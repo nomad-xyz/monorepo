@@ -1,0 +1,50 @@
+{
+  "name": "@nomad-xyz/nomad-xapps-sol",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.1",
+    "@nomiclabs/hardhat-etherscan": "^2.1.2",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@typechain/ethers-v5": "^7.0.0",
+    "@typechain/hardhat": "^2.0.1",
+    "chai": "^4.3.0",
+    "dotenv": "^10.0.0",
+    "eslint": "^7.20.0",
+    "ethereum-waffle": "^3.2.2",
+    "ethers": "^5.4.4",
+    "hardhat": "^2.6.0",
+    "hardhat-gas-reporter": "^1.0.4",
+    "prettier": "^2.2.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.5",
+    "solhint": "^3.3.2",
+    "solhint-plugin-prettier": "^0.0.5",
+    "solidity-coverage": "^0.7.14",
+    "ts-node": "^10.1.0",
+    "typechain": "^5.0.0",
+    "typescript": "^4.3.5"
+  },
+  "version": "0.0.0",
+  "description": "A bridge using nomad",
+  "main": " ",
+  "scripts": {
+    "prettier": "prettier --write './contracts'",
+    "compile": "hardhat compile && hardhat typechain && npm run prettier",
+    "coverage": "npm run compile && hardhat coverage",
+    "test": "cd ../../ && ./scripts/test-solidity.sh",
+    "lint": "solhint contracts/*.sol",
+    "lint:fix": "solhint --fix contracts/*.sol",
+    "deploy": "npm run compile && cd ../../typescript/nomad-deploy && npm run deploy-bridge",
+    "verify:kovan": "hardhat clean && hardhat --network kovan verify-latest-deploy",
+    "verify:mainnet": "hardhat clean && hardhat --network mainnet verify-latest-deploy",
+    "verify:rinkeby": "hardhat clean && hardhat --network rinkeby verify-latest-deploy",
+    "verify:arbitrum_rinkeby": "hardhat clean && hardhat --network arbitrum_rinkeby verify-latest-deploy",
+    "deploy-verify": "npm run deploy && npm run verify"
+  },
+  "author": "James Prestwich",
+  "license": "MIT OR Apache-2.0",
+  "dependencies": {
+    "@nomad-xyz/nomad-core-sol": "file:../nomad-core",
+    "@openzeppelin/contracts": "~3.4.2",
+    "@openzeppelin/contracts-upgradeable": "~3.4.2",
+    "@summa-tx/memview-sol": "^2.0.0"
+  }
+}
