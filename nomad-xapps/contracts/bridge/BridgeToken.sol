@@ -95,11 +95,12 @@ contract BridgeToken is Version0, IBridgeToken, OwnableUpgradeable, ERC20 {
         string calldata _newSymbol,
         uint8 _newDecimals
     ) external override {
+        bool _isFirstDetails = bytes(token.name).length == 0;
         // 0 case is the initial deploy. We allow the deploying registry to set
         // these once. After the first transfer is made, detailsHash will be
         // set, allowing anyone to supply correct name/symbols/decimals
         require(
-            bytes(token.name).length == 0 ||
+            _isFirstDetails ||
                 BridgeMessage.getDetailsHash(
                     _newName,
                     _newSymbol,
@@ -112,7 +113,9 @@ contract BridgeToken is Version0, IBridgeToken, OwnableUpgradeable, ERC20 {
         token.name = _newName;
         token.symbol = _newSymbol;
         token.decimals = _newDecimals;
-        emit UpdateDetails(_newName, _newSymbol, _newDecimals);
+        if (!_isFirstDetails) {
+            emit UpdateDetails(_newName, _newSymbol, _newDecimals);
+        }
     }
 
     /**
