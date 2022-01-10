@@ -4,21 +4,22 @@ import "@typechain/hardhat";
 import "@nomiclabs/hardhat-etherscan";
 
 import { task } from "hardhat/config";
-import { verifyLatestCoreDeploy } from "../../typescript/nomad-deploy/src/verification/verifyLatestDeploy";
+import { verifyCoreDeploy } from "../../typescript/nomad-deploy/src/verification/verifyDeploy";
 
 import * as dotenv from "dotenv";
 dotenv.config();
 
 const etherscanKey = process.env.ETHERSCAN_API_KEY;
+const infuraKey = process.env.INFURA_API_KEY;
 
 task(
-  "verify-latest-deploy",
+  "verify-deploy",
   "Verifies the source code of the latest contract deploy"
-).setAction(async (args: any, hre: any) => {
+).addParam("environment", "dev, staging or prod").setAction(async (args: any, hre: any) => {
   if (!etherscanKey) {
     throw new Error("set ETHERSCAN_API_KEY");
   }
-  await verifyLatestCoreDeploy(hre, etherscanKey);
+  await verifyCoreDeploy(hre, etherscanKey, args.environment);
 });
 
 /**
@@ -43,22 +44,15 @@ module.exports = {
     localhost: {
       url: "http://localhost:8545",
     },
-    goerli: {
-      url: "https://goerli.infura.io/v3/5c456d7844fa40a683e934df60534c60",
-    },
     kovan: {
-      url: "https://kovan.infura.io/v3/5c456d7844fa40a683e934df60534c60",
+      url: `https://kovan.infura.io/v3/${infuraKey}`,
     },
     rinkeby: {
-      url: "https://rinkeby.infura.io/v3/5c456d7844fa40a683e934df60534c60",
+      url: `https://rinkeby.infura.io/v3/${infuraKey}`,
     },
     mainnet: {
-      url: "https://mainnet.infura.io/v3/5c456d7844fa40a683e934df60534c60",
-    },
-    arbitrum_rinkeby: {
-      url: "rinkeby.arbitrum.io/rpc",
-    },
-    // TODO: add Ropsten
+      url: `https://mainnet.infura.io/v3/${infuraKey}`,
+    }
   },
   typechain: {
     outDir: "../../typescript/typechain/core",
