@@ -25,7 +25,7 @@ contract ETHHelper {
 
     // ============ Constructor ============
 
-    constructor(address _weth, address _bridge) {
+    constructor(address _weth, address payable _bridge) {
         weth = IWeth(_weth);
         bridge = BridgeRouter(_bridge);
         IWeth(_weth).approve(_bridge, uint256(-1));
