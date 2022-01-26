@@ -7,6 +7,7 @@ import {NomadBase} from "./NomadBase.sol";
 import {MerkleLib} from "./libs/Merkle.sol";
 import {Message} from "./libs/Message.sol";
 import {ExcessivelySafeCall} from "./libs/ExcessivelySafeCall.sol";
+import {IPreflight, IMessageRecipient} from "../interfaces/IMessageRecipient.sol";
 // ============ External Imports ============
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 
@@ -206,17 +207,42 @@ contract Replica is Version0, NomadBase {
         //    does not revert (i.e. we still mark the message processed)
         // To do this, we require that we have enough gas to process
         // and still return. We then delegate only the minimum processing gas.
-        require(gasleft() >= PROCESS_GAS + RESERVE_GAS, "!gas");
         // get the message recipient
         address _recipient = _m.recipientAddress();
-        bytes memory _calldata = abi.encodeWithSignature(
-            "handle(uint32,uint32,bytes32,bytes)",
+        // first we run a preflight to see how much gas the recipient recommends
+        bool _preflightSuccess;
+        bytes memory _encodedGas;
+        bytes memory _preflightCalldata = abi.encodeWithSelector(
+            IPreflight.preflight.selector,
             _m.origin(),
             _m.nonce(),
             _m.sender(),
             _m.body().clone()
         );
+        (_preflightSuccess, _encodedGas) = _recipient.excessivelySafeStaticCall(
+            PROCESS_GAS,
+            32,
+            _preflightCalldata
+        );
 
+        uint256 _gas;
+        if (!_preflightSuccess || _encodedGas.length != 32) {
+            _gas = PROCESS_GAS;
+        } else {
+            assembly {
+                _gas := mload(add(_encodedGas, 0x20))
+            }
+        }
+
+        require(gasleft() >= _gas + RESERVE_GAS, "!gas");
+        // Now we make the call itself
+        bytes memory _calldata = abi.encodeWithSelector(
+            IMessageRecipient.handle.selector,
+            _m.origin(),
+            _m.nonce(),
+            _m.sender(),
+            _m.body().clone()
+        );
         bytes memory _returnData;
         (_success, _returnData) = _recipient.excessivelySafeCall(
             PROCESS_GAS,
