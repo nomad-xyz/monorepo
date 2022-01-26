@@ -6,6 +6,7 @@ import {Version0} from "./Version0.sol";
 import {NomadBase} from "./NomadBase.sol";
 import {MerkleLib} from "./libs/Merkle.sol";
 import {Message} from "./libs/Message.sol";
+import {ExcessivelySafeCall} from "./libs/ExcessivelySafeCall.sol";
 // ============ External Imports ============
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 
@@ -22,6 +23,7 @@ contract Replica is Version0, NomadBase {
     using TypedMemView for bytes;
     using TypedMemView for bytes29;
     using Message for bytes29;
+    using ExcessivelySafeCall for address;
 
     // ============ Enums ============
 
@@ -207,12 +209,6 @@ contract Replica is Version0, NomadBase {
         require(gasleft() >= PROCESS_GAS + RESERVE_GAS, "!gas");
         // get the message recipient
         address _recipient = _m.recipientAddress();
-        // set up for assembly call
-        uint256 _toCopy;
-        uint256 _maxCopy = 256;
-        uint256 _gas = PROCESS_GAS;
-        // allocate memory for returndata
-        bytes memory _returnData = new bytes(_maxCopy);
         bytes memory _calldata = abi.encodeWithSignature(
             "handle(uint32,uint32,bytes32,bytes)",
             _m.origin(),
@@ -220,30 +216,13 @@ contract Replica is Version0, NomadBase {
             _m.sender(),
             _m.body().clone()
         );
-        // dispatch message to recipient
-        // by assembly calling "handle" function
-        // we call via assembly to avoid memcopying a very large returndata
-        // returned by a malicious contract
-        assembly {
-            _success := call(
-                _gas, // gas
-                _recipient, // recipient
-                0, // ether value
-                add(_calldata, 0x20), // inloc
-                mload(_calldata), // inlen
-                0, // outloc
-                0 // outlen
-            )
-            // limit our copy to 256 bytes
-            _toCopy := returndatasize()
-            if gt(_toCopy, _maxCopy) {
-                _toCopy := _maxCopy
-            }
-            // Store the length of the copied bytes
-            mstore(_returnData, _toCopy)
-            // copy the bytes from returndata[0:_toCopy]
-            returndatacopy(add(_returnData, 0x20), 0, _toCopy)
-        }
+
+        bytes memory _returnData;
+        (_success, _returnData) = _recipient.excessivelySafeCall(
+            PROCESS_GAS,
+            256,
+            _calldata
+        );
         // emit process results
         emit Process(_messageHash, _success, _returnData);
         // reset re-entrancy guard
