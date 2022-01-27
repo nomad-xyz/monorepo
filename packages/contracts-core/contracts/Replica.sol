@@ -225,12 +225,14 @@ contract Replica is Version0, NomadBase {
             _preflightCalldata
         );
 
-        uint256 _gas;
-        if (!_preflightSuccess || _encodedGas.length != 32) {
-            _gas = PROCESS_GAS;
-        } else {
+        uint256 _gas = PROCESS_GAS;
+        if (_preflightSuccess && _encodedGas.length == 32) {
+            uint256 _ret;
             assembly {
-                _gas := mload(add(_encodedGas, 0x20))
+                _ret := mload(add(_encodedGas, 0x20))
+            }
+            if (_ret <= 1_000_000) {
+                _gas = _ret;
             }
         }
 
