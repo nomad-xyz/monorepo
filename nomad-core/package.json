@@ -20,7 +20,7 @@
     "ts-node": "^10.1.0",
     "typechain": "^5.0.0"
   },
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Nomad contracts",
   "main": "",
   "directories": {
