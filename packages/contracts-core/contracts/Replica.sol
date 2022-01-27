@@ -40,10 +40,12 @@ contract Replica is Version0, NomadBase {
 
     // ============ Immutables ============
 
-    // Minimum gas for message processing
+    // Default minimum gas for message processing
     uint256 public immutable PROCESS_GAS;
     // Reserved gas (to ensure tx completes in case message processing runs out)
     uint256 public immutable RESERVE_GAS;
+    // Maximum gas that an app is allowed to request for message processing
+    uint256 public immutable MAXIMUM_GAS;
 
     // ============ Public Storage ============
 
@@ -102,12 +104,16 @@ contract Replica is Version0, NomadBase {
     constructor(
         uint32 _localDomain,
         uint256 _processGas,
-        uint256 _reserveGas
+        uint256 _reserveGas,
+        uint256 _maximumGas
     ) NomadBase(_localDomain) {
+        // No limit on maximum gas, to account for arbitrum and other odd gas
+        // metering environments.
         require(_processGas >= 850_000, "!process gas");
         require(_reserveGas >= 15_000, "!reserve gas");
         PROCESS_GAS = _processGas;
         RESERVE_GAS = _reserveGas;
+        MAXIMUM_GAS = _maximumGas;
     }
 
     // ============ Initializer ============
@@ -224,18 +230,18 @@ contract Replica is Version0, NomadBase {
             32,
             _preflightCalldata
         );
-
+        // Parse the gas from the preflight response, if necessary
         uint256 _gas = PROCESS_GAS;
         if (_preflightSuccess && _encodedGas.length == 32) {
             uint256 _ret;
             assembly {
                 _ret := mload(add(_encodedGas, 0x20))
             }
-            if (_ret <= 1_000_000) {
+            if (_ret <= MAXIMUM_GAS) {
                 _gas = _ret;
             }
         }
-
+        //
         require(gasleft() >= _gas + RESERVE_GAS, "!gas");
         // Now we make the call itself
         bytes memory _calldata = abi.encodeWithSelector(
