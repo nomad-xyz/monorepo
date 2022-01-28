@@ -218,7 +218,7 @@ contract Replica is Version0, NomadBase {
         // first we run a preflight to see how much gas the recipient recommends
         bool _preflightSuccess;
         bytes memory _encodedGas;
-        bytes memory _preflightCalldata = abi.encodeWithSelector(
+        bytes memory _calldata = abi.encodeWithSelector(
             IPreflight.preflight.selector,
             _m.origin(),
             _m.nonce(),
@@ -228,32 +228,30 @@ contract Replica is Version0, NomadBase {
         (_preflightSuccess, _encodedGas) = _recipient.excessivelySafeStaticCall(
             PROCESS_GAS,
             32,
-            _preflightCalldata
+            _calldata
         );
         // Parse the gas from the preflight response, if necessary
-        uint256 _gas = PROCESS_GAS;
+        uint256 _reqGas = PROCESS_GAS;
         if (_preflightSuccess && _encodedGas.length == 32) {
             uint256 _ret;
             assembly {
                 _ret := mload(add(_encodedGas, 0x20))
             }
             if (_ret <= MAXIMUM_GAS) {
-                _gas = _ret;
+                _reqGas = _ret;
             }
         }
-        //
-        require(gasleft() >= _gas + RESERVE_GAS, "!gas");
+        // TODO: Reuse the calldata above
+        require(gasleft() >= _reqGas + RESERVE_GAS, "!gas");
         // Now we make the call itself
-        bytes memory _calldata = abi.encodeWithSelector(
+
+        ExcessivelySafeCall.swapSelector(
             IMessageRecipient.handle.selector,
-            _m.origin(),
-            _m.nonce(),
-            _m.sender(),
-            _m.body().clone()
+            _calldata
         );
         bytes memory _returnData;
         (_success, _returnData) = _recipient.excessivelySafeCall(
-            PROCESS_GAS,
+            _reqGas,
             256,
             _calldata
         );
