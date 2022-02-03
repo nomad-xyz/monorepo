@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "name": "@nomad-xyz/contracts",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "bridge": "yarn workspace bridge"
+  },
+  "version": "0.0.0"
+}
