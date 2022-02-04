@@ -11,5 +11,5 @@
     "./tmp.ts",
     "../../node_modules"
   ],
-  "include": ["./src.ts/*.ts", "./src.ts/factories/*.ts"]
+  "include": ["index.ts", "./src.ts/*.ts", "./src.ts/factories/*.ts"]
 }
