@@ -1,0 +1,3 @@
+- [ ] write real readme
+- [x] fix solidity builds
+- [ ]
