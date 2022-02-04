@@ -31,6 +31,8 @@
     "test": "test"
   },
   "scripts": {
+    "prepublish": "yarn bootstrap && yarn build",
+    "build": "tsc",
     "prettier": "prettier --write ./contracts",
     "compile": "hardhat compile",
     "lint": "solhint 'contracts/*.sol' && solhint 'contracts/**/*.sol'",

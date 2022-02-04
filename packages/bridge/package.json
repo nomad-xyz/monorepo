@@ -29,6 +29,8 @@
   "version": "1.2.0",
   "description": "A bridge using nomad",
   "scripts": {
+    "prepublish": "yarn bootstrap && yarn build",
+    "build": "tsc",
     "prettier": "prettier --write './contracts'",
     "compile": "hardhat compile",
     "lint": "solhint contracts/*.sol",

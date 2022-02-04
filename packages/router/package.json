@@ -28,6 +28,8 @@
   "version": "1.2.0",
   "description": "The Nomad router, a reusable base for cross-chain applications",
   "scripts": {
+    "prepublish": "yarn bootstrap && yarn build",
+    "build": "tsc",
     "prettier": "prettier --write './contracts'",
     "compile": "hardhat compile",
     "lint": "solhint contracts/*.sol",

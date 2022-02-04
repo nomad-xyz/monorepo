@@ -1,9 +1,11 @@
 - [ ] write real readme
 - [x] fix solidity builds
-- [ ] proper tsconfig inheritance
-- [ ] typechain packaging
+- [x] proper tsconfig inheritance
+- [x] typechain packaging
 - [ ] break out governance from core?
 - [ ] publishing w/ npmignore etc
+- [ ] remove deploy dependency on contract-interfaces, replace with
+      dep on `whatever-contracts`
 
 ### Repo Setup
 
