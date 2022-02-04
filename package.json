@@ -13,7 +13,9 @@
     "prettier": "yarn deploy prettier && yarn core prettier && yarn router prettier && yarn bridge prettier && yarn example-xapps prettier",
     "lint": "yarn deploy lint && yarn core lint && yarn router lint && yarn bridge lint && yarn example-xapps lint",
     "compile": "yarn core compile && yarn router compile && yarn bridge compile",
-    "build": "yarn lint && yarn prettier && yarn compile"
+    "bootstrap-ts": "yarn core bootstrap && yarn router bootstrap && yarn bridge bootstrap",
+    "build-ts": "yarn deploy build && yarn core tsc && yarn router tsc && yarn bridge tsc",
+    "build": "yarn lint && yarn prettier && yarn compile && yarn build-ts"
   },
   "packageManager": "yarn@3.1.1"
 }

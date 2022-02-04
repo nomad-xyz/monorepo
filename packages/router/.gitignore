@@ -5,3 +5,4 @@ coverage/
 coverage.json
 .env
 src.ts/
+lib/

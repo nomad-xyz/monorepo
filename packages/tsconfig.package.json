@@ -11,7 +11,7 @@
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,
-    "noImplicitReturns": true,
+    "noImplicitReturns": false,
     "noUnusedLocals": true,
     "preserveSymlinks": true,
     "preserveWatchOutput": true,

@@ -22,8 +22,8 @@
   "scripts": {
     "build": "tsc",
     "check": "tsc --noEmit",
-    "prettier": "prettier --write ./src ./config ./scripts",
-    "lint": "eslint --fix ./src ./config ./scripts",
+    "prettier": "prettier --write ./src.ts ./config ./scripts",
+    "lint": "eslint --fix ./src.ts ./config ./scripts",
     "calculate-domain": "ts-node scripts/calculateDomain.ts",
     "deploy-dev-core": "ts-node scripts/development/core.ts",
     "deploy-dev-bridges": "ts-node scripts/development/bridge.ts",

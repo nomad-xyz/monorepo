@@ -50,7 +50,9 @@ function getNonGovernorDeploys(deploys: CoreDeploy[]): CoreDeploy[] {
 }
 
 export async function deployUpgradeBeaconController(deploy: CoreDeploy) {
-  const factory = new contracts.UpgradeBeaconController__factory(deploy.deployer);
+  const factory = new contracts.UpgradeBeaconController__factory(
+    deploy.deployer,
+  );
   deploy.contracts.upgradeBeaconController = await factory.deploy(
     deploy.overrides,
   );
