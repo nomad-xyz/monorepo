@@ -25,7 +25,8 @@
   },
   "version": "1.2.0",
   "description": "Nomad contracts",
-  "main": "",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "directories": {
     "test": "test"
   },
