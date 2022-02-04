@@ -3,7 +3,7 @@ import "@typechain/hardhat";
 import "@nomiclabs/hardhat-etherscan";
 
 import { task } from "hardhat/config";
-import { verifyCoreDeploy } from "@nomad-xyz/deploy/src/verification/verifyDeploy";
+import { verifyCoreDeploy } from "@nomad-xyz/deploy/src.ts/verification/verifyDeploy";
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -53,7 +53,7 @@ module.exports = {
     },
   },
   typechain: {
-    outDir: "./lib",
+    outDir: "./lib.ts",
     target: "ethers-v5",
     alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
   },

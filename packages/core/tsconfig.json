@@ -11,11 +11,5 @@
     "./scripts/",
     "./tmp.ts"
   ],
-  "include": [
-    "./src.ts/*.ts",
-    "./src.ts/core/*.ts",
-    "./src.ts/bridge/*.ts",
-    "./src.ts/verification/*.ts",
-    "./src.ts/incremental/*.ts"
-  ]
+  "include": ["./src.ts/*.ts", "./src.ts/factories/*.ts"]
 }

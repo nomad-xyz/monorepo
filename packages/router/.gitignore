@@ -4,3 +4,4 @@ artifacts/
 coverage/
 coverage.json
 .env
+src.ts/
