@@ -7,7 +7,7 @@ import {NomadBase} from "./NomadBase.sol";
 import {MerkleLib} from "./libs/Merkle.sol";
 import {Message} from "./libs/Message.sol";
 import {ExcessivelySafeCall} from "./libs/ExcessivelySafeCall.sol";
-import {IPreflight, IMessageRecipient} from "../interfaces/IMessageRecipient.sol";
+import {IPreflight, IMessageRecipient} from "./interfaces/IMessageRecipient.sol";
 // ============ External Imports ============
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 

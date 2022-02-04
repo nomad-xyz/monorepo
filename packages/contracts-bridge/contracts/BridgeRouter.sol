@@ -10,7 +10,7 @@ import {XAppConnectionClient} from "@nomad-xyz/contracts-router/contracts/XAppCo
 import {Router} from "@nomad-xyz/contracts-router/contracts/Router.sol";
 import {Home} from "@nomad-xyz/contracts-core/contracts/Home.sol";
 import {Version0} from "@nomad-xyz/contracts-core/contracts/Version0.sol";
-import {IPreflight} from "@nomad-xyz/contracts-core/interfaces/IMessageRecipient.sol";
+import {IPreflight} from "@nomad-xyz/contracts-core/contracts/interfaces/IMessageRecipient.sol";
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
