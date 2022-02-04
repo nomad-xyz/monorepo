@@ -2,14 +2,14 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { Home } from "./Home";
+export type { IMessageRecipient } from "./IMessageRecipient";
+export type { IUpdaterManager } from "./IUpdaterManager";
 export type { MerkleTreeManager } from "./MerkleTreeManager";
 export type { NomadBase } from "./NomadBase";
 export type { QueueManager } from "./QueueManager";
 export type { Replica } from "./Replica";
 export type { Version0 } from "./Version0";
 export type { XAppConnectionManager } from "./XAppConnectionManager";
-export type { IMessageRecipient } from "./IMessageRecipient";
-export type { IUpdaterManager } from "./IUpdaterManager";
 export type { OwnableUpgradeable } from "./OwnableUpgradeable";
 export type { Ownable } from "./Ownable";
 export type { TypedMemView } from "./TypedMemView";
@@ -17,14 +17,14 @@ export type { Router } from "./Router";
 export type { XAppConnectionClient } from "./XAppConnectionClient";
 
 export { Home__factory } from "./factories/Home__factory";
+export { IMessageRecipient__factory } from "./factories/IMessageRecipient__factory";
+export { IUpdaterManager__factory } from "./factories/IUpdaterManager__factory";
 export { MerkleTreeManager__factory } from "./factories/MerkleTreeManager__factory";
 export { NomadBase__factory } from "./factories/NomadBase__factory";
 export { QueueManager__factory } from "./factories/QueueManager__factory";
 export { Replica__factory } from "./factories/Replica__factory";
 export { Version0__factory } from "./factories/Version0__factory";
 export { XAppConnectionManager__factory } from "./factories/XAppConnectionManager__factory";
-export { IMessageRecipient__factory } from "./factories/IMessageRecipient__factory";
-export { IUpdaterManager__factory } from "./factories/IUpdaterManager__factory";
 export { OwnableUpgradeable__factory } from "./factories/OwnableUpgradeable__factory";
 export { Ownable__factory } from "./factories/Ownable__factory";
 export { TypedMemView__factory } from "./factories/TypedMemView__factory";

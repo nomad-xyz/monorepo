@@ -26,14 +26,8 @@ const _bytecode =
   "0x6080604052348015600f57600080fd5b5060848061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063ffa1ad7414602d575b600080fd5b60336049565b6040805160ff9092168252519081900360200190f35b60008156fea2646970667358221220b5c1d15ab0e6af353bee765abbaf34ec81898287b857ddf3cc10dc6f1df6c4aa64736f6c63430007060033";
 
 export class Version0__factory extends ContractFactory {
-  constructor(
-    ...args: [signer: Signer] | ConstructorParameters<typeof ContractFactory>
-  ) {
-    if (args.length === 1) {
-      super(_abi, _bytecode, args[0]);
-    } else {
-      super(...args);
-    }
+  constructor(signer?: Signer) {
+    super(_abi, _bytecode, signer);
   }
 
   deploy(

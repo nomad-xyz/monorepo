@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
+import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface NomadBaseInterface extends ethers.utils.Interface {
   functions: {
@@ -100,32 +100,6 @@ interface NomadBaseInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Update"): EventFragment;
 }
-
-export type DoubleUpdateEvent = TypedEvent<
-  [string, [string, string], string, string] & {
-    oldRoot: string;
-    newRoot: [string, string];
-    signature: string;
-    signature2: string;
-  }
->;
-
-export type NewUpdaterEvent = TypedEvent<
-  [string, string] & { oldUpdater: string; newUpdater: string }
->;
-
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string] & { previousOwner: string; newOwner: string }
->;
-
-export type UpdateEvent = TypedEvent<
-  [number, string, string, string] & {
-    homeDomain: number;
-    oldRoot: string;
-    newRoot: string;
-    signature: string;
-  }
->;
 
 export class NomadBase extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -260,21 +234,6 @@ export class NomadBase extends BaseContract {
   };
 
   filters: {
-    "DoubleUpdate(bytes32,bytes32[2],bytes,bytes)"(
-      oldRoot?: null,
-      newRoot?: null,
-      signature?: null,
-      signature2?: null
-    ): TypedEventFilter<
-      [string, [string, string], string, string],
-      {
-        oldRoot: string;
-        newRoot: [string, string];
-        signature: string;
-        signature2: string;
-      }
-    >;
-
     DoubleUpdate(
       oldRoot?: null,
       newRoot?: null,
@@ -290,14 +249,6 @@ export class NomadBase extends BaseContract {
       }
     >;
 
-    "NewUpdater(address,address)"(
-      oldUpdater?: null,
-      newUpdater?: null
-    ): TypedEventFilter<
-      [string, string],
-      { oldUpdater: string; newUpdater: string }
-    >;
-
     NewUpdater(
       oldUpdater?: null,
       newUpdater?: null
@@ -306,35 +257,12 @@ export class NomadBase extends BaseContract {
       { oldUpdater: string; newUpdater: string }
     >;
 
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): TypedEventFilter<
-      [string, string],
-      { previousOwner: string; newOwner: string }
-    >;
-
     OwnershipTransferred(
       previousOwner?: string | null,
       newOwner?: string | null
     ): TypedEventFilter<
       [string, string],
       { previousOwner: string; newOwner: string }
-    >;
-
-    "Update(uint32,bytes32,bytes32,bytes)"(
-      homeDomain?: BigNumberish | null,
-      oldRoot?: BytesLike | null,
-      newRoot?: BytesLike | null,
-      signature?: null
-    ): TypedEventFilter<
-      [number, string, string, string],
-      {
-        homeDomain: number;
-        oldRoot: string;
-        newRoot: string;
-        signature: string;
-      }
     >;
 
     Update(

@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
+import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface ETHHelperInterface extends ethers.utils.Interface {
   functions: {
@@ -58,8 +58,6 @@ interface ETHHelperInterface extends ethers.utils.Interface {
 
   getEvent(nameOrSignatureOrTopic: "Send"): EventFragment;
 }
-
-export type SendEvent = TypedEvent<[string] & { from: string }>;
 
 export class ETHHelper extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -181,10 +179,6 @@ export class ETHHelper extends BaseContract {
   };
 
   filters: {
-    "Send(address)"(
-      from?: string | null
-    ): TypedEventFilter<[string], { from: string }>;
-
     Send(from?: string | null): TypedEventFilter<[string], { from: string }>;
   };
 

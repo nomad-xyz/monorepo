@@ -2,7 +2,7 @@
 pragma solidity >=0.6.11;
 
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
-import {Message} from "../../libs/Message.sol";
+import {Message} from "../libs/Message.sol";
 
 contract TestMessage {
     using Message for bytes29;

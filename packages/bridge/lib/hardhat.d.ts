@@ -17,6 +17,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Home__factory>;
     getContractFactory(
+      name: "IMessageRecipient",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IMessageRecipient__factory>;
+    getContractFactory(
+      name: "IUpdaterManager",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IUpdaterManager__factory>;
+    getContractFactory(
       name: "MerkleTreeManager",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.MerkleTreeManager__factory>;
@@ -44,14 +52,6 @@ declare module "hardhat/types/runtime" {
       name: "XAppConnectionManager",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.XAppConnectionManager__factory>;
-    getContractFactory(
-      name: "IMessageRecipient",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IMessageRecipient__factory>;
-    getContractFactory(
-      name: "IUpdaterManager",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IUpdaterManager__factory>;
     getContractFactory(
       name: "Router",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -89,6 +89,18 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ETHHelper__factory>;
     getContractFactory(
+      name: "IBridgeToken",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IBridgeToken__factory>;
+    getContractFactory(
+      name: "ITokenRegistry",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ITokenRegistry__factory>;
+    getContractFactory(
+      name: "IWeth",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IWeth__factory>;
+    getContractFactory(
       name: "MockCore",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.MockCore__factory>;
@@ -120,169 +132,6 @@ declare module "hardhat/types/runtime" {
       name: "ERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC20__factory>;
-    getContractFactory(
-      name: "IBridgeToken",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IBridgeToken__factory>;
-    getContractFactory(
-      name: "ITokenRegistry",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ITokenRegistry__factory>;
-    getContractFactory(
-      name: "IWeth",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IWeth__factory>;
-
-    getContractAt(
-      name: "Home",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Home>;
-    getContractAt(
-      name: "MerkleTreeManager",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.MerkleTreeManager>;
-    getContractAt(
-      name: "NomadBase",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.NomadBase>;
-    getContractAt(
-      name: "QueueManager",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.QueueManager>;
-    getContractAt(
-      name: "Replica",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Replica>;
-    getContractAt(
-      name: "UpgradeBeaconProxy",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.UpgradeBeaconProxy>;
-    getContractAt(
-      name: "Version0",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Version0>;
-    getContractAt(
-      name: "XAppConnectionManager",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.XAppConnectionManager>;
-    getContractAt(
-      name: "IMessageRecipient",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IMessageRecipient>;
-    getContractAt(
-      name: "IUpdaterManager",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IUpdaterManager>;
-    getContractAt(
-      name: "Router",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Router>;
-    getContractAt(
-      name: "XAppConnectionClient",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.XAppConnectionClient>;
-    getContractAt(
-      name: "OwnableUpgradeable",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OwnableUpgradeable>;
-    getContractAt(
-      name: "Ownable",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Ownable>;
-    getContractAt(
-      name: "IERC20",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC20>;
-    getContractAt(
-      name: "TypedMemView",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TypedMemView>;
-    getContractAt(
-      name: "BridgeRouter",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.BridgeRouter>;
-    getContractAt(
-      name: "BridgeToken",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.BridgeToken>;
-    getContractAt(
-      name: "ETHHelper",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ETHHelper>;
-    getContractAt(
-      name: "MockCore",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.MockCore>;
-    getContractAt(
-      name: "MockWeth",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.MockWeth>;
-    getContractAt(
-      name: "TestBridgeMessage",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TestBridgeMessage>;
-    getContractAt(
-      name: "CantBePaid",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.CantBePaid>;
-    getContractAt(
-      name: "TestBridgeRouter",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TestBridgeRouter>;
-    getContractAt(
-      name: "TestEncoding",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TestEncoding>;
-    getContractAt(
-      name: "TokenRegistry",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TokenRegistry>;
-    getContractAt(
-      name: "ERC20",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC20>;
-    getContractAt(
-      name: "IBridgeToken",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IBridgeToken>;
-    getContractAt(
-      name: "ITokenRegistry",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ITokenRegistry>;
-    getContractAt(
-      name: "IWeth",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IWeth>;
 
     // default types
     getContractFactory(
@@ -294,10 +143,5 @@ declare module "hardhat/types/runtime" {
       bytecode: ethers.utils.BytesLike,
       signer?: ethers.Signer
     ): Promise<ethers.ContractFactory>;
-    getContractAt(
-      nameOrAbi: string | any[],
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<ethers.Contract>;
   }
 }

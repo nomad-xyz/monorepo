@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity >=0.6.11;
 
-import {IMessageRecipient} from "../../../interfaces/IMessageRecipient.sol";
+import {IMessageRecipient} from "../../interfaces/IMessageRecipient.sol";
 
 contract BadRecipient5 is IMessageRecipient {
     function handle(

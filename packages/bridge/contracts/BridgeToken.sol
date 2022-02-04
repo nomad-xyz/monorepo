@@ -2,9 +2,9 @@
 pragma solidity >=0.6.11;
 
 // ============ Internal Imports ============
-import {IBridgeToken} from "../interfaces/IBridgeToken.sol";
-import {ERC20} from "./vendored/OZERC20.sol";
 import {BridgeMessage} from "./BridgeMessage.sol";
+import {IBridgeToken} from "./interfaces/IBridgeToken.sol";
+import {ERC20} from "./vendored/OZERC20.sol";
 // ============ External Imports ============
 import {Version0} from "@nomad-xyz/core-contracts/contracts/Version0.sol";
 import {TypeCasts} from "@nomad-xyz/core-contracts/contracts/XAppConnectionManager.sol";

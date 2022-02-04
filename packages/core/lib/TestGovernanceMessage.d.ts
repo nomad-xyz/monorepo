@@ -16,13 +16,13 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
+import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface TestGovernanceMessageInterface extends ethers.utils.Interface {
   functions: {
     "formatBatch(tuple[])": FunctionFragment;
     "isValidBatch(bytes)": FunctionFragment;
-    "serializeCall((bytes32,bytes))": FunctionFragment;
+    "serializeCall(tuple)": FunctionFragment;
   };
 
   encodeFunctionData(

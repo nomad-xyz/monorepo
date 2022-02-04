@@ -14,5 +14,6 @@
     "lint": "yarn deploy lint && yarn core lint && yarn router lint && yarn bridge lint && yarn example-xapps lint",
     "compile": "yarn core compile && yarn router compile && yarn bridge compile",
     "build": "yarn lint && yarn prettier && yarn compile"
-  }
+  },
+  "packageManager": "yarn@3.1.1"
 }

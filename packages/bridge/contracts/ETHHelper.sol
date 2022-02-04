@@ -3,7 +3,7 @@ pragma solidity >=0.6.11;
 
 // ============ Internal Imports ============
 import {BridgeRouter} from "./BridgeRouter.sol";
-import {IWeth} from "../interfaces/IWeth.sol";
+import {IWeth} from "./interfaces/IWeth.sol";
 // ============ External Imports ============
 import {TypeCasts} from "@nomad-xyz/core-contracts/contracts/XAppConnectionManager.sol";
 

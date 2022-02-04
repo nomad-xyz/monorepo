@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
+import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface XAppConnectionManagerInterface extends ethers.utils.Interface {
   functions: {
@@ -139,26 +139,6 @@ interface XAppConnectionManagerInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "ReplicaUnenrolled"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "WatcherPermissionSet"): EventFragment;
 }
-
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string] & { previousOwner: string; newOwner: string }
->;
-
-export type ReplicaEnrolledEvent = TypedEvent<
-  [number, string] & { domain: number; replica: string }
->;
-
-export type ReplicaUnenrolledEvent = TypedEvent<
-  [number, string] & { domain: number; replica: string }
->;
-
-export type WatcherPermissionSetEvent = TypedEvent<
-  [number, string, boolean] & {
-    domain: number;
-    watcher: string;
-    access: boolean;
-  }
->;
 
 export class XAppConnectionManager extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -383,14 +363,6 @@ export class XAppConnectionManager extends BaseContract {
   };
 
   filters: {
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): TypedEventFilter<
-      [string, string],
-      { previousOwner: string; newOwner: string }
-    >;
-
     OwnershipTransferred(
       previousOwner?: string | null,
       newOwner?: string | null
@@ -399,17 +371,7 @@ export class XAppConnectionManager extends BaseContract {
       { previousOwner: string; newOwner: string }
     >;
 
-    "ReplicaEnrolled(uint32,address)"(
-      domain?: BigNumberish | null,
-      replica?: null
-    ): TypedEventFilter<[number, string], { domain: number; replica: string }>;
-
     ReplicaEnrolled(
-      domain?: BigNumberish | null,
-      replica?: null
-    ): TypedEventFilter<[number, string], { domain: number; replica: string }>;
-
-    "ReplicaUnenrolled(uint32,address)"(
       domain?: BigNumberish | null,
       replica?: null
     ): TypedEventFilter<[number, string], { domain: number; replica: string }>;
@@ -418,15 +380,6 @@ export class XAppConnectionManager extends BaseContract {
       domain?: BigNumberish | null,
       replica?: null
     ): TypedEventFilter<[number, string], { domain: number; replica: string }>;
-
-    "WatcherPermissionSet(uint32,address,bool)"(
-      domain?: BigNumberish | null,
-      watcher?: null,
-      access?: null
-    ): TypedEventFilter<
-      [number, string, boolean],
-      { domain: number; watcher: string; access: boolean }
-    >;
 
     WatcherPermissionSet(
       domain?: BigNumberish | null,

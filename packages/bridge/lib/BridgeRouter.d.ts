@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
+import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface BridgeRouterInterface extends ethers.utils.Interface {
   functions: {
@@ -173,31 +173,6 @@ interface BridgeRouterInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Receive"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Send"): EventFragment;
 }
-
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string] & { previousOwner: string; newOwner: string }
->;
-
-export type ReceiveEvent = TypedEvent<
-  [BigNumber, string, string, string, BigNumber] & {
-    originAndNonce: BigNumber;
-    token: string;
-    recipient: string;
-    liquidityProvider: string;
-    amount: BigNumber;
-  }
->;
-
-export type SendEvent = TypedEvent<
-  [string, string, number, string, BigNumber, boolean] & {
-    token: string;
-    from: string;
-    toDomain: number;
-    toId: string;
-    amount: BigNumber;
-    fastLiquidityEnabled: boolean;
-  }
->;
 
 export class BridgeRouter extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -491,37 +466,12 @@ export class BridgeRouter extends BaseContract {
   };
 
   filters: {
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): TypedEventFilter<
-      [string, string],
-      { previousOwner: string; newOwner: string }
-    >;
-
     OwnershipTransferred(
       previousOwner?: string | null,
       newOwner?: string | null
     ): TypedEventFilter<
       [string, string],
       { previousOwner: string; newOwner: string }
-    >;
-
-    "Receive(uint64,address,address,address,uint256)"(
-      originAndNonce?: BigNumberish | null,
-      token?: string | null,
-      recipient?: string | null,
-      liquidityProvider?: null,
-      amount?: null
-    ): TypedEventFilter<
-      [BigNumber, string, string, string, BigNumber],
-      {
-        originAndNonce: BigNumber;
-        token: string;
-        recipient: string;
-        liquidityProvider: string;
-        amount: BigNumber;
-      }
     >;
 
     Receive(
@@ -538,25 +488,6 @@ export class BridgeRouter extends BaseContract {
         recipient: string;
         liquidityProvider: string;
         amount: BigNumber;
-      }
-    >;
-
-    "Send(address,address,uint32,bytes32,uint256,bool)"(
-      token?: string | null,
-      from?: string | null,
-      toDomain?: BigNumberish | null,
-      toId?: null,
-      amount?: null,
-      fastLiquidityEnabled?: null
-    ): TypedEventFilter<
-      [string, string, number, string, BigNumber, boolean],
-      {
-        token: string;
-        from: string;
-        toDomain: number;
-        toId: string;
-        amount: BigNumber;
-        fastLiquidityEnabled: boolean;
       }
     >;
 

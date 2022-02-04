@@ -5,8 +5,8 @@ pragma solidity >=0.6.11;
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 // ============ Internal Imports ============
 import {PingPongMessage} from "./PingPongMessage.sol";
-import {Router} from "../Router.sol";
-import {XAppConnectionClient} from "../XAppConnectionClient.sol";
+import {Router} from "@nomad-xyz/router-contracts/contracts/Router.sol";
+import {XAppConnectionClient} from "@nomad-xyz/router-contracts/contracts/XAppConnectionClient.sol";
 
 /*
 ============ PingPong xApp ============

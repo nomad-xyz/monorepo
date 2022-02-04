@@ -4,8 +4,8 @@ pragma solidity >=0.6.11;
 // ============ Internal Imports ============
 import {Version0} from "./Version0.sol";
 import {NomadBase} from "./NomadBase.sol";
-import {MerkleLib} from "../libs/Merkle.sol";
-import {Message} from "../libs/Message.sol";
+import {MerkleLib} from "./libs/Merkle.sol";
+import {Message} from "./libs/Message.sol";
 // ============ External Imports ============
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 

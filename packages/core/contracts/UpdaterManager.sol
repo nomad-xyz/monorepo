@@ -2,7 +2,7 @@
 pragma solidity >=0.6.11;
 
 // ============ Internal Imports ============
-import {IUpdaterManager} from "../interfaces/IUpdaterManager.sol";
+import {IUpdaterManager} from "./interfaces/IUpdaterManager.sol";
 import {Home} from "./Home.sol";
 // ============ External Imports ============
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";

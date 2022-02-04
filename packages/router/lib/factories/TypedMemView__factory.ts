@@ -26,14 +26,8 @@ const _bytecode =
   "0x60cd610025600b82828239805160001a60731461001857fe5b30600052607381538281f3fe730000000000000000000000000000000000000000301460806040526004361060335760003560e01c8063f26be3fc146038575b600080fd5b603e6073565b604080517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000009092168252519081900360200190f35b7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000008156fea2646970667358221220b07daa2cfa732a0712e14f333f7fb26a0736db4a4fce155c515a5dd1fc062de564736f6c63430007060033";
 
 export class TypedMemView__factory extends ContractFactory {
-  constructor(
-    ...args: [signer: Signer] | ConstructorParameters<typeof ContractFactory>
-  ) {
-    if (args.length === 1) {
-      super(_abi, _bytecode, args[0]);
-    } else {
-      super(...args);
-    }
+  constructor(signer?: Signer) {
+    super(_abi, _bytecode, signer);
   }
 
   deploy(

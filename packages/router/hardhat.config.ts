@@ -1,5 +1,4 @@
 import "hardhat-gas-reporter";
-import "solidity-coverage";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-etherscan";
 

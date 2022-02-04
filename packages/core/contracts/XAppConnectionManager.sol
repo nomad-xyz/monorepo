@@ -4,7 +4,7 @@ pragma solidity >=0.6.11;
 // ============ Internal Imports ============
 import {Home} from "./Home.sol";
 import {Replica} from "./Replica.sol";
-import {TypeCasts} from "../libs/TypeCasts.sol";
+import {TypeCasts} from "./libs/TypeCasts.sol";
 // ============ External Imports ============
 import {ECDSA} from "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";

@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
+import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface BridgeTokenInterface extends ethers.utils.Interface {
   functions: {
@@ -204,26 +204,6 @@ interface BridgeTokenInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "UpdateDetails"): EventFragment;
 }
-
-export type ApprovalEvent = TypedEvent<
-  [string, string, BigNumber] & {
-    owner: string;
-    spender: string;
-    value: BigNumber;
-  }
->;
-
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string] & { previousOwner: string; newOwner: string }
->;
-
-export type TransferEvent = TypedEvent<
-  [string, string, BigNumber] & { from: string; to: string; value: BigNumber }
->;
-
-export type UpdateDetailsEvent = TypedEvent<
-  [string, string, number] & { name: string; symbol: string; decimals: number }
->;
 
 export class BridgeToken extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -593,15 +573,6 @@ export class BridgeToken extends BaseContract {
   };
 
   filters: {
-    "Approval(address,address,uint256)"(
-      owner?: string | null,
-      spender?: string | null,
-      value?: null
-    ): TypedEventFilter<
-      [string, string, BigNumber],
-      { owner: string; spender: string; value: BigNumber }
-    >;
-
     Approval(
       owner?: string | null,
       spender?: string | null,
@@ -609,14 +580,6 @@ export class BridgeToken extends BaseContract {
     ): TypedEventFilter<
       [string, string, BigNumber],
       { owner: string; spender: string; value: BigNumber }
-    >;
-
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): TypedEventFilter<
-      [string, string],
-      { previousOwner: string; newOwner: string }
     >;
 
     OwnershipTransferred(
@@ -627,15 +590,6 @@ export class BridgeToken extends BaseContract {
       { previousOwner: string; newOwner: string }
     >;
 
-    "Transfer(address,address,uint256)"(
-      from?: string | null,
-      to?: string | null,
-      value?: null
-    ): TypedEventFilter<
-      [string, string, BigNumber],
-      { from: string; to: string; value: BigNumber }
-    >;
-
     Transfer(
       from?: string | null,
       to?: string | null,
@@ -643,15 +597,6 @@ export class BridgeToken extends BaseContract {
     ): TypedEventFilter<
       [string, string, BigNumber],
       { from: string; to: string; value: BigNumber }
-    >;
-
-    "UpdateDetails(string,string,uint8)"(
-      name?: string | null,
-      symbol?: string | null,
-      decimals?: BigNumberish | null
-    ): TypedEventFilter<
-      [string, string, number],
-      { name: string; symbol: string; decimals: number }
     >;
 
     UpdateDetails(

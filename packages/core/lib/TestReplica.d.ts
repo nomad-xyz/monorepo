@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
+import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface TestReplicaInterface extends ethers.utils.Interface {
   functions: {
@@ -385,52 +385,6 @@ interface TestReplicaInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "SetOptimisticTimeout"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Update"): EventFragment;
 }
-
-export type DoubleUpdateEvent = TypedEvent<
-  [string, [string, string], string, string] & {
-    oldRoot: string;
-    newRoot: [string, string];
-    signature: string;
-    signature2: string;
-  }
->;
-
-export type NewUpdaterEvent = TypedEvent<
-  [string, string] & { oldUpdater: string; newUpdater: string }
->;
-
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string] & { previousOwner: string; newOwner: string }
->;
-
-export type ProcessEvent = TypedEvent<
-  [string, boolean, string] & {
-    messageHash: string;
-    success: boolean;
-    returnData: string;
-  }
->;
-
-export type SetConfirmationEvent = TypedEvent<
-  [string, BigNumber, BigNumber] & {
-    root: string;
-    previousConfirmAt: BigNumber;
-    newConfirmAt: BigNumber;
-  }
->;
-
-export type SetOptimisticTimeoutEvent = TypedEvent<
-  [BigNumber] & { timeout: BigNumber }
->;
-
-export type UpdateEvent = TypedEvent<
-  [number, string, string, string] & {
-    homeDomain: number;
-    oldRoot: string;
-    newRoot: string;
-    signature: string;
-  }
->;
 
 export class TestReplica extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -1163,21 +1117,6 @@ export class TestReplica extends BaseContract {
   };
 
   filters: {
-    "DoubleUpdate(bytes32,bytes32[2],bytes,bytes)"(
-      oldRoot?: null,
-      newRoot?: null,
-      signature?: null,
-      signature2?: null
-    ): TypedEventFilter<
-      [string, [string, string], string, string],
-      {
-        oldRoot: string;
-        newRoot: [string, string];
-        signature: string;
-        signature2: string;
-      }
-    >;
-
     DoubleUpdate(
       oldRoot?: null,
       newRoot?: null,
@@ -1193,14 +1132,6 @@ export class TestReplica extends BaseContract {
       }
     >;
 
-    "NewUpdater(address,address)"(
-      oldUpdater?: null,
-      newUpdater?: null
-    ): TypedEventFilter<
-      [string, string],
-      { oldUpdater: string; newUpdater: string }
-    >;
-
     NewUpdater(
       oldUpdater?: null,
       newUpdater?: null
@@ -1209,29 +1140,12 @@ export class TestReplica extends BaseContract {
       { oldUpdater: string; newUpdater: string }
     >;
 
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): TypedEventFilter<
-      [string, string],
-      { previousOwner: string; newOwner: string }
-    >;
-
     OwnershipTransferred(
       previousOwner?: string | null,
       newOwner?: string | null
     ): TypedEventFilter<
       [string, string],
       { previousOwner: string; newOwner: string }
-    >;
-
-    "Process(bytes32,bool,bytes)"(
-      messageHash?: BytesLike | null,
-      success?: boolean | null,
-      returnData?: BytesLike | null
-    ): TypedEventFilter<
-      [string, boolean, string],
-      { messageHash: string; success: boolean; returnData: string }
     >;
 
     Process(
@@ -1243,15 +1157,6 @@ export class TestReplica extends BaseContract {
       { messageHash: string; success: boolean; returnData: string }
     >;
 
-    "SetConfirmation(bytes32,uint256,uint256)"(
-      root?: BytesLike | null,
-      previousConfirmAt?: null,
-      newConfirmAt?: null
-    ): TypedEventFilter<
-      [string, BigNumber, BigNumber],
-      { root: string; previousConfirmAt: BigNumber; newConfirmAt: BigNumber }
-    >;
-
     SetConfirmation(
       root?: BytesLike | null,
       previousConfirmAt?: null,
@@ -1261,28 +1166,9 @@ export class TestReplica extends BaseContract {
       { root: string; previousConfirmAt: BigNumber; newConfirmAt: BigNumber }
     >;
 
-    "SetOptimisticTimeout(uint256)"(
-      timeout?: null
-    ): TypedEventFilter<[BigNumber], { timeout: BigNumber }>;
-
     SetOptimisticTimeout(
       timeout?: null
     ): TypedEventFilter<[BigNumber], { timeout: BigNumber }>;
-
-    "Update(uint32,bytes32,bytes32,bytes)"(
-      homeDomain?: BigNumberish | null,
-      oldRoot?: BytesLike | null,
-      newRoot?: BytesLike | null,
-      signature?: null
-    ): TypedEventFilter<
-      [number, string, string, string],
-      {
-        homeDomain: number;
-        oldRoot: string;
-        newRoot: string;
-        signature: string;
-      }
-    >;
 
     Update(
       homeDomain?: BigNumberish | null,

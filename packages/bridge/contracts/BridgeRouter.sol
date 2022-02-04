@@ -2,9 +2,9 @@
 pragma solidity >=0.6.11;
 
 // ============ Internal Imports ============
-import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {BridgeMessage} from "./BridgeMessage.sol";
-import {IBridgeToken} from "../interfaces/IBridgeToken.sol";
+import {IBridgeToken} from "./interfaces/IBridgeToken.sol";
+import {ITokenRegistry} from "./interfaces/ITokenRegistry.sol";
 // ============ External Imports ============
 import {XAppConnectionClient} from "@nomad-xyz/router-contracts/contracts/XAppConnectionClient.sol";
 import {Router} from "@nomad-xyz/router-contracts/contracts/Router.sol";

@@ -17,6 +17,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Home__factory>;
     getContractFactory(
+      name: "IMessageRecipient",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IMessageRecipient__factory>;
+    getContractFactory(
+      name: "IUpdaterManager",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IUpdaterManager__factory>;
+    getContractFactory(
       name: "MerkleTreeManager",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.MerkleTreeManager__factory>;
@@ -41,14 +49,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.XAppConnectionManager__factory>;
     getContractFactory(
-      name: "IMessageRecipient",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IMessageRecipient__factory>;
-    getContractFactory(
-      name: "IUpdaterManager",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IUpdaterManager__factory>;
-    getContractFactory(
       name: "OwnableUpgradeable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.OwnableUpgradeable__factory>;
@@ -69,77 +69,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.XAppConnectionClient__factory>;
 
-    getContractAt(
-      name: "Home",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Home>;
-    getContractAt(
-      name: "MerkleTreeManager",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.MerkleTreeManager>;
-    getContractAt(
-      name: "NomadBase",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.NomadBase>;
-    getContractAt(
-      name: "QueueManager",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.QueueManager>;
-    getContractAt(
-      name: "Replica",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Replica>;
-    getContractAt(
-      name: "Version0",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Version0>;
-    getContractAt(
-      name: "XAppConnectionManager",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.XAppConnectionManager>;
-    getContractAt(
-      name: "IMessageRecipient",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IMessageRecipient>;
-    getContractAt(
-      name: "IUpdaterManager",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IUpdaterManager>;
-    getContractAt(
-      name: "OwnableUpgradeable",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.OwnableUpgradeable>;
-    getContractAt(
-      name: "Ownable",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Ownable>;
-    getContractAt(
-      name: "TypedMemView",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TypedMemView>;
-    getContractAt(
-      name: "Router",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Router>;
-    getContractAt(
-      name: "XAppConnectionClient",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.XAppConnectionClient>;
-
     // default types
     getContractFactory(
       name: string,
@@ -150,10 +79,5 @@ declare module "hardhat/types/runtime" {
       bytecode: ethers.utils.BytesLike,
       signer?: ethers.Signer
     ): Promise<ethers.ContractFactory>;
-    getContractAt(
-      nameOrAbi: string | any[],
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<ethers.Contract>;
   }
 }

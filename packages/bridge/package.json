@@ -7,6 +7,7 @@
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@typechain/ethers-v5": "7.0.0",
     "@typechain/hardhat": "^2.0.1",
+    "@types/node": "^17.0.14",
     "chai": "^4.3.0",
     "dotenv": "^10.0.0",
     "eslint": "^7.20.0",
@@ -18,7 +19,6 @@
     "prettier-plugin-solidity": "^1.0.0-beta.5",
     "solhint": "^3.3.2",
     "solhint-plugin-prettier": "^0.0.5",
-    "solidity-coverage": "^0.7.14",
     "ts-node": "^10.1.0",
     "typechain": "^5.0.0",
     "typescript": "^4.5.5"
@@ -28,18 +28,9 @@
   "main": " ",
   "scripts": {
     "prettier": "prettier --write './contracts'",
-    "compile": "hardhat compile && hardhat typechain",
-    "coverage": "npm run compile && hardhat coverage",
-    "test": "cd ../../ && ./scripts/test-solidity.sh",
+    "compile": "hardhat compile",
     "lint": "solhint contracts/*.sol",
-    "lint:fix": "solhint --fix contracts/*.sol",
-    "deploy": "npm run compile && cd ../../typescript/nomad-deploy && npm run deploy-bridge",
-    "verify:mainnet": "hardhat clean && hardhat --network mainnet verify-deploy --environment prod",
-    "verify:dev:kovan": "hardhat clean && hardhat --network kovan verify-deploy --environment dev",
-    "verify:dev:rinkeby": "hardhat clean && hardhat --network rinkeby verify-deploy --environment dev",
-    "verify:staging:kovan": "hardhat clean && hardhat --network kovan verify-deploy --environment staging",
-    "verify:staging:rinkeby": "hardhat clean && hardhat --network rinkeby verify-deploy --environment staging",
-    "deploy-verify": "npm run deploy && npm run verify"
+    "lint:fix": "solhint --fix contracts/*.sol"
   },
   "author": "James Prestwich",
   "license": "MIT OR Apache-2.0",

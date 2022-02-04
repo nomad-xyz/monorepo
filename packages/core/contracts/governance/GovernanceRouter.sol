@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 import {Home} from "../Home.sol";
 import {Version0} from "../Version0.sol";
 import {XAppConnectionManager, TypeCasts} from "../XAppConnectionManager.sol";
-import {IMessageRecipient} from "../../interfaces/IMessageRecipient.sol";
+import {IMessageRecipient} from "../interfaces/IMessageRecipient.sol";
 import {GovernanceMessage} from "./GovernanceMessage.sol";
 // ============ External Imports ============
 import {Initializable} from "@openzeppelin/contracts/proxy/Initializable.sol";

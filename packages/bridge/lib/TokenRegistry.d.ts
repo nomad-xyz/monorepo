@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
+import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface TokenRegistryInterface extends ethers.utils.Interface {
   functions: {
@@ -180,18 +180,6 @@ interface TokenRegistryInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TokenDeployed"): EventFragment;
 }
-
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string] & { previousOwner: string; newOwner: string }
->;
-
-export type TokenDeployedEvent = TypedEvent<
-  [number, string, string] & {
-    domain: number;
-    id: string;
-    representation: string;
-  }
->;
 
 export class TokenRegistry extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -512,29 +500,12 @@ export class TokenRegistry extends BaseContract {
   };
 
   filters: {
-    "OwnershipTransferred(address,address)"(
-      previousOwner?: string | null,
-      newOwner?: string | null
-    ): TypedEventFilter<
-      [string, string],
-      { previousOwner: string; newOwner: string }
-    >;
-
     OwnershipTransferred(
       previousOwner?: string | null,
       newOwner?: string | null
     ): TypedEventFilter<
       [string, string],
       { previousOwner: string; newOwner: string }
-    >;
-
-    "TokenDeployed(uint32,bytes32,address)"(
-      domain?: BigNumberish | null,
-      id?: BytesLike | null,
-      representation?: string | null
-    ): TypedEventFilter<
-      [number, string, string],
-      { domain: number; id: string; representation: string }
     >;
 
     TokenDeployed(

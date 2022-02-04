@@ -17,7 +17,7 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
+import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface MockCoreInterface extends ethers.utils.Interface {
   functions: {
@@ -99,23 +99,6 @@ interface MockCoreInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Dispatch"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Enqueue"): EventFragment;
 }
-
-export type DispatchEvent = TypedEvent<
-  [BigNumber, BigNumber, string, string] & {
-    leafIndex: BigNumber;
-    destinationAndNonce: BigNumber;
-    leaf: string;
-    message: string;
-  }
->;
-
-export type EnqueueEvent = TypedEvent<
-  [number, string, string] & {
-    _destination: number;
-    _recipient: string;
-    _body: string;
-  }
->;
 
 export class MockCore extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -260,21 +243,6 @@ export class MockCore extends BaseContract {
   };
 
   filters: {
-    "Dispatch(uint256,uint64,bytes32,bytes)"(
-      leafIndex?: BigNumberish | null,
-      destinationAndNonce?: BigNumberish | null,
-      leaf?: BytesLike | null,
-      message?: null
-    ): TypedEventFilter<
-      [BigNumber, BigNumber, string, string],
-      {
-        leafIndex: BigNumber;
-        destinationAndNonce: BigNumber;
-        leaf: string;
-        message: string;
-      }
-    >;
-
     Dispatch(
       leafIndex?: BigNumberish | null,
       destinationAndNonce?: BigNumberish | null,
@@ -288,15 +256,6 @@ export class MockCore extends BaseContract {
         leaf: string;
         message: string;
       }
-    >;
-
-    "Enqueue(uint32,bytes32,bytes)"(
-      _destination?: BigNumberish | null,
-      _recipient?: BytesLike | null,
-      _body?: null
-    ): TypedEventFilter<
-      [number, string, string],
-      { _destination: number; _recipient: string; _body: string }
     >;
 
     Enqueue(

@@ -2,7 +2,7 @@
 pragma solidity >=0.6.11;
 
 import "../XAppConnectionManager.sol";
-import "../../libs/TypeCasts.sol";
+import "../libs/TypeCasts.sol";
 
 contract TestXAppConnectionManager is XAppConnectionManager {
     constructor() XAppConnectionManager() {} // solhint-disable-line no-empty-blocks
