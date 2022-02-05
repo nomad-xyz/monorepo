@@ -3,7 +3,7 @@ import fs from 'fs';
 import { ethers } from 'ethers';
 import * as proxyUtils from '../proxyUtils';
 import { CoreDeploy } from './CoreDeploy';
-import * as contracts from '@nomad-xyz/contract-interfaces/core';
+import * as contracts from '@nomad-xyz/core-contracts';
 import { checkCoreDeploy } from './checks';
 import { getPathToDeployConfig } from '../verification/readDeployOutput';
 import { canonizeId } from '@nomad-xyz/sdk/utils';

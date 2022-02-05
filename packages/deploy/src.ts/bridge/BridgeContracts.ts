@@ -1,8 +1,10 @@
-import * as xAppContracts from '@nomad-xyz/contract-interfaces/bridge';
+import * as xAppContracts from '@nomad-xyz/bridge-contracts';
+import * as contracts from '@nomad-xyz/core-contracts';
+
+import * as ethers from 'ethers';
+
 import { BeaconProxy, ProxyAddresses } from '../proxyUtils';
 import { Contracts } from '../contracts';
-import * as ethers from 'ethers';
-import * as contracts from '@nomad-xyz/contract-interfaces/core';
 
 type SignerOrProvider = ethers.ethers.providers.Provider | ethers.ethers.Signer;
 
@@ -23,7 +25,7 @@ export class BridgeContracts extends Contracts {
     super();
   }
 
-  toObject(): Object {
+  toObject(): Record<string, unknown> {
     return {
       bridgeRouter: this.bridgeRouter?.toObject(),
       tokenRegistry: this.tokenRegistry?.toObject(),

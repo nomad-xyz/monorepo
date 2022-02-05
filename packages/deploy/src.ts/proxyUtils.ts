@@ -1,6 +1,6 @@
 import { BytesLike, ethers } from 'ethers';
 
-import * as contracts from '@nomad-xyz/contract-interfaces/core';
+import contracts from '@nomad-xyz/core-contracts';
 import { CoreDeploy } from './core/CoreDeploy';
 import { BridgeDeploy } from './bridge/BridgeDeploy';
 import TestBridgeDeploy from './bridge/TestBridgeDeploy';

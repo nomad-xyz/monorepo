@@ -29,7 +29,8 @@
   "description": "The Nomad router, a reusable base for cross-chain applications",
   "scripts": {
     "prepublish": "yarn bootstrap && yarn build",
-    "build": "tsc",
+    "build": "tsc && yarn copy-definitions",
+    "copy-definitions": "cp src.ts/*.d.ts lib/src.ts",
     "prettier": "prettier --write './contracts'",
     "compile": "hardhat compile",
     "lint": "solhint contracts/*.sol",

@@ -4,7 +4,7 @@
 - [x] typechain packaging
 - [ ] break out governance from core?
 - [ ] publishing w/ npmignore etc
-- [ ] remove deploy dependency on contract-interfaces, replace with
+- [x] remove deploy dependency on contract-interfaces, replace with
       dep on `whatever-contracts`
 
 ### Repo Setup

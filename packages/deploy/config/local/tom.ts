@@ -1,9 +1,8 @@
 import * as dotenv from 'dotenv';
 
-import { ChainJson, toChain } from '../../src/chain';
-import { CoreConfig } from '../../src/core/CoreDeploy';
-import { BridgeConfig } from '../../src/bridge/BridgeDeploy';
-import { BigNumber } from 'ethers';
+import { ChainJson, toChain } from '../../src.ts/chain';
+import { CoreConfig } from '../../src.ts/core/CoreDeploy';
+import { BridgeConfig } from '../../src.ts/bridge/BridgeDeploy';
 
 const TOM_RPC = 'http://127.0.0.1:9545';
 

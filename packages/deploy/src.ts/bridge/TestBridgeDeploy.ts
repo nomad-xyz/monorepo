@@ -2,7 +2,7 @@ import { BytesLike, ethers, Signer } from 'ethers';
 import {
   UpgradeBeaconController,
   UpgradeBeaconController__factory,
-} from '@nomad-xyz/contract-interfaces/core';
+} from '@nomad-xyz/core-contracts';
 import {
   BridgeRouter,
   BridgeToken,
@@ -12,7 +12,7 @@ import {
   MockWeth,
   MockWeth__factory,
   TokenRegistry,
-} from '@nomad-xyz/contract-interfaces/bridge';
+} from '@nomad-xyz/bridge-contracts';
 import { ContractVerificationInput } from '../deploy';
 import { BridgeContracts } from './BridgeContracts';
 import * as process from '.';
