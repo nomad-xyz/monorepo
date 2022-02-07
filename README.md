@@ -1,17 +1,26 @@
 - [ ] write real readme
-- [x] fix solidity builds
-- [x] proper tsconfig inheritance
-- [x] typechain packaging
 - [ ] break out governance from core?
 - [ ] publishing w/ npmignore etc
-- [x] remove deploy dependency on contract-interfaces, replace with
-      dep on `whatever-contracts`
-- [ ] .nvmrc
 - [ ] standardize on a set of standard scripts build/prettier/lint/test
 - [ ] use `yarn workspace foreach`
 - [ ] hardhat-packager
+- [ ] use TS resolutions
+- [x] fix solidity builds
+- [x] proper tsconfig inheritance
+- [x] typechain packaging
+- [x] remove deploy dependency on contract-interfaces, replace with
+      dep on `whatever-contracts`
+- [x] .nvmrc
 
 ### Repo Setup
+
+- make sure you're on yarn2!
+
+Install workspace-tools
+
+```
+$ yarn plugin import workspace-tools
+```
 
 Install all dependencies
 

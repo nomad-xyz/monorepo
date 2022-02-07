@@ -1,4 +1,5 @@
 {
+  "exclude": ["**/dist/**", "**/node_modules/**", "**/tests/**"],
   "compilerOptions": {
     "composite": true,
     "declaration": true,
@@ -19,5 +20,19 @@
     "sourceMap": true,
     "target": "es6",
     "strict": true
-  }
+  },
+  "references": [
+    {
+      "path": "./core"
+    },
+    {
+      "path": "./router"
+    },
+    {
+      "path": "./bridge"
+    },
+    {
+      "path": "./deploy"
+    }
+  ]
 }

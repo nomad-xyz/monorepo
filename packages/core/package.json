@@ -32,7 +32,7 @@
   },
   "scripts": {
     "prepublish": "yarn bootstrap && yarn build",
-    "build": "tsc && yarn copy-definitions",
+    "build": "yarn compile && tsc && yarn copy-definitions",
     "copy-definitions": "cp src.ts/*.d.ts lib/src.ts",
     "prettier": "prettier --write ./contracts",
     "compile": "hardhat compile",
