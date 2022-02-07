@@ -1,9 +1,10 @@
 import "hardhat-gas-reporter";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-etherscan";
+import "hardhat-packager";
 
 import { task } from "hardhat/config";
-import { verifyCoreDeploy } from "@nomad-xyz/deploy/src.ts/verification/verifyDeploy";
+import { verifyCoreDeploy } from "@nomad-xyz/deploy/src/verification/verifyDeploy";
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -52,14 +53,33 @@ module.exports = {
       url: `https://mainnet.infura.io/v3/${infuraKey}`,
     },
   },
+
   typechain: {
-    outDir: "./src.ts",
+    outDir: "./src",
     target: "ethers-v5",
     alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
   },
+
+  // config for hardhat-packager
+  // https://www.npmjs.com/package/hardhat-packager
+  packager: {
+    contracts: [
+      "Home",
+      "Replica",
+      "UpdaterManager",
+      "XAppConnectionManager",
+      "UpgradeBeacon",
+      "UpgradeBeaconController",
+      "UpgradeBeaconProxy",
+      "GovernanceRouter",
+    ],
+    includeFactories: true,
+  },
+
   mocha: {
     bail: true,
   },
+
   etherscan: {
     apiKey: etherscanKey,
   },

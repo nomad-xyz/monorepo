@@ -1,10 +1,13 @@
+# Nomad Contracts
+
+## TODOs
+
 - [ ] write real readme
-- [ ] break out governance from core?
 - [ ] publishing w/ npmignore etc
-- [ ] standardize on a set of standard scripts build/prettier/lint/test
-- [ ] use `yarn workspace foreach`
+- [x] standardize on a set of standard scripts build/prettier/lint/test
+- [x] use `yarn workspace foreach`
 - [ ] hardhat-packager
-- [ ] use TS resolutions
+- [x] use TS references
 - [x] fix solidity builds
 - [x] proper tsconfig inheritance
 - [x] typechain packaging
@@ -15,12 +18,6 @@
 ### Repo Setup
 
 - make sure you're on yarn2!
-
-Install workspace-tools
-
-```
-$ yarn plugin import workspace-tools
-```
 
 Install all dependencies
 

@@ -1,9 +1,10 @@
 import "hardhat-gas-reporter";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-etherscan";
+import "hardhat-packager";
 
 import { task } from "hardhat/config";
-import { verifyBridgeDeploy } from "@nomad-xyz/deploy/src.ts/verification/verifyDeploy";
+import { verifyBridgeDeploy } from "@nomad-xyz/deploy/src/verification/verifyDeploy";
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -54,9 +55,16 @@ module.exports = {
   },
 
   typechain: {
-    outDir: "./src.ts",
+    outDir: "./src",
     target: "ethers-v5",
     alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
+  },
+
+  // config for hardhat-packager
+  // https://www.npmjs.com/package/hardhat-packager
+  packager: {
+    contracts: ["BridgeRouter", "BridgeToken", "ETHHelper", "TokenRegistry"],
+    includeFactories: true,
   },
 
   etherscan: {

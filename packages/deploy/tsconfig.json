@@ -2,7 +2,7 @@
   "extends": "../tsconfig.package.json",
   "compilerOptions": {
     "outDir": "./lib/",
-    "rootDir": "./src.ts/"
+    "rootDir": "./src/"
   },
   "exclude": [
     "./node_modules/",
@@ -12,10 +12,10 @@
     "./tmp.ts"
   ],
   "include": [
-    "./src.ts/*.ts",
-    "./src.ts/core/*.ts",
-    "./src.ts/bridge/*.ts",
-    "./src.ts/verification/*.ts",
-    "./src.ts/incremental/*.ts"
+    "./src/*.ts",
+    "./src/core/*.ts",
+    "./src/bridge/*.ts",
+    "./src/verification/*.ts",
+    "./src/incremental/*.ts"
   ]
 }

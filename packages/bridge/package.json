@@ -29,14 +29,15 @@
   "version": "1.2.0",
   "description": "A bridge using nomad",
   "scripts": {
+    "bootstrap": "yarn clean && yarn build",
+    "clean": "hardhat clean && rm -rf lib && rm -rf src",
     "prepublish": "yarn bootstrap && yarn build",
-    "build": "yarn compile && tsc && yarn copy-definitions",
-    "copy-definitions": "cp src.ts/*.d.ts lib/src.ts",
+    "build": "yarn compile && hardhat prepare-package && tsc && yarn copy-definitions",
+    "copy-definitions": "cp src/*.d.ts lib/src",
     "prettier": "prettier --write './contracts'",
     "compile": "hardhat compile",
     "lint": "solhint contracts/*.sol",
-    "lint:fix": "solhint --fix contracts/*.sol",
-    "bootstrap": "hardhat clean && yarn build"
+    "lint:fix": "solhint --fix contracts/*.sol"
   },
   "author": "James Prestwich",
   "license": "MIT OR Apache-2.0",
