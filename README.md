@@ -2,11 +2,11 @@
 
 ## TODOs
 
-- [ ] write real readme
+- [ ] write real readme(s)
 - [ ] publishing w/ npmignore etc
 - [x] standardize on a set of standard scripts build/prettier/lint/test
 - [x] use `yarn workspace foreach`
-- [ ] hardhat-packager
+- [x] hardhat-packager
 - [x] use TS references
 - [x] fix solidity builds
 - [x] proper tsconfig inheritance
@@ -36,7 +36,7 @@ $ yarn bootstrap-ts
 
 This repo is a [yarn workspace](https://yarnpkg.com/features/workspaces). All
 packages are located in `packages/`. Generally, packages are intended to
-contain a `src.ts/` directory, which is built to `lib/` for publishing.
+contain a `src/` directory, which is built to `lib/` for publishing.
 
 The deploy package is not intended to be published.
 
