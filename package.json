@@ -6,7 +6,11 @@
     "packages/router",
     "packages/bridge",
     "packages/example-xapps",
-    "packages/deploy"
+    "packages/deploy",
+    "packages/multi-provider",
+    "packages/sdk",
+    "packages/sdk-bridge",
+    "packages/sdk-govern"
   ],
   "scripts": {
     "bridge": "yarn workspace @nomad-xyz/bridge-contracts",
@@ -14,6 +18,10 @@
     "deploy": "yarn workspace @nomad-xyz/deploy",
     "example-xapps": "yarn workspace @nomad-xyz/example-xapp-contracts",
     "router": "yarn workspace @nomad-xyz/router-contracts",
+    "multi-provider": "yarn workspace @nomad-xyz/multi-provider",
+    "sdk": "yarn workspace @nomad-xyz/sdk",
+    "bridge-sdk": "yarn workspace @nomad-xyz/bridge-sdk",
+    "govern-sdk": "yarn workspace @nomad-xyz/govern-sdk",
     "prettier": "yarn workspaces foreach -Apv run prettier",
     "lint": "yarn workspaces foreach -Apv run lint",
     "test": "yarn workspaces foreach -Apv run test",

@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.package.json",
+  "compilerOptions": {
+    "outDir": "./lib/",
+    "rootDir": "./src/"
+  },
+  "exclude": ["./node_modules/", "./dist/", "./src/tmp.ts"],
+  "include": ["./src/*.ts"],
+  "references": [
+    { "path": "../core" },
+    { "path": "../bridge" },
+    { "path": "../multi-provider" },
+    { "path": "../sdk" }
+  ]
+}

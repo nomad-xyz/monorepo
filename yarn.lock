@@ -378,7 +378,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ethersproject/contracts@npm:5.5.0":
+"@ethersproject/contracts@npm:5.5.0, @ethersproject/contracts@npm:^5.5.0":
   version: 5.5.0
   resolution: "@ethersproject/contracts@npm:5.5.0"
   dependencies:
@@ -581,7 +581,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ethersproject/solidity@npm:5.5.0":
+"@ethersproject/solidity@npm:5.5.0, @ethersproject/solidity@npm:^5.5.0":
   version: 5.5.0
   resolution: "@ethersproject/solidity@npm:5.5.0"
   dependencies:
@@ -690,46 +690,64 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gnosis.pm/safe-core-sdk-types@npm:^0.1.1":
-  version: 0.1.1
-  resolution: "@gnosis.pm/safe-core-sdk-types@npm:0.1.1"
-  checksum: f0f258044ca1de7eccf4d5430664523111afbafef9cdd0e0aa23eb685f31fd37b2e4e3fa207be6d323c0b6e2f7bb9371d51bf0f156328a6de5c9080296cc857d
+"@gnosis.pm/safe-core-sdk-types@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@gnosis.pm/safe-core-sdk-types@npm:1.0.0"
+  dependencies:
+    "@ethersproject/bignumber": ^5.5.0
+    "@ethersproject/contracts": ^5.5.0
+    "@gnosis.pm/safe-deployments": ^1.8.0
+    web3-core: ^1.7.0
+  checksum: a1fd2fe99858992fd0f2e9fe0c4d5286f6c7cd21ffcde19c527151cab51998a7db0ae6b0f6f6cc8fafcc2f0bc7f3b8f14cd9401e383af5bf35da43b91ddfd485
   languageName: node
   linkType: hard
 
-"@gnosis.pm/safe-core-sdk@npm:^1.0.0, @gnosis.pm/safe-core-sdk@npm:^1.3.0":
-  version: 1.3.0
-  resolution: "@gnosis.pm/safe-core-sdk@npm:1.3.0"
+"@gnosis.pm/safe-core-sdk@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@gnosis.pm/safe-core-sdk@npm:2.0.0"
   dependencies:
-    "@gnosis.pm/safe-core-sdk-types": ^0.1.1
-    "@gnosis.pm/safe-deployments": ^1.7.0
+    "@ethersproject/solidity": ^5.5.0
+    "@gnosis.pm/safe-core-sdk-types": ^1.0.0
+    "@gnosis.pm/safe-deployments": ^1.8.0
     ethereumjs-util: ^7.1.3
     semver: ^7.3.5
-  checksum: c7aa8dd6b2d624ca583f576074490961ca10c996e60b1a3a686d83cca5e36677c1e51e0e2d0fb0bf8a56230ee9c70cd3ed96836b48247b7e12208fcb7a4f35a2
+    web3-utils: ^1.7.0
+  checksum: ee658c48c620428d7c2dcf662c82c26803868dda8da2dd47a7f63ea3ef3047118ff970f219ef4945451e36955932b4d1478f831c8dc32aa76e2f9ca57feb49ef
   languageName: node
   linkType: hard
 
-"@gnosis.pm/safe-deployments@npm:^1.0.0, @gnosis.pm/safe-deployments@npm:^1.7.0":
+"@gnosis.pm/safe-deployments@npm:^1.8.0":
   version: 1.8.0
   resolution: "@gnosis.pm/safe-deployments@npm:1.8.0"
   checksum: 79da925f7e4183c7f3d58665b068f1abf1d7e14430c60e5ac1f4d77a65c979b624e3ee0091869e2bbff8e650819764faca4aadef18540cbeb581f69216190636
   languageName: node
   linkType: hard
 
-"@gnosis.pm/safe-ethers-adapters@npm:0.1.0-alpha.7":
-  version: 0.1.0-alpha.7
-  resolution: "@gnosis.pm/safe-ethers-adapters@npm:0.1.0-alpha.7"
+"@gnosis.pm/safe-ethers-adapters@npm:^0.1.0-alpha.8":
+  version: 0.1.0-alpha.8
+  resolution: "@gnosis.pm/safe-ethers-adapters@npm:0.1.0-alpha.8"
   dependencies:
-    "@gnosis.pm/safe-core-sdk": ^1.0.0
-    "@gnosis.pm/safe-core-sdk-types": ^0.1.1
-    "@gnosis.pm/safe-deployments": ^1.0.0
-    axios: ^0.21.1
+    "@gnosis.pm/safe-core-sdk": ^2.0.0
+    "@gnosis.pm/safe-core-sdk-types": ^1.0.0
+    "@gnosis.pm/safe-deployments": ^1.8.0
+    axios: ^0.25.0
   peerDependencies:
-    "@ethersproject/abstract-provider": ^5.0.0
-    "@ethersproject/abstract-signer": ^5.0.0
-    "@ethersproject/bignumber": ^5.0.0
-    "@ethersproject/properties": ^5.0.0
-  checksum: fac8d0e1fcfb4368da22f40501dd92da831a92704a7b024363adb89f5d385c4db77f7d80694a5f95907f7f8659ab70ac6fe24cf51256520e3ced4ee1ef23abda
+    "@ethersproject/abstract-provider": ^5.5.1
+    "@ethersproject/abstract-signer": ^5.5.0
+    "@ethersproject/bignumber": ^5.5.0
+    "@ethersproject/properties": ^5.5.0
+  checksum: 36d57629897b8fe2dbabe4befa6c8bb78fe6da5ae86979872e9276b7fa707851432472c90ee8641e9a7f4183327905a21d904d7d7816d67636664e38ca4e4ac9
+  languageName: node
+  linkType: hard
+
+"@gnosis.pm/safe-ethers-lib@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@gnosis.pm/safe-ethers-lib@npm:1.0.0"
+  dependencies:
+    "@gnosis.pm/safe-core-sdk-types": ^1.0.0
+  peerDependencies:
+    ethers: ^5.5.3
+  checksum: 68ed3c29e4e0331a35a3c07354d1c009f04b0ab204a0104d04c87ed5e21d8f5f94e7cb6edfe8eb6293c65bed7431e85d5396d8092c68634785369fd6f453faa8
   languageName: node
   linkType: hard
 
@@ -812,16 +830,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/contract-interfaces@npm:1.1.1":
-  version: 1.1.1
-  resolution: "@nomad-xyz/contract-interfaces@npm:1.1.1"
+"@nomad-xyz/bridge-sdk@workspace:packages/sdk-bridge":
+  version: 0.0.0-use.local
+  resolution: "@nomad-xyz/bridge-sdk@workspace:packages/sdk-bridge"
   dependencies:
-    "@ethersproject/experimental": ^5.3.0
-    "@types/node": ^16.10.2
+    "@nomad-xyz/sdk": 1.3.6
+    "@types/node": ^16.9.1
+    "@typescript-eslint/eslint-plugin": ^4.33.0
+    "@typescript-eslint/parser": ^4.33.0
+    dotenv: ^10.0.0
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.3.0
+    ethers: ^5.4.6
+    fs: 0.0.1-security
+    prettier: ^2.4.1
     typescript: ^4.4.3
-  checksum: 620b179dda18c3afa339d056cacfd3cb48960b2925a1d403b1c2101aa3e4227d1e6f511c5d0760daafa57b7b4fe1b15fc3833eb9cbaf8655ffff709478e3e195
-  languageName: node
-  linkType: hard
+    web3: ^1.6.1
+  languageName: unknown
+  linkType: soft
 
 "@nomad-xyz/contracts@workspace:.":
   version: 0.0.0-use.local
@@ -833,7 +859,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/core-contracts@workspace:packages/core"
   dependencies:
-    "@nomad-xyz/deploy": 0.1.2
+    "@nomad-xyz/deploy": "workspace:^"
     "@nomiclabs/hardhat-ethers": ^2.0.4
     "@nomiclabs/hardhat-etherscan": ^2.1.2
     "@nomiclabs/hardhat-waffle": ^2.0.1
@@ -860,7 +886,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/deploy@0.1.2, @nomad-xyz/deploy@workspace:packages/deploy":
+"@nomad-xyz/deploy@0.1.2, @nomad-xyz/deploy@workspace:^, @nomad-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/deploy@workspace:packages/deploy"
   dependencies:
@@ -868,7 +894,7 @@ __metadata:
     "@nomad-xyz/bridge-contracts": 1.2.0
     "@nomad-xyz/core-contracts": 1.2.0
     "@nomad-xyz/router-contracts": 1.2.0
-    "@nomad-xyz/sdk": 1.3.2
+    "@nomad-xyz/sdk": ^1.3.2
     "@types/chai": ^4.2.21
     "@types/node": ^17.0.14
     "@typescript-eslint/eslint-plugin": ^4.33.0
@@ -918,6 +944,46 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nomad-xyz/govern-sdk@workspace:packages/sdk-govern":
+  version: 0.0.0-use.local
+  resolution: "@nomad-xyz/govern-sdk@workspace:packages/sdk-govern"
+  dependencies:
+    "@gnosis.pm/safe-core-sdk": ^2.0.0
+    "@gnosis.pm/safe-ethers-adapters": ^0.1.0-alpha.8
+    "@gnosis.pm/safe-ethers-lib": ^1.0.0
+    "@nomad-xyz/sdk": 1.3.6
+    "@types/node": ^16.9.1
+    "@typescript-eslint/eslint-plugin": ^4.33.0
+    "@typescript-eslint/parser": ^4.33.0
+    dotenv: ^10.0.0
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.3.0
+    ethers: ^5.4.6
+    fs: 0.0.1-security
+    prettier: ^2.4.1
+    typescript: ^4.4.3
+    web3: ^1.6.1
+  languageName: unknown
+  linkType: soft
+
+"@nomad-xyz/multi-provider@1.3.6, @nomad-xyz/multi-provider@workspace:packages/multi-provider":
+  version: 0.0.0-use.local
+  resolution: "@nomad-xyz/multi-provider@workspace:packages/multi-provider"
+  dependencies:
+    "@types/node": ^16.9.1
+    "@typescript-eslint/eslint-plugin": ^4.33.0
+    "@typescript-eslint/parser": ^4.33.0
+    dotenv: ^10.0.0
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.3.0
+    ethers: ^5.4.6
+    fs: 0.0.1-security
+    prettier: ^2.4.1
+    typescript: ^4.4.3
+    web3: ^1.6.1
+  languageName: unknown
+  linkType: soft
+
 "@nomad-xyz/router-contracts@1.2.0, @nomad-xyz/router-contracts@workspace:packages/router":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/router-contracts@workspace:packages/router"
@@ -950,18 +1016,23 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk@npm:1.3.2":
-  version: 1.3.2
-  resolution: "@nomad-xyz/sdk@npm:1.3.2"
+"@nomad-xyz/sdk@1.3.6, @nomad-xyz/sdk@^1.3.2, @nomad-xyz/sdk@workspace:packages/sdk":
+  version: 0.0.0-use.local
+  resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@gnosis.pm/safe-core-sdk": ^1.3.0
-    "@gnosis.pm/safe-ethers-adapters": 0.1.0-alpha.7
-    "@nomad-xyz/contract-interfaces": 1.1.1
+    "@nomad-xyz/multi-provider": 1.3.6
+    "@types/node": ^16.9.1
+    "@typescript-eslint/eslint-plugin": ^4.33.0
+    "@typescript-eslint/parser": ^4.33.0
+    dotenv: ^10.0.0
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.3.0
     ethers: ^5.4.6
-    web3: ^1.6.1
-  checksum: 4df5f7136f7bd0bff44760a5073b6d6ad5ad2325b0be5d84724ba70b3af10ddbe07e5074eef70fd2b70087dac6c66b7a4bd3dd280218481a7f9cf2c48a6081e7
-  languageName: node
-  linkType: hard
+    fs: 0.0.1-security
+    prettier: ^2.4.1
+    typescript: ^4.4.3
+  languageName: unknown
+  linkType: soft
 
 "@nomiclabs/hardhat-ethers@npm:^2.0.1, @nomiclabs/hardhat-ethers@npm:^2.0.4":
   version: 2.0.4
@@ -1454,7 +1525,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^16.10.2":
+"@types/node@npm:^16.9.1":
   version: 16.11.22
   resolution: "@types/node@npm:16.11.22"
   checksum: 9d879b9b0427e21a11e3162917553d5bc3c7d68d1ef4aa631512144801fe59bc3b4da5965e7ea7c2db99394487b543d4f2499b318e12392574802ac4f975b7c4
@@ -2231,12 +2302,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^0.21.1, axios@npm:^0.21.3":
+"axios@npm:^0.21.3":
   version: 0.21.4
   resolution: "axios@npm:0.21.4"
   dependencies:
     follow-redirects: ^1.14.0
   checksum: 44245f24ac971e7458f3120c92f9d66d1fc695e8b97019139de5b0cc65d9b8104647db01e5f46917728edfc0cfd88eb30fc4c55e6053eef4ace76768ce95ff3c
+  languageName: node
+  linkType: hard
+
+"axios@npm:^0.25.0":
+  version: 0.25.0
+  resolution: "axios@npm:0.25.0"
+  dependencies:
+    follow-redirects: ^1.14.7
+  checksum: 2a8a3787c05f2a0c9c3878f49782357e2a9f38945b93018fb0c4fd788171c43dceefbb577988628e09fea53952744d1ecebde234b561f1e703aa43e0a598a3ad
   languageName: node
   linkType: hard
 
@@ -5883,6 +5963,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"follow-redirects@npm:^1.14.7":
+  version: 1.14.8
+  resolution: "follow-redirects@npm:1.14.8"
+  peerDependenciesMeta:
+    debug:
+      optional: true
+  checksum: 40c67899c2e3149a27e8b6498a338ff27f39fe138fde8d7f0756cb44b073ba0bfec3d52af28f20c5bdd67263d564d0d8d7b5efefd431de95c18c42f7b4aef457
+  languageName: node
+  linkType: hard
+
 "for-each@npm:^0.3.3, for-each@npm:~0.3.3":
   version: 0.3.3
   resolution: "for-each@npm:0.3.3"
@@ -6070,6 +6160,13 @@ __metadata:
   version: 1.0.0
   resolution: "fs.realpath@npm:1.0.0"
   checksum: 99ddea01a7e75aa276c250a04eedeffe5662bce66c65c07164ad6264f9de18fb21be9433ead460e54cff20e31721c811f4fb5d70591799df5f85dce6d6746fd0
+  languageName: node
+  linkType: hard
+
+"fs@npm:0.0.1-security":
+  version: 0.0.1-security
+  resolution: "fs@npm:0.0.1-security"
+  checksum: 53c6230e1faae9fa32c1df82c16a84b51b1243d20f3da2b64bd110bb472b73b9185169b703e008356e3cdc92d155088b617d9d39a63b5227a30b3621baad7f5d
   languageName: node
   linkType: hard
 
@@ -9729,7 +9826,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^2.1.2, prettier@npm:^2.2.1, prettier@npm:^2.3.1":
+"prettier@npm:^2.1.2, prettier@npm:^2.2.1, prettier@npm:^2.3.1, prettier@npm:^2.4.1":
   version: 2.5.1
   resolution: "prettier@npm:2.5.1"
   bin:
@@ -12573,7 +12670,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web3-core@npm:1.7.0":
+"web3-core@npm:1.7.0, web3-core@npm:^1.7.0":
   version: 1.7.0
   resolution: "web3-core@npm:1.7.0"
   dependencies:
@@ -12956,7 +13053,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web3-utils@npm:1.7.0, web3-utils@npm:^1.0.0-beta.31":
+"web3-utils@npm:1.7.0, web3-utils@npm:^1.0.0-beta.31, web3-utils@npm:^1.7.0":
   version: 1.7.0
   resolution: "web3-utils@npm:1.7.0"
   dependencies:
