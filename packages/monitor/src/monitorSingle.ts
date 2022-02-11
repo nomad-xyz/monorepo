@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { NomadContext } from '@nomad-xyz/sdk';
+import { NomadContext, parseMessage, getEvents } from '@nomad-xyz/sdk';
 import { Home, Replica } from '@nomad-xyz/contract-interfaces/core';
 import Logger from 'bunyan';
 import { RelayLatencyMonitor } from './latencies/relayer/relayerMonitor';
@@ -7,8 +7,6 @@ import { ProcessorLatencyMonitor } from './latencies/processor/processorMonitor'
 import { BridgeHealthMonitor } from './bridgeHealth/healthMonitor';
 import { MetricsCollector } from './metrics';
 import { TypedEvent } from '@nomad-xyz/contract-interfaces/core/commons';
-import { getEvents } from '@nomad-xyz/sdk/nomad/events/fetch';
-import { parseMessage } from '@nomad-xyz/sdk/nomad/messages/NomadMessage';
 import { E2ELatencyMonitor } from './latencies/e2e/e2eMonitor';
 import { MonitorConfig } from './config';
 

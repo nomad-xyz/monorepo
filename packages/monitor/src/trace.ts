@@ -1,4 +1,4 @@
-import {NomadContext, NomadMessage} from '@nomad-xyz/sdk';
+import { BridgeContext, BridgeMessage } from '@nomad-xyz/bridge-sdk';
 import * as contexts from "./registerContext";
 import {printStatus} from "./print";
 
@@ -17,7 +17,7 @@ traceMany(input).then(() => {
 
 interface TraceInput {
   chain: string;
-  context: NomadContext;
+  context: BridgeContext;
   transactionHash: string;
   messageHash?: string;
   leafIndex?: number;
@@ -31,13 +31,13 @@ async function traceMany(inputs: TraceInput[]) {
 }
 
 async function traceTransfer(
-  context: NomadContext,
+  context: BridgeContext,
   origin: string,
   transactionHash: string,
 ) {
   console.log(`Trace ${transactionHash} on ${origin}`);
 
-  const message = await NomadMessage.singleFromTransactionHash(
+  const message = await BridgeMessage.singleFromTransactionHash(
     context,
     origin,
     transactionHash,

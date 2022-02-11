@@ -45,6 +45,9 @@
     },
     {
       "path": "./sdk-bridge"
+    },
+    {
+      "path": "./monitor"
     }
   ]
 }

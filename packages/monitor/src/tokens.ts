@@ -2,16 +2,13 @@ import { dev } from './registerContext';
 import { buildConfig } from './config';
 
 import {
+  BridgeContext,
   AnnotatedSend,
   AnnotatedTokenDeployed,
   TokenDeployedArgs,
   TokenDeployedTypes,
-} from '@nomad-xyz/sdk/nomad/events/bridgeEvents';
-import {
-  NomadContext,
-  queryAnnotatedEvents,
-} from '@nomad-xyz/sdk/nomad';
-import { TSContract } from '@nomad-xyz/sdk/nomad/events/fetch';
+} from '@nomad-xyz/bridge-sdk';
+import { TSContract, queryAnnotatedEvents } from '@nomad-xyz/sdk';
 import { uploadDeployedTokens } from './googleSheets';
 
 export type TokenDetails = {
@@ -24,7 +21,7 @@ export type Deploy = AnnotatedTokenDeployed & { token: TokenDetails };
 export type Send = AnnotatedSend & { token: TokenDetails };
 
 export async function getDomainDeployedTokens(
-  context: NomadContext,
+  context: BridgeContext,
   nameOrDomain: string | number,
 ): Promise<Deploy[]> {
   const domain = context.resolveDomain(nameOrDomain);
@@ -65,7 +62,7 @@ export async function getDomainDeployedTokens(
 }
 
 export async function getDeployedTokens(
-  context: NomadContext,
+  context: BridgeContext,
 ): Promise<Map<number, Deploy[]>> {
   const events = new Map();
   for (const domain of context.domainNumbers) {
@@ -74,7 +71,7 @@ export async function getDeployedTokens(
   return events;
 }
 
-function prettyDeploy(context: NomadContext, deploy: Deploy) {
+function prettyDeploy(context: BridgeContext, deploy: Deploy) {
   const {
     event: {
       args: { domain, id, representation },
@@ -86,7 +83,7 @@ function prettyDeploy(context: NomadContext, deploy: Deploy) {
 }
 
 export async function printDeployedTokens(
-  context: NomadContext,
+  context: BridgeContext,
 ): Promise<void> {
   const deployed = await getDeployedTokens(context);
 
@@ -98,7 +95,7 @@ export async function printDeployedTokens(
 }
 
 export async function persistDeployedTokens(
-  context: NomadContext,
+  context: BridgeContext,
   credentials: string
 ): Promise <void> {
   const deployed = await getDeployedTokens(context);

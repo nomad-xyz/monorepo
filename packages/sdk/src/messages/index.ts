@@ -1,1 +1,1 @@
-export { NomadMessage } from './NomadMessage';
+export * from './NomadMessage';

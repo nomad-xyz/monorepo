@@ -1,5 +1,4 @@
-import { NomadContext } from '@nomad-xyz/sdk';
-import { getEvents } from '@nomad-xyz/sdk/nomad/events/fetch';
+import { NomadContext, getEvents } from '@nomad-xyz/sdk';
 import * as contexts from '../registerContext';
 import { getMonitorMetrics, writeUnprocessedMessages } from '../print';
 import { HealthMetricsCollector } from './healthMetrics';

@@ -20,6 +20,10 @@
   "bugs": {
     "url": "https://github.com/nomad-xyz/monorepo/issues"
   },
+  "files": [
+    "lib/**/*",
+    "src/**/*"
+  ],
   "homepage": "https://github.com/nomad-xyz/monorepo#readme",
   "devDependencies": {
     "@types/node": "^16.9.1",

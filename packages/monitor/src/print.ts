@@ -1,8 +1,9 @@
 import {
   AnnotatedLifecycleEvent,
   MessageStatus,
-} from '@nomad-xyz/sdk/nomad';
-import { NomadContext, NomadStatus } from '@nomad-xyz/sdk';
+  NomadContext,
+  NomadStatus
+} from '@nomad-xyz/sdk'
 import fs from 'fs';
 
 export function blockExplorerURL(

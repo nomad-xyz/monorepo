@@ -1,6 +1,6 @@
 // import * as contexts from "./registerContext";
 // import config from './config';
-//import { ethereum } from '@nomad-xyz/sdk/nomad/domains/mainnet';
+//import { mainnetDomains } from '@nomad-xyz/sdk';
 import { BigNumber, ethers } from 'ethers';
 import moment from 'moment';
 import { plot, Plot } from 'nodeplotlib';

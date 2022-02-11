@@ -1,4 +1,4 @@
-import { dev, mainnet, staging } from '@nomad-xyz/sdk';
+import { dev, mainnet, staging } from '@nomad-xyz/bridge-sdk';
 
 export function setRpcProviders(rpcs: any) {
   // register mainnet
