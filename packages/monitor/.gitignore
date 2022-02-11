@@ -1,0 +1,4 @@
+tsconfig.tsbuildinfo
+credentials.json
+unprocessed/*
+dist/

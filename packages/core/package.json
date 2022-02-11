@@ -1,7 +1,7 @@
 {
   "name": "@nomad-xyz/core-contracts",
   "devDependencies": {
-    "@nomad-xyz/deploy": "0.1.2",
+    "@nomad-xyz/deploy": "workspace:^",
     "@nomiclabs/hardhat-ethers": "^2.0.4",
     "@nomiclabs/hardhat-etherscan": "^2.1.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
@@ -34,7 +34,7 @@
     "bootstrap": "yarn clean && yarn build",
     "clean": "hardhat clean && rm -rf lib && rm -rf src",
     "prepublish": "yarn bootstrap && yarn build",
-    "build": "yarn compile && hardhat prepare-package && tsc && yarn copy-definitions",
+    "build": "yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions",
     "copy-definitions": "cp src/*.d.ts lib/src",
     "prettier": "prettier --write './contracts'",
     "compile": "hardhat compile",

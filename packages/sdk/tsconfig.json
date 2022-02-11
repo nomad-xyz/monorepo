@@ -1,0 +1,22 @@
+{
+  "extends": "../tsconfig.package.json",
+  "compilerOptions": {
+    "outDir": "./lib/",
+    "rootDir": "./src/"
+  },
+  "exclude": ["./node_modules/", "./dist/", "./src/tmp.ts"],
+  "include": [
+    "./src/*.ts",
+    "src/contracts/*.ts",
+    "src/domains/*.ts",
+    "src/events/*.ts",
+    "src/messages/*.ts",
+    "src/tokens/*.ts",
+    "src/govern/*.ts"
+  ],
+  "references": [
+    { "path": "../core" },
+    { "path": "../bridge" },
+    { "path": "../multi-provider" }
+  ]
+}

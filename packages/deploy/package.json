@@ -48,7 +48,7 @@
     "@nomad-xyz/bridge-contracts": "1.2.0",
     "@nomad-xyz/core-contracts": "1.2.0",
     "@nomad-xyz/router-contracts": "1.2.0",
-    "@nomad-xyz/sdk": "1.3.2",
+    "@nomad-xyz/sdk": "^1.3.2",
     "axios": "^0.21.3",
     "chai": "^4.3.4"
   },

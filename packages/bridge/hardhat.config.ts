@@ -63,7 +63,13 @@ module.exports = {
   // config for hardhat-packager
   // https://www.npmjs.com/package/hardhat-packager
   packager: {
-    contracts: ["BridgeRouter", "BridgeToken", "ETHHelper", "TokenRegistry"],
+    contracts: [
+      "BridgeRouter",
+      "BridgeToken",
+      "ETHHelper",
+      "TokenRegistry",
+      "ERC20",
+    ],
     includeFactories: true,
   },
 

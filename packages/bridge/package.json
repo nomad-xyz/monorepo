@@ -32,7 +32,7 @@
     "bootstrap": "yarn clean && yarn build",
     "clean": "hardhat clean && rm -rf lib && rm -rf src",
     "prepublish": "yarn bootstrap && yarn build",
-    "build": "yarn compile && hardhat prepare-package && tsc && yarn copy-definitions",
+    "build": "yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions",
     "copy-definitions": "cp src/*.d.ts lib/src",
     "prettier": "prettier --write './contracts'",
     "compile": "hardhat compile",

@@ -1,0 +1,20 @@
+{
+  "extends": "../tsconfig.package.json",
+  "compilerOptions": {
+    "outDir": "./lib/",
+    "rootDir": "./src/"
+  },
+  "exclude": [
+    "./node_modules/",
+    "./dist/",
+    "./src/tmp.ts",
+    "./src/sendCoins.ts"
+  ],
+  "include": ["./src/*.ts", "./src/tokens/*.ts"],
+  "references": [
+    { "path": "../core" },
+    { "path": "../bridge" },
+    { "path": "../multi-provider" },
+    { "path": "../sdk" }
+  ]
+}

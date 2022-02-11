@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "monitor.fullname" . }}-moonbasealpha-relayer
+  labels:
+    {{- include "monitor.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "monitor.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "monitor.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes: 
+      - name: monitor-config
+        configMap:
+          name: {{.Release.Name}}-config
+      containers:
+      - name: {{ .Chart.Name }}-relayer
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["npm", "run", "relayer", "moonbasealpha"]
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        env: 
+          - name: CONFIG_PATH
+            value: /code/config/.env
+        ports: 
+        - name: metrics
+          containerPort: 9090
+        volumeMounts: 
+        - name: monitor-config
+          mountPath: /code/config
