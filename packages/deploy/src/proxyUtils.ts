@@ -3,9 +3,8 @@ import { BytesLike, ethers } from 'ethers';
 import contracts from '@nomad-xyz/core-contracts';
 import { CoreDeploy } from './core/CoreDeploy';
 import { BridgeDeploy } from './bridge/BridgeDeploy';
-import TestBridgeDeploy from './bridge/TestBridgeDeploy';
 
-type Deploy = CoreDeploy | BridgeDeploy | TestBridgeDeploy;
+type Deploy = CoreDeploy | BridgeDeploy;
 
 type ProxyNames =
   | 'Home'

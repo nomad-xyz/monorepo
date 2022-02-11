@@ -1,4 +1,4 @@
-import { NomadDomain } from '@nomad-xyz/sdk/nomad';
+import { NomadDomain } from '@nomad-xyz/sdk';
 import { BridgeDeploy } from '../bridge/BridgeDeploy';
 import { CoreDeploy } from '../core/CoreDeploy';
 import {

@@ -11,7 +11,7 @@ import { CoreContracts } from './CoreContracts';
 import { Deploy } from '../deploy';
 import { BigNumberish } from '@ethersproject/bignumber';
 import fs from 'fs';
-import { NomadDomain } from '@nomad-xyz/sdk/nomad';
+import { NomadDomain } from '@nomad-xyz/sdk';
 import { ethers } from 'ethers';
 
 type Address = string;
@@ -36,8 +36,8 @@ export type CoreConfig = {
 export class CoreDeploy extends Deploy<CoreContracts> {
   config: CoreConfig;
 
-  constructor(chain: Chain, config: CoreConfig, test = false) {
-    super(chain, new CoreContracts(), test);
+  constructor(chain: Chain, config: CoreConfig) {
+    super(chain, new CoreContracts());
     this.config = config;
   }
 
@@ -189,9 +189,8 @@ export class ExistingCoreDeploy extends CoreDeploy {
     config: CoreConfig,
     addresses: CoreDeployAddresses,
     signer?: ethers.Signer,
-    test = false,
   ) {
-    super(chain, config, test);
+    super(chain, config);
     this.contracts = CoreContracts.fromAddresses(
       addresses,
       signer || chain.provider,
@@ -203,11 +202,10 @@ export class ExistingCoreDeploy extends CoreDeploy {
     config: CoreConfig,
     path: string,
     signer?: ethers.Signer,
-    test = false,
   ): ExistingCoreDeploy {
     const addresses: CoreDeployAddresses = JSON.parse(
       fs.readFileSync(`${path}/${chain.name}_contracts.json`) as any as string,
     );
-    return new ExistingCoreDeploy(chain, config, addresses, signer, test);
+    return new ExistingCoreDeploy(chain, config, addresses, signer);
   }
 }

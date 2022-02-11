@@ -2,14 +2,12 @@ import { expect } from 'chai';
 
 import { assertBeaconProxy } from '../core/checks';
 import { BridgeDeploy as Deploy } from './BridgeDeploy';
-import TestBridgeDeploy from './TestBridgeDeploy';
 import { checkVerificationInput } from '../core/checks';
-import { AnyBridgeDeploy } from '.';
 
 const emptyAddr = '0x' + '00'.repeat(32);
 
 export async function checkBridgeDeployValues(
-  deploy: Deploy | TestBridgeDeploy,
+  deploy: Deploy,
   remotes: number[],
 ) {
   assertBeaconProxy(deploy.contracts.bridgeToken!);
@@ -77,7 +75,7 @@ export async function checkBridgeDeployValues(
 }
 
 /// Check bridge connections for an n-to-n setup (all connected to all)
-export async function checkBridgeConnections(deploys: AnyBridgeDeploy[]) {
+export async function checkBridgeConnections(deploys: Deploy[]) {
   for (const deploy of deploys) {
     const bridgeRouter = deploy.contracts.bridgeRouter?.proxy!;
     const remotes = deploys.filter(
@@ -94,8 +92,8 @@ export async function checkBridgeConnections(deploys: AnyBridgeDeploy[]) {
 
 /// Check bridge connections for an hub and spoke setup
 export async function checkHubAndSpokeBridgeConnections(
-  hub: AnyBridgeDeploy,
-  spokes: AnyBridgeDeploy[],
+  hub: Deploy,
+  spokes: Deploy[],
 ) {
   const hubRouter = hub.contracts.bridgeRouter?.proxy!;
   for (const spoke of spokes) {

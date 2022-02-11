@@ -6,13 +6,10 @@ import {
 } from './checks';
 import * as xAppContracts from '@nomad-xyz/bridge-contracts';
 import fs from 'fs';
-import { BridgeDeploy } from './BridgeDeploy';
-import TestBridgeDeploy from './TestBridgeDeploy';
+import { BridgeDeploy as Deploy } from './BridgeDeploy';
 import assert from 'assert';
 import { getPathToBridgeConfigFromCore } from '../verification/readDeployOutput';
-import { canonizeId } from '@nomad-xyz/sdk/utils';
-
-export type AnyBridgeDeploy = BridgeDeploy | TestBridgeDeploy;
+import { utils as mpUtils } from '@nomad-xyz/multi-provider';
 
 export type BridgeDeployOutput = {
   bridgeRouter?: string;
@@ -25,9 +22,7 @@ export type BridgeDeployOutput = {
  *
  * @param deploys - The list of deploy instances for each chain
  */
-export async function deployBridgesComplete(deploys: AnyBridgeDeploy[]) {
-  const isTestDeploy: boolean = deploys.filter((c) => c.test).length > 0;
-
+export async function deployBridgesComplete(deploys: Deploy[]) {
   // deploy BridgeTokens & BridgeRouters
   await Promise.all(
     deploys.map(async (deploy) => {
@@ -67,11 +62,9 @@ export async function deployBridgesComplete(deploys: AnyBridgeDeploy[]) {
 
   await checkBridgeConnections(deploys);
 
-  if (!isTestDeploy) {
-    // output the Bridge deploy information to a subdirectory
-    // of the core system deploy config folder
-    writeBridgeDeployOutput(deploys);
-  }
+  // output the Bridge deploy information to a subdirectory
+  // of the core system deploy config folder
+  writeBridgeDeployOutput(deploys);
 }
 
 /**
@@ -82,11 +75,10 @@ export async function deployBridgesComplete(deploys: AnyBridgeDeploy[]) {
  * @param deploys - The list of deploy instances for each chain
  */
 export async function deployBridgesHubAndSpoke(
-  hub: AnyBridgeDeploy,
-  spokes: AnyBridgeDeploy[],
+  hub: Deploy,
+  spokes: Deploy[],
 ) {
-  const deploys: AnyBridgeDeploy[] = [hub, ...spokes];
-  const isTestDeploy: boolean = deploys.filter((c) => c.test).length > 0;
+  const deploys: Deploy[] = [hub, ...spokes];
 
   // deploy BridgeTokens & BridgeRouters
   await Promise.all(
@@ -130,11 +122,9 @@ export async function deployBridgesHubAndSpoke(
 
   await checkHubAndSpokeBridgeConnections(hub, spokes);
 
-  if (!isTestDeploy) {
-    // output the Bridge deploy information to a subdirectory
-    // of the core system deploy config folder
-    writeBridgeDeployOutput(deploys);
-  }
+  // output the Bridge deploy information to a subdirectory
+  // of the core system deploy config folder
+  writeBridgeDeployOutput(deploys);
 }
 
 /**
@@ -145,8 +135,8 @@ export async function deployBridgesHubAndSpoke(
  * @param deploys - The list of deploy instances for each chain
  */
 export async function deployNewChainBridge(
-  newDeploy: BridgeDeploy,
-  hubDeploy: BridgeDeploy,
+  newDeploy: Deploy,
+  hubDeploy: Deploy,
 ) {
   // deploy BridgeToken & BridgeRouter
   await deployTokenUpgradeBeacon(newDeploy);
@@ -174,7 +164,7 @@ export async function deployNewChainBridge(
  *
  * @param deploy - The deploy instance
  */
-export async function deployTokenUpgradeBeacon(deploy: AnyBridgeDeploy) {
+export async function deployTokenUpgradeBeacon(deploy: Deploy) {
   console.log(`deploying ${deploy.chain.name} Token Upgrade Beacon`);
 
   // no initialize function called
@@ -197,7 +187,7 @@ export async function deployTokenUpgradeBeacon(deploy: AnyBridgeDeploy) {
  *
  * @param deploy - The deploy instance
  */
-export async function deployTokenRegistry(deploy: AnyBridgeDeploy) {
+export async function deployTokenRegistry(deploy: Deploy) {
   console.log(`deploying ${deploy.chain.name} TokenRegistry`);
 
   const initData =
@@ -235,7 +225,7 @@ export async function deployTokenRegistry(deploy: AnyBridgeDeploy) {
  *
  * @param deploy - The deploy instance
  */
-export async function deployBridgeRouter(deploy: AnyBridgeDeploy) {
+export async function deployBridgeRouter(deploy: Deploy) {
   console.log(`deploying ${deploy.chain.name} BridgeRouter`);
 
   const initData =
@@ -274,7 +264,7 @@ export async function deployBridgeRouter(deploy: AnyBridgeDeploy) {
  *
  * @param deploy - The deploy instance for the chain on which to deploy the contract
  */
-export async function deployEthHelper(deploy: AnyBridgeDeploy) {
+export async function deployEthHelper(deploy: Deploy) {
   if (!deploy.config.weth) {
     console.log(`skipping ${deploy.chain.name} EthHelper deploy`);
     return;
@@ -312,8 +302,8 @@ export async function deployEthHelper(deploy: AnyBridgeDeploy) {
  * @param allDeploys - Array of all deploy instances for the Bridge deploy
  */
 export async function enrollAllBridgeRouters(
-  deploy: AnyBridgeDeploy,
-  allDeploys: AnyBridgeDeploy[],
+  deploy: Deploy,
+  allDeploys: Deploy[],
 ) {
   for (const remoteDeploy of allDeploys) {
     if (deploy.chain.domain != remoteDeploy.chain.domain) {
@@ -330,8 +320,8 @@ export async function enrollAllBridgeRouters(
  * @param remote - The deploy instance for the chain to enroll on the local router
  */
 export async function enrollBridgeRouter(
-  local: AnyBridgeDeploy,
-  remote: AnyBridgeDeploy,
+  local: Deploy,
+  remote: Deploy,
 ) {
   console.log(
     `enrolling ${remote.chain.name} BridgeRouter on ${local.chain.name}`,
@@ -339,7 +329,7 @@ export async function enrollBridgeRouter(
 
   const tx = await local.contracts.bridgeRouter!.proxy.enrollRemoteRouter(
     remote.chain.domain,
-    canonizeId(remote.contracts.bridgeRouter!.proxy.address),
+    mpUtils.canonizeId(remote.contracts.bridgeRouter!.proxy.address),
     local.overrides,
   );
 
@@ -356,7 +346,7 @@ export async function enrollBridgeRouter(
  *
  * @param deploy - The deploy instance for the chain
  */
-export async function transferOwnershipOfBridge(deploy: AnyBridgeDeploy) {
+export async function transferOwnershipOfBridge(deploy: Deploy) {
   // Transfer Ownership of TokenRegistry to BridgeRouter
   console.log(`transfer ownership of ${deploy.chain.name} TokenRegistry`);
 
@@ -382,7 +372,7 @@ export async function transferOwnershipOfBridge(deploy: AnyBridgeDeploy) {
   console.log(`transferred ownership of ${deploy.chain.name} BridgeRouter`);
 }
 
-function buildSDK(deploy: AnyBridgeDeploy) {
+function buildSDK(deploy: Deploy) {
   const config = {
     bridgeRouter: deploy.contracts.bridgeRouter?.proxy!.address,
     tokenRegistry: deploy.contracts.tokenRegistry?.proxy!.address,
@@ -396,7 +386,7 @@ function buildSDK(deploy: AnyBridgeDeploy) {
  *
  * @param deploys - The array of bridge deploys
  */
-export function writeBridgeDeployOutput(deploys: AnyBridgeDeploy[]) {
+export function writeBridgeDeployOutput(deploys: Deploy[]) {
   console.log(`Have ${deploys.length} bridge deploys`);
   if (deploys.length == 0) {
     return;

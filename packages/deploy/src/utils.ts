@@ -1,4 +1,4 @@
-import { canonizeId } from '@nomad-xyz/sdk/utils';
+import { utils as mpUtils } from '@nomad-xyz/multi-provider';
 import * as ethers from 'ethers';
 
 /*
@@ -32,7 +32,7 @@ export function formatCall(
   );
 
   return {
-    to: canonizeId(destinationContract.address),
+    to: mpUtils.canonizeId(destinationContract.address),
     data: data,
   };
 }

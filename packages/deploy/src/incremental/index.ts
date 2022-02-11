@@ -1,6 +1,7 @@
-import { NomadContext } from '@nomad-xyz/sdk/';
-import { CallBatch } from '@nomad-xyz/sdk/nomad';
-import { canonizeId } from '@nomad-xyz/sdk/utils';
+// import { NomadContext } from '@nomad-xyz/sdk';
+import { BridgeContext } from '@nomad-xyz/bridge-sdk'
+import { CallBatch } from '@nomad-xyz/govern-sdk';
+import { utils as mpUtils } from '@nomad-xyz/multi-provider';
 import { CoreConfig } from '../core/CoreDeploy';
 import { writeBatchOutput } from './utils';
 
@@ -13,7 +14,7 @@ import { writeBatchOutput } from './utils';
  * @param watchers set of watchers to be enrolled
  */
 export async function enrollSpoke(
-  sdk: NomadContext,
+  sdk: BridgeContext,
   spokeDomain: number,
   spokeConfig: CoreConfig,
 ): Promise<void> {
@@ -49,14 +50,14 @@ export async function enrollSpoke(
   const setRouterCall =
     await hubCore.governanceRouter.populateTransaction.setRouterLocal(
       spokeDomain,
-      canonizeId(spokeCore.governanceRouter.address),
+      mpUtils.canonizeId(spokeCore.governanceRouter.address),
     );
   batch.pushLocal(setRouterCall);
   // enroll bridge
   const enrollBridgeCall =
     await hubBridge.bridgeRouter.populateTransaction.enrollRemoteRouter(
       spokeDomain,
-      canonizeId(spokeBridge.bridgeRouter.address),
+      mpUtils.canonizeId(spokeBridge.bridgeRouter.address),
     );
   batch.pushLocal(enrollBridgeCall);
 

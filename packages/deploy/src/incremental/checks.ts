@@ -1,9 +1,9 @@
-import { NomadContext } from '@nomad-xyz/sdk/';
+import { BridgeContext } from '@nomad-xyz/bridge-sdk';
 import { expect, AssertionError } from 'chai';
 import { Waiter } from './utils';
 
 export async function checkHubAndSpokeConnections(
-  sdk: NomadContext,
+  sdk: BridgeContext,
   spokeDomain: number,
   watchers: string[],
 ) {
@@ -60,7 +60,7 @@ export async function checkHubAndSpokeConnections(
 }
 
 export async function checkHubToSpokeConnectionWithWaiter(
-  sdk: NomadContext,
+  sdk: BridgeContext,
   spokeDomain: number,
   watchers: string[],
 ): Promise<void> {

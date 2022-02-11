@@ -6,33 +6,13 @@ import { CoreDeploy } from './CoreDeploy';
 import * as contracts from '@nomad-xyz/core-contracts';
 import { checkCoreDeploy } from './checks';
 import { getPathToDeployConfig } from '../verification/readDeployOutput';
-import { canonizeId } from '@nomad-xyz/sdk/utils';
+import { utils as mpUtils } from '@nomad-xyz/multi-provider';
 
-function log(isTest: boolean, str: string) {
-  if (!isTest) {
-    console.log(str);
-  }
-}
-
-function warn(text: string, padded = false) {
-  if (padded) {
-    const padding = '*'.repeat(text.length + 8);
-    console.log(
-      `
-      ${padding}
-      *** ${text.toUpperCase()} ***
-      ${padding}
-      `,
-    );
-  } else {
-    console.log(`**** ${text.toUpperCase()} ****`);
-  }
+function log(str: string) {
+  console.log(str);
 }
 
 function getGovernorDeploy(deploys: CoreDeploy[]): CoreDeploy {
-  const isTest: boolean = deploys.filter((c) => c.test).length > 0;
-  if (isTest) return deploys[0];
-
   const govDeploy = deploys.find((d) => d.config.governor != undefined);
   if (!govDeploy)
     throw new Error(
@@ -43,9 +23,6 @@ function getGovernorDeploy(deploys: CoreDeploy[]): CoreDeploy {
 }
 
 function getNonGovernorDeploys(deploys: CoreDeploy[]): CoreDeploy[] {
-  const isTest: boolean = deploys.filter((c) => c.test).length > 0;
-  if (isTest) return deploys.slice(1);
-
   return deploys.filter((d) => d.config.governor == undefined);
 }
 
@@ -100,13 +77,8 @@ export async function deployUpdaterManager(deploy: CoreDeploy) {
  * @param deploy - The deploy instance
  */
 export async function deployXAppConnectionManager(deploy: CoreDeploy) {
-  const isTestDeploy: boolean = deploy.test;
-  if (isTestDeploy) warn('deploying test XAppConnectionManager');
-
   const deployer = deploy.deployer;
-  const factory = isTestDeploy
-    ? new contracts.TestXAppConnectionManager__factory(deployer)
-    : new contracts.XAppConnectionManager__factory(deployer);
+  const factory = new contracts.XAppConnectionManager__factory(deployer);
 
   deploy.contracts.xAppConnectionManager = await factory.deploy(
     deploy.overrides,
@@ -130,11 +102,7 @@ export async function deployXAppConnectionManager(deploy: CoreDeploy) {
  * @param deploy - The deploy instance
  */
 export async function deployHome(deploy: CoreDeploy) {
-  const isTestDeploy: boolean = deploy.test;
-  if (isTestDeploy) warn('deploying test Home');
-  const homeFactory = isTestDeploy
-    ? contracts.TestHome__factory
-    : contracts.Home__factory;
+  const homeFactory = contracts.Home__factory;
 
   const { updaterManager } = deploy.contracts;
   const initData = homeFactory
@@ -157,11 +125,7 @@ export async function deployHome(deploy: CoreDeploy) {
  * @param deploy - The deploy instance
  */
 export async function deployGovernanceRouter(deploy: CoreDeploy) {
-  const isTestDeploy: boolean = deploy.test;
-  if (isTestDeploy) warn('deploying test GovernanceRouter');
-  const governanceRouter = isTestDeploy
-    ? contracts.TestGovernanceRouter__factory
-    : contracts.GovernanceRouter__factory;
+  const governanceRouter = contracts.GovernanceRouter__factory;
 
   const { xAppConnectionManager } = deploy.contracts;
   const recoveryManager = deploy.config.recoveryManager;
@@ -196,12 +160,7 @@ export async function deployUnenrolledReplica(
   local: CoreDeploy,
   remote: CoreDeploy,
 ) {
-  const isTestDeploy: boolean = remote.test;
-  if (isTestDeploy) warn('deploying test Replica');
-
-  const replica = isTestDeploy
-    ? contracts.TestReplica__factory
-    : contracts.Replica__factory;
+  const replica = contracts.Replica__factory;
 
   const initData = replica.createInterface().encodeFunctionData('initialize', [
     remote.chain.domain,
@@ -215,7 +174,6 @@ export async function deployUnenrolledReplica(
   let proxy;
   if (Object.keys(local.contracts.replicas).length === 0) {
     log(
-      isTestDeploy,
       `${local.chain.name}: deploying initial Replica for ${remote.chain.name}`,
     );
     proxy = await proxyUtils.deployProxy<contracts.Replica>(
@@ -229,7 +187,6 @@ export async function deployUnenrolledReplica(
     );
   } else {
     log(
-      isTestDeploy,
       `${local.chain.name}: deploying additional Replica for ${remote.chain.name}`,
     );
     const prev = Object.entries(local.contracts.replicas)[0][1];
@@ -242,7 +199,6 @@ export async function deployUnenrolledReplica(
   }
   local.contracts.replicas[remote.chain.domain] = proxy;
   log(
-    isTestDeploy,
     `${local.chain.name}: replica deployed for ${remote.chain.name}`,
   );
 }
@@ -254,31 +210,23 @@ export async function deployUnenrolledReplica(
  * @param deploy - The deploy instance
  */
 export async function deployNomad(deploy: CoreDeploy) {
-  const isTestDeploy: boolean = deploy.test;
-  if (isTestDeploy) {
-    warn('deploying test contracts', true);
-  }
-
-  log(isTestDeploy, `${deploy.chain.name}: awaiting deploy UBC(deploy);`);
+  log(`${deploy.chain.name}: awaiting deploy UBC(deploy);`);
   await deployUpgradeBeaconController(deploy);
 
   log(
-    isTestDeploy,
     `${deploy.chain.name}: awaiting deploy UpdaterManager(deploy);`,
   );
   await deployUpdaterManager(deploy);
 
   log(
-    isTestDeploy,
     `${deploy.chain.name}: awaiting deploy XappConnectionManager(deploy);`,
   );
   await deployXAppConnectionManager(deploy);
 
-  log(isTestDeploy, `${deploy.chain.name}: awaiting deploy Home(deploy);`);
+  log(`${deploy.chain.name}: awaiting deploy Home(deploy);`);
   await deployHome(deploy);
 
   log(
-    isTestDeploy,
     `${deploy.chain.name}: awaiting XAppConnectionManager.setHome(...);`,
   );
   await deploy.contracts.xAppConnectionManager!.setHome(
@@ -287,7 +235,6 @@ export async function deployNomad(deploy: CoreDeploy) {
   );
 
   log(
-    isTestDeploy,
     `${deploy.chain.name}: awaiting updaterManager.setHome(...);`,
   );
   await deploy.contracts.updaterManager!.setHome(
@@ -296,12 +243,11 @@ export async function deployNomad(deploy: CoreDeploy) {
   );
 
   log(
-    isTestDeploy,
     `${deploy.chain.name}: awaiting deploy GovernanceRouter(deploy);`,
   );
   await deployGovernanceRouter(deploy);
 
-  log(isTestDeploy, `${deploy.chain.name}: initial chain deploy completed`);
+  log(`${deploy.chain.name}: initial chain deploy completed`);
 }
 
 /**
@@ -310,17 +256,15 @@ export async function deployNomad(deploy: CoreDeploy) {
  * @param deploy - The deploy instance
  */
 export async function relinquish(deploy: CoreDeploy) {
-  const isTestDeploy = deploy.test;
   const govRouter = await deploy.contracts.governance!.proxy.address;
 
-  log(isTestDeploy, `${deploy.chain.name}: Relinquishing control`);
+  log(`${deploy.chain.name}: Relinquishing control`);
   await deploy.contracts.updaterManager!.transferOwnership(
     govRouter,
     deploy.overrides,
   );
 
   log(
-    isTestDeploy,
     `${deploy.chain.name}: Dispatched relinquish updatermanager`,
   );
 
@@ -330,7 +274,6 @@ export async function relinquish(deploy: CoreDeploy) {
   );
 
   log(
-    isTestDeploy,
     `${deploy.chain.name}: Dispatched relinquish XAppConnectionManager`,
   );
 
@@ -340,7 +283,6 @@ export async function relinquish(deploy: CoreDeploy) {
   );
 
   log(
-    isTestDeploy,
     `${deploy.chain.name}: Dispatched relinquish upgradeBeaconController`,
   );
 
@@ -350,7 +292,6 @@ export async function relinquish(deploy: CoreDeploy) {
     const replica = replicaEntry[1];
     await replica!.proxy.transferOwnership(govRouter, deploy.overrides);
     log(
-      isTestDeploy,
       `${deploy.chain.name}: Dispatched relinquish Replica for ${remoteDomain}`,
     );
   }
@@ -360,10 +301,10 @@ export async function relinquish(deploy: CoreDeploy) {
     deploy.overrides,
   );
 
-  log(isTestDeploy, `${deploy.chain.name}: Dispatched relinquish home`);
+  log(`${deploy.chain.name}: Dispatched relinquish home`);
 
   await tx.wait(deploy.chain.confirmations);
-  log(isTestDeploy, `${deploy.chain.name}: Control relinquished`);
+  log(`${deploy.chain.name}: Control relinquished`);
 }
 
 /**
@@ -373,8 +314,7 @@ export async function relinquish(deploy: CoreDeploy) {
  * @param remote - The remote deploy instance
  */
 export async function enrollReplica(local: CoreDeploy, remote: CoreDeploy) {
-  const isTestDeploy = local.test;
-  log(isTestDeploy, `${local.chain.name}: starting replica enrollment`);
+  log(`${local.chain.name}: starting replica enrollment`);
 
   const tx = await local.contracts.xAppConnectionManager!.ownerEnrollReplica(
     local.contracts.replicas[remote.chain.domain].proxy.address,
@@ -383,7 +323,7 @@ export async function enrollReplica(local: CoreDeploy, remote: CoreDeploy) {
   );
   await tx.wait(local.chain.confirmations);
 
-  log(isTestDeploy, `${local.chain.name}: replica enrollment done`);
+  log(`${local.chain.name}: replica enrollment done`);
 }
 
 /**
@@ -393,8 +333,7 @@ export async function enrollReplica(local: CoreDeploy, remote: CoreDeploy) {
  * @param remote - The remote deploy instance
  */
 export async function enrollWatchers(left: CoreDeploy, right: CoreDeploy) {
-  const isTestDeploy = left.test;
-  log(isTestDeploy, `${left.chain.name}: starting watcher enrollment`);
+  log(`${left.chain.name}: starting watcher enrollment`);
 
   await Promise.all(
     left.config.watchers.map(async (watcher) => {
@@ -409,7 +348,7 @@ export async function enrollWatchers(left: CoreDeploy, right: CoreDeploy) {
     }),
   );
 
-  log(isTestDeploy, `${left.chain.name}: watcher enrollment done`);
+  log(`${left.chain.name}: watcher enrollment done`);
 }
 
 /**
@@ -422,19 +361,16 @@ export async function enrollGovernanceRouter(
   local: CoreDeploy,
   remote: CoreDeploy,
 ) {
-  const isTestDeploy = local.test;
   log(
-    isTestDeploy,
     `${local.chain.name}: starting enroll ${remote.chain.name} governance router`,
   );
   const tx = await local.contracts.governance!.proxy.setRouterLocal(
     remote.chain.domain,
-    canonizeId(remote.contracts.governance!.proxy.address),
+    mpUtils.canonizeId(remote.contracts.governance!.proxy.address),
     local.overrides,
   );
   await tx.wait(local.chain.confirmations);
   log(
-    isTestDeploy,
     `${local.chain.name}: enrolled ${remote.chain.name} governance router`,
   );
 }
@@ -459,7 +395,7 @@ export async function enrollRemote(local: CoreDeploy, remote: CoreDeploy) {
  * @param non - The non-governor chain deploy instance
  */
 export async function transferGovernorship(gov: CoreDeploy, non: CoreDeploy) {
-  log(gov.test, `${non.chain.name}: transferring governorship`);
+  log(`${non.chain.name}: transferring governorship`);
   const governorAddress = await gov.contracts.governance!.proxy.governor();
   const tx = await non.contracts.governance!.proxy.transferGovernor(
     gov.chain.domain,
@@ -467,7 +403,7 @@ export async function transferGovernorship(gov: CoreDeploy, non: CoreDeploy) {
     non.overrides,
   );
   await tx.wait(non.chain.confirmations);
-  log(gov.test, `${non.chain.name}: governorship transferred`);
+  log(`${non.chain.name}: governorship transferred`);
 }
 
 /**
@@ -480,7 +416,6 @@ export async function appointGovernor(gov: CoreDeploy) {
   const governor = gov.config.governor;
   if (governor) {
     log(
-      gov.test,
       `${gov.chain.name}: transferring root governorship to ${governor.domain}:${governor.address}`,
     );
     const tx = await gov.contracts.governance!.proxy.transferGovernor(
@@ -489,7 +424,7 @@ export async function appointGovernor(gov: CoreDeploy) {
       gov.overrides,
     );
     await tx.wait(gov.chain.confirmations);
-    log(gov.test, `${gov.chain.name}: root governorship transferred`);
+    log(`${gov.chain.name}: root governorship transferred`);
   }
 }
 
@@ -502,38 +437,34 @@ export async function appointGovernor(gov: CoreDeploy) {
  * @param non - The non-governor chain deploy instance
  */
 export async function deployTwoChains(gov: CoreDeploy, non: CoreDeploy) {
-  const isTestDeploy: boolean = gov.test || non.test;
-
-  log(isTestDeploy, 'Beginning Two Chain deploy process');
-  log(isTestDeploy, `Deploy env is ${gov.config.environment}`);
-  log(isTestDeploy, `${gov.chain.name} is governing`);
+  log('Beginning Two Chain deploy process');
+  log(`Deploy env is ${gov.config.environment}`);
+  log(`${gov.chain.name} is governing`);
   log(
-    isTestDeploy,
     `Updater for ${gov.chain.name} Home is ${gov.config.updater}`,
   );
   log(
-    isTestDeploy,
     `Updater for ${non.chain.name} Home is ${non.config.updater}`,
   );
 
-  log(isTestDeploy, 'awaiting provider ready');
+  log('awaiting provider ready');
   await Promise.all([gov.ready(), non.ready()]);
-  log(isTestDeploy, 'done readying');
+  log('done readying');
 
   await Promise.all([deployNomad(gov), deployNomad(non)]);
 
-  log(isTestDeploy, 'initial deploys done');
+  log('initial deploys done');
 
   await Promise.all([
     deployUnenrolledReplica(gov, non),
     deployUnenrolledReplica(non, gov),
   ]);
 
-  log(isTestDeploy, 'replica deploys done');
+  log('replica deploys done');
 
   await Promise.all([enrollReplica(gov, non), enrollReplica(non, gov)]);
 
-  log(isTestDeploy, 'replica enrollment done');
+  log('replica enrollment done');
 
   await Promise.all([enrollWatchers(gov, non), enrollWatchers(non, gov)]);
 
@@ -543,7 +474,7 @@ export async function deployTwoChains(gov: CoreDeploy, non: CoreDeploy) {
   ]);
 
   if (gov.config.governor) {
-    log(isTestDeploy, `appoint governor: ${gov.config.governor}`);
+    log(`appoint governor: ${gov.config.governor}`);
     await appointGovernor(gov);
   }
 
@@ -557,9 +488,7 @@ export async function deployTwoChains(gov: CoreDeploy, non: CoreDeploy) {
   await checkCoreDeploy(gov, [nonDomain], govDomain);
   await checkCoreDeploy(non, [govDomain], govDomain);
 
-  if (!isTestDeploy) {
-    writeDeployOutput([gov, non]);
-  }
+  writeDeployOutput([gov, non]);
 }
 
 function containsDuplicateDomains(array: any): boolean {
@@ -589,15 +518,11 @@ export async function deployComplete(deploys: CoreDeploy[]) {
     throw new Error('Must pass at least one deploy config');
   }
 
-  // there exists any chain marked test
-  const isTestDeploy: boolean = deploys.filter((c) => c.test).length > 0;
-
-  log(isTestDeploy, `Beginning ${deploys.length} Chain deploy process`);
-  log(isTestDeploy, `Deploy env is ${deploys[0].config.environment}`);
-  log(isTestDeploy, `${deploys[0].chain.name} is governing`);
+  log(`Beginning ${deploys.length} Chain deploy process`);
+  log(`Deploy env is ${deploys[0].config.environment}`);
+  log(`${deploys[0].chain.name} is governing`);
   deploys.forEach((deploy) => {
     log(
-      isTestDeploy,
       `Updater for ${deploy.chain.name} Home is ${deploy.config.updater}`,
     );
   });
@@ -605,13 +530,13 @@ export async function deployComplete(deploys: CoreDeploy[]) {
   const govChain = getGovernorDeploy(deploys);
   const nonGovChains = getNonGovernorDeploys(deploys);
 
-  log(isTestDeploy, 'awaiting provider ready');
+  log('awaiting provider ready');
   await Promise.all([
     deploys.map(async (deploy) => {
       await deploy.ready();
     }),
   ]);
-  log(isTestDeploy, 'done readying');
+  log('done readying');
 
   // store block numbers for each chain, so that agents know where to start
   await Promise.all(deploys.map((d) => d.recordFromBlock()));
@@ -634,12 +559,10 @@ export async function deployComplete(deploys: CoreDeploy[]) {
     );
     for (const remote of remotes) {
       log(
-        isTestDeploy,
         `connecting ${remote.chain.name} on ${local.chain.name}`,
       );
       await enrollRemote(local, remote);
       log(
-        isTestDeploy,
         `connected ${remote.chain.name} on ${local.chain.name}`,
       );
     }
@@ -648,7 +571,6 @@ export async function deployComplete(deploys: CoreDeploy[]) {
   // appoint the configured governance account as governor
   if (govChain.config.governor) {
     log(
-      isTestDeploy,
       `appoint governor: ${govChain.config.governor.address} at ${govChain.config.governor.domain}`,
     );
     await appointGovernor(govChain);
@@ -676,9 +598,7 @@ export async function deployComplete(deploys: CoreDeploy[]) {
   }
 
   // write config outputs
-  if (!isTestDeploy) {
-    writeDeployOutput(deploys);
-  }
+  writeDeployOutput(deploys);
 }
 
 /**
@@ -708,40 +628,34 @@ export async function deployHubAndSpoke(hub: CoreDeploy, spokes: CoreDeploy[]) {
     );
   }
 
-  // there exists any chain marked test
-  const isTestDeploy: boolean = deploys.filter((c) => c.test).length > 0;
-
-  log(isTestDeploy, 'awaiting provider ready');
+  log('awaiting provider ready');
   await Promise.all([
     deploys.map(async (deploy) => {
       await deploy.ready();
     }),
   ]);
-  log(isTestDeploy, 'done readying');
+  log('done readying');
 
   log(
-    isTestDeploy,
     `Beginning 1 Hub, ${spokes.length} Spoke${
       spokes.length > 1 ? 's' : ''
     } deploy process`,
   );
-  log(isTestDeploy, `Deploy env is ${hub.config.environment}`);
-  log(isTestDeploy, `${hub.chain.name} is governing hub`);
+  log(`Deploy env is ${hub.config.environment}`);
+  log(`${hub.chain.name} is governing hub`);
   log(
-    isTestDeploy,
     `${JSON.stringify(spokes.map((deploy) => deploy.chain.name))} ${
       spokes.length > 1 ? 'are spokes' : 'is spoke'
     }`,
   );
   deploys.forEach((deploy) => {
     log(
-      isTestDeploy,
       `Updater for ${deploy.chain.name} Home is ${deploy.config.updater}`,
     );
   });
 
   // ensure that the hub has a governor config
-  if (!isTestDeploy && !hub.config.governor) {
+  if (!hub.config.governor) {
     throw new Error(`Hub has no governor config`);
   }
 
@@ -760,12 +674,10 @@ export async function deployHubAndSpoke(hub: CoreDeploy, spokes: CoreDeploy[]) {
   await Promise.all(
     spokes.map(async (spoke) => {
       log(
-        isTestDeploy,
         `connecting Spoke ${spoke.chain.name} to Hub ${hub.chain.name}`,
       );
       await enrollRemote(spoke, hub);
       log(
-        isTestDeploy,
         `connected Spoke ${spoke.chain.name} to Hub ${hub.chain.name}`,
       );
     }),
@@ -777,12 +689,10 @@ export async function deployHubAndSpoke(hub: CoreDeploy, spokes: CoreDeploy[]) {
   //
   for (const spoke of spokes) {
     log(
-      isTestDeploy,
       `connecting Hub ${hub.chain.name} to Spoke ${spoke.chain.name}`,
     );
     await enrollRemote(hub, spoke);
     log(
-      isTestDeploy,
       `connected Hub ${hub.chain.name} to Spoke ${spoke.chain.name}`,
     );
   }
@@ -790,7 +700,6 @@ export async function deployHubAndSpoke(hub: CoreDeploy, spokes: CoreDeploy[]) {
   // appoint the configured governance account as governor
   if (hub.config.governor) {
     log(
-      isTestDeploy,
       `appoint governor: ${hub.config.governor.address} at ${hub.config.governor.domain}`,
     );
     // TODO: governor chain should never transfer to another domain...
@@ -819,9 +728,7 @@ export async function deployHubAndSpoke(hub: CoreDeploy, spokes: CoreDeploy[]) {
   );
 
   // write config outputs
-  if (!isTestDeploy) {
-    writeHubAndSpokeOutput(hub, spokes);
-  }
+  writeHubAndSpokeOutput(hub, spokes);
 }
 /**
  * Deploy the entire suite of Nomad contracts
@@ -842,17 +749,12 @@ export async function deployNewChain(
     throw new Error('Bad deploy input for deployNewChain');
   }
 
-  // there exists any chain marked test
-  const isTestDeploy: boolean = newDeploy.test || hubDeploy.test;
-
   // log the deploy details
   log(
-    isTestDeploy,
     `Beginning New Chain deploy process for ${newDeploy.chain.name}`,
   );
-  log(isTestDeploy, `Deploy env is ${newDeploy.config.environment}`);
+  log(`Deploy env is ${newDeploy.config.environment}`);
   log(
-    isTestDeploy,
     `Updater for ${newDeploy.chain.name} Home is ${newDeploy.config.updater}`,
   );
 
@@ -860,9 +762,9 @@ export async function deployNewChain(
   await newDeploy.recordFromBlock();
 
   // wait for providers to be ready
-  log(isTestDeploy, 'awaiting provider ready');
+  log('awaiting provider ready');
   await Promise.all([newDeploy.ready(), hubDeploy.ready()]);
-  log(isTestDeploy, 'done readying');
+  log('done readying');
 
   // START TRANSACTIONS ON NEW CHAIN
   // deploy nomad on the new chain
@@ -870,13 +772,11 @@ export async function deployNewChain(
 
   // deploy remotes on new spoke chain & hub chain
   log(
-    isTestDeploy,
     `connecting ${hubDeploy.chain.name} on ${newDeploy.chain.name}`,
   );
   // deploy and enroll replica for the hub chain on the new chain
   await enrollRemote(newDeploy, hubDeploy);
   log(
-    isTestDeploy,
     `connected ${hubDeploy.chain.name} on ${newDeploy.chain.name}`,
   );
 
@@ -905,12 +805,10 @@ export async function deployNewChain(
   const govAddress = hubDeploy.contracts.governance?.proxy.address!;
 
   log(
-    isTestDeploy,
     `Transfering ownership of new replica to ${hubDeploy.chain.name} governor router`,
   );
   await newReplica.transferOwnership(govAddress, hubDeploy.overrides);
   log(
-    isTestDeploy,
     `${hubDeploy.chain.name}: Dispatched relinquish Replica for ${newDeploy.chain.domain}`,
   );
   // END TRANSACTION ON HUB CHAIN
@@ -973,7 +871,7 @@ function writeOutput(
  * @param deploys - The array of chain deploys
  */
 export function writeDeployOutput(deploys: CoreDeploy[]) {
-  log(deploys[0].test, `Have ${deploys.length} deploys`);
+  log(`Have ${deploys.length} deploys`);
   const dir = getPathToDeployConfig(deploys[0].config.environment);
   for (const local of deploys) {
     // get remotes
@@ -997,7 +895,6 @@ export function writeHubAndSpokeOutput(
   oldSpokes: CoreDeploy[] = [],
 ) {
   log(
-    hub.test,
     `Have 1 Hub and ${newSpokes.length + oldSpokes.length} Spoke deploys`,
   );
 

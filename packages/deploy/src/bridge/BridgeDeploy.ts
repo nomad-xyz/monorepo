@@ -15,22 +15,19 @@ export class BridgeDeploy extends Deploy<BridgeContracts> {
   readonly config: BridgeConfig;
   readonly coreDeployPath: string;
   readonly coreContractAddresses: CoreContractAddresses;
-  readonly test: boolean;
 
   constructor(
     chain: Chain,
     config: BridgeConfig,
     coreDeployPath: string,
-    test = false,
     coreContracts?: CoreContractAddresses,
   ) {
-    super(chain, new BridgeContracts(), test);
+    super(chain, new BridgeContracts());
     this.config = config;
     this.coreDeployPath = coreDeployPath;
     this.coreContractAddresses =
       coreContracts ||
       parseFileFromDeploy(coreDeployPath, chain.config.name, 'contracts');
-    this.test = test;
   }
 
   get ubcAddress(): string | undefined {
@@ -57,9 +54,8 @@ export class ExistingBridgeDeploy extends BridgeDeploy {
     addresses?: BridgeContractAddresses,
     coreContracts?: CoreContractAddresses,
     signer?: ethers.Signer,
-    test = false,
   ) {
-    super(chain, config, coreDeployPath, test, coreContracts);
+    super(chain, config, coreDeployPath, coreContracts);
 
     if (!addresses) {
       const bridgeConfigPath = getPathToBridgeConfigFromCore(coreDeployPath);
@@ -83,7 +79,6 @@ export class ExistingBridgeDeploy extends BridgeDeploy {
     coreDeployPath?: string,
     coreContracts?: CoreContractAddresses,
     signer?: ethers.Signer,
-    test = false,
   ): ExistingBridgeDeploy {
     return new ExistingBridgeDeploy(
       chain,
@@ -92,7 +87,6 @@ export class ExistingBridgeDeploy extends BridgeDeploy {
       addresses,
       coreContracts,
       signer,
-      test,
     );
   }
 }
