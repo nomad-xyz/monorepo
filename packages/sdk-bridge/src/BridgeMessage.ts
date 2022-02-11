@@ -72,7 +72,7 @@ function parseBody(messageBody: string): ParsedTransferMessage {
  * The BridgeMessage extends {@link nomadMessage} with Bridge-specific
  * functionality.
  */
-class BridgeMessage extends NomadMessage<BridgeContext> {
+export class BridgeMessage extends NomadMessage<BridgeContext> {
   readonly token: TokenIdentifier;
   readonly fromBridge: BridgeContracts;
   readonly toBridge: BridgeContracts;

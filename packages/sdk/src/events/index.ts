@@ -80,4 +80,4 @@ export type {
   DispatchTypes,
 } from './nomadEvents';
 
-export { queryAnnotatedEvents } from './fetch';
+export * from './fetch';

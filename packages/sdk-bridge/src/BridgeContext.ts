@@ -15,6 +15,7 @@ import { BridgeContracts } from './BridgeContracts';
 import { ResolvedTokenInfo, TokenIdentifier } from './tokens';
 import { TransferMessage } from './BridgeMessage';
 
+
 type Address = string;
 
 /**
