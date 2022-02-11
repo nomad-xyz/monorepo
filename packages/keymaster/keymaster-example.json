@@ -1,0 +1,42 @@
+{
+    "networks": {
+        "alfajores": {
+            "endpoint": "https://alfajores-forno.celo-testnet.org",
+            "bank": {
+                "signer": "<hexKey>",
+                "address": "<address>"
+            },
+            "threshold": 500000000000000000
+        },
+        "kovan": {
+            "endpoint": "<RPCEndpoint>",
+            "bank": {
+                "signer": "<hexKey>",
+                "address": "<address>"
+            },
+            "threshold": 500000000000000000
+        }
+    },
+    "homes": {
+        "alfajores": {
+            "replicas": ["kovan"],
+            "addresses": {
+                "kathy": "<address>",
+                "watcher": "<address>",
+                "updater": "<address>",
+                "relayer": "<address>",
+                "processor": "<address>"
+            }
+        },
+        "kovan": {
+            "replicas": ["alfajores"],
+            "addresses": {
+                "kathy": "<address>",
+                "watcher": "<address>",
+                "updater": "<address>",
+                "relayer": "<address>",
+                "processor": "<address>"
+            }
+        }
+    }
+}
