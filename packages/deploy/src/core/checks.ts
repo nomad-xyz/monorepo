@@ -4,7 +4,6 @@ import { Contract } from 'ethers';
 import { CoreDeploy as Deploy } from './CoreDeploy';
 import { BridgeDeploy } from '../bridge/BridgeDeploy';
 import { BeaconProxy } from '../proxyUtils';
-import TestBridgeDeploy from '../bridge/TestBridgeDeploy';
 
 const emptyAddr = '0x' + '00'.repeat(20);
 
@@ -15,7 +14,7 @@ export function assertBeaconProxy(beaconProxy: BeaconProxy<Contract>) {
 }
 
 export function checkVerificationInput(
-  deploy: Deploy | BridgeDeploy | TestBridgeDeploy,
+  deploy: Deploy | BridgeDeploy,
   name: string,
   addr: string,
 ) {

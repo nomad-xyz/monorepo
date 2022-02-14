@@ -17,5 +17,14 @@
     "./src/bridge/*.ts",
     "./src/verification/*.ts",
     "./src/incremental/*.ts"
+  ],
+  "references": [
+    { "path": "../sdk" },
+    { "path": "../core" },
+    { "path": "../bridge" },
+    { "path": "../router" },
+    { "path": "../sdk-bridge" },
+    { "path": "../sdk-govern" },
+    { "path": "../multi-provider" }
   ]
 }

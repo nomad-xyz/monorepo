@@ -49,7 +49,6 @@ export type ContractVerificationInput = {
 
 export abstract class Deploy<T extends Contracts> {
   readonly chain: Chain;
-  readonly test: boolean;
   contracts: T;
   verificationInput: ContractVerificationInput[];
 
@@ -57,10 +56,9 @@ export abstract class Deploy<T extends Contracts> {
 
   abstract get ubcAddress(): string | undefined;
 
-  constructor(chain: Chain, contracts: T, test = false) {
+  constructor(chain: Chain, contracts: T) {
     this.chain = chain;
     this.verificationInput = [];
-    this.test = test;
     this.contracts = contracts;
   }
 

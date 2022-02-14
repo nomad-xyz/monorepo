@@ -4,6 +4,10 @@ export * as bridgeEvents from './bridgeEvents'
 export * from './BridgeContext'
 
 export * from './BridgeMessage'
+
+export * from './tokens'
+export type { TokenIdentifier } from './tokens'
+
 // export * as BridgeMessage from './BridgeMessage'
 
 //
