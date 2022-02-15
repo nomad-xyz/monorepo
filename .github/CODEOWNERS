@@ -1,0 +1,19 @@
+# Defaults
+* @nomad-xyz/engineering
+
+# Core packages 
+packages/core/ @nomad-xyz/experience @nomad-xyz/protocol
+packages/bridge/ @nomad-xyz/experience @nomad-xyz/protocol
+packages/deploy/ @nomad-xyz/experience @nomad-xyz/protocol
+packages/multi-provider/ @nomad-xyz/experience @nomad-xyz/protocol
+packages/router/ @nomad-xyz/experience @nomad-xyz/protocol
+
+# SDK Packages 
+packages/sdk/ @nomad-xyz/experience @nomad-xyz/protocol 
+packages/sdk-govern/ @nomad-xyz/experience @nomad-xyz/protocol
+packages/sdk-bridge/ @nomad-xyz/experience @nomad-xyz/protocol
+
+# Other Packages and Services
+packages/example-xapps/ @nomad-xyz/experience @nomad-xyz/protocol
+packages/monitor/ @yourbuddyconner @arnaud036
+packages/keymaster/ @yourbuddyconner @arnaud036

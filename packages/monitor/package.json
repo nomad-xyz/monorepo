@@ -5,7 +5,7 @@
   "license": "Apache 2.0",
   "author": "Illusory Systems Inc.",
   "scripts": {
-    "build": "rm tsconfig.tsbuildinfo & tsc --build",
+    "build": "tsc --build",
     "check": "rm tsconfig.tsbuildinfo & tsc --noEmit",
     "e2e": "ts-node src/run.ts e2e",
     "gas": "ts-node src/gas.ts",
