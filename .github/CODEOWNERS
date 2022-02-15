@@ -15,5 +15,4 @@ packages/sdk-bridge/ @nomad-xyz/experience @nomad-xyz/protocol
 
 # Other Packages and Services
 packages/example-xapps/ @nomad-xyz/experience @nomad-xyz/protocol
-packages/monitor/ @yourbuddyconner @arnaud036
 packages/keymaster/ @yourbuddyconner @arnaud036
