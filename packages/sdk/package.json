@@ -1,30 +1,39 @@
 {
   "name": "@nomad-xyz/sdk",
-  "version": "1.3.6",
+  "version": "1.3.7",
   "description": "Nomad SDK",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
-  "scripts": {
-    "build": "tsc --build",
-    "check": "tsc --noEmit",
-    "prettier": "prettier --write ./src.ts ./config ./scripts",
-    "lint": "eslint --fix ./src.ts ./config ./scripts",
-    "lint:fix": "eslint --fix ./src"
+  "keywords": [
+    "nomad",
+    "sdk"
+  ],
+  "homepage": "https://github.com/nomad-xyz/monorepo#readme",
+  "bugs": {
+    "url": "https://github.com/nomad-xyz/monorepo/issues"
   },
-  "author": "Illusory Systems Inc.",
-  "license": "Apache-2.0 OR MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nomad-xyz/monorepo.git"
   },
-  "bugs": {
-    "url": "https://github.com/nomad-xyz/monorepo/issues"
-  },
+  "license": "Apache-2.0 OR MIT",
+  "author": "Illusory Systems Inc.",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "files": [
     "lib/**/*",
     "src/**/*"
   ],
-  "homepage": "https://github.com/nomad-xyz/monorepo#readme",
+  "scripts": {
+    "build": "tsc --build",
+    "check": "tsc --noEmit",
+    "lint": "eslint --fix ./src.ts ./config ./scripts",
+    "lint:fix": "eslint --fix ./src",
+    "prettier": "prettier --write ./src.ts ./config ./scripts",
+    "release": "release-it"
+  },
+  "dependencies": {
+    "@nomad-xyz/multi-provider": "1.3.6",
+    "ethers": "^5.4.6"
+  },
   "devDependencies": {
     "@types/node": "^16.9.1",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
@@ -34,14 +43,7 @@
     "eslint-config-prettier": "^8.3.0",
     "fs": "0.0.1-security",
     "prettier": "^2.4.1",
+    "release-it": "^14.12.4",
     "typescript": "^4.4.3"
-  },
-  "dependencies": {
-    "@nomad-xyz/multi-provider": "1.3.6",
-    "ethers": "^5.4.6"
-  },
-  "keywords": [
-    "nomad",
-    "sdk"
-  ]
+  }
 }
