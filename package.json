@@ -9,6 +9,7 @@
     "packages/deploy",
     "packages/monitor",
     "packages/multi-provider",
+    "packages/local-environment",
     "packages/sdk",
     "packages/sdk-bridge",
     "packages/sdk-govern"
@@ -21,6 +22,7 @@
     "router": "yarn workspace @nomad-xyz/router-contracts",
     "monitor": "yarn workspace @nomad-xyz/monitor",
     "multi-provider": "yarn workspace @nomad-xyz/multi-provider",
+    "local-environment": "yarn workspace @nomad-xyz/local-environment",
     "sdk": "yarn workspace @nomad-xyz/sdk",
     "bridge-sdk": "yarn workspace @nomad-xyz/bridge-sdk",
     "govern-sdk": "yarn workspace @nomad-xyz/govern-sdk",

@@ -35,6 +35,9 @@
       "path": "./deploy"
     },
     {
+      "path": "./local-environment"
+    },
+    {
       "path": "./multi-provider"
     },
     {
