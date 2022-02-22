@@ -1,9 +1,9 @@
-# Nomad Contracts
+# Nomad
 
 ## TODOs
 
 - [ ] write real readme(s)
-- [ ] publishing w/ npmignore etc
+- [x] publishing w/ npmignore etc
 - [x] standardize on a set of standard scripts build/prettier/lint/test
 - [x] use `yarn workspace foreach`
 - [x] hardhat-packager
