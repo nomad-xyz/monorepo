@@ -63,8 +63,8 @@ jobs:
       - name: Build and push container
         uses: docker/build-push-action@v2
         with:
-          context: ./tools/keymaster/
-          file: ./tools/keymaster/Dockerfile
+          context: ./packages/keymaster/
+          file: ./packages/keymaster/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
