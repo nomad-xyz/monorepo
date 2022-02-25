@@ -5,10 +5,10 @@ WORKDIR /code
 COPY ./requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-COPY keymaster.py keymaster.py
-COPY __init__.py __init__.py
-COPY config.py config.py
-COPY utils.py utils.py
+COPY src/keymaster.py keymaster.py
+COPY src/__init__.py __init__.py
+COPY src/config.py config.py
+COPY src/utils.py utils.py
 
 RUN adduser --disabled-password --gecos '' unpriv
 RUN chown -R unpriv: /code

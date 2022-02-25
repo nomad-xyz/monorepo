@@ -4,3 +4,4 @@ web3==5.22.0
 prometheus-client==0.11.0
 backoff==1.11.1
 websockets>=9.1
+logging_json==0.2.1

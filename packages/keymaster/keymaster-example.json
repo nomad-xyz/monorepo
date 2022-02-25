@@ -1,4 +1,5 @@
 {
+    "environment": "development",
     "networks": {
         "alfajores": {
             "endpoint": "https://alfajores-forno.celo-testnet.org",
@@ -37,6 +38,33 @@
                 "relayer": "<address>",
                 "processor": "<address>"
             }
+        }
+    },
+    "logging": {
+        "version": 1,
+        "formatters": {
+            "json": {
+                "()": "logging_json.JSONFormatter",
+                "fields":{
+                    "level": "levelname",
+                    "method": "funcName",
+                    "timestamp": "asctime"
+                }
+            }
+        },
+        "handlers": {
+            "standard_output": {
+                "class": "logging.StreamHandler",
+                "formatter": "json",
+                "stream": "ext://sys.stdout"
+            }
+        },
+        "loggers": {
+            "keymaster": {"level": "INFO"}
+        },
+        "root": {
+            "level": "INFO",
+            "handlers": ["standard_output"]
         }
     }
 }
