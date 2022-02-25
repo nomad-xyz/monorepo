@@ -20,7 +20,8 @@ metrics = {
     "wallet_balance": Gauge("ethereum_wallet_balance", "ETH Wallet Balance", ["role", "home", "address", "network", "environment"]),
     "transaction_count": Gauge("ethereum_transaction_count", "ETH Wallet Balance", ["role", "home", "address", "network", "environment"]),
     "block_number": Gauge("ethereum_block_height", "Block Height", ["network", "environment"]),
-    "failed_tx_count": Counter("keymaster_failed_tx_count", "Number of Failed Keymaster Top-Ups", ["network", "to", "error", "environment"])
+    "failed_tx_count": Counter("keymaster_failed_tx_count", "Number of Failed Keymaster Top-Ups", ["network", "to", "error", "environment"]),
+    "rpc_errors": Counter("keymaster_rpc_errors", "RPC Failures (outside of Transaction dispatch)", ["network", "error", "environment"])
 }
 
 @click.group()
@@ -77,35 +78,56 @@ def monitor(ctx, metrics_port, pause_duration):
             try:
                 block_height = get_block_height(endpoint)
                 metrics["block_number"].labels(network=home_name, environment=environment).set(block_height)
-            except ValueError:
-                continue
+            except Exception as e:
+                logger.error({
+                    "msg": "Failed to fetch block height (this is the first RPC request I make when checking a network!)", 
+                    "error": e 
+                })
+                metrics["rpc_errors"].labels(environment=environment, network=home_name, error=str(e)).inc()
+                break
 
             # Fetch Bank status for Home
             address = home_config["bank"]["address"]
-            status = check_account(home_name, home_name, "bank", address, endpoint, home_threshold, logger)
-            statuses.append(status)
+            try:
+                status = check_account(home_name, home_name, "bank", address, endpoint, home_threshold, logger)
+                statuses.append(status)
+            except Exception as e:
+                logger.error({
+                    "msg": "Failed to fetch block height (this is the first RPC request I make when checking a network!)", 
+                    "error": e 
+                })
+                metrics["rpc_errors"].labels(environment=environment, network=home_name, error=str(e)).inc()
+                break
 
             # Get statuses, see if we need to top-up
             for role, address in home["addresses"].items():
-                
-                # only process agents that act on the home
-                if role in ["updater", "kathy", "watcher"]:
-                    # Watcher only needs 1/4 the funds as the rest of the agents
-                    if role == "watcher": 
-                        status = check_account(home_name, home_name, role, address, endpoint, home_threshold / 4, logger=logger)
-                    else:
-                        status = check_account(home_name, home_name, role, address, endpoint, home_threshold, logger=logger)
-                    statuses.append(status)
+                try: 
+                    # only process agents that act on the home
+                    if role in ["updater", "kathy", "watcher"]:
+                        # Watcher only needs 1/4 the funds as the rest of the agents
 
-                # only process agents that act on the replica
-                if role in ["relayer", "processor"]:
-                    # Get status on Home's replicas for role
-                    for replica_name in home["replicas"]:
-                        replica_config = config["networks"][replica_name] 
-                        replica_threshold = replica_config["threshold"]
-                        endpoint = replica_config["endpoint"]
-                        status = check_account(home_name, replica_name, role, address, endpoint, replica_threshold, logger)
+                        if role == "watcher": 
+                            status = check_account(home_name, home_name, role, address, endpoint, home_threshold / 4, logger=logger)
+                        else:
+                            status = check_account(home_name, home_name, role, address, endpoint, home_threshold, logger=logger)
                         statuses.append(status)
+
+                    # only process agents that act on the replica
+                    if role in ["relayer", "processor"]:
+                        # Get status on Home's replicas for role
+                        for replica_name in home["replicas"]:
+                            replica_config = config["networks"][replica_name] 
+                            replica_threshold = replica_config["threshold"]
+                            endpoint = replica_config["endpoint"]
+                            status = check_account(home_name, replica_name, role, address, endpoint, replica_threshold, logger)
+                            statuses.append(status)
+                except Exception as e:
+                    logger.error({
+                        "msg": "Failed to check agent balance!", 
+                        "error": e 
+                    })
+                    metrics["rpc_errors"].labels(environment=environment, network=home_name, error=str(e)).inc()
+                    break
             
         logger.info("== == == == Done inspecting wallets, now processing top-ups. == == == ==")
         # sort and process banks first
@@ -128,10 +150,11 @@ def monitor(ctx, metrics_port, pause_duration):
                 bank_endpoint = config["networks"][target_network]["endpoint"]
                 bank_address = config["networks"][target_network]["bank"]["address"]
                 bank_signer = config["networks"][target_network]["bank"]["signer"]
-                bank_nonce = get_nonce(bank_address, bank_endpoint)
-                transaction_tuple = create_transaction(bank_signer, address, amount, bank_nonce, bank_endpoint)
-                logger.debug(f"Attempting to send transaction of {amount * 10**-18} {home_network} {role} ({address}) on {target_network}")
+                
                 try: 
+                    bank_nonce = get_nonce(bank_address, bank_endpoint)
+                    transaction_tuple = create_transaction(bank_signer, address, amount, bank_nonce, bank_endpoint)
+                    logger.debug(f"Attempting to send transaction of {amount * 10**-18} {home_network} {role} ({address}) on {target_network}")
                     hash = dispatch_signed_transaction(transaction_tuple[1], bank_endpoint)
                     logger.debug(f"Dispatched Transaction: {hash}")
                     time.sleep(3)
