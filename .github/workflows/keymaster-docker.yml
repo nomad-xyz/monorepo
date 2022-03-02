@@ -1,0 +1,70 @@
+# Documentation
+# https://github.com/docker/metadata-action
+# https://github.com/docker/login-action#google-container-registry-gcr
+# https://github.com/docker/build-push-action
+name: Push Keymaster Image to GCR GitHub Action
+on: 
+  push:
+    paths: 
+      - 'packages/keymaster/**'
+    branches:
+      - '**'
+    tags:
+      - '**'
+  # pull_request:
+  #   branches:
+  #     - 'main'
+jobs:
+  check-env:
+    runs-on: ubuntu-latest
+    # assign output from step to job output
+    outputs:
+      gcloud-service-key: ${{ steps.gcloud-service-key.outputs.defined }}
+    steps:
+      - id: gcloud-service-key
+        # assign GCLOUD_SERVICE_KEY to env for access in conditional
+        env:
+          GCLOUD_SERVICE_KEY: ${{ secrets.GCLOUD_SERVICE_KEY }}
+        if: "${{ env.GCLOUD_SERVICE_KEY != '' }}"
+        # runs if GCLOUD_SERVICE_KEY is defined, so we set the output to true
+        run: echo "::set-output name=defined::true"
+
+  build-and-push-to-gcr:
+    runs-on: ubuntu-latest
+
+    # uses check-env to determine if secrets.GCLOUD_SERVICE_KEY is defined
+    needs: [check-env]
+    if: needs.check-env.outputs.gcloud-service-key == 'true'
+
+    steps:
+      
+      - uses: actions/checkout@v2
+      
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            gcr.io/nomad-xyz/keymaster
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+
+      - name: Login to GCR Docker repository
+        uses: docker/login-action@v1
+        with:
+          registry: gcr.io
+          username: _json_key
+          password: ${{ secrets.GCLOUD_SERVICE_KEY }}
+
+      - name: Build and push container
+        uses: docker/build-push-action@v2
+        with:
+          context: ./packages/keymaster/
+          file: ./packages/keymaster/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
