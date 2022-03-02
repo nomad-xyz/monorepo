@@ -5,22 +5,18 @@ import { Network, Networkish, networkFromObject } from "./network";
 import { Key } from "./key";
 import { Agent, AgentType, agentTypeToString, LocalAgent } from "./agent";
 
-import * as foo from '@nomad-xyz/deploy'
-console.log('foo', foo)
-
 import {
   Chain,
   CoreDeployAddresses,
   RustConfig,
   DEFAULT_GAS,
   DeployEnvironment,
-} from "@nomad-xyz/deploy";
-import {
   Governor,
   CoreConfig,
   CoreDeploy,
   ExistingCoreDeploy,
-} from "@nomad-xyz/deploy/core/CoreDeploy";
+  enrollSpoke
+} from "@nomad-xyz/deploy";
 import {
   BridgeConfig,
   BridgeDeploy,
@@ -36,8 +32,6 @@ import {
 } from "@nomad-xyz/deploy/src/bridge";
 import { deployHubAndSpoke, deployNewChain } from "@nomad-xyz/deploy/src/core";
 import { ContractVerificationInput } from "@nomad-xyz/deploy/src/deploy";
-import { enrollSpoke } from "@nomad-xyz/deploy/incremental";
-import TestBridgeDeploy from "@nomad-xyz/deploy/bridge/TestBridgeDeploy";
 import {
   BridgeContractAddresses,
   BridgeContracts,
@@ -275,7 +269,7 @@ export class Nomad {
   async getUpdater(
     networkish: Networkish,
     addressOrIndex?: string | number
-  ): Promise<Updater> {
+  ) {
     const network = this.getNetwork(networkish);
     if (!network) throw new Error(`Network not found`);
 
@@ -289,7 +283,9 @@ export class Nomad {
     const signerWithAddress = await network.getSignerWithAddress(
       addressOrNumInNode
     );
-    return Updater.fromSigner(signerWithAddress, network.domain);
+    // TODO: determine if we need to export Updater from somewhere else since we no longer have the test package
+    return 'lol'
+    // return Updater.fromSigner(signerWithAddress, network.domain);
   }
 
   setAllKeys(networkish: Networkish, key: Key) {
@@ -1146,7 +1142,7 @@ export class Nomad {
   }
 }
 
-type Deploy = BridgeDeploy | TestBridgeDeploy;
+type Deploy = BridgeDeploy;
 
 interface CoreDeploysArtifact {
   rustConfig: RustConfig;

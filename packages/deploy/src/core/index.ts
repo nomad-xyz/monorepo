@@ -8,6 +8,8 @@ import { checkCoreDeploy } from './checks';
 import { getPathToDeployConfig } from '../verification/readDeployOutput';
 import { utils as mpUtils } from '@nomad-xyz/multi-provider';
 
+export * from './CoreDeploy'
+
 function log(str: string) {
   console.log(str);
 }
