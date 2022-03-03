@@ -22,26 +22,26 @@ import {
   BridgeConfig,
   BridgeDeploy,
   ExistingBridgeDeploy,
-} from "@nomad-xyz/deploy/src/bridge/BridgeDeploy";
+} from "@nomad-xyz/deploy/lib/bridge/BridgeDeploy";
 import {
   getPathToDeployConfig,
   getPathToBridgeConfig,
-} from "@nomad-xyz/deploy/src/verification/readDeployOutput";
+} from "@nomad-xyz/deploy/lib/verification/readDeployOutput";
 import {
   deployBridgesHubAndSpoke,
   deployNewChainBridge,
-} from "@nomad-xyz/deploy/src/bridge";
-import { deployHubAndSpoke, deployNewChain } from "@nomad-xyz/deploy/src/core";
-import { ContractVerificationInput } from "@nomad-xyz/deploy/src/deploy";
+} from "@nomad-xyz/deploy/lib/bridge";
+import { deployHubAndSpoke, deployNewChain } from "@nomad-xyz/deploy/lib/core";
+import { ContractVerificationInput } from "@nomad-xyz/deploy/lib/deploy";
 import {
   BridgeContractAddresses,
   BridgeContracts,
-} from "@nomad-xyz/deploy/src/bridge/BridgeContracts";
+} from "@nomad-xyz/deploy/lib/bridge/BridgeContracts";
 
 import { CoreContracts as NomadCoreContracts } from "@nomad-xyz/sdk";
 import type { NomadDomain } from "@nomad-xyz/sdk"
 import { BridgeContext, BridgeContracts as NomadBridgeContracts } from "@nomad-xyz/bridge-sdk";
-import { CoreContracts } from "@nomad-xyz/deploy/src/core/CoreContracts";
+import { CoreContracts } from "@nomad-xyz/deploy/lib/core/CoreContracts";
 
 import {
   XAppConnectionManager__factory,
@@ -51,10 +51,11 @@ import {
 import { NonceManager } from "@ethersproject/experimental";
 import { ethers } from "ethers";
 import { Logger, LogLevel } from "./logger";
-import { checkCoreDeploy } from "@nomad-xyz/deploy/src/core/checks";
-import { checkHubAndSpokeBridgeConnections } from "@nomad-xyz/deploy/src/bridge/checks";
-import { checkHubAndSpokeConnections } from "@nomad-xyz/deploy/src/incremental/checks";
+import { checkCoreDeploy } from "@nomad-xyz/deploy/lib/core/checks";
+import { checkHubAndSpokeBridgeConnections } from "@nomad-xyz/deploy/lib/bridge/checks";
+import { checkHubAndSpokeConnections } from "@nomad-xyz/deploy/lib/incremental/checks";
 import { utils } from ".";
+import type { Deploy } from './types'
 
 export class Nomad {
   id: number;
@@ -1104,8 +1105,8 @@ export class Nomad {
         };
 
         if (
-          deploy instanceof BridgeDeploy ||
-          deploy instanceof ExistingBridgeDeploy
+          deploy instanceof ExistingBridgeDeploy ||
+          deploy instanceof BridgeDeploy
         ) {
           artifact.bridgeDeployAddresses = deploy.contractOutput;
         }
@@ -1138,8 +1139,6 @@ export class Nomad {
     };
   }
 }
-
-type Deploy = BridgeDeploy;
 
 interface CoreDeploysArtifact {
   rustConfig: RustConfig;
