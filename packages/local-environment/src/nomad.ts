@@ -38,12 +38,9 @@ import {
   BridgeContracts,
 } from "@nomad-xyz/deploy/src/bridge/BridgeContracts";
 
-import {
-  NomadContext,
-  CoreContracts as NomadCoreContracts
-} from "@nomad-xyz/sdk";
+import { CoreContracts as NomadCoreContracts } from "@nomad-xyz/sdk";
 import type { NomadDomain } from "@nomad-xyz/sdk"
-import { BridgeContracts as NomadBridgeContracts } from "@nomad-xyz/bridge-sdk";
+import { BridgeContext, BridgeContracts as NomadBridgeContracts } from "@nomad-xyz/bridge-sdk";
 import { CoreContracts } from "@nomad-xyz/deploy/src/core/CoreContracts";
 
 import {
@@ -74,7 +71,7 @@ export class Nomad {
   private bridgeCache: Map<number, BridgeDeploy>;
   logger: Logger;
 
-  multiprovider?: NomadContext;
+  multiprovider?: BridgeContext;
 
   constructor(host: Network) {
     this.id = Date.now();
@@ -413,7 +410,7 @@ export class Nomad {
     };
   }
 
-  async updateMultiProvider(): Promise<NomadContext> {
+  async updateMultiProvider(): Promise<BridgeContext> {
     if (!this.deployArtifacts)
       throw new Error(`Nomad haven't been deployed yet`);
     this.logger.debug(`updating MultiProvider...`);
@@ -428,7 +425,7 @@ export class Nomad {
 
     const filteredDomains = utils.filterUndefined(domains); //.filter(isNomadDomain);
 
-    const ctx = NomadContext.fromDomains(filteredDomains);
+    const ctx = BridgeContext.fromDomains(filteredDomains);
 
     this.getNetworks()
       .filter((n) => this.isDeployed(n))
@@ -452,7 +449,7 @@ export class Nomad {
     return ctx;
   }
 
-  getMultiprovider(): NomadContext {
+  getMultiprovider(): BridgeContext {
     if (!this.multiprovider) throw new Error(`No multiprovider`);
     return this.multiprovider;
   }
