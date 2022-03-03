@@ -4,6 +4,7 @@ import fs from "fs";
 import { Network, Networkish, networkFromObject } from "./network";
 import { Key } from "./key";
 import { Agent, AgentType, agentTypeToString, LocalAgent } from "./agent";
+import { Updater } from './updater'
 
 import {
   Chain,
@@ -37,10 +38,12 @@ import {
   BridgeContracts,
 } from "@nomad-xyz/deploy/src/bridge/BridgeContracts";
 
-import { NomadContext } from "@nomad-xyz/sdk";
-import { CoreContracts as NomadCoreContracts } from "@nomad-xyz/sdk/nomad/contracts/CoreContracts";
-import { BridgeContracts as NomadBridgeContracts } from "@nomad-xyz/sdk/nomad/contracts/BridgeContracts";
-import type { NomadDomain } from "@nomad-xyz/sdk/nomad/domains/domain";
+import {
+  NomadContext,
+  CoreContracts as NomadCoreContracts
+} from "@nomad-xyz/sdk";
+import type { NomadDomain } from "@nomad-xyz/sdk"
+import { BridgeContracts as NomadBridgeContracts } from "@nomad-xyz/bridge-sdk";
 import { CoreContracts } from "@nomad-xyz/deploy/src/core/CoreContracts";
 
 import {
@@ -48,7 +51,6 @@ import {
   XAppConnectionManager,
 } from "@nomad-xyz/contract-interfaces/core";
 
-import { Updater } from "@nomad-xyz/test/lib/core";
 import { NonceManager } from "@ethersproject/experimental";
 import { ethers } from "ethers";
 import { Logger, LogLevel } from "./logger";
@@ -269,7 +271,7 @@ export class Nomad {
   async getUpdater(
     networkish: Networkish,
     addressOrIndex?: string | number
-  ) {
+  ): Promise<Updater> {
     const network = this.getNetwork(networkish);
     if (!network) throw new Error(`Network not found`);
 
@@ -283,9 +285,8 @@ export class Nomad {
     const signerWithAddress = await network.getSignerWithAddress(
       addressOrNumInNode
     );
-    // TODO: determine if we need to export Updater from somewhere else since we no longer have the test package
-    return 'lol'
-    // return Updater.fromSigner(signerWithAddress, network.domain);
+
+    return Updater.fromSigner(signerWithAddress, network.domain);
   }
 
   setAllKeys(networkish: Networkish, key: Key) {
@@ -587,7 +588,6 @@ export class Nomad {
         chain,
         bridgeConfig,
         "/tmp/deleteme",
-        false,
         coreDeploy.contractOutput
       );
     } else {
