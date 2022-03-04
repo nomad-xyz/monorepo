@@ -44,7 +44,7 @@ export class CallBatch {
   }
 
   static async fromContext(context: NomadContext): Promise<CallBatch> {
-    const governorDomain = await context.governorDomain();
+    const governorDomain = context.governor.domain;
     return new CallBatch(context, governorDomain, true);
   }
 

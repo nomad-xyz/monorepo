@@ -1174,6 +1174,7 @@ __metadata:
     "@gnosis.pm/safe-core-sdk": ^2.0.0
     "@gnosis.pm/safe-ethers-adapters": ^0.1.0-alpha.8
     "@gnosis.pm/safe-ethers-lib": ^1.0.0
+    "@nomad-xyz/config": 0.1.0-beta.12
     "@nomad-xyz/sdk": "workspace:^"
     "@types/node": ^16.9.1
     "@typescript-eslint/eslint-plugin": ^4.33.0
