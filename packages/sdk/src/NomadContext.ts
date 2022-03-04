@@ -27,6 +27,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
 
   constructor(conf: config.NomadConfig) {
     super();
+    config.validateConfig(conf);
     this.conf = conf;
 
     const domains = conf.networks.map(
@@ -34,8 +35,8 @@ export class NomadContext extends MultiProvider<config.Domain> {
     );
     domains.forEach((domain) => this.registerDomain(domain));
     this.cores = new Map();
-    const cores = conf.networks.map((network) =>
-      CoreContracts.fromConfig(network, conf.core[network]),
+    const cores = conf.networks.map(
+      (network) => new CoreContracts(network, conf.core[network]),
     );
     cores.forEach((core) => {
       this.cores.set(core.domain, core);

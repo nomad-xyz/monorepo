@@ -91,16 +91,4 @@ export class CoreContracts extends Contracts {
   connect(providerOrSigner: ethers.providers.Provider | ethers.Signer): void {
     this.providerOrSigner = providerOrSigner;
   }
-
-  toConfig(): config.CoreContracts {
-    return this.conf;
-  }
-
-  static fromConfig(
-    domain: string,
-    core: config.CoreContracts,
-    providerOrSigner?: ethers.providers.Provider | ethers.Signer,
-  ): CoreContracts {
-    return new CoreContracts(domain, core, providerOrSigner);
-  }
 }

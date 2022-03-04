@@ -1,20 +1,12 @@
 import { BigNumberish, ethers } from 'ethers';
 import { canonizeId, evmId } from '@nomad-xyz/multi-provider/lib/utils';
 import * as bridge from '@nomad-xyz/contracts-bridge';
-import {
-  CoreContracts,
-  FailedHomeError,
-  NomadDomain,
-  NomadContext,
-  mainnet as baseMainnet,
-  dev as baseDev,
-  staging as baseStaging,
-} from '@nomad-xyz/sdk';
+import { FailedHomeError, NomadContext } from '@nomad-xyz/sdk';
 import { hexlify } from '@ethersproject/bytes';
 import { BridgeContracts } from './BridgeContracts';
 import { ResolvedTokenInfo, TokenIdentifier } from './tokens';
 import { TransferMessage } from './BridgeMessage';
-
+import * as config from '@nomad-xyz/config';
 
 type Address = string;
 
@@ -32,36 +24,24 @@ type Address = string;
  */
 
 export class BridgeContext extends NomadContext {
-  private bridges: Map<number, BridgeContracts>;
+  private bridges: Map<string, BridgeContracts>;
 
-  constructor(
-    domains: NomadDomain[],
-    cores: CoreContracts[],
-    bridges: BridgeContracts[],
-  ) {
-    super(domains, cores);
+  constructor(conf: config.NomadConfig) {
+    super(conf);
 
     this.bridges = new Map();
+    const bridges = conf.networks.map(
+      (network) => new BridgeContracts(network, conf.bridge[network]),
+    );
 
     bridges.forEach((bridge) => {
       this.bridges.set(bridge.domain, bridge);
     });
   }
 
-  /**
-   * Instantiate an BridgeContext from contract info.
-   *
-   * @param domains An array of Domains with attached contract info
-   * @returns A context object
-   */
-  static fromDomains(domains: NomadDomain[]): BridgeContext {
-    const cores = domains.map((domain) => CoreContracts.fromObject(domain));
-    const bridges = domains.map((domain) => BridgeContracts.fromObject(domain));
-    return new BridgeContext(domains, cores, bridges);
-  }
-
   static fromNomadContext(context: NomadContext): BridgeContext {
-    const bridge = BridgeContext.fromDomains(context.registeredDomains);
+    const bridge = new BridgeContext(context.conf);
+
     for (const domain of context.domainNumbers) {
       const provider = context.getProvider(domain);
       if (provider) bridge.registerProvider(domain, provider);
@@ -79,7 +59,8 @@ export class BridgeContext extends NomadContext {
    *
    * @param domain the domain to reconnect
    */
-  protected reconnect(domain: number): void {
+  protected reconnect(nameOrDomain: string | number): void {
+    const domain = this.resolveDomainName(nameOrDomain);
     super.reconnect(domain);
     const connection = this.getConnection(domain);
     if (!connection) {
@@ -98,7 +79,7 @@ export class BridgeContext extends NomadContext {
    * @returns a {@link BridgeContracts} object (or undefined)
    */
   getBridge(nameOrDomain: string | number): BridgeContracts | undefined {
-    const domain = this.resolveDomain(nameOrDomain);
+    const domain = this.resolveDomainName(nameOrDomain);
     return this.bridges.get(domain);
   }
   /**
@@ -390,7 +371,3 @@ export class BridgeContext extends NomadContext {
     return message as TransferMessage;
   }
 }
-
-export const mainnet = BridgeContext.fromNomadContext(baseMainnet);
-export const dev = BridgeContext.fromNomadContext(baseDev);
-export const staging = BridgeContext.fromNomadContext(baseStaging);
