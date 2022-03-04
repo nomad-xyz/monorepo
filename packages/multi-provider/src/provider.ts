@@ -19,9 +19,9 @@ type Provider = ethers.providers.Provider;
  * mainnet.registerSigner('ethereum', ethereumProvider);
  */
 export class MultiProvider<T extends Domain> {
-  protected domains: Map<number, T>;
-  protected providers: Map<number, Provider>;
-  protected signers: Map<number, ethers.Signer>;
+  protected domains: Map<string, T>;
+  protected providers: Map<string, Provider>;
+  protected signers: Map<string, ethers.Signer>;
 
   constructor() {
     this.domains = new Map();
@@ -36,7 +36,7 @@ export class MultiProvider<T extends Domain> {
    * @param domain The Domain object to register.
    */
   registerDomain(domain: T): void {
-    this.domains.set(domain.id, domain);
+    this.domains.set(domain.name, domain);
   }
 
   get registeredDomains(): Array<Readonly<T>> {
@@ -44,12 +44,15 @@ export class MultiProvider<T extends Domain> {
   }
 
   get domainNumbers(): number[] {
+    return this.registeredDomains.map((domain) => domain.domain);
+  }
+
+  get domainNames(): string[] {
     return Array.from(this.domains.keys());
   }
 
-  get missingProviders(): number[] {
-    const numbers = this.domainNumbers;
-    return numbers.filter((number) => this.providers.has(number));
+  get missingProviders(): string[] {
+    return this.domainNames.filter((name) => this.providers.has(name));
   }
 
   /**
@@ -69,7 +72,7 @@ export class MultiProvider<T extends Domain> {
       if (domains.length === 0) {
         throw new Error(`Domain not found: ${nameOrDomain}`);
       }
-      return domains[0].id;
+      return domains[0].domain;
     } else {
       return nameOrDomain;
     }
@@ -97,7 +100,9 @@ export class MultiProvider<T extends Domain> {
    * @returns A {@link Domain} (if the domain has been registered)
    */
   getDomain(nameOrDomain: number | string): Domain | undefined {
-    return this.domains.get(this.resolveDomain(nameOrDomain));
+    const name = this.resolveDomainName(nameOrDomain);
+    if (!name) return;
+    return this.domains.get(name);
   }
 
   /**
@@ -124,8 +129,10 @@ export class MultiProvider<T extends Domain> {
    * @param nameOrDomain A domain name or number.
    * @returns The name (or undefined)
    */
-  resolveDomainName(nameOrDomain: string | number): string | undefined {
-    return this.getDomain(nameOrDomain)?.name;
+  resolveDomainName(nameOrDomain: string | number): string {
+    const name = this.getDomain(nameOrDomain)?.name;
+    if (!name) throw new Error(`Domain ${nameOrDomain} not registered`);
+    return name;
   }
 
   /**
@@ -135,7 +142,7 @@ export class MultiProvider<T extends Domain> {
    * @param provider An ethers Provider to be used by requests to that domain.
    */
   registerProvider(nameOrDomain: string | number, provider: Provider): void {
-    const domain = this.mustGetDomain(nameOrDomain).id;
+    const domain = this.mustGetDomain(nameOrDomain).name;
     try {
       const signer = this.signers.get(domain);
       if (signer) {
@@ -167,8 +174,7 @@ export class MultiProvider<T extends Domain> {
    * @returns The currently registered Provider (or none)
    */
   getProvider(nameOrDomain: string | number): Provider | undefined {
-    const domain = this.resolveDomain(nameOrDomain);
-
+    const domain = this.resolveDomainName(nameOrDomain);
     return this.providers.get(domain);
   }
 
@@ -209,12 +215,10 @@ export class MultiProvider<T extends Domain> {
    * @param signer An ethers Signer to be used by requests to that domain.
    */
   registerSigner(nameOrDomain: string | number, signer: ethers.Signer): void {
-    const domain = this.resolveDomain(nameOrDomain);
-
+    const domain = this.resolveDomainName(nameOrDomain);
     const provider = this.providers.get(domain);
-    if (!provider && !signer.provider) {
+    if (!provider && !signer.provider)
       throw new Error('Must have a provider before registering signer');
-    }
 
     if (provider) {
       try {
@@ -241,7 +245,7 @@ export class MultiProvider<T extends Domain> {
    * @param nameOrDomain A domain name or number.
    */
   unregisterSigner(nameOrDomain: string | number): void {
-    const domain = this.resolveDomain(nameOrDomain);
+    const domain = this.resolveDomainName(nameOrDomain);
     if (!this.signers.has(domain)) {
       return;
     }
@@ -284,7 +288,7 @@ export class MultiProvider<T extends Domain> {
    * @returns The registered signer (or undefined)
    */
   getSigner(nameOrDomain: string | number): ethers.Signer | undefined {
-    const domain = this.resolveDomain(nameOrDomain);
+    const domain = this.resolveDomainName(nameOrDomain);
     return this.signers.get(domain);
   }
 

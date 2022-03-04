@@ -10,7 +10,7 @@ export interface Pagination {
  * A Domain (and its characteristics)
  */
 export interface Domain {
-  id: number;
   name: string;
+  domain: number;
   paginate?: Pagination;
 }

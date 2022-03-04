@@ -892,6 +892,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nomad-xyz/config@npm:0.1.0-beta.12":
+  version: 0.1.0-beta.12
+  resolution: "@nomad-xyz/config@npm:0.1.0-beta.12"
+  checksum: 576cea8727ba86da5e4a37aa8f3c3d5a9570ae38ccecfeee42ee6c690b7b3bf25f127cfcc3d52397e70d7e47e026cfbfe4c785bce33650c6c9cae5e9440744ff
+  languageName: node
+  linkType: hard
+
 "@nomad-xyz/contract-interfaces@npm:1.1.1":
   version: 1.1.1
   resolution: "@nomad-xyz/contract-interfaces@npm:1.1.1"
@@ -1186,6 +1193,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
+    "@nomad-xyz/config": 0.1.0-beta.12
     "@nomad-xyz/multi-provider": "workspace:^"
     "@types/node": ^16.9.1
     "@typescript-eslint/eslint-plugin": ^4.33.0
