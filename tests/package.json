@@ -9,7 +9,8 @@
     "check": "tsc --noEmit",
     "prettier": "prettier --write ./src.ts ./config ./scripts",
     "lint": "eslint --fix ./src.ts ./config ./scripts",
-    "lint:fix": "eslint --fix ./src"
+    "lint:fix": "eslint --fix ./src",
+    "test": "mocha -r ts-node/register 'multi-provider/*.ts' 'sdk/*.ts' 'sdk-bridge/*.ts' 'sdk-govern/*.ts'"
   },
   "author": "Illusory Systems Inc.",
   "license": "Apache-2.0 OR MIT",
@@ -39,7 +40,12 @@
     "@nomad-xyz/multi-provider": "workspace:^",
     "@nomad-xyz/nomad-core-sol": "^1.2.0",
     "@nomad-xyz/sdk": "workspace:^",
-    "ethers": "^5.4.6"
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^9.1.0",
+    "chai": "^4.3.6",
+    "ethers": "^5.5.4",
+    "mocha": "^9.2.1",
+    "ts-node": "^10.7.0"
   },
   "keywords": [
     "nomad",
