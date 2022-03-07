@@ -36,7 +36,7 @@
     "typescript": "^4.4.3"
   },
   "dependencies": {
-    "@nomad-xyz/config": "0.1.0-beta.12",
+    "@nomad-xyz/config": "0.1.0-beta.14",
     "@nomad-xyz/multi-provider": "workspace:^",
     "@nomad-xyz/nomad-core-sol": "^1.2.0",
     "@nomad-xyz/sdk": "workspace:^",
