@@ -1148,6 +1148,19 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nomad-xyz/nomad-core-sol@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@nomad-xyz/nomad-core-sol@npm:1.2.0"
+  dependencies:
+    "@openzeppelin/contracts": ^3.4.2
+    "@openzeppelin/contracts-upgradeable": ~3.4.2
+    "@summa-tx/memview-sol": ^2.0.0
+    dotenv: ^10.0.0
+    ts-generator: ^0.1.1
+  checksum: d5a45a8c1fc02b4bf88264a2011f7f2b3dc8cd1b630a847b494f9c1aa6e55ca154b6a5e794e897d26f1543efbb75a011e41c3b6cd0a360fcd9bea883fe5e455d
+  languageName: node
+  linkType: hard
+
 "@nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
@@ -1190,12 +1203,32 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nomad-xyz/sdk-tests@workspace:tests":
+  version: 0.0.0-use.local
+  resolution: "@nomad-xyz/sdk-tests@workspace:tests"
+  dependencies:
+    "@nomad-xyz/config": 0.1.0-beta.12
+    "@nomad-xyz/multi-provider": "workspace:^"
+    "@nomad-xyz/nomad-core-sol": ^1.2.0
+    "@nomad-xyz/sdk": "workspace:^"
+    "@types/node": ^16.9.1
+    "@typescript-eslint/eslint-plugin": ^4.33.0
+    "@typescript-eslint/parser": ^4.33.0
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.3.0
+    ethers: ^5.4.6
+    prettier: ^2.4.1
+    typescript: ^4.4.3
+  languageName: unknown
+  linkType: soft
+
 "@nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
     "@nomad-xyz/config": 0.1.0-beta.12
     "@nomad-xyz/multi-provider": "workspace:^"
+    "@nomad-xyz/nomad-core-sol": ^1.2.0
     "@types/node": ^16.9.1
     "@typescript-eslint/eslint-plugin": ^4.33.0
     "@typescript-eslint/parser": ^4.33.0
@@ -5642,9 +5675,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.3.47":
-  version: 1.4.77
-  resolution: "electron-to-chromium@npm:1.4.77"
-  checksum: df2311dee07ed1b0203978429f3b5c703cee7e2c8f90e480ca8cadc9d8e33ffe606fcdd4099cf0f4318c6ee9cee50aabeaee22e5588b0bb1cc29cb8742953cb4
+  version: 1.4.79
+  resolution: "electron-to-chromium@npm:1.4.79"
+  checksum: 0d312fc3a347d384d4c7d52fab353eca29827076faec515d2156a681b210d68d1eded416b74b41512337ca264649e7d4a11ae0bd97742b5c21ff9c2869657ed3
   languageName: node
   linkType: hard
 
@@ -10226,9 +10259,9 @@ __metadata:
   linkType: hard
 
 "lru-cache@npm:^7.4.1":
-  version: 7.4.1
-  resolution: "lru-cache@npm:7.4.1"
-  checksum: de6d8aa83b0a304943a1e1ec2a982d9b44ef36963c20bd01950f13dcb3eb482c57bfa15ab49b1baa15c682d6d33a10842bb7b33d8a449845009ffab6a2faec3c
+  version: 7.4.2
+  resolution: "lru-cache@npm:7.4.2"
+  checksum: 389b3b13b3a0406087b5ff3a913358161aa0b17e55e5a2626c343fa701026ce176483043ed6062ea188edbcd9ffab47a136a0f6e6d9b42b4236c8c49523a6ac5
   languageName: node
   linkType: hard
 

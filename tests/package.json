@@ -1,7 +1,7 @@
 {
-  "name": "@nomad-xyz/sdk",
+  "name": "@nomad-xyz/sdk-tests",
   "version": "0.1.0",
-  "description": "Nomad SDK",
+  "description": "Nomad SDK tests",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
@@ -29,10 +29,8 @@
     "@types/node": "^16.9.1",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
-    "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
-    "fs": "0.0.1-security",
     "prettier": "^2.4.1",
     "typescript": "^4.4.3"
   },
@@ -40,10 +38,12 @@
     "@nomad-xyz/config": "0.1.0-beta.12",
     "@nomad-xyz/multi-provider": "workspace:^",
     "@nomad-xyz/nomad-core-sol": "^1.2.0",
+    "@nomad-xyz/sdk": "workspace:^",
     "ethers": "^5.4.6"
   },
   "keywords": [
     "nomad",
-    "sdk"
+    "sdk",
+    "tests"
   ]
 }

@@ -12,7 +12,8 @@
     "packages/local-environment",
     "packages/sdk",
     "packages/sdk-bridge",
-    "packages/sdk-govern"
+    "packages/sdk-govern",
+    "tests"
   ],
   "scripts": {
     "contracts-bridge": "yarn workspace @nomad-xyz/contracts-bridge",
