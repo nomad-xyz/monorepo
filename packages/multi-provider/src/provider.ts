@@ -6,17 +6,32 @@ type Provider = ethers.providers.Provider;
 /**
  * The MultiProvider manages a collection of [Domains]{@link Domain} and allows
  * developers to enroll ethers Providers and Signers for each domain. It is
- * intended to enable faster multi-chain development by grouping all chain
+ * intended to enable faster multi-chain development by housing all chain
  * connections under a single roof.
  *
+ * Generally, we intend developers inherit the MultiProvider. Which is to say,
+ * the expected usage pattern is `class AppContext<T> extends MultiProvider<T>`.
+ * This way, the `MultiProvider` registration methods are available on the app
+ * context.
+ *
+ * However, the multiprovider also works well as a property on a `Context`
+ * class.  E.g. `class AppContext<T> { protected provider: MultiProvider<T> }`
+ *
+ * The `Domain` type parameter to the MultiProvider specifies an internal data
+ * carrier that describes chains. This can be as simple as a name and a number.
+ * This is the logical place to insert app-specific chain information. E.g. if
+ * your application needs to know the blocktime of a chain, it should be on the
+ * `Domain` type.
+ *
  * @example
- * import {mainnet} from 'nomad-sdk';
- * mainnet.registerRpcProvider('celo', 'https://forno.celo.org');
- * mainnet.registerRpcProvider('polygon', '...');
- * mainnet.registerRpcProvider('ethereum', '...');
- * mainnet.registerSigner('celo', celoProvider);
- * mainnet.registerSigner('polygon', polygonProvider);
- * mainnet.registerSigner('ethereum', ethereumProvider);
+ * import { MultiProvider, Domain } from '@nomad-xyz/multi-provider';
+ * const myApp = new MultiProvider<Domain>();
+ * myApp.registerDomain({name: 'polygon', id: 50});
+ * myApp.registerDomain({name: 'ethereum', id: 1});
+ * myApp.registerRpcProvider('celo', 'https://forno.celo.org');
+ * myApp.registerRpcProvider('ethereum', '...');
+ * myApp.registerSigner('ethereum', someSigner);
+ * myApp.registerSigner('polygon', someSigner);
  */
 export class MultiProvider<T extends Domain> {
   protected domains: Map<string, T>;
@@ -58,8 +73,7 @@ export class MultiProvider<T extends Domain> {
   /**
    * Resolve a domain name (or number) to the canonical number.
    *
-   * This function is used extensively to disambiguate domains, and allows
-   * devs to reference domains using their preferred nomenclature.
+   * This function is used extensively to disambiguate domains.
    *
    * @param nameOrDomain A domain name or number.
    * @returns The canonical domain number.
@@ -76,6 +90,20 @@ export class MultiProvider<T extends Domain> {
     } else {
       return nameOrDomain;
     }
+  }
+
+  /**
+   * Resolve the name of a registered {@link Domain}, from its name or number.
+   *
+   * Similar to `resolveDomain`.
+   *
+   * @param nameOrDomain A domain name or number.
+   * @returns The name (or undefined)
+   */
+  resolveDomainName(nameOrDomain: string | number): string {
+    const name = this.getDomain(nameOrDomain)?.name;
+    if (!name) throw new Error(`Domain ${nameOrDomain} not registered`);
+    return name;
   }
 
   /**
@@ -119,20 +147,6 @@ export class MultiProvider<T extends Domain> {
     }
 
     return domain;
-  }
-
-  /**
-   * Resolve the name of a registered {@link Domain}, from its name or number.
-   *
-   * Similar to `resolveDomain`.
-   *
-   * @param nameOrDomain A domain name or number.
-   * @returns The name (or undefined)
-   */
-  resolveDomainName(nameOrDomain: string | number): string {
-    const name = this.getDomain(nameOrDomain)?.name;
-    if (!name) throw new Error(`Domain ${nameOrDomain} not registered`);
-    return name;
   }
 
   /**

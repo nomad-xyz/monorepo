@@ -11,16 +11,10 @@ import * as config from '@nomad-xyz/config';
 type Address = string;
 
 /**
- * The NomadContext managers connections to Nomad core and Bridge contracts.
- * It inherits from the {@link MultiProvider}, and ensures that its contracts
- * always use the latest registered providers and signers.
- *
- * For convenience, we've pre-constructed contexts for mainnet and testnet
- * deployments. These can be imported directly.
- *
- * @example
- * // Set up mainnet and then access contracts as below:
- * let router = mainnet.mustGetBridge('celo').bridgeRouter;
+ * The BridgeContext manages connections to Nomad Bridge contracts.
+ * It inherits from the {@link MultiProvider} and {@link NomadContext} and
+ * ensures that its contracts always use the latest registered providers and
+ * signers.
  */
 
 export class BridgeContext extends NomadContext {
