@@ -7,7 +7,7 @@ import {
   AnnotatedTokenDeployed,
   TokenDeployedArgs,
   TokenDeployedTypes,
-} from '@nomad-xyz/bridge-sdk';
+} from '@nomad-xyz/sdk-bridge';
 import { TSContract, queryAnnotatedEvents } from '@nomad-xyz/sdk';
 import { uploadDeployedTokens } from './googleSheets';
 

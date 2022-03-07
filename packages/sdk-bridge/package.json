@@ -1,5 +1,5 @@
 {
-  "name": "@nomad-xyz/bridge-sdk",
+  "name": "@nomad-xyz/sdk-bridge",
   "version": "1.3.6",
   "description": "Nomad bridge SDK",
   "main": "lib/index.js",
