@@ -37,8 +37,8 @@
   },
   "dependencies": {
     "@nomad-xyz/config": "0.1.0-beta.14",
+    "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/multi-provider": "workspace:^",
-    "@nomad-xyz/nomad-core-sol": "^1.2.0",
     "@nomad-xyz/sdk": "workspace:^",
     "@types/chai": "^4.3.0",
     "@types/mocha": "^9.1.0",

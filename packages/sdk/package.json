@@ -38,8 +38,8 @@
   },
   "dependencies": {
     "@nomad-xyz/config": "0.1.0-beta.12",
+    "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/multi-provider": "workspace:^",
-    "@nomad-xyz/nomad-core-sol": "^1.2.0",
     "ethers": "^5.4.6"
   },
   "keywords": [

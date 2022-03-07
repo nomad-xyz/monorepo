@@ -1155,19 +1155,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/nomad-core-sol@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "@nomad-xyz/nomad-core-sol@npm:1.2.0"
-  dependencies:
-    "@openzeppelin/contracts": ^3.4.2
-    "@openzeppelin/contracts-upgradeable": ~3.4.2
-    "@summa-tx/memview-sol": ^2.0.0
-    dotenv: ^10.0.0
-    ts-generator: ^0.1.1
-  checksum: d5a45a8c1fc02b4bf88264a2011f7f2b3dc8cd1b630a847b494f9c1aa6e55ca154b6a5e794e897d26f1543efbb75a011e41c3b6cd0a360fcd9bea883fe5e455d
-  languageName: node
-  linkType: hard
-
 "@nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
@@ -1215,8 +1202,8 @@ __metadata:
   resolution: "@nomad-xyz/sdk-tests@workspace:tests"
   dependencies:
     "@nomad-xyz/config": 0.1.0-beta.14
+    "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
-    "@nomad-xyz/nomad-core-sol": ^1.2.0
     "@nomad-xyz/sdk": "workspace:^"
     "@types/chai": ^4.3.0
     "@types/mocha": ^9.1.0
@@ -1239,8 +1226,8 @@ __metadata:
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
     "@nomad-xyz/config": 0.1.0-beta.12
+    "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
-    "@nomad-xyz/nomad-core-sol": ^1.2.0
     "@types/node": ^16.9.1
     "@typescript-eslint/eslint-plugin": ^4.33.0
     "@typescript-eslint/parser": ^4.33.0
