@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 import { NomadContext, CoreContracts } from '@nomad-xyz/sdk';
 
 import * as utils from './utils';
+export { parseAction, Action } from './GovernanceMessage';
 
 export type Address = string;
 
