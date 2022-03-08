@@ -2,9 +2,9 @@
   "private": true,
   "name": "@nomad-xyz/contracts",
   "workspaces": [
-    "packages/core",
-    "packages/router",
-    "packages/bridge",
+    "packages/bridge-contracts",
+    "packages/core-contracts",
+    "packages/router-contracts",
     "packages/example-xapps",
     "packages/deploy",
     "packages/monitor",
@@ -15,23 +15,23 @@
     "packages/sdk-govern"
   ],
   "scripts": {
-    "bridge": "yarn workspace @nomad-xyz/bridge-contracts",
-    "core": "yarn workspace @nomad-xyz/core-contracts",
+    "bridge-contracts": "yarn workspace @nomad-xyz/bridge-contracts",
+    "core-contracts": "yarn workspace @nomad-xyz/core-contracts",
     "deploy": "yarn workspace @nomad-xyz/deploy",
     "example-xapps": "yarn workspace @nomad-xyz/example-xapp-contracts",
-    "router": "yarn workspace @nomad-xyz/router-contracts",
+    "router-contracts": "yarn workspace @nomad-xyz/router-contracts",
     "monitor": "yarn workspace @nomad-xyz/monitor",
     "multi-provider": "yarn workspace @nomad-xyz/multi-provider",
     "local-environment": "yarn workspace @nomad-xyz/local-environment",
     "sdk": "yarn workspace @nomad-xyz/sdk",
-    "bridge-sdk": "yarn workspace @nomad-xyz/bridge-sdk",
-    "govern-sdk": "yarn workspace @nomad-xyz/govern-sdk",
+    "sdk-bridge": "yarn workspace @nomad-xyz/sdk-bridge",
+    "sdk-govern": "yarn workspace @nomad-xyz/sdk-govern",
     "prettier": "yarn workspaces foreach -Apv run prettier",
     "lint": "yarn workspaces foreach -Apv run lint",
     "test": "yarn workspaces foreach -Apv run test",
-    "build": "yarn workspaces foreach -Atv run build",
-    "compile": "yarn workspaces foreach -Apv --exclude deploy run compile",
-    "bootstrap": "yarn workspaces foreach -Apv --exclude deploy --exclude example-xapps run bootstrap"
+    "build": "yarn workspaces foreach -Atv --exclude @nomad-xyz/deploy run build",
+    "compile": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy run compile",
+    "bootstrap": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/example-xapps run bootstrap"
   },
   "packageManager": "yarn@3.1.1"
 }

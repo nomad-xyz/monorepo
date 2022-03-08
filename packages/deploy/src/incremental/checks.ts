@@ -1,4 +1,4 @@
-import { BridgeContext } from '@nomad-xyz/bridge-sdk';
+import { BridgeContext } from '@nomad-xyz/sdk-bridge';
 import { expect, AssertionError } from 'chai';
 import { Waiter } from './utils';
 

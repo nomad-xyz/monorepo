@@ -1,5 +1,5 @@
-import * as xAppContracts from '@nomad-xyz/bridge-contracts';
-import * as contracts from '@nomad-xyz/core-contracts';
+import * as xAppContracts from '../../../bridge-contracts';
+import * as contracts from '../../../core-contracts';
 
 import * as ethers from 'ethers';
 
