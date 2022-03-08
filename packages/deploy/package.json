@@ -18,8 +18,12 @@
   "private": true,
   "version": "0.1.2",
   "description": "Nomad deploy tools",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*",
+    "src/**/*"
+  ],
   "scripts": {
     "build": "tsc",
     "check": "tsc --noEmit",
