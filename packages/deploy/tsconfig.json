@@ -13,16 +13,16 @@
   ],
   "include": [
     "./src/*.ts",
-    "./src/core/*.ts",
-    "./src/bridge/*.ts",
+    "./src/core-contracts/*.ts",
+    "./src/bridge-contracts/*.ts",
     "./src/verification/*.ts",
     "./src/incremental/*.ts"
   ],
   "references": [
     { "path": "../sdk" },
-    { "path": "../core" },
-    { "path": "../bridge" },
-    { "path": "../router" },
+    { "path": "../core-contracts" },
+    { "path": "../bridge-contracts" },
+    { "path": "../router-contracts" },
     { "path": "../sdk-bridge" },
     { "path": "../sdk-govern" },
     { "path": "../multi-provider" }
