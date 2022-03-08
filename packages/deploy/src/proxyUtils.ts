@@ -1,6 +1,6 @@
 import { BytesLike, ethers } from 'ethers';
 
-import contracts from '../../core-contracts';
+import contracts from '../../contracts-core';
 import { CoreDeploy } from './core/CoreDeploy';
 import { BridgeDeploy } from './bridge/BridgeDeploy';
 

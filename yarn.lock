@@ -892,13 +892,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/bridge-contracts@1.2.0, @nomad-xyz/bridge-contracts@workspace:packages/bridge-contracts":
+"@nomad-xyz/contracts-bridge@1.2.0, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
   version: 0.0.0-use.local
-  resolution: "@nomad-xyz/bridge-contracts@workspace:packages/bridge-contracts"
+  resolution: "@nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge"
   dependencies:
-    "@nomad-xyz/core-contracts": 1.2.0
+    "@nomad-xyz/contracts-core": 1.2.0
     "@nomad-xyz/deploy": 0.1.2
-    "@nomad-xyz/router-contracts": 1.2.0
+    "@nomad-xyz/contracts-router": 1.2.0
     "@nomiclabs/hardhat-ethers": ^2.0.1
     "@nomiclabs/hardhat-etherscan": ^2.1.2
     "@nomiclabs/hardhat-waffle": ^2.0.1
@@ -943,9 +943,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/core-contracts@1.2.0, @nomad-xyz/core-contracts@workspace:packages/core-contracts":
+"@nomad-xyz/contracts-core@1.2.0, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
   version: 0.0.0-use.local
-  resolution: "@nomad-xyz/core-contracts@workspace:packages/core-contracts"
+  resolution: "@nomad-xyz/contracts-core@workspace:packages/contracts-core"
   dependencies:
     "@nomad-xyz/deploy": "workspace:^"
     "@nomiclabs/hardhat-ethers": ^2.0.4
@@ -979,10 +979,10 @@ __metadata:
   resolution: "@nomad-xyz/deploy@workspace:packages/deploy"
   dependencies:
     "@ethersproject/experimental": ^5.3.0
-    "@nomad-xyz/bridge-contracts": 1.2.0
-    "@nomad-xyz/core-contracts": 1.2.0
+    "@nomad-xyz/contracts-bridge": 1.2.0
+    "@nomad-xyz/contracts-core": 1.2.0
     "@nomad-xyz/multi-provider": "workspace:^"
-    "@nomad-xyz/router-contracts": 1.2.0
+    "@nomad-xyz/contracts-router": 1.2.0
     "@nomad-xyz/sdk": "workspace:^"
     "@nomad-xyz/sdk-bridge": "workspace:^"
     "@nomad-xyz/sdk-govern": "workspace:^"
@@ -1008,8 +1008,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/example-xapp-contracts@workspace:packages/example-xapps"
   dependencies:
-    "@nomad-xyz/core-contracts": 1.2.0
-    "@nomad-xyz/router-contracts": 1.2.0
+    "@nomad-xyz/contracts-core": 1.2.0
+    "@nomad-xyz/contracts-router": 1.2.0
     "@nomiclabs/hardhat-ethers": ^2.0.1
     "@nomiclabs/hardhat-etherscan": ^2.1.2
     "@nomiclabs/hardhat-waffle": ^2.0.1
@@ -1109,11 +1109,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/router-contracts@1.2.0, @nomad-xyz/router-contracts@workspace:packages/router-contracts":
+"@nomad-xyz/contracts-router@1.2.0, @nomad-xyz/contracts-router@workspace:packages/contracts-router":
   version: 0.0.0-use.local
-  resolution: "@nomad-xyz/router-contracts@workspace:packages/router-contracts"
+  resolution: "@nomad-xyz/contracts-router@workspace:packages/contracts-router"
   dependencies:
-    "@nomad-xyz/core-contracts": 1.2.0
+    "@nomad-xyz/contracts-core": 1.2.0
     "@nomiclabs/hardhat-ethers": ^2.0.1
     "@nomiclabs/hardhat-etherscan": ^2.1.2
     "@nomiclabs/hardhat-waffle": ^2.0.1

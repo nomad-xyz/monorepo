@@ -7,7 +7,7 @@ import {
   TokenRegistry__factory,
   BridgeRouter__factory,
   ETHHelper__factory,
-} from '@nomad-xyz/bridge-contracts';
+} from '@nomad-xyz/contracts-bridge';
 
 type Address = string;
 

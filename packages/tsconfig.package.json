@@ -23,13 +23,13 @@
   },
   "references": [
     {
-      "path": "./core-contracts"
+      "path": "./contracts-core"
     },
     {
-      "path": "./router-contracts"
+      "path": "./contracts-router"
     },
     {
-      "path": "./bridge-contracts"
+      "path": "./contracts-bridge"
     },
     {
       "path": "./deploy"

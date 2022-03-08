@@ -6,10 +6,10 @@ import {BridgeMessage} from "./BridgeMessage.sol";
 import {IBridgeToken} from "./interfaces/IBridgeToken.sol";
 import {ITokenRegistry} from "./interfaces/ITokenRegistry.sol";
 // ============ External Imports ============
-import {XAppConnectionClient} from "@nomad-xyz/router-contracts/contracts/XAppConnectionClient.sol";
-import {Router} from "@nomad-xyz/router-contracts/contracts/Router.sol";
-import {Home} from "@nomad-xyz/core-contracts/contracts/Home.sol";
-import {Version0} from "@nomad-xyz/core-contracts/contracts/Version0.sol";
+import {XAppConnectionClient} from "@nomad-xyz/contracts-router/contracts/XAppConnectionClient.sol";
+import {Router} from "@nomad-xyz/contracts-router/contracts/Router.sol";
+import {Home} from "@nomad-xyz/contracts-core/contracts/Home.sol";
+import {Version0} from "@nomad-xyz/contracts-core/contracts/Version0.sol";
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";

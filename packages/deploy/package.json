@@ -49,10 +49,10 @@
   "license": "MIT OR Apache-2.0",
   "dependencies": {
     "@ethersproject/experimental": "^5.3.0",
-    "@nomad-xyz/bridge-contracts": "1.2.0",
-    "@nomad-xyz/core-contracts": "1.2.0",
+    "@nomad-xyz/contracts-bridge": "1.2.0",
+    "@nomad-xyz/contracts-core": "1.2.0",
     "@nomad-xyz/multi-provider": "workspace:^",
-    "@nomad-xyz/router-contracts": "1.2.0",
+    "@nomad-xyz/contracts-router": "1.2.0",
     "@nomad-xyz/sdk": "workspace:^",
     "@nomad-xyz/sdk-bridge": "workspace:^",
     "@nomad-xyz/sdk-govern": "workspace:^",

@@ -1,6 +1,6 @@
 import { Result } from '@ethersproject/abi';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
-import { TypedEvent } from '@nomad-xyz/core-contracts';
+import { TypedEvent } from '@nomad-xyz/contracts-core';
 
 export class Annotated<U extends Result, T extends TypedEvent<U>> {
   readonly domain: number;

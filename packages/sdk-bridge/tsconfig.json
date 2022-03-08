@@ -12,8 +12,8 @@
   ],
   "include": ["./src/*.ts", "./src/tokens/*.ts"],
   "references": [
-    { "path": "../core-contracts" },
-    { "path": "../bridge-contracts" },
+    { "path": "../contracts-core" },
+    { "path": "../contracts-bridge" },
     { "path": "../multi-provider" },
     { "path": "../sdk" }
   ]

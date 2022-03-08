@@ -5,7 +5,7 @@ pragma solidity >=0.6.11;
 import {BridgeRouter} from "./BridgeRouter.sol";
 import {IWeth} from "./interfaces/IWeth.sol";
 // ============ External Imports ============
-import {TypeCasts} from "@nomad-xyz/core-contracts/contracts/XAppConnectionManager.sol";
+import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 
 contract ETHHelper {
     // ============ Immutables ============

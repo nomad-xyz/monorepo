@@ -1,5 +1,5 @@
 import { BigNumber } from '@ethersproject/bignumber';
-import { TypedEvent } from '@nomad-xyz/core-contracts';
+import { TypedEvent } from '@nomad-xyz/contracts-core';
 
 import { Annotated } from '.';
 

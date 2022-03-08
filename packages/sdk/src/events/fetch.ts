@@ -2,7 +2,7 @@ import { Annotated } from '.';
 import { NomadContext } from '..';
 import { Domain } from '@nomad-xyz/multi-provider';
 import { Result } from '@ethersproject/abi';
-import { TypedEvent, TypedEventFilter } from '@nomad-xyz/core-contracts';
+import { TypedEvent, TypedEventFilter } from '@nomad-xyz/contracts-core';
 
 // specifies an interface shared by the TS generated contracts
 export interface TSContract<T extends Result, U> {

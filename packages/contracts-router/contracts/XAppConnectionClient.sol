@@ -2,8 +2,8 @@
 pragma solidity >=0.6.11;
 
 // ============ External Imports ============
-import {Home} from "@nomad-xyz/core-contracts/contracts/Home.sol";
-import {XAppConnectionManager} from "@nomad-xyz/core-contracts/contracts/XAppConnectionManager.sol";
+import {Home} from "@nomad-xyz/contracts-core/contracts/Home.sol";
+import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 abstract contract XAppConnectionClient is OwnableUpgradeable {
