@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model kv_storage {
+  id        Int      @id @default(autoincrement())
+  namespace String   @db.VarChar
+  key       String   @db.VarChar
+  value     String   @db.VarChar
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+
+  @@unique([namespace, key], map: "unique_namespace_key")
+  @@index([id], map: "kv_storage_id_index")
+}
+
+model messages {
+  id                      Int      @id @default(autoincrement())
+  messageHash                    String @map("message_hash")   @unique @db.VarChar(66)
+  origin                  Int
+  destination             Int
+  nonce                   Int
+  internalSender          String   @map("internal_sender") @db.VarChar(66)
+  internalRecipient       String   @map("internal_recipient") @db.VarChar(66)
+  root                    String   @db.VarChar(66)
+  state                   Int
+  dispatchBlock                   Int
+  dispatchedAt            Int @map("dispatched_at")
+  updatedAt               Int @map("updated_at")
+  relayedAt               Int @map("relayed_at")
+  receivedAt              Int @map("received_at")
+  processedAt             Int @map("processed_at")
+  sender                  String?  @db.VarChar(66)
+  recipient               String?  @db.VarChar(66)
+  amount       String?  @db.VarChar(256)
+  allowFast    Boolean?  @map("allow_fast")
+  detailsHash   String?  @map("details_hash") @db.VarChar(66)
+  tokenDomain   Int? @map("token_domain")
+  tokenId      String? @map("token_id")  @db.VarChar(66)
+  body                     String   @db.VarChar
+  leafIndex              String @map("leaf_index")   @db.VarChar(256)
+  tx                     String?  @db.VarChar(66)
+  gasAtDispatch         String? @map("gas_at_dispatch")   @db.VarChar(256)
+  gasAtUpdate         String? @map("gas_at_update")   @db.VarChar(256)
+  gasAtRelay          String? @map("gas_at_relay")   @db.VarChar(256)
+  gasAtReceive          String? @map("gas_at_receive")   @db.VarChar(256)
+  gasAtProcess          String? @map("gas_at_process")   @db.VarChar(256)
+  createdAt               DateTime @map("created_at") @default(now()) @db.Timestamp(6)
+
+  @@index([id], map: "messages_id_index")
+}
