@@ -1,4 +1,4 @@
-import * as contracts from '@nomad-xyz/core-contracts';
+import * as contracts from '../../../core-contracts';
 import { BeaconProxy, ProxyAddresses } from '../proxyUtils';
 import { Contracts } from '../contracts';
 import { CoreContractAddresses } from '../chain';

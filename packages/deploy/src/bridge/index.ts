@@ -4,7 +4,7 @@ import {
   checkBridgeConnections,
   checkHubAndSpokeBridgeConnections,
 } from './checks';
-import * as xAppContracts from '@nomad-xyz/bridge-contracts';
+import * as xAppContracts from '../../../bridge-contracts';
 import fs from 'fs';
 import { BridgeDeploy as Deploy } from './BridgeDeploy';
 import assert from 'assert';

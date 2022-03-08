@@ -15,8 +15,8 @@
     "src/govern/*.ts"
   ],
   "references": [
-    { "path": "../core" },
-    { "path": "../bridge" },
+    { "path": "../core-contracts" },
+    { "path": "../bridge-contracts" },
     { "path": "../multi-provider" }
   ]
 }
