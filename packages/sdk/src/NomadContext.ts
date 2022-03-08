@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 
 import { MultiProvider } from '@nomad-xyz/multi-provider';
-import * as core from '@nomad-xyz/core-contracts';
+import * as core from '@nomad-xyz/contracts-core';
 
 import { CoreContracts } from './CoreContracts';
 import {

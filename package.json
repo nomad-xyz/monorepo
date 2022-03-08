@@ -2,9 +2,9 @@
   "private": true,
   "name": "@nomad-xyz/contracts",
   "workspaces": [
-    "packages/bridge-contracts",
-    "packages/core-contracts",
-    "packages/router-contracts",
+    "packages/contracts-bridge",
+    "packages/contracts-core",
+    "packages/contracts-router",
     "packages/example-xapps",
     "packages/deploy",
     "packages/monitor",
@@ -14,11 +14,11 @@
     "packages/sdk-govern"
   ],
   "scripts": {
-    "bridge-contracts": "yarn workspace @nomad-xyz/bridge-contracts",
-    "core-contracts": "yarn workspace @nomad-xyz/core-contracts",
+    "contracts-bridge": "yarn workspace @nomad-xyz/contracts-bridge",
+    "contracts-core": "yarn workspace @nomad-xyz/contracts-core",
     "deploy": "yarn workspace @nomad-xyz/deploy",
     "example-xapps": "yarn workspace @nomad-xyz/example-xapp-contracts",
-    "router-contracts": "yarn workspace @nomad-xyz/router-contracts",
+    "contracts-router": "yarn workspace @nomad-xyz/contracts-router",
     "monitor": "yarn workspace @nomad-xyz/monitor",
     "multi-provider": "yarn workspace @nomad-xyz/multi-provider",
     "sdk": "yarn workspace @nomad-xyz/sdk",

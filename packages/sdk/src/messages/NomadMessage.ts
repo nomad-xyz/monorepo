@@ -1,7 +1,7 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
-import * as core from '@nomad-xyz/core-contracts';
+import * as core from '@nomad-xyz/contracts-core';
 import { NomadContext } from '..';
 import { utils } from '@nomad-xyz/multi-provider';
 

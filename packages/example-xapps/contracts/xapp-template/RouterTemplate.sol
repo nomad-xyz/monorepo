@@ -5,8 +5,8 @@ pragma solidity >=0.6.11;
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 // ============ Internal Imports ============
 import {Message} from "./MessageTemplate.sol";
-import {Router} from "@nomad-xyz/router-contracts/contracts/Router.sol";
-import {XAppConnectionClient} from "@nomad-xyz/router-contracts/contracts/XAppConnectionClient.sol";
+import {Router} from "@nomad-xyz/contracts-router/contracts/Router.sol";
+import {XAppConnectionClient} from "@nomad-xyz/contracts-router/contracts/XAppConnectionClient.sol";
 
 /*
 ============ Overview: Building a xApp ============

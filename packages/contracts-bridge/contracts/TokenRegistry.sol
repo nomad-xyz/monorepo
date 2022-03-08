@@ -9,9 +9,9 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IBridgeToken} from "./interfaces/IBridgeToken.sol";
 import {ITokenRegistry} from "./interfaces/ITokenRegistry.sol";
 // ============ External Contracts ============
-import {XAppConnectionClient} from "@nomad-xyz/router-contracts/contracts/XAppConnectionClient.sol";
-import {TypeCasts} from "@nomad-xyz/core-contracts/contracts/XAppConnectionManager.sol";
-import {UpgradeBeaconProxy} from "@nomad-xyz/core-contracts/contracts/upgrade/UpgradeBeaconProxy.sol";
+import {XAppConnectionClient} from "@nomad-xyz/contracts-router/contracts/XAppConnectionClient.sol";
+import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
+import {UpgradeBeaconProxy} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeaconProxy.sol";
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 

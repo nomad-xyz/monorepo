@@ -2,7 +2,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { ethers } from 'ethers';
-import * as bridge from '@nomad-xyz/bridge-contracts';
+import * as bridge from '@nomad-xyz/contracts-bridge';
 import { NomadMessage, AnnotatedDispatch } from '@nomad-xyz/sdk';
 import { ResolvedTokenInfo, TokenIdentifier } from './tokens';
 import { BridgeContracts } from './BridgeContracts';

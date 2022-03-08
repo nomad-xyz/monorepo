@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import * as core from '@nomad-xyz/core-contracts';
+import * as core from '@nomad-xyz/contracts-core';
 import { Contracts } from '@nomad-xyz/multi-provider';
 import { ReplicaInfo } from './domains/domain';
 

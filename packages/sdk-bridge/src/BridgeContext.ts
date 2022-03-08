@@ -1,6 +1,6 @@
 import { BigNumberish, ethers } from 'ethers';
 import { canonizeId, evmId } from '@nomad-xyz/multi-provider/lib/utils';
-import * as bridge from '@nomad-xyz/bridge-contracts';
+import * as bridge from '@nomad-xyz/contracts-bridge';
 import {
   CoreContracts,
   FailedHomeError,

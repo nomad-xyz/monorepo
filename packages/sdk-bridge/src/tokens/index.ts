@@ -1,5 +1,5 @@
 import { BytesLike } from 'ethers';
-import * as bridge from '@nomad-xyz/bridge-contracts';
+import * as bridge from '@nomad-xyz/contracts-bridge';
 import wellKnown from './wellKnown';
 import testnetWellKnown from './testnetWellKnown';
 
