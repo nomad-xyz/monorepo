@@ -1,4 +1,4 @@
-import { BridgeContext, BridgeMessage } from '@nomad-xyz/bridge-sdk';
+import { BridgeContext, BridgeMessage } from '@nomad-xyz/sdk-bridge';
 import * as contexts from "./registerContext";
 import {printStatus} from "./print";
 

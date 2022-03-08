@@ -1,5 +1,5 @@
 {
-  "name": "@nomad-xyz/govern-sdk",
+  "name": "@nomad-xyz/sdk-govern",
   "version": "1.3.6",
   "description": "Nomad governance SDK",
   "main": "lib/index.js",

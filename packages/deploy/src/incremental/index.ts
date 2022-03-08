@@ -1,6 +1,6 @@
 // import { NomadContext } from '@nomad-xyz/sdk';
-import { BridgeContext } from '@nomad-xyz/bridge-sdk'
-import { CallBatch } from '@nomad-xyz/govern-sdk';
+import { BridgeContext } from '@nomad-xyz/sdk-bridge'
+import { CallBatch } from '@nomad-xyz/sdk-govern';
 import { utils as mpUtils } from '@nomad-xyz/multi-provider';
 import { CoreConfig } from '../core/CoreDeploy';
 import { writeBatchOutput } from './utils';
