@@ -76,10 +76,6 @@ module.exports = {
     includeFactories: true,
   },
 
-  mocha: {
-    bail: true,
-  },
-
   etherscan: {
     apiKey: etherscanKey,
   },

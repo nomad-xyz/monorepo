@@ -67,7 +67,7 @@ export class MultiProvider<T extends Domain> {
   }
 
   get missingProviders(): string[] {
-    return this.domainNames.filter((name) => this.providers.has(name));
+    return this.domainNames.filter((name) => !this.providers.has(name));
   }
 
   /**
@@ -79,17 +79,15 @@ export class MultiProvider<T extends Domain> {
    * @returns The canonical domain number.
    */
   resolveDomain(nameOrDomain: string | number): number {
-    if (typeof nameOrDomain === 'string') {
-      const domains = Array.from(this.domains.values()).filter(
-        (domain) => domain.name.toLowerCase() === nameOrDomain.toLowerCase(),
-      );
-      if (domains.length === 0) {
-        throw new Error(`Domain not found: ${nameOrDomain}`);
-      }
-      return domains[0].domain;
-    } else {
-      return nameOrDomain;
+    if (typeof nameOrDomain === 'number') return nameOrDomain;
+
+    const domain = this.registeredDomains.find(
+      (domain) => domain.name.toLowerCase() === nameOrDomain.toLowerCase(),
+    );
+    if (!domain) {
+      throw new Error(`Domain not found: ${nameOrDomain}`);
     }
+    return domain.domain;
   }
 
   /**
@@ -101,9 +99,15 @@ export class MultiProvider<T extends Domain> {
    * @returns The name (or undefined)
    */
   resolveDomainName(nameOrDomain: string | number): string {
-    const name = this.getDomain(nameOrDomain)?.name;
-    if (!name) throw new Error(`Domain ${nameOrDomain} not registered`);
-    return name;
+    if (typeof nameOrDomain === 'string') return nameOrDomain;
+
+    const domain = this.registeredDomains.find(
+      (domain) => domain.domain === nameOrDomain,
+    );
+    if (!domain) {
+      throw new Error(`Domain not found: ${nameOrDomain}`);
+    }
+    return domain.name;
   }
 
   /**
@@ -128,7 +132,10 @@ export class MultiProvider<T extends Domain> {
    * @returns A {@link Domain} (if the domain has been registered)
    */
   getDomain(nameOrDomain: number | string): Domain | undefined {
-    const name = this.resolveDomainName(nameOrDomain);
+    let name = nameOrDomain;
+    if (typeof name !== 'string') {
+      name = this.resolveDomainName(nameOrDomain);
+    }
     if (!name) return;
     return this.domains.get(name);
   }
