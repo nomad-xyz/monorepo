@@ -50,7 +50,7 @@ function parseAction(buf: Uint8Array): Action {
   throw new Error('Bad action');
 }
 
-function parseBody(messageBody: string): ParsedTransferMessage {
+export function parseBody(messageBody: string): ParsedTransferMessage {
   const buf = arrayify(messageBody);
 
   const tokenId = buf.slice(0, 36);

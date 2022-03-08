@@ -37,7 +37,7 @@
     "typescript": "^4.4.3"
   },
   "dependencies": {
-    "@nomad-xyz/sdk": "1.3.6",
+    "@nomad-xyz/sdk": "workspace:^",
     "ethers": "^5.4.6",
     "web3": "^1.6.1"
   },

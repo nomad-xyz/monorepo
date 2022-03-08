@@ -36,7 +36,7 @@ type TransferGovernor = {
 
 export type Action = Batch | TransferGovernor;
 
-function parseAction(raw: ethers.BytesLike): Action {
+export function parseAction(raw: ethers.BytesLike): Action {
   const buf = ethers.utils.arrayify(raw);
   const actionType = buf[0];
   if (buf.length === ACTION_LEN.batch && actionType === ActionTypes.batch) {
