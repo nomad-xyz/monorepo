@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "description": "Nomad Monitor",
   "scripts": {
-    "build": "rm tsconfig.tsbuildinfo & tsc --build",
-    "check": "rm tsconfig.tsbuildinfo & tsc --noEmit",
+    "build": "tsc --build",
+    "check": "tsc --noEmit",
     "prettier": "prettier --write .",
     "lint": "echo 'TODO'",
     "lint:fix": "echo 'TODO'",

@@ -2,8 +2,8 @@
   "name": "@nomad-xyz/local-environment",
   "version": "1.0.0",
   "description": "",
-  "main": "lib/index.ts",
-  "types": "lib/index.d.ts",
+  "main": "dist/index.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --build",
     "agents_build": "pushd ../../../agents && ./build.sh latest && popd",
@@ -20,7 +20,7 @@
     "test-agents-die": "npx ts-node tests/agentsDieOnImproperUpdate.ts"
   },
   "files": [
-    "lib/**/*",
+    "dist/**/*",
     "src/**/*"
   ],
   "author": "",

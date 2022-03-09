@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { Contracts } from '@nomad-xyz/multi-provider/lib/contracts';
+import { Contracts } from '@nomad-xyz/multi-provider';
 import {
   BridgeRouter,
   TokenRegistry,

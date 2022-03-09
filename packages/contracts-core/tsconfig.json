@@ -1,14 +1,14 @@
 {
   "extends": "../tsconfig.package.json",
   "compilerOptions": {
-    "outDir": "./lib/",
+    "outDir": "./dist",
     "composite": true
   },
   "exclude": [
-    "./node_modules/",
-    "./lib/",
-    "./config/",
-    "./scripts/",
+    "./node_modules",
+    "./dist",
+    "./config",
+    "./scripts",
     "./tmp.ts",
     "../../node_modules",
     "./hardhat.config.ts"
