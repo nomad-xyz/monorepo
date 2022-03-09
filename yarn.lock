@@ -892,13 +892,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/contracts-bridge@1.2.0, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
+"@nomad-xyz/contract-interfaces@npm:1.1.1":
+  version: 1.1.1
+  resolution: "@nomad-xyz/contract-interfaces@npm:1.1.1"
+  dependencies:
+    "@ethersproject/experimental": ^5.3.0
+    "@types/node": ^16.10.2
+    typescript: ^4.4.3
+  checksum: 620b179dda18c3afa339d056cacfd3cb48960b2925a1d403b1c2101aa3e4227d1e6f511c5d0760daafa57b7b4fe1b15fc3833eb9cbaf8655ffff709478e3e195
+  languageName: node
+  linkType: hard
+
+"@nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge"
   dependencies:
-    "@nomad-xyz/contracts-core": 1.2.0
-    "@nomad-xyz/deploy": 0.1.2
-    "@nomad-xyz/contracts-router": 1.2.0
+    "@nomad-xyz/contracts-core": "workspace:^"
+    "@nomad-xyz/contracts-router": "workspace:^"
+    "@nomad-xyz/deploy": "workspace:^"
     "@nomiclabs/hardhat-ethers": ^2.0.1
     "@nomiclabs/hardhat-etherscan": ^2.1.2
     "@nomiclabs/hardhat-waffle": ^2.0.1
@@ -926,24 +937,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/contract-interfaces@npm:1.1.1":
-  version: 1.1.1
-  resolution: "@nomad-xyz/contract-interfaces@npm:1.1.1"
-  dependencies:
-    "@ethersproject/experimental": ^5.3.0
-    "@types/node": ^16.10.2
-    typescript: ^4.4.3
-  checksum: 620b179dda18c3afa339d056cacfd3cb48960b2925a1d403b1c2101aa3e4227d1e6f511c5d0760daafa57b7b4fe1b15fc3833eb9cbaf8655ffff709478e3e195
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/contracts@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "@nomad-xyz/contracts@workspace:."
-  languageName: unknown
-  linkType: soft
-
-"@nomad-xyz/contracts-core@1.2.0, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
+"@nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-core@workspace:packages/contracts-core"
   dependencies:
@@ -974,15 +968,53 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nomad-xyz/contracts-router@workspace:^, @nomad-xyz/contracts-router@workspace:packages/contracts-router":
+  version: 0.0.0-use.local
+  resolution: "@nomad-xyz/contracts-router@workspace:packages/contracts-router"
+  dependencies:
+    "@nomad-xyz/contracts-core": "workspace:^"
+    "@nomiclabs/hardhat-ethers": ^2.0.1
+    "@nomiclabs/hardhat-etherscan": ^2.1.2
+    "@nomiclabs/hardhat-waffle": ^2.0.1
+    "@openzeppelin/contracts": ~3.4.2
+    "@openzeppelin/contracts-upgradeable": ~3.4.2
+    "@summa-tx/memview-sol": ^2.0.0
+    "@typechain/ethers-v5": 7.2.0
+    "@typechain/hardhat": ^2.0.1
+    "@types/mocha": ^9.1.0
+    "@types/node": ^17.0.14
+    chai: ^4.3.0
+    dotenv: ^10.0.0
+    eslint: ^7.20.0
+    ethereum-waffle: ^3.2.2
+    ethers: ^5.4.4
+    hardhat: ^2.6.0
+    hardhat-gas-reporter: ^1.0.4
+    prettier: ^2.2.1
+    prettier-plugin-solidity: ^1.0.0-beta.5
+    solhint: ^3.3.2
+    solhint-plugin-prettier: ^0.0.5
+    ts-node: ^10.1.0
+    typechain: ^5.0.0
+    typescript: ^4.5.5
+  languageName: unknown
+  linkType: soft
+
+"@nomad-xyz/contracts@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@nomad-xyz/contracts@workspace:."
+  languageName: unknown
+  linkType: soft
+
 "@nomad-xyz/deploy@0.1.2, @nomad-xyz/deploy@workspace:^, @nomad-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/deploy@workspace:packages/deploy"
   dependencies:
     "@ethersproject/experimental": ^5.3.0
-    "@nomad-xyz/contracts-bridge": 1.2.0
-    "@nomad-xyz/contracts-core": 1.2.0
+    "@nomad-xyz/contracts-bridge": "workspace:^"
+    "@nomad-xyz/contracts-core": "workspace:^"
+    "@nomad-xyz/contracts-router": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
-    "@nomad-xyz/contracts-router": 1.2.0
     "@nomad-xyz/sdk": "workspace:^"
     "@nomad-xyz/sdk-bridge": "workspace:^"
     "@nomad-xyz/sdk-govern": "workspace:^"
@@ -1008,8 +1040,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/example-xapp-contracts@workspace:packages/example-xapps"
   dependencies:
-    "@nomad-xyz/contracts-core": 1.2.0
-    "@nomad-xyz/contracts-router": 1.2.0
+    "@nomad-xyz/contracts-core": "workspace:^"
+    "@nomad-xyz/contracts-router": "workspace:^"
     "@nomiclabs/hardhat-ethers": ^2.0.1
     "@nomiclabs/hardhat-etherscan": ^2.1.2
     "@nomiclabs/hardhat-waffle": ^2.0.1
@@ -1041,9 +1073,9 @@ __metadata:
   dependencies:
     "@ethersproject/experimental": ^5.5.0
     "@nomad-xyz/contract-interfaces": 1.1.1
-    "@nomad-xyz/core-contracts": 1.2.0
+    "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/deploy": 0.1.2
-    "@nomad-xyz/sdk": 1.3.6
+    "@nomad-xyz/sdk": "workspace:^"
     "@nomiclabs/hardhat-ethers": ^2.0.2
     "@types/chai": ^4.3.0
     "@types/dockerode": ^3.3.0
@@ -1091,7 +1123,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/multi-provider@1.3.7, @nomad-xyz/multi-provider@workspace:^, @nomad-xyz/multi-provider@workspace:packages/multi-provider":
+"@nomad-xyz/multi-provider@workspace:^, @nomad-xyz/multi-provider@workspace:packages/multi-provider":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/multi-provider@workspace:packages/multi-provider"
   dependencies:
@@ -1106,38 +1138,6 @@ __metadata:
     prettier: ^2.4.1
     typescript: ^4.4.3
     web3: ^1.6.1
-  languageName: unknown
-  linkType: soft
-
-"@nomad-xyz/contracts-router@1.2.0, @nomad-xyz/contracts-router@workspace:packages/contracts-router":
-  version: 0.0.0-use.local
-  resolution: "@nomad-xyz/contracts-router@workspace:packages/contracts-router"
-  dependencies:
-    "@nomad-xyz/contracts-core": 1.2.0
-    "@nomiclabs/hardhat-ethers": ^2.0.1
-    "@nomiclabs/hardhat-etherscan": ^2.1.2
-    "@nomiclabs/hardhat-waffle": ^2.0.1
-    "@openzeppelin/contracts": ~3.4.2
-    "@openzeppelin/contracts-upgradeable": ~3.4.2
-    "@summa-tx/memview-sol": ^2.0.0
-    "@typechain/ethers-v5": 7.2.0
-    "@typechain/hardhat": ^2.0.1
-    "@types/mocha": ^9.1.0
-    "@types/node": ^17.0.14
-    chai: ^4.3.0
-    dotenv: ^10.0.0
-    eslint: ^7.20.0
-    ethereum-waffle: ^3.2.2
-    ethers: ^5.4.4
-    hardhat: ^2.6.0
-    hardhat-gas-reporter: ^1.0.4
-    prettier: ^2.2.1
-    prettier-plugin-solidity: ^1.0.0-beta.5
-    solhint: ^3.3.2
-    solhint-plugin-prettier: ^0.0.5
-    ts-node: ^10.1.0
-    typechain: ^5.0.0
-    typescript: ^4.5.5
   languageName: unknown
   linkType: soft
 
@@ -1186,7 +1186,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@nomad-xyz/multi-provider": 1.3.7
+    "@nomad-xyz/multi-provider": "workspace:^"
     "@types/node": ^16.9.1
     "@typescript-eslint/eslint-plugin": ^4.33.0
     "@typescript-eslint/parser": ^4.33.0
@@ -5824,13 +5824,13 @@ __metadata:
   linkType: hard
 
 "es5-ext@npm:^0.10.35, es5-ext@npm:^0.10.46, es5-ext@npm:^0.10.50":
-  version: 0.10.56
-  resolution: "es5-ext@npm:0.10.56"
+  version: 0.10.57
+  resolution: "es5-ext@npm:0.10.57"
   dependencies:
     es6-iterator: ^2.0.3
     es6-symbol: ^3.1.3
     next-tick: ^1.1.0
-  checksum: 5be0b3d2985d5332630ce77de834af906e6b76cdedcabbbc5a089e3629d2921a643aa221438dbe9f6778da757e8f622f2ad5c5b14c5eceb72aa14691eca80318
+  checksum: 1e503355cf422d3123627c872258238fba0e1fcca7c8ba345761a257ad0ac8e5daa57eb2cbf2d6d64af064969e0ca59c538a9b93cc3da4f2e7329df0ff3d64bc
   languageName: node
   linkType: hard
 
@@ -6404,7 +6404,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 
@@ -10216,7 +10216,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:^7.4.0":
+"lru-cache@npm:^7.4.1":
   version: 7.4.1
   resolution: "lru-cache@npm:7.4.1"
   checksum: de6d8aa83b0a304943a1e1ec2a982d9b44ef36963c20bd01950f13dcb3eb482c57bfa15ab49b1baa15c682d6d33a10842bb7b33d8a449845009ffab6a2faec3c
@@ -10252,8 +10252,8 @@ __metadata:
   linkType: hard
 
 "make-fetch-happen@npm:^10.0.3":
-  version: 10.0.4
-  resolution: "make-fetch-happen@npm:10.0.4"
+  version: 10.0.5
+  resolution: "make-fetch-happen@npm:10.0.5"
   dependencies:
     agentkeepalive: ^4.2.1
     cacache: ^15.3.0
@@ -10261,17 +10261,17 @@ __metadata:
     http-proxy-agent: ^5.0.0
     https-proxy-agent: ^5.0.0
     is-lambda: ^1.0.1
-    lru-cache: ^7.4.0
+    lru-cache: ^7.4.1
     minipass: ^3.1.6
     minipass-collect: ^1.0.2
-    minipass-fetch: ^2.0.1
+    minipass-fetch: ^2.0.2
     minipass-flush: ^1.0.5
     minipass-pipeline: ^1.2.4
     negotiator: ^0.6.3
     promise-retry: ^2.0.1
     socks-proxy-agent: ^6.1.1
     ssri: ^8.0.1
-  checksum: 036fcfaec18b69ce6384644275850b0871aff105663aecc0130b5c45fe318542d7e2004cf1f4cd26b7c6842c282f8b37f00da67aa3bae13c13693e405480ac74
+  checksum: 150071e41262bffafccafa764bab0e6a929a46be5abc1dfee414ffb821d052942596f3660ff84b17e4d6c44f51b2d2741f6d02a49e2dad44e06c94c3baf624fa
   languageName: node
   linkType: hard
 
@@ -10631,9 +10631,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minipass-fetch@npm:^2.0.1":
-  version: 2.0.2
-  resolution: "minipass-fetch@npm:2.0.2"
+"minipass-fetch@npm:^2.0.2":
+  version: 2.0.3
+  resolution: "minipass-fetch@npm:2.0.3"
   dependencies:
     encoding: ^0.1.13
     minipass: ^3.1.6
@@ -10642,7 +10642,7 @@ __metadata:
   dependenciesMeta:
     encoding:
       optional: true
-  checksum: 0613b0a6ef427609707c2b73b69230348fe3c24b33c144622e8e248404534fa1f125b94c324c555cd665ef623abedab0f7891e460b1c9ac6babc3ab2385b3c18
+  checksum: 78a4a509b1e73f5e63b84065969790373b36b04da586744815c7f7f80013f1d786797842cc33cfa517eba0ad2f2142eb0ac808c46738da1c53e0e3aeed81df11
   languageName: node
   linkType: hard
 
@@ -15255,12 +15255,12 @@ __metadata:
   linkType: hard
 
 "utf-8-validate@npm:^5.0.2":
-  version: 5.0.8
-  resolution: "utf-8-validate@npm:5.0.8"
+  version: 5.0.9
+  resolution: "utf-8-validate@npm:5.0.9"
   dependencies:
     node-gyp: latest
     node-gyp-build: ^4.3.0
-  checksum: cb1be3fa4eb896be17945a2e46c25f47ef9344d5955703a09d9d831efef681ce120bddfe02a8ebf3a96580ffa8f70edda55623e4d021adff70cb81cd0c8a885e
+  checksum: 90117f1b65e0a1256c83dfad529983617263b622f2379745311d0438c7ea31db0d134ebd0dca84c3f5847a3560a3d249644e478a9109c616f63c7ea19cac53dc
   languageName: node
   linkType: hard
 

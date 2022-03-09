@@ -28,9 +28,9 @@
   "dependencies": {
     "@ethersproject/experimental": "^5.5.0",
     "@nomad-xyz/contract-interfaces": "1.1.1",
-    "@nomad-xyz/core-contracts": "1.2.0",
+    "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/deploy": "0.1.2",
-    "@nomad-xyz/sdk": "1.3.6",
+    "@nomad-xyz/sdk": "workspace:^",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@types/dockerode": "^3.3.0",
     "chai": "^4.3.4",
