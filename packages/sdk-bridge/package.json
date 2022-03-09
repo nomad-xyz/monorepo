@@ -2,8 +2,28 @@
   "name": "@nomad-xyz/sdk-bridge",
   "version": "1.0.0",
   "description": "Nomad bridge SDK",
+  "keywords": [
+    "nomad",
+    "sdk",
+    "provider",
+    "multi-provider"
+  ],
+  "homepage": "https://github.com/nomad-xyz/monorepo#readme",
+  "bugs": {
+    "url": "https://github.com/nomad-xyz/monorepo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nomad-xyz/monorepo.git"
+  },
+  "license": "Apache-2.0 OR MIT",
+  "author": "Illusory Systems Inc.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "src/**/*"
+  ],
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
@@ -12,20 +32,11 @@
     "lint:fix": "eslint --fix ./src ./tests",
     "test": "ts-mocha ./tests/*.ts"
   },
-  "author": "Illusory Systems Inc.",
-  "license": "Apache-2.0 OR MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nomad-xyz/monorepo.git"
+  "dependencies": {
+    "@nomad-xyz/sdk": "workspace:^",
+    "ethers": "^5.4.6",
+    "web3": "^1.6.1"
   },
-  "bugs": {
-    "url": "https://github.com/nomad-xyz/monorepo/issues"
-  },
-  "files": [
-    "dist/**/*",
-    "src/**/*"
-  ],
-  "homepage": "https://github.com/nomad-xyz/monorepo#readme",
   "devDependencies": {
     "@types/mocha": "^9.1.0",
     "@types/node": "^16.9.1",
@@ -39,16 +50,5 @@
     "prettier": "^2.4.1",
     "ts-mocha": "^9.0.2",
     "typescript": "^4.4.3"
-  },
-  "dependencies": {
-    "@nomad-xyz/sdk": "workspace:^",
-    "ethers": "^5.4.6",
-    "web3": "^1.6.1"
-  },
-  "keywords": [
-    "nomad",
-    "sdk",
-    "provider",
-    "multi-provider"
-  ]
+  }
 }
