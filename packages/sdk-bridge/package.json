@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/sdk-bridge",
-  "version": "1.3.6",
+  "version": "1.0.0",
   "description": "Nomad bridge SDK",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

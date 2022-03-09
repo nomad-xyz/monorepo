@@ -24,7 +24,7 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "version": "1.2.0",
+  "version": "1.0.0",
   "description": "A bridge using nomad",
   "scripts": {
     "bootstrap": "yarn clean && yarn build",

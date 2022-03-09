@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/multi-provider",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A wrapper for multiple ethers.js providers, suitable for multi-chain applications",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
