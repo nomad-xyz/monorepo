@@ -29,9 +29,9 @@
     "prettier": "yarn workspaces foreach -Apv run prettier",
     "lint": "yarn workspaces foreach -Apv run lint",
     "test": "yarn workspaces foreach -Apv run test",
-    "build": "yarn workspaces foreach -Atv --exclude @nomad-xyz/deploy run build",
-    "compile": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy run compile",
-    "bootstrap": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/example-xapps run bootstrap"
+    "build": "yarn workspaces foreach -Atv --exclude @nomad-xyz/deploy  --exclude @nomad-xyz/local-environment run build",
+    "compile": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment run compile",
+    "bootstrap": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/example-xapps  --exclude @nomad-xyz/local-environment run bootstrap"
   },
   "packageManager": "yarn@3.1.1"
 }

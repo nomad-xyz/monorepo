@@ -1,5 +1,5 @@
 import { BigNumberish, ethers } from 'ethers';
-import { canonizeId, evmId } from '@nomad-xyz/multi-provider/lib/utils';
+import { utils as mpUtils } from '@nomad-xyz/multi-provider';
 import * as bridge from '@nomad-xyz/contracts-bridge';
 import {
   CoreContracts,
@@ -136,7 +136,7 @@ export class BridgeContext extends NomadContext {
     const bridgeContracts = this.getBridge(domain);
 
     const tokenDomain = this.resolveDomain(token.domain);
-    const tokenId = canonizeId(token.id);
+    const tokenId = mpUtils.canonizeId(token.id);
 
     const address = await bridgeContracts?.tokenRegistry[
       'getLocalAddress(uint32,bytes32)'
@@ -151,7 +151,7 @@ export class BridgeContext extends NomadContext {
         `No provider or signer for ${domain}. Register a connection first before calling resolveRepresentation.`,
       );
     }
-    return bridge.BridgeToken__factory.connect(evmId(address), connection);
+    return bridge.BridgeToken__factory.connect(mpUtils.evmId(address), connection);
   }
 
   /**
@@ -201,7 +201,7 @@ export class BridgeContext extends NomadContext {
   ): Promise<TokenIdentifier> {
     const domain = this.resolveDomain(nameOrDomain);
     const bridge = this.mustGetBridge(nameOrDomain);
-    const repr = hexlify(canonizeId(representation));
+    const repr = hexlify(mpUtils.canonizeId(representation));
 
     const canonical = await bridge.tokenRegistry.representationToCanonical(
       representation,
@@ -222,7 +222,7 @@ export class BridgeContext extends NomadContext {
     if (local !== ethers.constants.AddressZero) {
       return {
         domain,
-        id: hexlify(canonizeId(local)),
+        id: hexlify(mpUtils.canonizeId(local)),
       };
     }
 
@@ -316,7 +316,7 @@ export class BridgeContext extends NomadContext {
       fromToken.address,
       amount,
       this.resolveDomain(to),
-      canonizeId(recipient),
+      mpUtils.canonizeId(recipient),
       enableFast,
       overrides,
     );

@@ -1,7 +1,7 @@
 node_modules/
 yarn-error.log
 **/tsconfig.tsbuildinfo
-lib/
+dist/
 
 .pnp.*
 .yarn/*

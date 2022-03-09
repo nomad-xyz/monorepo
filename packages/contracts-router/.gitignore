@@ -6,4 +6,4 @@ coverage.json
 .env
 src.ts/
 src/
-lib/
+dist/

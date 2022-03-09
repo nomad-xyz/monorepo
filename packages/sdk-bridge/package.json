@@ -2,8 +2,8 @@
   "name": "@nomad-xyz/sdk-bridge",
   "version": "1.3.6",
   "description": "Nomad bridge SDK",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
@@ -21,7 +21,7 @@
     "url": "https://github.com/nomad-xyz/monorepo/issues"
   },
   "files": [
-    "lib/**/*",
+    "dist/**/*",
     "src/**/*"
   ],
   "homepage": "https://github.com/nomad-xyz/monorepo#readme",
