@@ -1,5 +1,5 @@
 import "hardhat-gas-reporter";
-import "@typechain/hardhat";
+import "@nomiclabs/hardhat-etherscan";
 import "hardhat-packager";
 
 import * as dotenv from "dotenv";
