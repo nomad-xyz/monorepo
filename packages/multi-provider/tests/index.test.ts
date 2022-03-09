@@ -1,3 +1,5 @@
+import { describe, it } from 'mocha';
+
 import { expect } from 'chai';
 import { MultiProvider } from '@nomad-xyz/multi-provider';
 import { ethers } from 'ethers';
@@ -7,22 +9,19 @@ interface Domain {
   domain: number;
 }
 
-
 describe('multi-provider', async () => {
   let mp;
   const chainADomain: Domain = {
     name: 'a',
     domain: 1000,
-  }
+  };
   const chainBDomain: Domain = {
     name: 'b',
     domain: 2000,
-  }
-  const chainCDomain: Domain = {
-    name: 'c',
-    domain: 3000,
-  }
-  const testProvider = new ethers.providers.JsonRpcProvider('http://localhost:8545');
+  };
+  const testProvider = new ethers.providers.JsonRpcProvider(
+    'http://localhost:8545',
+  );
   const testSigner = testProvider.getSigner();
 
   // register A and B domains
