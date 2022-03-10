@@ -29,7 +29,7 @@ Compile the solidity and the initial typechain TS source for each solidity
 package:
 
 ```
-$ yarn bootstrap-ts
+$ yarn bootstrap
 ```
 
 ### Repo Layout
