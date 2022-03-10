@@ -1,21 +1,14 @@
 # Nomad
 
-## TODOs
+Nomad is cross-chain communication protocol. This repo contains the following:
 
-- [ ] write real readme(s)
-- [x] publishing w/ npmignore etc
-- [x] standardize on a set of standard scripts build/prettier/lint/test
-- [x] use `yarn workspace foreach`
-- [x] hardhat-packager
-- [x] use TS references
-- [x] fix solidity builds
-- [x] proper tsconfig inheritance
-- [x] typechain packaging
-- [x] remove deploy dependency on contract-interfaces, replace with
-      dep on `whatever-contracts`
-- [x] .nvmrc
+- Smart contracts for the core Nomad protocol
+- Smart contracts for the Nomad token bridge
+- SDKs for Nomad's core protocol, bridge, and governance systems
+- Tooling for local environment simulation
+- Smart contract deployment tooling
 
-### Repo Setup
+### Development setup
 
 - make sure you're on yarn2!
 
@@ -32,18 +25,34 @@ package:
 $ yarn bootstrap
 ```
 
+Build all workspace packages
+
+```
+$ yarn build
+```
+
 ### Repo Layout
 
 This repo is a [yarn workspace](https://yarnpkg.com/features/workspaces). All
 packages are located in `packages/`. Generally, packages are intended to
 contain a `src/` directory, which is built to `dist/` for publishing.
 
-The deploy package is not intended to be published.
+Packages for publishing:
 
-### Publishing
+- `@nomad-xyz/contracts-core`
+- `@nomad-xyz/contracts-router`
+- `@nomad-xyz/contracts-bridge`
+- `@nomad-xyz/sdk`
+- `@nomad-xyz/sdk-bridge`
+- `@nomad-xyz/sdk-govern`
 
-Before publishing, ensure all packages are built
+Tooling and other unpublished packages:
 
-```
-$ yarn build
-```
+- `keymaster`
+- `local-enviroment`
+- `deploy`
+- `monitor`
+
+Examples:
+
+- `@nomad-xyz/example-xapps`

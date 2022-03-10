@@ -1,6 +1,6 @@
-## Nomad Core
+## Nomad Bridge
 
-Solidity implementations of the core Nomad protocol.
+Solidity implementations of the [Nomad Bridge](https://app.nomad.xyz).
 
 ### Setup
 
