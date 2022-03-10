@@ -7,9 +7,10 @@
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
-    "prettier": "prettier --write ./src.ts ./config ./scripts",
-    "lint": "eslint --fix ./src.ts ./config ./scripts",
-    "lint:fix": "eslint --fix ./src"
+    "prettier": "prettier --write ./src ./tests",
+    "lint": "eslint --fix ./src ./tests",
+    "lint:fix": "eslint --fix ./src ./tests",
+    "test": "ts-mocha ./tests/*.ts"
   },
   "author": "Illusory Systems Inc.",
   "license": "Apache-2.0 OR MIT",
@@ -26,6 +27,7 @@
   ],
   "homepage": "https://github.com/nomad-xyz/monorepo#readme",
   "devDependencies": {
+    "@types/mocha": "^9.1.0",
     "@types/node": "^16.9.1",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
@@ -33,7 +35,9 @@
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "fs": "0.0.1-security",
+    "mocha": "^9.2.1",
     "prettier": "^2.4.1",
+    "ts-mocha": "^9.0.2",
     "typescript": "^4.4.3"
   },
   "dependencies": {

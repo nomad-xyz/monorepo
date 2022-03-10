@@ -35,7 +35,8 @@
     "prettier": "prettier --write './contracts'",
     "compile": "hardhat compile",
     "lint": "solhint contracts/*.sol",
-    "lint:fix": "solhint --fix contracts/*.sol"
+    "lint:fix": "solhint --fix contracts/*.sol",
+    "test": "hardhat test"
   },
   "author": "James Prestwich",
   "license": "MIT OR Apache-2.0",
