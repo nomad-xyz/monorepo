@@ -6,22 +6,37 @@ type Provider = ethers.providers.Provider;
 /**
  * The MultiProvider manages a collection of [Domains]{@link Domain} and allows
  * developers to enroll ethers Providers and Signers for each domain. It is
- * intended to enable faster multi-chain development by grouping all chain
+ * intended to enable faster multi-chain development by housing all chain
  * connections under a single roof.
  *
+ * Generally, we intend developers inherit the MultiProvider. Which is to say,
+ * the expected usage pattern is `class AppContext<T> extends MultiProvider<T>`.
+ * This way, the `MultiProvider` registration methods are available on the app
+ * context.
+ *
+ * However, the multiprovider also works well as a property on a `Context`
+ * class.  E.g. `class AppContext<T> { protected provider: MultiProvider<T> }`
+ *
+ * The `Domain` type parameter to the MultiProvider specifies an internal data
+ * carrier that describes chains. This can be as simple as a name and a number.
+ * This is the logical place to insert app-specific chain information. E.g. if
+ * your application needs to know the blocktime of a chain, it should be on the
+ * `Domain` type.
+ *
  * @example
- * import {mainnet} from 'nomad-sdk';
- * mainnet.registerRpcProvider('celo', 'https://forno.celo.org');
- * mainnet.registerRpcProvider('polygon', '...');
- * mainnet.registerRpcProvider('ethereum', '...');
- * mainnet.registerSigner('celo', celoProvider);
- * mainnet.registerSigner('polygon', polygonProvider);
- * mainnet.registerSigner('ethereum', ethereumProvider);
+ * import { MultiProvider, Domain } from '@nomad-xyz/multi-provider';
+ * const myApp = new MultiProvider<Domain>();
+ * myApp.registerDomain({name: 'polygon', id: 50});
+ * myApp.registerDomain({name: 'ethereum', id: 1});
+ * myApp.registerRpcProvider('celo', 'https://forno.celo.org');
+ * myApp.registerRpcProvider('ethereum', '...');
+ * myApp.registerSigner('ethereum', someSigner);
+ * myApp.registerSigner('polygon', someSigner);
  */
 export class MultiProvider<T extends Domain> {
-  protected domains: Map<number, T>;
-  protected providers: Map<number, Provider>;
-  protected signers: Map<number, ethers.Signer>;
+  protected domains: Map<string, T>;
+  protected providers: Map<string, Provider>;
+  protected signers: Map<string, ethers.Signer>;
 
   constructor() {
     this.domains = new Map();
@@ -36,7 +51,7 @@ export class MultiProvider<T extends Domain> {
    * @param domain The Domain object to register.
    */
   registerDomain(domain: T): void {
-    this.domains.set(domain.id, domain);
+    this.domains.set(domain.name, domain);
   }
 
   get registeredDomains(): Array<Readonly<T>> {
@@ -44,35 +59,55 @@ export class MultiProvider<T extends Domain> {
   }
 
   get domainNumbers(): number[] {
+    return this.registeredDomains.map((domain) => domain.domain);
+  }
+
+  get domainNames(): string[] {
     return Array.from(this.domains.keys());
   }
 
-  get missingProviders(): number[] {
-    const numbers = this.domainNumbers;
-    return numbers.filter((number) => this.providers.has(number));
+  get missingProviders(): string[] {
+    return this.domainNames.filter((name) => !this.providers.has(name));
   }
 
   /**
    * Resolve a domain name (or number) to the canonical number.
    *
-   * This function is used extensively to disambiguate domains, and allows
-   * devs to reference domains using their preferred nomenclature.
+   * This function is used extensively to disambiguate domains.
    *
    * @param nameOrDomain A domain name or number.
    * @returns The canonical domain number.
    */
   resolveDomain(nameOrDomain: string | number): number {
-    if (typeof nameOrDomain === 'string') {
-      const domains = Array.from(this.domains.values()).filter(
-        (domain) => domain.name.toLowerCase() === nameOrDomain.toLowerCase(),
-      );
-      if (domains.length === 0) {
-        throw new Error(`Domain not found: ${nameOrDomain}`);
-      }
-      return domains[0].id;
-    } else {
-      return nameOrDomain;
+    if (typeof nameOrDomain === 'number') return nameOrDomain;
+
+    const domain = this.registeredDomains.find(
+      (domain) => domain.name.toLowerCase() === nameOrDomain.toLowerCase(),
+    );
+    if (!domain) {
+      throw new Error(`Domain not found: ${nameOrDomain}`);
     }
+    return domain.domain;
+  }
+
+  /**
+   * Resolve the name of a registered {@link Domain}, from its name or number.
+   *
+   * Similar to `resolveDomain`.
+   *
+   * @param nameOrDomain A domain name or number.
+   * @returns The name (or undefined)
+   */
+  resolveDomainName(nameOrDomain: string | number): string {
+    if (typeof nameOrDomain === 'string') return nameOrDomain;
+
+    const domain = this.registeredDomains.find(
+      (domain) => domain.domain === nameOrDomain,
+    );
+    if (!domain) {
+      throw new Error(`Domain not found: ${nameOrDomain}`);
+    }
+    return domain.name;
   }
 
   /**
@@ -97,7 +132,12 @@ export class MultiProvider<T extends Domain> {
    * @returns A {@link Domain} (if the domain has been registered)
    */
   getDomain(nameOrDomain: number | string): Domain | undefined {
-    return this.domains.get(this.resolveDomain(nameOrDomain));
+    let name = nameOrDomain;
+    if (typeof name !== 'string') {
+      name = this.resolveDomainName(nameOrDomain);
+    }
+    if (!name) return;
+    return this.domains.get(name);
   }
 
   /**
@@ -117,25 +157,13 @@ export class MultiProvider<T extends Domain> {
   }
 
   /**
-   * Resolve the name of a registered {@link Domain}, from its name or number.
-   *
-   * Similar to `resolveDomain`.
-   *
-   * @param nameOrDomain A domain name or number.
-   * @returns The name (or undefined)
-   */
-  resolveDomainName(nameOrDomain: string | number): string | undefined {
-    return this.getDomain(nameOrDomain)?.name;
-  }
-
-  /**
    * Register an ethers Provider for a specified domain.
    *
    * @param nameOrDomain A domain name or number.
    * @param provider An ethers Provider to be used by requests to that domain.
    */
   registerProvider(nameOrDomain: string | number, provider: Provider): void {
-    const domain = this.mustGetDomain(nameOrDomain).id;
+    const domain = this.mustGetDomain(nameOrDomain).name;
     try {
       const signer = this.signers.get(domain);
       if (signer) {
@@ -167,8 +195,7 @@ export class MultiProvider<T extends Domain> {
    * @returns The currently registered Provider (or none)
    */
   getProvider(nameOrDomain: string | number): Provider | undefined {
-    const domain = this.resolveDomain(nameOrDomain);
-
+    const domain = this.resolveDomainName(nameOrDomain);
     return this.providers.get(domain);
   }
 
@@ -209,12 +236,10 @@ export class MultiProvider<T extends Domain> {
    * @param signer An ethers Signer to be used by requests to that domain.
    */
   registerSigner(nameOrDomain: string | number, signer: ethers.Signer): void {
-    const domain = this.resolveDomain(nameOrDomain);
-
+    const domain = this.resolveDomainName(nameOrDomain);
     const provider = this.providers.get(domain);
-    if (!provider && !signer.provider) {
+    if (!provider && !signer.provider)
       throw new Error('Must have a provider before registering signer');
-    }
 
     if (provider) {
       try {
@@ -241,7 +266,7 @@ export class MultiProvider<T extends Domain> {
    * @param nameOrDomain A domain name or number.
    */
   unregisterSigner(nameOrDomain: string | number): void {
-    const domain = this.resolveDomain(nameOrDomain);
+    const domain = this.resolveDomainName(nameOrDomain);
     if (!this.signers.has(domain)) {
       return;
     }
@@ -284,7 +309,7 @@ export class MultiProvider<T extends Domain> {
    * @returns The registered signer (or undefined)
    */
   getSigner(nameOrDomain: string | number): ethers.Signer | undefined {
-    const domain = this.resolveDomain(nameOrDomain);
+    const domain = this.resolveDomainName(nameOrDomain);
     return this.signers.get(domain);
   }
 

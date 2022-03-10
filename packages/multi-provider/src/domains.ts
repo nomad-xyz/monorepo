@@ -7,10 +7,12 @@ export interface Pagination {
 }
 
 /**
- * A Domain (and its characteristics)
+ * A Domain (and its characteristics). This interface is deliberately vague.
+ * We inted MultiProvider users to supply their own defintion of a `Domain`
+ * object with any relevant properties.
  */
 export interface Domain {
-  id: number;
   name: string;
+  domain: number;
   paginate?: Pagination;
 }

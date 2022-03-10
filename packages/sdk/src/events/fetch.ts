@@ -74,7 +74,7 @@ async function getPaginatedEvents<T extends Result, U>(
   // or current block number
   let lastBlock;
   if (!endBlock) {
-    const provider = context.mustGetProvider(domain.id);
+    const provider = context.mustGetProvider(domain.domain);
     lastBlock = await provider.getBlockNumber();
   } else {
     lastBlock = endBlock;

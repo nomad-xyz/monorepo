@@ -2,14 +2,9 @@ import { ethers } from 'ethers';
 
 import { MultiProvider } from '@nomad-xyz/multi-provider';
 import * as core from '@nomad-xyz/contracts-core';
+import * as config from '@nomad-xyz/config';
 
 import { CoreContracts } from './CoreContracts';
-import {
-  devDomains,
-  mainnetDomains,
-  NomadDomain,
-  stagingDomains,
-} from './domains';
 
 export type Address = string;
 
@@ -25,30 +20,32 @@ export type Address = string;
  * // Set up mainnet and then access contracts as below:
  * let router = mainnet.mustGetBridge('celo').bridgeRouter;
  */
-export class NomadContext extends MultiProvider<NomadDomain> {
-  protected cores: Map<number, CoreContracts>;
+export class NomadContext extends MultiProvider<config.Domain> {
+  protected cores: Map<string, CoreContracts>;
   protected _blacklist: Set<number>;
-  protected _governorDomain?: number;
+  readonly conf: config.NomadConfig;
 
-  constructor(domains: NomadDomain[], cores: CoreContracts[]) {
+  constructor(conf: config.NomadConfig) {
     super();
+    config.validateConfig(conf);
+    this.conf = conf;
+
+    const domains = conf.networks.map(
+      (network) => conf.protocol.networks[network],
+    );
     domains.forEach((domain) => this.registerDomain(domain));
     this.cores = new Map();
+    const cores = conf.networks.map(
+      (network) => new CoreContracts(network, conf.core[network]),
+    );
     cores.forEach((core) => {
       this.cores.set(core.domain, core);
     });
     this._blacklist = new Set();
   }
 
-  /**
-   * Instantiate an NomadContext from contract info.
-   *
-   * @param domains An array of Domains with attached contract info
-   * @returns A context object
-   */
-  static fromDomains(domains: NomadDomain[]): NomadContext {
-    const cores = domains.map((domain) => CoreContracts.fromObject(domain));
-    return new NomadContext(domains, cores);
+  get governor(): config.NomadLocator {
+    return this.conf.protocol.governor;
   }
 
   /**
@@ -57,7 +54,8 @@ export class NomadContext extends MultiProvider<NomadDomain> {
    *
    * @param domain the domain to reconnect
    */
-  protected reconnect(domain: number): void {
+  protected reconnect(nameOrDomain: string | number): void {
+    const domain = this.resolveDomainName(nameOrDomain);
     const connection = this.getConnection(domain);
     if (!connection) {
       throw new Error(`Reconnect failed: no connection for ${domain}`);
@@ -124,7 +122,7 @@ export class NomadContext extends MultiProvider<NomadDomain> {
    * @returns a {@link CoreContracts} object (or undefined)
    */
   getCore(nameOrDomain: string | number): CoreContracts | undefined {
-    const domain = this.resolveDomain(nameOrDomain);
+    const domain = this.resolveDomainName(nameOrDomain);
     return this.cores.get(domain);
   }
 
@@ -157,7 +155,8 @@ export class NomadContext extends MultiProvider<NomadDomain> {
     home: string | number,
     remote: string | number,
   ): core.Replica | undefined {
-    return this.getCore(remote)?.getReplica(this.resolveDomain(home));
+    const homeDomain = this.resolveDomainName(home);
+    return this.getCore(remote)?.getReplica(homeDomain);
   }
 
   /**
@@ -183,31 +182,13 @@ export class NomadContext extends MultiProvider<NomadDomain> {
   }
 
   /**
-   * Discovers the governor domain of this nomad deployment and caches it.
-   *
-   * @returns The identifier of the governing domain
-   */
-  async governorDomain(): Promise<number> {
-    if (this._governorDomain) {
-      return this._governorDomain;
-    }
-
-    const core: CoreContracts = this.cores.values().next().value;
-    if (!core) throw new Error('empty core map');
-
-    const governorDomain = await core.governanceRouter.governorDomain();
-    this._governorDomain = governorDomain !== 0 ? governorDomain : core.domain;
-    return this._governorDomain;
-  }
-
-  /**
    * Discovers the governor domain of this nomad deployment and returns the
    * associated Core.
    *
    * @returns The identifier of the governing domain
    */
   async governorCore(): Promise<CoreContracts> {
-    return this.mustGetCore(await this.governorDomain());
+    return this.mustGetCore(this.governor.domain);
   }
 
   blacklist(): Set<number> {
@@ -230,7 +211,3 @@ export class NomadContext extends MultiProvider<NomadDomain> {
     }
   }
 }
-
-export const mainnet = NomadContext.fromDomains(mainnetDomains);
-export const dev = NomadContext.fromDomains(devDomains);
-export const staging = NomadContext.fromDomains(stagingDomains);

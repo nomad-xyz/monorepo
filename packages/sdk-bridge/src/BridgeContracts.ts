@@ -8,43 +8,23 @@ import {
   BridgeRouter__factory,
   ETHHelper__factory,
 } from '@nomad-xyz/contracts-bridge';
-
-type Address = string;
-
-interface ProxyInfo {
-  proxy: Address;
-}
-
-interface BridgeInfo {
-  id: number;
-  bridgeRouter: Address | ProxyInfo;
-  tokenRegistry: Address | ProxyInfo;
-  ethHelper?: Address;
-}
+import * as config from '@nomad-xyz/config';
 
 export class BridgeContracts extends Contracts {
-  domain: number;
-  readonly _bridgeRouter: Address;
-  readonly _tokenRegistry: Address;
-  readonly _ethHelper?: Address;
+  readonly domain: string;
+  protected conf: config.BridgeContracts;
+
   private providerOrSigner?: ethers.providers.Provider | ethers.Signer;
 
   constructor(
-    domain: number,
-    bridgeRouter: Address,
-    tokenRegistry: Address,
-    ethHelper?: Address,
+    domain: string,
+    conf: config.BridgeContracts,
     providerOrSigner?: ethers.providers.Provider | ethers.Signer,
   ) {
-    super(domain, bridgeRouter, ethHelper, providerOrSigner);
-    this.providerOrSigner = providerOrSigner;
+    super(domain, conf, providerOrSigner);
     this.domain = domain;
-
-    this._bridgeRouter = bridgeRouter;
-    this._tokenRegistry = tokenRegistry;
-    if (ethHelper) {
-      this._ethHelper = ethHelper;
-    }
+    this.conf = conf;
+    this.providerOrSigner = providerOrSigner;
   }
 
   get bridgeRouter(): BridgeRouter {
@@ -52,7 +32,7 @@ export class BridgeContracts extends Contracts {
       throw new Error('No provider or signer. Call `connect` first.');
     }
     return BridgeRouter__factory.connect(
-      this._bridgeRouter,
+      this.conf.bridgeRouter.proxy,
       this.providerOrSigner,
     );
   }
@@ -62,7 +42,7 @@ export class BridgeContracts extends Contracts {
       throw new Error('No provider or signer. Call `connect` first.');
     }
     return TokenRegistry__factory.connect(
-      this._tokenRegistry,
+      this.conf.tokenRegistry.proxy,
       this.providerOrSigner,
     );
   }
@@ -71,44 +51,14 @@ export class BridgeContracts extends Contracts {
     if (!this.providerOrSigner) {
       throw new Error('No provider or signer. Call `connect` first.');
     }
-    if (!this._ethHelper) return;
-    return ETHHelper__factory.connect(this._ethHelper, this.providerOrSigner);
+    if (!this.conf.ethHelper) return;
+    return ETHHelper__factory.connect(
+      this.conf.ethHelper,
+      this.providerOrSigner,
+    );
   }
 
   connect(providerOrSigner: ethers.providers.Provider | ethers.Signer): void {
     this.providerOrSigner = providerOrSigner;
-  }
-
-  static fromObject(
-    data: BridgeInfo,
-    providerOrSigner?: ethers.providers.Provider | ethers.Signer,
-  ): BridgeContracts {
-    const { id, bridgeRouter, tokenRegistry, ethHelper } = data;
-    if (!id || !bridgeRouter) {
-      throw new Error('missing domain or bridgeRouter address');
-    }
-    const router =
-      typeof bridgeRouter === 'string' ? bridgeRouter : bridgeRouter.proxy;
-    const registry =
-      typeof tokenRegistry === 'string' ? tokenRegistry : tokenRegistry.proxy;
-    return new BridgeContracts(
-      id,
-      router,
-      registry,
-      ethHelper,
-      providerOrSigner,
-    );
-  }
-
-  toObject(): BridgeInfo {
-    const bridge: BridgeInfo = {
-      id: this.domain,
-      bridgeRouter: this.bridgeRouter.address,
-      tokenRegistry: this.tokenRegistry.address,
-    };
-    if (this.ethHelper) {
-      bridge.ethHelper = this.ethHelper.address;
-    }
-    return bridge;
   }
 }

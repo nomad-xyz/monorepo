@@ -1,22 +1,7 @@
 import { ethers } from 'ethers';
 import * as core from '@nomad-xyz/contracts-core';
+import * as config from '@nomad-xyz/config';
 import { Contracts } from '@nomad-xyz/multi-provider';
-import { ReplicaInfo } from './domains/domain';
-
-type Address = string;
-
-type InternalReplica = {
-  domain: number;
-  address: Address;
-};
-
-interface Core {
-  id: number;
-  home: Address;
-  replicas: ReplicaInfo[];
-  governanceRouter: Address;
-  xAppConnectionManager: Address;
-}
 
 export type LocalGovernor = {
   location: 'local';
@@ -31,55 +16,40 @@ export type RemoteGovernor = {
 export type Governor = LocalGovernor | RemoteGovernor;
 
 export class CoreContracts extends Contracts {
-  readonly domain: number;
-  readonly _home: Address;
-  readonly _replicas: Map<number, InternalReplica>;
-  readonly governanceRouterAddress: Address;
-  readonly xAppConnectionManagerAddress: Address;
-  private providerOrSigner?: ethers.providers.Provider | ethers.Signer;
+  readonly domain: string;
+  protected conf: config.CoreContracts;
+
   private _governor?: Governor;
+  private providerOrSigner?: ethers.providers.Provider | ethers.Signer;
 
   constructor(
-    domain: number,
-    home: Address,
-    replicas: ReplicaInfo[],
-    governaceRouter: Address,
-    xAppConnectionManager: Address,
+    domain: string,
+    conf: config.CoreContracts,
     providerOrSigner?: ethers.providers.Provider | ethers.Signer,
   ) {
-    super(domain, home, replicas, providerOrSigner);
+    super(domain, conf, providerOrSigner);
     this.providerOrSigner = providerOrSigner;
     this.domain = domain;
-    this._home = home;
-    this.governanceRouterAddress = governaceRouter;
-    this.xAppConnectionManagerAddress = xAppConnectionManager;
-
-    this._replicas = new Map();
-    replicas.forEach((replica) => {
-      this._replicas.set(replica.domain, {
-        address: replica.address,
-        domain: replica.domain,
-      });
-    });
+    this.conf = conf;
   }
 
-  getReplica(domain: number): core.Replica | undefined {
+  getReplica(domain: string): core.Replica | undefined {
     if (!this.providerOrSigner) {
       throw new Error('No provider or signer. Call `connect` first.');
     }
-    const replica = this._replicas.get(domain);
+    const replica = this.conf.replicas[domain];
     if (!replica) return;
-    return core.Replica__factory.connect(
-      replica.address,
-      this.providerOrSigner,
-    );
+    return core.Replica__factory.connect(replica.proxy, this.providerOrSigner);
   }
 
   get home(): core.Home {
     if (!this.providerOrSigner) {
       throw new Error('No provider or signer. Call `connect` first.');
     }
-    return core.Home__factory.connect(this._home, this.providerOrSigner);
+    return core.Home__factory.connect(
+      this.conf.home.proxy,
+      this.providerOrSigner,
+    );
   }
 
   get governanceRouter(): core.GovernanceRouter {
@@ -87,7 +57,7 @@ export class CoreContracts extends Contracts {
       throw new Error('No provider or signer. Call `connect` first.');
     }
     return core.GovernanceRouter__factory.connect(
-      this.governanceRouterAddress,
+      this.conf.governanceRouter.proxy,
       this.providerOrSigner,
     );
   }
@@ -97,7 +67,7 @@ export class CoreContracts extends Contracts {
       throw new Error('No provider or signer. Call `connect` first.');
     }
     return core.XAppConnectionManager__factory.connect(
-      this.xAppConnectionManagerAddress,
+      this.conf.xAppConnectionManager,
       this.providerOrSigner,
     );
   }
@@ -120,40 +90,5 @@ export class CoreContracts extends Contracts {
 
   connect(providerOrSigner: ethers.providers.Provider | ethers.Signer): void {
     this.providerOrSigner = providerOrSigner;
-  }
-
-  toObject(): Core {
-    const replicas: ReplicaInfo[] = Array.from(this._replicas.values()).map(
-      (replica) => {
-        return {
-          domain: replica.domain,
-          address: replica.address,
-        };
-      },
-    );
-
-    return {
-      id: this.domain,
-      home: this._home,
-      replicas: replicas,
-      governanceRouter: this.governanceRouterAddress,
-      xAppConnectionManager: this.xAppConnectionManagerAddress,
-    };
-  }
-
-  static fromObject(data: Core, signer?: ethers.Signer): CoreContracts {
-    const { id, home, replicas, governanceRouter, xAppConnectionManager } =
-      data;
-    if (!id || !home || !replicas) {
-      throw new Error('Missing key');
-    }
-    return new CoreContracts(
-      id,
-      home,
-      replicas,
-      governanceRouter,
-      xAppConnectionManager,
-      signer,
-    );
   }
 }
