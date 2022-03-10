@@ -126,7 +126,10 @@ export class BridgeContext extends NomadContext {
         `No provider or signer for ${domain}. Register a connection first before calling resolveRepresentation.`,
       );
     }
-    return bridge.BridgeToken__factory.connect(mpUtils.evmId(address), connection);
+    return bridge.BridgeToken__factory.connect(
+      mpUtils.evmId(address),
+      connection,
+    );
   }
 
   /**
