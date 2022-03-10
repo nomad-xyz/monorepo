@@ -7,9 +7,9 @@
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
-    "prettier": "prettier --write ./src.ts ./tests",
+    "prettier": "prettier --write ./src ./tests",
     "lint": "eslint --fix ./src ./tests",
-    "lint:fix": "eslint --fix ./src",
+    "lint:fix": "eslint --fix ./src ./tests",
     "test": "ts-mocha ./tests/*.ts"
   },
   "author": "Illusory Systems Inc.",

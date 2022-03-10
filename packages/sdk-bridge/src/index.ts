@@ -1,14 +1,14 @@
-export { BridgeContracts } from './BridgeContracts'
+export { BridgeContracts } from './BridgeContracts';
 
-export * from './bridgeEvents'
-export * as bridgeEvents from './bridgeEvents'
+export * from './bridgeEvents';
+export * as bridgeEvents from './bridgeEvents';
 
-export * from './BridgeContext'
+export * from './BridgeContext';
 
-export * from './BridgeMessage'
+export * from './BridgeMessage';
 
-export * from './tokens'
-export type { TokenIdentifier } from './tokens'
+export * from './tokens';
+export type { TokenIdentifier } from './tokens';
 
 // export * as BridgeMessage from './BridgeMessage'
 

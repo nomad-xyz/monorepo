@@ -1,6 +1,6 @@
 node_modules/
 tmp.ts
-dist/
 .env
 config/
 scripts/
+tests/

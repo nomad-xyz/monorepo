@@ -1,6 +1,8 @@
+import { describe, it } from 'mocha';
+
 import { expect } from 'chai';
 
-describe('sdk-govern', async () => {
+describe('sdk', async () => {
   // before(async () => {
   //
   // });
