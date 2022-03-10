@@ -1,4 +1,4 @@
-## Nomad Gover SDK
+## Nomad Govern SDK
 
 This package includes the `CallBatch`, a management system for Nomad governance
 actions. `CallBatch` allows developers to easily instruct the Nomad governance
