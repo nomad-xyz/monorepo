@@ -2,8 +2,26 @@
   "name": "@nomad-xyz/sdk",
   "version": "2.0.0",
   "description": "Nomad SDK",
+  "keywords": [
+    "nomad",
+    "sdk"
+  ],
+  "homepage": "https://github.com/nomad-xyz/monorepo#readme",
+  "bugs": {
+    "url": "https://github.com/nomad-xyz/monorepo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nomad-xyz/monorepo.git"
+  },
+  "license": "Apache-2.0 OR MIT",
+  "author": "Illusory Systems Inc.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "src/**/*"
+  ],
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
@@ -12,20 +30,12 @@
     "lint:fix": "eslint --fix ./src ./tests",
     "test": "ts-mocha ./tests/*.ts"
   },
-  "author": "Illusory Systems Inc.",
-  "license": "Apache-2.0 OR MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nomad-xyz/monorepo.git"
+  "dependencies": {
+    "@nomad-xyz/config": "0.1.0-beta.12",
+    "@nomad-xyz/contracts-core": "workspace:^",
+    "@nomad-xyz/multi-provider": "workspace:^",
+    "ethers": "^5.4.6"
   },
-  "bugs": {
-    "url": "https://github.com/nomad-xyz/monorepo/issues"
-  },
-  "files": [
-    "dist/**/*",
-    "src/**/*"
-  ],
-  "homepage": "https://github.com/nomad-xyz/monorepo#readme",
   "devDependencies": {
     "@types/mocha": "^9.1.0",
     "@types/node": "^16.9.1",
@@ -39,15 +49,5 @@
     "prettier": "^2.4.1",
     "ts-mocha": "^9.0.2",
     "typescript": "^4.4.3"
-  },
-  "dependencies": {
-    "@nomad-xyz/config": "0.1.0-beta.12",
-    "@nomad-xyz/contracts-core": "workspace:^",
-    "@nomad-xyz/multi-provider": "workspace:^",
-    "ethers": "^5.4.6"
-  },
-  "keywords": [
-    "nomad",
-    "sdk"
-  ]
+  }
 }
