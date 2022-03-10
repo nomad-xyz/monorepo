@@ -1,5 +1,5 @@
 {
-  "name": "@nomad-xyz/contracts",
+  "name": "@nomad-xyz/monorepo",
   "private": true,
   "workspaces": [
     "packages/contracts-bridge",
