@@ -20,12 +20,12 @@ type Address = string;
 export class BridgeContext extends NomadContext {
   private bridges: Map<string, BridgeContracts>;
 
-  constructor(conf: config.NomadConfig) {
-    super(conf);
+  constructor(environment: string | config.NomadConfig = 'development') {
+    super(environment);
 
     this.bridges = new Map();
-    const bridges = conf.networks.map(
-      (network) => new BridgeContracts(network, conf.bridge[network]),
+    const bridges = this.conf.networks.map(
+      (network) => new BridgeContracts(network, this.conf.bridge[network]),
     );
 
     bridges.forEach((bridge) => {
