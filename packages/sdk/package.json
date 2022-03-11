@@ -31,7 +31,7 @@
     "test": "ts-mocha ./tests/*.ts"
   },
   "dependencies": {
-    "@nomad-xyz/config": "0.1.0-beta.12",
+    "@nomad-xyz/configuration": "0.1.0-rc.1",
     "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/multi-provider": "workspace:^",
     "ethers": "^5.4.6"

@@ -6,7 +6,7 @@ import { hexlify } from '@ethersproject/bytes';
 import { BridgeContracts } from './BridgeContracts';
 import { ResolvedTokenInfo, TokenIdentifier } from './tokens';
 import { TransferMessage } from './BridgeMessage';
-import * as config from '@nomad-xyz/config';
+import * as config from '@nomad-xyz/configuration';
 
 type Address = string;
 

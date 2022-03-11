@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import * as core from '@nomad-xyz/contracts-core';
-import * as config from '@nomad-xyz/config';
+import * as config from '@nomad-xyz/configuration';
 import { Contracts } from '@nomad-xyz/multi-provider';
 
 export type LocalGovernor = {

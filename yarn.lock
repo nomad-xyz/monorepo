@@ -892,10 +892,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/config@npm:0.1.0-beta.12":
-  version: 0.1.0-beta.12
-  resolution: "@nomad-xyz/config@npm:0.1.0-beta.12"
-  checksum: 576cea8727ba86da5e4a37aa8f3c3d5a9570ae38ccecfeee42ee6c690b7b3bf25f127cfcc3d52397e70d7e47e026cfbfe4c785bce33650c6c9cae5e9440744ff
+"@nomad-xyz/configuration@npm:0.1.0-rc.1":
+  version: 0.1.0-rc.1
+  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.1"
+  checksum: 0f81fa96aba052fd41cbf81ca8414c105738ed2cc64e7ce9b1d33b41346bc1f87095d500090df94f75d2159bd26b9901a975f8bb65d9f4ae865415c2fe6c8144
   languageName: node
   linkType: hard
 
@@ -998,12 +998,6 @@ __metadata:
     ts-node: ^10.1.0
     typechain: ^5.0.0
     typescript: ^4.5.5
-  languageName: unknown
-  linkType: soft
-
-"@nomad-xyz/contracts@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "@nomad-xyz/contracts@workspace:."
   languageName: unknown
   linkType: soft
 
@@ -1124,6 +1118,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nomad-xyz/monorepo@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@nomad-xyz/monorepo@workspace:."
+  languageName: unknown
+  linkType: soft
+
 "@nomad-xyz/multi-provider@workspace:^, @nomad-xyz/multi-provider@workspace:packages/multi-provider":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/multi-provider@workspace:packages/multi-provider"
@@ -1174,7 +1174,7 @@ __metadata:
     "@gnosis.pm/safe-core-sdk": ^2.0.0
     "@gnosis.pm/safe-ethers-adapters": ^0.1.0-alpha.8
     "@gnosis.pm/safe-ethers-lib": ^1.0.0
-    "@nomad-xyz/config": 0.1.0-beta.12
+    "@nomad-xyz/configuration": 0.1.0-rc.1
     "@nomad-xyz/sdk": "workspace:^"
     "@types/mocha": ^9.1.0
     "@types/node": ^16.9.1
@@ -1197,7 +1197,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@nomad-xyz/config": 0.1.0-beta.12
+    "@nomad-xyz/configuration": 0.1.0-rc.1
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
     "@types/mocha": ^9.1.0
@@ -6434,7 +6434,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 
