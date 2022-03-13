@@ -25,11 +25,14 @@ export class NomadContext extends MultiProvider<config.Domain> {
   protected _blacklist: Set<number>;
   readonly conf: config.NomadConfig;
 
-  constructor(environment: string = "development", override: config.NomadConfig | null = null) {
+  constructor(environment: string | config.NomadConfig = 'development') {
     super();
 
-    const conf = override || config.getBuiltin(environment)
-    
+    const conf: config.NomadConfig =
+      typeof environment === 'string'
+        ? config.getBuiltin(environment)
+        : environment;
+
     config.validateConfig(conf);
     this.conf = conf;
 
