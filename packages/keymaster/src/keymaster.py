@@ -163,7 +163,8 @@ def monitor(ctx, metrics_port, pause_duration):
                     logger.error({
                         "msg": "Transaction Failed", 
                         "error": e, 
-                        "transaction": transaction_tuple[0]
+                        "transaction": transaction_tuple[0],
+                        "target_network": target_network
                     })
                     metrics["failed_tx_count"].labels(environment=environment, network=target_network, to=address, error=str(e)).inc()
                     pass
