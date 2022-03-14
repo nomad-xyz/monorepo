@@ -35,7 +35,7 @@ $ yarn build
 
 This repo is a [yarn workspace](https://yarnpkg.com/features/workspaces). All
 packages are located in `packages/`. Generally, packages are intended to
-contain a `src/` directory, which is built to `dist/` See https://github.com/nomad-xyz/monorepo#publishing-to-npm for more details on publishing each package to [npm](https://www.npmjs.com/settings/nomad-xyz/packages).
+contain a `src/` directory, which is built to `dist/` See [Publishing to npm](#publishing-to-npm) for more details on publishing each package to [npm](https://www.npmjs.com/settings/nomad-xyz/packages).
 
 Published packages:
 
@@ -57,6 +57,6 @@ Examples:
 
 - `@nomad-xyz/example-xapps`
 
-### Publishing to NPM
+### Publishing to npm
 
 Publishing a package involves first, building the package which outputs a built `dist/` folder. Once we have a `dist/` folder, we run `npm publish`. The entire package folder, including `src/` and `dist/`, is published to npm. The location of the entrypoint file (`dist/index.js`) and TypeScript types (`dist/index.d.ts`) are specified in each package's package.json.
