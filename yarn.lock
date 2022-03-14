@@ -892,10 +892,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/config@npm:0.1.0-beta.12":
-  version: 0.1.0-beta.12
-  resolution: "@nomad-xyz/config@npm:0.1.0-beta.12"
-  checksum: 576cea8727ba86da5e4a37aa8f3c3d5a9570ae38ccecfeee42ee6c690b7b3bf25f127cfcc3d52397e70d7e47e026cfbfe4c785bce33650c6c9cae5e9440744ff
+"@nomad-xyz/configuration@npm:0.1.0-rc.2":
+  version: 0.1.0-rc.2
+  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.2"
+  checksum: c76cf0bb87f7e40441f50790bd7000de97ffba80af90cb4029b4e1e091c5d6d4e4823522e31fe2316961fbe7d567ebd2c9c5d35009d0b5cbcf92e74f80c6bcb1
   languageName: node
   linkType: hard
 
@@ -1149,6 +1149,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
+    "@nomad-xyz/configuration": 0.1.0-rc.2
     "@nomad-xyz/sdk": "workspace:^"
     "@types/mocha": ^9.1.0
     "@types/node": ^16.9.1
@@ -1174,7 +1175,7 @@ __metadata:
     "@gnosis.pm/safe-core-sdk": ^2.0.0
     "@gnosis.pm/safe-ethers-adapters": ^0.1.0-alpha.8
     "@gnosis.pm/safe-ethers-lib": ^1.0.0
-    "@nomad-xyz/config": 0.1.0-beta.12
+    "@nomad-xyz/configuration": 0.1.0-rc.2
     "@nomad-xyz/sdk": "workspace:^"
     "@types/mocha": ^9.1.0
     "@types/node": ^16.9.1
@@ -1197,7 +1198,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@nomad-xyz/config": 0.1.0-beta.12
+    "@nomad-xyz/configuration": 0.1.0-rc.2
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
     "@types/mocha": ^9.1.0
