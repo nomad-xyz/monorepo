@@ -2,6 +2,14 @@
   "name": "@nomad-xyz/contracts-bridge",
   "version": "1.0.0-rc.1",
   "description": "A bridge using nomad",
+  "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/contracts-bridge#readme",
+  "bugs": {
+    "url": "https://github.com/nomad-xyz/monorepo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nomad-xyz/monorepo.git"
+  },
   "license": "MIT OR Apache-2.0",
   "author": "James Prestwich",
   "main": "dist/index.js",

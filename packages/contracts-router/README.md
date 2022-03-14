@@ -1,4 +1,4 @@
-## Nomad Core
+## Nomad Router
 
 Solidity implementations of the Nomad Router.
 
