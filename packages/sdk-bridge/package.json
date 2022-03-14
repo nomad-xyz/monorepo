@@ -5,10 +5,9 @@
   "keywords": [
     "nomad",
     "sdk",
-    "provider",
-    "multi-provider"
+    "bridge"
   ],
-  "homepage": "https://github.com/nomad-xyz/monorepo#readme",
+  "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/sdk-bridge#readme",
   "bugs": {
     "url": "https://github.com/nomad-xyz/monorepo/issues"
   },
@@ -27,9 +26,9 @@
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
-    "prettier": "prettier --write ./src ./tests",
     "lint": "eslint --fix ./src ./tests",
     "lint:fix": "eslint --fix ./src ./tests",
+    "prettier": "prettier --write ./src ./tests",
     "test": "ts-mocha ./tests/*.ts"
   },
   "dependencies": {

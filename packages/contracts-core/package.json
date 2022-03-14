@@ -2,6 +2,14 @@
   "name": "@nomad-xyz/contracts-core",
   "version": "1.0.0-rc.1",
   "description": "Nomad contracts",
+  "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/contracts-core#readme",
+  "bugs": {
+    "url": "https://github.com/nomad-xyz/monorepo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nomad-xyz/monorepo.git"
+  },
   "license": "MIT OR Apache-2.0",
   "author": "James Prestwich",
   "main": "dist/index.js",

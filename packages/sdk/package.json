@@ -6,7 +6,7 @@
     "nomad",
     "sdk"
   ],
-  "homepage": "https://github.com/nomad-xyz/monorepo#readme",
+  "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/contracts-bridge#readme",
   "bugs": {
     "url": "https://github.com/nomad-xyz/monorepo/issues"
   },
