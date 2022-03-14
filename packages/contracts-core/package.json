@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/contracts-core",
-  "version": "1.0.0",
+  "version": "1.0.0-rc.1",
   "description": "Nomad contracts",
   "license": "MIT OR Apache-2.0",
   "author": "James Prestwich",
