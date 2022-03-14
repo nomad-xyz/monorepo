@@ -12,8 +12,7 @@
     "packages/local-environment",
     "packages/sdk",
     "packages/sdk-bridge",
-    "packages/sdk-govern",
-    "tests"
+    "packages/sdk-govern"
   ],
   "scripts": {
     "bootstrap": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/example-xapps --exclude @nomad-xyz/local-environment --exclude @nomad-xyz/monitor run bootstrap",
