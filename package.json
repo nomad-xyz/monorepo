@@ -16,9 +16,9 @@
     "tests"
   ],
   "scripts": {
-    "bootstrap": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/example-xapps  --exclude @nomad-xyz/local-environment run bootstrap",
-    "build": "yarn workspaces foreach -Atv --exclude @nomad-xyz/deploy  --exclude @nomad-xyz/local-environment run build",
-    "compile": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment run compile",
+    "bootstrap": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/example-xapps --exclude @nomad-xyz/local-environment --exclude @nomad-xyz/monitor run bootstrap",
+    "build": "yarn workspaces foreach -Atv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment --exclude @nomad-xyz/monitor run build",
+    "compile": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment --exclude @nomad-xyz/monitor run compile",
     "contracts-bridge": "yarn workspace @nomad-xyz/contracts-bridge",
     "contracts-core": "yarn workspace @nomad-xyz/contracts-core",
     "contracts-router": "yarn workspace @nomad-xyz/contracts-router",
