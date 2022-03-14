@@ -9,7 +9,7 @@ import { CoreContracts } from './CoreContracts';
 export type Address = string;
 
 /**
- * The NomadContext managers connections to Nomad core and Bridge contracts.
+ * The NomadContext manages connections to Nomad core and Bridge contracts.
  * It inherits from the {@link MultiProvider}, and ensures that its contracts
  * always use the latest registered providers and signers.
  *
