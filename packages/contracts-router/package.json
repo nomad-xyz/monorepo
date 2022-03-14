@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/contracts-router",
-  "version": "1.0.0",
+  "version": "1.0.0-rc.1",
   "description": "The Nomad router, a reusable base for cross-chain applications",
   "license": "MIT OR Apache-2.0",
   "author": "James Prestwich",
