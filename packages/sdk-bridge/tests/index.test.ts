@@ -75,7 +75,7 @@ describe('sdk-bridge', async () => {
         expect(true).to.be.true;
       });
 
-      it('throws if the token doesn\'t exist', () => {
+      it("throws if the token doesn't exist", () => {
         // TODO
         expect(true).to.be.true;
       });
@@ -129,5 +129,5 @@ describe('sdk-bridge', async () => {
         expect(true).to.be.true;
       });
     });
-  }); 
+  });
 });
