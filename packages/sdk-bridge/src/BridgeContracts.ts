@@ -8,7 +8,7 @@ import {
   BridgeRouter__factory,
   ETHHelper__factory,
 } from '@nomad-xyz/contracts-bridge';
-import * as config from '@nomad-xyz/config';
+import * as config from '@nomad-xyz/configuration';
 
 export class BridgeContracts extends Contracts {
   readonly domain: string;
