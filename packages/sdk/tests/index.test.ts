@@ -1,108 +1,56 @@
 import { describe, it } from 'mocha';
 
 import { expect } from 'chai';
-// import { NomadContext } from '@nomad-xyz/sdk'
+import { NomadContext } from '@nomad-xyz/sdk';
+import * as config from '@nomad-xyz/configuration';
+
+const ENVIRONMENTS = ['test'];
 
 describe('sdk', async () => {
   describe('NomadContext', () => {
-    // before(async () => {
+    it('Is properly instantiated from a NomadConfig', async () => {
+      for (const env of ENVIRONMENTS) {
+        const conf = config.getBuiltin(env);
+        const context = new NomadContext(conf);
+        const domains = conf.networks;
 
-    // });
+        // Register providers
+        for (const domain of domains) {
+          const rpc = conf.rpcs[domain][0];
+          context.registerRpcProvider(domain, rpc);
+        }
 
-    // beforeEach(async () => {
+        // Gets governor
+        const governor = context.governor;
+        expect(governor).to.equal(conf.protocol.governor);
 
-    // });
+        // For each home domain, check core info
+        for (const homeDomain of domains) {
+          const remoteDomains = domains.filter((d) => d != homeDomain);
 
-    describe('governor()', () => {
-      it('gets the governor', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-    });
+          const confCore = conf.core[homeDomain];
 
-    describe('registerProvider()', () => {
-      it('registers a provider', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-    });
+          // Gets core
+          const core = context.mustGetCore(homeDomain);
+          expect(core.home.address).to.equal(confCore.home.proxy);
 
-    describe('registerSigner()', () => {
-      it('registers a signer', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-    });
+          // TODO: missing governance router proxy!
+          // expect(core.governanceRouter.address).to.equal(
+          //   confCore.governanceRouter.proxy,
+          // );
 
-    describe('unregisterSigner()', () => {
-      it('unregisters a signer', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-    });
+          // Gets xapp connection manager
+          expect(core.xAppConnectionManager.address).to.equal(
+            confCore.xAppConnectionManager,
+          );
 
-    describe('clearSigners()', () => {
-      it('clears all signers', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('getCore()', () => {
-      it('gets a core', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('mustGetCore()', () => {
-      it('gets a core', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-      it('throws if it cannot get a core', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('getReplicaFor()', () => {
-      it('get a replica', () => {
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('mustGetReplicaFor()', () => {
-      it('gets a replica', () => {
-        expect(true).to.be.true;
-      });
-      it('throws if it cannot get a replica', () => {
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('governorCore()', () => {
-      it('gets a governor core', () => {
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('blacklist()', () => {
-      it('gets the blacklist', () => {
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('checkHomes()', () => {
-      it('checks the home for each network', () => {
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('checkHome()', () => {
-      it('checks the home for a single network', () => {
-        expect(true).to.be.true;
-      });
+          // Gets replicas for home domain
+          for (const remoteDomain in remoteDomains) {
+            const replica = context.getReplicaFor(homeDomain, remoteDomain);
+            expect(typeof replica != 'undefined');
+          }
+        }
+      }
     });
   });
 });
