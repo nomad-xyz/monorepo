@@ -1,11 +1,10 @@
 import { describe, it } from 'mocha';
-
+import { ethers } from 'ethers';
 import { expect } from 'chai';
 import { NomadContext } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
 
-// TODO: fix test.json replicas + development.json rpc values
-const ENVIRONMENTS = ['staging', 'production'];
+const ENVIRONMENTS = ['test', 'development', 'staging', 'production'];
 
 describe('sdk', async () => {
   describe('NomadContext', () => {
@@ -17,8 +16,7 @@ describe('sdk', async () => {
 
         // Register providers
         for (const domain of domains) {
-          const rpc = conf.rpcs[domain][0];
-          context.registerRpcProvider(domain, rpc);
+          context.registerRpcProvider(domain, 'dummy-rpc-url');
         }
 
         // Gets governor
