@@ -899,6 +899,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nomad-xyz/configuration@npm:0.1.0-rc.3":
+  version: 0.1.0-rc.3
+  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.3"
+  checksum: 40a44d7ab61e1ce5de323d5afa2a25f55627dbac63c37b769e57aee26d698a31db0f58dfea0b9ba356000464d90e9b3f373bbd354272f56d9b99b67b497be4d6
+  languageName: node
+  linkType: hard
+
 "@nomad-xyz/contract-interfaces@npm:1.1.1":
   version: 1.1.1
   resolution: "@nomad-xyz/contract-interfaces@npm:1.1.1"
@@ -1198,7 +1205,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@nomad-xyz/configuration": 0.1.0-rc.2
+    "@nomad-xyz/configuration": 0.1.0-rc.3
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
     "@types/mocha": ^9.1.0

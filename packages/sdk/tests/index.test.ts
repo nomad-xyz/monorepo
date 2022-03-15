@@ -1,5 +1,4 @@
 import { describe, it } from 'mocha';
-import { ethers } from 'ethers';
 import { expect } from 'chai';
 import { NomadContext } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
@@ -38,10 +37,10 @@ describe('sdk', async () => {
           // Gets home
           expect(core.home.address).to.equal(homeConfCore.home.proxy);
 
-          // TODO: add governance router to configuration crate
-          // expect(core.governanceRouter.address).to.equal(
-          //   homeConfCore.governanceRouter.proxy,
-          // );
+          // Gets governance router
+          expect(core.governanceRouter.address).to.equal(
+            homeConfCore.governanceRouter.proxy,
+          );
 
           // Gets xapp connection manager
           expect(core.xAppConnectionManager.address).to.equal(
