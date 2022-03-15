@@ -193,7 +193,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
    *
    * @returns The identifier of the governing domain
    */
-  governorCore(): CoreContracts {
+  async governorCore(): Promise<CoreContracts> {
     return this.mustGetCore(this.governor.domain);
   }
 

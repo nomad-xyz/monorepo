@@ -4,7 +4,8 @@ import { expect } from 'chai';
 import { NomadContext } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
 
-const ENVIRONMENTS = ['test'];
+// TODO: fix test.json replicas + development.json rpc values
+const ENVIRONMENTS = ['staging', 'production'];
 
 describe('sdk', async () => {
   describe('NomadContext', () => {
@@ -24,30 +25,38 @@ describe('sdk', async () => {
         const governor = context.governor;
         expect(governor).to.equal(conf.protocol.governor);
 
+        // Gets governor core
+        const govCore = await context.governorCore();
+        expect(context.resolveDomain(govCore.domain)).to.equal(
+          conf.protocol.governor.domain,
+        );
+
         // For each home domain, check core info
         for (const homeDomain of domains) {
-          const remoteDomains = domains.filter((d) => d != homeDomain);
-
-          const confCore = conf.core[homeDomain];
-
-          // Gets core
+          const homeConfCore = conf.core[homeDomain];
+          const confNetwork = conf.protocol.networks[homeDomain];
           const core = context.mustGetCore(homeDomain);
-          expect(core.home.address).to.equal(confCore.home.proxy);
 
-          // TODO: missing governance router proxy!
+          // Gets home
+          expect(core.home.address).to.equal(homeConfCore.home.proxy);
+
+          // TODO: add governance router to configuration crate
           // expect(core.governanceRouter.address).to.equal(
-          //   confCore.governanceRouter.proxy,
+          //   homeConfCore.governanceRouter.proxy,
           // );
 
           // Gets xapp connection manager
           expect(core.xAppConnectionManager.address).to.equal(
-            confCore.xAppConnectionManager,
+            homeConfCore.xAppConnectionManager,
           );
 
           // Gets replicas for home domain
-          for (const remoteDomain in remoteDomains) {
-            const replica = context.getReplicaFor(homeDomain, remoteDomain);
-            expect(typeof replica != 'undefined');
+          for (const remoteDomain of confNetwork.connections) {
+            const remoteConfCore = conf.core[remoteDomain];
+            const replica = context.mustGetReplicaFor(homeDomain, remoteDomain);
+            expect(replica.address).to.equal(
+              remoteConfCore.replicas[homeDomain].proxy,
+            );
           }
         }
       }
