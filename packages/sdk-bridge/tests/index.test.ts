@@ -19,14 +19,17 @@ describe('sdk-bridge', async () => {
 
         // Register providers and test bridgeRouter, tokenRegistry and ethHelper
         for (const domain of domains) {
-          const rpc = conf.rpcs[domain][0];
-          context.registerRpcProvider(domain, rpc);
+          context.registerRpcProvider(domain, 'dummy-rpc-url');
 
           const bridge = context.getBridge(domain);
           const confBridge = conf.bridge[domain];
 
-          expect(bridge.bridgeRouter.address).to.equal(confBridge.bridgeRouter.proxy);
-          expect(bridge.tokenRegistry.address).to.equal(confBridge.tokenRegistry.proxy);
+          expect(bridge.bridgeRouter.address).to.equal(
+            confBridge.bridgeRouter.proxy,
+          );
+          expect(bridge.tokenRegistry.address).to.equal(
+            confBridge.tokenRegistry.proxy,
+          );
           expect(bridge.ethHelper.address).to.equal(confBridge.ethHelper);
         }
       }
