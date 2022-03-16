@@ -1,108 +1,62 @@
 import { describe, it } from 'mocha';
-
 import { expect } from 'chai';
-// import { NomadContext } from '@nomad-xyz/sdk'
+import { NomadContext } from '@nomad-xyz/sdk';
+import * as config from '@nomad-xyz/configuration';
+
+const ENVIRONMENTS = ['test', 'development', 'staging', 'production'];
 
 describe('sdk', async () => {
   describe('NomadContext', () => {
-    // before(async () => {
+    it('Is properly instantiated from a NomadConfig', async () => {
+      for (const env of ENVIRONMENTS) {
+        const conf = config.getBuiltin(env);
+        const context = new NomadContext(conf);
+        const domains = conf.networks;
 
-    // });
+        // Register providers
+        for (const domain of domains) {
+          context.registerRpcProvider(domain, 'dummy-rpc-url');
+        }
 
-    // beforeEach(async () => {
+        // Gets governor
+        const governor = context.governor;
+        expect(governor).to.equal(conf.protocol.governor);
 
-    // });
+        // Gets governor core
+        const govCore = await context.governorCore();
+        expect(context.resolveDomain(govCore.domain)).to.equal(
+          conf.protocol.governor.domain,
+        );
 
-    describe('governor()', () => {
-      it('gets the governor', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-    });
+        // For each home domain, check core info
+        for (const homeDomain of domains) {
+          const homeConfCore = conf.core[homeDomain];
+          const confNetwork = conf.protocol.networks[homeDomain];
+          const core = context.mustGetCore(homeDomain);
 
-    describe('registerProvider()', () => {
-      it('registers a provider', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-    });
+          // Gets home
+          expect(core.home.address).to.equal(homeConfCore.home.proxy);
 
-    describe('registerSigner()', () => {
-      it('registers a signer', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-    });
+          // Gets governance router
+          expect(core.governanceRouter.address).to.equal(
+            homeConfCore.governanceRouter.proxy,
+          );
 
-    describe('unregisterSigner()', () => {
-      it('unregisters a signer', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-    });
+          // Gets xapp connection manager
+          expect(core.xAppConnectionManager.address).to.equal(
+            homeConfCore.xAppConnectionManager,
+          );
 
-    describe('clearSigners()', () => {
-      it('clears all signers', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('getCore()', () => {
-      it('gets a core', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('mustGetCore()', () => {
-      it('gets a core', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-      it('throws if it cannot get a core', () => {
-        // TODO
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('getReplicaFor()', () => {
-      it('get a replica', () => {
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('mustGetReplicaFor()', () => {
-      it('gets a replica', () => {
-        expect(true).to.be.true;
-      });
-      it('throws if it cannot get a replica', () => {
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('governorCore()', () => {
-      it('gets a governor core', () => {
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('blacklist()', () => {
-      it('gets the blacklist', () => {
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('checkHomes()', () => {
-      it('checks the home for each network', () => {
-        expect(true).to.be.true;
-      });
-    });
-
-    describe('checkHome()', () => {
-      it('checks the home for a single network', () => {
-        expect(true).to.be.true;
-      });
+          // Gets replicas for home domain
+          for (const remoteDomain of confNetwork.connections) {
+            const remoteConfCore = conf.core[remoteDomain];
+            const replica = context.mustGetReplicaFor(homeDomain, remoteDomain);
+            expect(replica.address).to.equal(
+              remoteConfCore.replicas[homeDomain].proxy,
+            );
+          }
+        }
+      }
     });
   });
 });
