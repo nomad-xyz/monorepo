@@ -1156,7 +1156,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
-    "@nomad-xyz/configuration": 0.1.0-rc.2
+    "@nomad-xyz/configuration": 0.1.0-rc.3
     "@nomad-xyz/sdk": "workspace:^"
     "@types/mocha": ^9.1.0
     "@types/node": ^16.9.1
