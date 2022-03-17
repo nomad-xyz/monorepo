@@ -137,6 +137,7 @@ export default class DeployContext extends MultiProvider<config.Domain> {
 
     await core.deployHome();
     await core.deployGovernanceRouter();
+    // await Promise.all([core.deployHome(), core.deployGovernanceRouter()]);
 
     // all contracts deployed
     const complete = core.complete();
