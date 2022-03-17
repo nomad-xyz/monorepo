@@ -6,6 +6,7 @@
     "packages/contracts-core",
     "packages/contracts-router",
     "packages/deploy",
+    "packages/new-deploy",
     "packages/monitor",
     "packages/multi-provider",
     "packages/local-environment",

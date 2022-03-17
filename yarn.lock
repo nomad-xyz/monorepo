@@ -892,7 +892,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/configuration@npm:0.1.0-rc.6":
+"@nomad-xyz/configuration@npm:0.1.0-rc.6, @nomad-xyz/configuration@npm:^0.1.0-rc.2":
   version: 0.1.0-rc.6
   resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.6"
   checksum: 350e508ee75335262c2953d64452aa1a91083ef8b5748914dd599702d0fbd8cb9b0cd48eb1055bebb2ba421e800a205217dbd92f998268ac6663a19ed3acd004
@@ -1111,6 +1111,33 @@ __metadata:
     ts-mocha: ^9.0.2
     typescript: ^4.4.3
     web3: ^1.6.1
+  languageName: unknown
+  linkType: soft
+
+"@nomad-xyz/new-deploy@workspace:packages/new-deploy":
+  version: 0.0.0-use.local
+  resolution: "@nomad-xyz/new-deploy@workspace:packages/new-deploy"
+  dependencies:
+    "@nomad-xyz/configuration": ^0.1.0-rc.2
+    "@nomad-xyz/contracts-bridge": "workspace:^"
+    "@nomad-xyz/contracts-core": "workspace:^"
+    "@nomad-xyz/contracts-router": "workspace:^"
+    "@nomad-xyz/multi-provider": "workspace:^"
+    "@types/chai": ^4.2.21
+    "@types/node": ^17.0.14
+    "@typescript-eslint/eslint-plugin": ^4.33.0
+    "@typescript-eslint/parser": ^4.33.0
+    axios: ^0.21.3
+    chai: ^4.3.4
+    dotenv: ^10.0.0
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.3.0
+    ethers: ^5.5.1
+    hardhat-packager: ^1.2.1
+    prettier: ^2.3.1
+    ts-node: ^10.1.0
+    typechain: ^5.0.0
+    typescript: ^4.5.5
   languageName: unknown
   linkType: soft
 
@@ -6421,7 +6448,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
+  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
   languageName: node
   linkType: hard
 
