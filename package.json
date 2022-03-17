@@ -2,6 +2,7 @@
   "name": "@nomad-xyz/monorepo",
   "private": true,
   "workspaces": [
+    "packages/cli",
     "packages/contracts-bridge",
     "packages/contracts-core",
     "packages/contracts-router",
@@ -33,5 +34,9 @@
     "sdk-govern": "yarn workspace @nomad-xyz/sdk-govern",
     "test": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy  --exclude @nomad-xyz/local-environment run test"
   },
-  "packageManager": "yarn@3.1.1"
+  "packageManager": "yarn@3.1.1",
+  "dependencies": {
+    "@nomad-xyz/configuration": "^0.1.0-rc.3",
+    "@nomad-xyz/sdk": "workspace:^"
+  }
 }

@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "composite": true
+  },
+  "exclude": [
+    "./node_modules",
+    "./dist",
+    "./tmp.ts"
+  ],
+  "extends": "../tsconfig.package.json",
+  "include": [
+    "./src/**/*.ts",
+  ],
+  "references": [
+    { "path": "../sdk" },
+    { "path": "../sdk-bridge" }
+  ]
+}
