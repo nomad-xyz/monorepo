@@ -79,11 +79,15 @@ export class MultiProvider<T extends Domain> {
    * @returns The canonical domain number.
    */
   resolveDomain(nameOrDomain: string | number): number {
-    if (typeof nameOrDomain === 'number') return nameOrDomain;
+    let domain: Domain | undefined;
+    if (typeof nameOrDomain === 'number') {
+      domain = this.registeredDomains.find((d) => d?.domain === nameOrDomain);
+    } else if (typeof nameOrDomain === 'string') {
+      domain = this.registeredDomains.find(
+        (d) => d?.name.toLowerCase() === nameOrDomain.toLowerCase(),
+      );
+    }
 
-    const domain = this.registeredDomains.find(
-      (domain) => domain.name.toLowerCase() === nameOrDomain.toLowerCase(),
-    );
     if (!domain) {
       throw new Error(`Domain not found: ${nameOrDomain}`);
     }
@@ -96,14 +100,19 @@ export class MultiProvider<T extends Domain> {
    * Similar to `resolveDomain`.
    *
    * @param nameOrDomain A domain name or number.
-   * @returns The name (or undefined)
+   * @returns The name
+   * @throws If the domain is unknown
    */
   resolveDomainName(nameOrDomain: string | number): string {
-    if (typeof nameOrDomain === 'string') return nameOrDomain;
+    let domain: Domain | undefined;
+    if (typeof nameOrDomain === 'number') {
+      domain = this.registeredDomains.find((d) => d?.domain === nameOrDomain);
+    } else if (typeof nameOrDomain === 'string') {
+      domain = this.registeredDomains.find(
+        (d) => d?.name.toLowerCase() === nameOrDomain.toLowerCase(),
+      );
+    }
 
-    const domain = this.registeredDomains.find(
-      (domain) => domain.domain === nameOrDomain,
-    );
     if (!domain) {
       throw new Error(`Domain not found: ${nameOrDomain}`);
     }
@@ -184,8 +193,17 @@ export class MultiProvider<T extends Domain> {
   registerRpcProvider(nameOrDomain: string | number, rpc: string): void {
     const domain = this.resolveDomain(nameOrDomain);
 
-    const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
-    this.registerProvider(domain, provider);
+    if (rpc.startsWith('http://') || rpc.startsWith('https://')) {
+      const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
+      this.registerProvider(domain, provider);
+    } else if (rpc.startsWith('ws://') || rpc.startsWith('wss://')) {
+      const provider = new ethers.providers.WebSocketProvider(rpc);
+      this.registerProvider(domain, provider);
+    } else {
+      throw new Error(
+        'Unknown RPC string scheme. Expected an http or websocket URI',
+      );
+    }
   }
 
   /**
@@ -212,21 +230,6 @@ export class MultiProvider<T extends Domain> {
       throw new Error('unregistered name or domain');
     }
     return provider;
-  }
-
-  /**
-   * Get the Signer associated with a doman (or error)
-   *
-   * @param nameOrDomain A domain name or number.
-   * @returns A Signer
-   * @throws If no provider has been registered for the specified domain
-   */
-  mustGetSigner(nameOrDomain: string | number): ethers.Signer {
-    const signer = this.getSigner(nameOrDomain);
-    if (!signer) {
-      throw new Error('unregistered name or domain');
-    }
-    return signer;
   }
 
   /**
@@ -314,6 +317,21 @@ export class MultiProvider<T extends Domain> {
   }
 
   /**
+   * Get the Signer associated with a doman (or error)
+   *
+   * @param nameOrDomain A domain name or number.
+   * @returns A Signer
+   * @throws If no provider has been registered for the specified domain
+   */
+  mustGetSigner(nameOrDomain: string | number): ethers.Signer {
+    const signer = this.getSigner(nameOrDomain);
+    if (!signer) {
+      throw new Error(`Domain not found: ${nameOrDomain}`);
+    }
+    return signer;
+  }
+
+  /**
    * Returns the most privileged connection registered to a domain. E.g.
    * this function will attempt to return a Signer, then attempt to return the
    * Provider (if no Signer is registered). If neither Signer nor Provider is
@@ -327,6 +345,24 @@ export class MultiProvider<T extends Domain> {
     nameOrDomain: string | number,
   ): ethers.Signer | ethers.providers.Provider | undefined {
     return this.getSigner(nameOrDomain) ?? this.getProvider(nameOrDomain);
+  }
+
+  /**
+   * Get the Connection associated with a doman (or error)
+   *
+   * @param nameOrDomain A domain name or number.
+   * @returns A Signer
+   * @returns A Signer (if any), otherwise a Provider (if any), otherwise error
+   */
+  mustGetConnection(
+    nameOrDomain: string | number,
+  ): ethers.Signer | ethers.providers.Provider {
+    const connection = this.getConnection(nameOrDomain);
+    if (!connection) {
+      throw new Error(`Connection not found: ${nameOrDomain}`);
+    }
+
+    return connection;
   }
 
   /**

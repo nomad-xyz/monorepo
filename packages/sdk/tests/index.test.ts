@@ -15,7 +15,7 @@ describe('sdk', async () => {
 
         // Register providers
         for (const domain of domains) {
-          context.registerRpcProvider(domain, 'dummy-rpc-url');
+          context.registerRpcProvider(domain, 'http://dummy-rpc-url');
         }
 
         // Gets governor

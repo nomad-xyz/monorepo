@@ -108,7 +108,7 @@ describe('multi-provider', async () => {
     expect(mp.providers.has('a')).to.be.true;
     // rpc provider
     expect(mp.providers.has('b')).to.be.false;
-    const rpcProvider = 'someProvider';
+    const rpcProvider = 'http://someProvider';
     mp.registerRpcProvider('b', rpcProvider);
     expect(mp.providers.has('b')).to.be.true;
   });
@@ -116,10 +116,14 @@ describe('multi-provider', async () => {
   it('gets registered provider', () => {
     const providerA = mp.getProvider('a');
     const providerB = mp.getProvider(2000);
-    const noProvider = mp.getProvider('c');
     expect(providerA).to.not.be.undefined;
     expect(providerB).to.not.be.undefined;
-    expect(noProvider).to.be.undefined;
+    try {
+      mp.getProvider('c');
+      expect(false, 'Error expected').to.be.true;
+    } catch (_) {
+      _;
+    }
   });
 
   it('mustGetProvider errors if provider is not registered for given nameOrDomain', () => {
@@ -144,10 +148,14 @@ describe('multi-provider', async () => {
   it('gets signers', () => {
     const signerA = mp.getSigner('a');
     const signerB = mp.getSigner(2000);
-    const noSigner = mp.getSigner('c');
     expect(signerA).to.not.be.undefined;
     expect(signerB).to.not.be.undefined;
-    expect(noSigner).to.be.undefined;
+    try {
+      mp.getSigner('c');
+      expect(false, 'Error expected').to.be.true;
+    } catch (_) {
+      _;
+    }
   });
 
   it('gets connection', () => {

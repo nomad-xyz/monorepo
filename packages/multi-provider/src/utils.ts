@@ -92,6 +92,18 @@ export function evmId(data: BytesLike): Address {
 }
 
 /**
+ * Equality for the `NomadIdentifier`
+ *
+ * @param left Lhs of equality
+ * @param right Rhs of equality
+ * @returns true if equal, else false
+ * @throws if either side is not a valid 20 or 32 byte nomad identifier
+ */
+export function equalIds(left: BytesLike, right: BytesLike): boolean {
+  return canonizeId(left) === canonizeId(right);
+}
+
+/**
  * Sleep async for some time.
  *
  * @param ms the number of milliseconds to sleep
@@ -99,4 +111,14 @@ export function evmId(data: BytesLike): Address {
  */
 export function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Parse a number or string into an integer number
+ * @param input A number, decimal string, or hex string
+ * @returns The integer it represents
+ * @throws If the number is larger than MAX_SAFE_INTEGER
+ */
+export function parseInt(input: string | number): number {
+  return ethers.BigNumber.from(input).toNumber();
 }
