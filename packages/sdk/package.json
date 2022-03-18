@@ -28,13 +28,15 @@
     "prettier": "prettier --write ./src ./tests",
     "lint": "eslint --fix ./src ./tests",
     "lint:fix": "eslint --fix ./src ./tests",
-    "test": "ts-mocha ./tests/*.ts"
+    "test": "ts-mocha ./tests/*.ts",
+    "coverage": "nyc --reporter=text ts-mocha ./tests/*.ts"
   },
   "dependencies": {
     "@nomad-xyz/configuration": "0.1.0-rc.6",
     "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/multi-provider": "workspace:^",
-    "ethers": "^5.4.6"
+    "ethers": "^5.4.6",
+    "nyc": "^15.1.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.21",

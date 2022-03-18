@@ -29,7 +29,8 @@
     "lint": "eslint --fix ./src ./tests",
     "lint:fix": "eslint --fix ./src ./tests",
     "prettier": "prettier --write ./src ./tests",
-    "test": "ts-mocha ./tests/*.ts"
+    "test": "ts-mocha ./tests/*.ts",
+    "coverage": "nyc --reporter=text ts-mocha ./tests/*.ts"
   },
   "dependencies": {
     "@gnosis.pm/safe-core-sdk": "^2.0.0",
@@ -38,6 +39,7 @@
     "@nomad-xyz/configuration": "0.1.0-rc.6",
     "@nomad-xyz/sdk": "workspace:^",
     "ethers": "^5.4.6",
+    "nyc": "^15.1.0",
     "web3": "^1.6.1"
   },
   "devDependencies": {
