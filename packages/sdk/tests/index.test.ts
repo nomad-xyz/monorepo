@@ -1,7 +1,9 @@
-import { describe, it } from 'mocha';
+import { before, describe, it } from 'mocha';
 import { expect } from 'chai';
-import { NomadContext } from '@nomad-xyz/sdk';
+import { getDefaultProvider } from 'ethers';
+import { NomadContext, CoreContracts } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
+import { LocalGovernor, RemoteGovernor } from '../dist/CoreContracts';
 
 const ENVIRONMENTS = ['test', 'development', 'staging', 'production'];
 
@@ -55,8 +57,58 @@ describe('sdk', async () => {
               remoteConfCore.replicas[homeDomain].proxy,
             );
           }
+
+          // returns undefined if no replica exists
+          const noReplica = core.getReplica('none');
+          expect(noReplica).to.be.undefined;
         }
       }
     });
   });
+
+  describe('CoreContracts', () => {
+    let conf: config.NomadConfig;
+    let coreContracts: CoreContracts;
+
+    before('instantiates contracts', () => {
+      conf = config.getBuiltin('development');
+      coreContracts = new CoreContracts('rinkeby', conf.core['rinkeby']);
+    });
+    it('errors if no provider or signer', () => {
+      const errMsg = 'No provider or signer. Call `connect` first.'
+
+      // TODO: allow name or domain?
+      expect(() => coreContracts.getReplica('kovan')).to.throw(errMsg);
+      expect(() => coreContracts.home).to.throw(errMsg);
+      expect(() => coreContracts.governanceRouter).to.throw(errMsg);
+      expect(() => coreContracts.xAppConnectionManager).to.throw(errMsg);
+    });
+
+    it('gets governor and stores in class state', async () => {
+      const provider = getDefaultProvider();
+      coreContracts.connect(provider);
+
+      const localGovernor: LocalGovernor = {
+        location: 'local',
+        identifier: conf.protocol.governor.id
+      };
+      const remoteGovernor: RemoteGovernor = {
+        location: 'remote',
+        domain: 2000
+      }
+
+      let governor = await coreContracts.governor();
+      expect(governor).to.equal(localGovernor);
+
+      // should retrieve from class state second time
+      governor = await coreContracts.governor();
+      expect(governor).to.equal(localGovernor);
+
+      // gets governor from non-governor chain
+      const nonGovCore = new CoreContracts('kovan', conf.core['kovan']);
+
+      governor = await nonGovCore.governor();
+      expect(governor).to.equal(remoteGovernor);
+    });
+  })
 });

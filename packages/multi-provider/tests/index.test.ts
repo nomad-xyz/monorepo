@@ -1,4 +1,4 @@
-import { describe, it } from 'mocha';
+import { before, describe, it } from 'mocha';
 
 import { expect } from 'chai';
 import { MultiProvider, Contracts } from '@nomad-xyz/multi-provider';
