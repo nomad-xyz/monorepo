@@ -30,7 +30,7 @@
     "lint:fix": "eslint --fix ./src ./tests",
     "prettier": "prettier --write ./src ./tests",
     "test": "ts-mocha ./tests/*.ts",
-    "coverage": "nyc --reporter=text ts-mocha ./tests/*.ts"
+    "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts"
   },
   "dependencies": {
     "@gnosis.pm/safe-core-sdk": "^2.0.0",

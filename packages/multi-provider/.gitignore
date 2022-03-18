@@ -2,3 +2,4 @@
 dist/
 tsconfig.tsbuildinfo
 .nyc_output/
+coverage/

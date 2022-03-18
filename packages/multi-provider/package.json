@@ -27,7 +27,7 @@
     "lint": "eslint --fix ./src ./tests",
     "lint:fix": "eslint --fix ./src ./tests",
     "test": "ts-mocha ./tests/*.ts",
-    "coverage": "nyc --reporter=text ts-mocha ./tests/*.ts"
+    "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts"
   },
   "dependencies": {
     "ethers": "^5.4.6",
