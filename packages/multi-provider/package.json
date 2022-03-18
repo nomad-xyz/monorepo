@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/multi-provider",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0-rc.2",
   "description": "A wrapper for multiple ethers.js providers, suitable for multi-chain applications",
   "keywords": [
     "nomad",
