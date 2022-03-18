@@ -7,6 +7,12 @@ export type Address = string;
 const chainIdToDomainMapping: Map<number, number> = new Map([
   [1, 0x657468], // Ethereum ('eth interpreted as int)
   [1284, 0x6265616d], // Moonbeam ('beam interpreted as int)
+  [2001, 25393], // MilkomedaC1
+  [4, 2000], // Rinkeby
+  [42, 3000], // Kovan
+  [1287, 5000], // Moonbase Alpha
+  [200101, 8000], // Milkomeda Testnet
+  [9000, 9000] // Evmos Testnet
 ]);
 
 /**
@@ -59,9 +65,7 @@ export function getDomainFromString(name: string): number {
  * @returns A Uint8Array of length 32
  * @throws if the input is undefined, or not exactly 20 or 32 bytes long
  */
-export function canonizeId(data?: BytesLike): Uint8Array {
-  if (!data) throw new Error('Bad input. Undefined');
-
+export function canonizeId(data: BytesLike): Uint8Array {
   const buf = ethers.utils.arrayify(data);
   if (buf.length > 32) throw new Error('Too long');
   if (buf.length !== 20 && buf.length != 32) {
