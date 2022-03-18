@@ -1,7 +1,7 @@
 import { describe, it } from 'mocha';
 
 import { expect } from 'chai';
-import { MultiProvider } from '@nomad-xyz/multi-provider';
+import { MultiProvider, Contracts } from '@nomad-xyz/multi-provider';
 import { ethers } from 'ethers';
 
 interface Domain {
@@ -70,6 +70,11 @@ describe('multi-provider', async () => {
     const nameFromDomain = mp.resolveDomainName(chainADomain.domain);
     expect(nameFromName).to.equal(nameFromDomain).to.equal('a');
   });
+
+  it('resolveDomainName errors if domain is not found', () => {
+    expect(() => mp.resolveDomainName(4000)).to.throw();
+    expect(() => mp.resolveDomainName('hi')).to.throw();
+  })
 
   it('returns whether a given domain is registered', () => {
     const known = mp.knownDomain('a');
@@ -179,7 +184,7 @@ describe('multi-provider', async () => {
     // expect(connectionB).to.equal(testSigner);
   });
 
-  it('get signer address', async () => {
+  it('gets signer address', async () => {
     // TODO:
     // const addressA = await mp.getAddress('a');
     // const actualAddress = await testSigner.getAddress();
@@ -202,4 +207,28 @@ describe('multi-provider', async () => {
   it('registers Wallet Signer', () => {
     // TODO:
   });
+
+  it('instantiates Contracts class with appropriate args', () => {
+    class SomeContracts extends Contracts {
+      readonly domain: number;
+      readonly name: string;
+    
+      constructor(
+        domain: number,
+        name: string,
+      ) {
+        super(domain, name);
+        this.domain = domain;
+        this.name = name;
+      }
+      connect(): void {
+        return
+      }
+    }
+    const newContracts = new SomeContracts(2000, 'someChain');
+    expect(newContracts.args[0]).to.equal(2000);
+    expect(newContracts.args[1]).to.equal('someChain');
+  });
+
+  // it('resolveDomainName errors i')
 });

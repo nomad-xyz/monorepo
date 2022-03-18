@@ -247,7 +247,7 @@ export class MultiProvider<T extends Domain> {
     if (provider) {
       try {
         signer = signer.connect(provider);
-        this.signers.set(domain, signer.connect(provider));
+        this.signers.set(domain, signer);
         return;
       } catch (_) {
         // do nothing
