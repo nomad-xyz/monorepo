@@ -19,7 +19,7 @@ describe('sdk-bridge', async () => {
 
         // Register providers and test bridgeRouter, tokenRegistry and ethHelper
         for (const domain of domains) {
-          context.registerRpcProvider(domain, 'dummy-rpc-url');
+          context.registerRpcProvider(domain, 'http://dummy-rpc-url');
 
           const bridge = context.getBridge(domain);
           const confBridge = conf.bridge[domain];
