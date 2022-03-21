@@ -22,7 +22,7 @@ export async function run(db: DB, environment: string, logger: Logger, metrics: 
     throw new Error(`Enviroment '${environment}' is not suppoerted`);
   }
 
-  ctx.domainNumbers.forEach((domain) => {
+  ctx.domainNumbers.forEach((domain: number) => {
     const name = ctx.mustGetDomain(domain).name.toUpperCase();
     const rpcEnvKey = `${name}_RPC`;
     const rpc = process.env[rpcEnvKey];
