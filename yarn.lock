@@ -1286,7 +1286,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/local-environment@workspace:packages/local-environment":
+"@nomad-xyz/local-environment@workspace:^, @nomad-xyz/local-environment@workspace:packages/local-environment":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/local-environment@workspace:packages/local-environment"
   dependencies:
@@ -1428,6 +1428,7 @@ __metadata:
   dependencies:
     "@nomad-xyz/configuration": 0.1.0-rc.6
     "@nomad-xyz/contracts-core": "workspace:^"
+    "@nomad-xyz/local-environment": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
     "@types/chai": ^4.2.21
     "@types/node": ^16.9.1

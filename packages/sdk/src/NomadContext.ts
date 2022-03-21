@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { providers, Signer } from 'ethers';
 
 import { MultiProvider } from '@nomad-xyz/multi-provider';
 import * as core from '@nomad-xyz/contracts-core';
@@ -81,7 +81,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
    */
   registerProvider(
     nameOrDomain: string | number,
-    provider: ethers.providers.Provider,
+    provider: providers.Provider,
   ): void {
     const domain = this.resolveDomain(nameOrDomain);
     super.registerProvider(domain, provider);
@@ -94,7 +94,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
    * @param nameOrDomain A domain name or number.
    * @param signer An ethers Signer to be used by requests to that domain.
    */
-  registerSigner(nameOrDomain: string | number, signer: ethers.Signer): void {
+  registerSigner(nameOrDomain: string | number, signer: Signer): void {
     const domain = this.resolveDomain(nameOrDomain);
     super.registerSigner(domain, signer);
     this.reconnect(domain);
