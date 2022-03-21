@@ -99,7 +99,9 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     this._data.deployHeight = await provider.getBlockNumber();
   }
 
-  private async deployTokenImplementation(): Promise<void> {
+  private async deployTokenImplementation(): Promise<
+    Partial<config.Proxy | undefined>
+  > {
     const name = this.context.resolveDomainName(this.domain);
 
     // don't redeploy
@@ -109,19 +111,14 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const impl = await factory.deploy(this.overrides);
     await impl.deployTransaction.wait(this.confirmations);
 
-    if (!this._data.bridgeToken) {
-      this._data.bridgeToken = {
-        implementation: '',
-        proxy: '',
-        beacon: '',
-      };
-    }
-
-    this._data.bridgeToken.implementation = impl.address;
     this.context.pushVerification(name, {
       name: 'BridgeToken',
       address: impl.address,
     });
+
+    return {
+      implementation: impl.address,
+    };
   }
 
   // TODO: DRY
@@ -132,6 +129,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const name = this.context.resolveDomainName(this.domain);
     const beacon = proxy.beacon;
     if (!beacon) throw new Error('Tried to deploy proxy without beacon');
+    if (proxy.proxy) return; // don't redploy
 
     const factory = new UpgradeBeaconProxy__factory(
       this.context.getDeployer(name),
@@ -183,35 +181,21 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
   }
 
   async deployTokenUpgradeBeacon(): Promise<void> {
-    const name = this.context.resolveDomainName(this.domain);
+    // ensure the implementation exists. An undefined return value indicates
+    // that the implementation already exists
+    const proxy =
+      (await this.deployTokenImplementation()) ?? this.data.bridgeToken;
+    if (!proxy) throw new Error('unreachable');
 
-    // ensure the implementation exists
-    await this.deployTokenImplementation();
-    const implAddress = this.data.bridgeToken?.implementation;
+    const implAddress = proxy?.implementation;
     if (!implAddress) throw new Error('unreachable');
 
     // don't redeploy
-    if (!this.data.bridgeRouter) throw new Error('unreachable');
-    if (this.data.bridgeToken?.beacon) return;
+    if (proxy?.beacon) return;
 
-    // preconditions
-    const controller = this.context.mustGetCore(this.domain)
-      .upgradeBeaconController.address;
-
-    const factory = new UpgradeBeacon__factory(this.deployer);
-    const beacon = await factory.deploy(
-      implAddress,
-      controller,
-      this.overrides,
-    );
-    await beacon.deployTransaction.wait(this.confirmations);
-
-    this.data.bridgeRouter.beacon = beacon.address;
-    this.context.pushVerification(name, {
-      name: 'UpgradeBeacon',
-      address: beacon.address,
-      constructorArguments: [implAddress, controller],
-    });
+    await this.deployBeacon(proxy);
+    proxy.proxy = '';
+    this._data.bridgeToken = proxy as config.Proxy;
   }
 
   async deployTokenRegistry(): Promise<void> {
@@ -334,11 +318,11 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     if (!this.data.customs) this._data.customs = [];
 
     const implementation = this.data.bridgeToken?.implementation;
-    const router = this.data.bridgeRouter?.proxy;
+    const bridge = this.data.bridgeRouter?.proxy;
     const core = this.context.mustGetCore(this.domain);
     if (!implementation)
       throw new Error('Need bridge token impl to deploy custom');
-    if (!router) throw new Error('Need bridge router to deploy custom token');
+    if (!bridge) throw new Error('Need bridge router to deploy custom token');
     // factories
     const ubcFactory = new UpgradeBeaconController__factory(this.deployer);
     const beaconFactory = new UpgradeBeacon__factory(this.deployer);
@@ -388,7 +372,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
         // transfer ownership to the bridge router
         await (
-          await tokenProxy.transferOwnership(router)
+          await tokenProxy.transferOwnership(bridge)
         ).wait(this.confirmations);
 
         // enroll the custom representation
