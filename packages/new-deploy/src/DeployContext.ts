@@ -153,8 +153,6 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     // Essentially we run likely future governance actions at deploy time, so
     // we will not be required to run them later.
     await Promise.all([
-      core.xAppConnectionManager.setHome(complete.home.proxy),
-      core.updaterManager.setHome(complete.home.proxy),
       ...remoteDomains.map((remote) => core.enrollGovernanceRouter(remote)),
       ...remoteDomains.map((remote) => core.enrollWatchers(remote)),
     ]);

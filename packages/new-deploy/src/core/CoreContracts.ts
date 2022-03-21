@@ -37,6 +37,11 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     super(context, domain, data);
   }
 
+  checkComplete(): void {
+    if (!this.data.replicas) this._data.replicas = {};
+    super.checkComplete();
+  }
+
   get upgradeBeaconController(): contracts.UpgradeBeaconController {
     if (!this.data.upgradeBeaconController) {
       throw new Error('Missing upgradeBeaconController address');
@@ -270,6 +275,11 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     return newProxy as config.Proxy;
   }
 
+  // This function MUST be called at deploy time. If deployer is not still
+  // governor on this core, it will error.
+  //
+  // TODO: make this gracefully handle post-deploy home switching by returning
+  // a `ethers.PopulatedTransaction[]`
   async deployHome(): Promise<void> {
     const name = this.context.resolveDomainName(this.domain);
 
@@ -293,6 +303,11 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     const proxy = await this.newProxy(home.address, initData);
     this._data.home = proxy;
+
+    await Promise.all([
+      this.xAppConnectionManager.setHome(proxy.proxy),
+      this.updaterManager.setHome(proxy.proxy),
+    ]);
 
     this.context.pushVerification(name, {
       name: 'Home',

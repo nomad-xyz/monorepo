@@ -21,7 +21,6 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     'bridgeRouter',
     'tokenRegistry',
     'bridgeToken',
-    'ethHelper',
     'deployHeight',
   ];
 
@@ -31,6 +30,11 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     data?: config.EvmBridgeContracts,
   ) {
     super(context, domain, data);
+  }
+
+  checkComplete(): void {
+    if (!this.data.customs) this._data.customs = [];
+    super.checkComplete();
   }
 
   get deployer(): ethers.Signer {
