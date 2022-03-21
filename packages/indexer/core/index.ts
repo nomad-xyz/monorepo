@@ -1,4 +1,6 @@
-import { mainnet, staging, dev, NomadContext } from "@nomad-xyz/sdk";
+import { BridgeContext } from "@nomad-xyz/sdk-bridge";
+// import DeployContext from '../src/DeployContext';
+// import * as sdk from '@nomad-xyz/sdk';
 import { Processor } from "./consumer";
 import { Orchestrator } from "./orchestrator";
 import * as dotenv from "dotenv";
@@ -9,13 +11,13 @@ import {run as runApi} from "./api";
 dotenv.config({});
 
 export async function run(db: DB, environment: string, logger: Logger, metrics: IndexerCollector) {
-  let ctx: NomadContext;
+  let ctx: BridgeContext;
   if (environment === "production") {
-    ctx = mainnet;
+    ctx = new BridgeContext("production");
   } else if (environment === "staging") {
-    ctx = staging;
+    ctx = new BridgeContext("staging");
   } else if (environment === "development") {
-    ctx = dev;
+    ctx = new BridgeContext("development");
   } else {
     throw new Error(`Enviroment '${environment}' is not suppoerted`);
   }

@@ -1,11 +1,11 @@
 import { Orchestrator } from "./orchestrator";
-import { NomadContext } from "@nomad-xyz/sdk";
+import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import fs from "fs";
 import { ContractType, EventType, NomadEvent, EventSource } from "./event";
-import { Home, Replica } from "@nomad-xyz/contract-interfaces/core";
+import { Home, Replica } from "@nomad-xyz/contracts-core";
 import { ethers } from "ethers";
 import { FailureCounter, KVCache, replacer, retry, reviver } from "./utils";
-import { BridgeRouter } from "@nomad-xyz/contract-interfaces/bridge";
+import { BridgeRouter } from "@nomad-xyz/contracts-bridge";
 import pLimit from 'p-limit';
 import { RpcRequestMethod } from "./metrics";
 import Logger from "bunyan";
@@ -78,7 +78,7 @@ const RETRIES = 100;
 
 export class Indexer {
   domain: number;
-  sdk: NomadContext;
+  sdk: BridgeContext;
   orchestrator: Orchestrator;
   persistance: Persistance;
   blockCache: KVCache;
@@ -93,7 +93,7 @@ export class Indexer {
 
   eventCallback: undefined | ((event: NomadEvent) => void);
 
-  constructor(domain: number, sdk: NomadContext, orchestrator: Orchestrator) {
+  constructor(domain: number, sdk: BridgeContext, orchestrator: Orchestrator) {
     this.domain = domain;
     this.sdk = sdk;
     this.orchestrator = orchestrator;
@@ -349,7 +349,7 @@ export class Indexer {
   }
 
   bridgeRouter(): BridgeRouter {
-    return this.sdk.getBridge(this.domain)!.bridgeRouter;
+    return this.sdk.mustGetBridge(this.domain).bridgeRouter;
   }
 
   replicaForDomain(domain: number): Replica {

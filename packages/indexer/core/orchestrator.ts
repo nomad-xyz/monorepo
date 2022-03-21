@@ -1,5 +1,5 @@
-import { Home } from "@nomad-xyz/contract-interfaces/core";
-import { NomadContext } from "@nomad-xyz/sdk";
+import { Home } from "@nomad-xyz/contracts-core";
+import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import Logger from "bunyan";
 import { Consumer } from "./consumer";
 import { DB } from "./db";
@@ -14,7 +14,7 @@ class HomeHealth {
   logger: Logger;
   metrics: IndexerCollector;
 
-  constructor(domain: number, ctx: NomadContext, logger: Logger, metrics: IndexerCollector) {
+  constructor(domain: number, ctx: BridgeContext, logger: Logger, metrics: IndexerCollector) {
     this.domain = domain;
     this.home = ctx.mustGetCore(domain).home;
     this.logger = logger;
@@ -44,7 +44,7 @@ class HomeHealth {
 }
 
 export class Orchestrator {
-  sdk: NomadContext;
+  sdk: BridgeContext;
   consumer: Consumer;
   indexers: Map<number, Indexer>;
   healthCheckers: Map<number, HomeHealth>;
@@ -56,7 +56,7 @@ export class Orchestrator {
   db: DB;
 
   constructor(
-    sdk: NomadContext,
+    sdk: BridgeContext,
     c: Consumer,
     gov: number,
     metrics: IndexerCollector,

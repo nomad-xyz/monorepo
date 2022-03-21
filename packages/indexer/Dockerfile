@@ -5,20 +5,19 @@ WORKDIR /app
 
 COPY package.json ./package.json
 # COPY package-lock.json ./package-lock.json
+RUN yarn install
 
 
 # START should delete later
-COPY sdk.tgz ./sdk.tgz
-COPY bridge.tgz ./bridge.tgz
-COPY govern.tgz ./govern.tgz
-RUN npm i
+# COPY sdk.tgz ./sdk.tgz
+# COPY bridge.tgz ./bridge.tgz
+# COPY govern.tgz ./govern.tgz
 
 
-RUN npm i ./sdk.tgz
-RUN npm i ./bridge.tgz
-RUN npm i ./govern.tgz
+# RUN yarn add ./sdk.tgz
+# RUN yarn add ./bridge.tgz
+# RUN yarn add ./govern.tgz
 
-# RUN rm ./nomad-xyz-sdk-1.3.5.tgz
 # END should delete later
 
 
@@ -26,8 +25,8 @@ COPY api ./api
 COPY main.ts ./main.ts
 
 COPY prisma ./prisma
-RUN npm run build
+RUN yarn build
 
 COPY core ./core
 
-CMD [ "npm", "run", "start" ]
+CMD [ "yarn", "start" ]
