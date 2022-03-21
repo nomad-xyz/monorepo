@@ -140,22 +140,34 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     // all contracts deployed
     const complete = core.complete();
     this.addCore(domain.name, complete);
+  }
 
-    // the set of domains that are not the new core
-    const remoteDomains = this.data.networks.filter(
-      (net) => net !== domain.name,
+  // post-deployment setup
+  // We choose to enroll all currently known routers and watchers here,
+  // event those that may not be immediately connected, so that IF they are
+  // connected in the future, the routers will be properly configured.
+  // Essentially we run likely future governance actions at deploy time, so
+  // we will not be required to run them later.
+  protected async enrollCores(): Promise<ethers.PopulatedTransaction[]> {
+    const results = await Promise.all(
+      this.networks.map(async (network) => {
+        // the set of domains that are not the new core
+        const remoteDomains = this.data.networks.filter(
+          (net) => net !== network,
+        );
+        const core = this.mustGetCore(network);
+
+        return (
+          await Promise.all([
+            ...remoteDomains.map((remote) =>
+              core.enrollGovernanceRouter(remote),
+            ),
+            ...remoteDomains.map((remote) => core.enrollWatchers(remote)),
+          ])
+        ).flat();
+      }),
     );
-
-    // post-deployment setup
-    // We choose to enroll all currently known routers and watchers here,
-    // event those that may not be immediately connected, so that IF they are
-    // connected in the future, the routers will be properly configured.
-    // Essentially we run likely future governance actions at deploy time, so
-    // we will not be required to run them later.
-    await Promise.all([
-      ...remoteDomains.map((remote) => core.enrollGovernanceRouter(remote)),
-      ...remoteDomains.map((remote) => core.enrollWatchers(remote)),
-    ]);
+    return results.flat();
   }
 
   protected async deployBridge(name: string): Promise<void> {
@@ -175,13 +187,13 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   }
 
   /// Deploys all configured Cores
-  async ensureCores(): Promise<void> {
+  async ensureCores(): Promise<ethers.PopulatedTransaction[]> {
     const toDeploy = this.networks.filter((net) => !this.cores[net]);
 
-    const promises = toDeploy.map((net) =>
-      this.deployCore(this.mustGetDomainConfig(net)),
+    await Promise.all(
+      toDeploy.map((net) => this.deployCore(this.mustGetDomainConfig(net))),
     );
-    await Promise.all(promises);
+    return await this.enrollCores();
   }
 
   // Deploys all configured connections and enrolls them if possible.
@@ -190,7 +202,7 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   async ensureConnections(): Promise<ethers.PopulatedTransaction[]> {
     this.validate();
 
-    await this.ensureCores();
+    const ensure = await this.ensureCores();
 
     const promises = this.networks.map(async (network) => {
       const core = this.mustGetCore(network);
@@ -205,7 +217,8 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     });
 
     const txns = await Promise.all(promises);
-    return txns.flat();
+    ensure.push.apply(txns.flat());
+    return ensure;
   }
 
   /// Deploys all configured bridges.

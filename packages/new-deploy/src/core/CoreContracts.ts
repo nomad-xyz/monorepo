@@ -503,11 +503,11 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   }
 
   async enrollGovernanceRouter(
-    homeDomain: string | number,
+    remoteDomain: string | number,
   ): Promise<ethers.PopulatedTransaction[]> {
-    const home = this.context.resolveDomainName(homeDomain);
-    const homeCore = this.context.mustGetCore(home);
-    const homeConfig = this.context.mustGetDomainConfig(home);
+    const remote = this.context.resolveDomainName(remoteDomain);
+    const remoteCore = this.context.mustGetCore(remote);
+    const remoteConfig = this.context.mustGetDomainConfig(remote);
 
     // Check that this key has permissions to set this
     const owner = await this.governanceRouter.governor();
@@ -517,29 +517,29 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     if (!utils.equalIds(owner, deployer)) {
       return [
         await this.governanceRouter.populateTransaction.setRouterLocal(
-          homeConfig.domain,
-          utils.canonizeId(homeCore.governanceRouter.address),
+          remoteConfig.domain,
+          utils.canonizeId(remoteCore.governanceRouter.address),
         ),
       ];
     }
 
     // If we can use deployer ownership
     const tx = await this.governanceRouter.setRouterLocal(
-      homeConfig.domain,
-      utils.canonizeId(homeCore.governanceRouter.address),
+      remoteConfig.domain,
+      utils.canonizeId(remoteCore.governanceRouter.address),
     );
     await tx.wait(this.confirmations);
     return [];
   }
 
   async enrollRemote(
-    homeDomain: string | number,
+    remoteDomain: string | number,
   ): Promise<ethers.PopulatedTransaction[]> {
-    await this.deployUnenrolledReplica(homeDomain);
+    await this.deployUnenrolledReplica(remoteDomain);
     const txns = await Promise.all([
-      this.enrollReplica(homeDomain),
-      this.enrollWatchers(homeDomain),
-      this.enrollGovernanceRouter(homeDomain),
+      this.enrollReplica(remoteDomain),
+      this.enrollWatchers(remoteDomain),
+      this.enrollGovernanceRouter(remoteDomain),
     ]);
     return txns.flat();
   }
