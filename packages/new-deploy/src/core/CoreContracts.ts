@@ -92,18 +92,6 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     );
   }
 
-  getReplica(domain: string): contracts.Replica {
-    const replicas = this.data.replicas;
-
-    if (!replicas || !replicas[domain]) {
-      throw new Error(`Missing replicas address for domain ${domain}`);
-    }
-    return contracts.Replica__factory.connect(
-      replicas[domain].proxy,
-      this.context.mustGetConnection(this.domain),
-    );
-  }
-
   get replicas(): ReadonlyArray<string> {
     return Object.keys(this.replicas);
   }
@@ -129,6 +117,18 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
   get domainNumber(): number {
     return this.context.resolveDomain(this.domain);
+  }
+
+  getReplica(domain: string): contracts.Replica {
+    const replicas = this.data.replicas;
+
+    if (!replicas || !replicas[domain]) {
+      throw new Error(`Missing replicas address for domain ${domain}`);
+    }
+    return contracts.Replica__factory.connect(
+      replicas[domain].proxy,
+      this.context.mustGetConnection(this.domain),
+    );
   }
 
   anyReplicaProxy(): config.Proxy | undefined {
