@@ -126,7 +126,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       throw new Error(`Missing replicas address for domain ${domain}`);
     }
     return contracts.Replica__factory.connect(
-      replicas[domain].proxy,
+      utils.evmId(replicas[domain].proxy),
       this.context.mustGetConnection(this.domain),
     );
   }
