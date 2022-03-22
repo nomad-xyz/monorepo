@@ -491,7 +491,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const txns = await Promise.all(
       localConfig.configuration.watchers.map((watcher) =>
         this.xAppConnectionManager.setWatcherPermission(
-          watcher,
+          utils.evmId(watcher),
           homeConfig.domain,
           true,
           this.overrides,
