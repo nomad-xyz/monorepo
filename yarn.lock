@@ -1038,37 +1038,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/example-xapp-contracts@workspace:packages/example-xapps":
-  version: 0.0.0-use.local
-  resolution: "@nomad-xyz/example-xapp-contracts@workspace:packages/example-xapps"
-  dependencies:
-    "@nomad-xyz/contracts-core": "workspace:^"
-    "@nomad-xyz/contracts-router": "workspace:^"
-    "@nomiclabs/hardhat-ethers": ^2.0.1
-    "@nomiclabs/hardhat-etherscan": ^2.1.2
-    "@nomiclabs/hardhat-waffle": ^2.0.1
-    "@openzeppelin/contracts": ~3.4.2
-    "@openzeppelin/contracts-upgradeable": ~3.4.2
-    "@summa-tx/memview-sol": ^2.0.0
-    "@typechain/ethers-v5": 7.0.0
-    "@typechain/hardhat": ^2.0.1
-    chai: ^4.3.0
-    dotenv: ^10.0.0
-    eslint: ^7.20.0
-    ethereum-waffle: ^3.2.2
-    ethers: ^5.4.4
-    hardhat: ^2.6.0
-    hardhat-gas-reporter: ^1.0.4
-    prettier: ^2.2.1
-    prettier-plugin-solidity: ^1.0.0-beta.5
-    solhint: ^3.3.2
-    solhint-plugin-prettier: ^0.0.5
-    ts-node: ^10.1.0
-    typechain: ^5.0.0
-    typescript: ^4.5.5
-  languageName: unknown
-  linkType: soft
-
 "@nomad-xyz/local-environment@workspace:packages/local-environment":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/local-environment@workspace:packages/local-environment"
@@ -1601,20 +1570,6 @@ __metadata:
   dependencies:
     "@turf/helpers": ^6.5.0
   checksum: c6bb936aa92bf3365e87a50dc65f248e070c5767a36fac390754c00c89bf2d1583418686ab19a10332bfa9340b8cac6aaf2c55dad7f5fcf77f1a2dda75ccf363
-  languageName: node
-  linkType: hard
-
-"@typechain/ethers-v5@npm:7.0.0":
-  version: 7.0.0
-  resolution: "@typechain/ethers-v5@npm:7.0.0"
-  peerDependencies:
-    "@ethersproject/abi": ^5.0.0
-    "@ethersproject/bytes": ^5.0.0
-    "@ethersproject/providers": ^5.0.0
-    ethers: ^5.1.3
-    typechain: ^5.0.0
-    typescript: ">=4.0.0"
-  checksum: b975ee3240ce9462ffc3e48a460a0d3044c0988ea9bc7b0c0df1d047322815f0bbe7def5563fe7cba17f49cb64c3a70c9cb3f112da195d1e056bd1895e5a543e
   languageName: node
   linkType: hard
 
@@ -4161,7 +4116,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chai@npm:^4.3.0, chai@npm:^4.3.4":
+"chai@npm:^4.3.4":
   version: 4.3.6
   resolution: "chai@npm:4.3.6"
   dependencies:
