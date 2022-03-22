@@ -375,7 +375,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         'initialize',
         [
           homeConfig.domain,
-          homeConfig.configuration.updater,
+          utils.evmId(homeConfig.configuration.updater),
           root,
           homeConfig.configuration.optimisticSeconds,
         ],
