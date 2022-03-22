@@ -443,7 +443,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     if (!utils.equalIds(owner, deployer)) {
       return [
         await this.xAppConnectionManager.populateTransaction.ownerEnrollReplica(
-          replica,
+          utils.evmId(replica),
           homeConfig.domain,
           this.overrides,
         ),
@@ -452,7 +452,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     // If we can use deployer ownership
     const tx = await this.xAppConnectionManager.ownerEnrollReplica(
-      replica,
+      utils.evmId(replica),
       homeConfig.domain,
       this.overrides,
     );
