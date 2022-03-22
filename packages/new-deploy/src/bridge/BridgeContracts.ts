@@ -61,7 +61,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       throw new Error('Missing bridgeRouter address');
     }
     return contracts.BridgeRouter__factory.connect(
-      this.data.bridgeRouter.proxy,
+      utils.evmId(this.data.bridgeRouter.proxy),
       this.connection,
     );
   }
@@ -75,7 +75,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       throw new Error('Missing tokenRegistry address');
     }
     return contracts.TokenRegistry__factory.connect(
-      this.data.tokenRegistry.proxy,
+      utils.evmId(this.data.tokenRegistry.proxy),
       this.connection,
     );
   }
@@ -88,7 +88,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     if (!this.data.ethHelper) return undefined;
 
     return contracts.ETHHelper__factory.connect(
-      this.data.ethHelper,
+      utils.evmId(this.data.ethHelper),
       this.connection,
     );
   }

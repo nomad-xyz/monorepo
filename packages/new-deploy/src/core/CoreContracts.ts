@@ -47,7 +47,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       throw new Error('Missing upgradeBeaconController address');
     }
     return contracts.UpgradeBeaconController__factory.connect(
-      this.data.upgradeBeaconController,
+      utils.evmId(this.data.upgradeBeaconController),
       this.context.mustGetConnection(this.domain),
     );
   }
@@ -57,7 +57,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       throw new Error('Missing xAppConnectionManager address');
     }
     return contracts.XAppConnectionManager__factory.connect(
-      this.data.xAppConnectionManager,
+      utils.evmId(this.data.xAppConnectionManager),
       this.context.mustGetConnection(this.domain),
     );
   }
@@ -67,7 +67,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       throw new Error('Missing updaterManager address');
     }
     return contracts.UpdaterManager__factory.connect(
-      this.data.updaterManager,
+      utils.evmId(this.data.updaterManager),
       this.context.mustGetConnection(this.domain),
     );
   }
@@ -77,7 +77,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       throw new Error('Missing governanceRouter address');
     }
     return contracts.GovernanceRouter__factory.connect(
-      this.data.governanceRouter.proxy,
+      utils.evmId(this.data.governanceRouter.proxy),
       this.context.mustGetConnection(this.domain),
     );
   }
@@ -87,7 +87,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       throw new Error('Missing home address');
     }
     return contracts.Home__factory.connect(
-      this.data.home.proxy,
+      utils.evmId(this.data.home.proxy),
       this.context.mustGetConnection(this.domain),
     );
   }
