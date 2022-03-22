@@ -1,0 +1,27 @@
+version: "3.7"
+services:
+  indexer:
+    image: kekonen/indexer:latest
+    build: .
+    restart: always
+    command: npm run start indexer
+    env_file: .env
+    environment:
+      - PROGRAM=core
+      - DATABASE_URL=postgresql://postgres:postgres@192.168.1.107:5432/postgres?connect_timeout=300&schema=public
+    ports:
+      - "9090:3000"
+
+  api:
+    image: kekonen/indexer:latest
+    build: .
+    restart: always
+    command: npm run start indexer
+    ports:
+      - "8080:3000"
+    expose:
+      - 8080
+    env_file: .env
+    environment:
+      - PROGRAM=api
+      - DATABASE_URL=postgresql://postgres:postgres@192.168.1.107:5432/postgres?connect_timeout=300&schema=public
