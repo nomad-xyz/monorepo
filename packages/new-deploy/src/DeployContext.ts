@@ -135,7 +135,8 @@ export default class DeployContext extends MultiProvider<config.Domain> {
       core.deployXAppConnectionManager(),
     ]);
 
-    await Promise.all([core.deployHome(), core.deployGovernanceRouter()]);
+    await core.deployHome();
+    await core.deployGovernanceRouter();
 
     // all contracts deployed
     const complete = core.complete();
