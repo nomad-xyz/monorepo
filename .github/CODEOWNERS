@@ -14,5 +14,4 @@ packages/sdk-govern/ @nomad-xyz/experience @nomad-xyz/protocol
 packages/sdk-bridge/ @nomad-xyz/experience @nomad-xyz/protocol
 
 # Other Packages and Services
-packages/example-xapps/ @nomad-xyz/experience @nomad-xyz/protocol
 packages/keymaster/ @yourbuddyconner @arnaud036 

@@ -55,7 +55,7 @@ Tooling and other unpublished packages:
 
 Examples:
 
-- `@nomad-xyz/example-xapps`
+- see [examples repo here](https://github.com/nomad-xyz/examples)
 
 ### Publishing to npm
 
