@@ -18,7 +18,6 @@ const program = process.env.PROGRAM! as Program;
   const db = new DB(m, logger);
   await db.connect();
 
-
   if (program === "api") {
     await api.run(db, logger);
   } else if (program === "core") {

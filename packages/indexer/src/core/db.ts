@@ -1,6 +1,6 @@
 import { NomadMessage } from "./consumer";
 
-import { Prisma, PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from "@prisma/client"
 import { DbRequestType, IndexerCollector } from "./metrics";
 import Logger from "bunyan";
 import pLimit from 'p-limit';

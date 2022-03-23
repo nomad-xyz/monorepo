@@ -1,9 +1,13 @@
 import express from "express";
+import { graphqlHTTP } from 'express-graphql';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+
 import { DB, MsgRequest } from "../core/db";
+import { prefix } from "../core/metrics";
+
 import * as dotenv from "dotenv";
 import Logger from "bunyan";
 import promBundle from 'express-prom-bundle';
-import { prefix } from "../core/metrics";
 
 dotenv.config({});
 
@@ -12,6 +16,7 @@ function fail(res: any, code: number, reason: string) {
 }
 
 const PORT = process.env.PORT;
+
 
 export async function run(db: DB, logger: Logger) {
   const app = express();
@@ -49,6 +54,70 @@ export async function run(db: DB, logger: Logger) {
     res.send("OK!");
   });
 
+  const typeDefs = `
+    type Message {
+      id: Int!
+      messageHash: String!
+      origin: Int!
+      destination: Int!
+      nonce: Int!
+      internalSender: String!
+      internalRecipient: String!
+      root: String!
+      state: Int!
+      dispatchBlock: Int!
+      dispatchedAt: Int!
+      updatedAt: Int!
+      relayedAt: Int!
+      receivedAt: Int!
+      processedAt: Int!
+      sender: String!
+      recipient: String!
+      amount: String!
+      allowFast: Boolean!
+      detailsHash: String!
+      tokenDomain: Int!
+      tokenId: String!
+      body: String!
+      leafIndex: String!
+      tx : String!
+      gasAtDispatch: String!
+      gasAtUpdate: String!
+      gasAtRelay: String!
+      gasAtReceive: String!
+      gasAtProcess: String!
+      createdAt: Int!
+    }
+
+    type Query {
+      allMessages: [Message!]!
+      messageByHash(txHash: String!): Message
+    }
+  `;
+  
+  const resolvers = {
+    Query: {
+      allMessages: () => {
+        return db.client.messages.findMany();
+      },
+      messageByHash: (args: {txHash: string}) => {
+        return db.client.messages.findFirst({
+          where: { tx: args.txHash || undefined }
+        });
+      }
+    }
+  };
+
+  const schema = makeExecutableSchema({
+    resolvers,
+    typeDefs,
+  });
+
+  app.use('/graphql', graphqlHTTP({
+    schema,
+    graphiql: true
+  }));
+
   app.get("/tx/:tx", log, async (req, res) => {
     const messages = await db.getMessageByEvm(req.params.tx);
     return res.json(messages.map(m => m.serialize()));
@@ -75,6 +144,7 @@ export async function run(db: DB, logger: Logger) {
   );
 
   app.listen(PORT, () => {
+    console.log(process.env.DATABASE_URL)
     logger.info(`Server is running at https://localhost:${PORT}`);
   });
 }
