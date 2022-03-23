@@ -892,17 +892,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/configuration@npm:0.1.0-rc.2":
-  version: 0.1.0-rc.2
-  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.2"
-  checksum: c76cf0bb87f7e40441f50790bd7000de97ffba80af90cb4029b4e1e091c5d6d4e4823522e31fe2316961fbe7d567ebd2c9c5d35009d0b5cbcf92e74f80c6bcb1
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/configuration@npm:0.1.0-rc.3":
-  version: 0.1.0-rc.3
-  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.3"
-  checksum: 40a44d7ab61e1ce5de323d5afa2a25f55627dbac63c37b769e57aee26d698a31db0f58dfea0b9ba356000464d90e9b3f373bbd354272f56d9b99b67b497be4d6
+"@nomad-xyz/configuration@npm:0.1.0-rc.6":
+  version: 0.1.0-rc.6
+  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.6"
+  checksum: 350e508ee75335262c2953d64452aa1a91083ef8b5748914dd599702d0fbd8cb9b0cd48eb1055bebb2ba421e800a205217dbd92f998268ac6663a19ed3acd004
   languageName: node
   linkType: hard
 
@@ -1125,7 +1118,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
-    "@nomad-xyz/configuration": 0.1.0-rc.3
+    "@nomad-xyz/configuration": 0.1.0-rc.6
     "@nomad-xyz/contracts-bridge": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"
     "@types/chai": ^4.2.21
@@ -1152,7 +1145,7 @@ __metadata:
     "@gnosis.pm/safe-core-sdk": ^2.0.0
     "@gnosis.pm/safe-ethers-adapters": ^0.1.0-alpha.8
     "@gnosis.pm/safe-ethers-lib": ^1.0.0
-    "@nomad-xyz/configuration": 0.1.0-rc.2
+    "@nomad-xyz/configuration": 0.1.0-rc.6
     "@nomad-xyz/sdk": "workspace:^"
     "@types/chai": ^4.2.21
     "@types/node": ^16.9.1
@@ -1175,7 +1168,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@nomad-xyz/configuration": 0.1.0-rc.3
+    "@nomad-xyz/configuration": 0.1.0-rc.6
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
     "@types/chai": ^4.2.21
