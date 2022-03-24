@@ -198,7 +198,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     if (proxy?.beacon) return;
 
     await this.deployBeacon(proxy);
-    proxy.proxy = '';
+    proxy.proxy = ethers.constants.AddressZero;
     this._data.bridgeToken = proxy as config.Proxy;
   }
 

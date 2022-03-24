@@ -76,6 +76,7 @@ export class BridgeContext extends NomadContext {
     const domain = this.resolveDomainName(nameOrDomain);
     return this.bridges.get(domain);
   }
+
   /**
    * Get the {@link BridgeContracts} for a given domain (or throw an error)
    *
