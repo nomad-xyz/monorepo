@@ -16,7 +16,7 @@ import Contracts from '../Contracts';
 import DeployContext from '../DeployContext';
 
 import { expect } from 'chai';
-import { assertBeaconProxy, emptyAddr } from '../utils';
+import { assertBeaconProxy } from '../utils';
 
 export abstract class AbstractCoreDeploy<T> extends Contracts<T> {
   // Placeholder for future multi-VM abstraction
@@ -625,12 +625,12 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       const registeredRouter = await this.governanceRouter.routers(
         domainNumber,
       );
-      expect(!utils.equalIds(registeredRouter, emptyAddr));
+      expect(!utils.equalIds(registeredRouter, ethers.constants.AddressZero));
       // replica is enrolled in xAppConnectionManager
       const enrolledReplica = await this.xAppConnectionManager.domainToReplica(
         domainNumber,
       );
-      expect(!utils.equalIds(enrolledReplica, emptyAddr));
+      expect(!utils.equalIds(enrolledReplica, ethers.constants.AddressZero));
 
       const watchers =
         this.context.data.protocol.networks[this.domain].configuration.watchers;
@@ -669,9 +669,9 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const gov = await this.governanceRouter.governor();
     const localDomain = await this.home.localDomain();
     if (governorDomain == localDomain) {
-      expect(!utils.equalIds(gov, emptyAddr));
+      expect(!utils.equalIds(gov, ethers.constants.AddressZero));
     } else {
-      expect(utils.equalIds(gov, emptyAddr));
+      expect(utils.equalIds(gov, ethers.constants.AddressZero));
     }
     // governor domain is correct
     expect(
