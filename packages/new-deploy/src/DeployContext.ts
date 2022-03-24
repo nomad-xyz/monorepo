@@ -1,5 +1,5 @@
 import * as config from '@nomad-xyz/configuration';
-import { MultiProvider } from '@nomad-xyz/multi-provider';
+import { MultiProvider, utils } from '@nomad-xyz/multi-provider';
 import { expect } from 'chai';
 import ethers from 'ethers';
 
@@ -129,7 +129,7 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   ): readonly Verification[] {
     const domain = this.resolveDomainName(nameOrDomain);
     const verification = this.verification.get(domain);
-    if (!verification) throw new Error(`Verification with name ${name} for domain ${domain} is not defined`);
+    if (!verification) throw new Error(`Verification with name ${nameOrDomain} for domain ${domain} is not defined`);
 
     return verification
   }
@@ -293,6 +293,9 @@ export default class DeployContext extends MultiProvider<config.Domain> {
 
     await this.relinquish();
 
+    await this.checkCores();
+    await this.checkBridges();
+
     return txns;
   }
 
@@ -341,9 +344,10 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   ) {
     const verification = this.mustGetVerification(nameOrDomain);
 
+    if (verification.length === 0) throw new Error(`Verification with name '${name}' for domain '${nameOrDomain}' is not defined`);
     const inputAddr = verification.filter(
       (contract) => contract.name == name,
     )[0].address;
-    expect(inputAddr).to.equal(addr);
+    expect(utils.equalIds(inputAddr, addr));
   }
 }

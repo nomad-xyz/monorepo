@@ -97,7 +97,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   }
 
   get replicas(): ReadonlyArray<string> {
-    return Object.keys(this.replicas);
+    return Object.keys(this.data.replicas!);
   }
 
   get deployer(): ethers.Signer {
@@ -697,6 +697,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     expect(utils.equalIds(homeOwner, governorAddr!));
   
     // check verification addresses
+    // TODO: add beacon and proxy where needed.
     this.checkVerificationInput(
       'UpgradeBeaconController',
       this.data.upgradeBeaconController!,
@@ -710,44 +711,24 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       this.data.updaterManager!,
     );
     this.checkVerificationInput(
-      'Home Implementation',
+      'Home',
       this.data.home?.implementation!,
     );
     this.checkVerificationInput(
-      'Home UpgradeBeacon',
-      this.data.home?.beacon!,
-    );
-    this.checkVerificationInput(
-      'Home Proxy',
-      this.data.home?.proxy!,
-    );
-    this.checkVerificationInput(
-      'Governance Implementation',
+      'GovernanceRouter',
       this.data.governanceRouter?.implementation!,
-    );
-    this.checkVerificationInput(
-      'Governance UpgradeBeacon',
-      this.data.governanceRouter?.beacon!,
-    );
-    this.checkVerificationInput(
-      'Governance Proxy',
-      this.data.governanceRouter?.proxy!,
     );
   
     if (remoteDomains.length > 0) {
       this.checkVerificationInput(
-        'Replica Implementation',
+        'Replica',
         this.data.replicas![remoteDomains[0]].implementation!,
-      );
-      this.checkVerificationInput(
-        'Replica UpgradeBeacon',
-        this.data.replicas![remoteDomains[0]].beacon!,
       );
   
       const verification = this.context.mustGetVerification(this.domain);
 
       const replicaProxies = verification.filter(
-        (contract) => contract.name == 'Replica Proxy',
+        (contract) => contract.name == 'Replica',
       );
       remoteDomains.forEach((domain) => {
         const replicaProxy = replicaProxies.find((proxy) => {

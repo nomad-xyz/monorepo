@@ -439,42 +439,24 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       expect(this.data.ethHelper).to.be.undefined;
     }
 
-    expect(await this.bridgeRouterContract.owner()).to.equal(
-      this.context.cores[this.domain].governanceRouter.proxy,
-    );
+    expect(utils.equalIds(
+      await this.bridgeRouterContract.owner(), this.context.cores[this.domain].governanceRouter.proxy
+    ));
 
     // check verification addresses
+    // TODO: add beacon and proxy where needed.
     this.checkVerificationInput(
-      'BridgeToken Implementation',
+      'BridgeToken',
       this.data.bridgeToken?.implementation!,
     );
+
     this.checkVerificationInput(
-      'BridgeToken UpgradeBeacon',
-      this.data.bridgeToken?.beacon!,
-    );
-    this.checkVerificationInput(
-      'BridgeToken Proxy',
-      this.data.bridgeToken?.proxy!,
-    );
-    this.checkVerificationInput(
-      'BridgeRouter Implementation',
+      'BridgeRouter',
       this.data.bridgeRouter?.implementation!,
     );
     this.checkVerificationInput(
-      'BridgeRouter UpgradeBeacon',
-      this.data.bridgeRouter?.beacon!,
-    );
-    this.checkVerificationInput(
-      'BridgeRouter Proxy',
-      this.data.bridgeRouter?.proxy!,
-    );
-    this.checkVerificationInput(
-      'TokenRegistry UpgradeBeacon',
-      this.data.tokenRegistry?.beacon!,
-    );
-    this.checkVerificationInput(
-      'TokenRegistry Proxy',
-      this.data.tokenRegistry?.proxy!,
+      'TokenRegistry',
+      this.data.tokenRegistry?.implementation!,
     );
     if (weth) {
       const verification = this.context.mustGetVerification(this.domain);
