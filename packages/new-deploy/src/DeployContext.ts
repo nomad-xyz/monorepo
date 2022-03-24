@@ -256,13 +256,6 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     return connect;
   }
 
-  protected async appointGovernor(): Promise<ethers.PopulatedTransaction[]> {
-    const governor = this.data.protocol.governor;
-    const govDomain = governor.domain;
-    const govCore = this.mustGetCore(govDomain);
-    return govCore.appointGovernor();
-  }
-
   async relinquish(): Promise<void> {
     // relinquish deployer control
     await Promise.all([
