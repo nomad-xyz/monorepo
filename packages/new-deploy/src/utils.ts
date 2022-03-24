@@ -17,7 +17,6 @@ export function _unreachable(): void {
   throw new Error('unreachable');
 }
 
-
 export const emptyAddr = '0x' + '00'.repeat(20);
 
 export function assertBeaconProxy(beaconProxy: config.Proxy, message?: string) {

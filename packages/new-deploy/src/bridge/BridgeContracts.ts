@@ -431,7 +431,8 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     assertBeaconProxy(this.data.bridgeToken!);
     assertBeaconProxy(this.data.bridgeRouter!);
 
-    const weth = this.context.mustGetDomainConfig(this.domain).bridgeConfiguration.weth;
+    const weth = this.context.mustGetDomainConfig(this.domain)
+      .bridgeConfiguration.weth;
 
     if (weth) {
       expect(this.data.ethHelper).to.not.be.undefined;
@@ -439,9 +440,12 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       expect(this.data.ethHelper).to.be.undefined;
     }
 
-    expect(utils.equalIds(
-      await this.bridgeRouterContract.owner(), this.context.cores[this.domain].governanceRouter.proxy
-    ));
+    expect(
+      utils.equalIds(
+        await this.bridgeRouterContract.owner(),
+        this.context.cores[this.domain].governanceRouter.proxy,
+      ),
+    );
 
     // check verification addresses
     // TODO: add beacon and proxy where needed.
@@ -461,17 +465,12 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     if (weth) {
       const verification = this.context.mustGetVerification(this.domain);
       expect(
-        verification.filter(
-          (input) => input.address === this.ethHelper,
-        ).length,
+        verification.filter((input) => input.address === this.ethHelper).length,
       ).to.equal(1, 'No eth helper found');
     }
   }
 
-  checkVerificationInput(
-    name: string,
-    addr: string,
-  ) {
+  checkVerificationInput(name: string, addr: string) {
     this.context.checkVerificationInput(this.domain, name, addr);
   }
 }

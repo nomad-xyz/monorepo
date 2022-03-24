@@ -606,20 +606,17 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     return [];
   }
 
-  async checkDeploy(
-    remoteDomains: string[],
-    governorDomain: number,
-  ) {
+  async checkDeploy(remoteDomains: string[], governorDomain: number) {
     // Home upgrade setup contracts are defined
-    assertBeaconProxy(this.data.home!, "Home");
-  
+    assertBeaconProxy(this.data.home!, 'Home');
+
     // updaterManager is set on Home
     const updaterManager = await this.home.updaterManager();
     expect(utils.equalIds(updaterManager, this.data.updaterManager!));
-  
+
     // GovernanceRouter upgrade setup contracts are defined
-    assertBeaconProxy(this.data.governanceRouter!, "Governance router");
-  
+    assertBeaconProxy(this.data.governanceRouter!, 'Governance router');
+
     for (const domain of remoteDomains) {
       const domainNumber = this.context.mustGetDomain(domain).domain;
       // Replica upgrade setup contracts are defined
@@ -630,11 +627,13 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       );
       expect(!utils.equalIds(registeredRouter, emptyAddr));
       // replica is enrolled in xAppConnectionManager
-      const enrolledReplica =
-        await this.xAppConnectionManager.domainToReplica(domainNumber);
+      const enrolledReplica = await this.xAppConnectionManager.domainToReplica(
+        domainNumber,
+      );
       expect(!utils.equalIds(enrolledReplica, emptyAddr));
-      
-      const watchers = this.context.data.protocol.networks[this.domain].configuration.watchers;
+
+      const watchers =
+        this.context.data.protocol.networks[this.domain].configuration.watchers;
       //watchers have permission in xAppConnectionManager
       watchers.forEach(async (watcher) => {
         const watcherPermissions =
@@ -645,7 +644,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         expect(watcherPermissions).to.be.true;
       });
     }
-  
+
     if (remoteDomains.length > 0) {
       // expect all replicas to have to same implementation and upgradeBeacon
       const firstReplica = this.data.replicas![remoteDomains[0]];
@@ -660,12 +659,12 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         expect(utils.equalIds(beacon, replicaBeacon));
       });
     }
-  
+
     // contracts are defined
     expect(this.data.updaterManager).to.not.be.undefined;
     expect(this.data.upgradeBeaconController).to.not.be.undefined;
     expect(this.data.xAppConnectionManager).to.not.be.undefined;
-  
+
     // governor is set on governor chain, empty on others
     const gov = await this.governanceRouter.governor();
     const localDomain = await this.home.localDomain();
@@ -675,19 +674,19 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       expect(utils.equalIds(gov, emptyAddr));
     }
     // governor domain is correct
-    expect(await this.governanceRouter.governorDomain(), `this domain: ${this.domain} want ${governorDomain}`).to.equal(
-      governorDomain,
-    );
-  
+    expect(
+      await this.governanceRouter.governorDomain(),
+      `this domain: ${this.domain} want ${governorDomain}`,
+    ).to.equal(governorDomain);
+
     // Home is set on xAppConnectionManager
     const xAppManagerHome = await this.xAppConnectionManager.home();
     const homeAddress = this.data.home?.proxy;
     expect(utils.equalIds(xAppManagerHome, homeAddress!));
-  
+
     // governance has ownership over following contracts
     const updaterManagerOwner = await this.updaterManager.owner();
-    const xAppManagerOwner =
-      await this.xAppConnectionManager.owner();
+    const xAppManagerOwner = await this.xAppConnectionManager.owner();
     const beaconOwner = await this.upgradeBeaconController.owner();
     const homeOwner = await this.home.owner();
     const governorAddr = this.data.governanceRouter?.proxy;
@@ -695,7 +694,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     expect(utils.equalIds(xAppManagerOwner, governorAddr!));
     expect(utils.equalIds(beaconOwner, governorAddr!));
     expect(utils.equalIds(homeOwner, governorAddr!));
-  
+
     // check verification addresses
     // TODO: add beacon and proxy where needed.
     this.checkVerificationInput(
@@ -706,25 +705,19 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       'XAppConnectionManager',
       this.data.xAppConnectionManager!,
     );
-    this.checkVerificationInput(
-      'UpdaterManager',
-      this.data.updaterManager!,
-    );
-    this.checkVerificationInput(
-      'Home',
-      this.data.home?.implementation!,
-    );
+    this.checkVerificationInput('UpdaterManager', this.data.updaterManager!);
+    this.checkVerificationInput('Home', this.data.home?.implementation!);
     this.checkVerificationInput(
       'GovernanceRouter',
       this.data.governanceRouter?.implementation!,
     );
-  
+
     if (remoteDomains.length > 0) {
       this.checkVerificationInput(
         'Replica',
         this.data.replicas![remoteDomains[0]].implementation!,
       );
-  
+
       const verification = this.context.mustGetVerification(this.domain);
 
       const replicaProxies = verification.filter(
@@ -732,18 +725,14 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       );
       remoteDomains.forEach((domain) => {
         const replicaProxy = replicaProxies.find((proxy) => {
-          return (proxy.address =
-            this.data.replicas![domain].proxy);
+          return (proxy.address = this.data.replicas![domain].proxy);
         });
         expect(replicaProxy).to.not.be.undefined;
       });
     }
   }
 
-  checkVerificationInput(
-    name: string,
-    addr: string,
-  ) {
+  checkVerificationInput(name: string, addr: string) {
     this.context.checkVerificationInput(this.domain, name, addr);
   }
 }

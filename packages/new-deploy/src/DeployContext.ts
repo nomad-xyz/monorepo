@@ -124,14 +124,15 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     if (net) net.push(verification);
   }
 
-  mustGetVerification(
-    nameOrDomain: string | number
-  ): readonly Verification[] {
+  mustGetVerification(nameOrDomain: string | number): readonly Verification[] {
     const domain = this.resolveDomainName(nameOrDomain);
     const verification = this.verification.get(domain);
-    if (!verification) throw new Error(`Verification with name ${nameOrDomain} for domain ${domain} is not defined`);
+    if (!verification)
+      throw new Error(
+        `Verification with name ${nameOrDomain} for domain ${domain} is not defined`,
+      );
 
-    return verification
+    return verification;
   }
 
   protected async deployCore(domain: config.Domain): Promise<void> {
@@ -192,10 +193,7 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     await bridge.deployTokenUpgradeBeacon();
     await bridge.deployTokenRegistry();
 
-    await Promise.all([
-      bridge.deployBridgeRouter(),
-      bridge.deployEthHelper(),
-    ]);
+    await Promise.all([bridge.deployBridgeRouter(), bridge.deployEthHelper()]);
 
     this.addBridge(name, bridge.complete());
   }
@@ -321,11 +319,11 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     await Promise.all(
       this.networks.map(async (net) => {
         const core = new CoreContracts(this, net, this.data.core[net]!);
-        const remotes = this.networks.filter(n => n != net);
-  
+        const remotes = this.networks.filter((n) => n != net);
+
         await core.checkDeploy(remotes, this.data.protocol.governor.domain);
-      })
-    )
+      }),
+    );
   }
 
   async checkBridges(): Promise<void> {
@@ -333,7 +331,7 @@ export default class DeployContext extends MultiProvider<config.Domain> {
       this.networks.map(async (net) => {
         const bridge = new BridgeContracts(this, net, this.data.bridge[net]!);
         await bridge.checkDeploy();
-      })
+      }),
     );
   }
 
@@ -344,7 +342,10 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   ) {
     const verification = this.mustGetVerification(nameOrDomain);
 
-    if (verification.length === 0) throw new Error(`Verification with name '${name}' for domain '${nameOrDomain}' is not defined`);
+    if (verification.length === 0)
+      throw new Error(
+        `Verification with name '${name}' for domain '${nameOrDomain}' is not defined`,
+      );
     const inputAddr = verification.filter(
       (contract) => contract.name == name,
     )[0].address;
