@@ -1,5 +1,6 @@
 import * as config from '@nomad-xyz/configuration';
 import { MultiProvider } from '@nomad-xyz/multi-provider';
+import { expect } from 'chai';
 import ethers from 'ethers';
 
 import BridgeContracts from './bridge/BridgeContracts';
@@ -121,6 +122,16 @@ export default class DeployContext extends MultiProvider<config.Domain> {
 
     const net = this._verification.get(name);
     if (net) net.push(verification);
+  }
+
+  mustGetVerification(
+    nameOrDomain: string | number
+  ): readonly Verification[] {
+    const domain = this.resolveDomainName(nameOrDomain);
+    const verification = this.verification.get(domain);
+    if (!verification) throw new Error(`Verification with name ${name} for domain ${domain} is not defined`);
+
+    return verification
   }
 
   protected async deployCore(domain: config.Domain): Promise<void> {
@@ -300,5 +311,39 @@ export default class DeployContext extends MultiProvider<config.Domain> {
 
     this._data.protocol.networks[left].connections.push(right);
     this._data.protocol.networks[left].connections.push(left);
+  }
+
+  async checkCores(): Promise<void> {
+    await Promise.all(
+      this.networks.map(async (net) => {
+        const core = new CoreContracts(this, net, this.data.core[net]!);
+        const remotes = this.networks.filter(n => n != net);
+        const watchers = this.data.protocol.networks[net].configuration.watchers;
+  
+        await core.checkDeploy(remotes, this.data.protocol.governor.domain, watchers);
+      })
+    )
+  }
+
+  async checkBridges(): Promise<void> {
+    await Promise.all(
+      this.networks.map(async (net) => {
+        const bridge = new BridgeContracts(this, net, this.data.bridge[net]!);
+        await bridge.checkDeploy();
+      })
+    );
+  }
+
+  checkVerificationInput(
+    nameOrDomain: string | number,
+    name: string,
+    addr: string,
+  ) {
+    const verification = this.mustGetVerification(nameOrDomain);
+
+    const inputAddr = verification.filter(
+      (contract) => contract.name == name,
+    )[0].address;
+    expect(inputAddr).to.equal(addr);
   }
 }

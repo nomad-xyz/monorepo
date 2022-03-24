@@ -15,6 +15,9 @@ import { _notImplemented } from '../utils';
 import Contracts from '../Contracts';
 import DeployContext from '../DeployContext';
 
+import { expect } from 'chai';
+import { assertBeaconProxy, emptyAddr } from '../utils';
+
 export abstract class AbstractCoreDeploy<T> extends Contracts<T> {
   // Placeholder for future multi-VM abstraction
 }
@@ -443,7 +446,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     if (!utils.equalIds(owner, deployer)) {
       return [
         await this.xAppConnectionManager.populateTransaction.ownerEnrollReplica(
-          utils.evmId(replica),
+          replica,
           homeConfig.domain,
           this.overrides,
         ),
@@ -452,7 +455,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     // If we can use deployer ownership
     const tx = await this.xAppConnectionManager.ownerEnrollReplica(
-      utils.evmId(replica),
+      replica,
       homeConfig.domain,
       this.overrides,
     );
@@ -601,5 +604,163 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     );
     await tx.wait(this.confirmations);
     return [];
+  }
+
+  async checkDeploy(
+    remoteDomains: string[],
+    governorDomain: number,
+    watchers: string[],
+  ) {
+    // Home upgrade setup contracts are defined
+    assertBeaconProxy(this.data.home!, "Home");
+  
+    // updaterManager is set on Home
+    const updaterManager = await this.home.updaterManager();
+    expect(updaterManager).to.equal(this.data.updaterManager);
+  
+    // GovernanceRouter upgrade setup contracts are defined
+    assertBeaconProxy(this.data.governanceRouter!, "Governance router");
+  
+    for (const domain of remoteDomains) {
+      // Replica upgrade setup contracts are defined
+      assertBeaconProxy(this.data.replicas![domain], `${domain}'s replica`); // deploy.contracts.replicas[domain]!
+      // governanceRouter for remote domain is registered
+      const registeredRouter = await this.governanceRouter.routers(
+        domain,
+      );
+      expect(registeredRouter).to.not.equal(emptyAddr);
+      // replica is enrolled in xAppConnectionManager
+      const enrolledReplica =
+        await this.xAppConnectionManager.domainToReplica(domain);
+      expect(enrolledReplica).to.not.equal(emptyAddr);
+      //watchers have permission in xAppConnectionManager
+      watchers.forEach(async (watcher) => {
+        const watcherPermissions =
+          await this.xAppConnectionManager.watcherPermission(
+            watcher,
+            domain,
+          );
+        expect(watcherPermissions).to.be.true;
+      });
+    }
+  
+    if (remoteDomains.length > 0) {
+      // expect all replicas to have to same implementation and upgradeBeacon
+      const firstReplica = this.data.replicas![remoteDomains[0]];
+      const replicaImpl = firstReplica.implementation;
+      const replicaBeacon = firstReplica.beacon;
+      // check every other implementation/beacon matches the first
+      remoteDomains.slice(1).forEach((remoteDomain) => {
+        const replica = this.data.replicas![remoteDomain];
+        const implementation = replica.implementation;
+        const beacon = replica.beacon;
+        expect(implementation).to.equal(replicaImpl);
+        expect(beacon).to.equal(replicaBeacon);
+      });
+    }
+  
+    // contracts are defined
+    expect(this.data.updaterManager).to.not.be.undefined;
+    expect(this.data.upgradeBeaconController).to.not.be.undefined;
+    expect(this.data.xAppConnectionManager).to.not.be.undefined;
+  
+    // governor is set on governor chain, empty on others
+    const gov = await this.governanceRouter.governor();
+    const localDomain = await this.home.localDomain();
+    if (governorDomain == localDomain) {
+      expect(gov).to.not.equal(emptyAddr);
+    } else {
+      expect(gov).to.equal(emptyAddr);
+    }
+    // governor domain is correct
+    expect(await this.governanceRouter.governorDomain()).to.equal(
+      governorDomain,
+    );
+  
+    // Home is set on xAppConnectionManager
+    const xAppManagerHome = await this.xAppConnectionManager.home();
+    const homeAddress = this.data.home?.proxy;
+    expect(xAppManagerHome).to.equal(homeAddress);
+  
+    // governance has ownership over following contracts
+    const updaterManagerOwner = await this.updaterManager.owner();
+    const xAppManagerOwner =
+      await this.xAppConnectionManager.owner();
+    const beaconOwner = await this.upgradeBeaconController.owner();
+    const homeOwner = await this.home.owner();
+    const governorAddr = this.data.governanceRouter?.proxy;
+    expect(updaterManagerOwner).to.equal(governorAddr);
+    expect(xAppManagerOwner).to.equal(governorAddr);
+    expect(beaconOwner).to.equal(governorAddr);
+    expect(homeOwner).to.equal(governorAddr);
+  
+    // check verification addresses
+    this.checkVerificationInput(
+      'UpgradeBeaconController',
+      this.data.upgradeBeaconController!,
+    );
+    this.checkVerificationInput(
+      'XAppConnectionManager',
+      this.data.xAppConnectionManager!,
+    );
+    this.checkVerificationInput(
+      'UpdaterManager',
+      this.data.updaterManager!,
+    );
+    this.checkVerificationInput(
+      'Home Implementation',
+      this.data.home?.implementation!,
+    );
+    this.checkVerificationInput(
+      'Home UpgradeBeacon',
+      this.data.home?.beacon!,
+    );
+    this.checkVerificationInput(
+      'Home Proxy',
+      this.data.home?.proxy!,
+    );
+    this.checkVerificationInput(
+      'Governance Implementation',
+      this.data.governanceRouter?.implementation!,
+    );
+    this.checkVerificationInput(
+      'Governance UpgradeBeacon',
+      this.data.governanceRouter?.beacon!,
+    );
+    this.checkVerificationInput(
+      'Governance Proxy',
+      this.data.governanceRouter?.proxy!,
+    );
+  
+    if (remoteDomains.length > 0) {
+      this.checkVerificationInput(
+        'Replica Implementation',
+        this.data.replicas![remoteDomains[0]].implementation!,
+      );
+      this.checkVerificationInput(
+        'Replica UpgradeBeacon',
+        this.data.replicas![remoteDomains[0]].beacon!,
+      );
+  
+      const verification = this.context.mustGetVerification(this.domain);
+
+      const replicaProxies = verification.filter(
+        (contract) => contract.name == 'Replica Proxy',
+      );
+      remoteDomains.forEach((domain) => {
+        const replicaProxy = replicaProxies.find((proxy) => {
+          return (proxy.address =
+            this.data.replicas![domain].proxy);
+        });
+        expect(replicaProxy).to.not.be.undefined;
+      });
+    }
+  }
+
+  checkVerificationInput(
+    name: string,
+    addr: string,
+  ) {
+    this.context.checkVerificationInput(this.domain, name, addr);
   }
 }

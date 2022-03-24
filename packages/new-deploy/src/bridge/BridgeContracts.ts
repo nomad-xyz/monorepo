@@ -11,6 +11,8 @@ import * as config from '@nomad-xyz/configuration';
 
 import Contracts from '../Contracts';
 import DeployContext from '../DeployContext';
+import { assertBeaconProxy } from '../utils';
+import { expect } from 'chai';
 
 export abstract class AbstractBridgeDeploy<T> extends Contracts<T> {
   // Placeholder for future multi-VM abstraction
@@ -423,5 +425,71 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
         if (tx) await tx.wait(this.confirmations);
       }),
     );
+  }
+
+  async checkDeploy() {
+    assertBeaconProxy(this.data.bridgeToken!);
+    assertBeaconProxy(this.data.bridgeRouter!);
+
+    const weth = this.context.mustGetDomainConfig(this.domain).bridgeConfiguration.weth;
+
+    if (weth) {
+      expect(this.data.ethHelper).to.not.be.undefined;
+    } else {
+      expect(this.data.ethHelper).to.be.undefined;
+    }
+
+    expect(await this.bridgeRouterContract.owner()).to.equal(
+      this.context.cores[this.domain].governanceRouter.proxy,
+    );
+
+    // check verification addresses
+    this.checkVerificationInput(
+      'BridgeToken Implementation',
+      this.data.bridgeToken?.implementation!,
+    );
+    this.checkVerificationInput(
+      'BridgeToken UpgradeBeacon',
+      this.data.bridgeToken?.beacon!,
+    );
+    this.checkVerificationInput(
+      'BridgeToken Proxy',
+      this.data.bridgeToken?.proxy!,
+    );
+    this.checkVerificationInput(
+      'BridgeRouter Implementation',
+      this.data.bridgeRouter?.implementation!,
+    );
+    this.checkVerificationInput(
+      'BridgeRouter UpgradeBeacon',
+      this.data.bridgeRouter?.beacon!,
+    );
+    this.checkVerificationInput(
+      'BridgeRouter Proxy',
+      this.data.bridgeRouter?.proxy!,
+    );
+    this.checkVerificationInput(
+      'TokenRegistry UpgradeBeacon',
+      this.data.tokenRegistry?.beacon!,
+    );
+    this.checkVerificationInput(
+      'TokenRegistry Proxy',
+      this.data.tokenRegistry?.proxy!,
+    );
+    if (weth) {
+      const verification = this.context.mustGetVerification(this.domain);
+      expect(
+        verification.filter(
+          (input) => input.address === this.ethHelper,
+        ).length,
+      ).to.equal(1, 'No eth helper found');
+    }
+  }
+
+  checkVerificationInput(
+    name: string,
+    addr: string,
+  ) {
+    this.context.checkVerificationInput(this.domain, name, addr);
   }
 }
