@@ -27,7 +27,7 @@ export class BridgeContracts extends Contracts {
     this.providerOrSigner = providerOrSigner;
   }
 
-  get deployHieght(): number {
+  get deployHeight(): number {
     return this.conf.deployHeight;
   }
 
