@@ -100,7 +100,9 @@ export function evmId(data: BytesLike): Address {
  * @throws if either side is not a valid 20 or 32 byte nomad identifier
  */
 export function equalIds(left: BytesLike, right: BytesLike): boolean {
-  return canonizeId(left) === canonizeId(right);
+  const l = canonizeId(left);
+  const r = canonizeId(right);
+  return l.every((v, i) => v === r[i]);
 }
 
 /**
