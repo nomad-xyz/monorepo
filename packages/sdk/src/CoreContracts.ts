@@ -17,6 +17,7 @@ export type Governor = LocalGovernor | RemoteGovernor;
 
 export class CoreContracts extends Contracts {
   readonly domain: string;
+  readonly deployHeight: number;
   protected conf: config.CoreContracts;
 
   private _governor?: Governor;
@@ -30,6 +31,7 @@ export class CoreContracts extends Contracts {
     super(domain, conf, providerOrSigner);
     this.providerOrSigner = providerOrSigner;
     this.domain = domain;
+    this.deployHeight = conf.deployHeight;
     this.conf = conf;
   }
 

@@ -12,6 +12,7 @@ import * as config from '@nomad-xyz/configuration';
 
 export class BridgeContracts extends Contracts {
   readonly domain: string;
+  readonly deployHeight: number;
   protected conf: config.BridgeContracts;
 
   private providerOrSigner?: ethers.providers.Provider | ethers.Signer;
@@ -23,6 +24,7 @@ export class BridgeContracts extends Contracts {
   ) {
     super(domain, conf, providerOrSigner);
     this.domain = domain;
+    this.deployHeight = conf.deployHeight;
     this.conf = conf;
     this.providerOrSigner = providerOrSigner;
   }
