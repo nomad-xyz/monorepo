@@ -152,7 +152,7 @@ import fs from "fs";
     c.overrides.set('tom', overrides);
     c.overrides.set('jerry', overrides);
 
-    await c.ensureConnections();
+    await c.deployAndRelinquish();
     console.log(JSON.stringify(c.data, null, 4));
     fs.writeFileSync(`./scripts/config.json`, JSON.stringify(c.data, null, 4));
 })();

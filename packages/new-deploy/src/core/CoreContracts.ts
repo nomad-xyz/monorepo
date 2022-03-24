@@ -609,36 +609,38 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   async checkDeploy(
     remoteDomains: string[],
     governorDomain: number,
-    watchers: string[],
   ) {
     // Home upgrade setup contracts are defined
     assertBeaconProxy(this.data.home!, "Home");
   
     // updaterManager is set on Home
     const updaterManager = await this.home.updaterManager();
-    expect(updaterManager).to.equal(this.data.updaterManager);
+    expect(utils.equalIds(updaterManager, this.data.updaterManager!));
   
     // GovernanceRouter upgrade setup contracts are defined
     assertBeaconProxy(this.data.governanceRouter!, "Governance router");
   
     for (const domain of remoteDomains) {
+      const domainNumber = this.context.mustGetDomain(domain).domain;
       // Replica upgrade setup contracts are defined
       assertBeaconProxy(this.data.replicas![domain], `${domain}'s replica`); // deploy.contracts.replicas[domain]!
       // governanceRouter for remote domain is registered
       const registeredRouter = await this.governanceRouter.routers(
-        domain,
+        domainNumber,
       );
-      expect(registeredRouter).to.not.equal(emptyAddr);
+      expect(!utils.equalIds(registeredRouter, emptyAddr));
       // replica is enrolled in xAppConnectionManager
       const enrolledReplica =
-        await this.xAppConnectionManager.domainToReplica(domain);
-      expect(enrolledReplica).to.not.equal(emptyAddr);
+        await this.xAppConnectionManager.domainToReplica(domainNumber);
+      expect(!utils.equalIds(enrolledReplica, emptyAddr));
+      
+      const watchers = this.context.data.protocol.networks[this.domain].configuration.watchers;
       //watchers have permission in xAppConnectionManager
       watchers.forEach(async (watcher) => {
         const watcherPermissions =
           await this.xAppConnectionManager.watcherPermission(
-            watcher,
-            domain,
+            utils.evmId(watcher),
+            domainNumber,
           );
         expect(watcherPermissions).to.be.true;
       });
@@ -654,8 +656,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         const replica = this.data.replicas![remoteDomain];
         const implementation = replica.implementation;
         const beacon = replica.beacon;
-        expect(implementation).to.equal(replicaImpl);
-        expect(beacon).to.equal(replicaBeacon);
+        expect(utils.equalIds(implementation, replicaImpl));
+        expect(utils.equalIds(beacon, replicaBeacon));
       });
     }
   
@@ -668,19 +670,19 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const gov = await this.governanceRouter.governor();
     const localDomain = await this.home.localDomain();
     if (governorDomain == localDomain) {
-      expect(gov).to.not.equal(emptyAddr);
+      expect(!utils.equalIds(gov, emptyAddr));
     } else {
-      expect(gov).to.equal(emptyAddr);
+      expect(utils.equalIds(gov, emptyAddr));
     }
     // governor domain is correct
-    expect(await this.governanceRouter.governorDomain()).to.equal(
+    expect(await this.governanceRouter.governorDomain(), `this domain: ${this.domain} want ${governorDomain}`).to.equal(
       governorDomain,
     );
   
     // Home is set on xAppConnectionManager
     const xAppManagerHome = await this.xAppConnectionManager.home();
     const homeAddress = this.data.home?.proxy;
-    expect(xAppManagerHome).to.equal(homeAddress);
+    expect(utils.equalIds(xAppManagerHome, homeAddress!));
   
     // governance has ownership over following contracts
     const updaterManagerOwner = await this.updaterManager.owner();
@@ -689,10 +691,10 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const beaconOwner = await this.upgradeBeaconController.owner();
     const homeOwner = await this.home.owner();
     const governorAddr = this.data.governanceRouter?.proxy;
-    expect(updaterManagerOwner).to.equal(governorAddr);
-    expect(xAppManagerOwner).to.equal(governorAddr);
-    expect(beaconOwner).to.equal(governorAddr);
-    expect(homeOwner).to.equal(governorAddr);
+    expect(utils.equalIds(updaterManagerOwner, governorAddr!));
+    expect(utils.equalIds(xAppManagerOwner, governorAddr!));
+    expect(utils.equalIds(beaconOwner, governorAddr!));
+    expect(utils.equalIds(homeOwner, governorAddr!));
   
     // check verification addresses
     this.checkVerificationInput(

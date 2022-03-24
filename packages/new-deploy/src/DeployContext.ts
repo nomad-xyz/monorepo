@@ -189,9 +189,10 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     const bridge = new BridgeContracts(this, name);
     await bridge.recordStartBlock();
 
+    await bridge.deployTokenUpgradeBeacon();
+    await bridge.deployTokenRegistry();
+
     await Promise.all([
-      bridge.deployTokenUpgradeBeacon(),
-      bridge.deployTokenRegistry(),
       bridge.deployBridgeRouter(),
       bridge.deployEthHelper(),
     ]);
@@ -318,9 +319,8 @@ export default class DeployContext extends MultiProvider<config.Domain> {
       this.networks.map(async (net) => {
         const core = new CoreContracts(this, net, this.data.core[net]!);
         const remotes = this.networks.filter(n => n != net);
-        const watchers = this.data.protocol.networks[net].configuration.watchers;
   
-        await core.checkDeploy(remotes, this.data.protocol.governor.domain, watchers);
+        await core.checkDeploy(remotes, this.data.protocol.governor.domain);
       })
     )
   }
