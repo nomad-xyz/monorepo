@@ -11,6 +11,7 @@ import {
 import { utils } from '@nomad-xyz/multi-provider';
 import { ethers } from 'ethers';
 
+import { _notImplemented } from '../utils';
 import Contracts from '../Contracts';
 import DeployContext from '../DeployContext';
 
@@ -573,17 +574,12 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     );
   }
 
-  /// Enrolls the Remote Governing Router as the governor
+  /// Transfers governorship on this core to the appropriate remote domain or
+  /// local address. If this is not run during deploy time (i.e. while the
+  /// deployer owns the governance router) this instead returns a list of
+  /// governance transactions that must be made in order to transfer
+  /// governorship
   async appointGovernor(): Promise<ethers.PopulatedTransaction[]> {
-    const govDomain = this.context.data.protocol.governor.domain;
-
-    const gov = this.context.resolveDomainName(govDomain);
-    const non = this.context.resolveDomainName(this.domain);
-
-    if (gov === non) throw new Error('unreachable');
-
-    const nonCore = this.context.mustGetCore(non);
-    const govConfig = this.context.mustGetDomainConfig(gov);
     const governor = this.context.data.protocol.governor;
 
     // Check that this key has permissions to set this
@@ -592,18 +588,15 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     // If we can't use deployer ownership
     if (!utils.equalIds(owner, deployer)) {
-      return [
-        await this.governanceRouter.populateTransaction.transferGovernor(
-          govConfig.domain,
-          governor.id,
-        ),
-      ];
+      // TODO:
+      // transform into a governance tx targeting the Governing core
+      return _notImplemented();
     }
 
     // If we can use deployer ownership
-    const tx = await nonCore.governanceRouter.transferGovernor(
-      govConfig.domain,
-      governor.id,
+    const tx = await this.governanceRouter.transferGovernor(
+      governor.domain,
+      utils.evmId(governor.id),
       this.overrides,
     );
     await tx.wait(this.confirmations);
