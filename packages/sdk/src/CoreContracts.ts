@@ -42,7 +42,7 @@ export class CoreContracts extends Contracts {
     return core.Replica__factory.connect(replica.proxy, this.providerOrSigner);
   }
 
-  get deployHieght(): number {
+  get deployHeight(): number {
     return this.conf.deployHeight;
   }
 
