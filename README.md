@@ -10,7 +10,13 @@ Nomad is a cross-chain communication protocol. This repo contains the following:
 
 ### Development setup
 
-- make sure you're on yarn2!
+Confirm that you are using yarn2!
+
+```
+$ yarn -v
+```
+
+Should return greater than `1.x.x`. Use this [tutorial](https://yarnpkg.com/getting-started/migration) to upgrade if needed.
 
 Install all dependencies
 
