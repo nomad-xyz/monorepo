@@ -317,7 +317,10 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   async checkCores(): Promise<void> {
     await Promise.all(
       this.networks.map(async (net) => {
-        const core = new CoreContracts(this, net, this.data.core[net]!);
+        const coreConfig = this.data.core[net];
+        if (!coreConfig)
+          throw new Error(`network ${net} is missing core config`);
+        const core = new CoreContracts(this, net, coreConfig);
         const remotes = this.networks.filter((n) => n != net);
 
         await core.checkDeploy(remotes, this.data.protocol.governor.domain);
@@ -328,7 +331,10 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   async checkBridges(): Promise<void> {
     await Promise.all(
       this.networks.map(async (net) => {
-        const bridge = new BridgeContracts(this, net, this.data.bridge[net]!);
+        const bridgeConfig = this.data.bridge[net];
+        if (!bridgeConfig)
+          throw new Error(`network ${net} is missing bridge config`);
+        const bridge = new BridgeContracts(this, net);
         await bridge.checkDeploy();
       }),
     );
@@ -338,7 +344,7 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     nameOrDomain: string | number,
     name: string,
     addr: string,
-  ) {
+  ): void {
     const verification = this.mustGetVerification(nameOrDomain);
 
     if (verification.length === 0)
