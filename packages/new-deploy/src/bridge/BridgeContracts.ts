@@ -427,10 +427,13 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     );
   }
 
-  async checkDeploy() {
-    if (!this.data.bridgeToken) throw new Error(`BridgeToken is not defined for domain ${this.domain}`);
-    if (!this.data.bridgeRouter) throw new Error(`BridgeRouter is not defined for domain ${this.domain}`);
-    if (!this.data.tokenRegistry) throw new Error(`TokenRegistry is not defined for domain ${this.domain}`);
+  async checkDeploy(): Promise<void> {
+    if (!this.data.bridgeToken)
+      throw new Error(`BridgeToken is not defined for domain ${this.domain}`);
+    if (!this.data.bridgeRouter)
+      throw new Error(`BridgeRouter is not defined for domain ${this.domain}`);
+    if (!this.data.tokenRegistry)
+      throw new Error(`TokenRegistry is not defined for domain ${this.domain}`);
 
     assertBeaconProxy(this.data.bridgeToken);
     assertBeaconProxy(this.data.bridgeRouter);
@@ -474,7 +477,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     }
   }
 
-  checkVerificationInput(name: string, addr: string) {
+  checkVerificationInput(name: string, addr: string): void {
     this.context.checkVerificationInput(this.domain, name, addr);
   }
 }

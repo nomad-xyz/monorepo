@@ -96,9 +96,9 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     );
   }
 
+  // Returns an array containing the names of known replicas
   get replicas(): ReadonlyArray<string> {
-    if (!this.data.replicas) throw new Error(`Replicas are not defined for ${this.domain}`);
-    return Object.keys(this.data.replicas);
+    return Object.keys(this.data.replicas ?? {});
   }
 
   get deployer(): ethers.Signer {
@@ -477,27 +477,44 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const owner = await this.xAppConnectionManager.owner();
     const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
 
+    // want an async filter, but this'll have to do
+    // We make an array with the enrolled status of each watcher, then filter
+    // the watchers based on that status array. Mapping ensures that the status
+    // is at the same index as the watcher, so we use the index in the filter.
+    // This allows us to skip enrolling watchers that are already enrolled
+    const watchers = localConfig.configuration.watchers;
+    const enrollmentStatuses = await Promise.all(
+      watchers.map(async (watcher) => {
+        return await this.xAppConnectionManager.watcherPermission(
+          utils.evmId(watcher),
+          homeConfig.domain,
+        );
+      }),
+    );
+    const watchersToEnroll = watchers.filter(
+      (_, idx) => !enrollmentStatuses[idx],
+    );
+
     // If we can't use deployer ownership
     if (!utils.equalIds(owner, deployer)) {
       const txns = await Promise.all(
-        localConfig.configuration.watchers.map(async (watcher) =>
-          {
-            if (!await this.xAppConnectionManager.watcherPermission(utils.evmId(watcher), homeConfig.domain)) return undefined
-            return await this.xAppConnectionManager.populateTransaction.setWatcherPermission(
-              utils.evmId(watcher),
-              homeConfig.domain,
-              true,
-              this.overrides,
-            )
-          }
-        ),
+        watchersToEnroll.map(async (watcher) => {
+          return await this.xAppConnectionManager.populateTransaction.setWatcherPermission(
+            utils.evmId(watcher),
+            homeConfig.domain,
+            true,
+            this.overrides,
+          );
+        }),
       );
-      return txns.filter(x => x !== undefined) as Array<ethers.PopulatedTransaction>;
+      return txns.filter(
+        (x) => x !== undefined,
+      ) as Array<ethers.PopulatedTransaction>;
     }
 
     // If we can use deployer ownership
     const txns = await Promise.all(
-      localConfig.configuration.watchers.map((watcher) =>
+      watchersToEnroll.map((watcher) =>
         this.xAppConnectionManager.setWatcherPermission(
           utils.evmId(watcher),
           homeConfig.domain,
@@ -610,14 +627,31 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     return [];
   }
 
-  async checkDeploy(remoteDomains: string[], governorDomain: number) {
-    if (!this.data.home) throw new Error(`Home is not defined for domain ${this.domain}`);
-    if (!this.data.updaterManager) throw new Error(`UpdaterManager is not defined for domain ${this.domain}`);
-    if (!this.data.governanceRouter) throw new Error(`GovernanceRouter is not defined for domain ${this.domain}`);
+  async checkDeploy(
+    remoteDomains: string[],
+    governorDomain: number,
+  ): Promise<void> {
+    if (!this.data.home)
+      throw new Error(`Home is not defined for domain ${this.domain}`);
+    if (!this.data.updaterManager)
+      throw new Error(
+        `UpdaterManager is not defined for domain ${this.domain}`,
+      );
+    if (!this.data.governanceRouter)
+      throw new Error(
+        `GovernanceRouter is not defined for domain ${this.domain}`,
+      );
     const replicas = this.data.replicas;
-    if (!replicas) throw new Error(`Replicas is not defined for domain ${this.domain}`);
-    if (!this.data.upgradeBeaconController) throw new Error(`upgradeBeaconController is not defined for domain ${this.domain}`);
-    if (!this.data.xAppConnectionManager) throw new Error(`xAppConnectionManager is not defined for domain ${this.domain}`);
+    if (!replicas)
+      throw new Error(`Replicas is not defined for domain ${this.domain}`);
+    if (!this.data.upgradeBeaconController)
+      throw new Error(
+        `upgradeBeaconController is not defined for domain ${this.domain}`,
+      );
+    if (!this.data.xAppConnectionManager)
+      throw new Error(
+        `xAppConnectionManager is not defined for domain ${this.domain}`,
+      );
     // Home upgrade setup contracts are defined
     assertBeaconProxy(this.data.home, 'Home');
 
@@ -743,7 +777,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     }
   }
 
-  checkVerificationInput(name: string, addr: string) {
+  checkVerificationInput(name: string, addr: string): void {
     this.context.checkVerificationInput(this.domain, name, addr);
   }
 }
