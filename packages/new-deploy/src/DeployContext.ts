@@ -1,5 +1,6 @@
 import * as config from '@nomad-xyz/configuration';
-import { MultiProvider } from '@nomad-xyz/multi-provider';
+import { MultiProvider, utils } from '@nomad-xyz/multi-provider';
+import { expect } from 'chai';
 import ethers from 'ethers';
 
 import BridgeContracts from './bridge/BridgeContracts';
@@ -123,6 +124,17 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     if (net) net.push(verification);
   }
 
+  mustGetVerification(nameOrDomain: string | number): readonly Verification[] {
+    const domain = this.resolveDomainName(nameOrDomain);
+    const verification = this.verification.get(domain);
+    if (!verification)
+      throw new Error(
+        `Verification with name ${nameOrDomain} for domain ${domain} is not defined`,
+      );
+
+    return verification;
+  }
+
   protected async deployCore(domain: config.Domain): Promise<void> {
     this.addDomain(domain);
 
@@ -177,12 +189,10 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     const bridge = new BridgeContracts(this, name);
     await bridge.recordStartBlock();
 
-    await Promise.all([
-      bridge.deployTokenUpgradeBeacon(),
-      bridge.deployTokenRegistry(),
-      bridge.deployBridgeRouter(),
-      bridge.deployEthHelper(),
-    ]);
+    await bridge.deployTokenUpgradeBeacon();
+    await bridge.deployTokenRegistry();
+
+    await Promise.all([bridge.deployBridgeRouter(), bridge.deployEthHelper()]);
 
     this.addBridge(name, bridge.complete());
   }
@@ -280,6 +290,9 @@ export default class DeployContext extends MultiProvider<config.Domain> {
 
     await this.relinquish();
 
+    await this.checkCores();
+    await this.checkBridges();
+
     return txns;
   }
 
@@ -299,5 +312,42 @@ export default class DeployContext extends MultiProvider<config.Domain> {
 
     this._data.protocol.networks[left].connections.push(right);
     this._data.protocol.networks[left].connections.push(left);
+  }
+
+  async checkCores(): Promise<void> {
+    await Promise.all(
+      this.networks.map(async (net) => {
+        const core = new CoreContracts(this, net, this.data.core[net]!);
+        const remotes = this.networks.filter((n) => n != net);
+
+        await core.checkDeploy(remotes, this.data.protocol.governor.domain);
+      }),
+    );
+  }
+
+  async checkBridges(): Promise<void> {
+    await Promise.all(
+      this.networks.map(async (net) => {
+        const bridge = new BridgeContracts(this, net, this.data.bridge[net]!);
+        await bridge.checkDeploy();
+      }),
+    );
+  }
+
+  checkVerificationInput(
+    nameOrDomain: string | number,
+    name: string,
+    addr: string,
+  ) {
+    const verification = this.mustGetVerification(nameOrDomain);
+
+    if (verification.length === 0)
+      throw new Error(
+        `Verification with name '${name}' for domain '${nameOrDomain}' is not defined`,
+      );
+    const inputAddr = verification.filter(
+      (contract) => contract.name == name,
+    )[0].address;
+    expect(utils.equalIds(inputAddr, addr));
   }
 }

@@ -11,6 +11,8 @@ import * as config from '@nomad-xyz/configuration';
 
 import Contracts from '../Contracts';
 import DeployContext from '../DeployContext';
+import { assertBeaconProxy } from '../utils';
+import { expect } from 'chai';
 
 export abstract class AbstractBridgeDeploy<T> extends Contracts<T> {
   // Placeholder for future multi-VM abstraction
@@ -423,5 +425,56 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
         if (tx) await tx.wait(this.confirmations);
       }),
     );
+  }
+
+  async checkDeploy() {
+    if (!this.data.bridgeToken) throw new Error(`BridgeToken is not defined for domain ${this.domain}`);
+    if (!this.data.bridgeRouter) throw new Error(`BridgeRouter is not defined for domain ${this.domain}`);
+    if (!this.data.tokenRegistry) throw new Error(`TokenRegistry is not defined for domain ${this.domain}`);
+
+    assertBeaconProxy(this.data.bridgeToken);
+    assertBeaconProxy(this.data.bridgeRouter);
+
+    const weth = this.context.mustGetDomainConfig(this.domain)
+      .bridgeConfiguration.weth;
+
+    if (weth) {
+      expect(this.data.ethHelper).to.not.be.undefined;
+    } else {
+      expect(this.data.ethHelper).to.be.undefined;
+    }
+
+    expect(
+      utils.equalIds(
+        await this.bridgeRouterContract.owner(),
+        this.context.cores[this.domain].governanceRouter.proxy,
+      ),
+    );
+
+    // check verification addresses
+    // TODO: add beacon and proxy where needed.
+    this.checkVerificationInput(
+      'BridgeToken',
+      this.data.bridgeToken.implementation,
+    );
+
+    this.checkVerificationInput(
+      'BridgeRouter',
+      this.data.bridgeRouter.implementation,
+    );
+    this.checkVerificationInput(
+      'TokenRegistry',
+      this.data.tokenRegistry.implementation,
+    );
+    if (weth) {
+      const verification = this.context.mustGetVerification(this.domain);
+      expect(
+        verification.filter((input) => input.address === this.ethHelper).length,
+      ).to.equal(1, 'No eth helper found');
+    }
+  }
+
+  checkVerificationInput(name: string, addr: string) {
+    this.context.checkVerificationInput(this.domain, name, addr);
   }
 }
