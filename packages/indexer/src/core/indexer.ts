@@ -6,75 +6,75 @@ import { Home, Replica } from "@nomad-xyz/contracts-core";
 import { ethers } from "ethers";
 import { FailureCounter, KVCache, replacer, retry, reviver } from "./utils";
 import { BridgeRouter } from "@nomad-xyz/contracts-bridge";
-import pLimit from 'p-limit';
+import pLimit from "p-limit";
 import { RpcRequestMethod } from "./metrics";
 import Logger from "bunyan";
 
 type ShortTx = {
-  gasPrice?: ethers.BigNumber,
-  timestamp: number,
-  from: string,
-  to?: string,
-  gasLimit: ethers.BigNumber,
+  gasPrice?: ethers.BigNumber;
+  timestamp: number;
+  from: string;
+  to?: string;
+  gasLimit: ethers.BigNumber;
 };
 
-function txEncode(tx: ShortTx): string  {
+function txEncode(tx: ShortTx): string {
   const {
     gasPrice, // ?
     timestamp,
     from,
     to, // ?
-    gasLimit, 
+    gasLimit,
   } = tx as ShortTx;
-  return JSON.stringify({
-    gasPrice, // ?
-    timestamp,
-    from,
-    to, // ?
-    gasLimit, 
-  }, replacer)
+  return JSON.stringify(
+    {
+      gasPrice, // ?
+      timestamp,
+      from,
+      to, // ?
+      gasLimit,
+    },
+    replacer
+  );
 }
 
 function txDecode(encoded: string): ShortTx {
-  return JSON.parse(encoded, reviver)
+  return JSON.parse(encoded, reviver);
 }
 
 type ShortTxReceipt = {
-  effectiveGasPrice: ethers.BigNumber,
-  cumulativeGasUsed: ethers.BigNumber,
-  gasUsed: ethers.BigNumber,
-  from: string,
-  to: string,
-  status?: number,
+  effectiveGasPrice: ethers.BigNumber;
+  cumulativeGasUsed: ethers.BigNumber;
+  gasUsed: ethers.BigNumber;
+  from: string;
+  to: string;
+  status?: number;
 };
 
-function txReceiptEncode(receipt: ethers.providers.TransactionReceipt): string  {
-  const {
-    effectiveGasPrice,
-    cumulativeGasUsed,
-    from,
-    to,
-    gasUsed,
-    status,
-  } = receipt as ShortTxReceipt;
-  return JSON.stringify({
-    effectiveGasPrice,
-    cumulativeGasUsed,
-    from,
-    to,
-    gasUsed,
-    status, 
-  }, replacer)
+function txReceiptEncode(receipt: ethers.providers.TransactionReceipt): string {
+  const { effectiveGasPrice, cumulativeGasUsed, from, to, gasUsed, status } =
+    receipt as ShortTxReceipt;
+  return JSON.stringify(
+    {
+      effectiveGasPrice,
+      cumulativeGasUsed,
+      from,
+      to,
+      gasUsed,
+      status,
+    },
+    replacer
+  );
 }
 
 function txReceiptDecode(encoded: string): ShortTxReceipt {
-  return JSON.parse(encoded, reviver)
+  return JSON.parse(encoded, reviver);
 }
 
-
-const BATCH_SIZE = process.env.BATCH_SIZE ? parseInt(process.env.BATCH_SIZE) : 2000;
+const BATCH_SIZE = process.env.BATCH_SIZE
+  ? parseInt(process.env.BATCH_SIZE)
+  : 2000;
 const RETRIES = 100;
-
 
 export class Indexer {
   domain: number;
@@ -100,14 +100,30 @@ export class Indexer {
     this.persistance = new RamPersistance(
       `/tmp/persistance_${this.domain}.json`
     );
-    this.blockCache = new KVCache('b_' + String(this.domain), this.orchestrator.db);
-    this.blockTimestampCache = new KVCache('bts_' + String(this.domain), this.orchestrator.db);
-    this.txCache = new KVCache('tx_' + String(this.domain), this.orchestrator.db);
-    this.txReceiptCache = new KVCache('txr_' + String(this.domain), this.orchestrator.db);
+    this.blockCache = new KVCache(
+      "b_" + String(this.domain),
+      this.orchestrator.db
+    );
+    this.blockTimestampCache = new KVCache(
+      "bts_" + String(this.domain),
+      this.orchestrator.db
+    );
+    this.txCache = new KVCache(
+      "tx_" + String(this.domain),
+      this.orchestrator.db
+    );
+    this.txReceiptCache = new KVCache(
+      "txr_" + String(this.domain),
+      this.orchestrator.db
+    );
     // 20 concurrent requests per indexer
     this.limit = pLimit(100);
     this.lastBlock = 0;
-    this.logger = orchestrator.logger.child({span: 'indexer', network: this.network, domain: this.domain});
+    this.logger = orchestrator.logger.child({
+      span: "indexer",
+      network: this.network,
+      domain: this.domain,
+    });
     this.lastIndexed = new Date(0);
     this.failureCounter = new FailureCounter(60); // 1 hour
   }
@@ -136,18 +152,28 @@ export class Indexer {
     const [block, error] = await retry(
       async () => {
         return await this.limit(async () => {
-          this.orchestrator.metrics.incRpcRequests(RpcRequestMethod.GetBlockWithTxs, this.network);
+          this.orchestrator.metrics.incRpcRequests(
+            RpcRequestMethod.GetBlockWithTxs,
+            this.network
+          );
           const start = new Date().valueOf();
           const r = await this.provider.getBlockWithTransactions(blockNumber);
-          this.orchestrator.metrics.observeRpcLatency(RpcRequestMethod.GetBlockWithTxs, this.network, new Date().valueOf() - start);
+          this.orchestrator.metrics.observeRpcLatency(
+            RpcRequestMethod.GetBlockWithTxs,
+            this.network,
+            new Date().valueOf() - start
+          );
           return r;
-        })
+        });
       },
       RETRIES,
-      (error: any) =>
-        {
-          this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetBlockWithTxs, this.network, error.code);
-          this.logger.warn(
+      (error: any) => {
+        this.orchestrator.metrics.incRpcErrors(
+          RpcRequestMethod.GetBlockWithTxs,
+          this.network,
+          error.code
+        );
+        this.logger.warn(
           `Retrying after RPC Error... Block: ${blockNumber}, Error: ${error.code}`
         );
         this.failureCounter.add();
@@ -176,26 +202,36 @@ export class Indexer {
   async getBlockTimestamp(blockNumber: number): Promise<number> {
     const possible = await this.blockTimestampCache.get(String(blockNumber));
     if (possible) {
-      return parseInt(possible)
+      return parseInt(possible);
     }
 
     const [block, error] = await retry(
       async () => {
         return await this.limit(async () => {
-          this.orchestrator.metrics.incRpcRequests(RpcRequestMethod.GetBlock, this.network);
+          this.orchestrator.metrics.incRpcRequests(
+            RpcRequestMethod.GetBlock,
+            this.network
+          );
           const start = new Date().valueOf();
-          const r = await this.provider.getBlock(blockNumber)
-          this.orchestrator.metrics.observeRpcLatency(RpcRequestMethod.GetBlock, this.network, new Date().valueOf() - start);
+          const r = await this.provider.getBlock(blockNumber);
+          this.orchestrator.metrics.observeRpcLatency(
+            RpcRequestMethod.GetBlock,
+            this.network,
+            new Date().valueOf() - start
+          );
           return r;
-        })
+        });
       },
       RETRIES,
-      (error: any) =>
-        {
-          this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetBlock, this.network, error.code);
-          this.logger.warn(
+      (error: any) => {
+        this.orchestrator.metrics.incRpcErrors(
+          RpcRequestMethod.GetBlock,
+          this.network,
+          error.code
+        );
+        this.logger.warn(
           `Retrying after RPC Error... Block number: ${blockNumber}, Error: ${error.code}`
-        )
+        );
         this.failureCounter.add();
       }
     );
@@ -207,39 +243,44 @@ export class Indexer {
 
     const timestamp = block.timestamp * 1000;
 
-    await this.blockTimestampCache.set(
-      String(blockNumber),
-      String(timestamp)
-    );
+    await this.blockTimestampCache.set(String(blockNumber), String(timestamp));
 
-    return timestamp
+    return timestamp;
   }
 
-  
-
-  async getTransaction(hash: string, forceTimestamp=false): Promise<ShortTx> {
+  async getTransaction(hash: string, forceTimestamp = false): Promise<ShortTx> {
     const possible = await this.txCache.get(hash);
     if (possible) {
-      return txDecode(possible)
+      return txDecode(possible);
     }
 
     const [tx, error] = await retry(
       async () => {
         return await this.limit(async () => {
-          this.orchestrator.metrics.incRpcRequests(RpcRequestMethod.GetTx, this.network);
+          this.orchestrator.metrics.incRpcRequests(
+            RpcRequestMethod.GetTx,
+            this.network
+          );
           const start = new Date().valueOf();
-          const r = await this.provider.getTransaction(hash)
-          this.orchestrator.metrics.observeRpcLatency(RpcRequestMethod.GetTx, this.network, new Date().valueOf() - start);
+          const r = await this.provider.getTransaction(hash);
+          this.orchestrator.metrics.observeRpcLatency(
+            RpcRequestMethod.GetTx,
+            this.network,
+            new Date().valueOf() - start
+          );
           return r;
-        })
+        });
       },
       RETRIES,
-      (error: any) =>
-        {
-          this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetTx, this.network, error.code);
-          this.logger.warn(
+      (error: any) => {
+        this.orchestrator.metrics.incRpcErrors(
+          RpcRequestMethod.GetTx,
+          this.network,
+          error.code
+        );
+        this.logger.warn(
           `Retrying after RPC Error... TX hash: ${hash}, Error: ${error.code}`
-        )
+        );
         this.failureCounter.add();
       }
     );
@@ -252,16 +293,15 @@ export class Indexer {
     let timestamp: number;
 
     if (forceTimestamp) {
-
-      timestamp = new Date().valueOf()
+      timestamp = new Date().valueOf();
     } else if (!tx.timestamp) {
-
-      if (!tx.blockNumber) throw new Error(
-        `An RPC foo error occured. TX hash: ${hash} has no blockNumber. WTF?`
-      );
+      if (!tx.blockNumber)
+        throw new Error(
+          `An RPC foo error occured. TX hash: ${hash} has no blockNumber. WTF?`
+        );
       this.failureCounter.add();
 
-      timestamp = await this.getBlockTimestamp(tx.blockNumber!)
+      timestamp = await this.getBlockTimestamp(tx.blockNumber!);
     } else {
       timestamp = tx.timestamp! * 1000;
     }
@@ -274,11 +314,7 @@ export class Indexer {
       gasLimit: tx.gasLimit,
     };
 
-
-    await this.txCache.set(
-      hash,
-      txEncode(shortTx)
-    );
+    await this.txCache.set(hash, txEncode(shortTx));
 
     return shortTx;
   }
@@ -286,26 +322,34 @@ export class Indexer {
   async getTransactionReceipt(hash: string): Promise<ShortTxReceipt> {
     const possible = await this.txReceiptCache.get(hash);
     if (possible) {
-      return txReceiptDecode(possible)
+      return txReceiptDecode(possible);
     }
 
     const [receipt, error] = await retry(
       async () => {
         return await this.limit(async () => {
-          this.orchestrator.metrics.incRpcRequests(RpcRequestMethod.GetTxReceipt, this.network);
+          this.orchestrator.metrics.incRpcRequests(
+            RpcRequestMethod.GetTxReceipt,
+            this.network
+          );
           const start = new Date().valueOf();
-          const r = await this.provider.getTransactionReceipt(hash)
-          this.orchestrator.metrics.observeRpcLatency(RpcRequestMethod.GetTxReceipt, this.network, new Date().valueOf() - start);
+          const r = await this.provider.getTransactionReceipt(hash);
+          this.orchestrator.metrics.observeRpcLatency(
+            RpcRequestMethod.GetTxReceipt,
+            this.network,
+            new Date().valueOf() - start
+          );
           return r;
-        })
+        });
       },
       RETRIES,
-      (error: any) =>
-       {
-        this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetTxReceipt, this.network, error.code) 
-        this.logger.warn(
-          `Retrying after RPC Error... , Error: ${error.code}`
-        )
+      (error: any) => {
+        this.orchestrator.metrics.incRpcErrors(
+          RpcRequestMethod.GetTxReceipt,
+          this.network,
+          error.code
+        );
+        this.logger.warn(`Retrying after RPC Error... , Error: ${error.code}`);
         this.failureCounter.add();
       }
     );
@@ -315,20 +359,22 @@ export class Indexer {
       );
     }
 
-    await this.txReceiptCache.set(
-      hash,
-      txReceiptEncode(receipt)
-    );
+    await this.txReceiptCache.set(hash, txReceiptEncode(receipt));
 
-    return receipt
+    return receipt;
   }
 
-  async getAdditionalInfo(hash: string): Promise<{timestamp: number, gasUsed: ethers.BigNumber, from: string}> {
-    const {timestamp} = await this.getTransaction(hash, !this.orchestrator.chaseMode);
+  async getAdditionalInfo(
+    hash: string
+  ): Promise<{ timestamp: number; gasUsed: ethers.BigNumber; from: string }> {
+    const { timestamp } = await this.getTransaction(
+      hash,
+      !this.orchestrator.chaseMode
+    );
 
-    const {gasUsed, from} = await this.getTransactionReceipt(hash);
+    const { gasUsed, from } = await this.getTransactionReceipt(hash);
 
-    return {timestamp, gasUsed, from}
+    return { timestamp, gasUsed, from };
   }
 
   async init() {
@@ -364,21 +410,31 @@ export class Indexer {
     );
     const [to, error] = await retry(
       async () => {
-        this.orchestrator.metrics.incRpcRequests(RpcRequestMethod.GetBlockNumber, this.network);
+        this.orchestrator.metrics.incRpcRequests(
+          RpcRequestMethod.GetBlockNumber,
+          this.network
+        );
         const start = new Date().valueOf();
-        const r = await this.provider.getBlockNumber()
-        this.orchestrator.metrics.observeRpcLatency(RpcRequestMethod.GetBlockNumber, this.network, new Date().valueOf() - start);
+        const r = await this.provider.getBlockNumber();
+        this.orchestrator.metrics.observeRpcLatency(
+          RpcRequestMethod.GetBlockNumber,
+          this.network,
+          new Date().valueOf() - start
+        );
         return r;
       },
       RETRIES,
-      (error: any) =>
-        {
-          this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetBlockNumber, this.network, error.code)
-          this.logger.warn(
-            `Retrying after RPC Error on .getBlockNumber() method... Error: ${error}`
-          )
-          this.failureCounter.add();
-        }
+      (error: any) => {
+        this.orchestrator.metrics.incRpcErrors(
+          RpcRequestMethod.GetBlockNumber,
+          this.network,
+          error.code
+        );
+        this.logger.warn(
+          `Retrying after RPC Error on .getBlockNumber() method... Error: ${error}`
+        );
+        this.failureCounter.add();
+      }
     );
     if (!to) {
       throw new Error(
@@ -393,16 +449,15 @@ export class Indexer {
       return [];
     }
 
-    this.logger.info(
-      `Fetching events for from: ${from}, to: ${to}`
-    );
+    this.logger.info(`Fetching events for from: ${from}, to: ${to}`);
 
-    const fetchEvents = async (from: number, to: number): Promise<NomadEvent[]> => {
+    const fetchEvents = async (
+      from: number,
+      to: number
+    ): Promise<NomadEvent[]> => {
       const homeEvents = await this.fetchHome(from, to);
       const replicasEvents = (
-        await Promise.all(
-          replicas.map((r) => this.fetchReplica(r, from, to))
-        )
+        await Promise.all(replicas.map((r) => this.fetchReplica(r, from, to)))
       ).flat();
       const bridgeRouterEvents = await this.fetchBridgeRouter(from, to);
 
@@ -416,7 +471,7 @@ export class Indexer {
     let batchTo = Math.min(to, from + batchSize);
 
     while (true) {
-      const done = Math.floor((batchTo-from+1)/(to-from+1) * 100);
+      const done = Math.floor(((batchTo - from + 1) / (to - from + 1)) * 100);
       this.logger.debug(
         `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`
       );
@@ -426,16 +481,26 @@ export class Indexer {
       this.persistance.store(...events);
       try {
         this.dummyTestEventsIntegrity(batchTo);
-        this.logger.debug(`Integrity test PASSED between ${batchFrom} and ${batchTo}`);
-      } catch(e) {
+        this.logger.debug(
+          `Integrity test PASSED between ${batchFrom} and ${batchTo}`
+        );
+      } catch (e) {
         const pastFrom = batchFrom;
         const pastTo = batchTo;
-        batchFrom = batchFrom - batchSize/2;
+        batchFrom = batchFrom - batchSize / 2;
         batchTo = batchFrom + batchSize;
-        this.logger.warn(`Integrity test not passed between ${pastFrom} and ${pastTo}, recollecting between ${batchFrom} and ${batchTo}: ${e}`);
+        this.logger.warn(
+          `Integrity test not passed between ${pastFrom} and ${pastTo}, recollecting between ${batchFrom} and ${batchTo}: ${e}`
+        );
         continue;
       }
-      allEvents.push(...events.filter(newEvent => allEvents.every(oldEvent => newEvent.uniqueHash() !== oldEvent.uniqueHash())));
+      allEvents.push(
+        ...events.filter((newEvent) =>
+          allEvents.every(
+            (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash()
+          )
+        )
+      );
       if (batchTo >= to) break;
       batchFrom = batchTo + 1;
       batchTo = Math.min(to, batchFrom + batchSize);
@@ -454,10 +519,10 @@ export class Indexer {
 
   dummyTestEventsIntegrity(blockTo?: number) {
     let allEvents = this.persistance.allEvents();
-    if (blockTo) allEvents = allEvents.filter(e => e.block <= blockTo);
+    if (blockTo) allEvents = allEvents.filter((e) => e.block <= blockTo);
     if (allEvents.length === 0) {
       this.logger.debug(`No events to test integrity!!!`);
-      return ;
+      return;
     }
 
     const homeRoots = new Map<string, string>();
@@ -465,13 +530,21 @@ export class Indexer {
     let initialHomeTimestamp = Number.MAX_VALUE;
     let homeRootsTotal = 0;
 
-    type ReplicaDomainInfo = {root: string, ts: number, roots: Map<string, string>, total: number};
+    type ReplicaDomainInfo = {
+      root: string;
+      ts: number;
+      roots: Map<string, string>;
+      total: number;
+    };
 
     const initialReplica: Map<number, ReplicaDomainInfo> = new Map();
 
     for (const event of allEvents) {
       if (event.eventType == EventType.HomeUpdate) {
-        const { oldRoot, newRoot } = event.eventData as { oldRoot: string; newRoot: string };
+        const { oldRoot, newRoot } = event.eventData as {
+          oldRoot: string;
+          newRoot: string;
+        };
         homeRoots.set(oldRoot, newRoot);
         homeRootsTotal += 1;
         if (event.ts < initialHomeTimestamp) {
@@ -479,10 +552,18 @@ export class Indexer {
           initialHomeRoot = oldRoot;
         }
       } else if (event.eventType == EventType.ReplicaUpdate) {
-        const { oldRoot, newRoot } = event.eventData as { oldRoot: string; newRoot: string };
+        const { oldRoot, newRoot } = event.eventData as {
+          oldRoot: string;
+          newRoot: string;
+        };
         const domain = event.replicaOrigin;
         if (!initialReplica.has(domain)) {
-          initialReplica.set(domain, {root: '', ts: Number.MAX_VALUE, roots: new Map(), total: 0});
+          initialReplica.set(domain, {
+            root: "",
+            ts: Number.MAX_VALUE,
+            roots: new Map(),
+            total: 0,
+          });
         }
         const replica = initialReplica.get(domain)!;
         replica.roots.set(oldRoot, newRoot);
@@ -503,7 +584,10 @@ export class Indexer {
         break;
       }
     }
-    if (homeRootsTotal !== 0) throw new Error(`${this.domain}: Left roots for home supposed to be 0, but is ${homeRootsTotal}`);
+    if (homeRootsTotal !== 0)
+      throw new Error(
+        `${this.domain}: Left roots for home supposed to be 0, but is ${homeRootsTotal}`
+      );
 
     for (const [domain, replica] of initialReplica) {
       let root = replica.root;
@@ -517,7 +601,10 @@ export class Indexer {
           break;
         }
       }
-      if (total !== 0) throw new Error(`${this.domain}: Left roots for replica ${domain} supposed to be 0, but is ${total} replica for domain ${domain}`)
+      if (total !== 0)
+        throw new Error(
+          `${this.domain}: Left roots for replica ${domain} supposed to be 0, but is ${total} replica for domain ${domain}`
+        );
     }
   }
 
@@ -529,28 +616,50 @@ export class Indexer {
     const br = this.bridgeRouter();
     const allEvents = [];
     {
-      const [events, error] = await retry(async () => {
-        this.orchestrator.metrics.incRpcRequests(RpcRequestMethod.GetLogs, this.network);
-        const start = new Date().valueOf();
-        const r = await br.queryFilter(br.filters.Send(), from, to);
-        this.orchestrator.metrics.observeRpcLatency(RpcRequestMethod.GetLogs, this.network, new Date().valueOf() - start);
-        return r;
-      }, RETRIES, (e) => {
-        this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetBlockNumber, this.network, e.code)
-        this.logger.warn(`Some error happened at retrying getting logs for BridgeRouter.Send event between blocks ${from} and ${to}, error: ${e.message}`)
-        this.failureCounter.add();
-      })
+      const [events, error] = await retry(
+        async () => {
+          this.orchestrator.metrics.incRpcRequests(
+            RpcRequestMethod.GetLogs,
+            this.network
+          );
+          const start = new Date().valueOf();
+          const r = await br.queryFilter(br.filters.Send(), from, to);
+          this.orchestrator.metrics.observeRpcLatency(
+            RpcRequestMethod.GetLogs,
+            this.network,
+            new Date().valueOf() - start
+          );
+          return r;
+        },
+        RETRIES,
+        (e) => {
+          this.orchestrator.metrics.incRpcErrors(
+            RpcRequestMethod.GetBlockNumber,
+            this.network,
+            e.code
+          );
+          this.logger.warn(
+            `Some error happened at retrying getting logs for BridgeRouter.Send event between blocks ${from} and ${to}, error: ${e.message}`
+          );
+          this.failureCounter.add();
+        }
+      );
       if (error) {
-        this.logger.error(`Couldn't recover the error after ${RETRIES} retries`)
-        throw error
+        this.logger.error(
+          `Couldn't recover the error after ${RETRIES} retries`
+        );
+        throw error;
       }
       if (events === undefined) {
-        throw new Error(`There is no error, but events for some reason are still undefined`);
+        throw new Error(
+          `There is no error, but events for some reason are still undefined`
+        );
       }
       const parsedEvents = await Promise.all(
         events.map(async (event) => {
-
-          let {timestamp, gasUsed} = await this.getAdditionalInfo(event.transactionHash);
+          let { timestamp, gasUsed } = await this.getAdditionalInfo(
+            event.transactionHash
+          );
           return new NomadEvent(
             this.domain,
             EventType.BridgeRouterSend,
@@ -577,156 +686,216 @@ export class Indexer {
     }
 
     {
-      const [events, error] = await retry(async () => {
-        this.orchestrator.metrics.incRpcRequests(RpcRequestMethod.GetLogs, this.network);
-        const start = new Date().valueOf();
-        const r = await br.queryFilter(br.filters.Receive(), from, to);
-        this.orchestrator.metrics.observeRpcLatency(RpcRequestMethod.GetLogs, this.network, new Date().valueOf() - start);
-        return r;
-      }, RETRIES, (e) => {
-        this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetLogs, this.network, e.code);
-        this.logger.warn(`Some error happened at retrying getting logs for BridgeRouter.Receive event between blocks ${from} and ${to}, error: ${e.message}`)
-        this.failureCounter.add();
-      })
+      const [events, error] = await retry(
+        async () => {
+          this.orchestrator.metrics.incRpcRequests(
+            RpcRequestMethod.GetLogs,
+            this.network
+          );
+          const start = new Date().valueOf();
+          const r = await br.queryFilter(br.filters.Receive(), from, to);
+          this.orchestrator.metrics.observeRpcLatency(
+            RpcRequestMethod.GetLogs,
+            this.network,
+            new Date().valueOf() - start
+          );
+          return r;
+        },
+        RETRIES,
+        (e) => {
+          this.orchestrator.metrics.incRpcErrors(
+            RpcRequestMethod.GetLogs,
+            this.network,
+            e.code
+          );
+          this.logger.warn(
+            `Some error happened at retrying getting logs for BridgeRouter.Receive event between blocks ${from} and ${to}, error: ${e.message}`
+          );
+          this.failureCounter.add();
+        }
+      );
       if (error) {
-        this.logger.error(`Couldn't recover the error after ${RETRIES} retries`)
-        throw error
+        this.logger.error(
+          `Couldn't recover the error after ${RETRIES} retries`
+        );
+        throw error;
       }
       if (events === undefined) {
-        throw new Error(`There is no error, but events for some reason are still undefined`);
+        throw new Error(
+          `There is no error, but events for some reason are still undefined`
+        );
       }
       const parsedEvents = await Promise.all(
-        events.map(
-          async (event) => 
+        events.map(async (event) => {
+          let { timestamp, gasUsed } = await this.getAdditionalInfo(
+            event.transactionHash
+          );
+          return new NomadEvent(
+            this.domain,
+            EventType.BridgeRouterReceive,
+            ContractType.BridgeRouter,
+            0,
+            timestamp,
             {
-              let {timestamp, gasUsed, } = await this.getAdditionalInfo(event.transactionHash);
-              return new NomadEvent(
-              this.domain,
-              EventType.BridgeRouterReceive,
-              ContractType.BridgeRouter,
-              0,
-              timestamp,
-              {
-                originAndNonce: event.args[0],
-                token: event.args[1],
-                recipient: event.args[2],
-                liquidityProvider: event.args[3],
-                amount: event.args[4],
-              },
-              event.blockNumber,
-              EventSource.Fetch,
-              gasUsed,
-              event.transactionHash,
-            )})
-        )
-      ;
+              originAndNonce: event.args[0],
+              token: event.args[1],
+              recipient: event.args[2],
+              liquidityProvider: event.args[3],
+              amount: event.args[4],
+            },
+            event.blockNumber,
+            EventSource.Fetch,
+            gasUsed,
+            event.transactionHash
+          );
+        })
+      );
       allEvents.push(...parsedEvents);
     }
 
     return allEvents;
   }
 
-  
-
   async fetchHome(from: number, to: number) {
     let fetchedEvents: NomadEvent[] = [];
 
     const home = this.home();
     {
-      const [events, error] = await retry(async () => {
-        this.orchestrator.metrics.incRpcRequests(RpcRequestMethod.GetLogs, this.network);
-        const start = new Date().valueOf();
-        const r = await home.queryFilter(home.filters.Dispatch(), from, to);
-        this.orchestrator.metrics.observeRpcLatency(RpcRequestMethod.GetLogs, this.network, new Date().valueOf() - start);
-        return r;
-      }, RETRIES, (e) => {
-        this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetLogs, this.network, e.code)
-        this.logger.warn(`Some error happened at retrying getting logs for Home.Dispatch event between blocks ${from} and ${to}, error: ${e.message}`)
-        this.failureCounter.add();
-      })
+      const [events, error] = await retry(
+        async () => {
+          this.orchestrator.metrics.incRpcRequests(
+            RpcRequestMethod.GetLogs,
+            this.network
+          );
+          const start = new Date().valueOf();
+          const r = await home.queryFilter(home.filters.Dispatch(), from, to);
+          this.orchestrator.metrics.observeRpcLatency(
+            RpcRequestMethod.GetLogs,
+            this.network,
+            new Date().valueOf() - start
+          );
+          return r;
+        },
+        RETRIES,
+        (e) => {
+          this.orchestrator.metrics.incRpcErrors(
+            RpcRequestMethod.GetLogs,
+            this.network,
+            e.code
+          );
+          this.logger.warn(
+            `Some error happened at retrying getting logs for Home.Dispatch event between blocks ${from} and ${to}, error: ${e.message}`
+          );
+          this.failureCounter.add();
+        }
+      );
       if (error) {
-        this.logger.error(`Couldn't recover the error after ${RETRIES} retries`)
-        throw error
+        this.logger.error(
+          `Couldn't recover the error after ${RETRIES} retries`
+        );
+        throw error;
       }
       if (events === undefined) {
-        throw new Error(`There is no error, but events for some reason are still undefined`);
+        throw new Error(
+          `There is no error, but events for some reason are still undefined`
+        );
       }
 
       const parsedEvents = await Promise.all(
-        events.map(
-          async (event) => 
+        events.map(async (event) => {
+          let { timestamp, gasUsed } = await this.getAdditionalInfo(
+            event.transactionHash
+          );
+
+          return new NomadEvent(
+            this.domain,
+            EventType.HomeDispatch,
+            ContractType.Home,
+            0,
+            timestamp,
             {
-              
-              let {timestamp, gasUsed} = await this.getAdditionalInfo(event.transactionHash);
-              
-              return new NomadEvent(
-                this.domain,
-                EventType.HomeDispatch,
-                ContractType.Home,
-                0,
-                timestamp,
-                {
-                  messageHash: event.args[0],
-                  leafIndex: event.args[1],
-                  destinationAndNonce: event.args[2],
-                  committedRoot: event.args[3],
-                  message: event.args[4],
-                },
-                event.blockNumber,
-                EventSource.Fetch,
-                gasUsed,
-                event.transactionHash
-              )
-            })
-        );
-      
+              messageHash: event.args[0],
+              leafIndex: event.args[1],
+              destinationAndNonce: event.args[2],
+              committedRoot: event.args[3],
+              message: event.args[4],
+            },
+            event.blockNumber,
+            EventSource.Fetch,
+            gasUsed,
+            event.transactionHash
+          );
+        })
+      );
+
       fetchedEvents.push(...parsedEvents);
     }
 
     {
-      const [events, error] = await retry(async () => {
-        this.orchestrator.metrics.incRpcRequests(RpcRequestMethod.GetLogs, this.network);
-        const start = new Date().valueOf();
-        const r = await home.queryFilter(home.filters.Update(), from, to);
-        this.orchestrator.metrics.observeRpcLatency(RpcRequestMethod.GetLogs, this.network, new Date().valueOf() - start);
-        return r;
-      }, RETRIES, (e) => {
-        this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetLogs, this.network, e.code)
-        this.logger.warn(`Some error happened at retrying getting logs for Home.Update event between blocks ${from} and ${to}, error: ${e.message}`)
-        this.failureCounter.add();
-      })
+      const [events, error] = await retry(
+        async () => {
+          this.orchestrator.metrics.incRpcRequests(
+            RpcRequestMethod.GetLogs,
+            this.network
+          );
+          const start = new Date().valueOf();
+          const r = await home.queryFilter(home.filters.Update(), from, to);
+          this.orchestrator.metrics.observeRpcLatency(
+            RpcRequestMethod.GetLogs,
+            this.network,
+            new Date().valueOf() - start
+          );
+          return r;
+        },
+        RETRIES,
+        (e) => {
+          this.orchestrator.metrics.incRpcErrors(
+            RpcRequestMethod.GetLogs,
+            this.network,
+            e.code
+          );
+          this.logger.warn(
+            `Some error happened at retrying getting logs for Home.Update event between blocks ${from} and ${to}, error: ${e.message}`
+          );
+          this.failureCounter.add();
+        }
+      );
       if (error) {
-        this.logger.error(`Couldn't recover the error after ${RETRIES} retries`)
-        throw error
+        this.logger.error(
+          `Couldn't recover the error after ${RETRIES} retries`
+        );
+        throw error;
       }
       if (events === undefined) {
-        throw new Error(`There is no error, but events for some reason are still undefined`);
+        throw new Error(
+          `There is no error, but events for some reason are still undefined`
+        );
       }
 
       const parsedEvents = await Promise.all(
-        events.map(
-          async (event) =>  
+        events.map(async (event) => {
+          let { timestamp, gasUsed } = await this.getAdditionalInfo(
+            event.transactionHash
+          );
+          return new NomadEvent(
+            this.domain,
+            EventType.HomeUpdate,
+            ContractType.Home,
+            0,
+            timestamp,
             {
-              let {timestamp, gasUsed} = await this.getAdditionalInfo(event.transactionHash);
-              return new NomadEvent(
-              this.domain,
-              EventType.HomeUpdate,
-              ContractType.Home,
-              0,
-              timestamp,
-              {
-                homeDomain: event.args[0],
-                oldRoot: event.args[1],
-                newRoot: event.args[2],
-                signature: event.args[3],
-              },
-              event.blockNumber,
-              EventSource.Fetch,
-              gasUsed,
-              event.transactionHash
-            )})
-        )
-      ;
+              homeDomain: event.args[0],
+              oldRoot: event.args[1],
+              newRoot: event.args[2],
+              signature: event.args[3],
+            },
+            event.blockNumber,
+            EventSource.Fetch,
+            gasUsed,
+            event.transactionHash
+          );
+        })
+      );
       fetchedEvents.push(...parsedEvents);
     }
 
@@ -738,105 +907,146 @@ export class Indexer {
 
     const replica = this.replicaForDomain(domain);
     {
-      const [events, error] = await retry(async () => {
-        this.orchestrator.metrics.incRpcRequests(RpcRequestMethod.GetLogs, this.network);
-        const start = new Date().valueOf();
-        const r = await replica.queryFilter(
-                  replica.filters.Update(),
-                  from,
-                  to
-                );
-        this.orchestrator.metrics.observeRpcLatency(RpcRequestMethod.GetLogs, this.network, new Date().valueOf() - start);
-        return r;
-      }, RETRIES, (e) => {
-        this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetLogs, this.network, e.code)
-        this.logger.warn(`Some error happened at retrying getting logs for Replica(of ${domain}, at ${this.domain}).Update event between blocks ${from} and ${to}, error: ${e.message}`)
-        this.failureCounter.add();
-      })
+      const [events, error] = await retry(
+        async () => {
+          this.orchestrator.metrics.incRpcRequests(
+            RpcRequestMethod.GetLogs,
+            this.network
+          );
+          const start = new Date().valueOf();
+          const r = await replica.queryFilter(
+            replica.filters.Update(),
+            from,
+            to
+          );
+          this.orchestrator.metrics.observeRpcLatency(
+            RpcRequestMethod.GetLogs,
+            this.network,
+            new Date().valueOf() - start
+          );
+          return r;
+        },
+        RETRIES,
+        (e) => {
+          this.orchestrator.metrics.incRpcErrors(
+            RpcRequestMethod.GetLogs,
+            this.network,
+            e.code
+          );
+          this.logger.warn(
+            `Some error happened at retrying getting logs for Replica(of ${domain}, at ${this.domain}).Update event between blocks ${from} and ${to}, error: ${e.message}`
+          );
+          this.failureCounter.add();
+        }
+      );
       if (error) {
-        this.logger.error(`Couldn't recover the error after ${RETRIES} retries`)
-        throw error
+        this.logger.error(
+          `Couldn't recover the error after ${RETRIES} retries`
+        );
+        throw error;
       }
       if (events === undefined) {
-        throw new Error(`There is no error, but events for some reason are still undefined`);
+        throw new Error(
+          `There is no error, but events for some reason are still undefined`
+        );
       }
 
       const parsedEvents = await Promise.all(
-        events.map(
-          async (event) => 
+        events.map(async (event) => {
+          let { timestamp, gasUsed } = await this.getAdditionalInfo(
+            event.transactionHash
+          );
+          return new NomadEvent(
+            this.domain,
+            EventType.ReplicaUpdate,
+            ContractType.Replica,
+            domain,
+            timestamp,
             {
-              let {timestamp, gasUsed} = await this.getAdditionalInfo(event.transactionHash);
-              return new NomadEvent(
-              this.domain,
-              EventType.ReplicaUpdate,
-              ContractType.Replica,
-              domain,
-              timestamp,
-              {
-                homeDomain: event.args[0],
-                oldRoot: event.args[1],
-                newRoot: event.args[2],
-                signature: event.args[3],
-              },
-              event.blockNumber,
-              EventSource.Fetch,
-              gasUsed,
-              event.transactionHash
-            )})
-        )
-      ;
+              homeDomain: event.args[0],
+              oldRoot: event.args[1],
+              newRoot: event.args[2],
+              signature: event.args[3],
+            },
+            event.blockNumber,
+            EventSource.Fetch,
+            gasUsed,
+            event.transactionHash
+          );
+        })
+      );
       fetchedEvents.push(...parsedEvents);
     }
 
     {
-      const [events, error] = await retry(async () => {
-        this.orchestrator.metrics.incRpcRequests(RpcRequestMethod.GetLogs, this.network);
-        const start = new Date().valueOf();
-        const r = await replica.queryFilter(
-          replica.filters.Process(),
-          from,
-          to
-        );
-        this.orchestrator.metrics.observeRpcLatency(RpcRequestMethod.GetLogs, this.network, new Date().valueOf() - start);
+      const [events, error] = await retry(
+        async () => {
+          this.orchestrator.metrics.incRpcRequests(
+            RpcRequestMethod.GetLogs,
+            this.network
+          );
+          const start = new Date().valueOf();
+          const r = await replica.queryFilter(
+            replica.filters.Process(),
+            from,
+            to
+          );
+          this.orchestrator.metrics.observeRpcLatency(
+            RpcRequestMethod.GetLogs,
+            this.network,
+            new Date().valueOf() - start
+          );
 
-        return r
-
-      }, RETRIES, (e) => {
-        this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetLogs, this.network, e.code)
-        this.logger.warn(`Some error happened at retrying getting logs for Replica(of ${domain}, at ${this.domain}).Process event between blocks ${from} and ${to}, error: ${e.message}`)
-        this.failureCounter.add();
-      })
+          return r;
+        },
+        RETRIES,
+        (e) => {
+          this.orchestrator.metrics.incRpcErrors(
+            RpcRequestMethod.GetLogs,
+            this.network,
+            e.code
+          );
+          this.logger.warn(
+            `Some error happened at retrying getting logs for Replica(of ${domain}, at ${this.domain}).Process event between blocks ${from} and ${to}, error: ${e.message}`
+          );
+          this.failureCounter.add();
+        }
+      );
       if (error) {
-        this.logger.error(`Couldn't recover the error after ${RETRIES} retries`)
-        throw error
+        this.logger.error(
+          `Couldn't recover the error after ${RETRIES} retries`
+        );
+        throw error;
       }
       if (events === undefined) {
-        throw new Error(`There is no error, but events for some reason are still undefined`);
+        throw new Error(
+          `There is no error, but events for some reason are still undefined`
+        );
       }
 
       const parsedEvents = await Promise.all(
-        events.map(
-          async (event) => 
+        events.map(async (event) => {
+          let { timestamp, gasUsed } = await this.getAdditionalInfo(
+            event.transactionHash
+          );
+          return new NomadEvent(
+            this.domain,
+            EventType.ReplicaProcess,
+            ContractType.Replica,
+            domain,
+            timestamp,
             {
-              let {timestamp, gasUsed} = await this.getAdditionalInfo(event.transactionHash);
-              return new NomadEvent(
-              this.domain,
-              EventType.ReplicaProcess,
-              ContractType.Replica,
-              domain,
-              timestamp,
-              {
-                messageHash: event.args[0],
-                success: event.args[1],
-                returnData: event.args[2],
-              },
-              event.blockNumber,
-              EventSource.Fetch,
-              gasUsed,
-              event.transactionHash
-            )})
-        )
-      ;
+              messageHash: event.args[0],
+              success: event.args[1],
+              returnData: event.args[2],
+            },
+            event.blockNumber,
+            EventSource.Fetch,
+            gasUsed,
+            event.transactionHash
+          );
+        })
+      );
       fetchedEvents.push(...parsedEvents);
     }
     return fetchedEvents;
@@ -881,7 +1091,7 @@ export class RamPersistance extends Persistance {
     for (const event of events) {
       const block = this.block2events.get(event.block);
       if (block) {
-        if (block.some(e => e.uniqueHash() === event.uniqueHash())) {
+        if (block.some((e) => e.uniqueHash() === event.uniqueHash())) {
           continue;
         }
         block.push(event);
@@ -893,7 +1103,7 @@ export class RamPersistance extends Persistance {
         this.blocks.push(event.block);
         this.blocks = this.blocks.sort();
       }
-    };
+    }
     this.persist();
   }
   async init(): Promise<void> {

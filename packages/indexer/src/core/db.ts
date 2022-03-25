@@ -1,12 +1,12 @@
 import { NomadMessage } from "./consumer";
 
-import { Prisma, PrismaClient } from "@prisma/client"
+import { Prisma, PrismaClient } from "@prisma/client";
 import { DbRequestType, IndexerCollector } from "./metrics";
 import Logger from "bunyan";
-import pLimit from 'p-limit';
+import pLimit from "p-limit";
 
 // function fromDb(m: messages): NomadMessage {
-//   return 
+//   return
 
 // }
 
@@ -49,7 +49,6 @@ export interface MsgRequest {
   sender?: string;
 }
 
-
 export class DB {
   client: PrismaClient;
   syncedOnce: boolean;
@@ -60,11 +59,10 @@ export class DB {
     this.syncedOnce = false;
     this.client = new PrismaClient();
     this.metrics = metrics;
-    this.logger = logger.child({span: 'DB'});
+    this.logger = logger.child({ span: "DB" });
   }
 
-  async connect() {
-  }
+  async connect() {}
 
   async disconnect() {
     await this.client.$disconnect();
@@ -80,22 +78,24 @@ export class DB {
     this.metrics.incDbRequests(DbRequestType.Select);
     const messages = await this.client.messages.findMany({
       where: {
-        tx
-      }
+        tx,
+      },
     });
 
-    return messages.map(m => NomadMessage.deserialize(m, this.logger))
+    return messages.map((m) => NomadMessage.deserialize(m, this.logger));
   }
 
-  async getMessageByHash(messageHash: string): Promise<NomadMessage | undefined> {
+  async getMessageByHash(
+    messageHash: string
+  ): Promise<NomadMessage | undefined> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const message = await this.client.messages.findUnique({
       where: {
-        messageHash
-      }
+        messageHash,
+      },
     });
 
-    return message ? NomadMessage.deserialize(message, this.logger) : undefined
+    return message ? NomadMessage.deserialize(message, this.logger) : undefined;
   }
 
   async getMessages(req: MsgRequest): Promise<NomadMessage[]> {
@@ -112,32 +112,32 @@ export class DB {
         destination: req.destination,
       },
       take,
-      skip
+      skip,
     });
 
-    return messages.map(m => NomadMessage.deserialize(m, this.logger))
+    return messages.map((m) => NomadMessage.deserialize(m, this.logger));
   }
 
   async getMessageCount(origin: number): Promise<number> {
     this.metrics.incDbRequests(DbRequestType.Select);
     return await this.client.messages.count({
       where: {
-        origin
-      }
+        origin,
+      },
     });
   }
 
   async insertMessage(messages: NomadMessage[]) {
     if (!messages.length) return;
-    
+
     this.metrics.incDbRequests(DbRequestType.Insert);
     await this.client.messages.createMany({
-      data: messages.map(message => {
+      data: messages.map((message) => {
         message.logger.debug(`Message created in DB`);
-        return message.serialize()
+        return message.serialize();
       }),
       skipDuplicates: true,
-    })
+    });
 
     return;
   }
@@ -147,32 +147,36 @@ export class DB {
 
     const limit = pLimit(10);
 
-    await Promise.all(messages.map(async (m) => {
-      return await limit(async () => {
-        this.metrics.incDbRequests(DbRequestType.Update);
-        
-        const serialized = m.serialize();
-        await this.client.messages.update({
-          where: {
-            messageHash: m.messageHash
-          },
-          data: serialized,
-        });
-        m.logger.debug(`Message updated in DB. updated: ${serialized.updatedAt}, relayed: ${serialized.relayedAt}, received: ${serialized.receivedAt}, processed: ${serialized.processedAt}`);
-      })
-    }));
+    await Promise.all(
+      messages.map(async (m) => {
+        return await limit(async () => {
+          this.metrics.incDbRequests(DbRequestType.Update);
 
-    return
+          const serialized = m.serialize();
+          await this.client.messages.update({
+            where: {
+              messageHash: m.messageHash,
+            },
+            data: serialized,
+          });
+          m.logger.debug(
+            `Message updated in DB. updated: ${serialized.updatedAt}, relayed: ${serialized.relayedAt}, received: ${serialized.receivedAt}, processed: ${serialized.processedAt}`
+          );
+        });
+      })
+    );
+
+    return;
   }
 
   async getExistingHashes(): Promise<string[]> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const rows = await this.client.messages.findMany({
       select: {
-        messageHash: true
-      }
+        messageHash: true,
+      },
     });
-    return rows.map(row => row.messageHash)
+    return rows.map((row) => row.messageHash);
   }
 
   async getAllKeyPair(namespace: string): Promise<Map<string, string>> {
@@ -180,51 +184,61 @@ export class DB {
     const rows = await this.client.kv_storage.findMany({
       select: {
         key: true,
-        value: true
+        value: true,
       },
       where: {
-        namespace
-      }
+        namespace,
+      },
     });
-    return new Map(rows.map(row => [row.key, row.value]))
+    return new Map(rows.map((row) => [row.key, row.value]));
   }
 
-  async getKeyPair(namespace: string, key: string): Promise<string | undefined> {
+  async getKeyPair(
+    namespace: string,
+    key: string
+  ): Promise<string | undefined> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const row = await this.client.kv_storage.findUnique({
       select: {
-        value: true
+        value: true,
       },
       where: {
         namespace_key: {
           namespace,
-          key
-        }
-      }
+          key,
+        },
+      },
     });
     if (row) return row.value;
-    return undefined
+    return undefined;
   }
 
-  async setKeyPair(namespace: string, key: string, value: string): Promise<void> {
+  async setKeyPair(
+    namespace: string,
+    key: string,
+    value: string
+  ): Promise<void> {
     const where: Prisma.kv_storageWhereUniqueInput = {
       namespace_key: {
-        namespace, key
-      }
+        namespace,
+        key,
+      },
     };
 
     const create: Prisma.kv_storageCreateInput = {
-      namespace, key, value
+      namespace,
+      key,
+      value,
     };
-    const update: Prisma.kv_storageUpdateInput =  {
-      value
+    const update: Prisma.kv_storageUpdateInput = {
+      value,
     };
     this.metrics.incDbRequests(DbRequestType.Upsert);
     await this.client.kv_storage.upsert({
       where,
       update,
       create,
-    })
+    });
 
     // const found = await this.getKeyPair(namespace, key);
     // if (found) {

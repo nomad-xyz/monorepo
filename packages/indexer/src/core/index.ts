@@ -7,10 +7,15 @@ import * as dotenv from "dotenv";
 import { IndexerCollector } from "./metrics";
 import { DB } from "./db";
 import Logger from "bunyan";
-import {run as runApi} from "./api";
+import { run as runApi } from "./api";
 dotenv.config({});
 
-export async function run(db: DB, environment: string, logger: Logger, metrics: IndexerCollector) {
+export async function run(
+  db: DB,
+  environment: string,
+  logger: Logger,
+  metrics: IndexerCollector
+) {
   let ctx: BridgeContext;
   if (environment === "production") {
     ctx = new BridgeContext("production");
@@ -39,8 +44,8 @@ export async function run(db: DB, environment: string, logger: Logger, metrics: 
 
   const o = new Orchestrator(ctx, c, metrics, logger, db);
 
-  if (!!process.env.DEBUG_PORT) runApi(o, logger.child({span: 'debugApi'}));
-  
+  if (!!process.env.DEBUG_PORT) runApi(o, logger.child({ span: "debugApi" }));
+
   await o.init();
   await o.startConsuming();
 }

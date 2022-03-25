@@ -4,7 +4,7 @@ import fs from "fs";
 import { Mean } from "./types";
 import { DB } from "./db";
 import Logger from "bunyan";
-import pLimit from 'p-limit';
+import pLimit from "p-limit";
 
 export function sleep(ms: number) {
   return new Promise((resolve) => {
@@ -89,7 +89,7 @@ export class KVCache {
   }
 
   async get(k: string): Promise<string | undefined> {
-    return await this.db.getKeyPair(this.name, k)
+    return await this.db.getKeyPair(this.name, k);
   }
 }
 
@@ -118,8 +118,10 @@ export class Padded {
   private s: string;
 
   constructor(s: string) {
-    if (s.length !== 66) throw new Error(`Input string length must be 66, got: ${s.length}`);
-    if (s.slice(0, 2) !== '0x') throw new Error(`Input string length must start with '0x', got: ${s}`);
+    if (s.length !== 66)
+      throw new Error(`Input string length must be 66, got: ${s.length}`);
+    if (s.slice(0, 2) !== "0x")
+      throw new Error(`Input string length must start with '0x', got: ${s}`);
     this.s = s.toLowerCase();
   }
 
@@ -132,11 +134,10 @@ export class Padded {
   }
 }
 
-
 export class FailureCounter {
   container: Date[];
   period: number;
-  constructor(periodMins=60) {
+  constructor(periodMins = 60) {
     this.container = [];
     this.period = periodMins;
   }
@@ -145,7 +146,9 @@ export class FailureCounter {
   }
   num(): number {
     let now = new Date();
-    const cleanDates = this.container.filter(d => (now.valueOf() - d.valueOf()) <= 1000 * 60 * this.period); // millisec * 60 sec * period in mins
+    const cleanDates = this.container.filter(
+      (d) => now.valueOf() - d.valueOf() <= 1000 * 60 * this.period
+    ); // millisec * 60 sec * period in mins
     this.container = cleanDates;
     return cleanDates.length;
   }

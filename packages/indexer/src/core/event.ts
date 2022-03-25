@@ -48,28 +48,28 @@ export type EventData = {
 
 export function uniqueHash(d: EventData): string {
   return hash(
-    d.messageHash || 'undefined',
-    d.leafIndex?.toHexString()  || 'undefined',
-    d.destinationAndNonce?.toHexString() || 'undefined',
-    d.committedRoot || 'undefined',
-    d.oldRoot || 'undefined',
-    d.newRoot || 'undefined',
-    d.success ? 'true' : 'false',
-    d.returnData?.toString()  || 'undefined',
-    d.message || 'undefined',
-    d.signature || 'undefined',
-    d.homeDomain?.toString()  || 'undefined',
-    d.token || 'undefined',
-    d.from || 'undefined',
-    d.toDomain?.toString()  || 'undefined',
-    d.toId || 'undefined',
-    d.amount?.toHexString()  || 'undefined',
-    d.fastLiquidityEnabled ? 'true' : 'false',
-    d.originAndNonce?.toHexString()  || 'undefined',
-    d.recipient || 'undefined',
-    d.liquidityProvider || 'undefined',
-    d.evmHash || 'undefined',
-  )
+    d.messageHash || "undefined",
+    d.leafIndex?.toHexString() || "undefined",
+    d.destinationAndNonce?.toHexString() || "undefined",
+    d.committedRoot || "undefined",
+    d.oldRoot || "undefined",
+    d.newRoot || "undefined",
+    d.success ? "true" : "false",
+    d.returnData?.toString() || "undefined",
+    d.message || "undefined",
+    d.signature || "undefined",
+    d.homeDomain?.toString() || "undefined",
+    d.token || "undefined",
+    d.from || "undefined",
+    d.toDomain?.toString() || "undefined",
+    d.toId || "undefined",
+    d.amount?.toHexString() || "undefined",
+    d.fastLiquidityEnabled ? "true" : "false",
+    d.originAndNonce?.toHexString() || "undefined",
+    d.recipient || "undefined",
+    d.liquidityProvider || "undefined",
+    d.evmHash || "undefined"
+  );
 }
 
 export class NomadEvent {
@@ -94,7 +94,7 @@ export class NomadEvent {
     block: number,
     source: EventSource,
     gasUsed: ethers.BigNumber,
-    tx: string,
+    tx: string
   ) {
     this.domain = domain;
     this.eventType = eventType;
@@ -173,12 +173,20 @@ export class NomadEvent {
       e.block,
       EventSource.Storage,
       e.gasUsed,
-      e.tx,
+      e.tx
     );
   }
 
   uniqueHash(): string {
-    return hash(this.domain.toString(), this.eventType, this.replicaOrigin.toString(), this.block.toString(), uniqueHash(this.eventData), this.gasUsed.toString(), this.tx)
+    return hash(
+      this.domain.toString(),
+      this.eventType,
+      this.replicaOrigin.toString(),
+      this.block.toString(),
+      uniqueHash(this.eventData),
+      this.gasUsed.toString(),
+      this.tx
+    );
   }
 }
 
