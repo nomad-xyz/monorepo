@@ -13,7 +13,6 @@ const program = process.env.PROGRAM! as Program;
 (async () => {
   const logger = createLogger("indexer", environment);
   const m = new IndexerCollector(environment, logger);
-  
 
   const db = new DB(m, logger);
   await db.connect();

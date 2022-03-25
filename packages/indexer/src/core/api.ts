@@ -11,7 +11,7 @@ function fail(res: any, code: number, reason: string) {
   return res.status(code).json({ error: reason });
 }
 
-const PORT = process.env.DEBUG_PORT || '1337';
+const PORT = process.env.DEBUG_PORT || "1337";
 
 export async function run(o: Orchestrator, logger: Logger) {
   const app = express();
@@ -30,69 +30,85 @@ export async function run(o: Orchestrator, logger: Logger) {
   });
 
   app.get("/hash/:hash", log, async (req, res) => {
-    const p = (o.consumer as Processor);
+    const p = o.consumer as Processor;
     const message = p.getMsg(req.params.hash);
     if (message) {
-        return res.json(message.serialize());
+      return res.json(message.serialize());
     } else {
-        return res.status(404).json({});
+      return res.status(404).json({});
     }
   });
 
   app.get("/tx/:tx", log, async (req, res) => {
-    const p = (o.consumer as Processor);
-    const message = Array.from(p.messages).find(m => m.tx && m.tx! === req.params.tx);
+    const p = o.consumer as Processor;
+    const message = Array.from(p.messages).find(
+      (m) => m.tx && m.tx! === req.params.tx
+    );
     if (message) {
-        return res.json(message.serialize());
+      return res.json(message.serialize());
     } else {
-        return res.status(404).json({});
+      return res.status(404).json({});
     }
   });
 
   app.get("/status", log, async (req, res) => {
-    const promises: Promise<[number, {
-      lastIndexed: number;
-      numMessages: number;
-      numRpcFailures: number;
-    }]>[] = Array.from(o.indexers.entries()).map(async ([domain, indexer]): Promise<[number, {
-      lastIndexed: number;
-      numMessages: number;
-      numRpcFailures: number;
-    }]> => {
-      return [domain, {
-        lastIndexed: indexer.lastIndexed.valueOf(),
-        numMessages: await o.db.getMessageCount(domain),
-        numRpcFailures: indexer.failureCounter.num()
-      }]
-    });
-    const entries = await Promise.all(
-      promises
+    const promises: Promise<
+      [
+        number,
+        {
+          lastIndexed: number;
+          numMessages: number;
+          numRpcFailures: number;
+        }
+      ]
+    >[] = Array.from(o.indexers.entries()).map(
+      async ([domain, indexer]): Promise<
+        [
+          number,
+          {
+            lastIndexed: number;
+            numMessages: number;
+            numRpcFailures: number;
+          }
+        ]
+      > => {
+        return [
+          domain,
+          {
+            lastIndexed: indexer.lastIndexed.valueOf(),
+            numMessages: await o.db.getMessageCount(domain),
+            numRpcFailures: indexer.failureCounter.num(),
+          },
+        ];
+      }
     );
-    
-    const x = new Map(
-      entries
-    );
+    const entries = await Promise.all(promises);
+
+    const x = new Map(entries);
     return res.json(JSON.stringify(x, replacer));
-  })
+  });
 
   app.get("/msg/:origin/:state", log, async (req, res) => {
-
-    const {origin: originStr, state: stateStr} = req.params;
+    const { origin: originStr, state: stateStr } = req.params;
     let origin: number, state: number;
 
     try {
-        origin = parseInt(originStr);
-        state = parseInt(stateStr);
-    } catch(e) {
-        return res.status(407).json({error: `One of the params (origin or stage) is invalid`});
+      origin = parseInt(originStr);
+      state = parseInt(stateStr);
+    } catch (e) {
+      return res
+        .status(407)
+        .json({ error: `One of the params (origin or stage) is invalid` });
     }
 
-    const p = (o.consumer as Processor);
-    const messages = Array.from(p.messages).filter(m => m.origin === origin && m.state === state);
+    const p = o.consumer as Processor;
+    const messages = Array.from(p.messages).filter(
+      (m) => m.origin === origin && m.state === state
+    );
     if (messages.length) {
-        return res.json(messages.map(m => m.serialize()));
+      return res.json(messages.map((m) => m.serialize()));
     } else {
-        return res.status(404).json({});
+      return res.status(404).json({});
     }
   });
 

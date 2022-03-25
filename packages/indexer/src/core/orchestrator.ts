@@ -14,7 +14,12 @@ class HomeHealth {
   logger: Logger;
   metrics: IndexerCollector;
 
-  constructor(domain: number, ctx: BridgeContext, logger: Logger, metrics: IndexerCollector) {
+  constructor(
+    domain: number,
+    ctx: BridgeContext,
+    logger: Logger,
+    metrics: IndexerCollector
+  ) {
     this.domain = domain;
     this.home = ctx.mustGetCore(domain).home;
     this.logger = logger;
@@ -89,7 +94,7 @@ export class Orchestrator {
     events.sort((a, b) => a.ts - b.ts);
     this.logger.info(`Received ${events.length} events after reindexing`);
     await this.consumer.consume(events);
-    return events.length
+    return events.length;
   }
 
   async index(domain: number) {
@@ -116,17 +121,22 @@ export class Orchestrator {
       this.metrics.setNumMessages("relayed", network, s.relayed);
       this.metrics.setNumMessages("received", network, s.received);
       this.metrics.setNumMessages("processed", network, s.processed);
-    })
+    });
   }
 
   async checkAllHealth() {
-    await Promise.all(this.sdk.domainNumbers.map(async (domain: number) => {
-      await this.checkHealth(domain);
-    }))
+    await Promise.all(
+      this.sdk.domainNumbers.map(async (domain: number) => {
+        await this.checkHealth(domain);
+      })
+    );
   }
 
   async checkHealth(domain: number) {
-    this.metrics.setHomeState(this.domain2name(domain), await this.healthCheckers.get(domain)!.healthy() !== true)
+    this.metrics.setHomeState(
+      this.domain2name(domain),
+      (await this.healthCheckers.get(domain)!.healthy()) !== true
+    );
   }
 
   async initalFeedConsumer() {
@@ -147,46 +157,65 @@ export class Orchestrator {
 
   async initHealthCheckers() {
     for (const domain of this.sdk.domainNumbers) {
-      const checker = new HomeHealth(domain, this.sdk, this.logger, this.metrics);
+      const checker = new HomeHealth(
+        domain,
+        this.sdk,
+        this.logger,
+        this.metrics
+      );
       this.healthCheckers.set(domain, checker);
     }
   }
 
   subscribeStatisticEvents() {
+    this.consumer.on(
+      "dispatched",
+      (home: number, replica: number, gas: number) => {
+        const homeName = this.domain2name(home);
+        const replicaName = this.domain2name(replica);
+        this.metrics.observeGasUsage("dispatched", homeName, replicaName, gas);
+      }
+    );
 
-    this.consumer.on("dispatched", (home: number, replica: number, gas: number) => {
-      const homeName = this.domain2name(home);
-      const replicaName = this.domain2name(replica);
-      this.metrics.observeGasUsage("dispatched", homeName, replicaName, gas);
-    })
+    this.consumer.on(
+      "updated",
+      (home: number, replica: number, ms: number, gas: number) => {
+        const homeName = this.domain2name(home);
+        const replicaName = this.domain2name(replica);
+        this.metrics.observeLatency("updated", homeName, replicaName, ms);
+        this.metrics.observeGasUsage("updated", homeName, replicaName, gas);
+      }
+    );
 
-    this.consumer.on("updated", (home: number, replica: number ,ms: number, gas: number) => {
-      const homeName = this.domain2name(home);
-      const replicaName = this.domain2name(replica);
-      this.metrics.observeLatency("updated", homeName, replicaName, ms)
-      this.metrics.observeGasUsage("updated", homeName, replicaName, gas);
-    })
+    this.consumer.on(
+      "relayed",
+      (home: number, replica: number, ms: number, gas: number) => {
+        const homeName = this.domain2name(home);
+        const replicaName = this.domain2name(replica);
+        this.metrics.observeLatency("relayed", homeName, replicaName, ms);
+        this.metrics.observeGasUsage("relayed", homeName, replicaName, gas);
+      }
+    );
 
-    this.consumer.on("relayed", (home: number, replica: number ,ms: number, gas: number) => {
-      const homeName = this.domain2name(home);
-      const replicaName = this.domain2name(replica);
-      this.metrics.observeLatency("relayed", homeName, replicaName, ms)
-      this.metrics.observeGasUsage("relayed", homeName, replicaName, gas);
-    })
+    this.consumer.on(
+      "received",
+      (home: number, replica: number, ms: number, gas: number) => {
+        const homeName = this.domain2name(home);
+        const replicaName = this.domain2name(replica);
+        this.metrics.observeLatency("received", homeName, replicaName, ms);
+        this.metrics.observeGasUsage("received", homeName, replicaName, gas);
+      }
+    );
 
-    this.consumer.on("received", (home: number, replica: number, ms: number,  gas: number) => {
-      const homeName = this.domain2name(home);
-      const replicaName = this.domain2name(replica);
-      this.metrics.observeLatency("received", homeName, replicaName, ms)
-      this.metrics.observeGasUsage("received", homeName, replicaName, gas);
-    })
-
-    this.consumer.on("processed", (home: number, replica: number, e2e: number, gas: number) => {
-      const homeName = this.domain2name(home);
-      const replicaName = this.domain2name(replica);
-      this.metrics.observeLatency("processed", homeName, replicaName, e2e)
-      this.metrics.observeGasUsage("processed", homeName, replicaName, gas);
-    })
+    this.consumer.on(
+      "processed",
+      (home: number, replica: number, e2e: number, gas: number) => {
+        const homeName = this.domain2name(home);
+        const replicaName = this.domain2name(replica);
+        this.metrics.observeLatency("processed", homeName, replicaName, e2e);
+        this.metrics.observeGasUsage("processed", homeName, replicaName, gas);
+      }
+    );
   }
 
   async startConsuming() {
@@ -195,15 +224,14 @@ export class Orchestrator {
       const start = new Date().valueOf();
       const eventsLength = await this.indexAll();
       await this.checkAllHealth();
-      
+
       if (eventsLength > 0) this.collectStatistics();
 
-      
       if (this.chaseMode) {
         this.chaseMode = false;
-        this.subscribeStatisticEvents()
+        this.subscribeStatisticEvents();
       }
-      
+
       this.logger.info(
         `Finished reindexing after ${
           (new Date().valueOf() - start) / 1000
@@ -219,12 +247,15 @@ export class Orchestrator {
   reportAllMetrics() {
     for (const domain of this.sdk.domainNumbers) {
       const network = this.domain2name(domain);
-      this.metrics.setHomeState(network, this.healthCheckers.get(domain)!.failed);
+      this.metrics.setHomeState(
+        network,
+        this.healthCheckers.get(domain)!.failed
+      );
     }
   }
 
   domain2name(domain: number): string {
-    return this.sdk.getDomain(domain)!.name
+    return this.sdk.getDomain(domain)!.name;
   }
 
   stop() {

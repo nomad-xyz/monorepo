@@ -1,13 +1,13 @@
 import express from "express";
-import { graphqlHTTP } from 'express-graphql';
-import { makeExecutableSchema } from '@graphql-tools/schema';
+import { graphqlHTTP } from "express-graphql";
+import { makeExecutableSchema } from "@graphql-tools/schema";
 
 import { DB, MsgRequest } from "../core/db";
 import { prefix } from "../core/metrics";
 
 import * as dotenv from "dotenv";
 import Logger from "bunyan";
-import promBundle from 'express-prom-bundle';
+import promBundle from "express-prom-bundle";
 
 dotenv.config({});
 
@@ -16,7 +16,6 @@ function fail(res: any, code: number, reason: string) {
 }
 
 const PORT = process.env.PORT;
-
 
 export async function run(db: DB, logger: Logger) {
   const app = express();
@@ -31,15 +30,15 @@ export async function run(db: DB, logger: Logger) {
   };
 
   const metricsMiddleware = promBundle({
-    httpDurationMetricName: prefix + '_api',
+    httpDurationMetricName: prefix + "_api",
     buckets: [0.1, 0.3, 0.6, 1, 1.5, 2.5, 5],
     includeMethod: true,
     includePath: true,
-    metricsPath: '/metrics',
+    metricsPath: "/metrics",
   });
-  metricsMiddleware
+  metricsMiddleware;
 
-  app.use(metricsMiddleware)
+  app.use(metricsMiddleware);
 
   // app.use(promMid({
   //   metricsPath: '/metrics',
@@ -94,18 +93,18 @@ export async function run(db: DB, logger: Logger) {
       messageByHash(txHash: String!): Message
     }
   `;
-  
+
   const resolvers = {
     Query: {
       allMessages: () => {
         return db.client.messages.findMany();
       },
-      messageByHash: (args: {txHash: string}) => {
+      messageByHash: (args: { txHash: string }) => {
         return db.client.messages.findFirst({
-          where: { tx: args.txHash || undefined }
+          where: { tx: args.txHash || undefined },
         });
-      }
-    }
+      },
+    },
   };
 
   const schema = makeExecutableSchema({
@@ -113,14 +112,17 @@ export async function run(db: DB, logger: Logger) {
     typeDefs,
   });
 
-  app.use('/graphql', graphqlHTTP({
-    schema,
-    graphiql: true
-  }));
+  app.use(
+    "/graphql",
+    graphqlHTTP({
+      schema,
+      graphiql: true,
+    })
+  );
 
   app.get("/tx/:tx", log, async (req, res) => {
     const messages = await db.getMessageByEvm(req.params.tx);
-    return res.json(messages.map(m => m.serialize()));
+    return res.json(messages.map((m) => m.serialize()));
   });
 
   app.get("/hash/:hash", log, async (req, res) => {
@@ -139,12 +141,12 @@ export async function run(db: DB, logger: Logger) {
 
       const messages = await db.getMessages(req.query);
 
-      return res.json(messages.map(m => m.serialize()));
+      return res.json(messages.map((m) => m.serialize()));
     }
   );
 
   app.listen(PORT, () => {
-    console.log(process.env.DATABASE_URL)
+    console.log(process.env.DATABASE_URL);
     logger.info(`Server is running at https://localhost:${PORT}`);
   });
 }
