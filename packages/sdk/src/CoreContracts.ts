@@ -17,7 +17,6 @@ export type Governor = LocalGovernor | RemoteGovernor;
 
 export class CoreContracts extends Contracts {
   readonly domain: string;
-  readonly deployHeight: number;
   protected conf: config.CoreContracts;
 
   private _governor?: Governor;
@@ -31,7 +30,6 @@ export class CoreContracts extends Contracts {
     super(domain, conf, providerOrSigner);
     this.providerOrSigner = providerOrSigner;
     this.domain = domain;
-    this.deployHeight = conf.deployHeight;
     this.conf = conf;
   }
 
@@ -42,6 +40,10 @@ export class CoreContracts extends Contracts {
     const replica = this.conf.replicas[domain];
     if (!replica) return;
     return core.Replica__factory.connect(replica.proxy, this.providerOrSigner);
+  }
+
+  get deployHeight(): number {
+    return this.conf.deployHeight;
   }
 
   get home(): core.Home {
