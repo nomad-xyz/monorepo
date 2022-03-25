@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/sdk",
-  "version": "2.0.0-rc.3",
+  "version": "2.0.0-rc.4",
   "description": "Nomad SDK",
   "keywords": [
     "nomad",
@@ -24,6 +24,7 @@
   ],
   "scripts": {
     "build": "tsc --build",
+    "build:docs": "jsdoc2md --files ./src/*.ts --configure ./jsdoc2md.json > ./docs",
     "check": "tsc --noEmit",
     "prettier": "prettier --write ./src ./tests",
     "lint": "eslint --fix ./src ./tests",
