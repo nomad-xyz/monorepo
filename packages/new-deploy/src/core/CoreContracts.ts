@@ -97,7 +97,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   }
 
   get replicas(): ReadonlyArray<string> {
-    return Object.keys(this.data.replicas!);
+    if (!this.data.replicas) throw new Error(`Replicas are not defined for ${this.domain}`);
+    return Object.keys(this.data.replicas);
   }
 
   get deployer(): ethers.Signer {
@@ -479,16 +480,19 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     // If we can't use deployer ownership
     if (!utils.equalIds(owner, deployer)) {
       const txns = await Promise.all(
-        localConfig.configuration.watchers.map((watcher) =>
-          this.xAppConnectionManager.populateTransaction.setWatcherPermission(
-            utils.evmId(watcher),
-            homeConfig.domain,
-            true,
-            this.overrides,
-          ),
+        localConfig.configuration.watchers.map(async (watcher) =>
+          {
+            if (!await this.xAppConnectionManager.watcherPermission(utils.evmId(watcher), homeConfig.domain)) return undefined
+            return await this.xAppConnectionManager.populateTransaction.setWatcherPermission(
+              utils.evmId(watcher),
+              homeConfig.domain,
+              true,
+              this.overrides,
+            )
+          }
         ),
       );
-      return txns;
+      return txns.filter(x => x !== undefined) as Array<ethers.PopulatedTransaction>;
     }
 
     // If we can use deployer ownership
@@ -607,20 +611,27 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   }
 
   async checkDeploy(remoteDomains: string[], governorDomain: number) {
+    if (!this.data.home) throw new Error(`Home is not defined for domain ${this.domain}`);
+    if (!this.data.updaterManager) throw new Error(`UpdaterManager is not defined for domain ${this.domain}`);
+    if (!this.data.governanceRouter) throw new Error(`GovernanceRouter is not defined for domain ${this.domain}`);
+    const replicas = this.data.replicas;
+    if (!replicas) throw new Error(`Replicas is not defined for domain ${this.domain}`);
+    if (!this.data.upgradeBeaconController) throw new Error(`upgradeBeaconController is not defined for domain ${this.domain}`);
+    if (!this.data.xAppConnectionManager) throw new Error(`xAppConnectionManager is not defined for domain ${this.domain}`);
     // Home upgrade setup contracts are defined
-    assertBeaconProxy(this.data.home!, 'Home');
+    assertBeaconProxy(this.data.home, 'Home');
 
     // updaterManager is set on Home
     const updaterManager = await this.home.updaterManager();
-    expect(utils.equalIds(updaterManager, this.data.updaterManager!));
+    expect(utils.equalIds(updaterManager, this.data.updaterManager));
 
     // GovernanceRouter upgrade setup contracts are defined
-    assertBeaconProxy(this.data.governanceRouter!, 'Governance router');
+    assertBeaconProxy(this.data.governanceRouter, 'Governance router');
 
     for (const domain of remoteDomains) {
       const domainNumber = this.context.mustGetDomain(domain).domain;
       // Replica upgrade setup contracts are defined
-      assertBeaconProxy(this.data.replicas![domain], `${domain}'s replica`); // deploy.contracts.replicas[domain]!
+      assertBeaconProxy(replicas[domain], `${domain}'s replica`); // deploy.contracts.replicas[domain]!
       // governanceRouter for remote domain is registered
       const registeredRouter = await this.governanceRouter.routers(
         domainNumber,
@@ -647,12 +658,12 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     if (remoteDomains.length > 0) {
       // expect all replicas to have to same implementation and upgradeBeacon
-      const firstReplica = this.data.replicas![remoteDomains[0]];
+      const firstReplica = replicas[remoteDomains[0]];
       const replicaImpl = firstReplica.implementation;
       const replicaBeacon = firstReplica.beacon;
       // check every other implementation/beacon matches the first
       remoteDomains.slice(1).forEach((remoteDomain) => {
-        const replica = this.data.replicas![remoteDomain];
+        const replica = replicas[remoteDomain];
         const implementation = replica.implementation;
         const beacon = replica.beacon;
         expect(utils.equalIds(implementation, replicaImpl));
@@ -681,41 +692,41 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     // Home is set on xAppConnectionManager
     const xAppManagerHome = await this.xAppConnectionManager.home();
-    const homeAddress = this.data.home?.proxy;
-    expect(utils.equalIds(xAppManagerHome, homeAddress!));
+    const homeAddress = this.data.home.proxy;
+    expect(utils.equalIds(xAppManagerHome, homeAddress));
 
     // governance has ownership over following contracts
     const updaterManagerOwner = await this.updaterManager.owner();
     const xAppManagerOwner = await this.xAppConnectionManager.owner();
     const beaconOwner = await this.upgradeBeaconController.owner();
     const homeOwner = await this.home.owner();
-    const governorAddr = this.data.governanceRouter?.proxy;
-    expect(utils.equalIds(updaterManagerOwner, governorAddr!));
-    expect(utils.equalIds(xAppManagerOwner, governorAddr!));
-    expect(utils.equalIds(beaconOwner, governorAddr!));
-    expect(utils.equalIds(homeOwner, governorAddr!));
+    const governorAddr = this.data.governanceRouter.proxy;
+    expect(utils.equalIds(updaterManagerOwner, governorAddr));
+    expect(utils.equalIds(xAppManagerOwner, governorAddr));
+    expect(utils.equalIds(beaconOwner, governorAddr));
+    expect(utils.equalIds(homeOwner, governorAddr));
 
     // check verification addresses
     // TODO: add beacon and proxy where needed.
     this.checkVerificationInput(
       'UpgradeBeaconController',
-      this.data.upgradeBeaconController!,
+      this.data.upgradeBeaconController,
     );
     this.checkVerificationInput(
       'XAppConnectionManager',
-      this.data.xAppConnectionManager!,
+      this.data.xAppConnectionManager,
     );
-    this.checkVerificationInput('UpdaterManager', this.data.updaterManager!);
-    this.checkVerificationInput('Home', this.data.home?.implementation!);
+    this.checkVerificationInput('UpdaterManager', this.data.updaterManager);
+    this.checkVerificationInput('Home', this.data.home.implementation);
     this.checkVerificationInput(
       'GovernanceRouter',
-      this.data.governanceRouter?.implementation!,
+      this.data.governanceRouter.implementation,
     );
 
     if (remoteDomains.length > 0) {
       this.checkVerificationInput(
         'Replica',
-        this.data.replicas![remoteDomains[0]].implementation!,
+        replicas[remoteDomains[0]].implementation,
       );
 
       const verification = this.context.mustGetVerification(this.domain);
@@ -725,7 +736,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       );
       remoteDomains.forEach((domain) => {
         const replicaProxy = replicaProxies.find((proxy) => {
-          return (proxy.address = this.data.replicas![domain].proxy);
+          return (proxy.address = replicas[domain].proxy);
         });
         expect(replicaProxy).to.not.be.undefined;
       });

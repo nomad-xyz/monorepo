@@ -428,8 +428,12 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
   }
 
   async checkDeploy() {
-    assertBeaconProxy(this.data.bridgeToken!);
-    assertBeaconProxy(this.data.bridgeRouter!);
+    if (!this.data.bridgeToken) throw new Error(`BridgeToken is not defined for domain ${this.domain}`);
+    if (!this.data.bridgeRouter) throw new Error(`BridgeRouter is not defined for domain ${this.domain}`);
+    if (!this.data.tokenRegistry) throw new Error(`TokenRegistry is not defined for domain ${this.domain}`);
+
+    assertBeaconProxy(this.data.bridgeToken);
+    assertBeaconProxy(this.data.bridgeRouter);
 
     const weth = this.context.mustGetDomainConfig(this.domain)
       .bridgeConfiguration.weth;
@@ -451,16 +455,16 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     // TODO: add beacon and proxy where needed.
     this.checkVerificationInput(
       'BridgeToken',
-      this.data.bridgeToken?.implementation!,
+      this.data.bridgeToken.implementation,
     );
 
     this.checkVerificationInput(
       'BridgeRouter',
-      this.data.bridgeRouter?.implementation!,
+      this.data.bridgeRouter.implementation,
     );
     this.checkVerificationInput(
       'TokenRegistry',
-      this.data.tokenRegistry?.implementation!,
+      this.data.tokenRegistry.implementation,
     );
     if (weth) {
       const verification = this.context.mustGetVerification(this.domain);
