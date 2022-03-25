@@ -37,7 +37,7 @@ export async function run(db: DB, environment: string, logger: Logger, metrics: 
 
   const c = new Processor(db, logger);
 
-  const o = new Orchestrator(ctx, c, ctx.domainNumbers[0], metrics, logger, db);
+  const o = new Orchestrator(ctx, c, metrics, logger, db);
 
   if (!!process.env.DEBUG_PORT) runApi(o, logger.child({span: 'debugApi'}));
   

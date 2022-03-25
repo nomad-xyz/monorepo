@@ -537,7 +537,7 @@ export class Indexer {
         return r;
       }, RETRIES, (e) => {
         this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetBlockNumber, this.network, e.code)
-        this.logger.warn(`Some error happened at retrying getting logs between blocks ${from} and ${to}, error: ${e.message}`)
+        this.logger.warn(`Some error happened at retrying getting logs for BridgeRouter.Send event between blocks ${from} and ${to}, error: ${e.message}`)
         this.failureCounter.add();
       })
       if (error) {
@@ -585,7 +585,7 @@ export class Indexer {
         return r;
       }, RETRIES, (e) => {
         this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetLogs, this.network, e.code);
-        this.logger.warn(`Some error happened at retrying getting logs between blocks ${from} and ${to}, error: ${e.message}`)
+        this.logger.warn(`Some error happened at retrying getting logs for BridgeRouter.Receive event between blocks ${from} and ${to}, error: ${e.message}`)
         this.failureCounter.add();
       })
       if (error) {
@@ -641,7 +641,7 @@ export class Indexer {
         return r;
       }, RETRIES, (e) => {
         this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetLogs, this.network, e.code)
-        this.logger.warn(`Some error happened at retrying getting logs between blocks ${from} and ${to}, error: ${e.message}`)
+        this.logger.warn(`Some error happened at retrying getting logs for Home.Dispatch event between blocks ${from} and ${to}, error: ${e.message}`)
         this.failureCounter.add();
       })
       if (error) {
@@ -692,7 +692,7 @@ export class Indexer {
         return r;
       }, RETRIES, (e) => {
         this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetLogs, this.network, e.code)
-        this.logger.warn(`Some error happened at retrying getting logs between blocks ${from} and ${to}, error: ${e.message}`)
+        this.logger.warn(`Some error happened at retrying getting logs for Home.Update event between blocks ${from} and ${to}, error: ${e.message}`)
         this.failureCounter.add();
       })
       if (error) {
@@ -750,7 +750,7 @@ export class Indexer {
         return r;
       }, RETRIES, (e) => {
         this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetLogs, this.network, e.code)
-        this.logger.warn(`Some error happened at retrying getting logs between blocks ${from} and ${to}, error: ${e.message}`)
+        this.logger.warn(`Some error happened at retrying getting logs for Replica(of ${domain}, at ${this.domain}).Update event between blocks ${from} and ${to}, error: ${e.message}`)
         this.failureCounter.add();
       })
       if (error) {
@@ -803,7 +803,7 @@ export class Indexer {
 
       }, RETRIES, (e) => {
         this.orchestrator.metrics.incRpcErrors(RpcRequestMethod.GetLogs, this.network, e.code)
-        this.logger.warn(`Some error happened at retrying getting logs between blocks ${from} and ${to}, error: ${e.message}`)
+        this.logger.warn(`Some error happened at retrying getting logs for Replica(of ${domain}, at ${this.domain}).Process event between blocks ${from} and ${to}, error: ${e.message}`)
         this.failureCounter.add();
       })
       if (error) {

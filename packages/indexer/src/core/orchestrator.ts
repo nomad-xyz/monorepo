@@ -58,7 +58,6 @@ export class Orchestrator {
   constructor(
     sdk: BridgeContext,
     c: Consumer,
-    gov: number,
     metrics: IndexerCollector,
     logger: Logger,
     db: DB
@@ -67,7 +66,7 @@ export class Orchestrator {
     this.consumer = c;
     this.indexers = new Map();
     this.healthCheckers = new Map();
-    this.gov = gov;
+    this.gov = sdk.governor.domain;
     this.done = false;
     this.chaseMode = true;
     this.metrics = metrics;
