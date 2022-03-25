@@ -406,7 +406,7 @@ export class Indexer {
     let from = Math.max(
       this.lastBlock + 1,
       this.persistance.height,
-      this.sdk.getDomain(this.domain)?.paginate?.from || 0
+      this.sdk.getBridge(this.domain)?.deployHeight || 0
     );
     const [to, error] = await retry(
       async () => {
