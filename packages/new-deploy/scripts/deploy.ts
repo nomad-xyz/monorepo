@@ -13,17 +13,39 @@ if (!DEPLOYER_PRIVATE_KEY) {
 
 run();
 
+const DEPLOY_CONFIG: config.NomadConfig = getConfig();
+const OVERRIDES = getOverrides();
+
 /*
-* get published config
-* modify to add a network
-* run the deploy script
-* re-publish config
-* */
-const config = {}; // TODO: get published (or local??) config
-const OVERRIDES = {}; // TODO write local overrides config
+* FLOW FOR ENGINEER TO ADD A NEW CHAIN:
+* 1. load published config to local file (package.json script)
+* 2. modify to add a network (manual)
+* 3. run the deploy script (package.json script with local path for config)
+* 4. re-publish config (package.json script)
+*/
+
+/*
+* FLOW FOR ENGINEER TO DEPLOY PUBLISHED CONFIG:
+* 1. run the deploy script (package.json script with URL for config)
+*/
+
+function getConfig(): config.NomadConfig  {
+    // TODO:
+    // get argument from process.argv
+    // try string as filepath
+    // try string as URL
+    // error
+    return {} as any as config.NomadConfig;
+}
+
+function getOverrides() {
+    // TODO:
+    // load from local file (?) based on environment (?)
+    return {};
+}
 
 async function run() {
-    const deployContext = new DeployContext(config);
+    const deployContext = new DeployContext(DEPLOY_CONFIG);
     for (const network of deployContext.networks) {
         const provider = deployContext.mustGetProvider(network);
         const wallet = new ethers.Wallet(DEPLOYER_PRIVATE_KEY, provider);
