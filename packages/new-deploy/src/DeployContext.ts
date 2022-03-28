@@ -26,7 +26,7 @@ export default class DeployContext extends MultiProvider<config.Domain> {
 
     for (const network of this.data.networks) {
       this.registerDomain(this.data.protocol.networks[network]);
-      if (this.data.rpcs[network].length > 0) {
+      if (this.data.rpcs[network] && this.data.rpcs[network].length > 0) {
         this.registerRpcProvider(network, this.data.rpcs[network][0]);
       }
     }

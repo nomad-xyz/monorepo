@@ -6,15 +6,7 @@ import fs from "fs";
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
-if (!DEPLOYER_PRIVATE_KEY) {
-    throw new Error('Add DEPLOYER_PRIVATE_KEY to .env');
-}
-
 run();
-
-const DEPLOY_CONFIG: config.NomadConfig = getConfig();
-const OVERRIDES = getOverrides();
 
 /*
 * FLOW FOR ENGINEER TO ADD A NEW CHAIN:
@@ -35,23 +27,41 @@ function getConfig(): config.NomadConfig  {
     // try string as filepath
     // try string as URL
     // error
-    return {} as any as config.NomadConfig;
+    const args = process.argv.slice(2);
+    const path = args[0];
+    try {
+        // TODO: try bad filepath
+        // TODO: try bad file contents
+        return JSON.parse(fs.readFileSync(path).toString()) as any as config.NomadConfig;
+    } catch (e) {
+        console.log("errored....");
+        // TODO: try string as URL
+        throw e;
+    }
 }
 
-function getOverrides() {
-    // TODO:
-    // load from local file (?) based on environment (?)
-    return {};
-}
+// function getOverrides() {
+//     // TODO:
+//     // load from local file (?) based on environment (?)
+//     return {};
+//}
 
 async function run() {
+    const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
+    if (!DEPLOYER_PRIVATE_KEY) {
+        throw new Error('Add DEPLOYER_PRIVATE_KEY to .env');
+    }
+
+    const DEPLOY_CONFIG: config.NomadConfig = getConfig();
+    // TODO const OVERRIDES = getOverrides();
+
     const deployContext = new DeployContext(DEPLOY_CONFIG);
     for (const network of deployContext.networks) {
         const provider = deployContext.mustGetProvider(network);
         const wallet = new ethers.Wallet(DEPLOYER_PRIVATE_KEY, provider);
         const signer = new NonceManager(wallet);
         deployContext.registerSigner(network, signer);
-        deployContext.overrides.set(network, OVERRIDES[network]);
+        // TODO deployContext.overrides.set(network, OVERRIDES[network]);
     }
     // run the deploy script
     await deployContext.deployAndRelinquish();
