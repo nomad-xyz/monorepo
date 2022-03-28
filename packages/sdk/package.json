@@ -36,7 +36,8 @@
     "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/local-environment": "workspace:^",
     "@nomad-xyz/multi-provider": "workspace:^",
-    "ethers": "^5.4.6",
+    "@nomiclabs/hardhat-ethers": "^2.0.5",
+    "ethers": "^5.0.0",
     "nyc": "^15.1.0"
   },
   "devDependencies": {
