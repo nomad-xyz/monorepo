@@ -25,8 +25,7 @@ const OVERRIDES = {}; // TODO write local overrides config
 async function run() {
     const deployContext = new DeployContext(config);
     for (const network of deployContext.networks) {
-        const rpc = deployContext.data.rpcs[network][0]; // TODO: note: we can't publish private RPCs
-        const provider = new ethers.providers.JsonRpcProvider(rpc);
+        const provider = deployContext.mustGetProvider(network);
         const wallet = new ethers.Wallet(DEPLOYER_PRIVATE_KEY, provider);
         const signer = new NonceManager(wallet);
         deployContext.registerSigner(network, signer);
