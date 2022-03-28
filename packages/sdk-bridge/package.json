@@ -36,7 +36,8 @@
     "@nomad-xyz/configuration": "0.1.0-rc.6",
     "@nomad-xyz/contracts-bridge": "workspace:^",
     "@nomad-xyz/sdk": "workspace:^",
-    "ethers": "^5.4.6",
+    "@nomiclabs/hardhat-ethers": "^2.0.5",
+    "ethers": "^5.0.0",
     "nyc": "^15.1.0",
     "web3": "^1.6.1"
   },

@@ -1,6 +1,6 @@
 import { before, describe, it } from 'mocha';
 import { expect } from 'chai';
-import { getDefaultProvider } from 'ethers';
+import { constants, getDefaultProvider, VoidSigner } from 'ethers';
 import { NomadContext, CoreContracts } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
 import { LocalGovernor, RemoteGovernor } from '../dist/CoreContracts';
@@ -64,6 +64,36 @@ describe('sdk', async () => {
           expect(noReplica).to.be.undefined;
         }
       }
+    });
+
+    it('errors if signer is registered without a provider', () => {
+      const conf = config.getBuiltin('development');
+      const context = new NomadContext(conf);
+      const signer = new VoidSigner(constants.AddressZero);
+      const err = 'Must have a provider before registering signer';
+      expect(() => context.registerSigner(2000, signer)).to.throw(err);
+    });
+
+    // TODO:
+    // it('fails if given bad rpc provider string', () => {
+
+    // });
+
+    it('maintains connection when registering and unregistering signers', () => {
+      const conf = config.getBuiltin('development');
+      const context = new NomadContext(conf);
+      const signer = new VoidSigner(constants.AddressZero);
+      const provider = getDefaultProvider()
+      context.domainNames.forEach(domain => {
+        context.registerProvider(domain, provider);
+      });
+      context.registerSigner(2000, signer);
+      context.registerSigner(3000, signer);
+      context.unregisterSigner(2000);
+      expect(context.getConnection(2000)).to.not.be.undefined;
+      context.clearSigners();
+      expect(context.getConnection(2000)).to.not.be.undefined;
+      expect(context.getConnection(3000)).to.not.be.undefined;
     });
 
     it('maintains a list of Homes in failed state', () => {

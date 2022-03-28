@@ -185,10 +185,9 @@ describe('multi-provider', async () => {
   });
 
   it('gets signer address', async () => {
-    // TODO:
-    // const addressA = await mp.getAddress('a');
-    // const actualAddress = await testSigner.getAddress();
-    // expect(addressA).to.equal(actualAddress);
+    const addressA = await mp.getAddress('a');
+    const actualAddress = await testSigner.getAddress();
+    expect(addressA).to.equal(actualAddress);
   });
 
   it('mustGetSigner errors if signer is not registered for given nameOrDomain', () => {
