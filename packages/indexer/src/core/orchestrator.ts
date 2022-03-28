@@ -115,12 +115,16 @@ export class Orchestrator {
 
     this.sdk.domainNumbers.forEach(async (domain: number) => {
       const network = this.domain2name(domain);
-      const s = stats.forDomain(domain).counts;
-      this.metrics.setNumMessages("dispatched", network, s.dispatched);
-      this.metrics.setNumMessages("updated", network, s.updated);
-      this.metrics.setNumMessages("relayed", network, s.relayed);
-      this.metrics.setNumMessages("received", network, s.received);
-      this.metrics.setNumMessages("processed", network, s.processed);
+      try {
+        const s = stats.forDomain(domain).counts;
+        this.metrics.setNumMessages("dispatched", network, s.dispatched);
+        this.metrics.setNumMessages("updated", network, s.updated);
+        this.metrics.setNumMessages("relayed", network, s.relayed);
+        this.metrics.setNumMessages("received", network, s.received);
+        this.metrics.setNumMessages("processed", network, s.processed);
+      } catch(e: any) {
+        this.logger.error(`Tried to collect statistics for domain ${domain}, but error happened: ${e.message}`);
+      }
     });
   }
 

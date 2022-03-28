@@ -46,6 +46,26 @@ CREATE TABLE "messages" (
     CONSTRAINT "messages_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Token" (
+    "id" VARCHAR NOT NULL,
+    "domain" INTEGER NOT NULL,
+    "name" VARCHAR NOT NULL,
+    "decimals" INTEGER NOT NULL,
+    "symbol" VARCHAR NOT NULL,
+    "total_supply_hex" VARCHAR NOT NULL,
+    "balance_hex" VARCHAR NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "Replica" (
+    "id" VARCHAR NOT NULL,
+    "domain" INTEGER NOT NULL,
+    "total_supply_hex" VARCHAR NOT NULL,
+    "token_id" VARCHAR NOT NULL,
+    "token_domain" INTEGER NOT NULL
+);
+
 -- CreateIndex
 CREATE INDEX "kv_storage_id_index" ON "kv_storage"("id");
 
@@ -57,3 +77,12 @@ CREATE UNIQUE INDEX "messages_message_hash_key" ON "messages"("message_hash");
 
 -- CreateIndex
 CREATE INDEX "messages_id_index" ON "messages"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "token_id" ON "Token"("id", "domain");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "replica_id" ON "Replica"("id", "domain");
+
+-- AddForeignKey
+ALTER TABLE "Replica" ADD CONSTRAINT "Replica_token_id_token_domain_fkey" FOREIGN KEY ("token_id", "token_domain") REFERENCES "Token"("id", "domain") ON DELETE RESTRICT ON UPDATE CASCADE;
