@@ -136,6 +136,8 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   }
 
   protected async deployCore(domain: config.Domain): Promise<void> {
+    console.log("deployCore ", domain);
+
     this.addDomain(domain);
 
     const core = new CoreContracts(this, domain.name);
@@ -162,6 +164,8 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   // Essentially we run likely future governance actions at deploy time, so
   // we will not be required to run them later.
   protected async enrollCores(): Promise<ethers.PopulatedTransaction[]> {
+    console.log("enrollCores ");
+
     const results = await Promise.all(
       this.networks.map(async (network) => {
         // the set of domains that are not the new core
@@ -199,6 +203,8 @@ export default class DeployContext extends MultiProvider<config.Domain> {
 
   /// Deploys all configured Cores
   async ensureCores(): Promise<ethers.PopulatedTransaction[]> {
+    console.log("ensureCores ");
+
     const toDeploy = this.networks.filter((net) => !this.cores[net]);
 
     await Promise.all(
@@ -211,6 +217,8 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   // For any connection that cannot be enrolled, outputs the governance
   // action required to enroll them
   async ensureConnections(): Promise<ethers.PopulatedTransaction[]> {
+    console.log("ensureConnections ");
+
     this.validate();
 
     const ensure = await this.ensureCores();
@@ -246,6 +254,8 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   protected async ensureBridgeConnections(): Promise<
     ethers.PopulatedTransaction[]
   > {
+    console.log("ensure bridge connections ");
+
     const connect = await this.ensureConnections();
     await this.ensureBridges();
 
@@ -279,11 +289,14 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   // Intended entrypoint.
   async deployAndRelinquish(): Promise<ethers.PopulatedTransaction[]> {
     // ensure connections ensures the presence of cores
+    await this.ensureBridgeConnections();
+
     const txns = (
       await Promise.all([
-        await this.ensureBridgeConnections(),
-        ...this.networks.map((network) =>
-          this.mustGetCore(network).appointGovernor(),
+        ...this.networks.map((network) => {
+            console.log("appoint governor ");
+            return this.mustGetCore(network).appointGovernor();
+            }
         ),
       ])
     ).flat();

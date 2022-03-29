@@ -152,6 +152,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   }
 
   async deployUpgradeBeaconController(): Promise<void> {
+    console.log("deployUpgradeBeaconController ");
+
     const name = this.context.resolveDomainName(this.domain);
 
     // don't redeploy
@@ -171,6 +173,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   }
 
   async deployUpdaterManager(): Promise<void> {
+    console.log("deployUpdaterManager ");
+
     const name = this.context.resolveDomainName(this.domain);
     // don't redeploy
     if (this.data.updaterManager) return;
@@ -192,6 +196,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   }
 
   async deployXAppConnectionManager(): Promise<void> {
+    console.log("deployXAppConnectionManager");
     const name = this.context.resolveDomainName(this.domain);
     // don't redeploy
     if (this.data.xAppConnectionManager) return;

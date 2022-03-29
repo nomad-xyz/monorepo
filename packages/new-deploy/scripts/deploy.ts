@@ -30,6 +30,7 @@ function getConfig(): config.NomadConfig  {
     const args = process.argv.slice(2);
     const path = args[0];
     try {
+        console.log("filepath: ", path);
         // TODO: try bad filepath
         // TODO: try bad file contents
         return JSON.parse(fs.readFileSync(path).toString()) as any as config.NomadConfig;
@@ -57,6 +58,7 @@ async function run() {
 
     const deployContext = new DeployContext(DEPLOY_CONFIG);
     for (const network of deployContext.networks) {
+        console.log("network: ", network);
         const provider = deployContext.mustGetProvider(network);
         const wallet = new ethers.Wallet(DEPLOYER_PRIVATE_KEY, provider);
         const signer = new NonceManager(wallet);
