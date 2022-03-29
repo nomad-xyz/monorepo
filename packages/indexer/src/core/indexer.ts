@@ -90,6 +90,7 @@ export class Indexer {
   logger: Logger;
   lastIndexed: Date;
   failureCounter: FailureCounter;
+  develop: boolean;
 
   eventCallback: undefined | ((event: NomadEvent) => void);
 
@@ -97,9 +98,14 @@ export class Indexer {
     this.domain = domain;
     this.sdk = sdk;
     this.orchestrator = orchestrator;
-    this.persistance = new RamPersistance(
-      `/tmp/persistance_${this.domain}.json`
-    );
+    this.develop = false;
+    if (this.develop) {
+      this.persistance = new RamPersistance(
+        `/tmp/persistance_${this.domain}.json`
+      );
+    } else {
+      this.persistance = new RedisPersistance(domain);
+    }
     this.blockCache = new KVCache(
       "b_" + String(this.domain),
       this.orchestrator.db
@@ -478,12 +484,14 @@ export class Indexer {
       const events = await fetchEvents(batchFrom, batchTo);
       if (!events) throw new Error(`KEk`);
       events.sort((a, b) => a.ts - b.ts);
-      this.persistance.store(...events);
+      await this.persistance.store(...events);
       try {
-        this.dummyTestEventsIntegrity(batchTo);
-        this.logger.debug(
-          `Integrity test PASSED between ${batchFrom} and ${batchTo}`
-        );
+        if (this.develop) {
+          this.dummyTestEventsIntegrity(batchTo);
+          this.logger.debug(
+            `Integrity test PASSED between ${batchFrom} and ${batchTo}`
+          );
+        }
       } catch (e) {
         const pastFrom = batchFrom;
         const pastTo = batchTo;
@@ -510,15 +518,16 @@ export class Indexer {
 
     allEvents.sort((a, b) => a.ts - b.ts);
 
-    this.dummyTestEventsIntegrity();
+    if (this.develop || true) this.dummyTestEventsIntegrity();
     this.logger.info(`Fetched all`);
     this.lastBlock = to;
 
     return allEvents;
   }
 
-  dummyTestEventsIntegrity(blockTo?: number) {
-    let allEvents = this.persistance.allEvents();
+  // TODO: Just the last ones received
+  async dummyTestEventsIntegrity(blockTo?: number) {
+    let allEvents = await this.persistance.allEvents();
     if (blockTo) allEvents = allEvents.filter((e) => e.block <= blockTo);
     if (allEvents.length === 0) {
       this.logger.debug(`No events to test integrity!!!`);
@@ -1063,11 +1072,88 @@ export abstract class Persistance {
     this.height = -1;
   }
 
-  abstract store(...events: NomadEvent[]): void;
+  abstract store(...events: NomadEvent[]): Promise<void>;
   abstract init(): Promise<void>;
   abstract sortSorage(): void;
-  abstract allEvents(): NomadEvent[];
+  abstract allEvents(): Promise<NomadEvent[]>;
   abstract persist(): void;
+}
+
+import { createClient, RedisClientType } from 'redis';
+
+export class RedisPersistance extends Persistance {
+  client: RedisClientType;
+  domain: number;
+
+  constructor(domain: number) {
+    super();
+    this.client = createClient({
+      url: process.env.REDIS_URL || "redis://redis:6379"
+    });
+    this.domain = domain;
+
+    this.client.on('error', (err) => console.log('Redis Client Error', err));
+
+  }
+
+  async updateFromTo(block: number) {
+    if (block < this.from || this.from === -1) this.from = block;
+    if (block > this.height || this.height === -1) this.height = block;
+    await this.client.hSet(`from`, String(this.domain), String(this.from));
+    await this.client.hSet(`height`, String(this.domain), String(this.height));
+  }
+
+  async store(...events: NomadEvent[]): Promise<void> {
+    let fromChanged = false;
+    let heightChanged = false;
+    const promises = [];
+    const block2Events: Map<number, NomadEvent[]> = new Map();
+    for (const event of events) {
+      if (event.block < this.from || this.from === -1) {this.from = event.block;fromChanged = true};
+      if (event.block > this.height || this.height === -1) {this.height = event.block;heightChanged = true};
+      const block = block2Events.get(event.block);
+      if (block) {
+        block.push(event);
+      } else {
+        block2Events.set(event.block, [event]);
+      }
+    }
+
+    for (const [block, events] of block2Events) {
+      promises.push(this.client.hSet(`${this.domain}nomad_message`, String(block), JSON.stringify(events, replacer)));
+      promises.push(this.client.sAdd(`${this.domain}blocks`, String(block)));
+    }
+
+    if (fromChanged) promises.push(this.client.hSet(`from`, String(this.domain), String(this.from)));
+    if (heightChanged) promises.push(this.client.hSet(`height`, String(this.domain), String(this.height)));
+    
+    await Promise.all(promises);
+
+  }
+  async init(): Promise<void> {
+    await this.client.connect();
+
+    const from = await this.client.hGet(`from`, String(this.domain));
+    const height = await this.client.hGet(`height`, String(this.domain));
+
+    if (from) this.from = parseInt(from);
+    if (height) this.height = parseInt(height);
+    console.log(`SET FROM AND HEIGHT FOR`, from, height, this.domain);
+
+  }
+  sortSorage(): void {
+
+  }
+  async allEvents(): Promise<NomadEvent[]> {
+    const blocks = (await this.client.sMembers(`${this.domain}blocks`)).map(s => parseInt(s)).sort();
+    const x = await Promise.all(blocks.map(block => this.client.hGet(`${this.domain}nomad_message`, String(block))));
+    const q = x.filter(z=>z!='').map(s => JSON.parse(s!, reviver) as NomadEvent[]).flat();
+    return q
+  }
+  persist(): void {
+
+  }
+
 }
 
 export class RamPersistance extends Persistance {
@@ -1087,7 +1173,7 @@ export class RamPersistance extends Persistance {
     if (block > this.height || this.height === -1) this.height = block;
   }
 
-  store(...events: NomadEvent[]): void {
+  async store(...events: NomadEvent[]): Promise<void> {
     for (const event of events) {
       const block = this.block2events.get(event.block);
       if (block) {
@@ -1166,7 +1252,7 @@ export class RamPersistance extends Persistance {
     this.height = object.height;
   }
 
-  allEvents(): NomadEvent[] {
+  async allEvents(): Promise<NomadEvent[]> {
     return Array.from(this.iter());
   }
 }

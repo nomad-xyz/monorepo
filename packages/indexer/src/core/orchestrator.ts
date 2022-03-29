@@ -144,8 +144,8 @@ export class Orchestrator {
   }
 
   async initalFeedConsumer() {
-    const events = Array.from(this.indexers.values())
-      .map((indexer) => indexer.persistance.allEvents())
+    const events = (await Promise.all(Array.from(this.indexers.values())
+      .map((indexer) => indexer.persistance.allEvents())))
       .flat();
     events.sort((a, b) => a.ts - b.ts);
     await this.consumer.consume(events);

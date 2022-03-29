@@ -50,3 +50,14 @@ services:
       - '5432:5432'
     expose:
       - 5432
+
+  redis:
+    image: redis:latest
+    restart: always
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - ./redis-data:/data
+    ports:
+      - '6379:6379'
+    expose:
+      - 6379

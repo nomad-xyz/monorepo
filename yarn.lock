@@ -902,6 +902,63 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@node-redis/bloom@npm:1.0.1":
+  version: 1.0.1
+  resolution: "@node-redis/bloom@npm:1.0.1"
+  peerDependencies:
+    "@node-redis/client": ^1.0.0
+  checksum: b80cd54ae81f6165456c21645d339d37c4fdc46a0adc00f132f73f94e510f9d241614254add443e817b7a661dbafe844c3e610246c2504454f079520cdbe721b
+  languageName: node
+  linkType: hard
+
+"@node-redis/client@npm:1.0.4":
+  version: 1.0.4
+  resolution: "@node-redis/client@npm:1.0.4"
+  dependencies:
+    cluster-key-slot: 1.1.0
+    generic-pool: 3.8.2
+    redis-parser: 3.0.0
+    yallist: 4.0.0
+  checksum: 80c2665e86b24c704c502b673884551ad7e5f4a94d2337d1b2c24a3194841be12b4c493ae3d447eb4a0bc3fc7ec1449a591c7b792f053b185338b2000b20a84d
+  languageName: node
+  linkType: hard
+
+"@node-redis/graph@npm:1.0.0":
+  version: 1.0.0
+  resolution: "@node-redis/graph@npm:1.0.0"
+  peerDependencies:
+    "@node-redis/client": ^1.0.0
+  checksum: 967ea4a61cfcc2e22f354268ee58351d0d15df40036331444ef1ec79a9408849ee9333684eb4f898e164fa148c00e1b9caebdcac2a7bcb5c29dd188e2d57f4b2
+  languageName: node
+  linkType: hard
+
+"@node-redis/json@npm:1.0.2":
+  version: 1.0.2
+  resolution: "@node-redis/json@npm:1.0.2"
+  peerDependencies:
+    "@node-redis/client": ^1.0.0
+  checksum: ef89735d8117b52ff580bc022932cb358e92e5e7d4e01b459654b8dd8caee5105e64e531fd83943889c04807c18970b32b56a786a0fb3a9f55d6306fdeefc935
+  languageName: node
+  linkType: hard
+
+"@node-redis/search@npm:1.0.3":
+  version: 1.0.3
+  resolution: "@node-redis/search@npm:1.0.3"
+  peerDependencies:
+    "@node-redis/client": ^1.0.0
+  checksum: 5ad7ff7849728aec4bda2af51a3f5fc263420c812b4af4f2ac6e47cbe18f245e4c440de7aacf18db40bd209e088f448f2801ccfb3b0e3475b77c9aea507686a0
+  languageName: node
+  linkType: hard
+
+"@node-redis/time-series@npm:1.0.2":
+  version: 1.0.2
+  resolution: "@node-redis/time-series@npm:1.0.2"
+  peerDependencies:
+    "@node-redis/client": ^1.0.0
+  checksum: 70787aa22a81d274bc6a97a9e25db150b5c76603597fc00c8980d2c416b157f42c7e47947ea75cadea3a114802b0a93094aedd7d4f5977054d10f10fcbdf946c
+  languageName: node
+  linkType: hard
+
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -947,7 +1004,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/contracts-bridge@1.0.0-rc.2, @nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
+"@nomad-xyz/contracts-bridge@1.0.0-rc.2, @nomad-xyz/contracts-bridge@^1.0.0-rc.2, @nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge"
   dependencies:
@@ -979,7 +1036,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
+"@nomad-xyz/contracts-core@^1.0.0-rc.2, @nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-core@workspace:packages/contracts-core"
   dependencies:
@@ -1076,7 +1133,7 @@ __metadata:
     "@nomad-xyz/contracts-bridge": 1.0.0-rc.2
     "@nomad-xyz/multi-provider": ^1.0.0-rc.3
     "@nomad-xyz/sdk": ^2.0.0-rc.3
-    "@nomad-xyz/sdk-bridge": ^1.0.0-rc.3
+    "@nomad-xyz/sdk-bridge": ^1.0.0-rc.4
     "@nomad-xyz/sdk-govern": ^1.0.0-rc.3
     "@prisma/client": ^3.9.1
     "@types/bunyan": ^1.8.7
@@ -1093,6 +1150,7 @@ __metadata:
     prettier: ^2.4.1
     prisma: ^3.9.1
     prom-client: ^14.0.0
+    redis: ^4.0.4
     ts-node: ^10.4.0
     typescript: ^4.4.3
   languageName: unknown
@@ -1181,7 +1239,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk-bridge@^1.0.0-rc.3, @nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
+"@nomad-xyz/sdk-bridge@npm:^1.0.0-rc.4":
+  version: 1.0.0-rc.4
+  resolution: "@nomad-xyz/sdk-bridge@npm:1.0.0-rc.4"
+  dependencies:
+    "@nomad-xyz/configuration": 0.1.0-rc.6
+    "@nomad-xyz/contracts-bridge": ^1.0.0-rc.2
+    "@nomad-xyz/sdk": ^2.0.0-rc.4
+    ethers: ^5.4.6
+    web3: ^1.6.1
+  checksum: 7da7ba96028aff517cbfc01c7c855816031ad56a4dd763dd9042988a5b6eeb1a2bd2d81dd887ece0d69d9816b1ad96660cf2043e623267079c2857ce761812dc
+  languageName: node
+  linkType: hard
+
+"@nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
@@ -1253,6 +1324,18 @@ __metadata:
     typescript: ^4.4.3
   languageName: unknown
   linkType: soft
+
+"@nomad-xyz/sdk@npm:^2.0.0-rc.4":
+  version: 2.0.0-rc.4
+  resolution: "@nomad-xyz/sdk@npm:2.0.0-rc.4"
+  dependencies:
+    "@nomad-xyz/configuration": 0.1.0-rc.6
+    "@nomad-xyz/contracts-core": ^1.0.0-rc.2
+    "@nomad-xyz/multi-provider": ^1.0.0-rc.3
+    ethers: ^5.4.6
+  checksum: f4a30049285d8008590e40d42ef1451706f92a6af563b02e172a677a36722978177890231a6b4f4d9966fc4522a8c3603d5590f9ab881c9f7185ea575760f79a
+  languageName: node
+  linkType: hard
 
 "@nomiclabs/hardhat-ethers@npm:^2.0.1, @nomiclabs/hardhat-ethers@npm:^2.0.2, @nomiclabs/hardhat-ethers@npm:^2.0.4":
   version: 2.0.5
@@ -4487,6 +4570,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cluster-key-slot@npm:1.1.0":
+  version: 1.1.0
+  resolution: "cluster-key-slot@npm:1.1.0"
+  checksum: fc953c75209b1ef9088081bab4e40a0b2586491c974ab93460569c014515ca5a2e31c043f185285e177007162fc353d07836d98f570c171dbe055775430e495b
+  languageName: node
+  linkType: hard
+
 "code-point-at@npm:^1.0.0":
   version: 1.1.0
   resolution: "code-point-at@npm:1.1.0"
@@ -7696,6 +7786,13 @@ __metadata:
     gaxios: ^4.0.0
     json-bigint: ^1.0.0
   checksum: b0b1b85ea2efee1d640a1d4ead0937fdcceffd43ab4cacfdd66fd086fcfe5c3d09ad850ee14f43f2dc73244b2617b166adfa09a2a85e0652a8c56bed194f01fe
+  languageName: node
+  linkType: hard
+
+"generic-pool@npm:3.8.2":
+  version: 3.8.2
+  resolution: "generic-pool@npm:3.8.2"
+  checksum: f549077d90265e5e4d32a2410205b357ec61cf73d17861f1013637984390e09fe7bf537129a2c6ed30ae57662a57c8d54194f80046408d3349836330f422dbde
   languageName: node
   linkType: hard
 
@@ -12747,6 +12844,36 @@ __metadata:
   languageName: node
   linkType: hard
 
+"redis-errors@npm:^1.0.0":
+  version: 1.2.0
+  resolution: "redis-errors@npm:1.2.0"
+  checksum: f28ac2692113f6f9c222670735aa58aeae413464fd58ccf3fce3f700cae7262606300840c802c64f2b53f19f65993da24dc918afc277e9e33ac1ff09edb394f4
+  languageName: node
+  linkType: hard
+
+"redis-parser@npm:3.0.0":
+  version: 3.0.0
+  resolution: "redis-parser@npm:3.0.0"
+  dependencies:
+    redis-errors: ^1.0.0
+  checksum: 89290ae530332f2ae37577647fa18208d10308a1a6ba750b9d9a093e7398f5e5253f19855b64c98757f7129cccce958e4af2573fdc33bad41405f87f1943459a
+  languageName: node
+  linkType: hard
+
+"redis@npm:^4.0.4":
+  version: 4.0.4
+  resolution: "redis@npm:4.0.4"
+  dependencies:
+    "@node-redis/bloom": 1.0.1
+    "@node-redis/client": 1.0.4
+    "@node-redis/graph": 1.0.0
+    "@node-redis/json": 1.0.2
+    "@node-redis/search": 1.0.3
+    "@node-redis/time-series": 1.0.2
+  checksum: bed4ded396646d128843a97ff01202d802729c83234ba755701ef693e526e2d858b30c566e8830c7c70793ffbf3f91f6e316bfe61ddff3d1c11120ba292ce98a
+  languageName: node
+  linkType: hard
+
 "regenerate@npm:^1.2.1":
   version: 1.4.2
   resolution: "regenerate@npm:1.4.2"
@@ -16753,17 +16880,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"yallist@npm:4.0.0, yallist@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "yallist@npm:4.0.0"
+  checksum: 343617202af32df2a15a3be36a5a8c0c8545208f3d3dfbc6bb7c3e3b7e8c6f8e7485432e4f3b88da3031a6e20afa7c711eded32ddfb122896ac5d914e75848d5
+  languageName: node
+  linkType: hard
+
 "yallist@npm:^3.0.0, yallist@npm:^3.0.2, yallist@npm:^3.1.1":
   version: 3.1.1
   resolution: "yallist@npm:3.1.1"
   checksum: 48f7bb00dc19fc635a13a39fe547f527b10c9290e7b3e836b9a8f1ca04d4d342e85714416b3c2ab74949c9c66f9cebb0473e6bc353b79035356103b47641285d
-  languageName: node
-  linkType: hard
-
-"yallist@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "yallist@npm:4.0.0"
-  checksum: 343617202af32df2a15a3be36a5a8c0c8545208f3d3dfbc6bb7c3e3b7e8c6f8e7485432e4f3b88da3031a6e20afa7c711eded32ddfb122896ac5d914e75848d5
   languageName: node
   linkType: hard
 

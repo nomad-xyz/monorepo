@@ -801,9 +801,8 @@ export class Processor extends Consumer {
       logger.child({ messageHash: hash }).debug(`Found dispatched message`);
       this.addToSyncQueue(hash);
     } else {
-      let [origin, nonce] = e.originAndNonce();
       logger.warn(
-        { origin, nonce },
+        { tx: e.tx, domain: e.domain },
         `Haven't found a message for BridgeReceived event`
       );
     }
