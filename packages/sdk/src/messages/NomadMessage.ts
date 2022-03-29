@@ -4,6 +4,7 @@ import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import * as core from '@nomad-xyz/contracts-core';
 import { NomadContext } from '..';
 import { utils } from '@nomad-xyz/multi-provider';
+import { Logger } from '@ethersproject/logger';
 
 import {
   DispatchEvent,
@@ -167,12 +168,21 @@ export class NomadMessage<T extends NomadContext> {
           const message = new NomadMessage(context, annotated);
           messages.push(message);
         }
-      } catch (e) {
-        console.log(
-          'An error occured while getting NomadMessage from Receipt',
-          e,
-        );
-        continue;
+      } catch (e: any) {
+        
+        // Catch known errors that we'd like to squash
+        if ('code' in e){
+          if(e.code == Logger.errors.INVALID_ARGUMENT && e.reason == 'no matching event')
+            continue
+        }
+        else {
+          // We dont recognize this error, throw it
+          console.error(
+            'An error occured while getting NomadMessage from Receipt',
+            e,
+          );
+          throw e;
+        }        
       }
     }
     return messages;
