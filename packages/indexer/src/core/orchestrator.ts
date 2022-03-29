@@ -122,8 +122,10 @@ export class Orchestrator {
         this.metrics.setNumMessages("relayed", network, s.relayed);
         this.metrics.setNumMessages("received", network, s.received);
         this.metrics.setNumMessages("processed", network, s.processed);
-      } catch(e: any) {
-        this.logger.error(`Tried to collect statistics for domain ${domain}, but error happened: ${e.message}`);
+      } catch (e: any) {
+        this.logger.error(
+          `Tried to collect statistics for domain ${domain}, but error happened: ${e.message}`
+        );
       }
     });
   }
@@ -144,9 +146,13 @@ export class Orchestrator {
   }
 
   async initalFeedConsumer() {
-    const events = (await Promise.all(Array.from(this.indexers.values())
-      .map((indexer) => indexer.persistance.allEvents())))
-      .flat();
+    const events = (
+      await Promise.all(
+        Array.from(this.indexers.values()).map((indexer) =>
+          indexer.persistance.allEvents()
+        )
+      )
+    ).flat();
     events.sort((a, b) => a.ts - b.ts);
     await this.consumer.consume(events);
   }

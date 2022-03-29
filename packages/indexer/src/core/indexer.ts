@@ -1079,7 +1079,7 @@ export abstract class Persistance {
   abstract persist(): void;
 }
 
-import { createClient, RedisClientType } from 'redis';
+import { createClient, RedisClientType } from "redis";
 
 export class RedisPersistance extends Persistance {
   client: RedisClientType;
@@ -1088,12 +1088,11 @@ export class RedisPersistance extends Persistance {
   constructor(domain: number) {
     super();
     this.client = createClient({
-      url: process.env.REDIS_URL || "redis://redis:6379"
+      url: process.env.REDIS_URL || "redis://redis:6379",
     });
     this.domain = domain;
 
-    this.client.on('error', (err) => console.log('Redis Client Error', err));
-
+    this.client.on("error", (err) => console.log("Redis Client Error", err));
   }
 
   async updateFromTo(block: number) {
@@ -1109,8 +1108,14 @@ export class RedisPersistance extends Persistance {
     const promises = [];
     const block2Events: Map<number, NomadEvent[]> = new Map();
     for (const event of events) {
-      if (event.block < this.from || this.from === -1) {this.from = event.block;fromChanged = true};
-      if (event.block > this.height || this.height === -1) {this.height = event.block;heightChanged = true};
+      if (event.block < this.from || this.from === -1) {
+        this.from = event.block;
+        fromChanged = true;
+      }
+      if (event.block > this.height || this.height === -1) {
+        this.height = event.block;
+        heightChanged = true;
+      }
       const block = block2Events.get(event.block);
       if (block) {
         block.push(event);
@@ -1120,15 +1125,26 @@ export class RedisPersistance extends Persistance {
     }
 
     for (const [block, events] of block2Events) {
-      promises.push(this.client.hSet(`${this.domain}nomad_message`, String(block), JSON.stringify(events, replacer)));
+      promises.push(
+        this.client.hSet(
+          `${this.domain}nomad_message`,
+          String(block),
+          JSON.stringify(events, replacer)
+        )
+      );
       promises.push(this.client.sAdd(`${this.domain}blocks`, String(block)));
     }
 
-    if (fromChanged) promises.push(this.client.hSet(`from`, String(this.domain), String(this.from)));
-    if (heightChanged) promises.push(this.client.hSet(`height`, String(this.domain), String(this.height)));
-    
-    await Promise.all(promises);
+    if (fromChanged)
+      promises.push(
+        this.client.hSet(`from`, String(this.domain), String(this.from))
+      );
+    if (heightChanged)
+      promises.push(
+        this.client.hSet(`height`, String(this.domain), String(this.height))
+      );
 
+    await Promise.all(promises);
   }
   async init(): Promise<void> {
     await this.client.connect();
@@ -1139,21 +1155,24 @@ export class RedisPersistance extends Persistance {
     if (from) this.from = parseInt(from);
     if (height) this.height = parseInt(height);
     console.log(`SET FROM AND HEIGHT FOR`, from, height, this.domain);
-
   }
-  sortSorage(): void {
-
-  }
+  sortSorage(): void {}
   async allEvents(): Promise<NomadEvent[]> {
-    const blocks = (await this.client.sMembers(`${this.domain}blocks`)).map(s => parseInt(s)).sort();
-    const x = await Promise.all(blocks.map(block => this.client.hGet(`${this.domain}nomad_message`, String(block))));
-    const q = x.filter(z=>z!='').map(s => JSON.parse(s!, reviver) as NomadEvent[]).flat();
-    return q
+    const blocks = (await this.client.sMembers(`${this.domain}blocks`))
+      .map((s) => parseInt(s))
+      .sort();
+    const x = await Promise.all(
+      blocks.map((block) =>
+        this.client.hGet(`${this.domain}nomad_message`, String(block))
+      )
+    );
+    const q = x
+      .filter((z) => z != "")
+      .map((s) => JSON.parse(s!, reviver) as NomadEvent[])
+      .flat();
+    return q;
   }
-  persist(): void {
-
-  }
-
+  persist(): void {}
 }
 
 export class RamPersistance extends Persistance {
