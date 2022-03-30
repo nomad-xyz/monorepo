@@ -1,0 +1,55 @@
+{
+  "name": "@nomad-xyz/contracts-call",
+  "version": "1.0.0-rc.0",
+  "description": "Nomad cross-chain call contracts",
+  "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/contracts-call#readme",
+  "bugs": {
+    "url": "https://github.com/nomad-xyz/monorepo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nomad-xyz/monorepo.git"
+  },
+  "license": "MIT OR Apache-2.0",
+  "author": "Anna Carroll",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "bootstrap": "yarn clean && yarn build",
+    "build": "yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions",
+    "clean": "hardhat clean && rm -rf dist && rm -rf src",
+    "compile": "hardhat compile",
+    "copy-definitions": "cp src/*.d.ts dist/src",
+    "lint": "solhint contracts/*.sol",
+    "lint:fix": "solhint --fix contracts/*.sol",
+    "prettier": "prettier --write './contracts'",
+    "prepublish": "yarn bootstrap && yarn build",
+    "test": "hardhat test"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.4.2",
+    "@summa-tx/memview-sol": "^2.0.0"
+  },
+  "devDependencies": {
+    "@nomad-xyz/contracts-core": "workspace:^",
+    "@nomad-xyz/deploy": "workspace:^",
+    "@nomiclabs/hardhat-ethers": "^2.0.4",
+    "@nomiclabs/hardhat-etherscan": "^2.1.2",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@typechain/ethers-v5": "7.2.0",
+    "@typechain/hardhat": "^2.0.1",
+    "dotenv": "^10.0.0",
+    "eslint": "^7.20.0",
+    "ethereum-waffle": "^3.2.2",
+    "ethers": "^5.4.4",
+    "hardhat": "^2.8.3",
+    "hardhat-gas-reporter": "^1.0.4",
+    "prettier": "^2.2.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.5",
+    "solhint": "^3.3.2",
+    "solhint-plugin-prettier": "^0.0.5",
+    "ts-node": "^10.1.0",
+    "typechain": "^5.0.0",
+    "typescript": "^4.5.5"
+  }
+}

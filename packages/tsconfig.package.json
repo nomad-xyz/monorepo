@@ -30,6 +30,9 @@
       "path": "./contracts-core"
     },
     {
+      "path": "./contracts-call"
+    },
+    {
       "path": "./contracts-router"
     },
     {

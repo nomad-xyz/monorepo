@@ -4,6 +4,7 @@
   "workspaces": [
     "packages/contracts-bridge",
     "packages/contracts-core",
+    "packages/contracts-call",
     "packages/contracts-router",
     "packages/deploy",
     "packages/monitor",
