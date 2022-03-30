@@ -11,7 +11,6 @@ import {
 import { utils } from '@nomad-xyz/multi-provider';
 import { ethers } from 'ethers';
 
-import { _notImplemented } from '../utils';
 import Contracts from '../Contracts';
 import DeployContext from '../DeployContext';
 
@@ -615,20 +614,17 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const owner = await this.governanceRouter.governor();
     const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
 
-    // If we can't use deployer ownership
-    if (!utils.equalIds(owner, deployer)) {
-      // TODO:
-      // transform into a governance tx targeting the Governing core
-      return _notImplemented();
+    // If governor has NOT already been appointed
+    if (utils.equalIds(owner, deployer)) {
+      // submit transaction to transfer governor
+      const tx = await this.governanceRouter.transferGovernor(
+          governor.domain,
+          utils.evmId(governor.id),
+          this.overrides,
+      );
+      await tx.wait(this.confirmations);
     }
 
-    // If we can use deployer ownership
-    const tx = await this.governanceRouter.transferGovernor(
-      governor.domain,
-      utils.evmId(governor.id),
-      this.overrides,
-    );
-    await tx.wait(this.confirmations);
     return [];
   }
 
