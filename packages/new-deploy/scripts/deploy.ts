@@ -69,5 +69,6 @@ async function run() {
     await deployContext.deployAndRelinquish();
     // output the updated config
     fs.writeFileSync(`./scripts/config.json`, JSON.stringify(deployContext.data, null, 4));
+    fs.writeFileSync(`./scripts/verification.json`, JSON.stringify(deployContext.verification, null, 4));
     console.log(`DONE!`);
 }
