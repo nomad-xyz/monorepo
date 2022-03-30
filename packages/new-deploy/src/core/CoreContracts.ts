@@ -607,14 +607,14 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   /// deployer owns the governance router) this instead returns a list of
   /// governance transactions that must be made in order to transfer
   /// governorship
-  async appointGovernor(): Promise<ethers.PopulatedTransaction[]> {
+  async appointGovernor(): Promise<void> {
     const governor = this.context.data.protocol.governor;
 
-    // Check that this key has permissions to set this
+    // Check that the deployer key has permissions to transfer governor
     const owner = await this.governanceRouter.governor();
     const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
 
-    // If governor has NOT already been appointed
+    // If the deployer key DOES have permissions to transfer governor,
     if (utils.equalIds(owner, deployer)) {
       // submit transaction to transfer governor
       const tx = await this.governanceRouter.transferGovernor(
@@ -624,8 +624,6 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       );
       await tx.wait(this.confirmations);
     }
-
-    return [];
   }
 
   async checkDeploy(
