@@ -313,9 +313,9 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     if (!utils.equalIds(owner, deployer)) {
       return [
         await this.bridgeRouterContract.populateTransaction.enrollRemoteRouter(
-            remoteDomain,
-            utils.canonizeId(remoteRouter),
-            this.overrides,
+          remoteDomain,
+          utils.canonizeId(remoteRouter),
+          this.overrides,
         ),
       ];
     }
@@ -410,16 +410,18 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
         // enroll the custom representation
         // Check that this key has permissions to set this
         const owner = await this.tokenRegistryContract.owner();
-        const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
+        const deployer = ethers.utils.getAddress(
+          await this.deployer.getAddress(),
+        );
 
         // If we can't use deployer ownership
         if (!utils.equalIds(owner, deployer)) {
           return [
             await this.tokenRegistryContract.populateTransaction.enrollCustom(
-                custom.token.domain,
-                utils.canonizeId(custom.token.id),
-                proxy.address,
-                this.overrides,
+              custom.token.domain,
+              utils.canonizeId(custom.token.id),
+              proxy.address,
+              this.overrides,
             ),
           ];
         }

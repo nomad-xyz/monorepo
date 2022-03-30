@@ -151,7 +151,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   }
 
   async deployUpgradeBeaconController(): Promise<void> {
-    console.log("deployUpgradeBeaconController ");
+    console.log('deployUpgradeBeaconController ');
 
     const name = this.context.resolveDomainName(this.domain);
 
@@ -172,7 +172,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   }
 
   async deployUpdaterManager(): Promise<void> {
-    console.log("deployUpdaterManager ");
+    console.log('deployUpdaterManager ');
 
     const name = this.context.resolveDomainName(this.domain);
     // don't redeploy
@@ -195,7 +195,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   }
 
   async deployXAppConnectionManager(): Promise<void> {
-    console.log("deployXAppConnectionManager");
+    console.log('deployXAppConnectionManager');
     const name = this.context.resolveDomainName(this.domain);
     // don't redeploy
     if (this.data.xAppConnectionManager) return;
@@ -618,9 +618,9 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     if (utils.equalIds(owner, deployer)) {
       // submit transaction to transfer governor
       const tx = await this.governanceRouter.transferGovernor(
-          governor.domain,
-          utils.evmId(governor.id),
-          this.overrides,
+        governor.domain,
+        utils.evmId(governor.id),
+        this.overrides,
       );
       await tx.wait(this.confirmations);
     }
