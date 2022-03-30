@@ -157,36 +157,6 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     this.addCore(domain.name, complete);
   }
 
-  // post-deployment setup
-  // We choose to enroll all currently known routers and watchers here,
-  // event those that may not be immediately connected, so that IF they are
-  // connected in the future, the routers will be properly configured.
-  // Essentially we run likely future governance actions at deploy time, so
-  // we will not be required to run them later.
-  protected async enrollCores(): Promise<ethers.PopulatedTransaction[]> {
-    console.log("enrollCores ");
-
-    const results = await Promise.all(
-      this.networks.map(async (network) => {
-        // the set of domains that are not the new core
-        const remoteDomains = this.data.networks.filter(
-          (net) => net !== network,
-        );
-        const core = this.mustGetCore(network);
-
-        return (
-          await Promise.all([
-            ...remoteDomains.map((remote) =>
-              core.enrollGovernanceRouter(remote),
-            ),
-            ...remoteDomains.map((remote) => core.enrollWatchers(remote)),
-          ])
-        ).flat();
-      }),
-    );
-    return results.flat();
-  }
-
   protected async deployBridge(name: string): Promise<void> {
     this.mustGetCore(name).complete(); // assert that the core is totally deployed
 
@@ -202,15 +172,11 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   }
 
   /// Deploys all configured Cores
-  async ensureCores(): Promise<ethers.PopulatedTransaction[]> {
-    console.log("ensureCores ");
-
-    const toDeploy = this.networks.filter((net) => !this.cores[net]);
-
+  async ensureCores(): Promise<void> {
+    const networksToDeploy = this.networks.filter((net) => !this.cores[net]);
     await Promise.all(
-      toDeploy.map((net) => this.deployCore(this.mustGetDomainConfig(net))),
+      networksToDeploy.map((net) => this.deployCore(this.mustGetDomainConfig(net))),
     );
-    return await this.enrollCores();
   }
 
   // Deploys all configured connections and enrolls them if possible.
