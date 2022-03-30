@@ -66,9 +66,10 @@ async function run() {
         // TODO deployContext.overrides.set(network, OVERRIDES[network]);
     }
     // run the deploy script
-    await deployContext.deployAndRelinquish();
+    const governanceTransactions = await deployContext.deployAndRelinquish();
     // output the updated config
     fs.writeFileSync(`./scripts/config.json`, JSON.stringify(deployContext.data, null, 4));
     fs.writeFileSync(`./scripts/verification.json`, JSON.stringify(deployContext.verification, null, 4));
+    fs.writeFileSync(`./scripts/governanceTransactions.json`, JSON.stringify(governanceTransactions, null, 4));
     console.log(`DONE!`);
 }
