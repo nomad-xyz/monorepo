@@ -245,7 +245,7 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
    *
    * @returns The resolved token interface.
    */
-  async assetAtOrigin(): Promise<bridge.ERC20 | undefined> {
+  async assetAtOrigin(): Promise<bridge.BridgeToken | undefined> {
     return (await this.asset()).tokens.get(this.origin);
   }
 
@@ -258,7 +258,7 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
    *
    * @returns The resolved token interface.
    */
-  async assetAtDestination(): Promise<bridge.ERC20 | undefined> {
+  async assetAtDestination(): Promise<bridge.BridgeToken | undefined> {
     return (await this.asset()).tokens.get(this.destination);
   }
 }
