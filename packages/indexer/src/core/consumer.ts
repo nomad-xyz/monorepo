@@ -236,11 +236,11 @@ export type MinimumSerializedNomadMessage = {
   sender: string | null; //   m.sender || '',
   tx: string | null; //   m.evm || ''
   state: MsgState;
-  gasAtDispatch: string | null;
-  gasAtUpdate: string | null;
-  gasAtRelay: string | null;
-  gasAtReceive: string | null;
-  gasAtProcess: string | null;
+  gasAtDispatch: string;
+  gasAtUpdate: string;
+  gasAtRelay: string;
+  gasAtReceive: string;
+  gasAtProcess: string;
 };
 
 export type ExtendedSerializedNomadMessage = MinimumSerializedNomadMessage & {
@@ -250,7 +250,7 @@ export type ExtendedSerializedNomadMessage = MinimumSerializedNomadMessage & {
   // bridgeMsgType: this.transferMessage.action.type,
   recipient: string | null; // PADDED!// bridgeMsgTo: this.recipient(), // PADDED!
   amount: string | null; // bridgeMsgAmount: this.transferMessage.action.amount.toHexString(),
-  allowFast: boolean | null; // bridgeMsgAllowFast: this.transferMessage.action.allowFast,
+  allowFast: boolean; // bridgeMsgAllowFast: this.transferMessage.action.allowFast,
   detailsHash: string | null; // bridgeMsgDetailsHash: this.transferMessage.action.detailsHash,
   tokenDomain: number | null; // bridgeMsgTokenDomain: this.tokenDomain(),
   tokenId: string | null; // PADDED! // bridgeMsgTokenId: this.tokenId(), // PADDED!
@@ -347,10 +347,8 @@ export class NomadMessage {
       : undefined;
   }
 
-  allowFast(): boolean | undefined {
-    return this.transferMessage
-      ? this.transferMessage?.action.allowFast
-      : undefined;
+  allowFast(): boolean {
+    return !!this.transferMessage?.action.allowFast;
   }
 
   detailsHash(): string | undefined {
@@ -472,7 +470,7 @@ export class NomadMessage {
       // hasMessage: this.hasMessage,
       recipient: this.recipient()?.valueOf() || null,
       amount: this.amount()?.toHexString() || null,
-      allowFast: this.allowFast() || null,
+      allowFast: this.allowFast(),
       detailsHash: this.detailsHash() || null,
       tokenDomain: this.tokenDomain() || null,
       tokenId: this.tokenId()?.valueOf() || null,

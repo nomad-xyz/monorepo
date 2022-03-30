@@ -70,16 +70,16 @@ export async function run(db: DB, logger: Logger) {
       relayedAt: Int!
       receivedAt: Int!
       processedAt: Int!
-      sender: String!
-      recipient: String!
-      amount: String!
-      allowFast: Boolean!
-      detailsHash: String!
-      tokenDomain: Int!
-      tokenId: String!
+      sender: String
+      recipient: String
+      amount: String
+      allowFast: Boolean
+      detailsHash: String
+      tokenDomain: Int
+      tokenId: String
       body: String!
       leafIndex: String!
-      tx : String!
+      tx : String
       gasAtDispatch: String!
       gasAtUpdate: String!
       gasAtRelay: String!

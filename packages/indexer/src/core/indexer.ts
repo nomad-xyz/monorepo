@@ -123,7 +123,7 @@ export class Indexer {
       this.orchestrator.db
     );
     // 20 concurrent requests per indexer
-    this.limit = pLimit(100);
+    this.limit = pLimit(this.domainToLimit());
     this.lastBlock = 0;
     this.logger = orchestrator.logger.child({
       span: "indexer",
@@ -132,6 +132,13 @@ export class Indexer {
     });
     this.lastIndexed = new Date(0);
     this.failureCounter = new FailureCounter(60); // 1 hour
+  }
+
+  domainToLimit(): number {
+    return {
+      1650811245: 20,
+      6648936: 20,
+    }[this.domain] || 100
   }
 
   get provider(): ethers.providers.Provider {
@@ -174,13 +181,14 @@ export class Indexer {
       },
       RETRIES,
       (error: any) => {
+
         this.orchestrator.metrics.incRpcErrors(
           RpcRequestMethod.GetBlockWithTxs,
           this.network,
           error.code
         );
         this.logger.warn(
-          `Retrying after RPC Error... Block: ${blockNumber}, Error: ${error.code}`
+          `Retrying after RPC Error... Block: ${blockNumber}, Error: ${error.code}, msg: ${error.message}`
         );
         this.failureCounter.add();
       }
@@ -236,7 +244,7 @@ export class Indexer {
           error.code
         );
         this.logger.warn(
-          `Retrying after RPC Error... Block number: ${blockNumber}, Error: ${error.code}`
+          `Retrying after RPC Error... Block number: ${blockNumber}, Error: ${error.code}, msg: ${error.message}`
         );
         this.failureCounter.add();
       }
@@ -285,7 +293,7 @@ export class Indexer {
           error.code
         );
         this.logger.warn(
-          `Retrying after RPC Error... TX hash: ${hash}, Error: ${error.code}`
+          `Retrying after RPC Error... TX hash: ${hash}, Error: ${error.code}, msg: ${error.message}`
         );
         this.failureCounter.add();
       }
@@ -355,7 +363,7 @@ export class Indexer {
           this.network,
           error.code
         );
-        this.logger.warn(`Retrying after RPC Error... , Error: ${error.code}`);
+        this.logger.warn(`Retrying after RPC Error... , Error: ${error.code}, msg: ${error.message}`);
         this.failureCounter.add();
       }
     );
@@ -437,7 +445,7 @@ export class Indexer {
           error.code
         );
         this.logger.warn(
-          `Retrying after RPC Error on .getBlockNumber() method... Error: ${error}`
+          `Retrying after RPC Error on .getBlockNumber() method... Error: ${error}, msg: ${error.message}`
         );
         this.failureCounter.add();
       }
@@ -472,7 +480,12 @@ export class Indexer {
 
     const allEvents: NomadEvent[] = [];
 
-    const batchSize = BATCH_SIZE;
+    const domain2batchSize = new Map([
+      [1650811245, 500],
+      [6648936, 5000],
+    ]);
+
+    const batchSize = domain2batchSize.get(this.domain) || BATCH_SIZE;
     let batchFrom = from;
     let batchTo = Math.min(to, from + batchSize);
 
@@ -1154,7 +1167,6 @@ export class RedisPersistance extends Persistance {
 
     if (from) this.from = parseInt(from);
     if (height) this.height = parseInt(height);
-    console.log(`SET FROM AND HEIGHT FOR`, from, height, this.domain);
   }
   sortSorage(): void {}
   async allEvents(): Promise<NomadEvent[]> {
