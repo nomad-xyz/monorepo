@@ -113,26 +113,84 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     this._data = config.addBridge(this.data, name, bridge);
   }
 
-  pushVerification(
-    nameOrDomain: string | number,
-    verification: Verification,
-  ): void {
-    const name = this.resolveDomainName(nameOrDomain);
-    if (!this.verification.has(name)) this.verification.set(name, []);
+  /// Adds a connection between two known networks. Use this AHEAD OF calling
+  /// `ensureConnections
+  addConnection(left: string, right: string): void {
+    // asserts that the domains are known
+    this.mustGetDomain(left);
+    this.mustGetDomain(right);
 
-    const net = this._verification.get(name);
-    if (net) net.push(verification);
+    if (this._data.protocol.networks[left].connections.indexOf(right) !== -1) {
+      throw new Error(`${right} already a connection of ${left}`);
+    }
+    if (this._data.protocol.networks[right].connections.indexOf(left) !== -1) {
+      throw new Error(`${left} already a connection of ${right}`);
+    }
+
+    this._data.protocol.networks[left].connections.push(right);
+    this._data.protocol.networks[left].connections.push(left);
   }
 
-  mustGetVerification(nameOrDomain: string | number): readonly Verification[] {
-    const domain = this.resolveDomainName(nameOrDomain);
-    const verification = this.verification.get(domain);
-    if (!verification)
-      throw new Error(
-        `Verification with name ${nameOrDomain} for domain ${domain} is not defined`,
-      );
+  // Intended entrypoint.
+  async deployAndRelinquish(): Promise<ethers.PopulatedTransaction[]> {
+    // validate the config input
+    this.validate();
 
-    return verification;
+    // ensure the presence of all core + bridge contracts, and enroll all core + bridge contracts with each other
+    const governanceTransactions = await this.ensureCoreAndBridgeConnections();
+
+    // relinquish control of all other contracts from deployer to governance
+    await this.relinquishOwnership();
+
+    // appoint governor on all networks
+    await Promise.all(this.networks.map((network) => this.mustGetCore(network).appointGovernor()));
+
+    // perform validation checks on core and bridges
+    await this.checkCores();
+    await this.checkBridges();
+
+    return governanceTransactions;
+  }
+
+  // Checks for connections that are configured but lack a corresponding bridge
+  // connection. Attempts to enroll the bridge routers on eachother.
+  // For any connection that cannot be enrolled, outputs the governance
+  // action required to enroll them
+  protected async ensureCoreAndBridgeConnections(): Promise<
+      ethers.PopulatedTransaction[]
+      > {
+    const governanceTransactions = await this.ensureCoreConnections();
+    const bridgeGovernanceTransactions = await this.ensureBridgeConnections();
+    // combine governance transactions and return them
+    governanceTransactions.push.apply(bridgeGovernanceTransactions);
+    return governanceTransactions;
+  }
+
+  // Deploys all configured connections and enrolls them if possible.
+  // For any connection that cannot be enrolled, outputs the governance
+  // action required to enroll them
+  async ensureCoreConnections(): Promise<ethers.PopulatedTransaction[]> {
+    // ensure all core contracts are deployed
+    await this.ensureCores();
+    // ensure all core contracts are enrolled in each other
+    const enrollTransactions = await Promise.all(this.networks.map(async (network) => {
+      const core = this.mustGetCore(network);
+      const name = this.resolveDomainName(network);
+      const remoteDomains = this.data.protocol.networks[name]?.connections;
+      const txns = await Promise.all(
+          remoteDomains.map((remote) => core.enrollRemote(remote)),
+      );
+      return txns.flat();
+    }));
+    return enrollTransactions.flat();
+  }
+
+  /// Deploys all configured Cores
+  async ensureCores(): Promise<void> {
+    const networksToDeploy = this.networks.filter((net) => !this.cores[net]);
+    await Promise.all(
+        networksToDeploy.map((net) => this.deployCore(this.mustGetDomainConfig(net))),
+    );
   }
 
   protected async deployCore(domain: config.Domain): Promise<void> {
@@ -157,6 +215,30 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     this.addCore(domain.name, complete);
   }
 
+
+  async ensureBridgeConnections(): Promise<ethers.PopulatedTransaction[]> {
+    // first, ensure all bridge contracts are deployed
+    await this.ensureBridges();
+    // next, ensure all bridge contracts are enrolled in each other
+    const enrollTransactions = await Promise.all(this.networks.map(async (network) => {
+      const bridge = this.mustGetBridge(network);
+      const name = this.resolveDomainName(network);
+      const remoteDomains = this.data.protocol.networks[name]?.connections;
+      const txns = await Promise.all(
+          remoteDomains.map((remote) => bridge.enrollBridgeRouter(remote)),
+      );
+      return txns.flat();
+    }));
+    return enrollTransactions.flat();
+  }
+
+  /// Deploys all configured bridges.
+  async ensureBridges(): Promise<void> {
+    const toDeploy = this.networks.filter((net) => !this.bridges[net]);
+    const promises = toDeploy.map((net) => this.deployBridge(net));
+    await Promise.all(promises);
+  }
+
   protected async deployBridge(name: string): Promise<void> {
     this.mustGetCore(name).complete(); // assert that the core is totally deployed
 
@@ -171,115 +253,14 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     this.addBridge(name, bridge.complete());
   }
 
-  /// Deploys all configured Cores
-  async ensureCores(): Promise<void> {
-    const networksToDeploy = this.networks.filter((net) => !this.cores[net]);
-    await Promise.all(
-      networksToDeploy.map((net) => this.deployCore(this.mustGetDomainConfig(net))),
-    );
-  }
-
-  // Deploys all configured connections and enrolls them if possible.
-  // For any connection that cannot be enrolled, outputs the governance
-  // action required to enroll them
-  async ensureCoreConnections(): Promise<ethers.PopulatedTransaction[]> {
-    // validate the config input
-    this.validate();
-    // ensure all core contracts are deployed
-    await this.ensureCores();
-    // ensure all core contracts are enrolled in each other
-    const enrollTransactions = await Promise.all(this.networks.map(async (network) => {
-      const core = this.mustGetCore(network);
-      const name = this.resolveDomainName(network);
-      const remoteDomains = this.data.protocol.networks[name]?.connections;
-      const txns = await Promise.all(
-          remoteDomains.map((remote) => core.enrollRemote(remote)),
-      );
-      return txns.flat();
-    }));
-    return enrollTransactions.flat();
-  }
-
-  /// Deploys all configured bridges.
-  async ensureBridges(): Promise<void> {
-    const toDeploy = this.networks.filter((net) => !this.bridges[net]);
-    const promises = toDeploy.map((net) => this.deployBridge(net));
-    await Promise.all(promises);
-  }
-
-  // Checks for connections that are configured but lack a corresponding bridge
-  // connection. Attempts to enroll the bridge routers on eachother.
-  // For any connection that cannot be enrolled, outputs the governance
-  // action required to enroll them
-  protected async ensureCoreAndBridgeConnections(): Promise<
-    ethers.PopulatedTransaction[]
-  > {
-    const governanceTransactions = await this.ensureCoreConnections();
-    const bridgeGovernanceTransactions = await this.ensureBridgeConnections();
-
-    governanceTransactions.push.apply(bridgeGovernanceTransactions);
-    return governanceTransactions;
-  }
-
-  private async ensureBridgeConnections() {
-    // first, ensure all bridge contracts are deployed
-    await this.ensureBridges();
-    // next, ensure all bridge contracts are enrolled in each other
-    return Promise.all(this.networks.map(async (network) => {
-      const bridge = this.mustGetBridge(network);
-      const name = this.resolveDomainName(network);
-      const remoteDomains = this.data.protocol.networks[name]?.connections;
-      const txns = await Promise.all(
-          remoteDomains.map((remote) => bridge.enrollBridgeRouter(remote)),
-      );
-      return txns.flat();
-    }));
-  }
-
   async relinquishOwnership(): Promise<void> {
     // relinquish deployer control
     await Promise.all([
       ...this.networks.map((network) => this.mustGetCore(network).relinquish()),
       ...this.networks.map((network) =>
-        this.mustGetBridge(network).relinquish(),
+          this.mustGetBridge(network).relinquish(),
       ),
     ]);
-  }
-
-  // Intended entrypoint.
-  async deployAndRelinquish(): Promise<ethers.PopulatedTransaction[]> {
-    // ensure the presence of all core + bridge contracts, and enroll all core + bridge contracts with each other
-    const governanceTransactions = await this.ensureCoreAndBridgeConnections();
-
-    // relinquish control of all other contracts from deployer to governance
-    await this.relinquishOwnership();
-
-    // appoint governor on all networks
-    await Promise.all(this.networks.map((network) => this.mustGetCore(network).appointGovernor()));
-
-    // perform validation checks on core and bridges
-    await this.checkCores();
-    await this.checkBridges();
-
-    return governanceTransactions;
-  }
-
-  /// Adds a connection between two known networks. Use this AHEAD OF calling
-  /// `ensureConnections
-  addConnection(left: string, right: string): void {
-    // asserts that the domains are known
-    this.mustGetDomain(left);
-    this.mustGetDomain(right);
-
-    if (this._data.protocol.networks[left].connections.indexOf(right) !== -1) {
-      throw new Error(`${right} already a connection of ${left}`);
-    }
-    if (this._data.protocol.networks[right].connections.indexOf(left) !== -1) {
-      throw new Error(`${left} already a connection of ${right}`);
-    }
-
-    this._data.protocol.networks[left].connections.push(right);
-    this._data.protocol.networks[left].connections.push(left);
   }
 
   async checkCores(): Promise<void> {
@@ -330,5 +311,27 @@ export default class DeployContext extends MultiProvider<config.Domain> {
       (contract) => contract.name == name,
     )[0].address;
     expect(utils.equalIds(inputAddr, addr));
+  }
+
+  pushVerification(
+      nameOrDomain: string | number,
+      verification: Verification,
+  ): void {
+    const name = this.resolveDomainName(nameOrDomain);
+    if (!this.verification.has(name)) this.verification.set(name, []);
+
+    const net = this._verification.get(name);
+    if (net) net.push(verification);
+  }
+
+  mustGetVerification(nameOrDomain: string | number): readonly Verification[] {
+    const domain = this.resolveDomainName(nameOrDomain);
+    const verification = this.verification.get(domain);
+    if (!verification)
+      throw new Error(
+          `Verification with name ${nameOrDomain} for domain ${domain} is not defined`,
+      );
+
+    return verification;
   }
 }
