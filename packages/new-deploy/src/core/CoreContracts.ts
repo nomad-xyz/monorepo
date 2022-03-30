@@ -116,8 +116,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     return utils.parseInt(confirmations);
   }
 
-  get overrides(): ethers.Overrides | undefined {
-    return this.context.overrides.get(this.domain);
+  get overrides(): ethers.Overrides {
+    return this.context.overrides.get(this.domain) || {};
   }
 
   get domainNumber(): number {
