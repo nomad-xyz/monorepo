@@ -438,15 +438,15 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         `Cannot enroll replica for ${home} on ${local}. Replica does not exist`,
       );
 
-    // Check that this key has permissions to set this
-    const owner = await this.xAppConnectionManager.owner();
-    const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
-
     // skip if already enrolled
     const replicaAlreadyEnrolled = await this.xAppConnectionManager.isReplica(
       replica,
     );
     if (replicaAlreadyEnrolled) return [];
+
+    // Check that this key has permissions to set this
+    const owner = await this.xAppConnectionManager.owner();
+    const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
 
     // If we can't use deployer ownership
     if (!utils.equalIds(owner, deployer)) {
@@ -478,10 +478,6 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const homeConfig = this.context.mustGetDomainConfig(home);
     const localConfig = this.context.mustGetDomainConfig(local);
 
-    // Check that this key has permissions to set this
-    const owner = await this.xAppConnectionManager.owner();
-    const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
-
     // want an async filter, but this'll have to do
     // We make an array with the enrolled status of each watcher, then filter
     // the watchers based on that status array. Mapping ensures that the status
@@ -499,6 +495,10 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const watchersToEnroll = watchers.filter(
       (_, idx) => !enrollmentStatuses[idx],
     );
+
+    // Check that this key has permissions to set this
+    const owner = await this.xAppConnectionManager.owner();
+    const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
 
     // If we can't use deployer ownership
     if (!utils.equalIds(owner, deployer)) {

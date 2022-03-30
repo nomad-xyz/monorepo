@@ -305,6 +305,21 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     if (!remoteRouter)
       throw new Error('Remote deploy incomplete. No BridgeRouter');
 
+    // Check that this key has permissions to set this
+    const owner = await this.bridgeRouterContract.owner();
+    const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
+
+    // If we can't use deployer ownership
+    if (!utils.equalIds(owner, deployer)) {
+      return [
+        await this.bridgeRouterContract.populateTransaction.enrollRemoteRouter(
+            remoteDomain,
+            utils.canonizeId(remoteRouter),
+            this.overrides,
+        ),
+      ];
+    }
+
     const tx = await this.bridgeRouterContract.enrollRemoteRouter(
       remoteDomain,
       utils.canonizeId(remoteRouter),
@@ -314,12 +329,12 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     return [];
   }
 
-  async deployCustomTokens(): Promise<void> {
+  async deployCustomTokens(): Promise<ethers.PopulatedTransaction[][]> {
     const config = this.context.mustGetDomainConfig(this.domain);
 
     // Skip if not configured
     const customs = config.bridgeConfiguration.customs;
-    if (!customs) return;
+    if (!customs) return [];
 
     if (!this.data.customs) this._data.customs = [];
 
@@ -334,8 +349,8 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const beaconFactory = new UpgradeBeacon__factory(this.deployer);
     const proxyFactory = new UpgradeBeaconProxy__factory(this.deployer);
 
-    await Promise.all(
-      customs.map(async (custom) => {
+    return await Promise.all(
+      customs.map(async (custom): Promise<ethers.PopulatedTransaction[]> => {
         // deploy the controller
         const controller = await ubcFactory.deploy(this.overrides);
         await controller.deployTransaction.wait(this.confirmations);
@@ -381,15 +396,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
           await tokenProxy.transferOwnership(bridge)
         ).wait(this.confirmations);
 
-        // enroll the custom representation
-        const enroll = await this.tokenRegistryContract.enrollCustom(
-          custom.token.domain,
-          utils.canonizeId(custom.token.id),
-          proxy.address,
-          this.overrides,
-        );
-        await enroll.wait(this.confirmations);
-
+        // add custom to data
         this.data.customs?.push({
           ...custom,
           controller: controller.address,
@@ -399,6 +406,32 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
             beacon: beacon.address,
           },
         });
+
+        // enroll the custom representation
+        // Check that this key has permissions to set this
+        const owner = await this.tokenRegistryContract.owner();
+        const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
+
+        // If we can't use deployer ownership
+        if (!utils.equalIds(owner, deployer)) {
+          return [
+            await this.tokenRegistryContract.populateTransaction.enrollCustom(
+                custom.token.domain,
+                utils.canonizeId(custom.token.id),
+                proxy.address,
+                this.overrides,
+            ),
+          ];
+        }
+
+        const enroll = await this.tokenRegistryContract.enrollCustom(
+          custom.token.domain,
+          utils.canonizeId(custom.token.id),
+          proxy.address,
+          this.overrides,
+        );
+        await enroll.wait(this.confirmations);
+        return [];
       }),
     );
   }
