@@ -489,25 +489,6 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     // check verification addresses
     // TODO: add beacon and proxy where needed.
-    this.checkVerificationInput(
-      'BridgeToken',
-      this.data.bridgeToken.implementation,
-    );
-
-    this.checkVerificationInput(
-      'BridgeRouter',
-      this.data.bridgeRouter.implementation,
-    );
-    this.checkVerificationInput(
-      'TokenRegistry',
-      this.data.tokenRegistry.implementation,
-    );
-    if (weth) {
-      const verification = this.context.mustGetVerification(this.domain);
-      expect(
-        verification.filter((input) => input.address === this.ethHelper).length,
-      ).to.equal(1, 'No eth helper found');
-    }
   }
 
   checkVerificationInput(name: string, addr: string): void {

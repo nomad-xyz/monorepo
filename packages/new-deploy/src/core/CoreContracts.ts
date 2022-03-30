@@ -743,39 +743,6 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     // check verification addresses
     // TODO: add beacon and proxy where needed.
-    this.checkVerificationInput(
-      'UpgradeBeaconController',
-      this.data.upgradeBeaconController,
-    );
-    this.checkVerificationInput(
-      'XAppConnectionManager',
-      this.data.xAppConnectionManager,
-    );
-    this.checkVerificationInput('UpdaterManager', this.data.updaterManager);
-    this.checkVerificationInput('Home', this.data.home.implementation);
-    this.checkVerificationInput(
-      'GovernanceRouter',
-      this.data.governanceRouter.implementation,
-    );
-
-    if (remoteDomains.length > 0) {
-      this.checkVerificationInput(
-        'Replica',
-        replicas[remoteDomains[0]].implementation,
-      );
-
-      const verification = this.context.mustGetVerification(this.domain);
-
-      const replicaProxies = verification.filter(
-        (contract) => contract.name == 'Replica',
-      );
-      remoteDomains.forEach((domain) => {
-        const replicaProxy = replicaProxies.find((proxy) => {
-          return (proxy.address = replicas[domain].proxy);
-        });
-        expect(replicaProxy).to.not.be.undefined;
-      });
-    }
   }
 
   checkVerificationInput(name: string, addr: string): void {
