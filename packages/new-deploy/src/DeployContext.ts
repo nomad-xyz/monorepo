@@ -202,8 +202,6 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   }
 
   protected async deployCore(domain: config.Domain): Promise<void> {
-    console.log('deployCore ', domain);
-
     this.addDomain(domain);
 
     const core = new CoreContracts(this, domain.name);
