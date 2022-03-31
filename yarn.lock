@@ -1004,7 +1004,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/contracts-bridge@1.0.0-rc.2, @nomad-xyz/contracts-bridge@^1.0.0-rc.2, @nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
+"@nomad-xyz/contracts-bridge@1.0.0-rc.2, @nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge"
   dependencies:
@@ -1036,7 +1036,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/contracts-core@^1.0.0-rc.2, @nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
+"@nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-core@workspace:packages/contracts-core"
   dependencies:
@@ -1132,9 +1132,9 @@ __metadata:
     "@graphql-tools/schema": ^8.3.5
     "@nomad-xyz/contracts-bridge": 1.0.0-rc.2
     "@nomad-xyz/multi-provider": ^1.0.0-rc.3
-    "@nomad-xyz/sdk": ^2.0.0-rc.3
-    "@nomad-xyz/sdk-bridge": ^1.0.0-rc.4
-    "@nomad-xyz/sdk-govern": ^1.0.0-rc.3
+    "@nomad-xyz/sdk": "workspace:^"
+    "@nomad-xyz/sdk-bridge": "workspace:^"
+    "@nomad-xyz/sdk-govern": "workspace:^"
     "@prisma/client": ^3.9.1
     "@types/bunyan": ^1.8.7
     "@types/express": ^4.17.13
@@ -1239,19 +1239,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk-bridge@npm:^1.0.0-rc.4":
-  version: 1.0.0-rc.4
-  resolution: "@nomad-xyz/sdk-bridge@npm:1.0.0-rc.4"
-  dependencies:
-    "@nomad-xyz/configuration": 0.1.0-rc.6
-    "@nomad-xyz/contracts-bridge": ^1.0.0-rc.2
-    "@nomad-xyz/sdk": ^2.0.0-rc.4
-    ethers: ^5.4.6
-    web3: ^1.6.1
-  checksum: 7da7ba96028aff517cbfc01c7c855816031ad56a4dd763dd9042988a5b6eeb1a2bd2d81dd887ece0d69d9816b1ad96660cf2043e623267079c2857ce761812dc
-  languageName: node
-  linkType: hard
-
 "@nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
@@ -1276,7 +1263,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk-govern@^1.0.0-rc.3, @nomad-xyz/sdk-govern@workspace:^, @nomad-xyz/sdk-govern@workspace:packages/sdk-govern":
+"@nomad-xyz/sdk-govern@workspace:^, @nomad-xyz/sdk-govern@workspace:packages/sdk-govern":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-govern@workspace:packages/sdk-govern"
   dependencies:
@@ -1302,7 +1289,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk@^2.0.0-rc.3, @nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
+"@nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -1324,18 +1311,6 @@ __metadata:
     typescript: ^4.4.3
   languageName: unknown
   linkType: soft
-
-"@nomad-xyz/sdk@npm:^2.0.0-rc.4":
-  version: 2.0.0-rc.4
-  resolution: "@nomad-xyz/sdk@npm:2.0.0-rc.4"
-  dependencies:
-    "@nomad-xyz/configuration": 0.1.0-rc.6
-    "@nomad-xyz/contracts-core": ^1.0.0-rc.2
-    "@nomad-xyz/multi-provider": ^1.0.0-rc.3
-    ethers: ^5.4.6
-  checksum: f4a30049285d8008590e40d42ef1451706f92a6af563b02e172a677a36722978177890231a6b4f4d9966fc4522a8c3603d5590f9ab881c9f7185ea575760f79a
-  languageName: node
-  linkType: hard
 
 "@nomiclabs/hardhat-ethers@npm:^2.0.1, @nomiclabs/hardhat-ethers@npm:^2.0.2, @nomiclabs/hardhat-ethers@npm:^2.0.4":
   version: 2.0.5

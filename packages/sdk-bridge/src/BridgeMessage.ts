@@ -109,12 +109,11 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
    * @throws if the message cannot be parsed as a bridge message
    */
   static fromNomadMessage(
-    context: BridgeContext,
     nomadMessage: NomadMessage<BridgeContext>,
   ): AnyBridgeMessage {
     const parsedMessageBody = parseBody(nomadMessage.message.body);
     return new TransferMessage(
-      context,
+      BridgeContext.fromNomadContext(nomadMessage.context),
       nomadMessage.dispatch,
       parsedMessageBody as ParsedTransferMessage,
     );
@@ -140,7 +139,6 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
     for (const nomadMessage of nomadMessages) {
       try {
         const bridgeMessage = BridgeMessage.fromNomadMessage(
-          context,
           nomadMessage,
         );
         bridgeMessages.push(bridgeMessage);

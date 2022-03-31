@@ -1,13 +1,18 @@
-import { parseMessage } from "@nomad-xyz/sdk";
 import { BigNumber, ethers } from "ethers";
 import { EventType, NomadEvent } from "./event";
 import { Statistics } from "./types";
-import { parseBody, ParsedTransferMessage } from "@nomad-xyz/sdk-bridge";
+
+import { parseMessage, AnnotatedDispatch, AnnotatedProcess, AnnotatedUpdate, NomadContext, NomadMessage } from "@nomad-xyz/sdk";
+
+import { AnnotatedSend, AnnotatedReceive, BridgeContext, parseBody, ParsedTransferMessage, BridgeMessage } from "@nomad-xyz/sdk-bridge";
 import { parseAction } from "@nomad-xyz/sdk-govern";
 import { DB } from "./db";
 import Logger from "bunyan";
 import { Padded } from "./utils";
 import EventEmitter from "events";
+import { MadEvent } from "./mad";
+import { Result } from "ethers/lib/utils";
+import { TypedEvent } from "@nomad-xyz/contracts-bridge/dist/src/common";
 
 class StatisticsCollector {
   s: Statistics;
@@ -40,7 +45,7 @@ class StatisticsCollector {
     this.s.counts.domainStatistics.get(domain)!.processed += 1;
   }
 
-  contributeToCount(m: NomadMessage) {
+  contributeToCount(m: NomadMessagex) {
     switch (m.state) {
       case MsgState.Dispatched:
         this.addDispatched(m.origin);
@@ -67,8 +72,10 @@ class StatisticsCollector {
   }
 }
 
+type MadEventX = MadEvent<Result, TypedEvent<Result>, AnnotatedSend | AnnotatedReceive | AnnotatedDispatch | AnnotatedUpdate | AnnotatedProcess>;
+
 export abstract class Consumer extends EventEmitter {
-  abstract consume(evens: NomadEvent[]): Promise<void>;
+  abstract consume(evens: MadEventX[]): Promise<void>;
   abstract stats(): Statistics;
 }
 
@@ -256,7 +263,7 @@ export type ExtendedSerializedNomadMessage = MinimumSerializedNomadMessage & {
   tokenId: string | null; // PADDED! // bridgeMsgTokenId: this.tokenId(), // PADDED!
 };
 
-export class NomadMessage {
+export class NomadMessagex {
   origin: number;
   destination: number;
   nonce: number;
@@ -602,6 +609,7 @@ class SenderLostAndFound {
 
 export class Processor extends Consumer {
   messages: NomadMessage[];
+  sdks: [NomadContext, BridgeContext];
   msgToIndex: Map<string, number>;
   msgByOriginAndRoot: Map<string, number[]>;
   consumed: number; // for debug
@@ -611,8 +619,9 @@ export class Processor extends Consumer {
   logger: Logger;
   senderRegistry: SenderLostAndFound;
 
-  constructor(db: DB, logger: Logger) {
+  constructor(sdks: [NomadContext, BridgeContext], db: DB, logger: Logger) {
     super();
+    this.sdks = sdks;
     this.messages = [];
     this.msgToIndex = new Map();
     this.msgByOriginAndRoot = new Map();
@@ -625,20 +634,31 @@ export class Processor extends Consumer {
     this.logger = logger.child({ span: "consumer" });
   }
 
-  async consume(events: NomadEvent[]): Promise<void> {
+  async consume(events: MadEventX[]): Promise<void> {
     for (const event of events) {
-      if (event.eventType === EventType.HomeDispatch) {
-        this.dispatched(event);
-      } else if (event.eventType === EventType.HomeUpdate) {
-        this.homeUpdate(event);
-      } else if (event.eventType === EventType.ReplicaUpdate) {
-        this.replicaUpdate(event);
-      } else if (event.eventType === EventType.ReplicaProcess) {
-        this.process(event);
-      } else if (event.eventType === EventType.BridgeRouterSend) {
-        this.bridgeRouterSend(event);
-      } else if (event.eventType === EventType.BridgeRouterReceive) {
-        this.bridgeRouterReceive(event);
+      if (!event.event.eventName) throw new Error(`EVENT doesnt have an eventname: ${event}`); 
+      if (event.event.eventName === 'Send') {
+        const e = event as any as MadEvent<Result, TypedEvent<Result>, AnnotatedSend>;
+        this.bridgeRouterSend(e);
+        // this.dispatched(event);
+      } else if (event.event.eventName === "Dispatch") {
+        const e = event as any as MadEvent<Result, TypedEvent<Result>, AnnotatedDispatch>;
+        this.dispatched(e);
+      } else if (event.event.eventName === "Update") {
+        const e = event as any as MadEvent<Result, TypedEvent<Result>,AnnotatedUpdate>;
+        const a = e.event.event.args;
+        // if at home
+        if (a.homeDomain === e.event.domain) {
+          this.homeUpdate(e);
+        } else {
+          this.replicaUpdate(e);
+        }
+      } else if (event.event.eventName === "Process") {
+        const e = event as any as MadEvent<Result, TypedEvent<Result>,AnnotatedProcess>;
+        this.process(e);
+      } else if (event.event.eventName === "Receive") {
+        const e = event as any as MadEvent<Result, TypedEvent<Result>,AnnotatedReceive>;
+        this.bridgeRouterReceive(e);
       }
 
       this.consumed += 1;
@@ -688,7 +708,15 @@ export class Processor extends Consumer {
     return hashes.map((hash) => this.getMsg(hash)!).filter((m) => !!m);
   }
 
-  dispatched(e: NomadEvent) {
+  dispatched(e: MadEvent<Result, TypedEvent<Result>, AnnotatedDispatch>) {
+
+    const m = new NomadMessage(this.sdks[0], e.event);
+    this.add(m);
+    this.addToSyncQueue(m.bodyHash);
+    this.senderRegistry.dispatch(e, m);
+
+    /*
+
     const m = new NomadMessage(
       e.domain,
       ...e.destinationAndNonce(),
@@ -713,8 +741,29 @@ export class Processor extends Consumer {
     // this.logger.warn(`!Gas for dispatched from ${m.origin, m.destination} to ${m.origin, m.destination} (${e.tx}) = ${gas} (${e.gasUsed})`);
     this.emit("dispatched", m.origin, m.destination, gas);
     logger.debug(`Created message`);
+    */
 
-    if (!this.domains.includes(e.domain)) this.domains.push(e.domain);
+    if (!this.domains.includes(e.event.domain)) this.domains.push(e.event.domain);
+  }
+
+  bridgeRouterSend(e: MadEvent<Result, TypedEvent<Result>, AnnotatedDispatch>) {
+
+    const m = new NomadMessage(this.sdks[0], e.event);
+    
+    BridgeMessage.fromNomadMessage()
+
+
+    // let logger = this.logger.child({ eventName: "bridgeSent" });
+    const hash = this.senderRegistry.bridgeRouterSend(e);
+    // if (hash) {
+    //   logger.child({ messageHash: hash }).debug(`Found dispatched message`);
+    //   this.addToSyncQueue(hash);
+    // } else {
+    //   logger.warn(
+    //     { tx: e.tx, domain: e.domain },
+    //     `Haven't found a message for BridgeReceived event`
+    //   );
+    // }
   }
 
   homeUpdate(e: NomadEvent) {
@@ -792,19 +841,7 @@ export class Processor extends Consumer {
     }
   }
 
-  bridgeRouterSend(e: NomadEvent) {
-    let logger = this.logger.child({ eventName: "bridgeSent" });
-    const hash = this.senderRegistry.bridgeRouterSend(e);
-    if (hash) {
-      logger.child({ messageHash: hash }).debug(`Found dispatched message`);
-      this.addToSyncQueue(hash);
-    } else {
-      logger.warn(
-        { tx: e.tx, domain: e.domain },
-        `Haven't found a message for BridgeReceived event`
-      );
-    }
-  }
+  
 
   bridgeRouterReceive(e: NomadEvent) {
     const m = this.getMsgsByOriginAndNonce(...e.originAndNonce());

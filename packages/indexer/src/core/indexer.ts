@@ -1,5 +1,7 @@
 import { Orchestrator } from "./orchestrator";
-import { BridgeContext } from "@nomad-xyz/sdk-bridge";
+import { AnnotatedSend, BridgeContext, AnnotatedReceive, SendTypes, SendEvent, SendArgs } from "@nomad-xyz/sdk-bridge";
+import { Annotated, AnnotatedDispatch, AnnotatedProcess, AnnotatedUpdate, NomadContext } from "@nomad-xyz/sdk";
+
 import fs from "fs";
 import { ContractType, EventType, NomadEvent, EventSource } from "./event";
 import { Home, Replica } from "@nomad-xyz/contracts-core";
@@ -78,7 +80,7 @@ const RETRIES = 100;
 
 export class Indexer {
   domain: number;
-  sdk: BridgeContext;
+  sdks: [NomadContext, BridgeContext];
   orchestrator: Orchestrator;
   persistance: Persistance;
   blockCache: KVCache;
@@ -94,9 +96,9 @@ export class Indexer {
 
   eventCallback: undefined | ((event: NomadEvent) => void);
 
-  constructor(domain: number, sdk: BridgeContext, orchestrator: Orchestrator) {
+  constructor(domain: number, sdks: [NomadContext, BridgeContext], orchestrator: Orchestrator) {
     this.domain = domain;
-    this.sdk = sdk;
+    this.sdks = sdks;
     this.orchestrator = orchestrator;
     this.develop = false;
     if (this.develop) {
@@ -142,7 +144,7 @@ export class Indexer {
   }
 
   get provider(): ethers.providers.Provider {
-    return this.sdk.getProvider(this.domain)!;
+    return this.sdks[1].getProvider(this.domain)!;
   }
 
   get network(): string {
@@ -405,22 +407,22 @@ export class Indexer {
   }
 
   home(): Home {
-    return this.sdk.getCore(this.domain)!.home;
+    return this.sdks[1].getCore(this.domain)!.home;
   }
 
   bridgeRouter(): BridgeRouter {
-    return this.sdk.mustGetBridge(this.domain).bridgeRouter;
+    return this.sdks[1].mustGetBridge(this.domain).bridgeRouter;
   }
 
   replicaForDomain(domain: number): Replica {
-    return this.sdk.getReplicaFor(domain, this.domain)!;
+    return this.sdks[1].getReplicaFor(domain, this.domain)!;
   }
 
   async updateAll(replicas: number[]) {
     let from = Math.max(
       this.lastBlock + 1,
       this.persistance.height,
-      this.sdk.getBridge(this.domain)?.deployHeight || 0
+      this.sdks[1].getBridge(this.domain)?.deployHeight || 0
     );
     const [to, error] = await retry(
       async () => {
@@ -468,7 +470,7 @@ export class Indexer {
     const fetchEvents = async (
       from: number,
       to: number
-    ): Promise<NomadEvent[]> => {
+    ): Promise<MadEvent<Result, TypedEvent<Result>, (AnnotatedSend|AnnotatedReceive|AnnotatedDispatch|AnnotatedUpdate|AnnotatedProcess)>[]> => {
       const homeEvents = await this.fetchHome(from, to);
       const replicasEvents = (
         await Promise.all(replicas.map((r) => this.fetchReplica(r, from, to)))
@@ -478,7 +480,7 @@ export class Indexer {
       return [...homeEvents, ...replicasEvents, ...bridgeRouterEvents];
     };
 
-    const allEvents: NomadEvent[] = [];
+    const allEvents: MadEvent<Result, TypedEvent<Result>, (AnnotatedSend|AnnotatedReceive|AnnotatedDispatch|AnnotatedUpdate|AnnotatedProcess)>[] = [];
 
     const domain2batchSize = new Map([
       [1650811245, 500],
@@ -496,8 +498,8 @@ export class Indexer {
       );
       const events = await fetchEvents(batchFrom, batchTo);
       if (!events) throw new Error(`KEk`);
-      events.sort((a, b) => a.ts - b.ts);
-      await this.persistance.store(...events);
+      events.sort((a, b) => a.timestamp - b.timestamp);
+      // xxxxxxxx await this.persistance.store(...events);
       try {
         if (this.develop) {
           this.dummyTestEventsIntegrity(batchTo);
@@ -518,7 +520,7 @@ export class Indexer {
       allEvents.push(
         ...events.filter((newEvent) =>
           allEvents.every(
-            (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash()
+            (oldEvent) => newEvent.unique() !== oldEvent.unique()
           )
         )
       );
@@ -529,7 +531,7 @@ export class Indexer {
 
     if (!allEvents) throw new Error("kek");
 
-    allEvents.sort((a, b) => a.ts - b.ts);
+    allEvents.sort((a, b) => a.timestamp - b.timestamp);
 
     if (this.develop || true) this.dummyTestEventsIntegrity();
     this.logger.info(`Fetched all`);
@@ -634,9 +636,9 @@ export class Indexer {
     this.persistance.persist();
   }
 
-  async fetchBridgeRouter(from: number, to: number) {
+  async fetchBridgeRouter(from: number, to: number): Promise<MadEvent<Result, TypedEvent<Result>, (AnnotatedSend| AnnotatedReceive)>[]> {
     const br = this.bridgeRouter();
-    const allEvents = [];
+    const allEvents: MadEvent<Result, TypedEvent<Result>, (AnnotatedSend| AnnotatedReceive)>[] = [];
     {
       const [events, error] = await retry(
         async () => {
@@ -644,8 +646,11 @@ export class Indexer {
             RpcRequestMethod.GetLogs,
             this.network
           );
+
           const start = new Date().valueOf();
-          const r = await br.queryFilter(br.filters.Send(), from, to);
+          // const r = await queryAnnotatedBridgeEvents<SendTypes, SendArgs>(this.sdks[1], this.domain, br, br.filters.Send(), from, to);
+          const r = await Annotated.fromEvents(this.sdks[1].resolveDomain(this.domain), await br.queryFilter(br.filters.Send(), from, to))
+          // const r = await br.queryFilter(br.filters.Send(), from, to);
           this.orchestrator.metrics.observeRpcLatency(
             RpcRequestMethod.GetLogs,
             this.network,
@@ -677,34 +682,13 @@ export class Indexer {
           `There is no error, but events for some reason are still undefined`
         );
       }
-      const parsedEvents = await Promise.all(
-        events.map(async (event) => {
-          let { timestamp, gasUsed } = await this.getAdditionalInfo(
-            event.transactionHash
-          );
-          return new NomadEvent(
-            this.domain,
-            EventType.BridgeRouterSend,
-            ContractType.BridgeRouter,
-            0,
-            timestamp,
-            {
-              token: event.args[0],
-              from: event.args[1],
-              toDomain: event.args[2],
-              toId: event.args[3],
-              amount: event.args[4],
-              fastLiquidityEnabled: event.args[5],
-              evmHash: event.transactionHash,
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
-          );
-        })
-      );
-      allEvents.push(...parsedEvents);
+      // const x: Annotated<ethers.utils.Result, SendEvent> = events[0];
+      // const x: AnnotatedSend = events[0] as any as Annotated<ethers.utils.Result, TypedEvent<SendTypes & SendArgs>>;
+
+      allEvents.push(...await Promise.all(events.map(e => MadEvent.withProvider(e as any as AnnotatedSend, this.sdks[0].mustGetProvider(this.domain)))));
+
+
+      // allEvents.push(...events.map(ev => ev as any as AnnotatedSend));
     }
 
     {
@@ -715,7 +699,8 @@ export class Indexer {
             this.network
           );
           const start = new Date().valueOf();
-          const r = await br.queryFilter(br.filters.Receive(), from, to);
+          // const r = await br.queryFilter(br.filters.Receive(), from, to);
+          const r = await Annotated.fromEvents(this.sdks[1].resolveDomain(this.domain), await br.queryFilter(br.filters.Receive(), from, to))
           this.orchestrator.metrics.observeRpcLatency(
             RpcRequestMethod.GetLogs,
             this.network,
@@ -747,39 +732,19 @@ export class Indexer {
           `There is no error, but events for some reason are still undefined`
         );
       }
-      const parsedEvents = await Promise.all(
-        events.map(async (event) => {
-          let { timestamp, gasUsed } = await this.getAdditionalInfo(
-            event.transactionHash
-          );
-          return new NomadEvent(
-            this.domain,
-            EventType.BridgeRouterReceive,
-            ContractType.BridgeRouter,
-            0,
-            timestamp,
-            {
-              originAndNonce: event.args[0],
-              token: event.args[1],
-              recipient: event.args[2],
-              liquidityProvider: event.args[3],
-              amount: event.args[4],
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
-          );
-        })
-      );
-      allEvents.push(...parsedEvents);
+      
+      allEvents.push(...await Promise.all(events.map(e => MadEvent.withProvider(e as any as AnnotatedReceive, this.sdks[0].mustGetProvider(this.domain)))));
+      // allEvents.push(...events.map(ev => ev as any as AnnotatedReceive));
     }
 
     return allEvents;
   }
 
-  async fetchHome(from: number, to: number) {
-    let fetchedEvents: NomadEvent[] = [];
+  async fetchHome(from: number, to: number): Promise<MadEvent<Result, TypedEvent<Result>, (AnnotatedDispatch| AnnotatedUpdate)>[]> {
+    // let fetchedEvents: (AnnotatedDispatch| AnnotatedUpdate)[] = [];
+    // const sdk = getNomadContext('production');
+    const allEvents: MadEvent<Result, TypedEvent<Result>, (AnnotatedDispatch| AnnotatedUpdate)>[] = [];
+
 
     const home = this.home();
     {
@@ -790,7 +755,9 @@ export class Indexer {
             this.network
           );
           const start = new Date().valueOf();
-          const r = await home.queryFilter(home.filters.Dispatch(), from, to);
+          
+          const r = await Annotated.fromEvents(this.sdks[1].resolveDomain(this.domain), await home.queryFilter(home.filters.Dispatch(), from, to))
+          // const r = await queryAnnotatedNomadEvents<DispatchTypes, DispatchArgs>(this.sdks[0], this.domain, home, home.filters.Dispatch(), from, to);
           this.orchestrator.metrics.observeRpcLatency(
             RpcRequestMethod.GetLogs,
             this.network,
@@ -823,34 +790,9 @@ export class Indexer {
         );
       }
 
-      const parsedEvents = await Promise.all(
-        events.map(async (event) => {
-          let { timestamp, gasUsed } = await this.getAdditionalInfo(
-            event.transactionHash
-          );
 
-          return new NomadEvent(
-            this.domain,
-            EventType.HomeDispatch,
-            ContractType.Home,
-            0,
-            timestamp,
-            {
-              messageHash: event.args[0],
-              leafIndex: event.args[1],
-              destinationAndNonce: event.args[2],
-              committedRoot: event.args[3],
-              message: event.args[4],
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
-          );
-        })
-      );
-
-      fetchedEvents.push(...parsedEvents);
+      allEvents.push(...await Promise.all(events.map(e => MadEvent.withProvider(e as any as AnnotatedDispatch, this.sdks[0].mustGetProvider(this.domain)))));
+      // allEvents.push(...events.map(ev => ev as any as AnnotatedDispatch));
     }
 
     {
@@ -861,7 +803,9 @@ export class Indexer {
             this.network
           );
           const start = new Date().valueOf();
-          const r = await home.queryFilter(home.filters.Update(), from, to);
+          // const r = await home.queryFilter(home.filters.Update(), from, to);
+          const r = await Annotated.fromEvents(this.sdks[1].resolveDomain(this.domain), await home.queryFilter(home.filters.Update(), from, to))
+          // const r = await queryAnnotatedNomadEvents<UpdateTypes, UpdateArgs>(sdk, this.domain, home, home.filters.Update(), from, to);
           this.orchestrator.metrics.observeRpcLatency(
             RpcRequestMethod.GetLogs,
             this.network,
@@ -894,38 +838,14 @@ export class Indexer {
         );
       }
 
-      const parsedEvents = await Promise.all(
-        events.map(async (event) => {
-          let { timestamp, gasUsed } = await this.getAdditionalInfo(
-            event.transactionHash
-          );
-          return new NomadEvent(
-            this.domain,
-            EventType.HomeUpdate,
-            ContractType.Home,
-            0,
-            timestamp,
-            {
-              homeDomain: event.args[0],
-              oldRoot: event.args[1],
-              newRoot: event.args[2],
-              signature: event.args[3],
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
-          );
-        })
-      );
-      fetchedEvents.push(...parsedEvents);
+      allEvents.push(...await Promise.all(events.map(e => MadEvent.withProvider(e as any as AnnotatedUpdate, this.sdks[0].mustGetProvider(this.domain)))));
     }
 
-    return fetchedEvents;
+    return allEvents;
   }
 
-  async fetchReplica(domain: number, from: number, to: number) {
-    let fetchedEvents: NomadEvent[] = [];
+  async fetchReplica(domain: number, from: number, to: number): Promise<MadEvent<Result, TypedEvent<Result>, (AnnotatedUpdate| AnnotatedProcess)>[]> {
+    const allEvents: MadEvent<Result, TypedEvent<Result>, (AnnotatedUpdate|AnnotatedProcess)>[] = [];
 
     const replica = this.replicaForDomain(domain);
     {
@@ -936,11 +856,13 @@ export class Indexer {
             this.network
           );
           const start = new Date().valueOf();
-          const r = await replica.queryFilter(
-            replica.filters.Update(),
-            from,
-            to
-          );
+          const r = await Annotated.fromEvents(this.sdks[1].resolveDomain(this.domain), await replica.queryFilter(replica.filters.Update(), from, to))
+          // const r = await queryAnnotatedNomadEvents<UpdateTypes, UpdateArgs>(this.sdks[0], this.domain, replica, replica.filters.Update(), from, to);
+          // const r = await replica.queryFilter(
+          //   replica.filters.Update(),
+          //   from,
+          //   to
+          // );
           this.orchestrator.metrics.observeRpcLatency(
             RpcRequestMethod.GetLogs,
             this.network,
@@ -973,31 +895,8 @@ export class Indexer {
         );
       }
 
-      const parsedEvents = await Promise.all(
-        events.map(async (event) => {
-          let { timestamp, gasUsed } = await this.getAdditionalInfo(
-            event.transactionHash
-          );
-          return new NomadEvent(
-            this.domain,
-            EventType.ReplicaUpdate,
-            ContractType.Replica,
-            domain,
-            timestamp,
-            {
-              homeDomain: event.args[0],
-              oldRoot: event.args[1],
-              newRoot: event.args[2],
-              signature: event.args[3],
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
-          );
-        })
-      );
-      fetchedEvents.push(...parsedEvents);
+      allEvents.push(...await Promise.all(events.map(e => MadEvent.withProvider(e as any as AnnotatedUpdate, this.sdks[0].mustGetProvider(this.domain)))));
+      // allEvents.push(...events);
     }
 
     {
@@ -1008,11 +907,13 @@ export class Indexer {
             this.network
           );
           const start = new Date().valueOf();
-          const r = await replica.queryFilter(
-            replica.filters.Process(),
-            from,
-            to
-          );
+          const r = await Annotated.fromEvents(this.sdks[1].resolveDomain(this.domain), await replica.queryFilter(replica.filters.Process(), from, to))
+          // const r = await queryAnnotatedNomadEvents<ProcessTypes, ProcessArgs>(this.sdks[0], this.domain, replica, replica.filters.Process(), from, to);
+          // const r = await replica.queryFilter(
+          //   replica.filters.Process(),
+          //   from,
+          //   to
+          // );
           this.orchestrator.metrics.observeRpcLatency(
             RpcRequestMethod.GetLogs,
             this.network,
@@ -1046,32 +947,34 @@ export class Indexer {
         );
       }
 
-      const parsedEvents = await Promise.all(
-        events.map(async (event) => {
-          let { timestamp, gasUsed } = await this.getAdditionalInfo(
-            event.transactionHash
-          );
-          return new NomadEvent(
-            this.domain,
-            EventType.ReplicaProcess,
-            ContractType.Replica,
-            domain,
-            timestamp,
-            {
-              messageHash: event.args[0],
-              success: event.args[1],
-              returnData: event.args[2],
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
-          );
-        })
-      );
-      fetchedEvents.push(...parsedEvents);
+      // const parsedEvents = await Promise.all(
+      //   events.map(async (event) => {
+      //     const m = await MadMessage.fromNomadMessage(new NomadMessage(this.sdks[0], event));
+
+          // let { timestamp, gasUsed } = await this.getAdditionalInfo(
+          //   event.transactionHash
+          // );
+          // return new NomadEvent(
+          //   this.domain,
+          //   EventType.ReplicaProcess,
+          //   ContractType.Replica,
+          //   domain,
+          //   timestamp,
+          //   {
+          //     messageHash: event.args[0],
+          //     success: event.args[1],
+          //     returnData: event.args[2],
+          //   },
+          //   event.blockNumber,
+          //   EventSource.Fetch,
+          //   gasUsed,
+          //   event.transactionHash
+          // );
+      //   })
+      // );
+      allEvents.push(...await Promise.all(events.map(e => MadEvent.withProvider(e as any as AnnotatedProcess, this.sdks[0].mustGetProvider(this.domain)))));
     }
-    return fetchedEvents;
+    return allEvents;
   }
 }
 
@@ -1092,7 +995,15 @@ export abstract class Persistance {
   abstract persist(): void;
 }
 
+
+
+// import { getNomadContext, getBridgeContext } from "./sdk";
+// import { Result } from "ethers/lib/utils";
+// import { MadMessage } from "./madMessage";
 import { createClient, RedisClientType } from "redis";
+import { TypedEvent } from "@nomad-xyz/contracts-bridge/dist/src/common";
+import { MadEvent, MadMessage } from "./mad";
+import { Result } from "ethers/lib/utils";
 
 export class RedisPersistance extends Persistance {
   client: RedisClientType;
@@ -1345,3 +1256,127 @@ export class EventsRange implements Iterable<NomadEvent> {
     return this;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////
+
+// import { Domain } from '@nomad-xyz/multi-provider';
+// import { TypedEvent, TypedEventFilter } from '@nomad-xyz/contracts-core';
+// import { AnnotatedUpdate } from "@nomad-xyz/sdk";
+
+// specifies an interface shared by the TS generated contracts
+// export interface TSContract<T extends Result, U> {
+//   queryFilter(
+//     event: TypedEventFilter<T, U>,
+//     fromBlockOrBlockhash?: string | number | undefined,
+//     toBlock?: string | number | undefined,
+//   ): Promise<Array<TypedEvent<T & U>>>;
+// }
+
+// export async function queryAnnotatedBridgeEvents<T extends Result, U>(
+//   context: BridgeContext,
+//   nameOrDomain: string | number,
+//   contract: TSContract<T, U>,
+//   filter: TypedEventFilter<T, U>,
+//   startBlock?: number,
+//   endBlock?: number,
+// ): Promise<Array<Annotated<T, TypedEvent<T & U>>>> {
+//   const events = await getEvents(
+//     context,
+//     nameOrDomain,
+//     contract,
+//     filter,
+//     startBlock,
+//     endBlock,
+//   );
+//   return Annotated.fromEvents(context.resolveDomain(nameOrDomain), events);
+// }
+
+// export async function getEvents<T extends Result, U>(
+//   context: BridgeContext,
+//   nameOrDomain: string | number,
+//   contract: TSContract<T, U>,
+//   filter: TypedEventFilter<T, U>,
+//   startBlock?: number,
+//   endBlock?: number,
+// ): Promise<Array<TypedEvent<T & U>>> {
+//   const domain = context.mustGetDomain(nameOrDomain);
+//   if (domain.paginate) {
+//     return getPaginatedEvents(
+//       context,
+//       domain,
+//       contract,
+//       filter,
+//       startBlock,
+//       endBlock,
+//     );
+//   }
+//   return contract.queryFilter(filter, startBlock, endBlock);
+// }
+
+// async function getPaginatedEvents<T extends Result, U>(
+//   context: BridgeContext,
+//   domain: Domain,
+//   contract: TSContract<T, U>,
+//   filter: TypedEventFilter<T, U>,
+//   startBlock?: number,
+//   endBlock?: number,
+// ): Promise<Array<TypedEvent<T & U>>> {
+//   if (!domain.paginate) {
+//     throw new Error('Domain need not be paginated');
+//   }
+//   // get the first block by params
+//   // or domain deployment block
+//   const firstBlock = startBlock
+//     ? Math.max(startBlock, domain.paginate.from)
+//     : domain.paginate.from;
+//   // get the last block by params
+//   // or current block number
+//   let lastBlock;
+//   if (!endBlock) {
+//     const provider = context.mustGetProvider(domain.domain);
+//     lastBlock = await provider.getBlockNumber();
+//   } else {
+//     lastBlock = endBlock;
+//   }
+//   // query domain pagination limit at a time, concurrently
+//   const eventArrayPromises = [];
+//   for (
+//     let from = firstBlock;
+//     from <= lastBlock;
+//     from += domain.paginate.blocks
+//   ) {
+//     const nextFrom = from + domain.paginate.blocks;
+//     const to = Math.min(nextFrom, lastBlock);
+//     const eventArrayPromise = contract.queryFilter(filter, from, to);
+//     eventArrayPromises.push(eventArrayPromise);
+//   }
+//   // await promises & concatenate results
+//   const eventArrays = await Promise.all(eventArrayPromises);
+//   let events: Array<TypedEvent<T & U>> = [];
+//   for (const eventArray of eventArrays) {
+//     events = events.concat(eventArray);
+//   }
+//   return events;
+// }

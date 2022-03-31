@@ -6,6 +6,7 @@ export * as bridgeEvents from './bridgeEvents';
 export * from './BridgeContext';
 
 export * from './BridgeMessage';
+export { queryAnnotatedEvents } from './fetchEvents';
 
 export * from './tokens';
 export type { TokenIdentifier } from './tokens';

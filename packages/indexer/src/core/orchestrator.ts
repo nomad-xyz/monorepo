@@ -1,9 +1,16 @@
+import { TypedEvent } from "@nomad-xyz/contracts-bridge/dist/src/common";
 import { Home } from "@nomad-xyz/contracts-core";
-import { BridgeContext } from "@nomad-xyz/sdk-bridge";
+import { AnnotatedDispatch, AnnotatedProcess, AnnotatedUpdate, NomadContext } from "@nomad-xyz/sdk";
+// import {  } from "@nomad-xyz/sdk";
+// import {  } from "@nomad-xyz/sdk";
+// import {  } from "@nomad-xyz/sdk";
+import { AnnotatedSend, AnnotatedReceive, BridgeContext } from "@nomad-xyz/sdk-bridge";
 import Logger from "bunyan";
+import { Result } from "ethers/lib/utils";
 import { Consumer } from "./consumer";
 import { DB } from "./db";
 import { Indexer } from "./indexer";
+import { MadEvent } from "./mad";
 import { IndexerCollector } from "./metrics";
 import { Statistics } from "./types";
 import { replacer, sleep } from "./utils";
@@ -49,7 +56,7 @@ class HomeHealth {
 }
 
 export class Orchestrator {
-  sdk: BridgeContext;
+  sdks: [NomadContext, BridgeContext];
   consumer: Consumer;
   indexers: Map<number, Indexer>;
   healthCheckers: Map<number, HomeHealth>;
@@ -61,17 +68,17 @@ export class Orchestrator {
   db: DB;
 
   constructor(
-    sdk: BridgeContext,
+    sdks: [NomadContext, BridgeContext],
     c: Consumer,
     metrics: IndexerCollector,
     logger: Logger,
     db: DB
   ) {
-    this.sdk = sdk;
+    this.sdks = sdks;
     this.consumer = c;
     this.indexers = new Map();
     this.healthCheckers = new Map();
-    this.gov = sdk.governor.domain;
+    this.gov = sdks[1].governor.domain;
     this.done = false;
     this.chaseMode = true;
     this.metrics = metrics;
@@ -86,23 +93,23 @@ export class Orchestrator {
   }
 
   async indexAll(): Promise<number> {
+    const sdk = this.sdks[1];
+    const eventPromises = sdk.domainNumbers.map((domain: number) => this.index(domain));
     const events = (
-      await Promise.all(
-        this.sdk.domainNumbers.map((domain: number) => this.index(domain))
-      )
+      await Promise.all(eventPromises)
     ).flat();
-    events.sort((a, b) => a.ts - b.ts);
+    events.sort((a, b) => a.timestamp - b.timestamp);
     this.logger.info(`Received ${events.length} events after reindexing`);
     await this.consumer.consume(events);
     return events.length;
   }
 
-  async index(domain: number) {
+  async index(domain: number): Promise<MadEvent<Result, TypedEvent<Result>, AnnotatedSend | AnnotatedReceive | AnnotatedDispatch | AnnotatedUpdate | AnnotatedProcess>[]> {
     let indexer = this.indexers.get(domain)!;
 
     let replicas = [];
     if (domain === this.gov) {
-      replicas = this.sdk.domainNumbers.filter((d) => d != this.gov);
+      replicas = this.sdks[1].domainNumbers.filter((d) => d != this.gov);
     } else {
       replicas = [this.gov];
     }
@@ -113,7 +120,7 @@ export class Orchestrator {
   collectStatistics() {
     const stats = this.consumer.stats();
 
-    this.sdk.domainNumbers.forEach(async (domain: number) => {
+    this.sdks[1].domainNumbers.forEach(async (domain: number) => {
       const network = this.domain2name(domain);
       try {
         const s = stats.forDomain(domain).counts;
@@ -132,7 +139,7 @@ export class Orchestrator {
 
   async checkAllHealth() {
     await Promise.all(
-      this.sdk.domainNumbers.map(async (domain: number) => {
+      this.sdks[1].domainNumbers.map(async (domain: number) => {
         await this.checkHealth(domain);
       })
     );
@@ -146,6 +153,7 @@ export class Orchestrator {
   }
 
   async initalFeedConsumer() {
+    // TODO: xxxxx
     const events = (
       await Promise.all(
         Array.from(this.indexers.values()).map((indexer) =>
@@ -154,22 +162,22 @@ export class Orchestrator {
       )
     ).flat();
     events.sort((a, b) => a.ts - b.ts);
-    await this.consumer.consume(events);
+    await this.consumer.consume([]); // events
   }
 
   async initIndexers() {
-    for (const domain of this.sdk.domainNumbers) {
-      const indexer = new Indexer(domain, this.sdk, this);
+    for (const domain of this.sdks[1].domainNumbers) {
+      const indexer = new Indexer(domain, this.sdks, this);
       await indexer.init();
       this.indexers.set(domain, indexer);
     }
   }
 
   async initHealthCheckers() {
-    for (const domain of this.sdk.domainNumbers) {
+    for (const domain of this.sdks[1].domainNumbers) {
       const checker = new HomeHealth(
         domain,
-        this.sdk,
+        this.sdks[1],
         this.logger,
         this.metrics
       );
@@ -255,7 +263,7 @@ export class Orchestrator {
   }
 
   reportAllMetrics() {
-    for (const domain of this.sdk.domainNumbers) {
+    for (const domain of this.sdks[1].domainNumbers) {
       const network = this.domain2name(domain);
       this.metrics.setHomeState(
         network,
@@ -265,7 +273,7 @@ export class Orchestrator {
   }
 
   domain2name(domain: number): string {
-    return this.sdk.getDomain(domain)!.name;
+    return this.sdks[1].getDomain(domain)!.name;
   }
 
   stop() {
