@@ -4,6 +4,7 @@ import * as ethers from 'ethers';
 import { NonceManager } from '@ethersproject/experimental';
 import fs from "fs";
 import * as dotenv from 'dotenv';
+import {getConfig} from "./utils";
 dotenv.config();
 
 run();
@@ -21,41 +22,18 @@ run();
 * 1. run the deploy script (package.json script with URL for config)
 */
 
-function getConfig(): config.NomadConfig  {
-    // TODO:
-    // get argument from process.argv
-    // try string as filepath
-    // try string as URL
-    // error
-    const args = process.argv.slice(2);
-    const path = args[0];
-    try {
-        // TODO: try bad filepath
-        // TODO: try bad file contents
-        return JSON.parse(fs.readFileSync(path).toString()) as any as config.NomadConfig;
-    } catch (e) {
-        console.log("errored....");
-        // TODO: try string as URL
-        throw e;
-    }
-}
-
-// function getOverrides() {
-//     // TODO:
-//     // load from local file (?) based on environment (?)
-//     return {};
-//}
-
 async function run() {
+    // instantiate deploy context
+    const DEPLOY_CONFIG: config.NomadConfig = getConfig();
+    const deployContext = new DeployContext(DEPLOY_CONFIG);
+
+    // get deploy signer and overrides
     const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
     if (!DEPLOYER_PRIVATE_KEY) {
         throw new Error('Add DEPLOYER_PRIVATE_KEY to .env');
     }
-
-    const DEPLOY_CONFIG: config.NomadConfig = getConfig();
     // TODO const OVERRIDES = getOverrides();
-
-    const deployContext = new DeployContext(DEPLOY_CONFIG);
+    // add deploy signer and overrides for each network
     for (const network of deployContext.networks) {
         const provider = deployContext.mustGetProvider(network);
         const wallet = new ethers.Wallet(DEPLOYER_PRIVATE_KEY, provider);
@@ -64,6 +42,7 @@ async function run() {
         // TODO deployContext.overrides.set(network, OVERRIDES[network]);
     }
 
+    // TODO: refactor to overrides config
     deployContext.overrides.set(`rinkeby`, {
         maxFeePerGas: '20000000000',
         maxPriorityFeePerGas: '2000000000',
