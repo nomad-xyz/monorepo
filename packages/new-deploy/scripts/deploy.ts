@@ -63,6 +63,21 @@ async function run() {
         deployContext.registerSigner(network, signer);
         // TODO deployContext.overrides.set(network, OVERRIDES[network]);
     }
+
+    deployContext.overrides.set(`rinkeby`, {
+        maxFeePerGas: '20000000000',
+        maxPriorityFeePerGas: '2000000000',
+    });
+    deployContext.overrides.set(`kovan`, {
+        gasPrice: '10000000000',
+    });
+    deployContext.overrides.set(`moonbasealpha`, {
+        maxFeePerGas: '20000000000',
+        maxPriorityFeePerGas: '2000000000',
+    });
+    deployContext.overrides.set(`milkomedaC1testnet`, {
+    });
+    
     // run the deploy script
     const governanceTransactions = await deployContext.deployAndRelinquish();
     // output the updated config
