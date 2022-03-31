@@ -4,7 +4,7 @@ import * as ethers from 'ethers';
 import { NonceManager } from '@ethersproject/experimental';
 import fs from "fs";
 import * as dotenv from 'dotenv';
-import {getConfig} from "./utils";
+import {getConfig,getOverrides} from "./utils";
 dotenv.config();
 
 run();
@@ -32,31 +32,15 @@ async function run() {
     if (!DEPLOYER_PRIVATE_KEY) {
         throw new Error('Add DEPLOYER_PRIVATE_KEY to .env');
     }
-    // TODO const OVERRIDES = getOverrides();
+    const OVERRIDES = getOverrides();
     // add deploy signer and overrides for each network
     for (const network of deployContext.networks) {
         const provider = deployContext.mustGetProvider(network);
         const wallet = new ethers.Wallet(DEPLOYER_PRIVATE_KEY, provider);
         const signer = new NonceManager(wallet);
         deployContext.registerSigner(network, signer);
-        // TODO deployContext.overrides.set(network, OVERRIDES[network]);
+        deployContext.overrides.set(network, OVERRIDES[network]);
     }
-
-    // TODO: refactor to overrides config
-    deployContext.overrides.set(`rinkeby`, {
-        maxFeePerGas: '20000000000',
-        maxPriorityFeePerGas: '2000000000',
-    });
-    deployContext.overrides.set(`kovan`, {
-        gasPrice: '10000000000',
-    });
-    deployContext.overrides.set(`moonbasealpha`, {
-        maxFeePerGas: '20000000000',
-        maxPriorityFeePerGas: '2000000000',
-    });
-    deployContext.overrides.set(`milkomedaC1testnet`, {
-    });
-    
     // run the deploy script
     const governanceTransactions = await deployContext.deployAndRelinquish();
     // output the updated config
