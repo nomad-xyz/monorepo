@@ -329,7 +329,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     return [];
   }
 
-  async deployCustomTokens(): Promise<ethers.PopulatedTransaction[][]> {
+  async deployCustomTokens(): Promise<ethers.PopulatedTransaction[]> {
     const config = this.context.mustGetDomainConfig(this.domain);
 
     // Skip if not configured
@@ -349,7 +349,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const beaconFactory = new UpgradeBeacon__factory(this.deployer);
     const proxyFactory = new UpgradeBeaconProxy__factory(this.deployer);
 
-    return await Promise.all(
+    const enrollTxs = await Promise.all(
       customs.map(async (custom): Promise<ethers.PopulatedTransaction[]> => {
         // deploy the controller
         const controller = await ubcFactory.deploy(this.overrides);
@@ -436,6 +436,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
         return [];
       }),
     );
+    return enrollTxs.flat();
   }
 
   async relinquish(): Promise<void> {

@@ -225,16 +225,23 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     // first, ensure all bridge contracts are deployed
     await this.ensureBridges();
     // next, ensure all bridge contracts are enrolled in each other
+    // and all custom tokens are also enrolled
     const enrollTransactions = await Promise.all(
-      this.networks.map(async (network) => {
-        const bridge = this.mustGetBridge(network);
-        const name = this.resolveDomainName(network);
-        const remoteDomains = this.data.protocol.networks[name]?.connections;
-        const txns = await Promise.all(
-          remoteDomains.map((remote) => bridge.enrollBridgeRouter(remote)),
-        );
-        return txns.flat();
-      }),
+      this.networks.map(
+        async (network): Promise<ethers.PopulatedTransaction[]> => {
+          const bridge = this.mustGetBridge(network);
+          const name = this.resolveDomainName(network);
+          const remoteDomains = this.data.protocol.networks[name]?.connections;
+          const allEnrollRouterTxns = await Promise.all(
+            remoteDomains.map((remote) => bridge.enrollBridgeRouter(remote)),
+          );
+          const enrollTxns = allEnrollRouterTxns.flat();
+          // deploy and enroll custom tokens
+          const txns = await bridge.deployCustomTokens();
+          enrollTxns.push.apply(txns);
+          return enrollTxns;
+        },
+      ),
     );
     return enrollTransactions.flat();
   }
@@ -242,8 +249,7 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   /// Deploys all configured bridges.
   async ensureBridges(): Promise<void> {
     const toDeploy = this.networks.filter((net) => !this.bridges[net]);
-    const promises = toDeploy.map((net) => this.deployBridge(net));
-    await Promise.all(promises);
+    await Promise.all(toDeploy.map((net) => this.deployBridge(net)));
   }
 
   protected async deployBridge(name: string): Promise<void> {
