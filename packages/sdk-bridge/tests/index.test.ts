@@ -1,15 +1,11 @@
 import { before, describe, it } from 'mocha';
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
-import { utils } from 'ethers';
 
 
 import { BridgeContext } from '@nomad-xyz/sdk-bridge';
 import * as config from '@nomad-xyz/configuration';
 
 import { NomadContext } from '@nomad-xyz/sdk';
-
-import { canonizeId } from '@nomad-xyz/multi-provider/dist/utils';
 
 const ENVIRONMENTS = ['test', 'development', 'staging', 'production'];
 
