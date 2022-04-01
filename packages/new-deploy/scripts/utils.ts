@@ -10,12 +10,8 @@ export function getConfig(): config.NomadConfig {
         // try loading as a local filepath
         return JSON.parse(fs.readFileSync(path).toString()) as any as config.NomadConfig;
     } catch (e) {
-        // try {
             // TODO: try loading as a URL, catch failures
             throw e;
-        // } catch (e) {
-        //     throw e;
-        // }
     }
 }
 
@@ -31,13 +27,8 @@ export function getOverrides(): OverridesMap {
         // try loading as a local filepath
         return JSON.parse(fs.readFileSync(path).toString()) as any as OverridesMap;
     } catch (e) {
-        // try {
             // TODO: try loading as a URL, catch failures
             throw e;
-        // } catch (e) {
-        //     throw e;
-        // }
     }
-
 }
 
