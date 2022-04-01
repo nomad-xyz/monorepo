@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { NomadContext, CoreContracts } from '@nomad-xyz/sdk';
+import { NomadContext, CoreContracts } from '@nomad-xyz/sdk-core';
 
 import * as utils from './utils';
 export { parseAction, Action } from './GovernanceMessage';

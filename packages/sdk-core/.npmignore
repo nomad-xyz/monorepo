@@ -1,0 +1,6 @@
+node_modules/
+tmp.ts
+.env
+config/
+scripts/
+tests/

@@ -10,6 +10,7 @@
     "packages/multi-provider",
     "packages/local-environment",
     "packages/sdk",
+    "packages/sdk-core",
     "packages/sdk-bridge",
     "packages/sdk-govern",
     "packages/indexer"
@@ -28,6 +29,7 @@
     "multi-provider": "yarn workspace @nomad-xyz/multi-provider",
     "prettier": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/monitor --exclude @nomad-xyz/local-environment run prettier",
     "sdk": "yarn workspace @nomad-xyz/sdk",
+    "sdk-core": "yarn workspace @nomad-xyz/sdk-core",
     "sdk-bridge": "yarn workspace @nomad-xyz/sdk-bridge",
     "sdk-govern": "yarn workspace @nomad-xyz/sdk-govern",
     "test": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy  --exclude @nomad-xyz/local-environment run test"

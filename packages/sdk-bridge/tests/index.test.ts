@@ -1,10 +1,10 @@
 import { describe, it } from 'mocha';
 
-import { BridgeContext } from '@nomad-xyz/sdk-bridge';
+import { BridgeContext } from '@nomad-xyz/sdk-core-bridge';
 import * as config from '@nomad-xyz/configuration';
 
 import { expect } from 'chai';
-import { NomadContext } from '@nomad-xyz/sdk';
+import { NomadContext } from '@nomad-xyz/sdk-core';
 
 const ENVIRONMENTS = ['staging', 'production'];
 

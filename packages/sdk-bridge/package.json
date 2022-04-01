@@ -34,7 +34,7 @@
   "dependencies": {
     "@nomad-xyz/configuration": "0.1.0-rc.6",
     "@nomad-xyz/contracts-bridge": "workspace:^",
-    "@nomad-xyz/sdk": "workspace:^",
+    "@nomad-xyz/sdk-core": "workspace:^",
     "ethers": "^5.4.6",
     "web3": "^1.6.1"
   },

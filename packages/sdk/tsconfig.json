@@ -11,17 +11,11 @@
     "./src/tmp.ts"
   ],
   "include": [
-    "./src/*.ts",
-    "src/contracts/*.ts",
-    "src/domains/*.ts",
-    "src/events/*.ts",
-    "src/messages/*.ts",
-    "src/tokens/*.ts",
-    "src/govern/*.ts"
+    "./src/*.ts"
   ],
   "references": [
-    { "path": "../contracts-core" },
-    { "path": "../contracts-bridge" },
-    { "path": "../multi-provider" }
+    { "path": "../sdk-core" },
+    { "path": "../sdk-bridge" },
+    { "path": "../sdk-govern" }
   ]
 }

@@ -1,6 +1,6 @@
 import { TypedEvent } from '../../contracts-core';
 import { BigNumber } from 'ethers';
-import { Annotated } from '@nomad-xyz/sdk';
+import { Annotated } from '@nomad-xyz/sdk-core';
 
 export type SendTypes = [string, string, number, string, BigNumber];
 export type SendArgs = {

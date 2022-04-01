@@ -1,7 +1,7 @@
 import { BigNumberish, ethers } from 'ethers';
 import { utils as mpUtils } from '@nomad-xyz/multi-provider';
 import * as bridge from '@nomad-xyz/contracts-bridge';
-import { FailedHomeError, NomadContext } from '@nomad-xyz/sdk';
+import { FailedHomeError, NomadContext } from '@nomad-xyz/sdk-core';
 import { hexlify } from '@ethersproject/bytes';
 import { BridgeContracts } from './BridgeContracts';
 import { ResolvedTokenInfo, TokenIdentifier } from './tokens';

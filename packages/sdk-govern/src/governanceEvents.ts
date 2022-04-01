@@ -1,6 +1,6 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { TypedEvent } from '../../contracts-core';
-import { Annotated } from '@nomad-xyz/sdk/src/events';
+import { Annotated } from '@nomad-xyz/sdk-core/src/events';
 
 // copied from GovernanceRouter.d.ts
 export type BatchReceivedTypes = [string];

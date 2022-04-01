@@ -1,6 +1,6 @@
 {
-  "name": "@nomad-xyz/sdk",
-  "version": "2.0.0-rc.9",
+  "name": "@nomad-xyz/sdk-core",
+  "version": "1.0.0-rc.1",
   "description": "Nomad SDK",
   "keywords": [
     "nomad",
@@ -32,9 +32,8 @@
   },
   "dependencies": {
     "@nomad-xyz/configuration": "0.1.0-rc.6",
-    "@nomad-xyz/sdk-bridge": "workspace:^",
-    "@nomad-xyz/sdk-core": "workspace:^",
-    "@nomad-xyz/sdk-govern": "workspace:^",
+    "@nomad-xyz/contracts-core": "workspace:^",
+    "@nomad-xyz/multi-provider": "workspace:^",
     "ethers": "^5.4.6"
   },
   "devDependencies": {

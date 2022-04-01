@@ -19,6 +19,6 @@
     { "path": "../contracts-core" },
     { "path": "../contracts-bridge" },
     { "path": "../multi-provider" },
-    { "path": "../sdk" }
+    { "path": "../sdk-core" }
   ]
 }

@@ -3,7 +3,7 @@ import {
   CoreContracts,
   NomadContext,
   NomadMessage,
-} from '@nomad-xyz/sdk';
+} from '@nomad-xyz/sdk-core';
 import { ethers } from 'ethers';
 
 const ACTION_LEN = {

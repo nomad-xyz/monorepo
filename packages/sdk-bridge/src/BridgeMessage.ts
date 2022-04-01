@@ -3,7 +3,7 @@ import { arrayify, hexlify } from '@ethersproject/bytes';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { ethers } from 'ethers';
 import * as bridge from '@nomad-xyz/contracts-bridge';
-import { NomadMessage, AnnotatedDispatch } from '@nomad-xyz/sdk';
+import { NomadMessage, AnnotatedDispatch } from '@nomad-xyz/sdk-core';
 import { ResolvedTokenInfo, TokenIdentifier } from './tokens';
 import { BridgeContracts } from './BridgeContracts';
 import { BridgeContext } from './BridgeContext';
