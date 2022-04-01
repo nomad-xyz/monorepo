@@ -72,7 +72,7 @@ export function uniqueHash(d: EventData): string {
   );
 }
 
-export class NomadEvent {
+export class NomadishEvent {
   domain: number;
   eventType: EventType;
   contractType: ContractType;
@@ -151,7 +151,7 @@ export class NomadEvent {
     };
   }
 
-  static fromObject(v: any): NomadEvent {
+  static fromObject(v: any): NomadishEvent {
     const e = v as {
       domain: number;
       eventType: EventType;
@@ -163,7 +163,7 @@ export class NomadEvent {
       gasUsed: ethers.BigNumber;
       tx: string;
     };
-    return new NomadEvent(
+    return new NomadishEvent(
       e.domain,
       e.eventType,
       e.contractType,

@@ -88,9 +88,28 @@ export async function run(db: DB, logger: Logger) {
       createdAt: Int!
     }
 
+    type Token {
+      id: String!
+      domain: Int!
+      name: String!
+      decimals: Int!
+      symbol: String!
+      totalSupply: String!
+      balance: String!
+    }
+
+    type Replica {
+      id: String!
+      domain: Int!
+      token: Token!
+      totalSupply: String!
+    }
+
     type Query {
       allMessages: [Message!]!
       messageByHash(txHash: String!): Message
+      allTokens: [Token!]!
+      tokenReplicas(id: String!, domain: Int!): [Replica!]!
     }
   `;
 
@@ -102,6 +121,17 @@ export async function run(db: DB, logger: Logger) {
       messageByHash: (args: { txHash: string }) => {
         return db.client.messages.findFirst({
           where: { tx: args.txHash || undefined },
+        });
+      },
+      allTokens: () => {
+        return db.client.token.findMany();
+      },
+      tokenReplicas: (args: {id: string, domain: number}) => {
+        return db.client.replica.findMany({
+          where: {
+            tokenId: args.id,
+            tokenDomain: args.domain,
+          }
         });
       },
     },

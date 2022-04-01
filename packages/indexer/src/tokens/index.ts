@@ -41,7 +41,7 @@ class MakeFun {
     return this;
   }
 
-  async goToBarTogether(): Promise<any[]> {
+  async celebrate(): Promise<any[]> {
     return Promise.all(this.presents);
   }
 }
@@ -76,7 +76,7 @@ class TokenFetcher {
           "balanceOf",
           this.sdk.mustGetBridge(domain).bridgeRouter.address,
         ])
-        .goToBarTogether();
+        .celebrate();
     } catch (e) {
       this.logger.error(`Failed getting info for ${id} ${domain}`);
       return;
@@ -138,7 +138,7 @@ class TokenFetcher {
         try {
           [[_name], [_decimals], [_symbol], [_totalSupply]] = await new MakeFun(token)
             .with("name", "decimals", "symbol", "totalSupply")
-            .goToBarTogether();
+            .celebrate();
         } catch (e) {
           this.logger.error(`Failed getting info for ${domain} ${id}`);
           return;

@@ -1,6 +1,6 @@
 import { parseMessage } from "@nomad-xyz/sdk";
 import { BigNumber, ethers } from "ethers";
-import { EventType, NomadEvent } from "./event";
+import { EventType, NomadishEvent } from "./event";
 import { Statistics } from "./types";
 import { parseBody, ParsedTransferMessage } from "@nomad-xyz/sdk-bridge";
 import { parseAction } from "@nomad-xyz/sdk-govern";
@@ -68,7 +68,7 @@ class StatisticsCollector {
 }
 
 export abstract class Consumer extends EventEmitter {
-  abstract consume(evens: NomadEvent[]): Promise<void>;
+  abstract consume(evens: NomadishEvent[]): Promise<void>;
   abstract stats(): Statistics;
 }
 
@@ -516,15 +516,15 @@ export class NomadMessage {
 
 class SenderLostAndFound {
   p: Processor;
-  dispatchEventsWithMessages: [NomadEvent, NomadMessage][];
-  bridgeRouterSendEvents: NomadEvent[];
+  dispatchEventsWithMessages: [NomadishEvent, NomadMessage][];
+  bridgeRouterSendEvents: NomadishEvent[];
   constructor(p: Processor) {
     this.p = p;
     this.dispatchEventsWithMessages = [];
     this.bridgeRouterSendEvents = [];
   }
 
-  bridgeRouterSend(e: NomadEvent): string | undefined {
+  bridgeRouterSend(e: NomadishEvent): string | undefined {
     // check if we have dispatch events with block >= current && block <= current + 4;
     const hash = this.findMatchingDispatchAndUpdateAndRemove(e);
     if (hash) {
@@ -536,7 +536,7 @@ class SenderLostAndFound {
     }
   }
   findMatchingDispatchAndUpdateAndRemove(
-    brSend: NomadEvent
+    brSend: NomadishEvent
   ): string | undefined {
     const index = this.dispatchEventsWithMessages.findIndex(([dispatch, m]) =>
       this.match(dispatch, brSend, m)
@@ -555,7 +555,7 @@ class SenderLostAndFound {
     return undefined;
   }
 
-  match(dispatch: NomadEvent, brSend: NomadEvent, m: NomadMessage): boolean {
+  match(dispatch: NomadishEvent, brSend: NomadishEvent, m: NomadMessage): boolean {
     return (
       brSend.eventData.toDomain! === m.destination && //brSend.eventData.token?.toLowerCase() === m.bridgeMsgTokenId?.toLowerCase() &&
       new Padded(brSend.eventData.toId!).toEVMAddress() ===
@@ -566,7 +566,7 @@ class SenderLostAndFound {
   }
 
   findMatchingBRSendUpdateAndRemove(
-    dispatch: NomadEvent,
+    dispatch: NomadishEvent,
     m: NomadMessage
   ): boolean {
     const index = this.bridgeRouterSendEvents.findIndex((brSend) =>
@@ -584,7 +584,7 @@ class SenderLostAndFound {
     return false;
   }
 
-  dispatch(e: NomadEvent, m: NomadMessage): boolean {
+  dispatch(e: NomadishEvent, m: NomadMessage): boolean {
     if (m.hasMessage !== MessageType.TransferMessage) return false;
 
     if (this.findMatchingBRSendUpdateAndRemove(e, m)) {
@@ -625,7 +625,7 @@ export class Processor extends Consumer {
     this.logger = logger.child({ span: "consumer" });
   }
 
-  async consume(events: NomadEvent[]): Promise<void> {
+  async consume(events: NomadishEvent[]): Promise<void> {
     for (const event of events) {
       if (event.eventType === EventType.HomeDispatch) {
         this.dispatched(event);
@@ -688,7 +688,7 @@ export class Processor extends Consumer {
     return hashes.map((hash) => this.getMsg(hash)!).filter((m) => !!m);
   }
 
-  dispatched(e: NomadEvent) {
+  dispatched(e: NomadishEvent) {
     const m = new NomadMessage(
       e.domain,
       ...e.destinationAndNonce(),
@@ -717,7 +717,7 @@ export class Processor extends Consumer {
     if (!this.domains.includes(e.domain)) this.domains.push(e.domain);
   }
 
-  homeUpdate(e: NomadEvent) {
+  homeUpdate(e: NomadishEvent) {
     let logger = this.logger.child({ eventName: "updated" });
     const ms = this.getMsgsByOriginAndRoot(e.domain, e.eventData.oldRoot!);
     if (ms.length) {
@@ -742,7 +742,7 @@ export class Processor extends Consumer {
     }
   }
 
-  replicaUpdate(e: NomadEvent) {
+  replicaUpdate(e: NomadishEvent) {
     let logger = this.logger.child({ eventName: "relayed" });
     const ms = this.getMsgsByOriginAndRoot(
       e.replicaOrigin,
@@ -770,7 +770,7 @@ export class Processor extends Consumer {
     }
   }
 
-  process(e: NomadEvent) {
+  process(e: NomadishEvent) {
     let logger = this.logger.child({ eventName: "processed" });
     const m = this.getMsg(e.eventData.messageHash!);
     if (m) {
@@ -792,7 +792,7 @@ export class Processor extends Consumer {
     }
   }
 
-  bridgeRouterSend(e: NomadEvent) {
+  bridgeRouterSend(e: NomadishEvent) {
     let logger = this.logger.child({ eventName: "bridgeSent" });
     const hash = this.senderRegistry.bridgeRouterSend(e);
     if (hash) {
@@ -806,7 +806,7 @@ export class Processor extends Consumer {
     }
   }
 
-  bridgeRouterReceive(e: NomadEvent) {
+  bridgeRouterReceive(e: NomadishEvent) {
     const m = this.getMsgsByOriginAndNonce(...e.originAndNonce());
     let logger = this.logger.child({ eventName: "bridgeReceived" });
 
