@@ -16,11 +16,11 @@ type Address = string;
  * ensures that its contracts always use the latest registered providers and
  * signers.
  */
-
 export class BridgeContext extends NomadContext {
   private bridges: Map<string, BridgeContracts>;
 
   constructor(environment: string | config.NomadConfig = 'development') {
+    console.log('linked :)');
     super(environment);
 
     this.bridges = new Map();

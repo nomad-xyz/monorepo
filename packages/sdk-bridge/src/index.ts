@@ -1,3 +1,5 @@
+import(/* webpackMode: "eager" */ '@nomad-xyz/configuration');
+
 export { BridgeContracts } from './BridgeContracts';
 
 export * from './bridgeEvents';

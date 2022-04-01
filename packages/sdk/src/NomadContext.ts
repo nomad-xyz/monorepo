@@ -3,6 +3,8 @@ import { ethers } from 'ethers';
 import { MultiProvider } from '@nomad-xyz/multi-provider';
 import * as core from '@nomad-xyz/contracts-core';
 import * as config from '@nomad-xyz/configuration';
+import(/* webpackPreload: true */'@nomad-xyz/configuration');
+import(/* webpackMode: 'eager' */'@nomad-xyz/configuration');
 
 import { CoreContracts } from './CoreContracts';
 
@@ -27,6 +29,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
 
   constructor(environment: string | config.NomadConfig = 'development') {
     super();
+    console.log('inside NomadContext')
 
     const conf: config.NomadConfig =
       typeof environment === 'string'

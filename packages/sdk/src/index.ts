@@ -1,3 +1,5 @@
+import(/* webpackMode: "eager" */ '@nomad-xyz/configuration');
+
 export { CoreContracts } from './CoreContracts';
 
 export * from './messages/NomadMessage';
