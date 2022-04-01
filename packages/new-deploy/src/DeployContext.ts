@@ -149,10 +149,6 @@ export default class DeployContext extends MultiProvider<config.Domain> {
       ),
     );
 
-    // perform validation checks on core and bridges
-    await this.checkCores();
-    await this.checkBridges();
-
     return governanceTransactions;
   }
 
@@ -274,6 +270,12 @@ export default class DeployContext extends MultiProvider<config.Domain> {
         this.mustGetBridge(network).relinquish(),
       ),
     ]);
+  }
+
+  // perform validation checks on core and bridges
+  async checkDeployment(): Promise<void> {
+    await this.checkCores();
+    await this.checkBridges();
   }
 
   async checkCores(): Promise<void> {
