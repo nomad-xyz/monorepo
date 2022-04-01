@@ -1,7 +1,7 @@
 import { Orchestrator } from "./orchestrator";
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import fs from "fs";
-import { ContractType, EventType, NomadEvent, EventSource } from "./event";
+import { ContractType, EventType, NomadishEvent, EventSource } from "./event";
 import { Home, Replica } from "@nomad-xyz/contracts-core";
 import { ethers } from "ethers";
 import { FailureCounter, KVCache, replacer, retry, reviver } from "./utils";
@@ -92,7 +92,7 @@ export class Indexer {
   failureCounter: FailureCounter;
   develop: boolean;
 
-  eventCallback: undefined | ((event: NomadEvent) => void);
+  eventCallback: undefined | ((event: NomadishEvent) => void);
 
   constructor(domain: number, sdk: BridgeContext, orchestrator: Orchestrator) {
     this.domain = domain;
@@ -468,7 +468,7 @@ export class Indexer {
     const fetchEvents = async (
       from: number,
       to: number
-    ): Promise<NomadEvent[]> => {
+    ): Promise<NomadishEvent[]> => {
       const homeEvents = await this.fetchHome(from, to);
       const replicasEvents = (
         await Promise.all(replicas.map((r) => this.fetchReplica(r, from, to)))
@@ -478,7 +478,7 @@ export class Indexer {
       return [...homeEvents, ...replicasEvents, ...bridgeRouterEvents];
     };
 
-    const allEvents: NomadEvent[] = [];
+    const allEvents: NomadishEvent[] = [];
 
     const domain2batchSize = new Map([
       [1650811245, 500],
@@ -682,7 +682,7 @@ export class Indexer {
           let { timestamp, gasUsed } = await this.getAdditionalInfo(
             event.transactionHash
           );
-          return new NomadEvent(
+          return new NomadishEvent(
             this.domain,
             EventType.BridgeRouterSend,
             ContractType.BridgeRouter,
@@ -752,7 +752,7 @@ export class Indexer {
           let { timestamp, gasUsed } = await this.getAdditionalInfo(
             event.transactionHash
           );
-          return new NomadEvent(
+          return new NomadishEvent(
             this.domain,
             EventType.BridgeRouterReceive,
             ContractType.BridgeRouter,
@@ -779,7 +779,7 @@ export class Indexer {
   }
 
   async fetchHome(from: number, to: number) {
-    let fetchedEvents: NomadEvent[] = [];
+    let fetchedEvents: NomadishEvent[] = [];
 
     const home = this.home();
     {
@@ -829,7 +829,7 @@ export class Indexer {
             event.transactionHash
           );
 
-          return new NomadEvent(
+          return new NomadishEvent(
             this.domain,
             EventType.HomeDispatch,
             ContractType.Home,
@@ -899,7 +899,7 @@ export class Indexer {
           let { timestamp, gasUsed } = await this.getAdditionalInfo(
             event.transactionHash
           );
-          return new NomadEvent(
+          return new NomadishEvent(
             this.domain,
             EventType.HomeUpdate,
             ContractType.Home,
@@ -925,7 +925,7 @@ export class Indexer {
   }
 
   async fetchReplica(domain: number, from: number, to: number) {
-    let fetchedEvents: NomadEvent[] = [];
+    let fetchedEvents: NomadishEvent[] = [];
 
     const replica = this.replicaForDomain(domain);
     {
@@ -978,7 +978,7 @@ export class Indexer {
           let { timestamp, gasUsed } = await this.getAdditionalInfo(
             event.transactionHash
           );
-          return new NomadEvent(
+          return new NomadishEvent(
             this.domain,
             EventType.ReplicaUpdate,
             ContractType.Replica,
@@ -1051,7 +1051,7 @@ export class Indexer {
           let { timestamp, gasUsed } = await this.getAdditionalInfo(
             event.transactionHash
           );
-          return new NomadEvent(
+          return new NomadishEvent(
             this.domain,
             EventType.ReplicaProcess,
             ContractType.Replica,
@@ -1085,10 +1085,10 @@ export abstract class Persistance {
     this.height = -1;
   }
 
-  abstract store(...events: NomadEvent[]): Promise<void>;
+  abstract store(...events: NomadishEvent[]): Promise<void>;
   abstract init(): Promise<void>;
   abstract sortSorage(): void;
-  abstract allEvents(): Promise<NomadEvent[]>;
+  abstract allEvents(): Promise<NomadishEvent[]>;
   abstract persist(): void;
 }
 
@@ -1115,11 +1115,11 @@ export class RedisPersistance extends Persistance {
     await this.client.hSet(`height`, String(this.domain), String(this.height));
   }
 
-  async store(...events: NomadEvent[]): Promise<void> {
+  async store(...events: NomadishEvent[]): Promise<void> {
     let fromChanged = false;
     let heightChanged = false;
     const promises = [];
-    const block2Events: Map<number, NomadEvent[]> = new Map();
+    const block2Events: Map<number, NomadishEvent[]> = new Map();
     for (const event of events) {
       if (event.block < this.from || this.from === -1) {
         this.from = event.block;
@@ -1169,7 +1169,7 @@ export class RedisPersistance extends Persistance {
     if (height) this.height = parseInt(height);
   }
   sortSorage(): void {}
-  async allEvents(): Promise<NomadEvent[]> {
+  async allEvents(): Promise<NomadishEvent[]> {
     const blocks = (await this.client.sMembers(`${this.domain}blocks`))
       .map((s) => parseInt(s))
       .sort();
@@ -1180,7 +1180,7 @@ export class RedisPersistance extends Persistance {
     );
     const q = x
       .filter((z) => z != "")
-      .map((s) => JSON.parse(s!, reviver) as NomadEvent[])
+      .map((s) => JSON.parse(s!, reviver) as NomadishEvent[])
       .flat();
     return q;
   }
@@ -1188,7 +1188,7 @@ export class RedisPersistance extends Persistance {
 }
 
 export class RamPersistance extends Persistance {
-  block2events: Map<number, NomadEvent[]>;
+  block2events: Map<number, NomadishEvent[]>;
   blocks: number[];
   storePath: string;
 
@@ -1204,7 +1204,7 @@ export class RamPersistance extends Persistance {
     if (block > this.height || this.height === -1) this.height = block;
   }
 
-  async store(...events: NomadEvent[]): Promise<void> {
+  async store(...events: NomadishEvent[]): Promise<void> {
     for (const event of events) {
       const block = this.block2events.get(event.block);
       if (block) {
@@ -1270,7 +1270,7 @@ export class RamPersistance extends Persistance {
       fs.readFileSync(this.storePath, "utf8"),
       reviver
     ) as {
-      block2events: Map<number, NomadEvent[]>;
+      block2events: Map<number, NomadishEvent[]>;
       blocks: number[];
       initiated: boolean;
       from: number;
@@ -1283,12 +1283,12 @@ export class RamPersistance extends Persistance {
     this.height = object.height;
   }
 
-  async allEvents(): Promise<NomadEvent[]> {
+  async allEvents(): Promise<NomadishEvent[]> {
     return Array.from(this.iter());
   }
 }
 
-export class EventsRange implements Iterable<NomadEvent> {
+export class EventsRange implements Iterable<NomadishEvent> {
   private _p: RamPersistance;
   private _cacheBlockIndex: number;
   private _position: number;
@@ -1304,7 +1304,7 @@ export class EventsRange implements Iterable<NomadEvent> {
     return this._p.blocks.at(index);
   }
 
-  next(value?: any): IteratorResult<NomadEvent> {
+  next(value?: any): IteratorResult<NomadishEvent> {
     if (this.nextDone) return { done: true, value: undefined };
     let done = false;
     const blockNumber = this.cachedBlockIndex(this._cacheBlockIndex);

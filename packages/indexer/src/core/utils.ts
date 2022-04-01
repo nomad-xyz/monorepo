@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { NomadEvent } from "./event";
+import { NomadishEvent } from "./event";
 import fs from "fs";
 import { Mean } from "./types";
 import { DB } from "./db";
@@ -37,9 +37,9 @@ export function replacer(key: any, value: any): any {
       dataType: "Map",
       value: Array.from(value.entries()), // or with spread: value: [...value]
     };
-  } else if (value instanceof NomadEvent) {
+  } else if (value instanceof NomadishEvent) {
     return {
-      dataType: "NomadEvent",
+      dataType: "NomadishEvent",
       value: value.toObject(), // or with spread: value: [...value]
     };
   } else if (value instanceof ethers.BigNumber) {
@@ -58,8 +58,8 @@ export function reviver(key: any, value: any): any {
   if (typeof value === "object" && value !== null) {
     if (value.dataType === "Map") {
       return new Map(value.value);
-    } else if (value.dataType === "NomadEvent") {
-      return NomadEvent.fromObject(value.value);
+    } else if (value.dataType === "NomadishEvent") {
+      return NomadishEvent.fromObject(value.value);
     } else if (value.dataType === "BigNumber") {
       return ethers.BigNumber.from(value.value);
     } else if (value.type === "BigNumber") {
