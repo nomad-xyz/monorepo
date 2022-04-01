@@ -3,40 +3,37 @@ import fs from "fs";
 import ethers from "ethers";
 
 export function getConfig(): config.NomadConfig {
-    // TODO:
-    // get argument from process.argv
-    // try string as filepath
-    // try string as URL
-    // error
+    // first, get config location from process.argv
     const args = process.argv.slice(2);
     const path = args[0];
     try {
-        // TODO: try bad filepath
-        // TODO: try bad file contents
+        // try loading as a local filepath
         return JSON.parse(fs.readFileSync(path).toString()) as any as config.NomadConfig;
     } catch (e) {
-        console.log("errored....");
-        // TODO: try string as URL
-        throw e;
+        // try {
+            // TODO: try loading as a URL, catch failures
+            throw e;
+        // } catch (e) {
+        //     throw e;
+        // }
     }
 }
 
 export function getOverrides(): ethers.Overrides {
-    // TODO:
-    // get argument from process.argv
-    // try string as filepath
-    // try string as URL
-    // error
+    // first, get overrides location from process.argv
     const args = process.argv.slice(2);
     const path = args[1];
     try {
-        // TODO: try bad filepath
-        // TODO: try bad file contents
+        // try loading as a local filepath
         return JSON.parse(fs.readFileSync(path).toString()) as any as ethers.Overrides;
     } catch (e) {
-        console.log("errored....");
-        // TODO: try string as URL
-        throw e;
+        // try {
+            // TODO: try loading as a URL, catch failures
+            throw e;
+        // } catch (e) {
+        //     throw e;
+        // }
     }
+
 }
 

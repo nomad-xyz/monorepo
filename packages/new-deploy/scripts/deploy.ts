@@ -9,19 +9,6 @@ dotenv.config();
 
 run();
 
-/*
-* FLOW FOR ENGINEER TO ADD A NEW CHAIN:
-* 1. load published config to local file (package.json script)
-* 2. modify to add a network (manual)
-* 3. run the deploy script (package.json script with local path for config)
-* 4. re-publish config (package.json script)
-*/
-
-/*
-* FLOW FOR ENGINEER TO DEPLOY PUBLISHED CONFIG:
-* 1. run the deploy script (package.json script with URL for config)
-*/
-
 async function run() {
     // instantiate deploy context
     const DEPLOY_CONFIG: config.NomadConfig = getConfig();
