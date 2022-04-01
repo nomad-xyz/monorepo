@@ -284,17 +284,9 @@ export default class DeployContext extends MultiProvider<config.Domain> {
           throw new Error(`network ${net} is missing core config`);
         const core = new CoreContracts(this, net, coreConfig);
 
-        let remotes: string[] = [];
-        // If currently working with governor network
-        if (this.resolveDomain(net) === this.data.protocol.governor.domain) {
-          remotes = this.networks.filter((n) => n != net);
-        } else {
-          remotes = [
-            this.resolveDomainName(this.data.protocol.governor.domain),
-          ];
-        }
+        const domainConfig = this.mustGetDomainConfig(net);
 
-        await core.checkDeploy(remotes, this.data.protocol.governor.domain);
+        await core.checkDeploy(domainConfig.connections, this.data.protocol.governor.domain);
       }),
     );
   }
