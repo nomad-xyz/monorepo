@@ -19,13 +19,17 @@ export function getConfig(): config.NomadConfig {
     }
 }
 
-export function getOverrides(): ethers.Overrides {
+interface OverridesMap {
+    [key: string]: ethers.Overrides;
+}
+
+export function getOverrides(): OverridesMap {
     // first, get overrides location from process.argv
     const args = process.argv.slice(2);
     const path = args[1];
     try {
         // try loading as a local filepath
-        return JSON.parse(fs.readFileSync(path).toString()) as any as ethers.Overrides;
+        return JSON.parse(fs.readFileSync(path).toString()) as any as OverridesMap;
     } catch (e) {
         // try {
             // TODO: try loading as a URL, catch failures
