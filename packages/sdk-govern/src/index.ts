@@ -8,6 +8,11 @@ export type Address = string;
 
 export interface Call {
   to: Address;
+  data?: ethers.utils.BytesLike;
+}
+
+export interface NormalizedCall {
+  to: Address;
   data: ethers.utils.BytesLike;
 }
 
@@ -21,8 +26,8 @@ export interface CallBatchContents {
 }
 
 export class CallBatch {
-  readonly local: Readonly<Call>[];
-  readonly remote: Map<number, Readonly<Call>[]>;
+  readonly local: Readonly<NormalizedCall>[];
+  readonly remote: Map<number, Readonly<NormalizedCall>[]>;
   private governorCore: CoreContracts;
   private context: NomadContext;
   private built?: ethers.PopulatedTransaction;

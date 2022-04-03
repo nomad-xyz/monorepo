@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { Address, Call } from '.';
+import { Address, Call, NormalizedCall } from '.';
 import { utils as mpUtils } from '@nomad-xyz/multi-provider';
 
 import Safe from '@gnosis.pm/safe-core-sdk';
@@ -46,7 +46,7 @@ export function byteLength(bytesLike: ethers.utils.BytesLike): number {
  * @returns The serialized function call, as a '0x'-prepended hex string
  */
 export function serializeCall(call: Call): string {
-  const { to, data } = call;
+  const { to, data } = normalizeCall(call);
   const dataLen = byteLength(data);
 
   if (!to || !data) {
@@ -86,8 +86,8 @@ export function formatBatch(batch: Call[]): string {
 }
 
 export function associateRemotes(
-  remoteCalls: Map<number, Call[]>,
-): [number[], Call[][]] {
+  remoteCalls: Map<number, NormalizedCall[]>,
+): [number[], NormalizedCall[][]] {
   const domains = [];
   const calls = [];
   for (const [key, value] of remoteCalls) {
@@ -97,9 +97,9 @@ export function associateRemotes(
   return [domains, calls];
 }
 
-export function normalizeCall(partial: Call): Readonly<Call> {
-  const to = ethers.utils.hexlify(mpUtils.canonizeId(partial.to));
-  const data = partial.data ?? '0x';
+export function normalizeCall(call: Call): Readonly<NormalizedCall> {
+  const to = ethers.utils.hexlify(mpUtils.canonizeId(call.to));
+  const data = call.data ?? '0x';
 
   return Object.freeze({
     to,
