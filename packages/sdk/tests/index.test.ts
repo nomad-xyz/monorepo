@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { constants, getDefaultProvider, VoidSigner } from 'ethers';
 import { NomadContext, CoreContracts } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
-import { LocalGovernor, RemoteGovernor } from '../dist/CoreContracts';
+// import { LocalGovernor, RemoteGovernor } from '../dist/CoreContracts';
 
 const ENVIRONMENTS = ['test', 'development', 'staging', 'production'];
 
@@ -74,9 +74,7 @@ describe('sdk', async () => {
     });
 
     // TODO:
-    // it('fails if given bad rpc provider string', () => {
-
-    // });
+    it.skip('fails if given bad rpc provider string');
 
     it('maintains connection when registering and unregistering signers', () => {
       const conf = config.getBuiltin('development');
@@ -114,7 +112,7 @@ describe('sdk', async () => {
       expect(() => coreContracts.xAppConnectionManager).to.throw(errMsg);
     });
 
-    it('gets governor and stores in class state', async () => {
+    it.skip('gets governor and stores in class state', async () => {
       // TODO:
       // const provider = getDefaultProvider();
       // coreContracts.connect(provider);

@@ -99,10 +99,10 @@ describe('multi-provider', async () => {
     expect(() => mp.mustGetDomain('c')).to.throw();
   });
 
-  // it('registerSigner errors if no provider', () => {
-  //   const err = 'Must have a provider before registering signer';
-  //   // expect(() => mp.registerSigner('a', new ethers.Signer)).to.throw(err);
-  // });
+  it.skip('registerSigner errors if no provider', () => {
+    // const err = 'Must have a provider before registering signer';
+    // expect(() => mp.registerSigner('a', new ethers.Signer)).to.throw(err);
+  });
 
   // register A and B providers
   it('registers provider', async () => {
@@ -175,7 +175,7 @@ describe('multi-provider', async () => {
     expect(mp.signers.has('b')).to.be.false;
   });
 
-  it('gets connection', () => {
+  it.skip('gets connection', () => {
     const connectionA = mp.getConnection('a');
     expect(connectionA).to.equal(testSigner);
 
@@ -184,7 +184,7 @@ describe('multi-provider', async () => {
     // expect(connectionB).to.equal(testSigner);
   });
 
-  it('gets signer address', async () => {
+  it.skip('gets signer address', async () => {
     // TODO:
     // const addressA = await mp.getAddress('a');
     // const actualAddress = await testSigner.getAddress();
@@ -204,7 +204,7 @@ describe('multi-provider', async () => {
     expect(mp.signers.size).to.equal(0);
   });
 
-  it('registers Wallet Signer', () => {
+  it.skip('registers Wallet Signer', () => {
     // TODO:
   });
 
@@ -227,5 +227,5 @@ describe('multi-provider', async () => {
     expect(newContracts.args[1]).to.equal('someChain');
   });
 
-  // it('resolveDomainName errors i')
+  it.skip('TODO: resolveDomainName errors');
 });
