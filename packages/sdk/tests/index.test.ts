@@ -83,7 +83,7 @@ describe('sdk', async () => {
       const context = new NomadContext(conf);
       const signer = new VoidSigner(constants.AddressZero);
       const provider = getDefaultProvider();
-      context.domainNames.forEach(domain => {
+      context.domainNames.forEach((domain) => {
         context.registerProvider(domain, provider);
       });
       context.registerSigner(2000, signer);
@@ -118,7 +118,6 @@ describe('sdk', async () => {
       // TODO:
       // const provider = getDefaultProvider();
       // coreContracts.connect(provider);
-
       // const localGovernor: LocalGovernor = {
       //   location: 'local',
       //   identifier: conf.protocol.governor.id
@@ -127,17 +126,13 @@ describe('sdk', async () => {
       //   location: 'remote',
       //   domain: 2000
       // }
-
       // let governor = await coreContracts.governor();
       // expect(governor).to.equal(localGovernor);
-
       // // should retrieve from class state second time
       // governor = await coreContracts.governor();
       // expect(governor).to.equal(localGovernor);
-
       // // gets governor from non-governor chain
       // const nonGovCore = new CoreContracts('kovan', conf.core['kovan']);
-
       // governor = await nonGovCore.governor();
       // expect(governor).to.equal(remoteGovernor);
     });

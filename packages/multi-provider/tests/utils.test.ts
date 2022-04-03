@@ -11,7 +11,10 @@ describe('multi-provider utils', async () => {
   const badLen = new Uint8Array(Array(15).fill(1));
   const address = new Uint8Array(Array(20).fill(1));
   const bytes32 = new Uint8Array(Array(32).fill(1));
-  const paddedAddress = new Uint8Array([...Array(12).fill(0), ...Array(20).fill(1)]);
+  const paddedAddress = new Uint8Array([
+    ...Array(12).fill(0),
+    ...Array(20).fill(1),
+  ]);
 
   it('domain for given chain ID', () => {
     const domain = utils.chainIdToDomain(1);
@@ -32,11 +35,15 @@ describe('multi-provider utils', async () => {
     const cannonizedBytes32 = utils.canonizeId(bytes32);
     expect(cannonizedBytes32.toString()).to.equal(bytes32.toString());
     expect(() => utils.canonizeId(tooLong)).to.throw('Too long');
-    expect(() => utils.canonizeId(badLen)).to.throw('bad input, expect address or bytes32');
+    expect(() => utils.canonizeId(badLen)).to.throw(
+      'bad input, expect address or bytes32',
+    );
   });
 
   it('converts Nomad Id to emv address', () => {
-    expect(() => utils.evmId(badLen)).to.throw('Invalid id length. expected 20 or 32. Got 15');
+    expect(() => utils.evmId(badLen)).to.throw(
+      'Invalid id length. expected 20 or 32. Got 15',
+    );
     let evmId = utils.evmId(bytes32);
     expect(evmId).to.equal(hexlify(address));
     expect(evmId.length).to.equal(42);
@@ -48,7 +55,7 @@ describe('multi-provider utils', async () => {
     expect(evmId.length).to.equal(42);
   });
 
-  it('delays x milliseconds', async () => {
+  it.skip('delays x milliseconds', async () => {
     // TODO:
   });
 });

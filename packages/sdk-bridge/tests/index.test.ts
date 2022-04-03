@@ -1,14 +1,12 @@
 import { before, describe, it } from 'mocha';
 import { expect } from 'chai';
 
-
 import { BridgeContext } from '@nomad-xyz/sdk-bridge';
 import * as config from '@nomad-xyz/configuration';
 
 import { NomadContext } from '@nomad-xyz/sdk';
 
 const ENVIRONMENTS = ['test', 'development', 'staging', 'production'];
-
 
 describe('sdk-bridge', async () => {
   describe('BridgeContext', () => {

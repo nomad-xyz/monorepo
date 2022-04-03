@@ -212,11 +212,8 @@ describe('multi-provider', async () => {
     class SomeContracts extends Contracts {
       readonly domain: number;
       readonly name: string;
-    
-      constructor(
-        domain: number,
-        name: string,
-      ) {
+
+      constructor(domain: number, name: string) {
         super(domain, name);
         this.domain = domain;
         this.name = name;
