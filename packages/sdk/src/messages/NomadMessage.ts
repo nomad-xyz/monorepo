@@ -168,21 +168,19 @@ export class NomadMessage<T extends NomadContext> {
           const message = new NomadMessage(context, annotated);
           messages.push(message);
         }
-      } catch (e: any) {
-        
+      } catch (e: unknown) {
+        if (!e) throw e;
+        if (typeof e !== 'object') throw e;
+
+        const err = e as Record<string, unknown>;
+        if (!err.code || !err.reason) throw e;
+
         // Catch known errors that we'd like to squash
-        if ('code' in e){
-          if(e.code == Logger.errors.INVALID_ARGUMENT && e.reason == 'no matching event')
-            continue
-        }
-        else {
-          // We dont recognize this error, throw it
-          console.error(
-            'An error occured while getting NomadMessage from Receipt',
-            e,
-          );
-          throw e;
-        }        
+        if (
+          err.code == Logger.errors.INVALID_ARGUMENT &&
+          err.reason == 'no matching event'
+        )
+          continue;
       }
     }
     return messages;
