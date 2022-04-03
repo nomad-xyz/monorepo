@@ -82,7 +82,7 @@ describe('sdk', async () => {
       const conf = config.getBuiltin('development');
       const context = new NomadContext(conf);
       const signer = new VoidSigner(constants.AddressZero);
-      const provider = getDefaultProvider()
+      const provider = getDefaultProvider();
       context.domainNames.forEach(domain => {
         context.registerProvider(domain, provider);
       });
@@ -105,7 +105,7 @@ describe('sdk', async () => {
       coreContracts = new CoreContracts('rinkeby', conf.core['rinkeby']);
     });
     it('errors if no provider or signer', () => {
-      const errMsg = 'No provider or signer. Call `connect` first.'
+      const errMsg = 'No provider or signer. Call `connect` first.';
 
       // TODO: allow name or domain?
       expect(() => coreContracts.getReplica('kovan')).to.throw(errMsg);
@@ -141,5 +141,5 @@ describe('sdk', async () => {
       // governor = await nonGovCore.governor();
       // expect(governor).to.equal(remoteGovernor);
     });
-  })
+  });
 });

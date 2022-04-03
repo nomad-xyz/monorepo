@@ -97,7 +97,7 @@ export function associateRemotes(
   return [domains, calls];
 }
 
-export function normalizeCall(partial: Partial<Call>): Readonly<Call> {
+export function normalizeCall(partial: Call): Readonly<Call> {
   const to = ethers.utils.hexlify(mpUtils.canonizeId(partial.to));
   const data = partial.data ?? '0x';
 

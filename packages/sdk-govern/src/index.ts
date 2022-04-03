@@ -72,13 +72,13 @@ export class CallBatch {
     return Array.from(this.remote.keys());
   }
 
-  pushLocal(call: Partial<Call>): void {
+  pushLocal(call: Call): void {
     if (this.built)
       throw new Error('Batch has been built. Cannot push more calls');
     this.local.push(utils.normalizeCall(call));
   }
 
-  pushRemote(domain: number, call: Partial<Call>): void {
+  pushRemote(domain: number, call: Call): void {
     if (this.built)
       throw new Error('Batch has been built. Cannot push more calls');
     if (!this.context.getCore(domain))

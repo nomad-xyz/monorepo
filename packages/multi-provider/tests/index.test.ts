@@ -74,7 +74,7 @@ describe('multi-provider', async () => {
   it('resolveDomainName errors if domain is not found', () => {
     expect(() => mp.resolveDomainName(4000)).to.throw();
     expect(() => mp.resolveDomainName('hi')).to.throw();
-  })
+  });
 
   it('returns whether a given domain is registered', () => {
     const known = mp.knownDomain('a');
@@ -222,7 +222,7 @@ describe('multi-provider', async () => {
         this.name = name;
       }
       connect(): void {
-        return
+        return;
       }
     }
     const newContracts = new SomeContracts(2000, 'someChain');
