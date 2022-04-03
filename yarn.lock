@@ -1777,7 +1777,6 @@ __metadata:
     "@nomad-xyz/configuration": 0.1.0-rc.6
     "@nomad-xyz/contracts-bridge": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"
-    "@nomiclabs/hardhat-ethers": ^2.0.5
     "@types/chai": ^4.2.21
     "@types/node": ^16.9.1
     "@typescript-eslint/eslint-plugin": ^4.33.0
@@ -1848,7 +1847,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomiclabs/hardhat-ethers@npm:^2.0.1, @nomiclabs/hardhat-ethers@npm:^2.0.2, @nomiclabs/hardhat-ethers@npm:^2.0.4, @nomiclabs/hardhat-ethers@npm:^2.0.5":
+"@nomiclabs/hardhat-ethers@npm:^2.0.1, @nomiclabs/hardhat-ethers@npm:^2.0.2, @nomiclabs/hardhat-ethers@npm:^2.0.4":
   version: 2.0.5
   resolution: "@nomiclabs/hardhat-ethers@npm:2.0.5"
   peerDependencies:
