@@ -1831,7 +1831,6 @@ __metadata:
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/local-environment": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
-    "@nomiclabs/hardhat-ethers": ^2.0.5
     "@types/chai": ^4.2.21
     "@types/node": ^16.9.1
     "@typescript-eslint/eslint-plugin": ^4.33.0
