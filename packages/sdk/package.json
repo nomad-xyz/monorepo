@@ -34,11 +34,11 @@
   "dependencies": {
     "@nomad-xyz/configuration": "0.1.0-rc.6",
     "@nomad-xyz/contracts-core": "workspace:^",
-    "@nomad-xyz/local-environment": "workspace:^",
     "@nomad-xyz/multi-provider": "workspace:^",
     "ethers": "^5.0.0"
   },
   "devDependencies": {
+    "@nomad-xyz/local-environment": "workspace:^",
     "@types/chai": "^4.2.21",
     "@types/node": "^16.9.1",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
