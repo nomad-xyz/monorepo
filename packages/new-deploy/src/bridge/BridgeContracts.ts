@@ -13,6 +13,7 @@ import Contracts from '../Contracts';
 import DeployContext from '../DeployContext';
 import { log, assertBeaconProxy } from '../utils';
 import { expect } from 'chai';
+import { Call, CallBatch } from '@nomad-xyz/sdk-govern';
 
 export abstract class AbstractBridgeDeploy<T> extends Contracts<T> {
   // Placeholder for future multi-VM abstraction
@@ -37,6 +38,10 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
   assertIsComplete(): void {
     if (!this.data.customs) this._data.customs = [];
     super.assertIsComplete();
+  }
+
+  get domainNumber(): number {
+    return this.context.resolveDomain(this.domain);
   }
 
   get deployer(): ethers.Signer {
@@ -308,7 +313,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
   async enrollBridgeRouter(
     remote: string | number,
-  ): Promise<ethers.PopulatedTransaction[]> {
+  ): Promise<CallBatch | undefined> {
     const remoteBridge = this.context.mustGetBridge(remote);
     const remoteDomain = this.context.resolveDomain(remote);
     const remoteConfig = this.context.mustGetDomainConfig(remote);
@@ -323,8 +328,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const enrolledRemote = await this.bridgeRouterContract.remotes(
       remoteConfig.domain,
     );
-    if (!utils.equalIds(enrolledRemote, ethers.constants.AddressZero))
-      return [];
+    if (!utils.equalIds(enrolledRemote, ethers.constants.AddressZero)) return;
     log(`enroll BridgeRouter for ${remoteName} on ${local}`);
 
     // Check that this key has permissions to set this
@@ -333,13 +337,16 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     // If we can't use deployer ownership
     if (!utils.equalIds(owner, deployer)) {
-      return [
+      const batch = CallBatch.fromContext(this.context.asNomadContext);
+      const tx =
         await this.bridgeRouterContract.populateTransaction.enrollRemoteRouter(
           remoteDomain,
           utils.canonizeId(remoteRouter),
           this.overrides,
-        ),
-      ];
+        );
+      if (typeof tx.to !== 'string') throw new Error('unreachable');
+      batch.push(this.domainNumber, tx as Call);
+      return batch;
     }
 
     const tx = await this.bridgeRouterContract.enrollRemoteRouter(
@@ -348,16 +355,16 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       this.overrides,
     );
     await tx.wait(this.confirmations);
-    return [];
+    return;
   }
 
-  async deployCustomTokens(): Promise<ethers.PopulatedTransaction[]> {
+  async deployCustomTokens(): Promise<CallBatch | undefined> {
     const config = this.context.mustGetDomainConfig(this.domain);
     const name = this.context.resolveDomainName(this.domain);
 
     // Skip if not configured
     const customs = config.bridgeConfiguration.customs;
-    if (!customs) return [];
+    if (!customs) return;
 
     if (!this.data.customs) this._data.customs = [];
 
@@ -474,7 +481,9 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
         return [];
       }),
     );
-    return enrollTxs.flat();
+    const batch = CallBatch.fromContext(this.context.asNomadContext);
+    enrollTxs.flat().forEach((tx) => batch.push(this.domainNumber, tx as Call));
+    return batch;
   }
 
   async relinquish(): Promise<void> {
