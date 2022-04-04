@@ -24,12 +24,14 @@
     "build": "tsc --build",
     "check": "tsc --noEmit",
     "prettier": "prettier --write ./src",
-    "lint": "eslint --fix ./src"
+    "lint": "eslint --fix ./src",
+    "deploy": "ts-node scripts/deploy.ts config/development/config.json config/development/overrides.json",
+    "check-deploy": "ts-node scripts/check.ts config/development/config.json"
   },
   "author": "Illusory Systems Inc.",
   "license": "MIT OR Apache-2.0",
   "dependencies": {
-    "@nomad-xyz/configuration": "0.1.0-rc.5",
+    "@nomad-xyz/configuration": "^0.1.0-rc.7",
     "@nomad-xyz/contracts-bridge": "workspace:^",
     "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/contracts-router": "workspace:^",

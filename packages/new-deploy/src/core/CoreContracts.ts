@@ -11,7 +11,6 @@ import {
 import { utils } from '@nomad-xyz/multi-provider';
 import { ethers } from 'ethers';
 
-import { _notImplemented } from '../utils';
 import Contracts from '../Contracts';
 import DeployContext from '../DeployContext';
 
@@ -41,9 +40,9 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     super(context, domain, data);
   }
 
-  checkComplete(): void {
+  assertIsComplete(): void {
     if (!this.data.replicas) this._data.replicas = {};
-    super.checkComplete();
+    super.assertIsComplete();
   }
 
   get upgradeBeaconController(): contracts.UpgradeBeaconController {
@@ -116,8 +115,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     return utils.parseInt(confirmations);
   }
 
-  get overrides(): ethers.Overrides | undefined {
-    return this.context.overrides.get(this.domain);
+  get overrides(): ethers.Overrides {
+    return this.context.overrides.get(this.domain) || {};
   }
 
   get domainNumber(): number {
@@ -433,15 +432,15 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         `Cannot enroll replica for ${home} on ${local}. Replica does not exist`,
       );
 
-    // Check that this key has permissions to set this
-    const owner = await this.xAppConnectionManager.owner();
-    const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
-
     // skip if already enrolled
     const replicaAlreadyEnrolled = await this.xAppConnectionManager.isReplica(
       replica,
     );
     if (replicaAlreadyEnrolled) return [];
+
+    // Check that this key has permissions to set this
+    const owner = await this.xAppConnectionManager.owner();
+    const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
 
     // If we can't use deployer ownership
     if (!utils.equalIds(owner, deployer)) {
@@ -473,10 +472,6 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const homeConfig = this.context.mustGetDomainConfig(home);
     const localConfig = this.context.mustGetDomainConfig(local);
 
-    // Check that this key has permissions to set this
-    const owner = await this.xAppConnectionManager.owner();
-    const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
-
     // want an async filter, but this'll have to do
     // We make an array with the enrolled status of each watcher, then filter
     // the watchers based on that status array. Mapping ensures that the status
@@ -494,6 +489,10 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const watchersToEnroll = watchers.filter(
       (_, idx) => !enrollmentStatuses[idx],
     );
+
+    // Check that this key has permissions to set this
+    const owner = await this.xAppConnectionManager.owner();
+    const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
 
     // If we can't use deployer ownership
     if (!utils.equalIds(owner, deployer)) {
@@ -603,28 +602,23 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   /// deployer owns the governance router) this instead returns a list of
   /// governance transactions that must be made in order to transfer
   /// governorship
-  async appointGovernor(): Promise<ethers.PopulatedTransaction[]> {
+  async appointGovernor(): Promise<void> {
     const governor = this.context.data.protocol.governor;
 
-    // Check that this key has permissions to set this
+    // Check that the deployer key has permissions to transfer governor
     const owner = await this.governanceRouter.governor();
     const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
 
-    // If we can't use deployer ownership
-    if (!utils.equalIds(owner, deployer)) {
-      // TODO:
-      // transform into a governance tx targeting the Governing core
-      return _notImplemented();
+    // If the deployer key DOES have permissions to transfer governor,
+    if (utils.equalIds(owner, deployer)) {
+      // submit transaction to transfer governor
+      const tx = await this.governanceRouter.transferGovernor(
+        governor.domain,
+        utils.evmId(governor.id),
+        this.overrides,
+      );
+      await tx.wait(this.confirmations);
     }
-
-    // If we can use deployer ownership
-    const tx = await this.governanceRouter.transferGovernor(
-      governor.domain,
-      utils.evmId(governor.id),
-      this.overrides,
-    );
-    await tx.wait(this.confirmations);
-    return [];
   }
 
   async checkDeploy(
@@ -686,7 +680,10 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
             utils.evmId(watcher),
             domainNumber,
           );
-        expect(watcherPermissions).to.be.true;
+        expect(
+          watcherPermissions,
+          `Watcher of '${this.domain}' at remote '${domain}' doesn't have permissions`,
+        ).to.be.true;
       });
     }
 
@@ -742,39 +739,6 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     // check verification addresses
     // TODO: add beacon and proxy where needed.
-    this.checkVerificationInput(
-      'UpgradeBeaconController',
-      this.data.upgradeBeaconController,
-    );
-    this.checkVerificationInput(
-      'XAppConnectionManager',
-      this.data.xAppConnectionManager,
-    );
-    this.checkVerificationInput('UpdaterManager', this.data.updaterManager);
-    this.checkVerificationInput('Home', this.data.home.implementation);
-    this.checkVerificationInput(
-      'GovernanceRouter',
-      this.data.governanceRouter.implementation,
-    );
-
-    if (remoteDomains.length > 0) {
-      this.checkVerificationInput(
-        'Replica',
-        replicas[remoteDomains[0]].implementation,
-      );
-
-      const verification = this.context.mustGetVerification(this.domain);
-
-      const replicaProxies = verification.filter(
-        (contract) => contract.name == 'Replica',
-      );
-      remoteDomains.forEach((domain) => {
-        const replicaProxy = replicaProxies.find((proxy) => {
-          return (proxy.address = replicas[domain].proxy);
-        });
-        expect(replicaProxy).to.not.be.undefined;
-      });
-    }
   }
 
   checkVerificationInput(name: string, addr: string): void {
