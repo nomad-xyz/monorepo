@@ -256,8 +256,8 @@ export default class DeployContext extends MultiProvider<config.Domain> {
 
     await bridge.deployTokenUpgradeBeacon();
     await bridge.deployTokenRegistry();
-
-    await Promise.all([bridge.deployBridgeRouter(), bridge.deployEthHelper()]);
+    await bridge.deployBridgeRouter();
+    await bridge.deployEthHelper();
 
     this.addBridge(name, bridge.complete());
   }
