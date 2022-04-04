@@ -23,9 +23,10 @@ const program = process.env.PROGRAM! as Program;
 
   if (program === "api") {
     
-    const i = startTokenUpdater(sdk, db, logger);
+    const [s, p] = await startTokenUpdater(sdk, db, logger);
     await api.run(db, logger);
-    clearInterval(await i);
+    s();
+    await p;
 
   } else if (program === "core") {
 
@@ -35,12 +36,13 @@ const program = process.env.PROGRAM! as Program;
   } else {
 
     logger.warn(`Starting all on the same process...`);
-    const i = startTokenUpdater(sdk, db, logger);
+    const [s, p] = await startTokenUpdater(sdk, db, logger);
     await Promise.all([
       api.run(db, logger),
       core.run(sdk, db, logger, m),
     ]).catch(e => logger.error(`Error happened during run of api or core: ${e}`));
-    clearInterval(await i);
+    s();
+    await p;
 
   }
 })();

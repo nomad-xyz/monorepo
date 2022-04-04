@@ -7,6 +7,7 @@ dotenv.config({});
 import { PrismaClient } from "@prisma/client";
 import { DB } from "../core/db";
 import Logger, { createLogger } from "bunyan";
+import { sleep } from "../core/utils";
 
 const abi = [
   "function name() public view returns (string)",
@@ -61,6 +62,7 @@ class TokenFetcher {
   }
 
   async fetch(id: string, domain: number) {
+    this.logger.debug(`Started fetching of token [${domain}, ${id}]`);
     const provider = this.sdk.mustGetProvider(domain);
     const token = erc20(id, provider);
     let name: string;
@@ -103,6 +105,9 @@ class TokenFetcher {
       update: data,
       create: data,
     });
+
+    this.logger.debug(`Updated token [${domain}, ${id}]`);
+
 
     // Determine remotes whether network is gov or not
     let remotes: number[];
@@ -174,6 +179,8 @@ class TokenFetcher {
           update: data,
           create: data,
         });
+
+        this.logger.debug(`Updated Replica at doamin ${remoteDomain} for [${domain}, ${id}]`);
       })
     );
   }
@@ -225,25 +232,45 @@ class TokenFetcher {
 
 
 
-export async function startTokenUpdater(sdk: BridgeContext, db: DB, logger: Logger) {
+export async function startTokenUpdater(sdk: BridgeContext, db: DB, logger: Logger): Promise<[() => void, Promise<unknown>]> {
   logger.debug(`Starting TokenUpdater`);
 
-  const prisma = new PrismaClient();
-  const f = new TokenFetcher(prisma, sdk, logger);
+  const f = new TokenFetcher(db.client, sdk, logger);
   await f.connect();
 
   const x = async () => {
+    logger.debug(`Calling root update`);
     const tokens = await db.client.token.findMany({
       distinct: ['id', 'domain'],
       where: {}
     });
-    // logger.debug(`Found tokens:`, tokens);
-    return await Promise.all(tokens.map(({id, domain}) => f.fetch(id, domain)));
+    logger.debug(`Found tokens:`, tokens.length);
+    const result = await Promise.all(tokens.map(({id, domain}) => f.fetch(id, domain)));
+    logger.debug(`Root update finished successfully with ${tokens.length} tokens`);
+    return result
   }
 
-  await x();
+  let stopper = false;
 
-  const interval = setInterval(x, 5*60*1000);
+  const ff = () => {stopper = true};
 
-  return interval;
+  const p = new Promise(async (resolve, reject) => {
+    while (true) {
+      if (stopper) break;
+      try {
+        await x();
+        await sleep(5*60*1000) 
+      } catch(e) {
+        logger.error(`Failed updating tokens:`, e);
+      }
+    }
+    return ;
+  });
+
+  
+
+  // const interval = setInterval(() => {x()}, );
+
+  // return interval;
+  return [ff, p];
 }

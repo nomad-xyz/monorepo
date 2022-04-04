@@ -159,9 +159,9 @@ export class DB {
             },
             data: serialized,
           });
-          m.logger.debug(
-            `Message updated in DB. updated: ${serialized.updatedAt}, relayed: ${serialized.relayedAt}, received: ${serialized.receivedAt}, processed: ${serialized.processedAt}`
-          );
+          // m.logger.debug(
+          //   `Message updated in DB. updated: ${serialized.updatedAt}, relayed: ${serialized.relayedAt}, received: ${serialized.receivedAt}, processed: ${serialized.processedAt}`
+          // );
         });
       })
     );

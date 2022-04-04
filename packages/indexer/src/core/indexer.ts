@@ -1,7 +1,7 @@
 import { Orchestrator } from "./orchestrator";
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import fs from "fs";
-import { ContractType, EventType, NomadishEvent, EventSource } from "./event";
+import { ContractType, EventType, NomadishEvent, EventSource, eventTypeToOrder } from "./event";
 import { Home, Replica } from "@nomad-xyz/contracts-core";
 import { ethers } from "ethers";
 import { FailureCounter, KVCache, replacer, retry, reviver } from "./utils";
@@ -491,12 +491,13 @@ export class Indexer {
 
     while (true) {
       const done = Math.floor(((batchTo - from + 1) / (to - from + 1)) * 100);
+
       this.logger.debug(
         `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`
       );
       const events = await fetchEvents(batchFrom, batchTo);
       if (!events) throw new Error(`KEk`);
-      events.sort((a, b) => a.ts - b.ts);
+      events.sort((a, b) => a.ts===b.ts?eventTypeToOrder(a)-eventTypeToOrder(b):a.ts - b.ts);
       await this.persistance.store(...events);
       try {
         if (this.develop) {

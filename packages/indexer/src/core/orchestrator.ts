@@ -3,6 +3,7 @@ import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import Logger from "bunyan";
 import { Consumer } from "./consumer";
 import { DB } from "./db";
+import { eventTypeToOrder } from "./event";
 import { Indexer } from "./indexer";
 import { IndexerCollector } from "./metrics";
 import { Statistics } from "./types";
@@ -153,7 +154,13 @@ export class Orchestrator {
         )
       )
     ).flat();
-    events.sort((a, b) => a.ts - b.ts);
+    events.sort((a, b) => {
+      if (a.ts === b.ts) {
+        return eventTypeToOrder(a) - eventTypeToOrder(b) 
+      } else {
+        return a.ts - b.ts
+      }
+    });
     await this.consumer.consume(events);
   }
 
