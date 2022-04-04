@@ -18,7 +18,7 @@ export default abstract class Contracts<T> {
 
   abstract recordStartBlock(): Promise<void>;
 
-  checkComplete(): void {
+  assertIsComplete(): void {
     for (const key of this.keys) {
       if (!this.data[key]) {
         throw new Error(`Missing key ${key}`);
@@ -27,7 +27,7 @@ export default abstract class Contracts<T> {
   }
 
   complete(): T {
-    this.checkComplete();
+    this.assertIsComplete();
     return this.data as T;
   }
 

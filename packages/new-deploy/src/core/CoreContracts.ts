@@ -40,9 +40,9 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     super(context, domain, data);
   }
 
-  checkComplete(): void {
+  assertIsComplete(): void {
     if (!this.data.replicas) this._data.replicas = {};
-    super.checkComplete();
+    super.assertIsComplete();
   }
 
   get upgradeBeaconController(): contracts.UpgradeBeaconController {

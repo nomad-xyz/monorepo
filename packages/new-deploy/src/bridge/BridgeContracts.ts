@@ -34,9 +34,9 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     super(context, domain, data);
   }
 
-  checkComplete(): void {
+  assertIsComplete(): void {
     if (!this.data.customs) this._data.customs = [];
-    super.checkComplete();
+    super.assertIsComplete();
   }
 
   get deployer(): ethers.Signer {
