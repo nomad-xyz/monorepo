@@ -671,22 +671,20 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       );
       expect(!utils.equalIds(enrolledReplica, ethers.constants.AddressZero));
 
-      const owner = await this.xAppConnectionManager.owner();
-      const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
-
-      if (utils.equalIds(owner, deployer)) {
-        const watchers =
+      const watchers =
         this.context.data.protocol.networks[this.domain].configuration.watchers;
-        //watchers have permission in xAppConnectionManager
-        watchers.forEach(async (watcher) => {
-          const watcherPermissions =
-            await this.xAppConnectionManager.watcherPermission(
-              utils.evmId(watcher),
-              domainNumber,
-            );
-          expect(watcherPermissions, `Watcher of '${this.domain}' at remote '${domain}' doesn't have permissions`).to.be.true;
-        });
-      }
+      //watchers have permission in xAppConnectionManager
+      watchers.forEach(async (watcher) => {
+        const watcherPermissions =
+          await this.xAppConnectionManager.watcherPermission(
+            utils.evmId(watcher),
+            domainNumber,
+          );
+        expect(
+          watcherPermissions,
+          `Watcher of '${this.domain}' at remote '${domain}' doesn't have permissions`,
+        ).to.be.true;
+      });
     }
 
     if (remoteDomains.length > 0) {

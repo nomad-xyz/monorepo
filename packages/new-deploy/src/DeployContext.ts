@@ -288,7 +288,10 @@ export default class DeployContext extends MultiProvider<config.Domain> {
 
         const domainConfig = this.mustGetDomainConfig(net);
 
-        await core.checkDeploy(domainConfig.connections, this.data.protocol.governor.domain);
+        await core.checkDeploy(
+          domainConfig.connections,
+          this.data.protocol.governor.domain,
+        );
       }),
     );
   }
