@@ -248,7 +248,6 @@ export async function startTokenUpdater(sdk: BridgeContext, db: DB, logger: Logg
       distinct: ['tokenId', 'tokenDomain'],
       where: {}
     });
-    tokens[0]
     logger.debug(`Found tokens:`, tokens.length);
     const result = await Promise.all(tokens.map(({tokenId, tokenDomain}) => f.fetch(tokenId!, tokenDomain!)));
     logger.debug(`Root update finished successfully with ${tokens.length} tokens`);
@@ -264,7 +263,7 @@ export async function startTokenUpdater(sdk: BridgeContext, db: DB, logger: Logg
       if (stopper) break;
       try {
         await x();
-        await sleep(5*60*1000) 
+        await sleep(60*1000) 
       } catch(e) {
         logger.error(`Failed updating tokens:`, e);
       }
