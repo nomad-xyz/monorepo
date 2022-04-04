@@ -8,6 +8,11 @@ export type Address = string;
 
 export interface Call {
   to: Address;
+  data?: ethers.utils.BytesLike;
+}
+
+export interface NormalizedCall {
+  to: Address;
   data: ethers.utils.BytesLike;
 }
 
@@ -21,8 +26,8 @@ export interface CallBatchContents {
 }
 
 export class CallBatch {
-  readonly local: Readonly<Call>[];
-  readonly remote: Map<number, Readonly<Call>[]>;
+  readonly local: Readonly<NormalizedCall>[];
+  readonly remote: Map<number, Readonly<NormalizedCall>[]>;
   private governorCore: CoreContracts;
   private context: NomadContext;
   private built?: ethers.PopulatedTransaction;
@@ -72,13 +77,13 @@ export class CallBatch {
     return Array.from(this.remote.keys());
   }
 
-  pushLocal(call: Partial<Call>): void {
+  pushLocal(call: Call): void {
     if (this.built)
       throw new Error('Batch has been built. Cannot push more calls');
     this.local.push(utils.normalizeCall(call));
   }
 
-  pushRemote(domain: number, call: Partial<Call>): void {
+  pushRemote(domain: number, call: Call): void {
     if (this.built)
       throw new Error('Batch has been built. Cannot push more calls');
     if (!this.context.getCore(domain))
