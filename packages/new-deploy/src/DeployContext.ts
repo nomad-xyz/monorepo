@@ -113,24 +113,6 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     this._data = config.addBridge(this.data, name, bridge);
   }
 
-  /// Adds a connection between two known networks. Use this AHEAD OF calling
-  /// `ensureConnections
-  addConnection(left: string, right: string): void {
-    // asserts that the domains are known
-    this.mustGetDomain(left);
-    this.mustGetDomain(right);
-
-    if (this._data.protocol.networks[left].connections.indexOf(right) !== -1) {
-      throw new Error(`${right} already a connection of ${left}`);
-    }
-    if (this._data.protocol.networks[right].connections.indexOf(left) !== -1) {
-      throw new Error(`${left} already a connection of ${right}`);
-    }
-
-    this._data.protocol.networks[left].connections.push(right);
-    this._data.protocol.networks[left].connections.push(left);
-  }
-
   // Intended entrypoint.
   async deployAndRelinquish(): Promise<ethers.PopulatedTransaction[]> {
     // validate the config input
