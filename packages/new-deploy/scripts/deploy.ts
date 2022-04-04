@@ -31,8 +31,10 @@ async function run() {
     // run the deploy script
     const governanceTransactions = await deployContext.deployAndRelinquish();
     // output the updated config
-    fs.writeFileSync(`./scripts/config.json`, JSON.stringify(deployContext.data, null, 4));
-    fs.writeFileSync(`./scripts/verification.json`, JSON.stringify(deployContext.verification, null, 4));
-    fs.writeFileSync(`./scripts/governanceTransactions.json`, JSON.stringify(governanceTransactions, null, 4));
+    const outputDir = "./output";
+    fs.mkdirSync(outputDir, { recursive: true });
+    fs.writeFileSync(`${outputDir}/config.json`, JSON.stringify(deployContext.data, null, 4));
+    fs.writeFileSync(`${outputDir}/verification.json`, JSON.stringify(deployContext.verification, null, 4));
+    fs.writeFileSync(`${outputDir}/governanceTransactions.json`, JSON.stringify(governanceTransactions, null, 4));
     console.log(`DONE!`);
 }
