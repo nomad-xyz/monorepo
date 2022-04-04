@@ -382,6 +382,11 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
           proxy.address,
           this.deployer,
         );
+
+        // initialize the token proxy so that owner is set
+        const initTx = await tokenProxy.initialize(this.overrides);
+        await initTx.wait(this.confirmations);
+
         // set initial details
         await (
           await tokenProxy.setDetails(
