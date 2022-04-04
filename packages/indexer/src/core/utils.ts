@@ -58,7 +58,7 @@ export function reviver(key: any, value: any): any {
   if (typeof value === "object" && value !== null) {
     if (value.dataType === "Map") {
       return new Map(value.value);
-    } else if (value.dataType === "NomadishEvent") {
+    } else if (value.dataType === "NomadEvent" || value.dataType == "NomadishEvent") {
       return NomadishEvent.fromObject(value.value);
     } else if (value.dataType === "BigNumber") {
       return ethers.BigNumber.from(value.value);
