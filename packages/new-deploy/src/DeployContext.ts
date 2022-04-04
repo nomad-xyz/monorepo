@@ -114,8 +114,8 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   }
 
   pushVerification(
-      nameOrDomain: string | number,
-      verification: Verification,
+    nameOrDomain: string | number,
+    verification: Verification,
   ): void {
     const name = this.resolveDomainName(nameOrDomain);
     if (!this.verification.has(name)) this.verification.set(name, []);
@@ -129,7 +129,7 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     const verification = this.verification.get(domain);
     if (!verification)
       throw new Error(
-          `Verification with name ${nameOrDomain} for domain ${domain} is not defined`,
+        `Verification with name ${nameOrDomain} for domain ${domain} is not defined`,
       );
 
     return verification;
@@ -173,9 +173,9 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   async ensureCores(): Promise<void> {
     const networksToDeploy = this.networks.filter((net) => !this.cores[net]);
     await Promise.all(
-        networksToDeploy.map((net) =>
-            this.deployCore(this.mustGetDomainConfig(net)),
-        ),
+      networksToDeploy.map((net) =>
+        this.deployCore(this.mustGetDomainConfig(net)),
+      ),
     );
   }
 
@@ -187,17 +187,17 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     await this.ensureCores();
     // ensure all core contracts are enrolled in each other
     const enrollTransactions = await Promise.all(
-        this.networks.map(async (network) => {
-          const core = this.mustGetCore(network);
-          const name = this.resolveDomainName(network);
-          const remoteDomains = this.data.protocol.networks[name]?.connections;
-          // the following "unreachable" error performs type-narrowing for the compiler
-          if (!remoteDomains) throw new Error('unreachable');
-          const txns = await Promise.all(
-              remoteDomains.map((remote) => core.enrollRemote(remote)),
-          );
-          return txns.flat();
-        }),
+      this.networks.map(async (network) => {
+        const core = this.mustGetCore(network);
+        const name = this.resolveDomainName(network);
+        const remoteDomains = this.data.protocol.networks[name]?.connections;
+        // the following "unreachable" error performs type-narrowing for the compiler
+        if (!remoteDomains) throw new Error('unreachable');
+        const txns = await Promise.all(
+          remoteDomains.map((remote) => core.enrollRemote(remote)),
+        );
+        return txns.flat();
+      }),
     );
     return enrollTransactions.flat();
   }
@@ -214,23 +214,23 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     // next, ensure all bridge contracts are enrolled in each other
     // and all custom tokens are also enrolled
     const enrollTransactions = await Promise.all(
-        this.networks.map(
-            async (network): Promise<ethers.PopulatedTransaction[]> => {
-              const bridge = this.mustGetBridge(network);
-              const name = this.resolveDomainName(network);
-              const remoteDomains = this.data.protocol.networks[name]?.connections;
-              // the following "unreachable" error performs type-narrowing for the compiler
-              if (!remoteDomains) throw new Error('unreachable');
-              const allEnrollRouterTxns = await Promise.all(
-                  remoteDomains.map((remote) => bridge.enrollBridgeRouter(remote)),
-              );
-              const enrollTxns = allEnrollRouterTxns.flat();
-              // deploy and enroll custom tokens
-              const txns = await bridge.deployCustomTokens();
-              enrollTxns.push.apply(txns);
-              return enrollTxns;
-            },
-        ),
+      this.networks.map(
+        async (network): Promise<ethers.PopulatedTransaction[]> => {
+          const bridge = this.mustGetBridge(network);
+          const name = this.resolveDomainName(network);
+          const remoteDomains = this.data.protocol.networks[name]?.connections;
+          // the following "unreachable" error performs type-narrowing for the compiler
+          if (!remoteDomains) throw new Error('unreachable');
+          const allEnrollRouterTxns = await Promise.all(
+            remoteDomains.map((remote) => bridge.enrollBridgeRouter(remote)),
+          );
+          const enrollTxns = allEnrollRouterTxns.flat();
+          // deploy and enroll custom tokens
+          const txns = await bridge.deployCustomTokens();
+          enrollTxns.push.apply(txns);
+          return enrollTxns;
+        },
+      ),
     );
     return enrollTransactions.flat();
   }
@@ -240,7 +240,7 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     await Promise.all([
       ...this.networks.map((network) => this.mustGetCore(network).relinquish()),
       ...this.networks.map((network) =>
-          this.mustGetBridge(network).relinquish(),
+        this.mustGetBridge(network).relinquish(),
       ),
     ]);
   }
