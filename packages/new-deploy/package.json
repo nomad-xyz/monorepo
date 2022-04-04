@@ -26,7 +26,7 @@
     "prettier": "prettier --write ./src",
     "lint": "eslint --fix ./src",
     "deploy": "ts-node scripts/deploy.ts config/development/config.json config/development/overrides.json",
-    "check-deploy": "ts-node scripts/deploy.ts config/development/config.json"
+    "check-deploy": "ts-node scripts/check.ts config/development/config.json"
   },
   "author": "Illusory Systems Inc.",
   "license": "MIT OR Apache-2.0",
