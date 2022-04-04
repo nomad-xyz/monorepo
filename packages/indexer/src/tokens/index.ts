@@ -240,12 +240,17 @@ export async function startTokenUpdater(sdk: BridgeContext, db: DB, logger: Logg
 
   const x = async () => {
     logger.debug(`Calling root update`);
-    const tokens = await db.client.token.findMany({
-      distinct: ['id', 'domain'],
+    const tokens = await db.client.messages.findMany({
+      select: {
+        tokenId: true,
+        tokenDomain: true,
+      },
+      distinct: ['tokenId', 'tokenDomain'],
       where: {}
     });
+    tokens[0]
     logger.debug(`Found tokens:`, tokens.length);
-    const result = await Promise.all(tokens.map(({id, domain}) => f.fetch(id, domain)));
+    const result = await Promise.all(tokens.map(({tokenId, tokenDomain}) => f.fetch(tokenId!, tokenDomain!)));
     logger.debug(`Root update finished successfully with ${tokens.length} tokens`);
     return result
   }
