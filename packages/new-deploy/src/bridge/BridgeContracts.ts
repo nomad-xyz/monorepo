@@ -344,7 +344,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
           utils.canonizeId(remoteRouter),
           this.overrides,
         );
-      if (typeof tx.to !== 'string') throw new Error('unreachable');
+      // safe as populateTransaction always sets `to`
       batch.push(this.domainNumber, tx as Call);
       return batch;
     }
@@ -482,7 +482,8 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       }),
     );
     const batch = CallBatch.fromContext(this.context.asNomadContext);
-    enrollTxs.flat().forEach((tx) => batch.push(this.domainNumber, tx as Call));
+    // safe as populateTransaction always sets `to`
+    enrollTxs.forEach((tx) => batch.push(this.domainNumber, tx as Call[]));
     return batch;
   }
 

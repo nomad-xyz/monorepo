@@ -463,8 +463,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
           homeConfig.domain,
           this.overrides,
         );
-      if (typeof tx.to !== 'string') throw new Error('unreachable');
       const batch = CallBatch.fromContext(this.context.asNomadContext);
+      // safe as populateTransaction always sets `to`
       batch.push(this.domainNumber, tx as Call);
       return batch;
     }
@@ -523,10 +523,10 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
           );
         }),
       );
+
       const batch = CallBatch.fromContext(this.context.asNomadContext);
-      txns.forEach((tx) => {
-        if (tx) batch.push(this.domainNumber, tx as Call);
-      });
+      // safe as populateTransaction always sets `to`
+      batch.push(this.domainNumber, txns as Call[]);
       return batch;
     }
 
@@ -572,6 +572,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
           utils.canonizeId(remoteCore.governanceRouter.address),
         );
       const batch = CallBatch.fromContext(this.context.asNomadContext);
+      // safe as populateTransaction always sets `to`
       batch.push(this.domainNumber, call as Call);
       return batch;
     }
