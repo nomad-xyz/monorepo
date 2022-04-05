@@ -69,7 +69,7 @@ describe('sdk', async () => {
       const conf = config.getBuiltin('development');
       const context = new NomadContext(conf);
       const signer = new VoidSigner(constants.AddressZero);
-      const err = 'Must have a provider before registering signer';
+      const err = 'Missing provider for domain: 2000 : rinkeby';
       expect(() => context.registerSigner(2000, signer)).to.throw(err);
     });
 
