@@ -11,7 +11,7 @@ import * as config from '@nomad-xyz/configuration';
 
 import Contracts from '../Contracts';
 import DeployContext from '../DeployContext';
-import { assertBeaconProxy } from '../utils';
+import { log, assertBeaconProxy } from '../utils';
 import { expect } from 'chai';
 
 export abstract class AbstractBridgeDeploy<T> extends Contracts<T> {
@@ -136,6 +136,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const beacon = proxy.beacon;
     if (!beacon) throw new Error('Tried to deploy proxy without beacon');
     if (proxy.proxy) return; // don't redploy
+    log(`  deploy Proxy on ${name}`);
 
     const factory = new UpgradeBeaconProxy__factory(
       this.context.getDeployer(name),
@@ -159,6 +160,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       throw new Error('Tried to deploy beacon without initial implementation');
     // don't redeploy
     if (proxy.beacon) return;
+    log(`  deploy Beacon on ${name}`);
 
     const ubc = core.upgradeBeaconController.address;
     if (!ubc) throw new Error('Cannot deploy proxy without UBC');
@@ -187,6 +189,8 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
   }
 
   async deployTokenUpgradeBeacon(): Promise<void> {
+    const name = this.context.resolveDomainName(this.domain);
+
     // ensure the implementation exists. An undefined return value indicates
     // that the implementation already exists
     const proxy =
@@ -198,6 +202,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     // don't redeploy
     if (proxy?.beacon) return;
+    log(`deploy BridgeToken UGB on ${name}`);
 
     await this.deployBeacon(proxy);
     proxy.proxy = ethers.constants.AddressZero;
@@ -209,6 +214,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const core = this.context.mustGetCore(this.domain);
     // don't redeploy
     if (this.data.tokenRegistry) return;
+    log(`deploy TokenRegistry on ${name}`);
 
     // preconditions
     if (!this.data.bridgeToken?.beacon || this.data.bridgeToken?.beacon === '')
@@ -244,6 +250,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     // don't redeploy
     if (this.data.bridgeRouter) return;
+    log(`deploy BridgeRouter on ${name}`);
 
     const initData =
       contracts.BridgeRouter__factory.createInterface().encodeFunctionData(
@@ -279,6 +286,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     // precondition
     if (!this.data.bridgeRouter)
       throw new Error('Must have bridge router to deploy eth helper');
+    log(`deploy ETHHelper on ${name}`);
 
     const factory = new contracts.ETHHelper__factory(this.deployer);
     const helper = await factory.deploy(
@@ -316,6 +324,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
         remoteConfig.domain
     );
     if (!utils.equalIds(enrolledRemote, ethers.constants.AddressZero)) return [];
+    log(`enroll BridgeRouter for ${remoteName} on ${local}`);
 
     // Check that this key has permissions to set this
     const owner = await this.bridgeRouterContract.owner();
@@ -343,6 +352,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
   async deployCustomTokens(): Promise<ethers.PopulatedTransaction[]> {
     const config = this.context.mustGetDomainConfig(this.domain);
+    const name = this.context.resolveDomainName(this.domain);
 
     // Skip if not configured
     const customs = config.bridgeConfiguration.customs;
@@ -367,7 +377,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
         // TODO: break down each step, make idempotent
         const existingCustom = this.data.customs?.find(potentialMatch => potentialMatch.token.id == custom.token.id && potentialMatch.token.domain == custom.token.domain);
         if (existingCustom) return [];
-        console.log(`deploy ${custom.name} custom tokens on ${name}`);
+        log(`deploy ${custom.name} Custom Token on ${name}`);
 
         // deploy the controller
         const controller = await ubcFactory.deploy(this.overrides);
@@ -463,6 +473,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
   }
 
   async relinquish(): Promise<void> {
+    const name = this.context.resolveDomainName(this.domain);
     const core = this.context.mustGetCore(this.domain);
     const governance = core.governanceRouter.address;
 
@@ -474,6 +485,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       contracts.map(async (contract) => {
         const owner = await contract.owner();
         if (utils.equalIds(owner, deployer)) {
+          log(`transfer bridge ownership on ${name}`);
           return await contract.transferOwnership(governance, this.overrides);
         }
       }),
