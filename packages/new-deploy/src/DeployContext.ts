@@ -199,10 +199,10 @@ export default class DeployContext extends MultiProvider<config.Domain> {
         // wait on the first replica deploy to ensure that the implementation and beacon are deployed
         const firstReplicaTxns = await core.enrollRemote(firstDomain);
         // perform subsequent replica deploys concurrently (will use same implementation and beacon)
-        const txns = await Promise.all(
+        let txns = await Promise.all(
             restDomains.map((remote) => core.enrollRemote(remote)),
         );
-        txns.push.apply(firstReplicaTxns.flat());
+        txns = txns.concat(firstReplicaTxns.flat());
         return txns.flat();
       }),
     );
@@ -231,10 +231,10 @@ export default class DeployContext extends MultiProvider<config.Domain> {
           const allEnrollRouterTxns = await Promise.all(
             remoteDomains.map((remote) => bridge.enrollBridgeRouter(remote)),
           );
-          const enrollTxns = allEnrollRouterTxns.flat();
+          let enrollTxns = allEnrollRouterTxns.flat();
           // deploy and enroll custom tokens
           const txns = await bridge.deployCustomTokens();
-          enrollTxns.push.apply(txns);
+          enrollTxns = enrollTxns.concat(txns);
           return enrollTxns;
         },
       ),
@@ -280,10 +280,10 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   protected async ensureCoreAndBridgeConnections(): Promise<
     ethers.PopulatedTransaction[]
   > {
-    const governanceTransactions = await this.ensureCoreConnections();
+    let governanceTransactions = await this.ensureCoreConnections();
     const bridgeGovernanceTransactions = await this.ensureBridgeConnections();
     // combine governance transactions and return them
-    governanceTransactions.push.apply(bridgeGovernanceTransactions);
+    governanceTransactions = governanceTransactions.concat(bridgeGovernanceTransactions);
     return governanceTransactions;
   }
 
