@@ -193,9 +193,16 @@ export default class DeployContext extends MultiProvider<config.Domain> {
         const remoteDomains = this.data.protocol.networks[name]?.connections;
         // the following "unreachable" error performs type-narrowing for the compiler
         if (!remoteDomains) throw new Error('unreachable');
+        if (remoteDomains.length == 0) return [];
+        const firstDomain = remoteDomains[0];
+        const restDomains = remoteDomains.slice(1);
+        // wait on the first replica deploy to ensure that the implementation and beacon are deployed
+        const firstReplicaTxns = await core.enrollRemote(firstDomain);
+        // perform subsequent replica deploys concurrently (will use same implementation and beacon)
         const txns = await Promise.all(
-          remoteDomains.map((remote) => core.enrollRemote(remote)),
+            restDomains.map((remote) => core.enrollRemote(remote)),
         );
+        txns.push.apply(firstReplicaTxns.flat());
         return txns.flat();
       }),
     );
