@@ -301,8 +301,6 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
   async enrollBridgeRouter(
     remote: string | number,
   ): Promise<ethers.PopulatedTransaction[]> {
-    const local = this.context.resolveDomainName(this.domain);
-    const remoteName = this.context.resolveDomainName(remote);
     const remoteBridge = this.context.mustGetBridge(remote);
     const remoteDomain = this.context.resolveDomain(remote);
     const remoteConfig = this.context.mustGetDomainConfig(remote);
@@ -313,9 +311,10 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     // don't re-enroll if already enrolled
     const enrolledRemote = await this.bridgeRouterContract.remotes(
-        remoteConfig.domain
+      remoteConfig.domain,
     );
-    if (!utils.equalIds(enrolledRemote, ethers.constants.AddressZero)) return [];
+    if (!utils.equalIds(enrolledRemote, ethers.constants.AddressZero))
+      return [];
 
     // Check that this key has permissions to set this
     const owner = await this.bridgeRouterContract.owner();
@@ -365,7 +364,11 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       customs.map(async (custom): Promise<ethers.PopulatedTransaction[]> => {
         // don't re-deploy custom if already deployed
         // TODO: break down each step, make idempotent
-        const existingCustom = this.data.customs?.find(potentialMatch => potentialMatch.token.id == custom.token.id && potentialMatch.token.domain == custom.token.domain);
+        const existingCustom = this.data.customs?.find(
+          (potentialMatch) =>
+            potentialMatch.token.id == custom.token.id &&
+            potentialMatch.token.domain == custom.token.domain,
+        );
         if (existingCustom) return [];
         console.log(`deploy ${custom.name} custom tokens on ${name}`);
 

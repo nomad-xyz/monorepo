@@ -200,7 +200,7 @@ export default class DeployContext extends MultiProvider<config.Domain> {
         const firstReplicaTxns = await core.enrollRemote(firstDomain);
         // perform subsequent replica deploys concurrently (will use same implementation and beacon)
         let txns = await Promise.all(
-            restDomains.map((remote) => core.enrollRemote(remote)),
+          restDomains.map((remote) => core.enrollRemote(remote)),
         );
         txns = txns.concat(firstReplicaTxns.flat());
         return txns.flat();
@@ -283,7 +283,9 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     let governanceTransactions = await this.ensureCoreConnections();
     const bridgeGovernanceTransactions = await this.ensureBridgeConnections();
     // combine governance transactions and return them
-    governanceTransactions = governanceTransactions.concat(bridgeGovernanceTransactions);
+    governanceTransactions = governanceTransactions.concat(
+      bridgeGovernanceTransactions,
+    );
     return governanceTransactions;
   }
 
