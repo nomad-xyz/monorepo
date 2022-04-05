@@ -536,6 +536,12 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const remoteCore = this.context.mustGetCore(remote);
     const remoteConfig = this.context.mustGetDomainConfig(remote);
 
+    // don't re-enroll if already enrolled
+    const router = await this.governanceRouter.routers(
+        remoteConfig.domain
+    );
+    if (!utils.equalIds(router, ethers.constants.AddressZero)) return [];
+
     // Check that this key has permissions to set this
     const owner = await this.governanceRouter.governor();
     const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
