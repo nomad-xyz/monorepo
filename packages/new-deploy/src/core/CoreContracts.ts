@@ -366,11 +366,12 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   async deployUnenrolledReplica(homeDomain: string | number): Promise<void> {
     const local = this.context.resolveDomainName(this.domain);
     const home = this.context.resolveDomainName(homeDomain);
-
-    const homeCore = this.context.mustGetCore(local);
-
     const localConfig = this.context.mustGetDomainConfig(local);
     const homeConfig = this.context.mustGetDomainConfig(home);
+    const homeCore = this.context.mustGetCore(local);
+
+    // don't redeploy existing replica
+    if (this.data.replicas && this.data.replicas[home]) return;
 
     const root = await homeCore.home.committedRoot();
 
@@ -490,6 +491,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       (_, idx) => !enrollmentStatuses[idx],
     );
 
+    if (watchersToEnroll.length == 0) return [];
+
     // Check that this key has permissions to set this
     const owner = await this.xAppConnectionManager.owner();
     const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
@@ -532,6 +535,12 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const remote = this.context.resolveDomainName(remoteDomain);
     const remoteCore = this.context.mustGetCore(remote);
     const remoteConfig = this.context.mustGetDomainConfig(remote);
+
+    // don't re-enroll if already enrolled
+    const enrolledRemote = await this.governanceRouter.routers(
+        remoteConfig.domain
+    );
+    if (!utils.equalIds(enrolledRemote, ethers.constants.AddressZero)) return [];
 
     // Check that this key has permissions to set this
     const owner = await this.governanceRouter.governor();
@@ -604,6 +613,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   /// governorship
   async appointGovernor(): Promise<void> {
     const governor = this.context.data.protocol.governor;
+    const localDomain = this.context.resolveDomain(this.domain);
 
     // Check that the deployer key has permissions to transfer governor
     const owner = await this.governanceRouter.governor();
@@ -611,6 +621,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     // If the deployer key DOES have permissions to transfer governor,
     if (utils.equalIds(owner, deployer)) {
+      // if the deployer key is the rightful governor, don't attempt to transfer gov
+      if (utils.equalIds(owner, governor.id) && governor.domain == localDomain) return;
       // submit transaction to transfer governor
       const tx = await this.governanceRouter.transferGovernor(
         governor.domain,
