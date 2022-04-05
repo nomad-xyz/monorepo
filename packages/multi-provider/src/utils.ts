@@ -144,30 +144,40 @@ export class UnreachableError extends Error {
   }
 }
 
-export class WithContext<T extends Domain> extends Error {
-  provider: MultiProvider<T>;
+export abstract class WithContext<
+  D extends Domain,
+  T extends MultiProvider<D>,
+> extends Error {
+  provider: T;
 
-  constructor(provider: MultiProvider<T>, msg: string) {
+  constructor(provider: T, msg: string) {
     super(msg);
     this.provider = provider;
   }
 }
 
-export class UnknownDomainError<T extends Domain> extends WithContext<T> {
+export class UnknownDomainError<
+  D extends Domain,
+  T extends MultiProvider<D>,
+> extends WithContext<D, T> {
   domain: string | number;
 
-  constructor(provider: MultiProvider<T>, domain: string | number) {
+  constructor(provider: T, domain: string | number) {
     super(provider, `Attempted to access an unknown domain: ${domain}`);
+    this.name = 'UnknownDomainError';
     this.domain = domain;
   }
 }
 
-export class NoProviderError<T extends Domain> extends WithContext<T> {
+export class NoProviderError<
+  D extends Domain,
+  T extends MultiProvider<D>,
+> extends WithContext<D, T> {
   domain: string | number;
   domainName: string;
   domainNumber: number;
 
-  constructor(provider: MultiProvider<T>, domain: string | number) {
+  constructor(provider: T, domain: string | number) {
     const domainName = provider.resolveDomainName(domain);
     const domainNumber = provider.resolveDomain(domain);
 
@@ -175,7 +185,7 @@ export class NoProviderError<T extends Domain> extends WithContext<T> {
       provider,
       `Missing provider for domain: ${domainNumber} : ${domainName}`,
     );
-
+    this.name = 'NoProviderError';
     this.domain = domain;
     this.domainName = domainName;
     this.domainNumber = domainNumber;
