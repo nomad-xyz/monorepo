@@ -366,11 +366,12 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   async deployUnenrolledReplica(homeDomain: string | number): Promise<void> {
     const local = this.context.resolveDomainName(this.domain);
     const home = this.context.resolveDomainName(homeDomain);
-
-    const homeCore = this.context.mustGetCore(local);
-
     const localConfig = this.context.mustGetDomainConfig(local);
     const homeConfig = this.context.mustGetDomainConfig(home);
+    const homeCore = this.context.mustGetCore(local);
+
+    // don't redeploy existing replica
+    if (this.data.replicas && this.data.replicas[home]) return;
 
     const root = await homeCore.home.committedRoot();
 
