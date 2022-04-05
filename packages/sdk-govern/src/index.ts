@@ -75,6 +75,22 @@ export class CallBatch {
     return batch;
   }
 
+  /// Serialize for JSON storage
+  toJSON(): Readonly<CallBatchContents> {
+    const local = this.local;
+    const remote: RemoteContents = {};
+
+    for (const key of this.remote.keys()) {
+      const calls = this.remote.get(key);
+      if (calls) remote[this.context.resolveDomainName(key)] = calls;
+    }
+
+    return {
+      local,
+      remote,
+    };
+  }
+
   get domains(): number[] {
     return Array.from(this.remote.keys());
   }
