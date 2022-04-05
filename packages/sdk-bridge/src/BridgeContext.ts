@@ -268,7 +268,10 @@ export class BridgeContext extends NomadContext {
 
     await this.checkHome(fromDomain);
     if (this.blacklist().has(fromDomain)) {
-      throw new FailedHomeError('Attempted to send token to failed home!');
+      throw new FailedHomeError(
+        this,
+        'Attempted to send token to failed home!',
+      );
     }
 
     const fromBridge = this.mustGetBridge(from);
@@ -338,7 +341,10 @@ export class BridgeContext extends NomadContext {
 
     await this.checkHome(fromDomain);
     if (this.blacklist().has(fromDomain)) {
-      throw new FailedHomeError('Attempted to send token to failed home!');
+      throw new FailedHomeError(
+        this,
+        'Attempted to send token to failed home!',
+      );
     }
 
     const ethHelper = this.mustGetBridge(from).ethHelper;
