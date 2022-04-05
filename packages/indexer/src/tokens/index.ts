@@ -149,9 +149,9 @@ class TokenFetcher {
           return;
         }
 
-        if (name !== _name) throw new Error(`Look at me! ----> name !== _name in TokenFetcher.fetch()`);
-        if (decimals !== _decimals) throw new Error(`Look at me! ----> decimals !== _decimals in TokenFetcher.fetch()`);
-        if (symbol !== _symbol) throw new Error(`Look at me! ----> symbol !== _symbol in TokenFetcher.fetch()`);
+        if (name !== _name) this.logger.warn(`Original token name !== replica's _name in TokenFetcher.fetch(): ${name} !== ${_name}. Domain: ${remoteDomain}, id: ${remoteId}`);
+        if (decimals !== _decimals) throw new Error(`Original token decimals !== replica's _decimals in TokenFetcher.fetch(): ${decimals} !== ${_decimals}. Domain: ${remoteDomain}, id: ${remoteId}`);
+        if (symbol !== _symbol) this.logger.warn(`Original token symbol !== replica's _symbol in TokenFetcher.fetch(): ${symbol} !== ${_symbol}. Domain: ${remoteDomain}, id: ${remoteId}`);
         // if (!balance.eq(_totalSupply)) console.warn(`totalSupply of ${symbol} (from ${domain}) at ${remoteDomain}\nis ${_totalSupply.toString()}\n want: ${balance}`);
 
         const data = {
@@ -232,14 +232,11 @@ class TokenFetcher {
 
 
 
-export async function startTokenUpdater(sdk: BridgeContext, db: DB, logger: Logger): Promise<[() => void, Promise<unknown>]> {
-  logger.debug(`Starting TokenUpdater`);
-
+export async function startTokenUpdater(sdk: BridgeContext, db: DB, logger: Logger): Promise<[() => void, Promise<void>]> { // Promise<[() => void, Promise<null>]>
   const f = new TokenFetcher(db.client, sdk, logger);
   await f.connect();
 
   const x = async () => {
-    logger.debug(`Calling root update`);
     const tokens = await db.client.messages.findMany({
       select: {
         tokenId: true,
@@ -249,8 +246,7 @@ export async function startTokenUpdater(sdk: BridgeContext, db: DB, logger: Logg
       where: {}
     });
     logger.debug(`Found tokens:`, tokens.length);
-    const result = await Promise.all(tokens.map(({tokenId, tokenDomain}) => f.fetch(tokenId!, tokenDomain!)));
-    logger.debug(`Root update finished successfully with ${tokens.length} tokens`);
+    const result = await Promise.all(tokens.filter(({tokenId, tokenDomain}) => tokenId && tokenDomain).map(({tokenId, tokenDomain}) => f.fetch(tokenId!, tokenDomain!)));
     return result
   }
 
@@ -258,22 +254,27 @@ export async function startTokenUpdater(sdk: BridgeContext, db: DB, logger: Logg
 
   const ff = () => {stopper = true};
 
-  const p = new Promise(async (resolve, reject) => {
+  const p: Promise<void> = new Promise(async (resolve, reject) => {
     while (true) {
-      if (stopper) break;
+      if (stopper) {
+        resolve();
+        break;
+      }
       try {
         await x();
-        await sleep(60*1000) 
+        await sleep(5*60*1000) 
       } catch(e) {
         logger.error(`Failed updating tokens:`, e);
       }
     }
-    return ;
   });
 
-  
-
-  // const interval = setInterval(() => {x()}, );
+  // console.log(`xxxxxxx->`)
+  // const interval = setInterval(() => {
+  //   console.log(`----->`);
+  //   x()
+  // }, 15*1000);
+  // console.log(`xxxxxxx-<`)
 
   // return interval;
   return [ff, p];
