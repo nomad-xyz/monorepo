@@ -298,12 +298,21 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
   async enrollBridgeRouter(
     remote: string | number,
   ): Promise<ethers.PopulatedTransaction[]> {
+    const local = this.context.resolveDomainName(this.domain);
+    const remoteName = this.context.resolveDomainName(remote);
     const remoteBridge = this.context.mustGetBridge(remote);
     const remoteDomain = this.context.resolveDomain(remote);
+    const remoteConfig = this.context.mustGetDomainConfig(remote);
 
     const remoteRouter = remoteBridge.data.bridgeRouter?.proxy;
     if (!remoteRouter)
       throw new Error('Remote deploy incomplete. No BridgeRouter');
+
+    // don't re-enroll if already enrolled
+    const enrolledRemote = await this.bridgeRouterContract.remotes(
+        remoteConfig.domain
+    );
+    if (!utils.equalIds(enrolledRemote, ethers.constants.AddressZero)) return [];
 
     // Check that this key has permissions to set this
     const owner = await this.bridgeRouterContract.owner();
