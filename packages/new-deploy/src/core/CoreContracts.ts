@@ -613,6 +613,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   /// governorship
   async appointGovernor(): Promise<void> {
     const governor = this.context.data.protocol.governor;
+    const localDomain = this.context.resolveDomain(this.domain);
 
     // Check that the deployer key has permissions to transfer governor
     const owner = await this.governanceRouter.governor();
@@ -620,6 +621,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     // If the deployer key DOES have permissions to transfer governor,
     if (utils.equalIds(owner, deployer)) {
+      // if the deployer key is the rightful governor, don't attempt to transfer gov
+      if (utils.equalIds(owner, governor.id) && governor.domain == localDomain) return;
       // submit transaction to transfer governor
       const tx = await this.governanceRouter.transferGovernor(
         governor.domain,
