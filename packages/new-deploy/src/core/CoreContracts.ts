@@ -15,7 +15,14 @@ import Contracts from '../Contracts';
 import DeployContext from '../DeployContext';
 
 import { expect } from 'chai';
-import { assertBeaconProxy } from '../utils';
+import { assertBeaconProxy, retry } from '../utils';
+
+// import Logger from 'bunyan';
+
+// async function factory_deploy(factory: ) {
+
+// }
+
 
 export abstract class AbstractCoreDeploy<T> extends Contracts<T> {
   // Placeholder for future multi-VM abstraction
@@ -159,9 +166,11 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const factory = new UpgradeBeaconController__factory(
       this.context.getDeployer(name),
     );
-    const ubc = await factory.deploy(this.overrides);
+    const ubc = await retry(() => factory.deploy(this.overrides), 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract`, e)
+    }, 120_000, this.context.logger);
     this._data.upgradeBeaconController = ubc.address;
-    await ubc.deployTransaction.wait(this.confirmations);
+    await retry(()=>ubc.deployTransaction.wait(this.confirmations), 5, (e, i) => {this.context.logger.debug(`xxxxxxxx=>`, e)}, 120_000, this.context.logger);
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeaconController',
@@ -178,9 +187,11 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const updater =
       this.context.mustGetDomainConfig(name).configuration.updater;
     const factory = new UpdaterManager__factory(this.context.getDeployer(name));
-    const um = await factory.deploy(utils.evmId(updater), this.overrides);
+    const um = await retry(() => factory.deploy(utils.evmId(updater), this.overrides), 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract`, e)
+    }, 120_000, this.context.logger);
     this._data.updaterManager = um.address;
-    await um.deployTransaction.wait(this.confirmations);
+    await retry(()=>um.deployTransaction.wait(this.confirmations), 5, (e, i) => {this.context.logger.debug(`xxxxxxxx=>`, e)}, 120_000, this.context.logger);
 
     // update records
     this.context.pushVerification(name, {
@@ -199,9 +210,11 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const factory = new XAppConnectionManager__factory(
       this.context.getDeployer(name),
     );
-    const xcm = await factory.deploy(this.overrides);
+    const xcm = await retry(() => factory.deploy(this.overrides), 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract`, e)
+    }, 120_000, this.context.logger);
     this._data.xAppConnectionManager = xcm.address;
-    await xcm.deployTransaction.wait(this.confirmations);
+    await retry(()=>xcm.deployTransaction.wait(this.confirmations), 5, (e, i) => {this.context.logger.debug(`xxxxxxxx=>`, e)}, 120_000, this.context.logger);
 
     // update records
     this.context.pushVerification(name, {
@@ -222,9 +235,11 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const ubc = this.upgradeBeaconController?.address;
     if (!ubc) throw new Error('Cannot deploy proxy without UBC');
     const factory = new UpgradeBeacon__factory(this.context.getDeployer(name));
-    const beacon = await factory.deploy(implementation, ubc, this.overrides);
+    const beacon = await retry(() => factory.deploy(implementation, ubc, this.overrides), 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract`, e)
+    }, 120_000, this.context.logger);
     proxy.beacon = beacon.address;
-    await beacon.deployTransaction.wait(this.confirmations);
+    await retry(()=>beacon.deployTransaction.wait(this.confirmations), 5, (e, i) => {this.context.logger.debug(`xxxxxxxx=>`, e)}, 120_000, this.context.logger);
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeacon',
@@ -244,9 +259,11 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const factory = new UpgradeBeaconProxy__factory(
       this.context.getDeployer(name),
     );
-    const prx = await factory.deploy(beacon, initData, this.overrides);
+    const prx = await retry(() => factory.deploy(beacon, initData, this.overrides), 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract`, e)
+    }, 120_000, this.context.logger);
     proxy.proxy = prx.address;
-    await prx.deployTransaction.wait(this.confirmations);
+    await retry(()=>prx.deployTransaction.wait(this.confirmations), 5, (e, i) => {this.context.logger.debug(`xxxxxxxx=>`, e)}, 120_000, this.context.logger);
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeaconProxy',
@@ -297,8 +314,10 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const configuration = this.context.mustGetDomainConfig(this.domain);
 
     const factory = new Home__factory(this.context.getDeployer(this.domain));
-    const home = await factory.deploy(configuration.domain);
-    await home.deployTransaction.wait(this.confirmations);
+    const home = await retry(() => factory.deploy(configuration.domain), 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract`, e)
+    }, 120_000, this.context.logger);
+    await retry(()=>home.deployTransaction.wait(this.confirmations), 5, (e, i) => {this.context.logger.debug(`xxxxxxxx=>`, e)}, 120_000, this.context.logger);
 
     const initData = Home__factory.createInterface().encodeFunctionData(
       'initialize',
@@ -336,12 +355,14 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const factory = new contracts.GovernanceRouter__factory(
       this.context.getDeployer(this.domain),
     );
-    const router = await factory.deploy(
+    const router = await retry(() => factory.deploy(
       config.domain,
       config.configuration.governance.recoveryTimelock,
       this.overrides,
-    );
-    await router.deployTransaction.wait(this.confirmations);
+    ), 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract`, e)
+    }, 120_000, this.context.logger);
+    await retry(()=>router.deployTransaction.wait(this.confirmations), 5, (e, i) => {this.context.logger.debug(`xxxxxxxx=>`, e)}, 120_000, this.context.logger);
 
     const initData =
       contracts.GovernanceRouter__factory.createInterface().encodeFunctionData(
@@ -394,14 +415,16 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       const factory = new contracts.Replica__factory(
         this.context.getDeployer(local),
       );
-      const replica = await factory.deploy(
+      const replica = await retry(() => factory.deploy(
         localConfig.domain,
         localConfig.configuration.processGas,
         localConfig.configuration.reserveGas,
         // localConfig.configuration.maximumGas,  // future
         this.overrides,
-      );
-      await replica.deployTransaction.wait(this.confirmations);
+      ), 5, (e, i) => {
+        this.context.logger.debug(`Failed at ${i} deploying a contract`, e)
+      }, 120_000, this.context.logger);
+      await retry(()=>replica.deployTransaction.wait(this.confirmations), 5, (e, i) => {this.context.logger.debug(`xxxxxxxx=>`, e)}, 120_000, this.context.logger);
 
       this.context.pushVerification(local, {
         name: 'Replica',
@@ -459,7 +482,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       homeConfig.domain,
       this.overrides,
     );
-    await tx.wait(this.confirmations);
+    await retry(()=>tx.wait(this.confirmations), 5, (e, i) => {this.context.logger.debug(`xxxxxxxx=>`, e)}, 120_000, this.context.logger);
     return [];
   }
 
@@ -522,7 +545,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         ),
       ),
     );
-    await Promise.race(txns.map((tx) => tx.wait(this.confirmations)));
+    await Promise.race(txns.map((tx) => retry(()=>tx.wait(this.confirmations), 5, (e, i) => {this.context.logger.debug(`xxxxxxxx=>`, e)}, 120_000, this.context.logger)));
     return [];
   }
 
@@ -552,7 +575,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       remoteConfig.domain,
       utils.canonizeId(remoteCore.governanceRouter.address),
     );
-    await tx.wait(this.confirmations);
+    await retry(()=>tx.wait(this.confirmations), 5, (e, i) => {this.context.logger.debug(`xxxxxxxx=>`, e)}, 120_000, this.context.logger);
     return [];
   }
 
@@ -560,11 +583,13 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     remoteDomain: string | number,
   ): Promise<ethers.PopulatedTransaction[]> {
     await this.deployUnenrolledReplica(remoteDomain);
+    this.context.logger.debug(`---- enrollRemote.deployUnenrolledReplica done for domain`, remoteDomain)
     const txns = await Promise.all([
-      this.enrollReplica(remoteDomain),
-      this.enrollWatchers(remoteDomain),
-      this.enrollGovernanceRouter(remoteDomain),
+      this.enrollReplica(remoteDomain).then((x) => {this.context.logger.debug(`---- enrollRemote done for domain`, remoteDomain); return x}),
+      this.enrollWatchers(remoteDomain).then((x) => {this.context.logger.debug(`---- enrollRemote done for domain`, remoteDomain); return x}),
+      this.enrollGovernanceRouter(remoteDomain).then((x) => {this.context.logger.debug(`---- enrollRemote done for domain`, remoteDomain); return x}),
     ]);
+    this.context.logger.debug(`---- enrollRemote.enroll everything done for domain`, remoteDomain)
     return txns.flat();
   }
 
@@ -592,7 +617,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     await Promise.race(
       txns.map(async (tx) => {
-        if (tx) await tx.wait();
+        if (tx) await retry(()=>tx.wait(), 5, (e, i) => {this.context.logger.debug(`xxxxxxxx=>`, e)}, 120_000, this.context.logger);
       }),
     );
   }
@@ -617,7 +642,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         utils.evmId(governor.id),
         this.overrides,
       );
-      await tx.wait(this.confirmations);
+      await retry(()=>tx.wait(this.confirmations), 5, (e, i) => {this.context.logger.debug(`xxxxxxxx=>`, e)}, 120_000, this.context.logger);
     }
   }
 

@@ -11,7 +11,7 @@ import * as config from '@nomad-xyz/configuration';
 
 import Contracts from '../Contracts';
 import DeployContext from '../DeployContext';
-import { assertBeaconProxy } from '../utils';
+import { assertBeaconProxy, retry } from '../utils';
 import { expect } from 'chai';
 
 export abstract class AbstractBridgeDeploy<T> extends Contracts<T> {
@@ -114,7 +114,9 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     if (this.data.bridgeToken?.implementation) return;
 
     const factory = new contracts.BridgeToken__factory(this.deployer);
-    const impl = await factory.deploy(this.overrides);
+    const impl = await retry(() => factory.deploy(this.overrides), 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract BridgeToken__factory`, e)
+    }, 120_000, this.context.logger);
     await impl.deployTransaction.wait(this.confirmations);
 
     this.context.pushVerification(name, {
@@ -140,9 +142,15 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const factory = new UpgradeBeaconProxy__factory(
       this.context.getDeployer(name),
     );
-    const prx = await factory.deploy(beacon, initData, this.overrides);
+    console.log(`---TR deploying UpgradeBeaconProxy__factory`)
+    const prx = await retry(() => factory.deploy(beacon, initData, this.overrides), 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract UpgradeBeaconProxy__factory`, e)
+    }, 120_000, this.context.logger);
+    console.log(`---TR deployed UpgradeBeaconProxy__factory`)
     proxy.proxy = prx.address;
-    await prx.deployTransaction.wait(this.confirmations);
+    
+    await retry(()=>prx.deployTransaction.wait(this.confirmations), 5, (e, i) =>{this.context.logger.debug(`Failed at ${i} waiting for bridge contract prx.deployTransaction`, e)}, 120_000, this.context.logger) ;
+    console.log(`---TR waited UpgradeBeaconProxy__factory`)
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeaconProxy',
@@ -162,10 +170,25 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     const ubc = core.upgradeBeaconController.address;
     if (!ubc) throw new Error('Cannot deploy proxy without UBC');
+    console.log(`---TR Deploying UpgradeBeacon__factory`)
     const factory = new UpgradeBeacon__factory(this.context.getDeployer(name));
-    const beacon = await factory.deploy(implementation, ubc, this.overrides);
+    const beacon = await retry(async () => {
+      try {
+        console.log(`---xxxxxx UpgradeBeacon__factory`);
+        const x = await factory.deploy(implementation, ubc, this.overrides);
+        console.log(`---yyyyyy UpgradeBeacon__factory`);
+        return x
+      } catch(e) {
+        console.log(`eeeeee->`, e);
+        throw e
+      }
+    }, 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract UpgradeBeacon__factory`, e)
+    }, 120_000, this.context.logger);
+    console.log(`---TR DeployED UpgradeBeacon__factory`)
     proxy.beacon = beacon.address;
-    await beacon.deployTransaction.wait(this.confirmations);
+    await retry(()=>beacon.deployTransaction.wait(this.confirmations), 5, (e, i) =>{this.context.logger.debug(`Failed at ${i} waiting for bridge contract beacon.deployTransaction`, e)}, 120_000, this.context.logger) ;
+    console.log(`---TR Waited UpgradeBeacon__factory`)
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeacon',
@@ -181,7 +204,11 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const proxy = { implementation };
 
     await this.deployBeacon(proxy);
+    console.log(`--TR Deployed deployBeacon`)
+
     await this.deployProxy(initData, proxy);
+    console.log(`--TR Deployed deployProxy`)
+
 
     return proxy as config.Proxy;
   }
@@ -222,13 +249,21 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
         [this.data.bridgeToken.beacon, core.xAppConnectionManager.address],
       );
 
+    
+      this.context.logger.debug(`Token registry hustle start`, this.domain);
     const factory = new contracts.TokenRegistry__factory(this.deployer);
-    const implementation = await factory.deploy(this.overrides);
+    const implementation = await retry(() => factory.deploy(this.overrides), 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract TokenRegistry__factory`, e)
+    }, 120_000, this.context.logger);
+    console.log(`-TR Deployed`)
 
     this._data.tokenRegistry = await this.newProxy(
       implementation.address,
       initData,
     );
+    console.log(`-TR Deployed new Proxy`)
+
+    this.context.logger.debug(`Token registry hustle end`, this.domain);
     this.context.pushVerification(name, {
       name: 'TokenRegistry',
       address: implementation.address,
@@ -249,11 +284,13 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       );
 
     const factory = new contracts.BridgeRouter__factory(this.deployer);
-    const implementation = await factory.deploy(
+    const implementation = await retry(() => factory.deploy(
       // config.bridgeConfiguration.mintGas,  // future
       // config.bridgeConfiguration.deployGas, // future
       this.overrides,
-    );
+    ), 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract BridgeRouter__factory`, e)
+    }, 120_000, this.context.logger);
 
     this._data.bridgeRouter = await this.newProxy(
       implementation.address,
@@ -278,11 +315,13 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       throw new Error('Must have bridge router to deploy eth helper');
 
     const factory = new contracts.ETHHelper__factory(this.deployer);
-    const helper = await factory.deploy(
-      config.bridgeConfiguration.weth,
-      this.data.bridgeRouter.proxy,
+    const helper = await retry(() => factory.deploy(
+      config.bridgeConfiguration.weth || '0x' + '00'.repeat(20), // WTF??
+      this.data.bridgeRouter?.proxy || '0x' + '00'.repeat(20), // WTF??
       this.overrides,
-    );
+    ), 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract ETHHelper__factory`, e)
+    }, 120_000, this.context.logger);
 
     this._data.ethHelper = helper.address;
     this.context.pushVerification(name, {
@@ -352,23 +391,29 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const enrollTxs = await Promise.all(
       customs.map(async (custom): Promise<ethers.PopulatedTransaction[]> => {
         // deploy the controller
-        const controller = await ubcFactory.deploy(this.overrides);
+        const controller = await retry(() => ubcFactory.deploy(this.overrides), 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract UpgradeBeaconController__factory`, e)
+    }, 120_000, this.context.logger);
         await controller.deployTransaction.wait(this.confirmations);
 
         // deploy the beacon
-        const beacon = await beaconFactory.deploy(
+        const beacon = await retry(() => beaconFactory.deploy(
           implementation,
           controller.address,
           this.overrides,
-        );
+        ), 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract UpgradeBeacon__factory`, e)
+    }, 120_000, this.context.logger);
         await beacon.deployTransaction.wait(this.confirmations);
 
         // deploy a proxy
-        const proxy = await proxyFactory.deploy(
+        const proxy = await retry(() => proxyFactory.deploy(
           beacon.address,
           '0x',
           this.overrides,
-        );
+        ), 5, (e, i) => {
+      this.context.logger.debug(`Failed at ${i} deploying a contract UpgradeBeaconProxy__factory`, e)
+    }, 120_000, this.context.logger);
         await proxy.deployTransaction.wait(this.confirmations);
 
         // pre-emptively transfer ownership of controller to governance

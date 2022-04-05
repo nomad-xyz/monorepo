@@ -10,5 +10,7 @@
     "maxFeePerGas": "20000000000",
     "maxPriorityFeePerGas": "2000000000"
   },
-  "milkomedaC1testnet": {}
+  "milkomedaC1testnet": {
+    "gasPrice": 200000000
+  }
 }

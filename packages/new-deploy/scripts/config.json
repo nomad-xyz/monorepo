@@ -2,23 +2,64 @@
     "version": 0,
     "environment": "development",
     "networks": [
+      "rinkeby",
       "kovan",
-      "moonbasealpha"
+      "moonbasealpha",
+      "milkomedaC1testnet"
     ],
     "rpcs": {
+      "rinkeby": ["https://rinkeby.infura.io/v3/5f65182f06a14f5182a2e9af8d8fff33"],
       "kovan": ["https://kovan.infura.io/v3/5f65182f06a14f5182a2e9af8d8fff33"],
-      "moonbasealpha": ["https://rpc.api.moonbase.moonbeam.network"]
+      "milkomedaC1testnet": ["https://rpc-devnet-cardano-evm.c1.milkomeda.com"],
+      "moonbasealpha": ["https://moonbeam-alpha.api.onfinality.io/public"]
     },
     "protocol": {
       "governor": {
         "id": "0xa4849f1D96B26066f9C631FCdc8F1457D27Fb5EC",
-        "domain": 3000
+        "domain": 2000
       },
       "networks": {
+        "rinkeby": {
+          "name": "rinkeby",
+          "domain": 2000,
+          "connections": [
+            "kovan",
+            "moonbasealpha",
+            "milkomedaC1testnet"
+          ],
+          "specs": {
+            "chainId": 4,
+            "blockTime": 15,
+            "finalizationBlocks": 10,
+            "supports1559": true,
+            "confirmations": 2,
+            "blockExplorer": "https://rinkeby.etherscan.io/",
+            "indexPageSize": 2000
+          },
+          "configuration": {
+            "optimisticSeconds": 10,
+            "processGas": 850000,
+            "reserveGas": 15000,
+            "maximumGas": 1000000,
+            "governance": {
+              "recoveryManager": "0xa4849f1D96B26066f9C631FCdc8F1457D27Fb5EC",
+              "recoveryTimelock": 180
+            },
+            "updater": "0x4177372FD9581ceb2367e0Ce84adC5DAD9DF8D55",
+            "watchers": ["0x20aC2FD664bA5406A7262967C34107e708dCb18E"]
+          },
+          "bridgeConfiguration": {
+            "weth": "0xc778417E063141139Fce010982780140Aa0cD5Ab",
+            "customs": [],
+            "mintGas": 200000,
+            "deployGas": 850000
+          }
+        },
         "kovan": {
           "name": "kovan",
           "domain": 3000,
-          "connections": ["moonbasealpha"],
+          "connections": ["rinkeby", "moonbasealpha",
+            "milkomedaC1testnet"],
           "specs": {
             "chainId": 42,
             "blockTime": 4,
@@ -50,7 +91,7 @@
         "moonbasealpha": {
           "name": "moonbasealpha",
           "domain": 5000,
-          "connections": ["kovan"],
+          "connections": ["kovan", "rinkeby", "milkomedaC1testnet"],
           "specs": {
             "chainId": 1287,
             "blockTime": 17,
@@ -78,6 +119,36 @@
             "mintGas": 200000,
             "deployGas": 850000
           }
+        },
+        "milkomedaC1testnet": {
+          "name": "milkomedaC1testnet",
+          "domain": 8000,
+          "connections": ["rinkeby", "kovan", "moonbasealpha"],
+          "specs": {
+            "chainId": 200101,
+            "blockTime": 4,
+            "finalizationBlocks": 20,
+            "supports1559": true,
+            "confirmations": 3,
+            "blockExplorer": "https://explorer-devnet-cardano-evm.c1.milkomeda.com",
+            "indexPageSize": 2000
+          },
+          "configuration": {
+            "optimisticSeconds": 10,
+            "processGas": 850000,
+            "reserveGas": 15000,
+            "maximumGas": 1000000,
+            "governance": {
+              "recoveryManager": "0xa4849f1D96B26066f9C631FCdc8F1457D27Fb5EC",
+              "recoveryTimelock": 180
+            },
+            "updater": "0x4177372FD9581ceb2367e0Ce84adC5DAD9DF8D55",
+            "watchers": ["0x20aC2FD664bA5406A7262967C34107e708dCb18E"]
+          },
+          "bridgeConfiguration": {
+            "weth": "0x6942F4eD908bF1F294e25497624ad228d178D54C",
+            "customs": []
+          }
         }
       }
     },
@@ -86,7 +157,7 @@
     "bridge": {
     },
     "agent": {
-      "goerli": {
+      "rinkeby": {
         "rpcStyle": "ethereum",
         "db": "/usr/share/nomad",
         "metrics": 9090,

@@ -5,6 +5,10 @@ import ethers from 'ethers';
 
 import BridgeContracts from './bridge/BridgeContracts';
 import CoreContracts from './core/CoreContracts';
+import { retry } from './utils';
+
+import Logger from 'bunyan';
+
 
 export interface Verification {
   name: string;
@@ -16,10 +20,12 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   overrides: Map<string, ethers.Overrides>;
   protected _data: config.NomadConfig;
   protected _verification: Map<string, Array<Verification>>;
+  logger: Logger;
 
-  constructor(data: config.NomadConfig) {
+  constructor(data: config.NomadConfig, logger: Logger) {
     super();
 
+    this.logger = logger;
     this._data = data;
     this.overrides = new Map();
     this._verification = new Map();
@@ -135,19 +141,25 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   async deployAndRelinquish(): Promise<ethers.PopulatedTransaction[]> {
     // validate the config input
     this.validate();
+    this.logger.debug(`- validate done`)
 
     // ensure the presence of all core + bridge contracts, and enroll all core + bridge contracts with each other
     const governanceTransactions = await this.ensureCoreAndBridgeConnections();
+    this.logger.debug(`- ensureCoreAndBridgeConnections done`)
 
     // relinquish control of all other contracts from deployer to governance
     await this.relinquishOwnership();
+    this.logger.debug(`- relinquishOwnership done`)
 
     // appoint governor on all networks
     await Promise.all(
       this.networks.map((network) =>
-        this.mustGetCore(network).appointGovernor(),
+      retry(() => this.mustGetCore(network).appointGovernor(),5, ((e, i) => {
+        this.logger.debug(`Failed ${i} at appointGovernor for network '${network}'`, e)
+      })),
       ),
     );
+    this.logger.debug(`- appointGovernor done`)
 
     return governanceTransactions;
   }
@@ -160,11 +172,15 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     ethers.PopulatedTransaction[]
   > {
     const governanceTransactions = await this.ensureCoreConnections();
+    this.logger.debug(`-- ensureCoreConnections done`)
     const bridgeGovernanceTransactions = await this.ensureBridgeConnections();
+    this.logger.debug(`-- ensureBridgeConnections done`)
     // combine governance transactions and return them
     governanceTransactions.push.apply(bridgeGovernanceTransactions);
     return governanceTransactions;
   }
+
+  
 
   // Deploys all configured connections and enrolls them if possible.
   // For any connection that cannot be enrolled, outputs the governance
@@ -172,18 +188,28 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   async ensureCoreConnections(): Promise<ethers.PopulatedTransaction[]> {
     // ensure all core contracts are deployed
     await this.ensureCores();
+    this.logger.debug(`--- ensureCoreConnections.ensureCores done`)
     // ensure all core contracts are enrolled in each other
     const enrollTransactions = await Promise.all(
       this.networks.map(async (network) => {
-        const core = this.mustGetCore(network);
-        const name = this.resolveDomainName(network);
-        const remoteDomains = this.data.protocol.networks[name]?.connections;
-        const txns = await Promise.all(
-          remoteDomains.map((remote) => core.enrollRemote(remote)),
-        );
-        return txns.flat();
+        const retryResult = await retry(async () => {
+          const core = this.mustGetCore(network);
+          const name = this.resolveDomainName(network);
+          const remoteDomains = this.data.protocol.networks[name]?.connections;
+          const txns = await Promise.all(
+            remoteDomains.map((remote) => core.enrollRemote(remote)),
+          );
+          return txns.flat();
+        },5, ((e, i) => {
+          this.logger.debug(`Failed at ${i} enrolling after ensureCores for network '${network}'`, e)
+        }))
+
+        this.logger.debug(`--- ensureCoreConnections.enrollRemote done`)
+
+        return retryResult;
       }),
     );
+    this.logger.debug(`--- ensureCoreConnections.enrollTransactions done`)
     return enrollTransactions.flat();
   }
 
@@ -192,7 +218,7 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     const networksToDeploy = this.networks.filter((net) => !this.cores[net]);
     await Promise.all(
       networksToDeploy.map((net) =>
-        this.deployCore(this.mustGetDomainConfig(net)),
+        retry(() => this.deployCore(this.mustGetDomainConfig(net)),5, ((e, i) => this.logger.debug(`Failed at ${i} ensureCores for network '${net}'`, e))),
       ),
     );
   }
@@ -202,15 +228,19 @@ export default class DeployContext extends MultiProvider<config.Domain> {
 
     const core = new CoreContracts(this, domain.name);
     await core.recordStartBlock();
+    this.logger.debug(`----- deployCore.recordStartBlock done`,domain.name)
 
     await Promise.all([
-      core.deployUpgradeBeaconController(),
-      core.deployUpdaterManager(),
-      core.deployXAppConnectionManager(),
+      core.deployUpgradeBeaconController().then(() => this.logger.debug(`----- deployCore.deployUpgradeBeaconController done`, domain.name)),
+      core.deployUpdaterManager().then(() => this.logger.debug(`----- deployCore.deployUpdaterManager done`, domain.name)),
+      core.deployXAppConnectionManager().then(() => this.logger.debug(`----- deployCore.deployXAppConnectionManager done`, domain.name)),
     ]);
+    this.logger.debug(`----- deployCore.XUU done`,domain.name)
 
     await core.deployHome();
+    this.logger.debug(`----- deployCore.deployHome done`,domain.name)
     await core.deployGovernanceRouter();
+    this.logger.debug(`----- deployCore.deployGovernanceRouter done`,domain.name)
 
     // all contracts deployed
     const complete = core.complete();
@@ -220,32 +250,43 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   async ensureBridgeConnections(): Promise<ethers.PopulatedTransaction[]> {
     // first, ensure all bridge contracts are deployed
     await this.ensureBridges();
+    this.logger.debug(`--- ensureBridgeConnections.ensureBridges done`)
     // next, ensure all bridge contracts are enrolled in each other
     // and all custom tokens are also enrolled
     const enrollTransactions = await Promise.all(
       this.networks.map(
         async (network): Promise<ethers.PopulatedTransaction[]> => {
-          const bridge = this.mustGetBridge(network);
-          const name = this.resolveDomainName(network);
-          const remoteDomains = this.data.protocol.networks[name]?.connections;
-          const allEnrollRouterTxns = await Promise.all(
-            remoteDomains.map((remote) => bridge.enrollBridgeRouter(remote)),
-          );
-          const enrollTxns = allEnrollRouterTxns.flat();
-          // deploy and enroll custom tokens
-          const txns = await bridge.deployCustomTokens();
-          enrollTxns.push.apply(txns);
-          return enrollTxns;
+          return await retry(async () => {
+            const bridge = this.mustGetBridge(network);
+            const name = this.resolveDomainName(network);
+            const remoteDomains = this.data.protocol.networks[name]?.connections;
+            const allEnrollRouterTxns = await Promise.all(
+              remoteDomains.map((remote) => bridge.enrollBridgeRouter(remote)),
+            );
+            this.logger.debug(`--- ensureBridgeConnections.enrollBridgeRouter done`)
+            const enrollTxns = allEnrollRouterTxns.flat();
+            // deploy and enroll custom tokens
+            const txns = await bridge.deployCustomTokens();
+            enrollTxns.push.apply(txns);
+            return enrollTxns;
+          },5, ((e, i) => {
+            this.logger.debug(`Failed at ${i} doing many things after ensureBridges for network '${network}'`, e)
+          }))
         },
       ),
     );
+    this.logger.debug(`--- ensureBridgeConnections.enrollTransactions done`)
     return enrollTransactions.flat();
   }
 
   /// Deploys all configured bridges.
   async ensureBridges(): Promise<void> {
     const toDeploy = this.networks.filter((net) => !this.bridges[net]);
-    await Promise.all(toDeploy.map((net) => this.deployBridge(net)));
+    await Promise.all(toDeploy.map((net) => 
+      retry(() => this.deployBridge(net),5, ((e, i) => {
+        this.logger.debug(`Failed at ${i} ensureBridges for network '${net}'`, e)
+      }))
+    ));
   }
 
   protected async deployBridge(name: string): Promise<void> {
@@ -253,23 +294,37 @@ export default class DeployContext extends MultiProvider<config.Domain> {
 
     const bridge = new BridgeContracts(this, name);
     await bridge.recordStartBlock();
+    this.logger.debug(`----- deployCore.recordStartBlock done`, name)
+
 
     await bridge.deployTokenUpgradeBeacon();
-    await bridge.deployTokenRegistry();
+    this.logger.debug(`----- deployCore.deployTokenUpgradeBeacon done`, name)
 
-    await Promise.all([bridge.deployBridgeRouter(), bridge.deployEthHelper()]);
+    await bridge.deployTokenRegistry();
+    this.logger.debug(`----- deployCore.deployTokenRegistry done`, name)
+
+
+    await Promise.all([
+      bridge.deployBridgeRouter().then(()=> this.logger.debug(`----- deployBridgeRouter.name done`, name)),
+      bridge.deployEthHelper().then(()=> this.logger.debug(`----- deployEthHelper.name done`, name))
+    ]);
 
     this.addBridge(name, bridge.complete());
+    this.logger.debug(`----- deployCore.name done`, name)
+
   }
 
   async relinquishOwnership(): Promise<void> {
     // relinquish deployer control
     await Promise.all([
-      ...this.networks.map((network) => this.mustGetCore(network).relinquish()),
-      ...this.networks.map((network) =>
-        this.mustGetBridge(network).relinquish(),
-      ),
+      ...this.networks.map((network) => retry(() => this.mustGetCore(network).relinquish(),5, ((e, i) => {
+        this.logger.debug(`Failed at ${i} relinquishOwnership core for network '${network}'`, e)
+      }))),
+      ...this.networks.map((network) => retry(() => this.mustGetBridge(network).relinquish(),5, ((e, i) => {
+        this.logger.debug(`Failed at ${i} relinquishOwnership core for network '${network}'`, e)
+      }))),
     ]);
+    this.logger.debug(`-- relinquishOwnership.ensureBridges done`)
   }
 
   // perform validation checks on core and bridges

@@ -5,14 +5,19 @@ import { NonceManager } from '@ethersproject/experimental';
 import fs from "fs";
 import * as dotenv from 'dotenv';
 import {getConfig,getOverrides} from "./utils";
+import bunyan from 'bunyan';
+// const  = require('bunyan');
 dotenv.config();
 
 run();
 
 async function run() {
+
+    const logger = bunyan.createLogger({name: "myapp", level: 'debug'});
+    logger.info(`started!`);
     // instantiate deploy context
     const DEPLOY_CONFIG: config.NomadConfig = getConfig();
-    const deployContext = new DeployContext(DEPLOY_CONFIG);
+    const deployContext = new DeployContext(DEPLOY_CONFIG, logger);
 
     // get deploy signer and overrides
     const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
@@ -34,5 +39,5 @@ async function run() {
     fs.writeFileSync(`./scripts/config.json`, JSON.stringify(deployContext.data, null, 4));
     fs.writeFileSync(`./scripts/verification.json`, JSON.stringify(deployContext.verification, null, 4));
     fs.writeFileSync(`./scripts/governanceTransactions.json`, JSON.stringify(governanceTransactions, null, 4));
-    console.log(`DONE!`);
+    logger.info(`DONE!`);
 }
