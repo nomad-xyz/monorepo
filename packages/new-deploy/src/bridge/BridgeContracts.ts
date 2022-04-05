@@ -200,10 +200,10 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     // that the implementation already exists
     const proxy =
       (await this.deployTokenImplementation()) ?? this.data.bridgeToken;
-    if (!proxy) throw new Error('unreachable');
+    if (!proxy) throw new utils.UnreachableError();
 
     const implAddress = proxy?.implementation;
-    if (!implAddress) throw new Error('unreachable');
+    if (!implAddress) throw new utils.UnreachableError();
 
     // don't redeploy
     if (proxy?.beacon) return;

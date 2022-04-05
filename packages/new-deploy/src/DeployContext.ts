@@ -203,7 +203,7 @@ export default class DeployContext extends MultiProvider<config.Domain> {
         const name = this.resolveDomainName(network);
         const remoteDomains = this.data.protocol.networks[name]?.connections;
         // the following "unreachable" error performs type-narrowing for the compiler
-        if (!remoteDomains) throw new Error('unreachable');
+        if (!remoteDomains) throw new utils.UnreachableError();
         if (remoteDomains.length == 0) return;
 
         const [firstDomain, ...restDomains] = remoteDomains;
@@ -242,7 +242,7 @@ export default class DeployContext extends MultiProvider<config.Domain> {
         const name = this.resolveDomainName(network);
         const remoteDomains = this.data.protocol.networks[name]?.connections;
         // the following "unreachable" error performs type-narrowing for the compiler
-        if (!remoteDomains) throw new Error('unreachable');
+        if (!remoteDomains) throw new utils.UnreachableError();
         const batches = await Promise.all(
           remoteDomains.map((remote) => bridge.enrollBridgeRouter(remote)),
         );

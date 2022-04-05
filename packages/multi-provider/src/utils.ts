@@ -1,5 +1,7 @@
 import { arrayify, BytesLike, hexlify } from '@ethersproject/bytes';
 import { ethers } from 'ethers';
+import { MultiProvider } from './provider';
+import { Domain } from './domains';
 
 export type Address = string;
 
@@ -133,9 +135,49 @@ export function parseInt(input: string | number): number {
  * Unreachable error. Useful for type narrowing.
  */
 export class UnreachableError extends Error {
-  constructor() {
+  constructor(extra?: string) {
     super(
-      'Unreachable. You should not see this Error. Please file an issue at https://github.com/nomad-xyz/monorepo, including the full error output.',
+      `Unreachable. You should not see this Error. Please file an issue at https://github.com/nomad-xyz/monorepo, including the full error output. Extra info: ${
+        extra ?? 'none'
+      }`,
     );
+  }
+}
+
+export class WithContext<T extends Domain> extends Error {
+  provider: MultiProvider<T>;
+
+  constructor(provider: MultiProvider<T>, msg: string) {
+    super(msg);
+    this.provider = provider;
+  }
+}
+
+export class UnknownDomainError<T extends Domain> extends WithContext<T> {
+  domain: string | number;
+
+  constructor(provider: MultiProvider<T>, domain: string | number) {
+    super(provider, `Attempted to access an unknown domain: ${domain}`);
+    this.domain = domain;
+  }
+}
+
+export class NoProviderError<T extends Domain> extends WithContext<T> {
+  domain: string | number;
+  domainName: string;
+  domainNumber: number;
+
+  constructor(provider: MultiProvider<T>, domain: string | number) {
+    const domainName = provider.resolveDomainName(domain);
+    const domainNumber = provider.resolveDomain(domain);
+
+    super(
+      provider,
+      `Missing provider for domain: ${domainNumber} : ${domainName}`,
+    );
+
+    this.domain = domain;
+    this.domainName = domainName;
+    this.domainNumber = domainNumber;
   }
 }
