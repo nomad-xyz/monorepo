@@ -491,6 +491,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       (_, idx) => !enrollmentStatuses[idx],
     );
 
+    if (watchersToEnroll.length == 0) return [];
+
     // Check that this key has permissions to set this
     const owner = await this.xAppConnectionManager.owner();
     const deployer = ethers.utils.getAddress(await this.deployer.getAddress());
