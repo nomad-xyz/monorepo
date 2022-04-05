@@ -23,6 +23,7 @@ export interface RemoteContents {
 export interface CallBatchContents {
   local: Call[];
   remote: RemoteContents;
+  built?: ethers.PopulatedTransaction;
 }
 
 export class CallBatch {
@@ -71,6 +72,19 @@ export class CallBatch {
         batch.pushRemote(parseInt(domain), call);
       }
     }
+
+    if (batchContents.built) {
+      batch.build();
+      if (!batch.built) throw new Error('unreachable');
+      if (
+        batch.built.data !== batchContents.built.data ||
+        batch.built.to !== batchContents.built.to
+      )
+        throw new Error(
+          'Attempted to load an invalid pre-built CallBatch from JSON.',
+        );
+    }
+
     // return the constructed batch
     return batch;
   }
@@ -88,6 +102,7 @@ export class CallBatch {
     return {
       local,
       remote,
+      built: this.built,
     };
   }
 
