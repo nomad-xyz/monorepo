@@ -242,6 +242,9 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     if (!this.data.tokenRegistry)
       throw new Error('need token registry to deploy bridge');
 
+    // don't redeploy
+    if (this.data.bridgeRouter) return;
+
     const initData =
       contracts.BridgeRouter__factory.createInterface().encodeFunctionData(
         'initialize',
