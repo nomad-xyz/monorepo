@@ -128,3 +128,14 @@ export function delay(ms: number): Promise<void> {
 export function parseInt(input: string | number): number {
   return ethers.BigNumber.from(input).toNumber();
 }
+
+/**
+ * Unreachable error. Useful for type narrowing.
+ */
+export class UnreachableError extends Error {
+  constructor() {
+    super(
+      'Unreachable. You should not see this Error. Please file an issue at https://github.com/nomad-xyz/monorepo, including the full error output.',
+    );
+  }
+}
