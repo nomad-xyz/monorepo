@@ -45,7 +45,7 @@ async function run() {
 
   if (governanceBatch) {
       // build & write governance batch
-      await governanceBatch.build();
+      // await governanceBatch.build();
       fs.writeFileSync(
           `${outputDir}/governanceTransactions.json`,
           JSON.stringify(governanceBatch, null, 4),
