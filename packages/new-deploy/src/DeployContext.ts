@@ -14,7 +14,7 @@ export interface Verification {
   constructorArguments?: ReadonlyArray<unknown>;
 }
 
-export default class DeployContext extends MultiProvider<config.Domain> {
+export class DeployContext extends MultiProvider<config.Domain> {
   overrides: Map<string, ethers.Overrides>;
   protected _data: config.NomadConfig;
   protected _verification: Map<string, Array<Verification>>;
