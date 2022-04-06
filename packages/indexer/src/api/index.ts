@@ -101,7 +101,8 @@ export async function run(db: DB, logger: Logger) {
     type Replica {
       id: String!
       domain: Int!
-      token: Token!
+      tokenId: String!
+      tokenDomain: Int!
       totalSupply: String!
     }
 
@@ -126,11 +127,11 @@ export async function run(db: DB, logger: Logger) {
       allTokens: () => {
         return db.client.token.findMany();
       },
-      tokenReplicas: (args: {id: string, domain: number}) => {
+      tokenReplicas: (_: any, {id, domain}: {id: string, domain: number}) => {
         return db.client.replica.findMany({
           where: {
-            tokenId: args.id,
-            tokenDomain: args.domain,
+            tokenId: id,
+            tokenDomain: domain,
           }
         });
       },
