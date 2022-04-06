@@ -15,7 +15,7 @@ import Contracts from '../Contracts';
 import DeployContext from '../DeployContext';
 
 import { expect } from 'chai';
-import { assertBeaconProxy } from '../utils';
+import { log, assertBeaconProxy } from '../utils';
 
 export abstract class AbstractCoreDeploy<T> extends Contracts<T> {
   // Placeholder for future multi-VM abstraction
@@ -155,6 +155,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     // don't redeploy
     if (this.data.upgradeBeaconController) return;
+    log(`deploy UBC on ${name}`);
 
     const factory = new UpgradeBeaconController__factory(
       this.context.getDeployer(name),
@@ -171,8 +172,10 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
   async deployUpdaterManager(): Promise<void> {
     const name = this.context.resolveDomainName(this.domain);
+
     // don't redeploy
     if (this.data.updaterManager) return;
+    log(`deploy UpdaterManager on ${name}`);
 
     // run deployment
     const updater =
@@ -192,8 +195,10 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
   async deployXAppConnectionManager(): Promise<void> {
     const name = this.context.resolveDomainName(this.domain);
+
     // don't redeploy
     if (this.data.xAppConnectionManager) return;
+    log(`deploy xAppConnectionManager on ${name}`);
 
     // run deployment
     const factory = new XAppConnectionManager__factory(
@@ -218,6 +223,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       throw new Error('Tried to deploy beacon without initial implementation');
     // don't redeploy
     if (proxy.beacon) return;
+    log(`  deploy Beacon on ${name}`);
 
     const ubc = this.upgradeBeaconController?.address;
     if (!ubc) throw new Error('Cannot deploy proxy without UBC');
@@ -238,6 +244,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     proxy: Partial<config.Proxy>,
   ): Promise<void> {
     const name = this.context.resolveDomainName(this.domain);
+    log(`  deploy Proxy on ${name}`);
+
     const beacon = proxy.beacon;
     if (!beacon) throw new Error('Tried to deploy proxy without beacon');
 
@@ -289,6 +297,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     // don't redeploy
     if (this.data.home) return;
+    log(`deploy Home on ${name}`);
 
     const updaterManager = this.updaterManager?.address;
     if (!updaterManager)
@@ -324,6 +333,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const name = this.context.resolveDomainName(this.domain);
     // don't redeploy
     if (this.data.governanceRouter) return;
+    log(`deploy GovernanceRouter ${name}`);
 
     const xAppConnectionManager = this.xAppConnectionManager?.address;
     if (!xAppConnectionManager)
@@ -372,6 +382,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     // don't redeploy existing replica
     if (this.data.replicas && this.data.replicas[home]) return;
+    log(`deploy Replica for ${home} on ${local}`);
 
     const root = await homeCore.home.committedRoot();
 
@@ -424,7 +435,6 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   ): Promise<ethers.PopulatedTransaction[]> {
     const local = this.context.resolveDomainName(this.domain);
     const home = this.context.resolveDomainName(homeDomain);
-
     const homeConfig = this.context.mustGetDomainConfig(home);
 
     const replica = this.getReplica(home)?.address;
@@ -438,6 +448,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       replica,
     );
     if (replicaAlreadyEnrolled) return [];
+    log(`enroll Replica for ${home} on ${local}`);
 
     // Check that this key has permissions to set this
     const owner = await this.xAppConnectionManager.owner();
@@ -469,7 +480,6 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   ): Promise<ethers.PopulatedTransaction[]> {
     const local = this.context.resolveDomainName(this.domain);
     const home = this.context.resolveDomainName(homeDomain);
-
     const homeConfig = this.context.mustGetDomainConfig(home);
     const localConfig = this.context.mustGetDomainConfig(local);
 
@@ -492,6 +502,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     );
 
     if (watchersToEnroll.length == 0) return [];
+    log(`enroll Watchers for ${home} on ${local}`);
 
     // Check that this key has permissions to set this
     const owner = await this.xAppConnectionManager.owner();
@@ -532,6 +543,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   async enrollGovernanceRouter(
     remoteDomain: string | number,
   ): Promise<ethers.PopulatedTransaction[]> {
+    const local = this.context.resolveDomainName(this.domain);
     const remote = this.context.resolveDomainName(remoteDomain);
     const remoteCore = this.context.mustGetCore(remote);
     const remoteConfig = this.context.mustGetDomainConfig(remote);
@@ -542,6 +554,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     );
     if (!utils.equalIds(enrolledRemote, ethers.constants.AddressZero))
       return [];
+    log(`enroll GovernanceRouter for ${remote} on ${local}`);
 
     // Check that this key has permissions to set this
     const owner = await this.governanceRouter.governor();
@@ -579,6 +592,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   }
 
   async relinquish(): Promise<void> {
+    const local = this.context.resolveDomainName(this.domain);
     const governance = this.governanceRouter.address;
     const deployer = await this.deployer.getAddress();
 
@@ -595,6 +609,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       contracts.map(async (contract) => {
         const owner = await contract.owner();
         if (utils.equalIds(owner, deployer)) {
+          log(`transfer core ownership on ${local}`);
           return await contract.transferOwnership(governance, this.overrides);
         }
       }),
@@ -614,6 +629,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
   /// governorship
   async appointGovernor(): Promise<void> {
     const governor = this.context.data.protocol.governor;
+    const local = this.context.resolveDomainName(this.domain);
     const localDomain = this.context.resolveDomain(this.domain);
 
     // Check that the deployer key has permissions to transfer governor
@@ -625,6 +641,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       // if the deployer key is the rightful governor, don't attempt to transfer gov
       if (utils.equalIds(owner, governor.id) && governor.domain == localDomain)
         return;
+      log(`appoint governor on ${local}`);
+
       // submit transaction to transfer governor
       const tx = await this.governanceRouter.transferGovernor(
         governor.domain,
