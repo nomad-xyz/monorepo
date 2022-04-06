@@ -26,6 +26,14 @@ export class BridgeContracts extends Contracts<config.Domain, BridgeContext> {
     return this.conf.deployHeight;
   }
 
+  /**
+   * Get the BridgeRouter associated with this bridge.
+   *
+   * WARNING: do not hold references to this contract, as it will not be
+   * reconnected in the event the chain connection changes.
+   *
+   * @throws if there is no connection for this network
+   */
   get bridgeRouter(): BridgeRouter {
     if (!this.connection) throw new NoProviderError(this.context, this.domain);
     return BridgeRouter__factory.connect(
@@ -34,6 +42,14 @@ export class BridgeContracts extends Contracts<config.Domain, BridgeContext> {
     );
   }
 
+  /**
+   * Get the TokenRegistry associated with this bridge.
+   *
+   * WARNING: do not hold references to this contract, as it will not be
+   * reconnected in the event the chain connection changes.
+   *
+   * @throws if there is no connection for this network
+   */
   get tokenRegistry(): TokenRegistry {
     if (!this.connection) throw new NoProviderError(this.context, this.domain);
     return TokenRegistry__factory.connect(
@@ -42,6 +58,14 @@ export class BridgeContracts extends Contracts<config.Domain, BridgeContext> {
     );
   }
 
+  /**
+   * Get the EthHelper associated with this bridge (if any).
+   *
+   * WARNING: do not hold references to this contract, as it will not be
+   * reconnected in the event the chain connection changes.
+   *
+   * @throws if there is no connection for this network
+   */
   get ethHelper(): ETHHelper | undefined {
     if (!this.connection) throw new NoProviderError(this.context, this.domain);
     if (!this.conf.ethHelper) return;

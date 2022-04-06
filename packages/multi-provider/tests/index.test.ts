@@ -209,22 +209,21 @@ describe('multi-provider', async () => {
   });
 
   it('instantiates Contracts class with appropriate args', () => {
-    class SomeContracts extends Contracts {
-      readonly domain: number;
+    class SomeContracts extends Contracts<Domain, MultiProvider<Domain>> {
       readonly name: string;
 
-      constructor(domain: number, name: string) {
-        super(domain, name);
-        this.domain = domain;
-        this.name = name;
-      }
-      connect(): void {
-        return;
+      constructor(name: string, domain: number) {
+        super(new MultiProvider(), name, domain);
+        this.context.registerDomain({
+          name: 'someChain',
+          domain: 2000,
+        });
       }
     }
-    const newContracts = new SomeContracts(2000, 'someChain');
+    const newContracts = new SomeContracts('someChain', 2000);
+    expect(newContracts.domain).to.equal('someChain');
+    expect(newContracts.domainNumber).to.equal(2000);
     expect(newContracts.args[0]).to.equal(2000);
-    expect(newContracts.args[1]).to.equal('someChain');
   });
 
   it.skip('TODO: resolveDomainName errors');
