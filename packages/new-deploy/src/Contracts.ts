@@ -1,4 +1,4 @@
-import DeployContext from './DeployContext';
+import { DeployContext } from './DeployContext';
 
 export default abstract class Contracts<T> {
   protected _data: Partial<T>;
