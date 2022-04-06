@@ -4,7 +4,6 @@ import { constants, getDefaultProvider, VoidSigner } from 'ethers';
 import { NomadContext, CoreContracts } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
 import { NoProviderError } from '@nomad-xyz/multi-provider';
-// import { LocalGovernor, RemoteGovernor } from '../dist/CoreContracts';
 
 const ENVIRONMENTS = ['test', 'development', 'staging', 'production'];
 
@@ -111,7 +110,6 @@ describe('sdk', async () => {
     });
 
     it('errors if no provider or signer', () => {
-      // TODO: allow name or domain?
       expect(() => coreContracts.getReplica('kovan')).to.throw(NoProviderError);
       expect(() => coreContracts.home).to.throw(NoProviderError);
       expect(() => coreContracts.governanceRouter).to.throw(NoProviderError);
