@@ -29,7 +29,7 @@
     "lint": "eslint --fix ./src ./tests",
     "lint:fix": "eslint --fix ./src ./tests",
     "prettier": "prettier --write ./src ./tests",
-    "test": "ts-mocha ./tests/*.ts",
+    "test": "yarn build && ts-mocha ./tests/*.ts",
     "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts"
   },
   "dependencies": {

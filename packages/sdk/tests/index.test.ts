@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { constants, getDefaultProvider, VoidSigner } from 'ethers';
 import { NomadContext, CoreContracts } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
+import { NoProviderError } from '@nomad-xyz/multi-provider';
 // import { LocalGovernor, RemoteGovernor } from '../dist/CoreContracts';
 
 const ENVIRONMENTS = ['test', 'development', 'staging', 'production'];
@@ -96,20 +97,27 @@ describe('sdk', async () => {
 
   describe('CoreContracts', () => {
     let conf: config.NomadConfig;
-    let coreContracts: CoreContracts;
+    let coreContracts: CoreContracts<NomadContext>;
+    let context: NomadContext;
 
     before('instantiates contracts', () => {
       conf = config.getBuiltin('development');
-      coreContracts = new CoreContracts('rinkeby', conf.core['rinkeby']);
+      context = new NomadContext(conf);
+      coreContracts = new CoreContracts(
+        context,
+        'rinkeby',
+        conf.core['rinkeby'],
+      );
     });
-    it('errors if no provider or signer', () => {
-      const errMsg = 'No provider or signer. Call `connect` first.';
 
+    it('errors if no provider or signer', () => {
       // TODO: allow name or domain?
-      expect(() => coreContracts.getReplica('kovan')).to.throw(errMsg);
-      expect(() => coreContracts.home).to.throw(errMsg);
-      expect(() => coreContracts.governanceRouter).to.throw(errMsg);
-      expect(() => coreContracts.xAppConnectionManager).to.throw(errMsg);
+      expect(() => coreContracts.getReplica('kovan')).to.throw(NoProviderError);
+      expect(() => coreContracts.home).to.throw(NoProviderError);
+      expect(() => coreContracts.governanceRouter).to.throw(NoProviderError);
+      expect(() => coreContracts.xAppConnectionManager).to.throw(
+        NoProviderError,
+      );
     });
 
     it.skip('gets governor and stores in class state', async () => {

@@ -171,10 +171,7 @@ export class UnknownDomainError<
   constructor(provider: T, domain: string | number) {
     super(
       provider,
-      `
-      Attempted to access an unknown domain: ${domain}.
-      Hint: have you called \`context.registerDomain(...)\` yet?
-      `,
+      `Attempted to access an unknown domain: ${domain}.\nHint: have you called \`context.registerDomain(...)\` yet?`,
     );
     this.name = 'UnknownDomainError';
     this.domain = domain;
@@ -199,11 +196,7 @@ export class NoProviderError<
 
     super(
       provider,
-      `
-      Missing provider for domain: ${domainNumber} : ${domainName}.
-      Hint: Have you called \`context.registerProvider(${domain}, provider)\`
-      yet?
-      `,
+      `Missing provider for domain: ${domainNumber} : ${domainName}.\nHint: Have you called \`context.registerProvider(${domain}, provider)\` yet?`,
     );
     this.name = 'NoProviderError';
     this.domain = domain;
