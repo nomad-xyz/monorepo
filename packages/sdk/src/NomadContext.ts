@@ -21,7 +21,7 @@ export type Address = string;
  * let router = mainnet.mustGetBridge('celo').bridgeRouter;
  */
 export class NomadContext extends MultiProvider<config.Domain> {
-  protected cores: Map<string, CoreContracts>;
+  protected _cores: Map<string, CoreContracts>;
   protected _blacklist: Set<number>;
   readonly conf: config.NomadConfig;
 
@@ -40,12 +40,12 @@ export class NomadContext extends MultiProvider<config.Domain> {
       (network) => conf.protocol.networks[network],
     );
     domains.forEach((domain) => this.registerDomain(domain));
-    this.cores = new Map();
+    this._cores = new Map();
     const cores = conf.networks.map(
       (network) => new CoreContracts(network, conf.core[network]),
     );
     cores.forEach((core) => {
-      this.cores.set(core.domain, core);
+      this._cores.set(core.domain, core);
     });
     this._blacklist = new Set();
   }
@@ -67,7 +67,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
       throw new Error(`Reconnect failed: no connection for ${domain}`);
     }
     // re-register contracts
-    const core = this.cores.get(domain);
+    const core = this._cores.get(domain);
     if (core) {
       core.connect(connection);
     }
@@ -129,7 +129,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
    */
   getCore(nameOrDomain: string | number): CoreContracts | undefined {
     const domain = this.resolveDomainName(nameOrDomain);
-    return this.cores.get(domain);
+    return this._cores.get(domain);
   }
 
   /**
