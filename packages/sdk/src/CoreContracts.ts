@@ -1,7 +1,8 @@
 import { ethers } from 'ethers';
 import * as core from '@nomad-xyz/contracts-core';
 import * as config from '@nomad-xyz/configuration';
-import { Contracts } from '@nomad-xyz/multi-provider';
+import { Contracts, NoProviderError } from '@nomad-xyz/multi-provider';
+import { NomadContext } from './NomadContext';
 
 export type LocalGovernor = {
   location: 'local';
@@ -15,31 +16,24 @@ export type RemoteGovernor = {
 
 export type Governor = LocalGovernor | RemoteGovernor;
 
-export class CoreContracts extends Contracts {
-  readonly domain: string;
+export class CoreContracts<T extends NomadContext> extends Contracts<
+  config.Domain,
+  NomadContext
+> {
   protected conf: config.CoreContracts;
 
   private _governor?: Governor;
-  private providerOrSigner?: ethers.providers.Provider | ethers.Signer;
 
-  constructor(
-    domain: string,
-    conf: config.CoreContracts,
-    providerOrSigner?: ethers.providers.Provider | ethers.Signer,
-  ) {
-    super(domain, conf, providerOrSigner);
-    this.providerOrSigner = providerOrSigner;
-    this.domain = domain;
+  constructor(context: T, domain: string, conf: config.CoreContracts) {
+    super(context, domain, conf);
     this.conf = conf;
   }
 
   getReplica(domain: string): core.Replica | undefined {
-    if (!this.providerOrSigner) {
-      throw new Error('No provider or signer. Call `connect` first.');
-    }
+    if (!this.connection) throw new NoProviderError(this.context, domain);
     const replica = this.conf.replicas[domain];
     if (!replica) return;
-    return core.Replica__factory.connect(replica.proxy, this.providerOrSigner);
+    return core.Replica__factory.connect(replica.proxy, this.connection);
   }
 
   get deployHeight(): number {
@@ -47,32 +41,23 @@ export class CoreContracts extends Contracts {
   }
 
   get home(): core.Home {
-    if (!this.providerOrSigner) {
-      throw new Error('No provider or signer. Call `connect` first.');
-    }
-    return core.Home__factory.connect(
-      this.conf.home.proxy,
-      this.providerOrSigner,
-    );
+    if (!this.connection) throw new NoProviderError(this.context, this.domain);
+    return core.Home__factory.connect(this.conf.home.proxy, this.connection);
   }
 
   get governanceRouter(): core.GovernanceRouter {
-    if (!this.providerOrSigner) {
-      throw new Error('No provider or signer. Call `connect` first.');
-    }
+    if (!this.connection) throw new NoProviderError(this.context, this.domain);
     return core.GovernanceRouter__factory.connect(
       this.conf.governanceRouter.proxy,
-      this.providerOrSigner,
+      this.connection,
     );
   }
 
   get xAppConnectionManager(): core.XAppConnectionManager {
-    if (!this.providerOrSigner) {
-      throw new Error('No provider or signer. Call `connect` first.');
-    }
+    if (!this.connection) throw new NoProviderError(this.context, this.domain);
     return core.XAppConnectionManager__factory.connect(
       this.conf.xAppConnectionManager,
-      this.providerOrSigner,
+      this.connection,
     );
   }
 
@@ -90,9 +75,5 @@ export class CoreContracts extends Contracts {
       this._governor = { location: 'local', identifier };
     }
     return this._governor;
-  }
-
-  connect(providerOrSigner: ethers.providers.Provider | ethers.Signer): void {
-    this.providerOrSigner = providerOrSigner;
   }
 }

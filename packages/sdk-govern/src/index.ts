@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 import { NomadContext, CoreContracts } from '@nomad-xyz/sdk';
 
 import * as utils from './utils';
+import { UnreachableError } from '@nomad-xyz/multi-provider';
 export { parseAction, Action } from './GovernanceMessage';
 
 export type Address = string;
@@ -29,7 +30,7 @@ export interface CallBatchContents {
 export class CallBatch {
   readonly local: Readonly<NormalizedCall>[];
   readonly remote: Map<number, Readonly<NormalizedCall>[]>;
-  private governorCore: CoreContracts;
+  private governorCore: CoreContracts<NomadContext>;
   private context: NomadContext;
   private built?: ethers.PopulatedTransaction;
 
@@ -150,6 +151,7 @@ export class CallBatch {
         domains,
         remoteCalls,
       );
+    if (!this.built) throw new UnreachableError('built is undefined');
     return this.built;
   }
 

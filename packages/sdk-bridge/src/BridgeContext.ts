@@ -25,7 +25,8 @@ export class BridgeContext extends NomadContext {
 
     this.bridges = new Map();
     const bridges = this.conf.networks.map(
-      (network) => new BridgeContracts(network, this.conf.bridge[network]),
+      (network) =>
+        new BridgeContracts(this, network, this.conf.bridge[network]),
     );
 
     bridges.forEach((bridge) => {
@@ -45,25 +46,6 @@ export class BridgeContext extends NomadContext {
     }
 
     return bridge;
-  }
-
-  /**
-   * Ensure that the contracts on a given domain are connected to the
-   * currently-registered signer or provider.
-   *
-   * @param domain the domain to reconnect
-   */
-  protected reconnect(nameOrDomain: string | number): void {
-    const domain = this.resolveDomainName(nameOrDomain);
-    super.reconnect(domain);
-    const connection = this.getConnection(domain);
-    if (!connection) {
-      throw new Error(`Reconnect failed: no connection for ${domain}`);
-    }
-    const bridge = this.bridges.get(domain);
-    if (bridge) {
-      bridge.connect(connection);
-    }
   }
 
   /**
