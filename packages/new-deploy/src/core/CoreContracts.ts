@@ -13,7 +13,7 @@ import { ethers } from 'ethers';
 import { Call, CallBatch } from '@nomad-xyz/sdk-govern';
 
 import Contracts from '../Contracts';
-import DeployContext from '../DeployContext';
+import { DeployContext } from '../DeployContext';
 
 import { expect } from 'chai';
 import { log, assertBeaconProxy } from '../utils';

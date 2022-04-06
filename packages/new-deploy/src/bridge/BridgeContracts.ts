@@ -10,7 +10,7 @@ import { utils } from '@nomad-xyz/multi-provider';
 import * as config from '@nomad-xyz/configuration';
 
 import Contracts from '../Contracts';
-import DeployContext from '../DeployContext';
+import { DeployContext } from '../DeployContext';
 import { log, assertBeaconProxy } from '../utils';
 import { expect } from 'chai';
 import { Call, CallBatch } from '@nomad-xyz/sdk-govern';

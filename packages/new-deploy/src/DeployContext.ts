@@ -14,7 +14,7 @@ export interface Verification {
   constructorArguments?: ReadonlyArray<unknown>;
 }
 
-export default class DeployContext extends MultiProvider<config.Domain> {
+export class DeployContext extends MultiProvider<config.Domain> {
   overrides: Map<string, ethers.Overrides>;
   protected _data: config.NomadConfig;
   protected _verification: Map<string, Array<Verification>>;
@@ -37,8 +37,8 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   get asNomadContext(): NomadContext {
     const ctx = new NomadContext(this.data);
 
-    for (const key in this.domains.keys()) {
-      ctx.registerProvider(key, this.mustGetProvider(key));
+    for (const [domain, provider] of this.providers.entries()) {
+      ctx.registerProvider(domain, provider);
     }
     return ctx;
   }
