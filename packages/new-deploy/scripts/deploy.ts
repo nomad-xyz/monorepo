@@ -30,10 +30,8 @@ async function run() {
   }
   // run the deploy script
   const governanceBatch = await deployContext.deployAndRelinquish();
-  // build governance batch
-  await governanceBatch.build();
 
-  // output the updated config
+  // output the updated config & verification inputs
   const outputDir = './output';
   fs.mkdirSync(outputDir, { recursive: true });
   fs.writeFileSync(
@@ -42,13 +40,17 @@ async function run() {
   );
   fs.writeFileSync(
     `${outputDir}/verification.json`,
-    JSON.stringify(deployContext.verification, null, 4),
+    JSON.stringify(Object.fromEntries(deployContext.verification), null, 4),
   );
 
-  fs.writeFileSync(
-    `${outputDir}/governanceTransactions.json`,
-    JSON.stringify(governanceBatch, null, 4),
-  );
+  if (governanceBatch) {
+      // build & write governance batch
+      await governanceBatch.build();
+      fs.writeFileSync(
+          `${outputDir}/governanceTransactions.json`,
+          JSON.stringify(governanceBatch, null, 4),
+      );
+  }
 
   console.log(`DONE!`);
 }
