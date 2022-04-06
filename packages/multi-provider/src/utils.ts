@@ -144,6 +144,9 @@ export class UnreachableError extends Error {
   }
 }
 
+/**
+ * An error containing a multi-provider-based context
+ */
 export abstract class WithContext<
   D extends Domain,
   T extends MultiProvider<D>,
@@ -156,6 +159,9 @@ export abstract class WithContext<
   }
 }
 
+/**
+ * Thrown when attempting to access a domain not registered on the context
+ */
 export class UnknownDomainError<
   D extends Domain,
   T extends MultiProvider<D>,
@@ -163,12 +169,22 @@ export class UnknownDomainError<
   domain: string | number;
 
   constructor(provider: T, domain: string | number) {
-    super(provider, `Attempted to access an unknown domain: ${domain}`);
+    super(
+      provider,
+      `
+      Attempted to access an unknown domain: ${domain}.
+      Hint: have you called \`context.registerDomain(...)\` yet?
+      `,
+    );
     this.name = 'UnknownDomainError';
     this.domain = domain;
   }
 }
 
+/**
+ * Thrown when attempting to access contract data on a domain with no
+ * registered provider
+ */
 export class NoProviderError<
   D extends Domain,
   T extends MultiProvider<D>,
@@ -183,7 +199,11 @@ export class NoProviderError<
 
     super(
       provider,
-      `Missing provider for domain: ${domainNumber} : ${domainName}`,
+      `
+      Missing provider for domain: ${domainNumber} : ${domainName}.
+      Hint: Have you called \`context.registerProvider(${domain}, provider)\`
+      yet?
+      `,
     );
     this.name = 'NoProviderError';
     this.domain = domain;
