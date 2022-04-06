@@ -21,7 +21,7 @@ export type Address = string;
  * let router = mainnet.mustGetBridge('celo').bridgeRouter;
  */
 export class NomadContext extends MultiProvider<config.Domain> {
-  protected _cores: Map<string, CoreContracts>;
+  protected _cores: Map<string, CoreContracts<this>>;
   protected _blacklist: Set<number>;
   readonly conf: config.NomadConfig;
 
@@ -42,7 +42,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
     domains.forEach((domain) => this.registerDomain(domain));
     this._cores = new Map();
     const cores = conf.networks.map(
-      (network) => new CoreContracts(network, conf.core[network]),
+      (network) => new CoreContracts(this, network, conf.core[network]),
     );
     cores.forEach((core) => {
       this._cores.set(core.domain, core);
@@ -52,25 +52,6 @@ export class NomadContext extends MultiProvider<config.Domain> {
 
   get governor(): config.NomadLocator {
     return this.conf.protocol.governor;
-  }
-
-  /**
-   * Ensure that the contracts on a given domain are connected to the
-   * currently-registered signer or provider.
-   *
-   * @param domain the domain to reconnect
-   */
-  protected reconnect(nameOrDomain: string | number): void {
-    const domain = this.resolveDomainName(nameOrDomain);
-    const connection = this.getConnection(domain);
-    if (!connection) {
-      throw new Error(`Reconnect failed: no connection for ${domain}`);
-    }
-    // re-register contracts
-    const core = this._cores.get(domain);
-    if (core) {
-      core.connect(connection);
-    }
   }
 
   /**
@@ -85,7 +66,6 @@ export class NomadContext extends MultiProvider<config.Domain> {
   ): void {
     const domain = this.resolveDomain(nameOrDomain);
     super.registerProvider(domain, provider);
-    this.reconnect(domain);
   }
 
   /**
@@ -97,7 +77,6 @@ export class NomadContext extends MultiProvider<config.Domain> {
   registerSigner(nameOrDomain: string | number, signer: Signer): void {
     const domain = this.resolveDomain(nameOrDomain);
     super.registerSigner(domain, signer);
-    this.reconnect(domain);
   }
 
   /**
@@ -110,7 +89,6 @@ export class NomadContext extends MultiProvider<config.Domain> {
   unregisterSigner(nameOrDomain: string | number): void {
     const domain = this.resolveDomain(nameOrDomain);
     super.unregisterSigner(domain);
-    this.reconnect(domain);
   }
 
   /**
@@ -118,7 +96,6 @@ export class NomadContext extends MultiProvider<config.Domain> {
    */
   clearSigners(): void {
     super.clearSigners();
-    this.domainNumbers.forEach((domain) => this.reconnect(domain));
   }
 
   /**
@@ -127,7 +104,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
    * @param nameOrDomain A domain name or number.
    * @returns a {@link CoreContracts} object (or undefined)
    */
-  getCore(nameOrDomain: string | number): CoreContracts | undefined {
+  getCore(nameOrDomain: string | number): CoreContracts<this> | undefined {
     const domain = this.resolveDomainName(nameOrDomain);
     return this._cores.get(domain);
   }
@@ -139,7 +116,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
    * @returns a {@link CoreContracts} object
    * @throws if no {@link CoreContracts} object exists on that domain.
    */
-  mustGetCore(nameOrDomain: string | number): CoreContracts {
+  mustGetCore(nameOrDomain: string | number): CoreContracts<this> {
     const core = this.getCore(nameOrDomain);
     if (!core) {
       throw new Error(`Missing core for domain: ${nameOrDomain}`);
@@ -193,7 +170,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
    *
    * @returns The identifier of the governing domain
    */
-  async governorCore(): Promise<CoreContracts> {
+  async governorCore(): Promise<CoreContracts<this>> {
     return this.mustGetCore(this.governor.domain);
   }
 

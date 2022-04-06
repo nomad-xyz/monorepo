@@ -64,8 +64,8 @@ export type AnyGovernanceMessage = TransferGovernorMessage | BatchMessage;
  * functionality.
  */
 class GovernanceMessage extends NomadMessage<NomadContext> {
-  readonly fromCore: CoreContracts;
-  readonly toCore: CoreContracts;
+  readonly fromCore: CoreContracts<NomadContext>;
+  readonly toCore: CoreContracts<NomadContext>;
 
   /**
    * @hideconstructor
