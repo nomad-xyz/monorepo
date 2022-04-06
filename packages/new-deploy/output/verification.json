@@ -1,0 +1,186 @@
+{
+  "goerli": [
+    {
+      "name": "UpdaterManager",
+      "address": "0x53B94f2D4a3159b66fcCC4f406Ea388426A3f3cB",
+      "constructorArguments": ["0x4177372fd9581ceb2367e0ce84adc5dad9df8d55"]
+    },
+    {
+      "name": "UpgradeBeaconController",
+      "address": "0x35fc2d2CF9CACed16a4b0913830A7eCEA95CAd5F"
+    },
+    {
+      "name": "XAppConnectionManager",
+      "address": "0x74ad55dC4CC6A88a0240591352AeD72Fc828AEbA"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "address": "0x35eF86b59dbF21DDD6cf4fA7Dc04a3aEFaD57484",
+      "constructorArguments": [
+        "0x05a1afF80B23C2fc7E2067Daf4413eDa1B76b0d0",
+        "0x35fc2d2cf9caced16a4b0913830a7ecea95cad5f"
+      ]
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "address": "0x8459EDe1ed4dADD6D5B142d845240088A6530Cf8",
+      "constructorArguments": [
+        "0x35eF86b59dbF21DDD6cf4fA7Dc04a3aEFaD57484",
+        "0xc4d66de800000000000000000000000053b94f2d4a3159b66fccc4f406ea388426a3f3cb"
+      ]
+    },
+    {
+      "name": "Home",
+      "address": "0x05a1afF80B23C2fc7E2067Daf4413eDa1B76b0d0",
+      "constructorArguments": [8000]
+    },
+    {
+      "name": "UpgradeBeacon",
+      "address": "0xbdf5227e9D80C400cFB294864b7d068BdeE4e4ed",
+      "constructorArguments": [
+        "0x89a4cccC3d6708F16f40c873812091765B3f2884",
+        "0x35fc2d2cf9caced16a4b0913830a7ecea95cad5f"
+      ]
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "address": "0x8f8424DC94b4c302984Ab5a03fc4c2d1Ec95DC92",
+      "constructorArguments": [
+        "0xbdf5227e9D80C400cFB294864b7d068BdeE4e4ed",
+        "0x485cc95500000000000000000000000074ad55dc4cc6a88a0240591352aed72fc828aeba000000000000000000000000a4849f1d96b26066f9c631fcdc8f1457d27fb5ec"
+      ]
+    },
+    {
+      "name": "GovernanceRouter",
+      "address": "0x89a4cccC3d6708F16f40c873812091765B3f2884",
+      "constructorArguments": [8000, 180]
+    },
+    {
+      "name": "Replica",
+      "address": "0x42f046Ca3967f80F0F3178Ca73F8701b36957445",
+      "constructorArguments": [8000, 850000, 15000]
+    },
+    {
+      "name": "UpgradeBeacon",
+      "address": "0x73509B64B9A83F9e220d300cfA964e6bbE718B85",
+      "constructorArguments": [
+        "0x42f046Ca3967f80F0F3178Ca73F8701b36957445",
+        "0x35fc2d2cf9caced16a4b0913830a7ecea95cad5f"
+      ]
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "address": "0x7EB8450a5397b795F2d89BC48EA20c24fa147F11",
+      "constructorArguments": [
+        "0x73509B64B9A83F9e220d300cfA964e6bbE718B85",
+        "0xe7e7a7b700000000000000000000000000000000000000000000000000000000000007d00000000000000000000000004177372fd9581ceb2367e0ce84adc5dad9df8d550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a"
+      ]
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "address": "0x0C473afC0cabd469751CBE3Ac08aBac3e40bF586",
+      "constructorArguments": [
+        "0x73509B64B9A83F9e220d300cfA964e6bbE718B85",
+        "0xe7e7a7b70000000000000000000000000000000000000000000000000000000000000bb80000000000000000000000004177372fd9581ceb2367e0ce84adc5dad9df8d550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a"
+      ]
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "address": "0xb473F5e0AAf47Ba54dac048633e7b578c1eBde01",
+      "constructorArguments": [
+        "0x73509B64B9A83F9e220d300cfA964e6bbE718B85",
+        "0xe7e7a7b700000000000000000000000000000000000000000000000000000000000023280000000000000000000000004177372fd9581ceb2367e0ce84adc5dad9df8d550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a"
+      ]
+    },
+    {
+      "name": "BridgeToken",
+      "address": "0x374e21d37584128881cF385C3D629dd25f5d28b2"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "address": "0x29ED2691B1f474bFBC25A3Fc193faCF5191d1A76",
+      "constructorArguments": [
+        "0x374e21d37584128881cF385C3D629dd25f5d28b2",
+        "0x35fc2d2cf9caced16a4b0913830a7ecea95cad5f"
+      ]
+    },
+    {
+      "name": "UpgradeBeacon",
+      "address": "0x8F60dc7117dE62398a801100bfcf613569Dd66d7",
+      "constructorArguments": [
+        "0xA41400FE39d81FEd7800B9748Ffa3943F8d08125",
+        "0x35fc2d2cf9caced16a4b0913830a7ecea95cad5f"
+      ]
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "address": "0x32ea430C414DC7c08B6C40EEA495F358404dA03e",
+      "constructorArguments": [
+        "0x8F60dc7117dE62398a801100bfcf613569Dd66d7",
+        "0x485cc95500000000000000000000000029ed2691b1f474bfbc25a3fc193facf5191d1a7600000000000000000000000074ad55dc4cc6a88a0240591352aed72fc828aeba"
+      ]
+    },
+    {
+      "name": "TokenRegistry",
+      "address": "0xA41400FE39d81FEd7800B9748Ffa3943F8d08125"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "address": "0x8FbEA25D0bFDbff68F2B920df180e9498E9c856A",
+      "constructorArguments": [
+        "0xef357E74a084E7571f2FB7220953b7C7E876eA4a",
+        "0x35fc2d2cf9caced16a4b0913830a7ecea95cad5f"
+      ]
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "address": "0x1BEBC8F1260d16EE5d1CFEE9366bB474bD13DC5f",
+      "constructorArguments": [
+        "0x8FbEA25D0bFDbff68F2B920df180e9498E9c856A",
+        "0x485cc95500000000000000000000000032ea430c414dc7c08b6c40eea495f358404da03e00000000000000000000000074ad55dc4cc6a88a0240591352aed72fc828aeba"
+      ]
+    },
+    {
+      "name": "BridgeRouter",
+      "address": "0xef357E74a084E7571f2FB7220953b7C7E876eA4a"
+    },
+    {
+      "name": "EthHelper",
+      "address": "0x46d4cF3C3170542DD252D28114A9A9A0e2325A73",
+      "constructorArguments": [
+        "0x0bb7509324ce409f7bbc4b701f932eaca9736ab7",
+        "0x1BEBC8F1260d16EE5d1CFEE9366bB474bD13DC5f"
+      ]
+    }
+  ],
+  "kovan": [
+    {
+      "name": "UpgradeBeaconProxy",
+      "address": "0x734c23700E17976077c03EC12Abb00CAdC7A0bDB",
+      "constructorArguments": [
+        "0x165315fdac9929c37c4d012405a93d98e9ae3c71",
+        "0xe7e7a7b70000000000000000000000000000000000000000000000000000000000001f400000000000000000000000004177372fd9581ceb2367e0ce84adc5dad9df8d550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a"
+      ]
+    }
+  ],
+  "xdai": [
+    {
+      "name": "UpgradeBeaconProxy",
+      "address": "0x8C0a09eEE535Cc09FD7FBbc2b214177a32872579",
+      "constructorArguments": [
+        "0xd1b7cc438a5961d7825e1d7ae6b9de578c4d6f17",
+        "0xe7e7a7b70000000000000000000000000000000000000000000000000000000000001f400000000000000000000000004177372fd9581ceb2367e0ce84adc5dad9df8d550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a"
+      ]
+    }
+  ],
+  "rinkeby": [
+    {
+      "name": "UpgradeBeaconProxy",
+      "address": "0x788Dae99ea1B32665Bb0d2f8523abF534529d0fd",
+      "constructorArguments": [
+        "0xc6b39ac67fbe3e029708390ffea130c8c0e7d30b",
+        "0xe7e7a7b70000000000000000000000000000000000000000000000000000000000001f400000000000000000000000004177372fd9581ceb2367e0ce84adc5dad9df8d550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a"
+      ]
+    }
+  ]
+}
