@@ -312,6 +312,8 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const remoteBridge = this.context.mustGetBridge(remote);
     const remoteDomain = this.context.resolveDomain(remote);
     const remoteConfig = this.context.mustGetDomainConfig(remote);
+    const remoteName = this.context.resolveDomainName(remote);
+    const local = this.context.resolveDomainName(this.domain);
 
     const remoteRouter = remoteBridge.data.bridgeRouter?.proxy;
     if (!remoteRouter)
