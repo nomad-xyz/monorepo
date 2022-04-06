@@ -1,11 +1,11 @@
-import DeployContext from '../src/DeployContext';
+import { DeployContext } from '../src/DeployContext';
 import * as config from '@nomad-xyz/configuration';
-import {getConfig} from "./utils";
+import { getConfig } from "./utils";
 
 run();
 
 async function run() {
-// instantiate deploy context
+    // instantiate deploy context
     const DEPLOY_CONFIG: config.NomadConfig = getConfig();
     const deployContext = new DeployContext(DEPLOY_CONFIG);
 
