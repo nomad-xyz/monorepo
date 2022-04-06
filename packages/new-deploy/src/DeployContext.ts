@@ -1,5 +1,7 @@
 import * as config from '@nomad-xyz/configuration';
 import { MultiProvider, utils } from '@nomad-xyz/multi-provider';
+import { NomadContext } from '@nomad-xyz/sdk';
+import { CallBatch } from '@nomad-xyz/sdk-govern';
 import { expect } from 'chai';
 import ethers from 'ethers';
 
@@ -30,6 +32,15 @@ export default class DeployContext extends MultiProvider<config.Domain> {
         this.registerRpcProvider(network, this.data.rpcs[network][0]);
       }
     }
+  }
+
+  get asNomadContext(): NomadContext {
+    const ctx = new NomadContext(this.data);
+
+    for (const key in this.domains.keys()) {
+      ctx.registerProvider(key, this.mustGetProvider(key));
+    }
+    return ctx;
   }
 
   get protocol(): config.NetworkInfo | undefined {
@@ -182,31 +193,36 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   // Deploys all configured connections and enrolls them if possible.
   // For any connection that cannot be enrolled, outputs the governance
   // action required to enroll them
-  async ensureCoreConnections(): Promise<ethers.PopulatedTransaction[]> {
+  async ensureCoreConnections(): Promise<CallBatch | undefined> {
     // ensure all core contracts are deployed
     await this.ensureCores();
     // ensure all core contracts are enrolled in each other
-    const enrollTransactions = await Promise.all(
-      this.networks.map(async (network) => {
+    const batches = await Promise.all(
+      this.networks.map(async (network): Promise<CallBatch | undefined> => {
         const core = this.mustGetCore(network);
         const name = this.resolveDomainName(network);
         const remoteDomains = this.data.protocol.networks[name]?.connections;
         // the following "unreachable" error performs type-narrowing for the compiler
-        if (!remoteDomains) throw new Error('unreachable');
-        if (remoteDomains.length == 0) return [];
-        const firstDomain = remoteDomains[0];
-        const restDomains = remoteDomains.slice(1);
+        if (!remoteDomains) throw new utils.UnreachableError();
+        if (remoteDomains.length == 0) return;
+
+        const [firstDomain, ...restDomains] = remoteDomains;
         // wait on the first replica deploy to ensure that the implementation and beacon are deployed
+
         const firstReplicaTxns = await core.enrollRemote(firstDomain);
         // perform subsequent replica deploys concurrently (will use same implementation and beacon)
-        let txns = await Promise.all(
+        const batches = await Promise.all(
           restDomains.map((remote) => core.enrollRemote(remote)),
         );
-        txns = txns.concat(firstReplicaTxns.flat());
-        return txns.flat();
+
+        return CallBatch.flatten(this.asNomadContext, [
+          firstReplicaTxns,
+          ...batches,
+        ]);
       }),
     );
-    return enrollTransactions.flat();
+
+    return CallBatch.flatten(this.asNomadContext, batches);
   }
 
   /// Deploys all configured bridges.
@@ -215,31 +231,32 @@ export default class DeployContext extends MultiProvider<config.Domain> {
     await Promise.all(toDeploy.map((net) => this.deployBridge(net)));
   }
 
-  async ensureBridgeConnections(): Promise<ethers.PopulatedTransaction[]> {
+  async ensureBridgeConnections(): Promise<CallBatch | undefined> {
     // first, ensure all bridge contracts are deployed
     await this.ensureBridges();
     // next, ensure all bridge contracts are enrolled in each other
     // and all custom tokens are also enrolled
-    const enrollTransactions = await Promise.all(
-      this.networks.map(
-        async (network): Promise<ethers.PopulatedTransaction[]> => {
-          const bridge = this.mustGetBridge(network);
-          const name = this.resolveDomainName(network);
-          const remoteDomains = this.data.protocol.networks[name]?.connections;
-          // the following "unreachable" error performs type-narrowing for the compiler
-          if (!remoteDomains) throw new Error('unreachable');
-          const allEnrollRouterTxns = await Promise.all(
-            remoteDomains.map((remote) => bridge.enrollBridgeRouter(remote)),
-          );
-          let enrollTxns = allEnrollRouterTxns.flat();
-          // deploy and enroll custom tokens
-          const txns = await bridge.deployCustomTokens();
-          enrollTxns = enrollTxns.concat(txns);
-          return enrollTxns;
-        },
-      ),
+    const batches = await Promise.all(
+      this.networks.map(async (network): Promise<CallBatch> => {
+        const bridge = this.mustGetBridge(network);
+        const name = this.resolveDomainName(network);
+        const remoteDomains = this.data.protocol.networks[name]?.connections;
+        // the following "unreachable" error performs type-narrowing for the compiler
+        if (!remoteDomains) throw new utils.UnreachableError();
+        const batches = await Promise.all(
+          remoteDomains.map((remote) => bridge.enrollBridgeRouter(remote)),
+        );
+
+        // deploy and enroll custom tokens
+        const customs = await bridge.deployCustomTokens();
+
+        const batch = CallBatch.flatten(this.asNomadContext, batches);
+        if (customs) batch.append(customs);
+        return batch;
+      }),
     );
-    return enrollTransactions.flat();
+
+    return CallBatch.flatten(this.asNomadContext, batches);
   }
 
   async relinquishOwnership(): Promise<void> {
@@ -253,12 +270,12 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   }
 
   // Intended entrypoint.
-  async deployAndRelinquish(): Promise<ethers.PopulatedTransaction[]> {
+  async deployAndRelinquish(): Promise<CallBatch | undefined> {
     // validate the config input
     this.validate();
 
     // ensure the presence of all core + bridge contracts, and enroll all core + bridge contracts with each other
-    const governanceTransactions = await this.ensureCoreAndBridgeConnections();
+    const batch = await this.ensureCoreAndBridgeConnections();
 
     // relinquish control of all other contracts from deployer to governance
     await this.relinquishOwnership();
@@ -270,7 +287,7 @@ export default class DeployContext extends MultiProvider<config.Domain> {
       ),
     );
 
-    return governanceTransactions;
+    return batch;
   }
 
   // Checks for connections that are configured but lack a corresponding bridge
@@ -278,15 +295,15 @@ export default class DeployContext extends MultiProvider<config.Domain> {
   // For any connection that cannot be enrolled, outputs the governance
   // action required to enroll them
   protected async ensureCoreAndBridgeConnections(): Promise<
-    ethers.PopulatedTransaction[]
+    CallBatch | undefined
   > {
-    let governanceTransactions = await this.ensureCoreConnections();
-    const bridgeGovernanceTransactions = await this.ensureBridgeConnections();
-    // combine governance transactions and return them
-    governanceTransactions = governanceTransactions.concat(
-      bridgeGovernanceTransactions,
-    );
-    return governanceTransactions;
+    const coreBatch = await this.ensureCoreConnections();
+    const bridgeBatch = await this.ensureBridgeConnections();
+    // short circuit if no core txns
+    if (!coreBatch) return bridgeBatch;
+    // combine if there are some of each
+    if (bridgeBatch) coreBatch.append(bridgeBatch);
+    return coreBatch;
   }
 
   // perform validation checks on core and bridges

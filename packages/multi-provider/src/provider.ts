@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { Domain } from './domains';
+import { NoProviderError, UnknownDomainError, UnreachableError } from './utils';
 
 type Provider = ethers.providers.Provider;
 
@@ -88,9 +89,8 @@ export class MultiProvider<T extends Domain> {
       );
     }
 
-    if (!domain) {
-      throw new Error(`Domain not found: ${nameOrDomain}`);
-    }
+    if (!domain) throw new UnknownDomainError(this, nameOrDomain);
+
     return domain.domain;
   }
 
@@ -113,9 +113,7 @@ export class MultiProvider<T extends Domain> {
       );
     }
 
-    if (!domain) {
-      throw new Error(`Domain not found: ${nameOrDomain}`);
-    }
+    if (!domain) throw new UnknownDomainError(this, nameOrDomain);
     return domain.name;
   }
 
@@ -158,10 +156,7 @@ export class MultiProvider<T extends Domain> {
    */
   mustGetDomain(nameOrDomain: number | string): Domain {
     const domain = this.getDomain(nameOrDomain);
-    if (!domain) {
-      throw new Error(`Domain not found: ${nameOrDomain}`);
-    }
-
+    if (!domain) throw new UnknownDomainError(this, nameOrDomain);
     return domain;
   }
 
@@ -227,7 +222,7 @@ export class MultiProvider<T extends Domain> {
   mustGetProvider(nameOrDomain: string | number): Provider {
     const provider = this.getProvider(nameOrDomain);
     if (!provider) {
-      throw new Error('unregistered name or domain');
+      throw new NoProviderError(this, nameOrDomain);
     }
     return provider;
   }
@@ -242,7 +237,7 @@ export class MultiProvider<T extends Domain> {
     const domain = this.resolveDomainName(nameOrDomain);
     const provider = this.providers.get(domain);
     if (!provider && !signer.provider)
-      throw new Error('Must have a provider before registering signer');
+      throw new NoProviderError(this, nameOrDomain);
 
     if (provider) {
       try {
@@ -276,7 +271,7 @@ export class MultiProvider<T extends Domain> {
 
     const signer = this.signers.get(domain);
     if (signer == null || signer.provider == null) {
-      throw new Error('signer was missing provider. How?');
+      throw new UnreachableError('signer was missing provider.');
     }
 
     this.signers.delete(domain);
@@ -326,7 +321,7 @@ export class MultiProvider<T extends Domain> {
   mustGetSigner(nameOrDomain: string | number): ethers.Signer {
     const signer = this.getSigner(nameOrDomain);
     if (!signer) {
-      throw new Error(`Domain not found: ${nameOrDomain}`);
+      throw new UnknownDomainError(this, nameOrDomain);
     }
     return signer;
   }
@@ -359,7 +354,7 @@ export class MultiProvider<T extends Domain> {
   ): ethers.Signer | ethers.providers.Provider {
     const connection = this.getConnection(nameOrDomain);
     if (!connection) {
-      throw new Error(`Connection not found: ${nameOrDomain}`);
+      throw new NoProviderError(this, nameOrDomain);
     }
 
     return connection;

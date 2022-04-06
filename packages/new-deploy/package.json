@@ -36,6 +36,8 @@
     "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/contracts-router": "workspace:^",
     "@nomad-xyz/multi-provider": "workspace:^",
+    "@nomad-xyz/sdk": "workspace:^",
+    "@nomad-xyz/sdk-govern": "workspace:^",
     "axios": "^0.21.3",
     "chai": "^4.3.4"
   },

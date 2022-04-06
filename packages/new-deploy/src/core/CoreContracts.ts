@@ -10,6 +10,7 @@ import {
 } from '@nomad-xyz/contracts-core';
 import { utils } from '@nomad-xyz/multi-provider';
 import { ethers } from 'ethers';
+import { Call, CallBatch } from '@nomad-xyz/sdk-govern';
 
 import Contracts from '../Contracts';
 import DeployContext from '../DeployContext';
@@ -432,7 +433,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
   async enrollReplica(
     homeDomain: string | number,
-  ): Promise<ethers.PopulatedTransaction[]> {
+  ): Promise<CallBatch | undefined> {
     const local = this.context.resolveDomainName(this.domain);
     const home = this.context.resolveDomainName(homeDomain);
     const homeConfig = this.context.mustGetDomainConfig(home);
@@ -447,7 +448,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const replicaAlreadyEnrolled = await this.xAppConnectionManager.isReplica(
       replica,
     );
-    if (replicaAlreadyEnrolled) return [];
+    if (replicaAlreadyEnrolled) return;
     log(`enroll Replica for ${home} on ${local}`);
 
     // Check that this key has permissions to set this
@@ -456,13 +457,16 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     // If we can't use deployer ownership
     if (!utils.equalIds(owner, deployer)) {
-      return [
+      const tx =
         await this.xAppConnectionManager.populateTransaction.ownerEnrollReplica(
           replica,
           homeConfig.domain,
           this.overrides,
-        ),
-      ];
+        );
+      const batch = CallBatch.fromContext(this.context.asNomadContext);
+      // safe as populateTransaction always sets `to`
+      batch.push(this.domainNumber, tx as Call);
+      return batch;
     }
 
     // If we can use deployer ownership
@@ -472,12 +476,11 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       this.overrides,
     );
     await tx.wait(this.confirmations);
-    return [];
   }
 
   async enrollWatchers(
     homeDomain: string | number,
-  ): Promise<ethers.PopulatedTransaction[]> {
+  ): Promise<CallBatch | undefined> {
     const local = this.context.resolveDomainName(this.domain);
     const home = this.context.resolveDomainName(homeDomain);
     const homeConfig = this.context.mustGetDomainConfig(home);
@@ -501,7 +504,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       (_, idx) => !enrollmentStatuses[idx],
     );
 
-    if (watchersToEnroll.length == 0) return [];
+    if (watchersToEnroll.length == 0) return;
     log(`enroll Watchers for ${home} on ${local}`);
 
     // Check that this key has permissions to set this
@@ -520,9 +523,11 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
           );
         }),
       );
-      return txns.filter(
-        (x) => x !== undefined,
-      ) as Array<ethers.PopulatedTransaction>;
+
+      const batch = CallBatch.fromContext(this.context.asNomadContext);
+      // safe as populateTransaction always sets `to`
+      batch.push(this.domainNumber, txns as Call[]);
+      return batch;
     }
 
     // If we can use deployer ownership
@@ -537,12 +542,12 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       ),
     );
     await Promise.race(txns.map((tx) => tx.wait(this.confirmations)));
-    return [];
+    return;
   }
 
   async enrollGovernanceRouter(
     remoteDomain: string | number,
-  ): Promise<ethers.PopulatedTransaction[]> {
+  ): Promise<CallBatch | undefined> {
     const local = this.context.resolveDomainName(this.domain);
     const remote = this.context.resolveDomainName(remoteDomain);
     const remoteCore = this.context.mustGetCore(remote);
@@ -552,8 +557,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const enrolledRemote = await this.governanceRouter.routers(
       remoteConfig.domain,
     );
-    if (!utils.equalIds(enrolledRemote, ethers.constants.AddressZero))
-      return [];
+    if (!utils.equalIds(enrolledRemote, ethers.constants.AddressZero)) return;
     log(`enroll GovernanceRouter for ${remote} on ${local}`);
 
     // Check that this key has permissions to set this
@@ -562,12 +566,15 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     // If we can't use deployer ownership
     if (!utils.equalIds(owner, deployer)) {
-      return [
+      const call =
         await this.governanceRouter.populateTransaction.setRouterLocal(
           remoteConfig.domain,
           utils.canonizeId(remoteCore.governanceRouter.address),
-        ),
-      ];
+        );
+      const batch = CallBatch.fromContext(this.context.asNomadContext);
+      // safe as populateTransaction always sets `to`
+      batch.push(this.domainNumber, call as Call);
+      return batch;
     }
 
     // If we can use deployer ownership
@@ -576,19 +583,18 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       utils.canonizeId(remoteCore.governanceRouter.address),
     );
     await tx.wait(this.confirmations);
-    return [];
+    return;
   }
 
-  async enrollRemote(
-    remoteDomain: string | number,
-  ): Promise<ethers.PopulatedTransaction[]> {
+  async enrollRemote(remoteDomain: string | number): Promise<CallBatch> {
     await this.deployUnenrolledReplica(remoteDomain);
-    const txns = await Promise.all([
+    const batches = await Promise.all([
       this.enrollReplica(remoteDomain),
       this.enrollWatchers(remoteDomain),
       this.enrollGovernanceRouter(remoteDomain),
     ]);
-    return txns.flat();
+
+    return CallBatch.flatten(this.context.asNomadContext, batches);
   }
 
   async relinquish(): Promise<void> {
