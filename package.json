@@ -23,6 +23,7 @@
     "contracts-core": "yarn workspace @nomad-xyz/contracts-core",
     "contracts-router": "yarn workspace @nomad-xyz/contracts-router",
     "deploy": "yarn workspace @nomad-xyz/deploy",
+    "new-deploy": "yarn workspace @nomad-xyz/new-deploy",
     "lint": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy  --exclude @nomad-xyz/local-environment run lint",
     "local-environment": "yarn workspace @nomad-xyz/local-environment",
     "monitor": "yarn workspace @nomad-xyz/monitor",
