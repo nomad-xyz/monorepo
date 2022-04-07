@@ -721,7 +721,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     # UpgradeBeaconController
      * owner
     */
-    
+
     //  ========= Home =========
     // Home upgrade setup contracts are defined
     assertBeaconProxy(this.data.home, 'Home');
@@ -729,14 +729,15 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     // updaterManager is set on Home
     const updaterManager = await this.home.updaterManager();
     expect(utils.equalIds(updaterManager, this.data.updaterManager)).to.be.true;
-    
+
     // state
     const state = await this.home.state();
     expect(state).to.equal(1);
 
     // updater
     const homeUpdater = await this.home.updater();
-    expect(utils.equalIds(homeUpdater, domainConfig.configuration.updater)).to.be.true;
+    expect(utils.equalIds(homeUpdater, domainConfig.configuration.updater)).to
+      .be.true;
 
     // localDomain
     const homeLocalDomain = await this.home.localDomain();
@@ -749,11 +750,17 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     //  ========= UpdaterManager =========
     // updater
     const updaterAtUpdaterManager = await this.updaterManager.updater();
-    expect(utils.equalIds(updaterAtUpdaterManager, domainConfig.configuration.updater)).to.be.true;
+    expect(
+      utils.equalIds(
+        updaterAtUpdaterManager,
+        domainConfig.configuration.updater,
+      ),
+    ).to.be.true;
 
     // owner
     const updaterManagersOwner = await this.updaterManager.owner();
-    expect(utils.equalIds(updaterManagersOwner, this.governanceRouter.address)).to.be.true;
+    expect(utils.equalIds(updaterManagersOwner, this.governanceRouter.address))
+      .to.be.true;
 
     //  ========= xAppConnectionManager =========
     // home
@@ -761,21 +768,32 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     expect(utils.equalIds(xappHome, this.data.home.proxy)).to.be.true;
     // owner
     const xappsOwner = await this.xAppConnectionManager.owner();
-    expect(utils.equalIds(xappsOwner, this.governanceRouter.address)).to.be.true;
+    expect(utils.equalIds(xappsOwner, this.governanceRouter.address)).to.be
+      .true;
 
     for (const remoteDomain of remoteDomains) {
-      const remoteDomainNumber = this.context.mustGetDomain(remoteDomain).domain;
+      const remoteDomainNumber =
+        this.context.mustGetDomain(remoteDomain).domain;
       assertBeaconProxy(replicas[remoteDomain], `${remoteDomain}'s replica`);
 
-      const assumedDomain = await this.xAppConnectionManager.replicaToDomain(replicas[remoteDomain].proxy);
+      const assumedDomain = await this.xAppConnectionManager.replicaToDomain(
+        replicas[remoteDomain].proxy,
+      );
       expect(assumedDomain).to.equal(remoteDomainNumber);
       // domainToReplica
-      const assumedReplicaAddress = await this.xAppConnectionManager.domainToReplica(remoteDomainNumber);
-      expect(utils.equalIds(assumedReplicaAddress, replicas[remoteDomain].proxy)).to.be.true;
+      const assumedReplicaAddress =
+        await this.xAppConnectionManager.domainToReplica(remoteDomainNumber);
+      expect(
+        utils.equalIds(assumedReplicaAddress, replicas[remoteDomain].proxy),
+      ).to.be.true;
       // watcherPermission
 
       for (const watcher of domainConfig.configuration.watchers) {
-        const watcherPermission = await this.xAppConnectionManager.watcherPermission(watcher, remoteDomainNumber);
+        const watcherPermission =
+          await this.xAppConnectionManager.watcherPermission(
+            watcher,
+            remoteDomainNumber,
+          );
         expect(watcherPermission).to.be.true;
       }
     }
@@ -788,48 +806,74 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     expect(govLocalDomain).to.equal(this.domainNumber);
     // recoveryTimelock
     const recoveryTimelock = await this.governanceRouter.recoveryTimelock();
-    expect(ethers.BigNumber.from(domainConfig.configuration.governance.recoveryTimelock).toHexString()).to.equal(recoveryTimelock.toHexString())
+    expect(
+      ethers.BigNumber.from(
+        domainConfig.configuration.governance.recoveryTimelock,
+      ).toHexString(),
+    ).to.equal(recoveryTimelock.toHexString());
     // recoveryActiveAt
     const recoveryActiveAt = await this.governanceRouter.recoveryActiveAt();
-    expect(recoveryActiveAt.eq(0)).to.be.true
+    expect(recoveryActiveAt.eq(0)).to.be.true;
     // recoveryManager
     const recoveryManager = await this.governanceRouter.recoveryManager();
-    expect(utils.equalIds(domainConfig.configuration.governance.recoveryManager, recoveryManager));
+    expect(
+      utils.equalIds(
+        domainConfig.configuration.governance.recoveryManager,
+        recoveryManager,
+      ),
+    );
     // governor
     const govId = await this.governanceRouter.governor();
-    let expectedGovId = isGovernor ? this.context.protocol!.governor.id : ethers.constants.AddressZero;
+    let expectedGovId = isGovernor
+      ? this.context.protocol!.governor.id
+      : ethers.constants.AddressZero;
     expect(utils.equalIds(expectedGovId, govId)).to.be.true;
     // governorDomain
     const govDomain = await this.governanceRouter.governorDomain();
     let expectedGovDomain = this.context.protocol!.governor.domain;
-    expect(govDomain).to.equal(expectedGovDomain);   
+    expect(govDomain).to.equal(expectedGovDomain);
     // xAppConnectionManager
-    const xAppConnectionManager = await this.governanceRouter.xAppConnectionManager();
-    expect(utils.equalIds(this.data.xAppConnectionManager, xAppConnectionManager)).to.be.true;
+    const xAppConnectionManager =
+      await this.governanceRouter.xAppConnectionManager();
+    expect(
+      utils.equalIds(this.data.xAppConnectionManager, xAppConnectionManager),
+    ).to.be.true;
     // routers
     for (const domain of remoteDomains) {
       const remoteDomainNumber = this.context.mustGetDomain(domain).domain;
-      const remoteRouter = await this.governanceRouter.routers(remoteDomainNumber);
-      expect(utils.equalIds(this.context.mustGetCore(domain).governanceRouter.address, remoteRouter)).to.be.true;
+      const remoteRouter = await this.governanceRouter.routers(
+        remoteDomainNumber,
+      );
+      expect(
+        utils.equalIds(
+          this.context.mustGetCore(domain).governanceRouter.address,
+          remoteRouter,
+        ),
+      ).to.be.true;
     }
     // domains
-    const connections: number[] = domainConfig.connections.map(d => this.context.mustGetDomain(d).domain).sort();
-    const domainsOnChain: number[] = await Promise.all(connections.map((_, i: number) => this.governanceRouter.domains(i)));
+    const connections: number[] = domainConfig.connections
+      .map((d) => this.context.mustGetDomain(d).domain)
+      .sort();
+    const domainsOnChain: number[] = await Promise.all(
+      connections.map((_, i: number) => this.governanceRouter.domains(i)),
+    );
     domainsOnChain.sort();
     expect(connections.every((v, i) => v === domainsOnChain[i])).to.be.true;
 
     let threw = false;
     try {
-      await this.governanceRouter.domains(connections.length)
-    } catch(_) {
+      await this.governanceRouter.domains(connections.length);
+    } catch (_) {
       threw = true;
     }
     expect(threw).to.be.true;
-    
+
     //  ========= UpgradeBeaconController =========
     // owner
     const beaconOwner = await this.upgradeBeaconController.owner();
-    expect(utils.equalIds(beaconOwner, this.governanceRouter.address)).to.be.true;
+    expect(utils.equalIds(beaconOwner, this.governanceRouter.address)).to.be
+      .true;
 
     if (remoteDomains.length > 0) {
       // expect all replicas to have to same implementation and upgradeBeacon
