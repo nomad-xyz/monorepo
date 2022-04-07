@@ -1,0 +1,32 @@
+[core]
+src = 'packages/contracts-core/contracts'
+out = 'packages/contracts-core/foundry_artifacts'
+remappings = [
+    '@summa-tx/=node_modules/@summa-tx/',
+    '@openzeppelin/=node_modules/@openzeppelin/'
+]
+solc_version = '0.7.6'
+optimizer = true
+optimizer_runs = 99999
+
+[router]
+src = 'packages/contracts-router/contracts'
+out = 'packages/contracts-router/foundry_artifacts'
+remappings = [
+    '@summa-tx/=node_modules/@summa-tx/',
+    '@openzeppelin/=node_modules/@openzeppelin/'
+]
+solc_version = '0.7.6'
+optimizer = true
+optimizer_runs = 99999
+
+[bridge]
+src = 'packages/contracts-bridge/contracts'
+out = 'packages/contracts-bridge/foundry_artifacts'
+remappings = [
+    '@summa-tx/=node_modules/@summa-tx/',
+    '@openzeppelin/=node_modules/@openzeppelin/'
+]
+solc_version = '0.7.6'
+optimizer = true
+optimizer_runs = 99999
