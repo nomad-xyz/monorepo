@@ -542,24 +542,30 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     //  ========= BridgeRouter =========
     // owner
     const bridgeRouterOwner = await this.bridgeRouterContract.owner();
-    expect(utils.equalIds(bridgeRouterOwner, core.governanceRouter.address)).to.be.true;
+    expect(utils.equalIds(bridgeRouterOwner, core.governanceRouter.address)).to
+      .be.true;
     // tokenRegistry
     const tokenRegistry = await this.bridgeRouterContract.tokenRegistry();
-    expect(utils.equalIds(tokenRegistry, this.data.tokenRegistry.proxy)).to.be.true;
+    expect(utils.equalIds(tokenRegistry, this.data.tokenRegistry.proxy)).to.be
+      .true;
     // xAppConnectionManager
     const xApp = await this.bridgeRouterContract.xAppConnectionManager();
     expect(utils.equalIds(xApp, core.xAppConnectionManager.address)).to.be.true;
-    
+
     //  ========= tokenRegistry =========
     // owner
     const tokenRegistryOwner = await this.tokenRegistryContract.owner();
-    expect(utils.equalIds(tokenRegistryOwner, core.governanceRouter.address)).to.be.true;
+    expect(utils.equalIds(tokenRegistryOwner, core.governanceRouter.address)).to
+      .be.true;
     // xAppConnectionManager
-    const xAppAddress = await this.tokenRegistryContract.xAppConnectionManager();
-    expect(utils.equalIds(xAppAddress, core.xAppConnectionManager.address)).to.be.true;
+    const xAppAddress =
+      await this.tokenRegistryContract.xAppConnectionManager();
+    expect(utils.equalIds(xAppAddress, core.xAppConnectionManager.address)).to
+      .be.true;
     // tokenBeacon
     const tokenBeacon = await this.tokenRegistryContract.tokenBeacon();
-    expect(utils.equalIds(tokenBeacon, this.data.bridgeToken.beacon)).to.be.true;
+    expect(utils.equalIds(tokenBeacon, this.data.bridgeToken.beacon)).to.be
+      .true;
 
     const weth = this.context.mustGetDomainConfig(this.domain)
       .bridgeConfiguration.weth;
