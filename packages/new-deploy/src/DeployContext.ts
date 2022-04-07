@@ -337,7 +337,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
         if (!bridgeConfig)
           throw new Error(`network ${net} is missing bridge config`);
         const bridge = new BridgeContracts(this, net, bridgeConfig);
-        await bridge.checkDeploy();
+        await bridge.checkDeploy(this.data.protocol.networks[net].connections);
       }),
     );
   }

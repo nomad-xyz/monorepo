@@ -513,7 +513,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     );
   }
 
-  async checkDeploy(): Promise<void> {
+  async checkDeploy(remoteDomains: string[]): Promise<void> {
     if (!this.data.bridgeToken)
       throw new Error(`BridgeToken is not defined for domain ${this.domain}`);
     if (!this.data.bridgeRouter)
@@ -524,24 +524,74 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     assertBeaconProxy(this.data.bridgeToken);
     assertBeaconProxy(this.data.bridgeRouter);
 
+    /*
+    # BridgeRouter
+      * owner
+      * tokenRegistry
+      * xAppConnectionManager
+      * remotes
+
+    # TokenRegistry
+      * owner
+      * xAppConnectionManager
+      * tokenBeacon
+    */
+
+    const core = this.context.mustGetCore(this.domain);
+
+    //  ========= BridgeRouter =========
+    // BridgeRouter upgrade setup contracts are defined
+    assertBeaconProxy(this.data.bridgeRouter, 'BridgeRouter');
+    // owner
+    const bridgeRouterOwner = await this.bridgeRouterContract.owner();
+    expect(utils.equalIds(bridgeRouterOwner, core.governanceRouter.address)).to
+      .be.true;
+    // tokenRegistry
+    const tokenRegistry = await this.bridgeRouterContract.tokenRegistry();
+    expect(utils.equalIds(tokenRegistry, this.data.tokenRegistry.proxy)).to.be
+      .true;
+    // xAppConnectionManager
+    const xApp = await this.bridgeRouterContract.xAppConnectionManager();
+    expect(utils.equalIds(xApp, core.xAppConnectionManager.address)).to.be.true;
+    // remotes
+    for (const domain of remoteDomains) {
+      const remoteDomainNumber = this.context.mustGetDomain(domain).domain;
+      const remoteRouter = await this.bridgeRouterContract.remotes(
+        remoteDomainNumber,
+      );
+      expect(
+        utils.equalIds(
+          this.context.mustGetBridge(domain).bridgeRouterContract.address,
+          remoteRouter,
+        ),
+      ).to.be.true;
+    }
+
+    //  ========= tokenRegistry =========
+    // TokenRegistry upgrade setup contracts are defined
+    assertBeaconProxy(this.data.tokenRegistry, 'TokenRegistry');
+    // owner
+    const tokenRegistryOwner = await this.tokenRegistryContract.owner();
+    expect(utils.equalIds(tokenRegistryOwner, core.governanceRouter.address)).to
+      .be.true;
+    // xAppConnectionManager
+    const xAppAddress =
+      await this.tokenRegistryContract.xAppConnectionManager();
+    expect(utils.equalIds(xAppAddress, core.xAppConnectionManager.address)).to
+      .be.true;
+    // tokenBeacon
+    const tokenBeacon = await this.tokenRegistryContract.tokenBeacon();
+    expect(utils.equalIds(tokenBeacon, this.data.bridgeToken.beacon)).to.be
+      .true;
+
+    //  ========= eth helper =========
     const weth = this.context.mustGetDomainConfig(this.domain)
       .bridgeConfiguration.weth;
-
     if (weth) {
       expect(this.data.ethHelper).to.not.be.undefined;
     } else {
       expect(this.data.ethHelper).to.be.undefined;
     }
-
-    expect(
-      utils.equalIds(
-        await this.bridgeRouterContract.owner(),
-        this.context.cores[this.domain].governanceRouter.proxy,
-      ),
-    );
-
-    // check verification addresses
-    // TODO: add beacon and proxy where needed.
   }
 
   checkVerificationInput(name: string, addr: string): void {
