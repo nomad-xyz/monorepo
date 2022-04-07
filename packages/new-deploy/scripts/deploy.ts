@@ -1,4 +1,4 @@
-import DeployContext from '../src/DeployContext';
+import { DeployContext } from '../src/DeployContext';
 import * as config from '@nomad-xyz/configuration';
 import * as ethers from 'ethers';
 import { NonceManager } from '@ethersproject/experimental';
@@ -36,19 +36,19 @@ async function run() {
   fs.mkdirSync(outputDir, { recursive: true });
   fs.writeFileSync(
     `${outputDir}/config.json`,
-    JSON.stringify(deployContext.data, null, 4),
+    JSON.stringify(deployContext.data, null, 2),
   );
   fs.writeFileSync(
     `${outputDir}/verification.json`,
-    JSON.stringify(Object.fromEntries(deployContext.verification), null, 4),
+    JSON.stringify(Object.fromEntries(deployContext.verification), null, 2),
   );
 
   if (governanceBatch) {
       // build & write governance batch
-      // await governanceBatch.build();
+      await governanceBatch.build();
       fs.writeFileSync(
           `${outputDir}/governanceTransactions.json`,
-          JSON.stringify(governanceBatch, null, 4),
+          JSON.stringify(governanceBatch, null, 2),
       );
   }
 
