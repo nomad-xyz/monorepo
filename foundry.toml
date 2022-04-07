@@ -1,0 +1,20 @@
+[default]
+solc_version = '0.7.6'
+optimizer = true
+optimizer_runs = 99999
+remappings = [
+    '@summa-tx/=node_modules/@summa-tx/',
+    '@openzeppelin/=node_modules/@openzeppelin/'
+]
+
+[core]
+src = 'packages/contracts-core/contracts'
+out = 'packages/contracts-core/foundry_artifacts'
+
+[router]
+src = 'packages/contracts-router/contracts'
+out = 'packages/contracts-router/foundry_artifacts'
+
+[bridge]
+src = 'packages/contracts-bridge/contracts'
+out = 'packages/contracts-bridge/foundry_artifacts'
