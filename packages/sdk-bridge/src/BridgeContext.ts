@@ -22,16 +22,11 @@ export class BridgeContext extends NomadContext {
 
   constructor(environment: string | config.NomadConfig = 'development') {
     super(environment);
-
     this.bridges = new Map();
-    const bridges = this.conf.networks.map(
-      (network) =>
-        new BridgeContracts(this, network, this.conf.bridge[network]),
-    );
-
-    bridges.forEach((bridge) => {
+    for (const network of this.conf.networks) {
+      const bridge =  new BridgeContracts(this, network, this.conf.bridge[network]);
       this.bridges.set(bridge.domain, bridge);
-    });
+    }
   }
 
   static fromNomadContext(context: NomadContext): BridgeContext {

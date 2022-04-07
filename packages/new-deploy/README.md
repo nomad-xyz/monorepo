@@ -15,7 +15,11 @@ This package is feature-complete and we have big plans for the future :)
 
 ### Invocation
 
-Invoke the deployer as follows:
+Set the `DEPLOYER_PRIVATE_KEY` env var in your `.env` file.
+Supply a private key for an account funded with 
+sufficient gas tokens on each chain where contracts will be deployed.
+
+Then, Invoke the deployer as follows:
 
 ```sh
 # deploy script args are 'configuration file' 'overrides file'
