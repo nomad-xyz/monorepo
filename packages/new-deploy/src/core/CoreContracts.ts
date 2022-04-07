@@ -824,13 +824,14 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     );
     // governor
     const govId = await this.governanceRouter.governor();
+    if (!this.context.protocol) throw new Error('protocol config not defined');
     const expectedGovId = isGovernor
-      ? this.context.protocol!.governor.id
+      ? this.context.protocol.governor.id
       : ethers.constants.AddressZero;
     expect(utils.equalIds(expectedGovId, govId)).to.be.true;
     // governorDomain
     const govDomain = await this.governanceRouter.governorDomain();
-    const expectedGovDomain = this.context.protocol!.governor.domain;
+    const expectedGovDomain = this.context.protocol.governor.domain;
     expect(govDomain).to.equal(expectedGovDomain);
     // xAppConnectionManager
     const xAppConnectionManager =
