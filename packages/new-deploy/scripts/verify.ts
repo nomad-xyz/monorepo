@@ -19,6 +19,10 @@ const readFileAsync = promisify(readFile);
 
 const etherscanKey = process.env.ETHERSCAN_KEY;
 
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function command(
   verification: Verification,
   chainId = 1,
@@ -57,6 +61,7 @@ async function run() {
     const chainId = context.getDomain(network).specs.chainId;
     for (const verification of verifications) {
       await verify(verification, chainId);
+      await delay(500);
     }
   }
 }
