@@ -167,6 +167,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeaconController',
+      specifier: contracts.UPGRADE_BEACON_SPECIFIER,
       address: ubc.address,
     });
   }
@@ -189,6 +190,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     // update records
     this.context.pushVerification(name, {
       name: 'UpdaterManager',
+      specifier: contracts.UPDATER_MANAGER_SPECIFIER,
       address: um.address,
       constructorArguments: [updater],
     });
@@ -212,6 +214,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     // update records
     this.context.pushVerification(name, {
       name: 'XAppConnectionManager',
+      specifier: contracts.XCM_SPECIFIER,
       address: xcm.address,
     });
   }
@@ -235,6 +238,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeacon',
+      specifier: contracts.UPGRADE_BEACON_SPECIFIER,
       address: beacon.address,
       constructorArguments: [implementation, ubc],
     });
@@ -259,6 +263,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeaconProxy',
+      specifier: contracts.UBP_SPECIFIER,
       address: prx.address,
       constructorArguments: [beacon, initData],
     });
@@ -325,6 +330,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     this.context.pushVerification(name, {
       name: 'Home',
+      specifier: contracts.HOME_SPECIFIER,
       address: home.address,
       constructorArguments: [configuration.domain],
     });
@@ -366,6 +372,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     this._data.governanceRouter = proxy;
     this.context.pushVerification(name, {
       name: 'GovernanceRouter',
+      specifier: contracts.GOVERNANCE_ROUTER_SPECIFIER,
       address: router.address,
       constructorArguments: [
         config.domain,
@@ -418,6 +425,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
       this.context.pushVerification(local, {
         name: 'Replica',
+        specifier: contracts.REPLICA_SPECIFIER,
         address: replica.address,
         constructorArguments: [
           localConfig.domain,
@@ -695,7 +703,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
      * updater
      * localDomain
      * onwer
-    
+
     # UpdaterManager
      * updater
      * owner
@@ -706,7 +714,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
      * replicaToDomain
      * domainToReplica
      * watcherPermission
-    
+
     # GovernanceRouter
      * localDomain
      * recoveryTimelock
@@ -717,7 +725,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
      * xAppConnectionManager
      * routers
      * domains
-    
+
     # UpgradeBeaconController
      * owner
     */

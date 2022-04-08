@@ -1,8 +1,10 @@
 import * as contracts from '@nomad-xyz/contracts-bridge';
 import {
+  UBP_SPECIFIER,
   UpgradeBeaconController__factory,
   UpgradeBeaconProxy__factory,
   UpgradeBeacon__factory,
+  UPGRADE_BEACON_SPECIFIER,
 } from '@nomad-xyz/contracts-core';
 
 import { ethers } from 'ethers';
@@ -124,6 +126,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     this.context.pushVerification(name, {
       name: 'BridgeToken',
+      specifier: contracts.BRIDGE_TOKEN_SPECIFIER,
       address: impl.address,
     });
 
@@ -152,6 +155,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeaconProxy',
+      specifier: UBP_SPECIFIER,
       address: prx.address,
       constructorArguments: [beacon, initData],
     });
@@ -176,6 +180,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeacon',
+      specifier: UPGRADE_BEACON_SPECIFIER,
       address: beacon.address,
       constructorArguments: [implementation, ubc],
     });
@@ -242,6 +247,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     );
     this.context.pushVerification(name, {
       name: 'TokenRegistry',
+      specifier: contracts.TOKEN_REGISTRY_SPECIFIER,
       address: implementation.address,
     });
   }
@@ -276,6 +282,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     );
     this.context.pushVerification(name, {
       name: 'BridgeRouter',
+      specifier: contracts.BRIDGE_ROUTER_SPECIFIER,
       address: implementation.address,
     });
   }
@@ -302,7 +309,8 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     this._data.ethHelper = helper.address;
     this.context.pushVerification(name, {
-      name: 'EthHelper',
+      name: 'ETHHelper',
+      specifier: contracts.ETH_HELPER_SPECIFIER,
       address: helper.address,
       constructorArguments: [
         config.bridgeConfiguration.weth,

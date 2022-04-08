@@ -10,6 +10,7 @@ import CoreContracts from './core/CoreContracts';
 
 export interface Verification {
   name: string;
+  specifier: string;
   address: string;
   constructorArguments?: ReadonlyArray<unknown>;
 }

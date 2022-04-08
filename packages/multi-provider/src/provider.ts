@@ -138,7 +138,7 @@ export class MultiProvider<T extends Domain> {
    * @param nameOrDomain A domain name or number.
    * @returns A {@link Domain} (if the domain has been registered)
    */
-  getDomain(nameOrDomain: number | string): Domain | undefined {
+  getDomain(nameOrDomain: number | string): T | undefined {
     let name = nameOrDomain;
     if (typeof name !== 'string') {
       name = this.resolveDomainName(nameOrDomain);

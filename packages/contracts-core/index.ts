@@ -19,3 +19,13 @@ export { UpgradeBeaconProxy__factory } from "./src/factories/UpgradeBeaconProxy_
 export { XAppConnectionManager__factory } from "./src/factories/XAppConnectionManager__factory";
 
 export type { TypedEvent, TypedEventFilter, TypedListener } from "./src/common";
+
+const root = "packages/contracts-core/contracts";
+export const GOVERNANCE_ROUTER_SPECIFIER = `${root}/governance/GovernanceRouter.sol:GovernanceRouter`;
+export const HOME_SPECIFIER = `${root}/Home.sol:Home`;
+export const REPLICA_SPECIFIER = `${root}/Replica.sol:Replica`;
+export const UPDATER_MANAGER_SPECIFIER = `${root}/UpdaterManager.sol:UpdaterManager`;
+export const UPGRADE_BEACON_SPECIFIER = `${root}/upgrade/UpgradeBeacon.sol:UpgradeBeacon`;
+export const UBP_SPECIFIER = `${root}/upgrade/UpgradeBeaconProxy.sol:UpgradeBeaconProxy`;
+export const UPC_SPECIFIER = `${root}/upgrade/UpgradeBeaconController.sol:UpgradeBeaconController`;
+export const XCM_SPECIFIER = `${root}/XAppConnectionManager.sol:XAppConnectionManager`;
