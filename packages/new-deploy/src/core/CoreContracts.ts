@@ -124,7 +124,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     return this.context.resolveDomain(this.domain);
   }
 
-  getReplica(domain: string): contracts.Replica {
+  getReplica(nameOrDomain: string | number): contracts.Replica {
+    const domain = this.context.resolveDomain(nameOrDomain);
     const replicas = this.data.replicas;
 
     if (!replicas || !replicas[domain]) {
