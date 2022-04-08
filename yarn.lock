@@ -1216,7 +1216,6 @@ __metadata:
   dependencies:
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/contracts-router": "workspace:^"
-    "@nomad-xyz/deploy": "workspace:^"
     "@nomiclabs/hardhat-ethers": ^2.0.1
     "@nomiclabs/hardhat-etherscan": ^2.1.2
     "@nomiclabs/hardhat-waffle": ^2.0.1
@@ -1246,7 +1245,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-core@workspace:packages/contracts-core"
   dependencies:
-    "@nomad-xyz/deploy": "workspace:^"
     "@nomiclabs/hardhat-ethers": ^2.0.4
     "@nomiclabs/hardhat-etherscan": ^2.1.2
     "@nomiclabs/hardhat-waffle": ^2.0.1
@@ -1301,7 +1299,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/deploy@0.1.2, @nomad-xyz/deploy@workspace:^, @nomad-xyz/deploy@workspace:packages/deploy":
+"@nomad-xyz/deploy@0.1.2, @nomad-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/deploy@workspace:packages/deploy"
   dependencies:
