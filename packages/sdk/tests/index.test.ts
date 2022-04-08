@@ -76,6 +76,15 @@ describe('sdk', async () => {
     // TODO:
     it.skip('fails if given bad rpc provider string');
 
+    it('gets replica by name or domain', () => {
+      const context = new NomadContext('development');
+      const core = context.mustGetCore(2000);
+      const replica = core.getReplica(3000);
+      expect(replica).to.not.be.undefined;
+      const replicaFor = context.getReplicaFor(2000, 3000);
+      expect(replicaFor).to.not.be.undefined;
+    })
+
     it('maintains connection when registering and unregistering signers', () => {
       const conf = config.getBuiltin('development');
       const context = new NomadContext(conf);
