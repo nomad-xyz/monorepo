@@ -54,6 +54,15 @@ After cloning the repo, Confirm that you are using yarn2
 $ yarn -v
 ```
 
+And install Foundry using the instructions
+[here](https://book.getfoundry.sh/getting-started/installation.html) or via
+these commands:
+
+```
+$ curl -L https://foundry.paradigm.xyz | bash
+$ foundryup
+```
+
 Then run the following:
 
 ```
