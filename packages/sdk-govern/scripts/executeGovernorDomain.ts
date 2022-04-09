@@ -10,22 +10,18 @@ dotenv.config();
 run();
 
 async function run() {
-    console.log('get config');
     // instantiate CallBatch from config & batch contents
     const CONFIG: config.NomadConfig = getConfig();
     const context = new NomadContext(CONFIG);
-    console.log('instantiate batch');
     const BATCH_CONTENTS: CallBatchContents = getCallBatch();
     const batch = await CallBatch.fromJSON(context, BATCH_CONTENTS);
 
-    console.log('get key');
     // get transaction signing key
     const SIGNER_KEY = process.env.SIGNER_KEY;
     if (!SIGNER_KEY) {
         throw new Error('Add SIGNER_KEY to .env');
     }
 
-    console.log('register signer');
     const domain = context.governor.domain;
     const provider = context.mustGetProvider(domain);
     const signer = new ethers.Wallet(SIGNER_KEY, provider);
