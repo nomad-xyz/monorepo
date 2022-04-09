@@ -1,6 +1,8 @@
 node_modules/
 tmp.ts
-dist/
 .env
 config/
 scripts/
+tests/
+tsconfig.json
+tsconfig.tsbuildinfo
