@@ -40,7 +40,7 @@ export async function getEvents<T extends Result, U>(
   startBlock?: number,
   endBlock?: number,
 ): Promise<Array<TypedEvent<T & U>>> {
-  const domain = context.mustGetDomain(nameOrDomain);
+  const domain = context.mustGetDomain(nameOrDomain) as Domain;
   if (domain.paginate) {
     return getPaginatedEvents(
       context,

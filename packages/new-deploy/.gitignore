@@ -3,3 +3,4 @@ tmp.ts
 dist/
 .env
 lib/
+output/

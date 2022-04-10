@@ -167,7 +167,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeaconController',
-      specifier: contracts.UPGRADE_BEACON_SPECIFIER,
+      specifier: contracts.UBC_SPECIFIER,
       address: ubc.address,
     });
   }

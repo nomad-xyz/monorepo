@@ -154,7 +154,7 @@ export class MultiProvider<T extends Domain> {
    * @returns A {@link Domain}
    * @throws if the domain has not been registered
    */
-  mustGetDomain(nameOrDomain: number | string): Domain {
+  mustGetDomain(nameOrDomain: number | string): T {
     const domain = this.getDomain(nameOrDomain);
     if (!domain) throw new UnknownDomainError(this, nameOrDomain);
     return domain;

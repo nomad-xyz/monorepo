@@ -27,5 +27,5 @@ export const REPLICA_SPECIFIER = `${root}/Replica.sol:Replica`;
 export const UPDATER_MANAGER_SPECIFIER = `${root}/UpdaterManager.sol:UpdaterManager`;
 export const UPGRADE_BEACON_SPECIFIER = `${root}/upgrade/UpgradeBeacon.sol:UpgradeBeacon`;
 export const UBP_SPECIFIER = `${root}/upgrade/UpgradeBeaconProxy.sol:UpgradeBeaconProxy`;
-export const UPC_SPECIFIER = `${root}/upgrade/UpgradeBeaconController.sol:UpgradeBeaconController`;
+export const UBC_SPECIFIER = `${root}/upgrade/UpgradeBeaconController.sol:UpgradeBeaconController`;
 export const XCM_SPECIFIER = `${root}/XAppConnectionManager.sol:XAppConnectionManager`;
