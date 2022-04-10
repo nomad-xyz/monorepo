@@ -1,4 +1,4 @@
-import { TypedEvent } from '../../contracts-core';
+import { TypedEvent } from '@nomad-xyz/contracts-core';
 import { BigNumber } from 'ethers';
 import { Annotated } from '@nomad-xyz/sdk';
 
