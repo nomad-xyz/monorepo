@@ -379,7 +379,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const home = this.context.resolveDomainName(homeDomain);
     const localConfig = this.context.mustGetDomainConfig(local);
     const homeConfig = this.context.mustGetDomainConfig(home);
-    const homeCore = this.context.mustGetCore(local);
+    const homeCore = this.context.mustGetCore(home);
 
     // don't redeploy existing replica
     if (this.data.replicas && this.data.replicas[home]) return;
