@@ -42,7 +42,7 @@ function getProfile(verification: Verification): string {
   throw new Error(`bad specifier: ${verification.specifier}`);
 }
 
-export function command(
+export function verifyCommand(
   verification: Verification,
   chainId = 1,
   compiler = 'v0.7.6',
@@ -63,25 +63,44 @@ export function command(
   return pieces.join(' ');
 }
 
+export function checkCommand(GUID: string, chainId = 1): string {
+  const pieces = [
+    'forge verify-check',
+    `--chain-id ${chainId}`,
+    `${GUID}`,
+    `${etherscanKey}`,
+  ];
+  return pieces.join(' ');
+}
+
 export async function verify(
   verification: Verification,
   chainId?: number,
   compiler?: string,
   optimizations?: number,
 ): Promise<string> {
-  const toRun = command(verification, chainId, compiler, optimizations);
+  const toRun = verifyCommand(verification, chainId, compiler, optimizations);
   const { stdout, stderr } = await execAsync(toRun);
   if (stderr.length > 0) throw new Error(stderr);
   return extractGUID(stdout);
 }
 
+export async function check(
+  GUID: string,
+  chainId = 1,
+): Promise<string | undefined> {
+  const toRun = checkCommand(GUID, chainId);
+  const { stderr } = await execAsync(toRun);
+  if (stderr.indexOf('NOTOK') !== -1) {
+    return stderr.split('`')[4];
+  }
+}
+
 run();
 
 async function run() {
-  console.log(process.argv);
   const environment = process.argv[2];
   const jsonPath = process.argv[3];
-  console.log(jsonPath);
   const jsonString = await readFileAsync(jsonPath, 'utf8');
   const verificationMap: Record<
     string,
@@ -101,5 +120,21 @@ async function run() {
     }
   }
 
-  await writeFileAsync(jsonPath, JSON.stringify(verificationMap));
+  await writeFileAsync(jsonPath, JSON.stringify(verificationMap, null, 4));
+
+  console.log('waiting 30 seconds before checking status');
+  // Wait for 30 seconds before checking status
+  await delay(30_000);
+
+  for (const [network, verifications] of Object.entries(verificationMap)) {
+    const chainId = context.mustGetDomain(network).specs.chainId;
+    // run verification
+    for (const verification of verifications) {
+      const reason = await check(verification.GUID, chainId);
+      if (reason)
+        console.error(
+          `verification failed for ${verification.address}: ${reason}`,
+        );
+    }
+  }
 }
