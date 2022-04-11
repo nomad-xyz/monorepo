@@ -59,8 +59,7 @@ describe('sdk', async () => {
           }
 
           // returns undefined if no replica exists
-          const noReplica = core.getReplica('none');
-          expect(noReplica).to.be.undefined;
+          expect(() => core.getReplica('none')).to.throw;
         }
       }
     });
@@ -78,6 +77,8 @@ describe('sdk', async () => {
 
     it('gets replica by name or domain', () => {
       const context = new NomadContext('development');
+      context.registerRpcProvider(2000, 'http://dummy-rpc-url');
+      context.registerRpcProvider(3000, 'http://dummy-rpc-url');
       const core = context.mustGetCore(2000);
       const replica = core.getReplica(3000);
       expect(replica).to.not.be.undefined;
