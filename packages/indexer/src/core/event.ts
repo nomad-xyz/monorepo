@@ -20,16 +20,16 @@ export function eventTypeToOrder(eventType: NomadishEvent) {
   switch (eventType.eventType) {
     case EventType.HomeDispatch:
       return 0;
+    case EventType.BridgeRouterSend:
+      return 1;
     case EventType.HomeUpdate:
       return 2;
     case EventType.ReplicaUpdate:
       return 3;
-    case EventType.ReplicaProcess:
-      return 4;
-    case EventType.BridgeRouterSend:
-      return 1;
     case EventType.BridgeRouterReceive:
       return 5;
+    case EventType.ReplicaProcess:
+      return 4;
     default:
       console.log(eventType)
       throw new Error(`Unknown event type: ${eventType.eventType}`)
