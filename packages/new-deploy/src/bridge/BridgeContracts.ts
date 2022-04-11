@@ -149,7 +149,13 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const factory = new UpgradeBeaconProxy__factory(
       this.context.getDeployer(name),
     );
-    const prx = await factory.deploy(beacon, initData, this.overrides);
+
+    const constructorArguments = [beacon, initData];
+    const prx = await factory.deploy(
+      beacon, //constructorArguments[0],
+      constructorArguments[1],
+      this.overrides,
+    );
     proxy.proxy = prx.address;
     await prx.deployTransaction.wait(this.confirmations);
 
@@ -157,7 +163,11 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       name: 'UpgradeBeaconProxy',
       specifier: UBP_SPECIFIER,
       address: prx.address,
-      constructorArguments: [beacon, initData],
+      constructorArguments,
+      encodedConstructorArguments:
+        UpgradeBeaconProxy__factory.createInterface().encodeDeploy(
+          constructorArguments,
+        ),
     });
   }
 
@@ -174,7 +184,13 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const ubc = core.upgradeBeaconController.address;
     if (!ubc) throw new Error('Cannot deploy proxy without UBC');
     const factory = new UpgradeBeacon__factory(this.context.getDeployer(name));
-    const beacon = await factory.deploy(implementation, ubc, this.overrides);
+
+    const constructorArguments = [implementation, ubc];
+    const beacon = await factory.deploy(
+      constructorArguments[0],
+      constructorArguments[1],
+      this.overrides,
+    );
     proxy.beacon = beacon.address;
     await beacon.deployTransaction.wait(this.confirmations);
 
@@ -182,7 +198,11 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       name: 'UpgradeBeacon',
       specifier: UPGRADE_BEACON_SPECIFIER,
       address: beacon.address,
-      constructorArguments: [implementation, ubc],
+      constructorArguments,
+      encodedConstructorArguments:
+        UpgradeBeacon__factory.createInterface().encodeDeploy(
+          constructorArguments,
+        ),
     });
   }
 
@@ -301,9 +321,14 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     log(`deploy ETHHelper on ${name}`);
 
     const factory = new contracts.ETHHelper__factory(this.deployer);
-    const helper = await factory.deploy(
+
+    const constructorArguments = [
       config.bridgeConfiguration.weth,
       this.data.bridgeRouter.proxy,
+    ];
+    const helper = await factory.deploy(
+      constructorArguments[0],
+      constructorArguments[1],
       this.overrides,
     );
 
@@ -312,10 +337,11 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       name: 'ETHHelper',
       specifier: contracts.ETH_HELPER_SPECIFIER,
       address: helper.address,
-      constructorArguments: [
-        config.bridgeConfiguration.weth,
-        this.data.bridgeRouter.proxy,
-      ],
+      constructorArguments,
+      encodedConstructorArguments:
+        contracts.ETHHelper__factory.createInterface().encodeDeploy(
+          constructorArguments,
+        ),
     });
   }
 

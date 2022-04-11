@@ -13,6 +13,7 @@ export interface Verification {
   specifier: string;
   address: string;
   constructorArguments?: ReadonlyArray<unknown>;
+  encodedConstructorArguments?: ethers.BytesLike;
 }
 
 export class DeployContext extends MultiProvider<config.Domain> {
