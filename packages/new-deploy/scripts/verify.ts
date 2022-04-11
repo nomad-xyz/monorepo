@@ -25,11 +25,10 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/// TODO
-function encodeConstructorArgs(verification: Verification): string {
-  const constructorArguments = verification;
-  if (!constructorArguments) return '';
-  return ''; // TODO
+function getArgs(verification: Verification): string {
+  const encodeConstructorArgs = verification;
+  if (!encodeConstructorArgs) return '';
+  return `--constructor-args=${encodeConstructorArgs}`;
 }
 
 /// Extract the etherscan GUID from the `forge verify-contract` stdout
@@ -66,7 +65,7 @@ export function forgeVerifyCommand(
     `${verification.address}`,
     `${verification.specifier}`,
     `${etherscanKey}`,
-    encodeConstructorArgs(verification),
+    getArgs(verification),
   ];
 
   return pieces.join(' ');
