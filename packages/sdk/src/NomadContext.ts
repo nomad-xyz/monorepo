@@ -138,8 +138,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
     home: string | number,
     remote: string | number,
   ): core.Replica | undefined {
-    const homeDomain = this.resolveDomainName(home);
-    return this.getCore(remote)?.getReplica(homeDomain);
+    return this.getCore(remote)?.getReplica(home);
   }
 
   /**

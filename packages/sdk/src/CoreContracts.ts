@@ -29,7 +29,14 @@ export class CoreContracts<T extends NomadContext> extends Contracts<
     this.conf = conf;
   }
 
-  getReplica(domain: string): core.Replica | undefined {
+  /**
+   * Resolves Replica with given domain
+   *
+   * @param nameOrDomain The name or domain ID of the Replica
+   * @returns An interface for the Replica, undefined if not found
+   */
+  getReplica(nameOrDomain: string | number): core.Replica | undefined {
+    const domain = this.context.resolveDomainName(nameOrDomain);
     if (!this.connection) throw new NoProviderError(this.context, domain);
     const replica = this.conf.replicas[domain];
     if (!replica) return;
