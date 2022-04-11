@@ -20,21 +20,29 @@ const writeFileAsync = promisify(writeFile);
 
 const etherscanKey = process.env.ETHERSCAN_KEY;
 
+/// async sleep function
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/// TODO
 function encodeConstructorArgs(verification: Verification): string {
   const constructorArguments = verification;
   if (!constructorArguments) return '';
   return ''; // TODO
 }
 
-function extractGUID(stdout: string): string {
+/// Extract the etherscan GUID from the `forge verify-contract` stdout
+function extractGuidFromFoundry(stdout: string): string | undefined {
+  if (stdout.indexOf('already verified') !== -1) return;
+
   const bits = stdout.split('`');
   return bits[3];
 }
 
+/// Extract the foundry profile from a specifier.
+/// This is brittle code as it relies on the contents of `foundry.toml` not
+/// changing, as well as on our repo layout
 function getProfile(verification: Verification): string {
   if (verification.specifier.indexOf('core') !== -1) return 'core';
   if (verification.specifier.indexOf('bridge') !== -1) return 'bridge';
@@ -42,7 +50,8 @@ function getProfile(verification: Verification): string {
   throw new Error(`bad specifier: ${verification.specifier}`);
 }
 
-export function verifyCommand(
+/// Generate the `forge verify-contract` command for a contract
+export function forgeVerifyCommand(
   verification: Verification,
   chainId = 1,
   compiler = 'v0.7.6',
@@ -63,7 +72,8 @@ export function verifyCommand(
   return pieces.join(' ');
 }
 
-export function checkCommand(GUID: string, chainId = 1): string {
+/// Generate the `forge verify-check` for a GUID
+export function forgeCheckCommand(GUID: string, chainId = 1): string {
   const pieces = [
     'forge verify-check',
     `--chain-id ${chainId}`,
@@ -73,30 +83,35 @@ export function checkCommand(GUID: string, chainId = 1): string {
   return pieces.join(' ');
 }
 
-export async function verify(
+/// Run `forge verify-contract`
+export async function forgeVerify(
   verification: Verification,
   chainId?: number,
   compiler?: string,
   optimizations?: number,
-): Promise<string> {
-  const toRun = verifyCommand(verification, chainId, compiler, optimizations);
+): Promise<string | undefined> {
+  const toRun = forgeVerifyCommand(
+    verification,
+    chainId,
+    compiler,
+    optimizations,
+  );
   const { stdout, stderr } = await execAsync(toRun);
   if (stderr.length > 0) throw new Error(stderr);
-  return extractGUID(stdout);
+  return extractGuidFromFoundry(stdout);
 }
 
-export async function check(
-  GUID: string,
+export async function forgeCheck(
+  GUID: string | undefined,
   chainId = 1,
 ): Promise<string | undefined> {
-  const toRun = checkCommand(GUID, chainId);
+  if (!GUID) return;
+  const toRun = forgeCheckCommand(GUID, chainId);
   const { stderr } = await execAsync(toRun);
   if (stderr.indexOf('NOTOK') !== -1) {
     return stderr.split('`')[4];
   }
 }
-
-run();
 
 async function run() {
   const environment = process.argv[2];
@@ -104,7 +119,7 @@ async function run() {
   const jsonString = await readFileAsync(jsonPath, 'utf8');
   const verificationMap: Record<
     string,
-    ReadonlyArray<Verification & { GUID: string }>
+    ReadonlyArray<Verification & { GUID?: string }>
   > = JSON.parse(jsonString);
 
   const context = new NomadContext(environment);
@@ -113,9 +128,9 @@ async function run() {
     const chainId = context.mustGetDomain(network).specs.chainId;
     // run verification
     for (const verification of verifications) {
-      const GUID = await verify(verification, chainId, 'v0.7.6', 999999);
+      const GUID = await forgeVerify(verification, chainId, 'v0.7.6', 999999);
       verification.GUID = GUID;
-      console.log(verification.name, GUID);
+      console.log(verification.name, GUID ?? 'Already Verified');
       await delay(500);
     }
   }
@@ -128,9 +143,9 @@ async function run() {
 
   for (const [network, verifications] of Object.entries(verificationMap)) {
     const chainId = context.mustGetDomain(network).specs.chainId;
-    // run verification
+    // Check that verification worked
     for (const verification of verifications) {
-      const reason = await check(verification.GUID, chainId);
+      const reason = await forgeCheck(verification.GUID, chainId);
       if (reason)
         console.error(
           `verification failed for ${verification.address}: ${reason}`,
@@ -138,3 +153,5 @@ async function run() {
     }
   }
 }
+
+run();
