@@ -18,6 +18,13 @@ type ShortTx = {
   gasLimit: ethers.BigNumber;
 };
 
+function blockSpeed(from: number, to: number, start: Date, finish: Date): number {
+  const blocks = to - from + 1;
+  const timeS = (finish.valueOf() - start.valueOf())/1000;
+  const speed = blocks/timeS;
+  return speed
+}
+
 function txEncode(tx: ShortTx): string {
   const {
     gasPrice, // ?
@@ -418,7 +425,7 @@ export class Indexer {
   }
 
   async updateAll(replicas: number[]) {
-    let from = Math.max(
+    const from = Math.max(
       this.lastBlock + 1,
       this.persistance.height,
       this.sdk.getBridge(this.domain)?.deployHeight || 0
@@ -489,14 +496,18 @@ export class Indexer {
     const batchSize = domain2batchSize.get(this.domain) || BATCH_SIZE;
     let batchFrom = from;
     let batchTo = Math.min(to, from + batchSize);
+    const startAll = new Date();
 
     while (true) {
       const done = Math.floor(((batchTo - from + 1) / (to - from + 1)) * 100);
 
+
       this.logger.debug(
         `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`
       );
+      const startBatch = new Date();
       const events = await fetchEvents(batchFrom, batchTo);
+      const finishBatch = new Date();
       if (!events) throw new Error(`KEk`);
       events.sort((a, b) => a.ts===b.ts?eventTypeToOrder(a)-eventTypeToOrder(b):a.ts - b.ts);
       await this.persistance.store(...events);
@@ -517,24 +528,37 @@ export class Indexer {
         );
         continue;
       }
-      allEvents.push(
-        ...events.filter((newEvent) =>
-          allEvents.every(
-            (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash()
-          )
+      const filteredEvents = events.filter((newEvent) =>
+        allEvents.every(
+          (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash()
         )
       );
+      allEvents.push(
+        ...filteredEvents
+      );
+      const speed = blockSpeed(batchFrom, batchTo, startBatch, finishBatch);
+      this.logger.debug(`Fetched batch for domain ${this.domain}. Blocks: ${batchTo - batchFrom + 1} (${speed}b/sec). Got events: ${filteredEvents.length}`);
       if (batchTo >= to) break;
       batchFrom = batchTo + 1;
       batchTo = Math.min(to, batchFrom + batchSize);
     }
 
+    const finishedAll = new Date();
+
+
     if (!allEvents) throw new Error("kek");
 
-    allEvents.sort((a, b) => a.ts - b.ts);
+    allEvents.sort((a, b) => {
+      if (a.ts === b.ts) {
+        return eventTypeToOrder(a) - eventTypeToOrder(b) 
+      } else {
+        return a.ts - b.ts
+      }
+    });
 
     if (this.develop || true) this.dummyTestEventsIntegrity();
-    this.logger.info(`Fetched all`);
+    const speed = blockSpeed(from, to, startAll, finishedAll);
+    this.logger.info(`Fetched all for domain ${this.domain}. Blocks: ${to - from + 1} (${speed}b/sec). Got events: ${allEvents.length}`);
     this.lastBlock = to;
 
     return allEvents;
@@ -1183,7 +1207,7 @@ export class RedisPersistance extends Persistance {
   }
   sortSorage(): void {}
   async allEvents(): Promise<NomadishEvent[]> {
-    console.log(`Getting all events for ${this.domain}`)
+    // console.log(`Getting all events for ${this.domain}`)
     const blocks = (await this.client.sMembers(`${this.domain}blocks`))
       .map((s) => parseInt(s))
       .sort();
@@ -1197,7 +1221,7 @@ export class RedisPersistance extends Persistance {
       .map((s) => JSON.parse(s!, reviver) as NomadishEvent[])
       .flat();
 
-    console.log(`Sorting all events for ${this.domain}`)
+    // console.log(`Sorting all events for ${this.domain}`)
 
     events.sort((a, b) => {
       if (a.ts === b.ts) {
@@ -1206,7 +1230,7 @@ export class RedisPersistance extends Persistance {
         return a.ts - b.ts
       }
     });
-    console.log(`Returning all events for ${this.domain}`)
+    // console.log(`Returning all events for ${this.domain}`)
     
     return events;
   }
