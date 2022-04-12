@@ -14,6 +14,12 @@ import * as dotenv from 'dotenv';
 import { NomadContext } from '@nomad-xyz/sdk';
 dotenv.config();
 
+type VerificationOutput = Verification & {
+  GUID?: string;
+  verifyCommand: string;
+  verified?: boolean;
+};
+
 const execAsync = promisify(exec);
 const readFileAsync = promisify(readFile);
 const writeFileAsync = promisify(writeFile);
@@ -25,17 +31,21 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/// Get the args, if any
 function getArgs(verification: Verification): string {
-  const encodeConstructorArgs = verification;
-  if (!encodeConstructorArgs) return '';
-  return `--constructor-args=${encodeConstructorArgs}`;
+  const { encodedConstructorArguments } = verification;
+  if (!encodedConstructorArguments) return '';
+  return `--constructor-args=${encodedConstructorArguments}`;
 }
 
 /// Extract the etherscan GUID from the `forge verify-contract` stdout
-function extractGuidFromFoundry(stdout: string): string | undefined {
-  if (stdout.indexOf('already verified') !== -1) return;
+export function extractGuidFromFoundry(res: {
+  stdout: string;
+  stderr: string;
+}): string | undefined {
+  if (res.stderr.indexOf('already verified') !== -1) return;
 
-  const bits = stdout.split('`');
+  const bits = res.stdout.split('`');
   return bits[3];
 }
 
@@ -53,7 +63,7 @@ function getProfile(verification: Verification): string {
 export function forgeVerifyCommand(
   verification: Verification,
   chainId = 1,
-  compiler = 'v0.7.6',
+  compiler = 'v0.7.6+commit.7338295f',
   optimizations?: number,
 ): string {
   const pieces = [
@@ -84,7 +94,7 @@ export function forgeCheckCommand(GUID: string, chainId = 1): string {
 
 /// Run `forge verify-contract`
 export async function forgeVerify(
-  verification: Verification,
+  verification: VerificationOutput,
   chainId?: number,
   compiler?: string,
   optimizations?: number,
@@ -95,9 +105,18 @@ export async function forgeVerify(
     compiler,
     optimizations,
   );
-  const { stdout, stderr } = await execAsync(toRun);
-  if (stderr.length > 0) throw new Error(stderr);
-  return extractGuidFromFoundry(stdout);
+  verification.verifyCommand = toRun;
+  try {
+    const res = await execAsync(toRun);
+    return extractGuidFromFoundry(res);
+  } catch (e: unknown) {
+    const err = `${e}`;
+    console.error(toRun);
+    if (err.indexOf('Contract source code already verified') === -1) throw e;
+
+    // only "already verified" errors will reach this line
+    verification.verified = true;
+  }
 }
 
 export async function forgeCheck(
@@ -113,12 +132,13 @@ export async function forgeCheck(
 }
 
 async function run() {
+  console.log();
   const environment = process.argv[2];
   const jsonPath = process.argv[3];
   const jsonString = await readFileAsync(jsonPath, 'utf8');
   const verificationMap: Record<
     string,
-    ReadonlyArray<Verification & { GUID?: string }>
+    ReadonlyArray<VerificationOutput>
   > = JSON.parse(jsonString);
 
   const context = new NomadContext(environment);
@@ -127,30 +147,46 @@ async function run() {
     const chainId = context.mustGetDomain(network).specs.chainId;
     // run verification
     for (const verification of verifications) {
-      const GUID = await forgeVerify(verification, chainId, 'v0.7.6', 999999);
+      if (verification.verified) continue;
+
+      const GUID = await forgeVerify(
+        verification,
+        chainId,
+        'v0.7.6+commit.7338295f',
+        999999,
+      );
       verification.GUID = GUID;
       console.log(verification.name, GUID ?? 'Already Verified');
-      await delay(500);
+      await delay(1000);
     }
   }
 
   await writeFileAsync(jsonPath, JSON.stringify(verificationMap, null, 4));
-
-  console.log('waiting 30 seconds before checking status');
-  // Wait for 30 seconds before checking status
-  await delay(30_000);
 
   for (const [network, verifications] of Object.entries(verificationMap)) {
     const chainId = context.mustGetDomain(network).specs.chainId;
     // Check that verification worked
     for (const verification of verifications) {
       const reason = await forgeCheck(verification.GUID, chainId);
-      if (reason)
+      if (reason) {
         console.error(
           `verification failed for ${verification.address}: ${reason}`,
         );
+        console.error(
+          forgeVerifyCommand(
+            verification,
+            chainId,
+            'v0.7.6+commit.7338295f',
+            999999,
+          ),
+        );
+      } else {
+        verification.verified = true;
+      }
     }
   }
+
+  await writeFileAsync(jsonPath, JSON.stringify(verificationMap, null, 4));
 }
 
 run();
