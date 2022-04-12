@@ -1,8 +1,10 @@
 import * as contracts from '@nomad-xyz/contracts-bridge';
 import {
+  UBP_SPECIFIER,
   UpgradeBeaconController__factory,
   UpgradeBeaconProxy__factory,
   UpgradeBeacon__factory,
+  UPGRADE_BEACON_SPECIFIER,
 } from '@nomad-xyz/contracts-core';
 
 import { ethers } from 'ethers';
@@ -124,6 +126,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     this.context.pushVerification(name, {
       name: 'BridgeToken',
+      specifier: contracts.BRIDGE_TOKEN_SPECIFIER,
       address: impl.address,
     });
 
@@ -146,14 +149,25 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const factory = new UpgradeBeaconProxy__factory(
       this.context.getDeployer(name),
     );
-    const prx = await factory.deploy(beacon, initData, this.overrides);
+
+    const constructorArguments = [beacon, initData];
+    const prx = await factory.deploy(
+      beacon, //constructorArguments[0],
+      constructorArguments[1],
+      this.overrides,
+    );
     proxy.proxy = prx.address;
     await prx.deployTransaction.wait(this.confirmations);
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeaconProxy',
+      specifier: UBP_SPECIFIER,
       address: prx.address,
-      constructorArguments: [beacon, initData],
+      constructorArguments,
+      encodedConstructorArguments:
+        UpgradeBeaconProxy__factory.createInterface().encodeDeploy(
+          constructorArguments,
+        ),
     });
   }
 
@@ -170,14 +184,25 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const ubc = core.upgradeBeaconController.address;
     if (!ubc) throw new Error('Cannot deploy proxy without UBC');
     const factory = new UpgradeBeacon__factory(this.context.getDeployer(name));
-    const beacon = await factory.deploy(implementation, ubc, this.overrides);
+
+    const constructorArguments = [implementation, ubc];
+    const beacon = await factory.deploy(
+      constructorArguments[0],
+      constructorArguments[1],
+      this.overrides,
+    );
     proxy.beacon = beacon.address;
     await beacon.deployTransaction.wait(this.confirmations);
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeacon',
+      specifier: UPGRADE_BEACON_SPECIFIER,
       address: beacon.address,
-      constructorArguments: [implementation, ubc],
+      constructorArguments,
+      encodedConstructorArguments:
+        UpgradeBeacon__factory.createInterface().encodeDeploy(
+          constructorArguments,
+        ),
     });
   }
 
@@ -242,6 +267,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     );
     this.context.pushVerification(name, {
       name: 'TokenRegistry',
+      specifier: contracts.TOKEN_REGISTRY_SPECIFIER,
       address: implementation.address,
     });
   }
@@ -276,6 +302,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     );
     this.context.pushVerification(name, {
       name: 'BridgeRouter',
+      specifier: contracts.BRIDGE_ROUTER_SPECIFIER,
       address: implementation.address,
     });
   }
@@ -294,20 +321,27 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     log(`deploy ETHHelper on ${name}`);
 
     const factory = new contracts.ETHHelper__factory(this.deployer);
-    const helper = await factory.deploy(
+
+    const constructorArguments = [
       config.bridgeConfiguration.weth,
       this.data.bridgeRouter.proxy,
+    ];
+    const helper = await factory.deploy(
+      constructorArguments[0],
+      constructorArguments[1],
       this.overrides,
     );
 
     this._data.ethHelper = helper.address;
     this.context.pushVerification(name, {
-      name: 'EthHelper',
+      name: 'ETHHelper',
+      specifier: contracts.ETH_HELPER_SPECIFIER,
       address: helper.address,
-      constructorArguments: [
-        config.bridgeConfiguration.weth,
-        this.data.bridgeRouter.proxy,
-      ],
+      constructorArguments,
+      encodedConstructorArguments:
+        contracts.ETHHelper__factory.createInterface().encodeDeploy(
+          constructorArguments,
+        ),
     });
   }
 

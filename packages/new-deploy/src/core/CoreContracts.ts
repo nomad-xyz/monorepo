@@ -167,6 +167,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeaconController',
+      specifier: contracts.UBC_SPECIFIER,
       address: ubc.address,
     });
   }
@@ -182,15 +183,22 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const updater =
       this.context.mustGetDomainConfig(name).configuration.updater;
     const factory = new UpdaterManager__factory(this.context.getDeployer(name));
-    const um = await factory.deploy(utils.evmId(updater), this.overrides);
+
+    const constructorArguments = [utils.evmId(updater)];
+    const um = await factory.deploy(constructorArguments[0], this.overrides);
     this._data.updaterManager = um.address;
     await um.deployTransaction.wait(this.confirmations);
 
     // update records
     this.context.pushVerification(name, {
       name: 'UpdaterManager',
+      specifier: contracts.UPDATER_MANAGER_SPECIFIER,
       address: um.address,
-      constructorArguments: [updater],
+      constructorArguments,
+      encodedConstructorArguments:
+        UpdaterManager__factory.createInterface().encodeDeploy(
+          constructorArguments,
+        ),
     });
   }
 
@@ -212,6 +220,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     // update records
     this.context.pushVerification(name, {
       name: 'XAppConnectionManager',
+      specifier: contracts.XCM_SPECIFIER,
       address: xcm.address,
     });
   }
@@ -229,14 +238,25 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const ubc = this.upgradeBeaconController?.address;
     if (!ubc) throw new Error('Cannot deploy proxy without UBC');
     const factory = new UpgradeBeacon__factory(this.context.getDeployer(name));
-    const beacon = await factory.deploy(implementation, ubc, this.overrides);
+
+    const constructorArguments = [implementation, ubc];
+    const beacon = await factory.deploy(
+      constructorArguments[0],
+      constructorArguments[1],
+      this.overrides,
+    );
     proxy.beacon = beacon.address;
     await beacon.deployTransaction.wait(this.confirmations);
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeacon',
+      specifier: contracts.UPGRADE_BEACON_SPECIFIER,
       address: beacon.address,
-      constructorArguments: [implementation, ubc],
+      constructorArguments,
+      encodedConstructorArguments:
+        UpgradeBeacon__factory.createInterface().encodeDeploy(
+          constructorArguments,
+        ),
     });
   }
 
@@ -253,14 +273,25 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const factory = new UpgradeBeaconProxy__factory(
       this.context.getDeployer(name),
     );
-    const prx = await factory.deploy(beacon, initData, this.overrides);
+    const constructorArguments = [beacon, initData];
+    const prx = await factory.deploy(
+      beacon, // constructorArguments[0],
+      constructorArguments[1],
+      this.overrides,
+    );
+
     proxy.proxy = prx.address;
     await prx.deployTransaction.wait(this.confirmations);
 
     this.context.pushVerification(name, {
       name: 'UpgradeBeaconProxy',
+      specifier: contracts.UBP_SPECIFIER,
       address: prx.address,
-      constructorArguments: [beacon, initData],
+      constructorArguments,
+      encodedConstructorArguments:
+        UpgradeBeaconProxy__factory.createInterface().encodeDeploy(
+          constructorArguments,
+        ),
     });
   }
 
@@ -307,7 +338,10 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const configuration = this.context.mustGetDomainConfig(this.domain);
 
     const factory = new Home__factory(this.context.getDeployer(this.domain));
-    const home = await factory.deploy(configuration.domain);
+
+    const constructorArguments = [configuration.domain];
+    const home = await factory.deploy(constructorArguments[0], this.overrides);
+
     await home.deployTransaction.wait(this.confirmations);
 
     const initData = Home__factory.createInterface().encodeFunctionData(
@@ -325,8 +359,13 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     this.context.pushVerification(name, {
       name: 'Home',
+      specifier: contracts.HOME_SPECIFIER,
       address: home.address,
-      constructorArguments: [configuration.domain],
+      constructorArguments,
+      encodedConstructorArguments:
+        contracts.Home__factory.createInterface().encodeDeploy(
+          constructorArguments,
+        ),
     });
   }
 
@@ -347,9 +386,14 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const factory = new contracts.GovernanceRouter__factory(
       this.context.getDeployer(this.domain),
     );
-    const router = await factory.deploy(
+
+    const constructorArguments = [
       config.domain,
       config.configuration.governance.recoveryTimelock,
+    ];
+    const router = await factory.deploy(
+      constructorArguments[0],
+      constructorArguments[1],
       this.overrides,
     );
     await router.deployTransaction.wait(this.confirmations);
@@ -366,11 +410,13 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     this._data.governanceRouter = proxy;
     this.context.pushVerification(name, {
       name: 'GovernanceRouter',
+      specifier: contracts.GOVERNANCE_ROUTER_SPECIFIER,
       address: router.address,
-      constructorArguments: [
-        config.domain,
-        config.configuration.governance.recoveryTimelock,
-      ],
+      constructorArguments,
+      encodedConstructorArguments:
+        contracts.GovernanceRouter__factory.createInterface().encodeDeploy(
+          constructorArguments,
+        ),
     });
   }
 
@@ -407,10 +453,17 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       const factory = new contracts.Replica__factory(
         this.context.getDeployer(local),
       );
-      const replica = await factory.deploy(
+
+      const constructorArguments = [
         localConfig.domain,
         localConfig.configuration.processGas,
         localConfig.configuration.reserveGas,
+        // localConfig.configuration.maximumGas,  // future
+      ];
+      const replica = await factory.deploy(
+        constructorArguments[0],
+        constructorArguments[1],
+        constructorArguments[2],
         // localConfig.configuration.maximumGas,  // future
         this.overrides,
       );
@@ -418,12 +471,13 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
       this.context.pushVerification(local, {
         name: 'Replica',
+        specifier: contracts.REPLICA_SPECIFIER,
         address: replica.address,
-        constructorArguments: [
-          localConfig.domain,
-          localConfig.configuration.processGas,
-          localConfig.configuration.reserveGas,
-        ],
+        constructorArguments,
+        encodedConstructorArguments:
+          contracts.Replica__factory.createInterface().encodeDeploy(
+            constructorArguments,
+          ),
       });
       proxy = await this.newProxy(replica.address, initData);
     }
@@ -695,7 +749,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
      * updater
      * localDomain
      * onwer
-    
+
     # UpdaterManager
      * updater
      * owner
@@ -706,7 +760,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
      * replicaToDomain
      * domainToReplica
      * watcherPermission
-    
+
     # GovernanceRouter
      * localDomain
      * recoveryTimelock
@@ -717,7 +771,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
      * xAppConnectionManager
      * routers
      * domains
-    
+
     # UpgradeBeaconController
      * owner
     */

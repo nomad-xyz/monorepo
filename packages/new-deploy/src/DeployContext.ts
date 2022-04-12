@@ -10,8 +10,10 @@ import CoreContracts from './core/CoreContracts';
 
 export interface Verification {
   name: string;
+  specifier: string;
   address: string;
   constructorArguments?: ReadonlyArray<unknown>;
+  encodedConstructorArguments?: string; // DataHexString
 }
 
 export class DeployContext extends MultiProvider<config.Domain> {
