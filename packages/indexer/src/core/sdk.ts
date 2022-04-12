@@ -1,4 +1,5 @@
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
+import { ethers } from "ethers";
 
 export function getSdk(environment: string): BridgeContext {
     let sdk: BridgeContext;
@@ -22,7 +23,15 @@ export function getSdk(environment: string): BridgeContext {
             `RPC url for domain ${domain} is empty. Please provide as '${rpcEnvKey}=http://...' ENV variable`
         );
 
-        sdk.registerRpcProvider(domain, rpc);
+        if (rpc.includes(',')) {
+            const rpcs = rpc.split(',');
+            const providers = rpcs.map(rpc => new ethers.providers.StaticJsonRpcProvider(rpc));
+            const provider = new ethers.providers.FallbackProvider(providers, 1);
+            sdk.registerProvider(domain, provider);
+        } else {
+            sdk.registerRpcProvider(domain, rpc);
+        }
+
     });
 
     return sdk;

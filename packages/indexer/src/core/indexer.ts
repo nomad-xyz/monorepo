@@ -18,6 +18,13 @@ type ShortTx = {
   gasLimit: ethers.BigNumber;
 };
 
+function blockSpeed(from: number, to: number, start: Date, finish: Date): number {
+  const blocks = to - from + 1;
+  const timeS = (finish.valueOf() - start.valueOf())/1000;
+  const speed = blocks/timeS;
+  return speed
+}
+
 function txEncode(tx: ShortTx): string {
   const {
     gasPrice, // ?
@@ -75,6 +82,7 @@ const BATCH_SIZE = process.env.BATCH_SIZE
   ? parseInt(process.env.BATCH_SIZE)
   : 2000;
 const RETRIES = 100;
+const INTENTIONAL_BLOCK_LAG = 2;
 
 export class Indexer {
   domain: number;
@@ -417,7 +425,7 @@ export class Indexer {
   }
 
   async updateAll(replicas: number[]) {
-    let from = Math.max(
+    const from = Math.max(
       this.lastBlock + 1,
       this.persistance.height,
       this.sdk.getBridge(this.domain)?.deployHeight || 0
@@ -435,7 +443,7 @@ export class Indexer {
           this.network,
           new Date().valueOf() - start
         );
-        return r;
+        return r - INTENTIONAL_BLOCK_LAG;
       },
       RETRIES,
       (error: any) => {
@@ -488,14 +496,18 @@ export class Indexer {
     const batchSize = domain2batchSize.get(this.domain) || BATCH_SIZE;
     let batchFrom = from;
     let batchTo = Math.min(to, from + batchSize);
+    const startAll = new Date();
 
     while (true) {
       const done = Math.floor(((batchTo - from + 1) / (to - from + 1)) * 100);
 
+
       this.logger.debug(
         `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`
       );
+      const startBatch = new Date();
       const events = await fetchEvents(batchFrom, batchTo);
+      const finishBatch = new Date();
       if (!events) throw new Error(`KEk`);
       events.sort((a, b) => a.ts===b.ts?eventTypeToOrder(a)-eventTypeToOrder(b):a.ts - b.ts);
       await this.persistance.store(...events);
@@ -516,24 +528,37 @@ export class Indexer {
         );
         continue;
       }
-      allEvents.push(
-        ...events.filter((newEvent) =>
-          allEvents.every(
-            (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash()
-          )
+      const filteredEvents = events.filter((newEvent) =>
+        allEvents.every(
+          (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash()
         )
       );
+      allEvents.push(
+        ...filteredEvents
+      );
+      const speed = blockSpeed(batchFrom, batchTo, startBatch, finishBatch);
+      this.logger.debug(`Fetched batch for domain ${this.domain}. Blocks: ${batchTo - batchFrom + 1} (${speed}b/sec). Got events: ${filteredEvents.length}`);
       if (batchTo >= to) break;
       batchFrom = batchTo + 1;
       batchTo = Math.min(to, batchFrom + batchSize);
     }
 
+    const finishedAll = new Date();
+
+
     if (!allEvents) throw new Error("kek");
 
-    allEvents.sort((a, b) => a.ts - b.ts);
+    allEvents.sort((a, b) => {
+      if (a.ts === b.ts) {
+        return eventTypeToOrder(a) - eventTypeToOrder(b) 
+      } else {
+        return a.ts - b.ts
+      }
+    });
 
     if (this.develop || true) this.dummyTestEventsIntegrity();
-    this.logger.info(`Fetched all`);
+    const speed = blockSpeed(from, to, startAll, finishedAll);
+    this.logger.info(`Fetched all for domain ${this.domain}. Blocks: ${to - from + 1} (${speed}b/sec). Got events: ${allEvents.length}`);
     this.lastBlock = to;
 
     return allEvents;
@@ -541,13 +566,18 @@ export class Indexer {
 
   // TODO: Just the last ones received
   async dummyTestEventsIntegrity(blockTo?: number) {
+    // Get all events for the domain
     let allEvents = await this.persistance.allEvents();
+    // If there is a max block requirement, proceed only with them
     if (blockTo) allEvents = allEvents.filter((e) => e.block <= blockTo);
+
     if (allEvents.length === 0) {
       this.logger.debug(`No events to test integrity!!!`);
       return;
     }
 
+    // Creating a map of roots, which looks like this
+    // {root0:root1, root1:root2, root2:root4, ...}
     const homeRoots = new Map<string, string>();
     let initialHomeRoot = "";
     let initialHomeTimestamp = Number.MAX_VALUE;
@@ -562,18 +592,23 @@ export class Indexer {
 
     const initialReplica: Map<number, ReplicaDomainInfo> = new Map();
 
+    // For every event
     for (const event of allEvents) {
+      // if it is a home update
       if (event.eventType == EventType.HomeUpdate) {
         const { oldRoot, newRoot } = event.eventData as {
           oldRoot: string;
           newRoot: string;
         };
+        // add the root and increment
         homeRoots.set(oldRoot, newRoot);
         homeRootsTotal += 1;
+        // if the event is the oldest in the set, we make the root be the initial one
         if (event.ts < initialHomeTimestamp) {
           initialHomeTimestamp = event.ts;
           initialHomeRoot = oldRoot;
         }
+        // or Replica update
       } else if (event.eventType == EventType.ReplicaUpdate) {
         const { oldRoot, newRoot } = event.eventData as {
           oldRoot: string;
@@ -598,6 +633,7 @@ export class Indexer {
       }
     }
 
+    const homeRootsObserved = homeRootsTotal;
     while (true) {
       let newRoot = homeRoots.get(initialHomeRoot);
       if (newRoot) {
@@ -609,7 +645,7 @@ export class Indexer {
     }
     if (homeRootsTotal !== 0)
       throw new Error(
-        `${this.domain}: Left roots for home supposed to be 0, but is ${homeRootsTotal}`
+        `${this.domain}: Left roots for home supposed to be 0, but is ${homeRootsTotal} from total of ${homeRootsObserved}`
       );
 
     for (const [domain, replica] of initialReplica) {
@@ -1171,6 +1207,7 @@ export class RedisPersistance extends Persistance {
   }
   sortSorage(): void {}
   async allEvents(): Promise<NomadishEvent[]> {
+    // console.log(`Getting all events for ${this.domain}`)
     const blocks = (await this.client.sMembers(`${this.domain}blocks`))
       .map((s) => parseInt(s))
       .sort();
@@ -1179,11 +1216,23 @@ export class RedisPersistance extends Persistance {
         this.client.hGet(`${this.domain}nomad_message`, String(block))
       )
     );
-    const q = x
+    const events = x
       .filter((z) => z != "")
       .map((s) => JSON.parse(s!, reviver) as NomadishEvent[])
       .flat();
-    return q;
+
+    // console.log(`Sorting all events for ${this.domain}`)
+
+    events.sort((a, b) => {
+      if (a.ts === b.ts) {
+        return eventTypeToOrder(a) - eventTypeToOrder(b) 
+      } else {
+        return a.ts - b.ts
+      }
+    });
+    // console.log(`Returning all events for ${this.domain}`)
+    
+    return events;
   }
   persist(): void {}
 }
