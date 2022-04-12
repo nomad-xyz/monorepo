@@ -84,7 +84,7 @@ describe('sdk', async () => {
       expect(replica).to.not.be.undefined;
       const replicaFor = context.getReplicaFor(2000, 3000);
       expect(replicaFor).to.not.be.undefined;
-    })
+    });
 
     it('maintains connection when registering and unregistering signers', () => {
       const conf = config.getBuiltin('development');
