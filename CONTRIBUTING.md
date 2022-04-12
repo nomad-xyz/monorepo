@@ -106,16 +106,16 @@ Yes this is a lot, we intend to automate it later :)
 
 ### Publishing to npm
 
-Before publishing any package to `npm` perform the following steps
+Before publishing any package to `npm` perform the following steps:
 
+- Run yarn to ensure the lockfile is up to date
 - Format, lint, test, and build your package using the standard scripts
 - Ensure that your package has a sensible `.npmignore`
 - Ensure that the `main` and `types` keys in your package are set correctly
-- Bump the version number in `package.json` (consult a senior dev if unsure)
-- Move all `Unreleased` changes to a new header with the new version number
-- Run yarn to ensure the lockfile is up to date
+- Update package version (yarn <package-to-release> version <strategy>[patch | minor | major](https://semver.org/))
 - Commit the above changes
 - Create a PR
-- AFTER the PR is merged, checkout master and tag the commit
+- AFTER the PR is merged, checkout master and tag the commit (git tag -s <package-to-release>@<new-package-version> <commit>)
+- Push tags (git push --tags)
 - From the tagged commit, ensure your working tree is clean with `git status`
-- Publish with `yarn npm publish`
+- Publish to npm (yarn <package-to-release> npm publish --access public)
