@@ -20,16 +20,16 @@ export function eventTypeToOrder(eventType: NomadishEvent) {
   switch (eventType.eventType) {
     case EventType.HomeDispatch:
       return 0;
+    case EventType.BridgeRouterSend:
+      return 1;
     case EventType.HomeUpdate:
       return 2;
     case EventType.ReplicaUpdate:
       return 3;
-    case EventType.ReplicaProcess:
-      return 4;
-    case EventType.BridgeRouterSend:
-      return 1;
     case EventType.BridgeRouterReceive:
       return 5;
+    case EventType.ReplicaProcess:
+      return 4;
     default:
       console.log(eventType)
       throw new Error(`Unknown event type: ${eventType.eventType}`)
@@ -114,16 +114,17 @@ export class NomadishEvent {
     block: number,
     source: EventSource,
     gasUsed: ethers.BigNumber,
-    tx: string
+    tx: string,
+    restore = false,
   ) {
     this.domain = domain;
     this.eventType = eventType;
     this.contractType = contractType;
     this.replicaOrigin = replicaOrigin;
-    this.ts =
-      /*source === EventSource.Fetch && */ contractType == ContractType.Home ||
-      contractType == ContractType.BridgeRouter
-        ? ts - 45000
+    this.ts = !restore && (eventType === EventType.HomeDispatch || eventType === EventType.HomeUpdate || eventType === EventType.BridgeRouterSend)
+      // /*source === EventSource.Fetch && */ contractType == ContractType.Home ||
+      // contractType == ContractType.BridgeRouter
+        ? ts - 90000
         : ts; // if the event was fetched from RPC for past (we asked RPC when event happened) happened on another chain we want to make sure that event at chain of origin happened before it was relayed to destination
     this.eventData = eventData;
     this.block = block;
@@ -193,7 +194,8 @@ export class NomadishEvent {
       e.block,
       EventSource.Storage,
       e.gasUsed,
-      e.tx
+      e.tx,
+      true,
     );
   }
 

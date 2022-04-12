@@ -84,6 +84,42 @@ export class Orchestrator {
     await this.initIndexers();
     await this.initHealthCheckers();
     await this.initalFeedConsumer();
+    // console.log(`Checking integrity`);
+    try {
+      await this.checkAllIntegrity();
+    } catch(e) {
+      this.logger.error(`Initial integrity failed:`, e);
+      throw e;
+    }
+    // console.log(`Checked integrity`);
+    
+    // console.log(`EXITING!`);
+    // process.exit(0);
+  }
+
+  async checkAllIntegrity(): Promise<void> {
+
+    await Promise.all(this.sdk.domainNumbers.map(async (domain: number) => {
+      let indexer = this.indexers.get(domain)!;
+      await indexer.dummyTestEventsIntegrity()
+    }))
+
+    
+    // const events = (
+    //   await Promise.all(
+    //     this.sdk.domainNumbers.map((domain: number) => this.index(domain))
+    //   )
+    // ).flat();
+    // events.sort((a, b) => {
+    //   if (a.ts === b.ts) {
+    //     return eventTypeToOrder(a) - eventTypeToOrder(b) 
+    //   } else {
+    //     return a.ts - b.ts
+    //   }
+    // });
+    // this.logger.info(`Received ${events.length} events after reindexing`);
+    // await this.consumer.consume(events);
+    // return events.length;
   }
 
   async indexAll(): Promise<number> {
@@ -92,7 +128,13 @@ export class Orchestrator {
         this.sdk.domainNumbers.map((domain: number) => this.index(domain))
       )
     ).flat();
-    events.sort((a, b) => a.ts - b.ts);
+    events.sort((a, b) => {
+      if (a.ts === b.ts) {
+        return eventTypeToOrder(a) - eventTypeToOrder(b) 
+      } else {
+        return a.ts - b.ts
+      }
+    });
     this.logger.info(`Received ${events.length} events after reindexing`);
     await this.consumer.consume(events);
     return events.length;
