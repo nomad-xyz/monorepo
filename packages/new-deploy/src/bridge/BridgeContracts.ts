@@ -341,8 +341,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       const tx =
         await this.bridgeRouterContract.populateTransaction.enrollRemoteRouter(
           remoteDomain,
-          utils.canonizeId(remoteRouter),
-          this.overrides,
+          utils.canonizeId(remoteRouter)
         );
       // safe as populateTransaction always sets `to`
       batch.push(this.domainNumber, tx as Call);
@@ -465,8 +464,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
             await this.tokenRegistryContract.populateTransaction.enrollCustom(
               custom.token.domain,
               utils.canonizeId(custom.token.id),
-              proxy.address,
-              this.overrides,
+              proxy.address
             ),
           ];
         }
