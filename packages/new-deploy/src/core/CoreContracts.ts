@@ -538,14 +538,14 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const local = this.context.resolveDomainName(this.domain);
     const home = this.context.resolveDomainName(homeDomain);
     const homeConfig = this.context.mustGetDomainConfig(home);
-    const localConfig = this.context.mustGetDomainConfig(local);
 
     // want an async filter, but this'll have to do
     // We make an array with the enrolled status of each watcher, then filter
     // the watchers based on that status array. Mapping ensures that the status
     // is at the same index as the watcher, so we use the index in the filter.
     // This allows us to skip enrolling watchers that are already enrolled
-    const watchers = localConfig.configuration.watchers;
+    const watchers = homeConfig.configuration.watchers;
+
     const enrollmentStatuses = await Promise.all(
       watchers.map(async (watcher) => {
         return await this.xAppConnectionManager.watcherPermission(
