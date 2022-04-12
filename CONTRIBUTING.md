@@ -112,10 +112,10 @@ Before publishing any package to `npm` perform the following steps:
 - Format, lint, test, and build your package using the standard scripts
 - Ensure that your package has a sensible `.npmignore`
 - Ensure that the `main` and `types` keys in your package are set correctly
-- Update package version (yarn <package-to-release> version <strategy>[patch | minor | major](https://semver.org/))
+- Bump the version number in `package.json` (https://semver.org/, consult a senior dev if unsure)
 - Commit the above changes
 - Create a PR
-- AFTER the PR is merged, checkout master and tag the commit (git tag -s <package-to-release>@<new-package-version> <commit>)
+- AFTER the PR is merged, checkout main and tag the commit (git tag -s <package-to-release>@<new-package-version> <commit>)
 - Push tags (git push --tags)
 - From the tagged commit, ensure your working tree is clean with `git status`
 - Publish to npm (yarn <package-to-release> npm publish --access public)
