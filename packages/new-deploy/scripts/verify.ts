@@ -12,6 +12,7 @@ import { promisify } from 'util';
 import { Verification } from '../src';
 import * as dotenv from 'dotenv';
 import { NomadContext } from '@nomad-xyz/sdk';
+import { NomadConfig } from '@nomad-xyz/configuration';
 dotenv.config();
 
 type VerificationOutput = Verification & {
@@ -30,12 +31,17 @@ function delay(ms: number): Promise<void> {
 }
 
 const etherscanKey = process.env.ETHERSCAN_KEY;
+if (!etherscanKey || etherscanKey.length === 0)
+  throw new Error(
+    'Missing Etherscan key. Please set the `ETHERSCAN_KEY` variable in your .env file',
+  );
 
 /// Extract the etherscan GUID from the `forge verify-contract` stdout
 export function extractGuidFromFoundry(res: {
   stdout: string;
   stderr: string;
 }): string | undefined {
+  // Brittle and lazy parsing. Will break if forge changes its stdout
   if (res.stderr.indexOf('already verified') !== -1) return;
   const bits = res.stdout.split('`');
   if (bits.length < 4)
@@ -197,7 +203,17 @@ class VerificationInfo {
 
 async function run() {
   console.log();
-  const environment = process.argv[2];
+  const environmentArg = process.argv[2];
+
+  let environment: string | NomadConfig;
+  try {
+    environment = JSON.parse(
+      await readFileAsync(environmentArg, 'utf-8'),
+    ) as NomadConfig;
+  } catch (_: unknown) {
+    environment = environmentArg;
+  }
+
   const jsonPath = process.argv[3];
   const jsonString = await readFileAsync(jsonPath, 'utf8');
   const context = new NomadContext(environment);
