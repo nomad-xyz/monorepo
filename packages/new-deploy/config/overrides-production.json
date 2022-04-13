@@ -8,10 +8,6 @@
     "gasPrice": "150000000000",
     "gasLimit": "7000000"
   },
-  "milkomedaC1": {
-    "gasPrice": "150000000000",
-    "gasLimit": "7000000"
-  },
   "xdai": {
     "maxFeePerGas": "20000000000",
     "maxPriorityFeePerGas": "2500000000",
