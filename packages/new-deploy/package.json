@@ -34,7 +34,7 @@
   "author": "Illusory Systems Inc.",
   "license": "MIT OR Apache-2.0",
   "dependencies": {
-    "@nomad-xyz/configuration": "^0.1.0-rc.9",
+    "@nomad-xyz/configuration": "^0.1.0-rc.10",
     "@nomad-xyz/contracts-bridge": "workspace:^",
     "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/contracts-router": "workspace:^",

@@ -1192,10 +1192,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/configuration@npm:^0.1.0-rc.9":
-  version: 0.1.0-rc.9
-  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.9"
-  checksum: 5954d114dc4b7ec512ea7cabfe45e05be572a84f3a3feabb90d3c95014cbbf37dff4574263f993bc638fc0f10fbd2aeacd681ac43312e431949cca31cd4505e9
+"@nomad-xyz/configuration@npm:^0.1.0-rc.10":
+  version: 0.1.0-rc.10
+  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.10"
+  checksum: 8917abd840bfc2247609b7c70134488dee39035d1c37a53455141be60d4b4a6171f62fe48d7b5ce70ea8712211ff04d502869e5b90bdd3adef3fd8009826ef48
   languageName: node
   linkType: hard
 
@@ -1417,7 +1417,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/new-deploy@workspace:packages/new-deploy"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.9
+    "@nomad-xyz/configuration": ^0.1.0-rc.10
     "@nomad-xyz/contracts-bridge": "workspace:^"
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/contracts-router": "workspace:^"
@@ -1447,7 +1447,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.9
+    "@nomad-xyz/configuration": ^0.1.0-rc.10
     "@nomad-xyz/contracts-bridge": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"
     "@types/chai": ^4.2.21
@@ -1476,7 +1476,7 @@ __metadata:
     "@gnosis.pm/safe-core-sdk": ^2.0.0
     "@gnosis.pm/safe-ethers-adapters": ^0.1.0-alpha.8
     "@gnosis.pm/safe-ethers-lib": ^1.0.0
-    "@nomad-xyz/configuration": ^0.1.0-rc.9
+    "@nomad-xyz/configuration": ^0.1.0-rc.10
     "@nomad-xyz/sdk": "workspace:^"
     "@types/chai": ^4.2.21
     "@types/mocha": ^9.1.0
@@ -1501,7 +1501,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.9
+    "@nomad-xyz/configuration": ^0.1.0-rc.10
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/local-environment": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
