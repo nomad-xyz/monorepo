@@ -420,27 +420,27 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     });
   }
 
-  async deployUnenrolledReplica(homeDomain: string | number): Promise<void> {
+  async deployUnenrolledReplica(remoteDomain: string | number): Promise<void> {
     const local = this.context.resolveDomainName(this.domain);
-    const home = this.context.resolveDomainName(homeDomain);
+    const remote = this.context.resolveDomainName(remoteDomain);
     const localConfig = this.context.mustGetDomainConfig(local);
-    const homeConfig = this.context.mustGetDomainConfig(home);
-    const homeCore = this.context.mustGetCore(home);
+    const remoteConfig = this.context.mustGetDomainConfig(remote);
+    const remoteCore = this.context.mustGetCore(remote);
 
     // don't redeploy existing replica
-    if (this.data.replicas && this.data.replicas[home]) return;
-    log(`deploy Replica for ${home} on ${local}`);
+    if (this.data.replicas && this.data.replicas[remote]) return;
+    log(`deploy Replica for ${remote} on ${local}`);
 
-    const root = await homeCore.home.committedRoot();
+    const root = await remoteCore.home.committedRoot();
 
     const initData =
       contracts.Replica__factory.createInterface().encodeFunctionData(
         'initialize',
         [
-          homeConfig.domain,
-          utils.evmId(homeConfig.configuration.updater),
+          remoteConfig.domain,
+          utils.evmId(remoteConfig.configuration.updater),
           root,
-          homeConfig.configuration.optimisticSeconds,
+          remoteConfig.configuration.optimisticSeconds,
         ],
       );
 
@@ -482,20 +482,20 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       proxy = await this.newProxy(replica.address, initData);
     }
     if (!this._data.replicas) this._data.replicas = {};
-    this._data.replicas[home] = proxy;
+    this._data.replicas[remote] = proxy;
   }
 
   async enrollReplica(
-    homeDomain: string | number,
+    remoteDomain: string | number,
   ): Promise<CallBatch | undefined> {
     const local = this.context.resolveDomainName(this.domain);
-    const home = this.context.resolveDomainName(homeDomain);
-    const homeConfig = this.context.mustGetDomainConfig(home);
+    const remote = this.context.resolveDomainName(remoteDomain);
+    const remoteConfig = this.context.mustGetDomainConfig(remote);
 
-    const replica = this.getReplica(home)?.address;
+    const replica = this.getReplica(remote)?.address;
     if (!replica)
       throw new Error(
-        `Cannot enroll replica for ${home} on ${local}. Replica does not exist`,
+        `Cannot enroll replica for ${remote} on ${local}. Replica does not exist`,
       );
 
     // skip if already enrolled
@@ -503,7 +503,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       replica,
     );
     if (replicaAlreadyEnrolled) return;
-    log(`enroll Replica for ${home} on ${local}`);
+    log(`enroll Replica for ${remote} on ${local}`);
 
     // Check that this key has permissions to set this
     const owner = await this.xAppConnectionManager.owner();
@@ -514,7 +514,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       const tx =
         await this.xAppConnectionManager.populateTransaction.ownerEnrollReplica(
           replica,
-          homeConfig.domain,
+          remoteConfig.domain,
           this.overrides,
         );
       const batch = CallBatch.fromContext(this.context.asNomadContext);
@@ -526,31 +526,31 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     // If we can use deployer ownership
     const tx = await this.xAppConnectionManager.ownerEnrollReplica(
       replica,
-      homeConfig.domain,
+      remoteConfig.domain,
       this.overrides,
     );
     await tx.wait(this.confirmations);
   }
 
   async enrollWatchers(
-    homeDomain: string | number,
+    remoteDomain: string | number,
   ): Promise<CallBatch | undefined> {
     const local = this.context.resolveDomainName(this.domain);
-    const home = this.context.resolveDomainName(homeDomain);
-    const homeConfig = this.context.mustGetDomainConfig(home);
+    const remote = this.context.resolveDomainName(remoteDomain);
+    const remoteConfig = this.context.mustGetDomainConfig(remote);
 
     // want an async filter, but this'll have to do
     // We make an array with the enrolled status of each watcher, then filter
     // the watchers based on that status array. Mapping ensures that the status
     // is at the same index as the watcher, so we use the index in the filter.
     // This allows us to skip enrolling watchers that are already enrolled
-    const watchers = homeConfig.configuration.watchers;
+    const watchers = remoteConfig.configuration.watchers;
 
     const enrollmentStatuses = await Promise.all(
       watchers.map(async (watcher) => {
         return await this.xAppConnectionManager.watcherPermission(
           utils.evmId(watcher),
-          homeConfig.domain,
+          remoteConfig.domain,
         );
       }),
     );
@@ -559,7 +559,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     );
 
     if (watchersToEnroll.length == 0) return;
-    log(`enroll Watchers for ${home} on ${local}`);
+    log(`enroll Watchers for ${remote} on ${local}`);
 
     // Check that this key has permissions to set this
     const owner = await this.xAppConnectionManager.owner();
@@ -571,7 +571,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         watchersToEnroll.map(async (watcher) => {
           return await this.xAppConnectionManager.populateTransaction.setWatcherPermission(
             utils.evmId(watcher),
-            homeConfig.domain,
+            remoteConfig.domain,
             true,
             this.overrides,
           );
@@ -589,7 +589,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       watchersToEnroll.map((watcher) =>
         this.xAppConnectionManager.setWatcherPermission(
           utils.evmId(watcher),
-          homeConfig.domain,
+          remoteConfig.domain,
           true,
           this.overrides,
         ),
