@@ -842,7 +842,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       ).to.be.true;
       // watcherPermission
 
-      for (const watcher of domainConfig.configuration.watchers) {
+      const remoteConfig = this.context.mustGetDomainConfig(remoteDomain);
+      for (const watcher of remoteConfig.configuration.watchers) {
         const watcherPermission =
           await this.xAppConnectionManager.watcherPermission(
             watcher,
