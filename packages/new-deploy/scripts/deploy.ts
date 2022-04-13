@@ -29,28 +29,38 @@ async function run() {
     deployContext.overrides.set(network, OVERRIDES[network]);
   }
   // run the deploy script
-  const governanceBatch = await deployContext.deployAndRelinquish();
-
-  // output the updated config & verification inputs
   const outputDir = './output';
-  fs.mkdirSync(outputDir, { recursive: true });
-  fs.writeFileSync(
-    `${outputDir}/config.json`,
-    JSON.stringify(deployContext.data, null, 2),
-  );
-  fs.writeFileSync(
-    `${outputDir}/verification.json`,
-    JSON.stringify(Object.fromEntries(deployContext.verification), null, 2),
-  );
+  try {
+    const governanceBatch = await deployContext.deployAndRelinquish();
 
-  if (governanceBatch) {
+    outputConfigAndVerification(outputDir, deployContext);
+
+    if (governanceBatch) {
       // build & write governance batch
       await governanceBatch.build();
       fs.writeFileSync(
           `${outputDir}/governanceTransactions.json`,
           JSON.stringify(governanceBatch, null, 2),
       );
-  }
+    }
 
-  console.log(`DONE!`);
+    console.log(`DONE!`);
+  } catch (e) {
+    outputConfigAndVerification(outputDir, deployContext);
+    
+    throw e;
+  }
+}
+
+function outputConfigAndVerification(outputDir: string, deployContext: DeployContext) {
+  // output the updated config & verification inputs
+  fs.mkdirSync(outputDir, {recursive: true});
+  fs.writeFileSync(
+      `${outputDir}/config.json`,
+      JSON.stringify(deployContext.data, null, 2),
+  );
+  fs.writeFileSync(
+      `${outputDir}/verification.json`,
+      JSON.stringify(Object.fromEntries(deployContext.verification), null, 2),
+  );
 }
