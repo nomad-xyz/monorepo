@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/sdk-govern",
-  "version": "1.0.0-rc.4",
+  "version": "1.0.0-rc.5",
   "description": "Nomad governance SDK",
   "keywords": [
     "nomad",

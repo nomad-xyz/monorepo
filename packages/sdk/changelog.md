@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### 2.0.0-rc.6
+
+- chore: bump multi-provider to v1.0.0-rc.4
+
 ### 2.0.0-rc.5
 
 - refactor: simpler connection logic (deleting `reconnect`)
