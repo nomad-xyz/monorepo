@@ -4,3 +4,4 @@ dist/
 .env
 lib/
 output/
+config/config.json
