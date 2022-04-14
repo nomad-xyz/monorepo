@@ -2,7 +2,10 @@
 solc_version = '0.7.6'
 optimizer_runs = 999999
 bytecodeHash = 'none'
-
+remappings = [
+"@openzeppelin/=node_modules/@openzeppelin/",
+"@summa-tx/=node_modules/@summa-tx/"
+]
 [core]
 src = 'packages/contracts-core/contracts'
 out = 'packages/contracts-core/foundry_artifacts'
