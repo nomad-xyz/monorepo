@@ -27,6 +27,25 @@ export interface CallBatchContents {
   built?: ethers.PopulatedTransaction;
 }
 
+export enum BatchStatus {
+  NOT_RECEIVED,
+  RECEIVED,
+  EXECUTED,
+}
+
+export function BatchStatusText(status: number): string {
+  switch (status) {
+    case BatchStatus.NOT_RECEIVED:
+      return 'Not Received';
+    case BatchStatus.RECEIVED:
+      return 'Received';
+    case BatchStatus.EXECUTED:
+      return 'Executed';
+    default:
+      return 'Invalid';
+  }
+}
+
 export class CallBatch {
   readonly local: Readonly<NormalizedCall>[];
   readonly remote: Map<number, Readonly<NormalizedCall>[]>;
@@ -228,6 +247,14 @@ export class CallBatch {
     }
     // return the event transaction receipt
     return event.getTransactionReceipt();
+  }
+
+  // Get the status of the batch hash on the remote domain
+  async status(nameOrDomain: number | string): Promise<number> {
+    const domain = this.context.resolveDomain(nameOrDomain);
+    const router = this.context.mustGetCore(domain).governanceRouter;
+    const hash = this.batchHash(domain);
+    return router.inboundCallBatches(hash);
   }
 
   // Waits for all participating domains to receive their batches
