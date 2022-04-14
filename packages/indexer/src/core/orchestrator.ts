@@ -91,6 +91,7 @@ export class Orchestrator {
       this.logger.error(`Initial integrity failed:`, e);
       throw e;
     }
+    this.collectStatistics();
     // console.log(`Checked integrity`);
     
     // console.log(`EXITING!`);
