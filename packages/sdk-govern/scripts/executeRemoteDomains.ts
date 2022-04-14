@@ -1,7 +1,7 @@
 import * as config from '@nomad-xyz/configuration';
 import {NomadContext} from "@nomad-xyz/sdk";
 import {getCallBatch, getConfig} from './utils';
-import {CallBatch, CallBatchContents} from "../dist";
+import {CallBatch, CallBatchContents, BatchStatusText, BatchStatus} from "../dist";
 import * as dotenv from 'dotenv';
 import * as ethers from "ethers";
 dotenv.config();
@@ -33,15 +33,18 @@ async function run() {
         // context.overrides.set(name, OVERRIDES[name]);
     }
 
-    // ensure that all batch hashes have landed on each remote domain
-    await batch.waitAll();
-    console.log('All Batch Hashes Ready.');
     // for each domain, execute the batch calls
     for (const domain of batch.remoteDomains) {
         const domainName = context.resolveDomainName(domain);
+        // check that the batch has been received, but not executed
+        const status = await batch.status(domain);
+        console.log(`Batch status on ${domainName}: ${BatchStatusText(status)}!`);
+        if (status !== BatchStatus.RECEIVED) continue;
+        // execute the batch
         console.log(`Executing Batch on ${domainName}...`);
         const tx = await batch.executeDomain(domain);
         const receipt = await tx.wait();
+        // print details of execution tx
         console.log(`Executed Batch on ${domainName}!!`);
         console.log(`   Transaction Hash: ${receipt.transactionHash}`);
         console.log(`   Block Explorer: ${CONFIG.protocol.networks[domainName].specs.blockExplorer}`);

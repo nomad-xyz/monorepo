@@ -1,7 +1,7 @@
 import * as config from '@nomad-xyz/configuration';
 import {NomadContext} from "@nomad-xyz/sdk";
 import {getCallBatch, getConfig} from './utils';
-import {CallBatch, CallBatchContents} from "../dist";
+import {BatchStatusText, CallBatch, CallBatchContents} from "../dist";
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -18,11 +18,8 @@ async function run() {
     await Promise.all(
         batch.remoteDomains.map(async (domain: number) => {
             const domainName = context.resolveDomainName(domain);
-            console.log(`Waiting for batch to be received on ${domainName}...`);
-            await batch.waitDomain(domain);
-            console.log(`Batch received on ${domainName}!`);
+            const status = await batch.status(domain);
+            console.log(`Batch status on ${domainName}: ${BatchStatusText(status)}!`);
         }),
     );
-
-    console.log(`DONE! Ready to execute remotes.`);
 }
