@@ -29,9 +29,9 @@
     "lint": "eslint --fix ./src ./tests",
     "prettier": "prettier --write ./src ./tests",
     "test": "yarn build && ts-mocha ./tests/*.ts",
-    "execute-governor": "ts-node scripts/executeGovernorDomain.ts config/development/config.json config/development/callBatch.json config/development/overrides.json",
-    "print-status": "ts-node scripts/printStatus.ts config/development/config.json config/development/callBatch.json",
-    "execute-remotes": "ts-node scripts/executeRemoteDomains.ts config/development/config.json config/development/callBatch.json config/development/overrides.json",
+    "execute-governor": "ts-node scripts/executeGovernorDomain.ts config/config.json config/callBatch.json config/overrides-production.json",
+    "print-status": "ts-node scripts/printStatus.ts config/config.json config/callBatch.json",
+    "execute-remotes": "ts-node scripts/executeRemoteDomains.ts config/config.json config/callBatch.json config/overrides-production.json",
     "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts"
   },
   "dependencies": {

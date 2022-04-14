@@ -1,0 +1,16 @@
+{
+  "ethereum": {
+    "maxFeePerGas": "100000000000",
+    "maxPriorityFeePerGas": "3000000000",
+    "gasLimit": "7000000"
+  },
+  "moonbeam": {
+    "gasPrice": "150000000000",
+    "gasLimit": "7000000"
+  },
+  "xdai": {
+    "maxFeePerGas": "20000000000",
+    "maxPriorityFeePerGas": "2500000000",
+    "gasLimit": "7000000"
+  }
+}
