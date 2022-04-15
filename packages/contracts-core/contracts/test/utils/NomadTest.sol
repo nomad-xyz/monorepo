@@ -28,14 +28,11 @@ contract NomadTest is DSTest, stdCheats {
         public
         returns (bytes memory)
     {
-        bytes memory message = new bytes(68);
-        assembly {
-            mstore(add(message, 0x04), sload(domain.slot))
-            mstore(add(message, 0x24), oldRoot)
-            mstore(add(message, 0x44), newRoot)
-        }
-        console.log(unicode"Message⇲");
-        console.logBytes(message);
+        bytes memory message = abi.encodePacked(
+            keccak256(abi.encodePacked(domain, "NOMAD")),
+            oldRoot,
+            newRoot
+        );
         return message;
     }
 
@@ -44,16 +41,12 @@ contract NomadTest is DSTest, stdCheats {
         bytes32 oldRoot,
         bytes32 newRoot
     ) public returns (bytes memory) {
-        bytes memory message = getMessage(oldRoot, newRoot);
-
-        bytes32 hash = keccak256(message);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, hash);
-        bytes memory signature = new bytes(65);
-        assembly {
-            mstore(add(signature, 32), r)
-            mstore(add(signature, 64), s)
-            mstore(add(signature, 64), v)
-        }
+        bytes32 digest = keccak256(getMessage(oldRoot, newRoot));
+        digest = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", digest)
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, digest);
+        bytes memory signature = abi.encodePacked(r, s, v);
         return signature;
     }
 }

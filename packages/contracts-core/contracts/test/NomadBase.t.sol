@@ -12,14 +12,13 @@ contract NomadBaseTest is NomadTest {
     function setUp() public override {
         super.setUp();
         nbh = new NomadBaseHarness(domain);
+        nbh.initialize(updater);
         vm.label(address(nbh), "Nomad Base Harness");
     }
 
-    function test_acceptUpdaterSignature() public {
+    function testAcceptUpdaterSignature() public {
         bytes32 oldRoot = "old Root";
         bytes32 newRoot = "new Root";
-        console.log(unicode"oldRoot⇲");
-        console.logBytes32(oldRoot);
         bytes memory sig = signUpdate(updaterPK, oldRoot, newRoot);
         assert(nbh.isUpdaterSignature(oldRoot, newRoot, sig));
     }

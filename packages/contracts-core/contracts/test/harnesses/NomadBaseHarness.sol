@@ -4,9 +4,11 @@ pragma solidity >=0.6.11;
 import {NomadBase} from "../../NomadBase.sol";
 
 contract NomadBaseHarness is NomadBase {
-    uint32 domain = 1000;
+    uint32 domain;
 
-    constructor(uint32 domain) NomadBase(domain) {}
+    constructor(uint32 _domain) NomadBase(_domain) {
+        domain = _domain;
+    }
 
     function _fail() internal override {}
 
@@ -20,5 +22,9 @@ contract NomadBaseHarness is NomadBase {
         bytes memory signature
     ) external returns (bool) {
         return _isUpdaterSignature(oldRoot, newRoot, signature);
+    }
+
+    function initialize(address updater) public {
+        __NomadBase_initialize(updater);
     }
 }
