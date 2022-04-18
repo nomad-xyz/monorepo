@@ -530,7 +530,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const registryOwner = await this.tokenRegistryContract.owner();
     if (utils.equalIds(registryOwner, deployer)) {
       log(`transfer token registry ownership on ${name}`);
-      const tx = await this.bridgeRouterContract.transferOwnership(this.bridgeRouterContract.address, this.overrides);
+      const tx = await this.tokenRegistryContract.transferOwnership(this.bridgeRouterContract.address, this.overrides);
       await tx.wait(this.confirmations);
     }
 
