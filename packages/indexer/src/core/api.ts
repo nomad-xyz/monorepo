@@ -4,7 +4,7 @@ import { DB, MsgRequest } from "./db";
 import * as dotenv from "dotenv";
 import Logger from "bunyan";
 import { Orchestrator } from "./orchestrator";
-import { Processor } from "./consumer";
+import { ProcessorV2 } from "./consumerV2";
 import { replacer } from "./utils";
 dotenv.config({});
 
@@ -32,8 +32,8 @@ export async function run(o: Orchestrator, logger: Logger) {
   });
 
   app.get("/hash/:hash", log, async (req, res) => {
-    const p = o.consumer as Processor;
-    const message = p.getMsg(req.params.hash);
+    const p = o.consumer as ProcessorV2;
+    const message = await p.getMsg(req.params.hash);
     if (message) {
       return res.json(message.serialize());
     } else {
@@ -42,12 +42,11 @@ export async function run(o: Orchestrator, logger: Logger) {
   });
 
   app.get("/tx/:tx", log, async (req, res) => {
-    const p = o.consumer as Processor;
-    const message = Array.from(p.messages).find(
-      (m) => m.tx && m.tx! === req.params.tx
-    );
-    if (message) {
-      return res.json(message.serialize());
+    const p = o.consumer as ProcessorV2;
+    const messages = await p.db.getMessageByEvm(req.params.tx)
+    
+    if (messages.length > 0) {
+      return res.json(messages[0].serialize());
     } else {
       return res.status(404).json({});
     }
@@ -103,10 +102,11 @@ export async function run(o: Orchestrator, logger: Logger) {
         .json({ error: `One of the params (origin or stage) is invalid` });
     }
 
-    const p = o.consumer as Processor;
-    const messages = Array.from(p.messages).filter(
-      (m) => m.origin === origin && m.state === state
-    );
+    const p = o.consumer as ProcessorV2;
+    const messages = await p.db.getMessagesByOriginAndStateNumber(origin, state);
+    // const messages = Array.from(p.messages).filter(
+    //   (m) => m.origin === origin && m.state === state
+    // );
     if (messages.length) {
       return res.json(messages.map((m) => m.serialize()));
     } else {

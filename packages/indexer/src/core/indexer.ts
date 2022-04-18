@@ -1,7 +1,7 @@
 import { Orchestrator } from "./orchestrator";
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import fs from "fs";
-import { ContractType, EventType, NomadishEvent, EventSource, eventTypeToOrder } from "./event";
+import { EventType, NomadishEvent, EventSource, eventTypeToOrder } from "./event";
 import { Home, Replica } from "@nomad-xyz/contracts-core";
 import { ethers } from "ethers";
 import { FailureCounter, KVCache, replacer, retry, reviver } from "./utils";
@@ -722,9 +722,12 @@ export class Indexer {
           return new NomadishEvent(
             this.domain,
             EventType.BridgeRouterSend,
-            ContractType.BridgeRouter,
             0,
             timestamp,
+            event.blockNumber,
+            EventSource.Fresh,
+            gasUsed,
+            event.transactionHash,
             {
               token: event.args[0],
               from: event.args[1],
@@ -732,12 +735,7 @@ export class Indexer {
               toId: event.args[3],
               amount: event.args[4],
               fastLiquidityEnabled: event.args[5],
-              evmHash: event.transactionHash,
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
+            }
           );
         })
       );
@@ -792,20 +790,19 @@ export class Indexer {
           return new NomadishEvent(
             this.domain,
             EventType.BridgeRouterReceive,
-            ContractType.BridgeRouter,
             0,
             timestamp,
+            event.blockNumber,
+            EventSource.Fresh,
+            gasUsed,
+            event.transactionHash,
             {
               originAndNonce: event.args[0],
               token: event.args[1],
               recipient: event.args[2],
               liquidityProvider: event.args[3],
               amount: event.args[4],
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
+            }
           );
         })
       );
@@ -869,20 +866,19 @@ export class Indexer {
           return new NomadishEvent(
             this.domain,
             EventType.HomeDispatch,
-            ContractType.Home,
             0,
             timestamp,
+            event.blockNumber,
+            EventSource.Fresh,
+            gasUsed,
+            event.transactionHash,
             {
               messageHash: event.args[0],
               leafIndex: event.args[1],
               destinationAndNonce: event.args[2],
               committedRoot: event.args[3],
               message: event.args[4],
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
+            }
           );
         })
       );
@@ -939,19 +935,18 @@ export class Indexer {
           return new NomadishEvent(
             this.domain,
             EventType.HomeUpdate,
-            ContractType.Home,
             0,
             timestamp,
+            event.blockNumber,
+            EventSource.Fresh,
+            gasUsed,
+            event.transactionHash,
             {
               homeDomain: event.args[0],
               oldRoot: event.args[1],
               newRoot: event.args[2],
               signature: event.args[3],
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
+            }
           );
         })
       );
@@ -1018,19 +1013,18 @@ export class Indexer {
           return new NomadishEvent(
             this.domain,
             EventType.ReplicaUpdate,
-            ContractType.Replica,
             domain,
             timestamp,
+            event.blockNumber,
+            EventSource.Fresh,
+            gasUsed,
+            event.transactionHash,
             {
               homeDomain: event.args[0],
               oldRoot: event.args[1],
               newRoot: event.args[2],
               signature: event.args[3],
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
+            }
           );
         })
       );
@@ -1091,18 +1085,17 @@ export class Indexer {
           return new NomadishEvent(
             this.domain,
             EventType.ReplicaProcess,
-            ContractType.Replica,
             domain,
             timestamp,
+            event.blockNumber,
+            EventSource.Fresh,
+            gasUsed,
+            event.transactionHash,
             {
               messageHash: event.args[0],
               success: event.args[1],
               returnData: event.args[2],
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
+            }
           );
         })
       );

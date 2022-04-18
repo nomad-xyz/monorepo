@@ -91,7 +91,7 @@ export class Orchestrator {
       this.logger.error(`Initial integrity failed:`, e);
       throw e;
     }
-    this.collectStatistics();
+    await this.collectStatistics();
     // console.log(`Checked integrity`);
     
     // console.log(`EXITING!`);
@@ -154,8 +154,8 @@ export class Orchestrator {
     return await indexer.updateAll(replicas);
   }
 
-  collectStatistics() {
-    const stats = this.consumer.stats();
+  async collectStatistics() {
+    const stats = await this.consumer.stats();
 
     this.sdk.domainNumbers.forEach(async (domain: number) => {
       const network = this.domain2name(domain);
@@ -285,7 +285,7 @@ export class Orchestrator {
       const eventsLength = await this.indexAll();
       await this.checkAllHealth();
 
-      if (eventsLength > 0) this.collectStatistics();
+      if (eventsLength > 0) await this.collectStatistics();
 
       if (this.chaseMode) {
         this.chaseMode = false;

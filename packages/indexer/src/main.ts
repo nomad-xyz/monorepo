@@ -42,7 +42,7 @@ const program = process.env.PROGRAM! as Program;
     await Promise.all([
       api.run(db, logger),
       core.run(sdk, db, logger, m),
-    ]).catch(e => logger.error(`Error happened during run of api or core: ${e}`));
+    ]).catch(e => logger.error(`Error happened during run of api or core:`, e));
     // s();
     // await p;
     // clearInterval(i);

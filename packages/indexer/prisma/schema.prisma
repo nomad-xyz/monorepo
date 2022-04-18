@@ -49,6 +49,11 @@ model messages {
   gasAtRelay        String  @map("gas_at_relay") @db.VarChar(256)
   gasAtReceive      String  @map("gas_at_receive") @db.VarChar(256)
   gasAtProcess      String  @map("gas_at_process") @db.VarChar(256)
+  sent              Boolean
+  updated           Boolean
+  relayed           Boolean
+  received          Boolean
+  processed         Boolean
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
   @@index([id], map: "messages_id_index")

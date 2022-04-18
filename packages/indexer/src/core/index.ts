@@ -1,5 +1,5 @@
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
-import { Processor } from "./consumer";
+import { ProcessorV2 } from "./consumerV2";
 import { Orchestrator } from "./orchestrator";
 import * as dotenv from "dotenv";
 import { IndexerCollector } from "./metrics";
@@ -14,7 +14,7 @@ export async function run(
   logger: Logger,
   metrics: IndexerCollector
 ) {
-  const c = new Processor(db, logger);
+  const c = new ProcessorV2(db, logger);
 
   const o = new Orchestrator(sdk, c, metrics, logger, db);
 
