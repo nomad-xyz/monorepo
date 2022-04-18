@@ -9,6 +9,9 @@ import { BridgeRouter } from "@nomad-xyz/contracts-bridge";
 import pLimit from "p-limit";
 import { RpcRequestMethod } from "./metrics";
 import Logger from "bunyan";
+import { createClient, RedisClientType } from "redis";
+import { RedisClient } from "./types";
+
 
 type ShortTx = {
   gasPrice?: ethers.BigNumber;
@@ -102,7 +105,7 @@ export class Indexer {
 
   eventCallback: undefined | ((event: NomadishEvent) => void);
 
-  constructor(domain: number, sdk: BridgeContext, orchestrator: Orchestrator) {
+  constructor(domain: number, sdk: BridgeContext, orchestrator: Orchestrator, redis?: RedisClient) {
     this.domain = domain;
     this.sdk = sdk;
     this.orchestrator = orchestrator;
@@ -112,7 +115,7 @@ export class Indexer {
         `/tmp/persistance_${this.domain}.json`
       );
     } else {
-      this.persistance = new RedisPersistance(domain);
+      this.persistance = new RedisPersistance(domain, redis);
     }
     this.blockCache = new KVCache(
       "b_" + String(this.domain),
@@ -1122,15 +1125,14 @@ export abstract class Persistance {
   abstract persist(): void;
 }
 
-import { createClient, RedisClientType } from "redis";
 
 export class RedisPersistance extends Persistance {
-  client: RedisClientType;
+  client: RedisClient;
   domain: number;
 
-  constructor(domain: number) {
+  constructor(domain: number, client?: RedisClient) {
     super();
-    this.client = createClient({
+    this.client = client || createClient({
       url: process.env.REDIS_URL || "redis://redis:6379",
     });
     this.domain = domain;
@@ -1190,7 +1192,7 @@ export class RedisPersistance extends Persistance {
     await Promise.all(promises);
   }
   async init(): Promise<void> {
-    await this.client.connect();
+    // await this.client.connect();
 
     const from = await this.client.hGet(`from`, String(this.domain));
     const height = await this.client.hGet(`height`, String(this.domain));

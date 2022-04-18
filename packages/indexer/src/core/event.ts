@@ -154,11 +154,7 @@ export class NomadishEvent {
     this.domain = domain;
     this.eventType = eventType;
     this.replicaOrigin = replicaOrigin;
-    this.ts = !restore && (eventType === EventType.HomeDispatch || eventType === EventType.HomeUpdate || eventType === EventType.BridgeRouterSend)
-      // /*source === EventSource.Fetch && */ contractType == ContractType.Home ||
-      // contractType == ContractType.BridgeRouter
-      ? ts - 90000
-      : ts; // if the event was fetched from RPC for past (we asked RPC when event happened) happened on another chain we want to make sure that event at chain of origin happened before it was relayed to destination
+    this.ts = !restore && (eventType === EventType.HomeDispatch || eventType === EventType.HomeUpdate || eventType === EventType.BridgeRouterSend) ? ts - 90000 : ts; // if the event was fetched from RPC for past (we asked RPC when event happened) happened on another chain we want to make sure that event at chain of origin happened before it was relayed to destination
     
     // checkEventData(eventData, eventType);
     

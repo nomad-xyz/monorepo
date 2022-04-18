@@ -1,13 +1,15 @@
+import { RedisClientType } from "@node-redis/client";
 import { Home } from "@nomad-xyz/contracts-core";
+import { NomadMessage } from "./consumerV2";
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import Logger from "bunyan";
 import { Consumer } from "./consumer";
 import { DB } from "./db";
-import { eventTypeToOrder } from "./event";
+import { eventTypeToOrder, NomadishEvent } from "./event";
 import { Indexer } from "./indexer";
 import { IndexerCollector } from "./metrics";
-import { Statistics } from "./types";
-import { replacer, sleep } from "./utils";
+import { RedisClient, Statistics } from "./types";
+import { logToFile, replacer, sleep } from "./utils";
 
 class HomeHealth {
   home: Home;
@@ -60,13 +62,15 @@ export class Orchestrator {
   metrics: IndexerCollector;
   logger: Logger;
   db: DB;
+  redis?: RedisClient
 
   constructor(
     sdk: BridgeContext,
     c: Consumer,
     metrics: IndexerCollector,
     logger: Logger,
-    db: DB
+    db: DB,
+    redis?: RedisClient,
   ) {
     this.sdk = sdk;
     this.consumer = c;
@@ -78,6 +82,7 @@ export class Orchestrator {
     this.metrics = metrics;
     this.logger = logger;
     this.db = db;
+    this.redis = redis;
   }
 
   async init() {
@@ -209,7 +214,7 @@ export class Orchestrator {
 
   async initIndexers() {
     for (const domain of this.sdk.domainNumbers) {
-      const indexer = new Indexer(domain, this.sdk, this);
+      const indexer = new Indexer(domain, this.sdk, this, this.redis);
       await indexer.init();
       this.indexers.set(domain, indexer);
     }
@@ -230,50 +235,50 @@ export class Orchestrator {
   subscribeStatisticEvents() {
     this.consumer.on(
       "dispatched",
-      (home: number, replica: number, gas: number) => {
-        const homeName = this.domain2name(home);
-        const replicaName = this.domain2name(replica);
-        this.metrics.observeGasUsage("dispatched", homeName, replicaName, gas);
+      (m: NomadMessage, e: NomadishEvent) => {
+        const homeName = this.domain2name(m.origin);
+        const replicaName = this.domain2name(m.destination);
+        this.metrics.observeGasUsage("dispatched", homeName, replicaName, e.gasUsed.toNumber());
       }
     );
 
     this.consumer.on(
       "updated",
-      (home: number, replica: number, ms: number, gas: number) => {
-        const homeName = this.domain2name(home);
-        const replicaName = this.domain2name(replica);
-        this.metrics.observeLatency("updated", homeName, replicaName, ms);
-        this.metrics.observeGasUsage("updated", homeName, replicaName, gas);
+      (m: NomadMessage, e: NomadishEvent) => {
+        const homeName = this.domain2name(m.origin);
+        const replicaName = this.domain2name(m.destination);
+        this.metrics.observeLatency("updated", homeName, replicaName, m.timings.toUpdate()!);
+        this.metrics.observeGasUsage("updated", homeName, replicaName, e.gasUsed.toNumber());
       }
     );
 
     this.consumer.on(
       "relayed",
-      (home: number, replica: number, ms: number, gas: number) => {
-        const homeName = this.domain2name(home);
-        const replicaName = this.domain2name(replica);
-        this.metrics.observeLatency("relayed", homeName, replicaName, ms);
-        this.metrics.observeGasUsage("relayed", homeName, replicaName, gas);
+      (m: NomadMessage, e: NomadishEvent) => {
+        const homeName = this.domain2name(m.origin);
+        const replicaName = this.domain2name(m.destination);
+        this.metrics.observeLatency("relayed", homeName, replicaName, m.timings.toRelay()!);
+        this.metrics.observeGasUsage("relayed", homeName, replicaName, e.gasUsed.toNumber());
       }
     );
 
     this.consumer.on(
       "received",
-      (home: number, replica: number, ms: number, gas: number) => {
-        const homeName = this.domain2name(home);
-        const replicaName = this.domain2name(replica);
-        this.metrics.observeLatency("received", homeName, replicaName, ms);
-        this.metrics.observeGasUsage("received", homeName, replicaName, gas);
+      (m: NomadMessage, e: NomadishEvent) => {
+        const homeName = this.domain2name(m.origin);
+        const replicaName = this.domain2name(m.destination);
+        this.metrics.observeLatency("received", homeName, replicaName, m.timings.toReceive()!);
+        this.metrics.observeGasUsage("received", homeName, replicaName, e.gasUsed.toNumber());
       }
     );
 
     this.consumer.on(
       "processed",
-      (home: number, replica: number, e2e: number, gas: number) => {
-        const homeName = this.domain2name(home);
-        const replicaName = this.domain2name(replica);
-        this.metrics.observeLatency("processed", homeName, replicaName, e2e);
-        this.metrics.observeGasUsage("processed", homeName, replicaName, gas);
+      (m: NomadMessage, e: NomadishEvent) => {
+        const homeName = this.domain2name(m.origin);
+        const replicaName = this.domain2name(m.destination);
+        this.metrics.observeLatency("processed", homeName, replicaName, m.timings.toProcess()!);
+        this.metrics.observeGasUsage("processed", homeName, replicaName, e.gasUsed.toNumber());
       }
     );
   }
@@ -289,7 +294,7 @@ export class Orchestrator {
 
       if (this.chaseMode) {
         this.chaseMode = false;
-        this.subscribeStatisticEvents();
+        // this.subscribeStatisticEvents();
       }
 
       this.logger.info(

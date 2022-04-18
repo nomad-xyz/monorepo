@@ -8,7 +8,9 @@ import { Consumer, GasUsed, StatisticsCollector, Timings } from "./consumer";
 import { Dispatch, EventType, NomadishEvent, Process, Receive, Send, Update } from "./event";
 import { filter, Padded, replacer, retain, reviver } from "./utils";
 import { DB } from "./db";
-import { Statistics } from "./types";
+import { Statistics, RedisClient } from "./types";
+
+
 // import e from "express";
 // import pLimit from "p-limit";
 
@@ -221,15 +223,17 @@ enum MessageType {
         : undefined;
     }
   
-    update(ts: number, gasUsed: BigNumber) {
-      this.timings.updated(ts);
-      this.gasUsed.update = gasUsed;
+    update(event: NomadishEvent) {
+      this.timings.updated(event.ts);
+      this.gasUsed.update = event.gasUsed;
       this.checkbox.updated = true;
       if (this.state < MsgState.Updated) {
         this.logger.debug(
           `Updated message from state ${this.state} to ${MsgState.Updated} (Updated)`
         );
         this.state = MsgState.Updated;
+
+
         
         return true;
       }
@@ -239,9 +243,9 @@ enum MessageType {
       return false;
     }
   
-    relay(ts: number, gasUsed: BigNumber) {
-      this.timings.relayed(ts);
-      this.gasUsed.relay = gasUsed;
+    relay(event: NomadishEvent) {
+      this.timings.relayed(event.ts);
+      this.gasUsed.relay = event.gasUsed;
       this.checkbox.relayed = true;
       if (this.state < MsgState.Relayed) {
         this.logger.debug(
@@ -258,9 +262,9 @@ enum MessageType {
       return false;
     }
   
-    receive(ts: number, gasUsed: BigNumber) {
-      this.timings.received(ts);
-      this.gasUsed.receive = gasUsed;
+    receive(event: NomadishEvent) {
+      this.timings.received(event.ts);
+      this.gasUsed.receive = event.gasUsed;
       this.checkbox.received = true;
       if (this.state < MsgState.Received) {
         this.logger.debug(
@@ -276,9 +280,9 @@ enum MessageType {
       return false;
     }
   
-    process(ts: number, gasUsed: BigNumber) {
-      this.timings.processed(ts);
-      this.gasUsed.process = gasUsed;
+    process(event: NomadishEvent) {
+      this.timings.processed(event.ts);
+      this.gasUsed.process = event.gasUsed;
       this.checkbox.processed = true;
 
       if (this.state < MsgState.Processed) {
@@ -398,8 +402,11 @@ enum MessageType {
 
 import fs from 'fs';
 import pLimit from "p-limit";
+import { createClient } from "redis";
+import { Orchestrator } from "./orchestrator";
 
 class EventsPool {
+    redis: RedisClient;
     // db: DB;
     pool: {
       send: Map<string, string>,
@@ -409,7 +416,10 @@ class EventsPool {
       process: Map<string, string>,
     };
 
-    constructor() {
+    constructor(redis?: RedisClient) {
+      this.redis = redis || createClient({
+        url: process.env.REDIS_URL || "redis://redis:6379",
+      });
       this.pool = {
         send: new Map(),
         update: new Map(),
@@ -439,7 +449,8 @@ class EventsPool {
       if      (e.eventType === EventType.BridgeRouterSend) {
         const eventData = e.eventData as Send;
         const key = `${eventData.toDomain};${(Padded.fromWhatever(eventData.toId)).toEVMAddress()};${eventData.amount.toHexString()};${e.block}`;
-        this.pool.send.set(key, value);
+        await this.redis.hSet('send', key, value);
+        // this.pool.send.set(key, value);
 
         fsLog(`store event send ${JSON.stringify(e.toObject())} {destination:${eventData.toDomain},recipient:${Padded.fromWhatever(eventData.toId).valueOf()}}`, )
 
@@ -447,36 +458,50 @@ class EventsPool {
         const eventData = e.eventData as Update;
         fsLog(`store event home updtae ${JSON.stringify(e.toObject())} {origin:${eventData.homeDomain},root:${eventData.oldRoot}}`, );
         const key = `${eventData.homeDomain};${eventData.oldRoot}`;
-        if (!this.pool.update.has(key)) {
-          this.pool.update.set(key, [value])
+        const exists = await this.redis.hExists('update', key);
+        if (!exists) {
+          await this.redis.hSet('update', key, JSON.stringify([value]));
+          // this.pool.update.set(key, [value])
         } else {
-          const values = this.pool.update.get(key)!;
-          if (values.indexOf(value) < 0) {
-            values.push(value)
+          const values = (await this.redis.hGet('update', key))!;
+          const valuesStr: string[] = JSON.parse(values);
+          
+          // const values = this.pool.update.get(key)!;
+          if (valuesStr.indexOf(value) < 0) {
+            valuesStr.push(value);
+            await this.redis.hSet('update', key, JSON.stringify(valuesStr))
           }
         }
       } else if (e.eventType === EventType.ReplicaUpdate) {
         const eventData = e.eventData as Update;
         fsLog(`store event replica updtae ${JSON.stringify(e.toObject())} {origin:${eventData.homeDomain},root:${eventData.oldRoot}}`, )
         const key = `${eventData.homeDomain};${eventData.oldRoot}`;
-        if (!this.pool.relay.has(key)) {
-          this.pool.relay.set(key, [value])
+        const exists = await this.redis.hExists('relay', key);
+        if (!exists) {
+          await this.redis.hSet('relay', key, JSON.stringify([value]));
+          // this.pool.update.set(key, [value])
         } else {
-          const values = this.pool.relay.get(key)!;
-          if (values.indexOf(value) < 0) {
-            values.push(value)
+          const values = (await this.redis.hGet('relay', key))!;
+          const valuesStr: string[] = JSON.parse(values);
+          
+          // const values = this.pool.update.get(key)!;
+          if (valuesStr.indexOf(value) < 0) {
+            valuesStr.push(value);
+            await this.redis.hSet('relay', key, JSON.stringify(valuesStr))
           }
         }
 
       } else if (e.eventType === EventType.BridgeRouterReceive) {
         const [origin, nonce] = e.originAndNonce()
         const key = `${origin};${nonce}`
-        this.pool.receive.set(key, value);
+        await this.redis.hSet('receive', key, value)
+        // this.pool.receive.set(key, value);
         fsLog(`store event BridgeRouterReceive ${JSON.stringify(e.toObject())} {origin:${origin},nonce:${nonce}}`, )
       } else if (e.eventType === EventType.ReplicaProcess) {
         const eventData = e.eventData as Process
         const key = eventData.messageHash;
-        this.pool.process.set(key, value);
+        await this.redis.hSet('process', key, value)
+        // this.pool.process.set(key, value);
         
         fsLog(`store event process ${JSON.stringify(e.toObject())} {hash:${eventData.messageHash}}`, )
       }
@@ -484,7 +509,8 @@ class EventsPool {
 
     async getSend(destination: number, recipient: Padded, amount: ethers.BigNumber, block: number): Promise<NomadishEvent | null> {
       const key = `${destination};${recipient.toEVMAddress()};${amount.toHexString()};${block}`;
-      const value = this.pool.send.get(key);
+      const value = await this.redis.hGet('send', key);
+      // const value = this.pool.send.get(key);
       if (!value) return null;
       
       return JSON.parse(value, reviver);
@@ -492,27 +518,33 @@ class EventsPool {
 
     async getUpdate(origin: number, root: string): Promise<NomadishEvent[]> {
       const key = `${origin};${root}`;
-      const values = this.pool.update.get(key);
+      const values = await this.redis.hGet('update', key);
+      // const values = this.pool.update.get(key);
       if (!values) return [];
+      const valuesArr: string[] = JSON.parse(values)
       
-      return values.map(v => JSON.parse(v, reviver));
+      return valuesArr.map(v => JSON.parse(v, reviver));
     }
     async getRelay(origin: number, root: string) {
       const key = `${origin};${root}`;
-      const values = this.pool.relay.get(key);
+      const values = await this.redis.hGet('relay', key);
+      // const values = this.pool.relay.get(key);
       if (!values) return [];
-      
-      return values.map(v => JSON.parse(v, reviver));
+      const valuesArr: string[] = JSON.parse(values);
+
+      return valuesArr.map(v => JSON.parse(v, reviver));
     }
     async getProcess(messageHash: string): Promise<NomadishEvent | null> {
-      const value = this.pool.process.get(messageHash);
+      const value = await this.redis.hGet('process', messageHash);
+      // const value = this.pool.process.get(messageHash);
       if (!value) return null;
       
       return JSON.parse(value, reviver);
     }
     async getReceive(origin: number, nonce: number): Promise<NomadishEvent | null> {
       const key = `${origin};${nonce}`;
-      const value = this.pool.receive.get(key);
+      const value = await this.redis.hGet('receive', key);
+      // const value = this.pool.receive.get(key);
       if (!value) return null;
       
       return JSON.parse(value, reviver);
@@ -546,9 +578,10 @@ export class ProcessorV2 extends Consumer {
       process: number;
     };
   
-    constructor(db: DB, logger: Logger) {
+    constructor(db: DB, logger: Logger, redis: RedisClient) {
       super();
-      this.pool = new EventsPool();
+
+      this.pool = new EventsPool(redis);
       this.archive = [];
       this.debugStats = {
         send: 0,
@@ -679,9 +712,6 @@ export class ProcessorV2 extends Consumer {
   
       let logger = m.logger.child({ eventName: "dispatched" });
   
-      m.gasUsed.dispatch = e.gasUsed;
-      const gas = e.gasUsed.toNumber();
-
       console.error(`I HAVEN"T CHECKED IF MESSAGE EXISTS ALREADY`)
   
         //   this.senderRegistry.dispatch(e, m);
@@ -689,7 +719,7 @@ export class ProcessorV2 extends Consumer {
         //   this.add(m);
         //   this.addToSyncQueue(m.messageHash);
       // this.logger.warn(`!Gas for dispatched from ${m.origin, m.destination} to ${m.origin, m.destination} (${e.tx}) = ${gas} (${e.gasUsed})`);
-      // this.emit("dispatched", m.origin, m.destination, gas);
+      this.emit("dispatched", m, e);
       logger.debug(`Created message`);
   
       if (!this.domains.includes(e.domain)) this.domains.push(e.domain);
@@ -708,28 +738,70 @@ export class ProcessorV2 extends Consumer {
         const event: NomadishEvent | null = await this.pool.getSend(m.destination, m.recipient()!, m.amount()!, m.dispatchBlock);
         fsLog(`checkAndUpdateSend with messageHash, event found: ${!!event} {hash:${m.messageHash}}`)
         if (event) {
-            const eventData = event.eventData as Send;
-            m.sender = eventData.from;
-            m.tx = event.tx;
-            m.checkbox.sent = true;
-            this.debugStatsAfter.send += 1;
+            this.msgSend(event, m);
         }
+    }
+
+    // msgDispatch(event: NomadishEvent, message: NomadMessage) {
+
+      
+
+    // }
+
+    msgSend(event: NomadishEvent, message: NomadMessage) {
+      const eventData = event.eventData as Send;
+      message.sender = eventData.from;
+      message.tx = event.tx;
+      message.checkbox.sent = true;
+      this.debugStats.send +=1;
+    }
+
+    msgUpdate(event: NomadishEvent, message: NomadMessage) {
+      if (message.update(event)) {
+        this.emit(
+          "updated",
+          message, event
+        );
+        this.debugStatsAfter.update += 1;
+      }
+    }
+
+    msgRelay(event: NomadishEvent, message: NomadMessage) {
+      if (message.relay(event)) {
+        this.emit(
+          "relayed",
+          message, event
+        );
+        this.debugStatsAfter.relay += 1;
+      }
+    }
+
+    msgReceive(event: NomadishEvent, message: NomadMessage) {
+      if (message.receive(event)) {
+        this.emit(
+          "received",
+          message, event
+        );
+        this.debugStatsAfter.receive += 1;
+    }
+    }
+
+    msgProcess(event: NomadishEvent, message: NomadMessage) {
+      if (message.process(event)) {
+        this.emit(
+          "processed",
+          message, event
+        );
+        this.debugStatsAfter.process += 1;
+    }
     }
 
     async checkAndUpdateUpdate(m: NomadMessage) {
         const events: NomadishEvent[] = await this.pool.getUpdate(m.origin, m.root);
         fsLog(`checkAndUpdateUpdate with messageHash, events found: ${events.length} {hash:${m.messageHash}}`)
         events.forEach(event => {
-          if (m.update(event.ts, event.gasUsed)) {
-            // this.emit(
-            //   "updated",
-            //   m.origin,
-            //   m.destination,
-            //   m.timings.toUpdate(),
-            //   event.gasUsed.toNumber()
-            // );
-            this.debugStatsAfter.update += 1;
-          }
+          this.msgUpdate(event, m)
+          
         })
     }
 
@@ -737,16 +809,7 @@ export class ProcessorV2 extends Consumer {
       const events: NomadishEvent[] = await this.pool.getRelay(m.origin, m.root);
       fsLog(`checkAndUpdateRelay with messageHash, events found: ${events.length} {hash:${m.messageHash}}`)
       events.forEach(event => {
-        if (m.relay(event.ts, event.gasUsed)) {
-            // this.emit(
-            //   "relayed",
-            //   m.origin,
-            //   m.destination,
-            //   m.timings.toUpdate(),
-            //   event.gasUsed.toNumber()
-            // );
-            this.debugStatsAfter.relay += 1;
-        }
+        this.msgRelay(event, m)
       })
     }
 
@@ -754,16 +817,7 @@ export class ProcessorV2 extends Consumer {
         const event: NomadishEvent | null = await this.pool.getProcess(m.messageHash);
         fsLog(`checkAndUpdateProcess with messageHash , event found: ${!!event} {hash:${m.messageHash}}`)
         if (event) {
-            if (m.process(event.ts, event.gasUsed)) {
-                // this.emit(
-                //   "processed",
-                //   m.origin,
-                //   m.destination,
-                //   m.timings.toUpdate(),
-                //   event.gasUsed.toNumber()
-                // );
-                this.debugStatsAfter.process += 1;
-            }
+          this.msgProcess(event, m)
         }
     }
 
@@ -771,16 +825,8 @@ export class ProcessorV2 extends Consumer {
         const event: NomadishEvent | null = await this.pool.getReceive(m.origin, m.nonce);
         fsLog(`checkAndUpdateReceive with messageHash , event found: ${!!event} {hash:${m.messageHash}}`)
         if (event) {
-            if (m.receive(event.ts, event.gasUsed)) {
-                // this.emit(
-                //   "received",
-                //   m.origin,
-                //   m.destination,
-                //   m.timings.toUpdate(),
-                //   event.gasUsed.toNumber()
-                // );
-                this.debugStatsAfter.receive += 1;
-            }
+          this.msgReceive(event, m)
+            
         }
     }
 
@@ -823,20 +869,21 @@ export class ProcessorV2 extends Consumer {
 
           if (ms.length) {
             await Promise.all(ms.map(async (m) => {
-              if (m.update(e.ts, e.gasUsed)) {
-                // this.addToSyncQueue(m.messageHash);
-                this.debugStats.update +=1;
+              this.msgUpdate(e, m);
+              // if (m.update(e.ts, e.gasUsed)) {
+              //   // this.addToSyncQueue(m.messageHash);
+              //   this.debugStats.update +=1;
     
-                // this.emit(
-                //   "updated",
-                //   m.origin,
-                //   m.destination,
-                //   m.timings.toUpdate(),
-                //   e.gasUsed.toNumber()
-                // );
+              //   // this.emit(
+              //   //   "updated",
+              //   //   m.origin,
+              //   //   m.destination,
+              //   //   m.timings.toUpdate(),
+              //   //   e.gasUsed.toNumber()
+              //   // );
 
                 
-              }
+              // }
               await this.checkAndUpdateAll(m, 'homeUpdate');
               await this.updateMessage(m)
             }));
@@ -865,18 +912,19 @@ export class ProcessorV2 extends Consumer {
   
       if (ms.length) {
         await Promise.all(ms.map(async (m) => {
-          if (m.relay(e.ts, e.gasUsed)) {
-            this.debugStats.relay +=1;
+          this.msgRelay(e, m);
+          // if (m.relay(e.ts, e.gasUsed)) {
+          //   this.debugStats.relay +=1;
 
-            // this.emit(
-            //   "relayed",
-            //   m.origin,
-            //   m.destination,
-            //   m.timings.toRelay(),
-            //   e.gasUsed.toNumber()
-            // );
+          //   // this.emit(
+          //   //   "relayed",
+          //   //   m.origin,
+          //   //   m.destination,
+          //   //   m.timings.toRelay(),
+          //   //   e.gasUsed.toNumber()
+          //   // );
             
-          }
+          // }
           await this.checkAndUpdateAll(m, 'replicaUpdate');
             await this.updateMessage(m)
         }));
@@ -894,18 +942,19 @@ export class ProcessorV2 extends Consumer {
       fsLog(`Process actually happened {hash:${messageHash}}`)
       const m = await this.getMsg(messageHash);
       if (m) {
-        if (m.process(e.ts, e.gasUsed)) {
-          this.debugStats.process +=1;
-          // this.emit(
-          //   "processed",
-          //   m.origin,
-          //   m.destination,
-          //   m.timings.toProcess(),
-          //   e.gasUsed.toNumber()
-          // );
+        this.msgProcess(e, m);
+        // if (m.process(e.ts, e.gasUsed)) {
+        //   this.debugStats.process +=1;
+        //   // this.emit(
+        //   //   "processed",
+        //   //   m.origin,
+        //   //   m.destination,
+        //   //   m.timings.toProcess(),
+        //   //   e.gasUsed.toNumber()
+        //   // );
 
           
-        }
+        // }
         await this.checkAndUpdateAll(m, 'process');
             await this.updateMessage(m)
       } else {
@@ -932,11 +981,8 @@ export class ProcessorV2 extends Consumer {
       // brSend.block === dispatch.block
 
       if (m) {
-        const eventData = e.eventData as Send;
-        m.sender = eventData.from;
-        m.tx = e.tx;
-        m.checkbox.sent = true;
-        this.debugStats.send +=1;
+        this.msgSend(e, m);
+        
 
         await this.checkAndUpdateAll(m, 'bridgeRouterSend');
         await this.updateMessage(m)
@@ -964,19 +1010,20 @@ export class ProcessorV2 extends Consumer {
       let logger = this.logger.child({ eventName: "bridgeReceived" });
   
       if (m) {
-        if (m.receive(e.ts, e.gasUsed)) {
-          const gas = e.gasUsed.toNumber();
-          this.debugStats.receive +=1;
+        this.msgReceive(e, m)
+        // if (m.receive(e.ts, e.gasUsed)) {
+        //   const gas = e.gasUsed.toNumber();
+        //   this.debugStats.receive +=1;
 
-          // this.emit(
-          //   "received",
-          //   m.origin,
-          //   m.destination,
-          //   m.timings.toReceive(),
-          //   gas
-          // );
+        //   // this.emit(
+        //   //   "received",
+        //   //   m.origin,
+        //   //   m.destination,
+        //   //   m.timings.toReceive(),
+        //   //   gas
+        //   // );
           
-        }
+        // }
         await this.checkAndUpdateAll(m, 'bridgeRouterReceive');
           await this.updateMessage(m)
       } else {
@@ -1061,11 +1108,11 @@ export class ProcessorV2 extends Consumer {
     async stats(): Promise<Statistics> {
       const collector = new StatisticsCollector(this.domains);
 
-      // const messages = await this.db.getAllMessages();
+      const messages = await this.db.getAllMessages();
   
-      // messages.forEach((m) => {
-      //   collector.contributeToCount(m);
-      // });
+      messages.forEach((m) => {
+        collector.contributeToCount(m);
+      });
   
       return collector.stats();
     }

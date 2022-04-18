@@ -4,6 +4,7 @@ import { DB } from "./db";
 import { createLogger, replacer, reviver } from "./utils";
 import fs from 'fs';
 import { NomadishEvent } from "./event";
+import { createClient } from "redis";
 
 
 const environment = 'production';
@@ -18,7 +19,11 @@ const batchesFolder = './batches';
     const db = new DB(m, logger);
     await db.connect();
 
-    const c = new ProcessorV2(db, logger);
+    const redis = createClient({
+        url: process.env.REDIS_URL || "redis://redis:6379",
+    });
+
+    const c = new ProcessorV2(db, logger, redis);
 
     const fileNames = fs.readdirSync(batchesFolder).sort();
     console.log(fileNames);

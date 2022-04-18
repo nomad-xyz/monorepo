@@ -64,6 +64,7 @@ export class MetricsCollector {
       },
       "Prometheus metrics exposed"
     );
+
     server.listen(port);
   }
 }
