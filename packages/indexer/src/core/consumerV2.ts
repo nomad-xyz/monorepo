@@ -6,7 +6,7 @@ import Logger from "bunyan";
 import { BigNumber, ethers } from "ethers";
 import { Consumer, GasUsed, StatisticsCollector, Timings } from "./consumer";
 import { Dispatch, EventType, NomadishEvent, Process, Receive, Send, Update } from "./event";
-import { filter, Padded, retain } from "./utils";
+import { filter, Padded, replacer, retain, reviver } from "./utils";
 import { DB } from "./db";
 import { Statistics } from "./types";
 // import e from "express";
@@ -396,177 +396,126 @@ enum MessageType {
     }
 }
 
-// import pLimit from "p-limit";
 import fs from 'fs';
 import pLimit from "p-limit";
 
 class EventsPool {
-
-  plimit: {
-    send: pLimit.Limit,
-    update: pLimit.Limit,
-    relay: pLimit.Limit,
-    receive: pLimit.Limit,
-    process: pLimit.Limit,
-  };
     // db: DB;
     pool: {
-      send: NomadishEvent[],
-      update: NomadishEvent[],
-      relay: NomadishEvent[],
-      receive: NomadishEvent[],
-      process: NomadishEvent[],
+      send: Map<string, string>,
+      update: Map<string, string[]>,
+      relay: Map<string, string[]>,
+      receive: Map<string, string>,
+      process: Map<string, string>,
     };
 
-    maxx: {
-      send: number,
-      update: number,
-      relay: number,
-      receive: number,
-      process: number,
-    };
     constructor() {
       this.pool = {
-        send: [],
-        update: [],
-        relay: [],
-        receive: [],
-        process: [],
-      }
-      this.maxx = {
-        send: 0,
-        update: 0,
-        relay: 0,
-        receive: 0,
-        process: 0,
+        send: new Map(),
+        update: new Map(),
+        relay: new Map(),
+        receive: new Map(),
+        process: new Map(),
       }
 
-      this.plimit = {
-        send: pLimit(1),
-        update: pLimit(1),
-        relay: pLimit(1),
-        receive: pLimit(1),
-        process: pLimit(1),
-      }
-
-      setInterval(() => {
-        console.log(`In send pool there are events`, this.pool.send.length, this.maxx.send);
-        console.log(`In update pool there are events`, this.pool.update.length, this.maxx.update);
-        console.log(`In relay pool there are events`, this.pool.relay.length, this.maxx.relay);
-        console.log(`In receive pool there are events`, this.pool.receive.length, this.maxx.receive);
-        console.log(`In process pool there are events`, this.pool.process.length, this.maxx.process);
-      }, 10000)
-      setTimeout(() => {
-        fsLog(this.pool.send.map(r => JSON.stringify(r.toObject())).join('\n'), './sendsx.txt')
-        fsLog(this.pool.receive.map(r => JSON.stringify(r.toObject())).join('\n'), './receivesx.txt')
-        fsLog(this.pool.process.map(r => JSON.stringify(r.toObject())).join('\n'), './processesx.txt')
-      }, 100000)
+      // setInterval(() => {
+      //   console.log(`In send pool there are events`, this.pool.send.length, this.maxx.send);
+      //   console.log(`In update pool there are events`, this.pool.update.length, this.maxx.update);
+      //   console.log(`In relay pool there are events`, this.pool.relay.length, this.maxx.relay);
+      //   console.log(`In receive pool there are events`, this.pool.receive.length, this.maxx.receive);
+      //   console.log(`In process pool there are events`, this.pool.process.length, this.maxx.process);
+      // }, 10000)
+      // setTimeout(() => {
+      //   // fsLog(this.pool.send.map(r => JSON.stringify(r.toObject())).join('\n'), './sendsx.txt')
+      //   // fsLog(this.pool.receive.map(r => JSON.stringify(r.toObject())).join('\n'), './receivesx.txt')
+      //   // fsLog(this.pool.process.map(r => JSON.stringify(r.toObject())).join('\n'), './processesx.txt')
+      // }, 100000)
 
         // this.db = db;
     }
 
     async storeEvent(e: NomadishEvent) {
+      const value = JSON.stringify(e.toObject(), replacer);
       if      (e.eventType === EventType.BridgeRouterSend) {
-        this.pool.send.push(e);
-        const ev = e.eventData as Send
-        fsLog(`store event send ${JSON.stringify(e.toObject())} {destination:${ev.toDomain},recipient:${Padded.fromWhatever(ev.toId).valueOf()}}`, )
+        const eventData = e.eventData as Send;
+        const key = `${eventData.toDomain};${(Padded.fromWhatever(eventData.toId)).toEVMAddress()};${eventData.amount.toHexString()};${e.block}`;
+        this.pool.send.set(key, value);
+
+        fsLog(`store event send ${JSON.stringify(e.toObject())} {destination:${eventData.toDomain},recipient:${Padded.fromWhatever(eventData.toId).valueOf()}}`, )
 
       } else if (e.eventType === EventType.HomeUpdate) {
-        const ev = e.eventData as Update
-        fsLog(`store event home updtae ${JSON.stringify(e.toObject())} {origin:${ev.homeDomain},root:${ev.oldRoot}}`, )
-        if (!this.pool.update.some(e => {
-          const ve = e.eventData as Update;
-          return ev.homeDomain === ve.homeDomain && ev.oldRoot === ve.oldRoot
-        }))  this.pool.update.push(e);
-
-       
-
+        const eventData = e.eventData as Update;
+        fsLog(`store event home updtae ${JSON.stringify(e.toObject())} {origin:${eventData.homeDomain},root:${eventData.oldRoot}}`, );
+        const key = `${eventData.homeDomain};${eventData.oldRoot}`;
+        if (!this.pool.update.has(key)) {
+          this.pool.update.set(key, [value])
+        } else {
+          const values = this.pool.update.get(key)!;
+          if (values.indexOf(value) < 0) {
+            values.push(value)
+          }
+        }
       } else if (e.eventType === EventType.ReplicaUpdate) {
-        const ev = e.eventData as Update
-        fsLog(`store event replica updtae ${JSON.stringify(e.toObject())} {origin:${ev.homeDomain},root:${ev.oldRoot}}`, )
-        if (!this.pool.relay.some(e => {
-          const ve = e.eventData as Update;
-          return ev.homeDomain === ve.homeDomain && ev.oldRoot === ve.oldRoot
-        }))  this.pool.relay.push(e);
+        const eventData = e.eventData as Update;
+        fsLog(`store event replica updtae ${JSON.stringify(e.toObject())} {origin:${eventData.homeDomain},root:${eventData.oldRoot}}`, )
+        const key = `${eventData.homeDomain};${eventData.oldRoot}`;
+        if (!this.pool.relay.has(key)) {
+          this.pool.relay.set(key, [value])
+        } else {
+          const values = this.pool.relay.get(key)!;
+          if (values.indexOf(value) < 0) {
+            values.push(value)
+          }
+        }
 
       } else if (e.eventType === EventType.BridgeRouterReceive) {
-        this.pool.receive.push(e);
-        // const ev = e.eventData as Receive
         const [origin, nonce] = e.originAndNonce()
+        const key = `${origin};${nonce}`
+        this.pool.receive.set(key, value);
         fsLog(`store event BridgeRouterReceive ${JSON.stringify(e.toObject())} {origin:${origin},nonce:${nonce}}`, )
       } else if (e.eventType === EventType.ReplicaProcess) {
-        this.pool.process.push(e);
-        const ev = e.eventData as Process
-        fsLog(`store event process ${JSON.stringify(e.toObject())} {hash:${ev.messageHash}}`, )
+        const eventData = e.eventData as Process
+        const key = eventData.messageHash;
+        this.pool.process.set(key, value);
+        
+        fsLog(`store event process ${JSON.stringify(e.toObject())} {hash:${eventData.messageHash}}`, )
       }
-      if (this.maxx.send < this.pool.send.length) {
-        this.maxx.send = this.pool.send.length
-      }
-
-      if (this.maxx.update < this.pool.update.length) {
-        this.maxx.update = this.pool.update.length
-      }
-
-      if (this.maxx.relay < this.pool.relay.length) {
-        this.maxx.relay = this.pool.relay.length
-      }
-
-      if (this.maxx.receive < this.pool.receive.length) {
-        this.maxx.receive = this.pool.receive.length
-      }
-
-      if (this.maxx.process < this.pool.process.length) {
-        this.maxx.process = this.pool.process.length
-      }
-
     }
 
     async getSend(destination: number, recipient: Padded, amount: ethers.BigNumber, block: number): Promise<NomadishEvent | null> {
-      const events = await this.plimit.send(async () => retain(this.pool.send, (e) => {
-        const eventData = e.eventData as Send;
-        // if (Math.random() <= 0.001) {
-        //   fs.appendFileSync(`./kek.txt`, `${destination}===${eventData.toDomain};${recipient.toEVMAddress()}===${(Padded.fromWhatever(eventData.toId)).toEVMAddress()};${amount.toHexString()}===${eventData.amount.toHexString()};${block}===${e.block};${tokenId.toEVMAddress()}===${(Padded.fromWhatever(eventData.token)).toEVMAddress()}\n`)
-        // }
-        return destination === eventData.toDomain && 
-          recipient.toEVMAddress() === (Padded.fromWhatever(eventData.toId)).toEVMAddress() && 
-          amount.eq(eventData.amount) &&
-          block === e.block
-          // tokenId.toEVMAddress() === (Padded.fromWhatever(eventData.token)).toEVMAddress()
-      }));
+      const key = `${destination};${recipient.toEVMAddress()};${amount.toHexString()};${block}`;
+      const value = this.pool.send.get(key);
+      if (!value) return null;
       
-      if (events.length > 0) return events[0];
-      return null;
+      return JSON.parse(value, reviver);
     }
 
     async getUpdate(origin: number, root: string): Promise<NomadishEvent[]> {
-      return await this.plimit.send(async () => filter(this.pool.update, (e) => {
-        const eventData = e.eventData as Update;
-        return eventData.oldRoot === root && eventData.homeDomain === origin
-      }))
+      const key = `${origin};${root}`;
+      const values = this.pool.update.get(key);
+      if (!values) return [];
+      
+      return values.map(v => JSON.parse(v, reviver));
     }
     async getRelay(origin: number, root: string) {
-      return await this.plimit.send(async () => filter(this.pool.relay, (e) => {
-        const eventData = e.eventData as Update;
-        return eventData.oldRoot === root && eventData.homeDomain === origin
-      }))
+      const key = `${origin};${root}`;
+      const values = this.pool.relay.get(key);
+      if (!values) return [];
+      
+      return values.map(v => JSON.parse(v, reviver));
     }
     async getProcess(messageHash: string): Promise<NomadishEvent | null> {
-      const events = await this.plimit.send(async () => retain(this.pool.process, (e) => {
-        const eventData = e.eventData as Process;
-        return eventData.messageHash === messageHash
-      }))
-
-      if (events.length > 0) return events[0];
-      return null;
+      const value = this.pool.process.get(messageHash);
+      if (!value) return null;
+      
+      return JSON.parse(value, reviver);
     }
     async getReceive(origin: number, nonce: number): Promise<NomadishEvent | null> {
-      const events = await this.plimit.send(async () => retain(this.pool.receive, (e) => {
-        const [eventOrigin, eventNonce] = e.originAndNonce();
-        return eventNonce === nonce && eventOrigin === origin
-      }))
-
-      if (events.length > 0) return events[0];
-      return null;
+      const key = `${origin};${nonce}`;
+      const value = this.pool.receive.get(key);
+      if (!value) return null;
+      
+      return JSON.parse(value, reviver);
     }
 }
 
