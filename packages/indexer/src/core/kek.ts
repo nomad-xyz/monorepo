@@ -2,40 +2,39 @@ import { ProcessorV2 } from "./consumerV2";
 import { IndexerCollector } from "./metrics";
 import { DB } from "./db";
 import { createLogger, replacer, reviver } from "./utils";
-import fs from 'fs';
+import fs from "fs";
 import { NomadishEvent } from "./event";
 import { createClient } from "redis";
 
-
-const environment = 'production';
-const batchesFolder = './batches';
-
+const environment = "production";
+const batchesFolder = "./batches";
 
 (async () => {
+  const logger = createLogger("indexer", environment);
+  const m = new IndexerCollector(environment, logger);
 
-    const logger = createLogger("indexer", environment);
-    const m = new IndexerCollector(environment, logger);
+  const db = new DB(m, logger);
+  await db.connect();
 
-    const db = new DB(m, logger);
-    await db.connect();
+  const redis = createClient({
+    url: process.env.REDIS_URL || "redis://redis:6379",
+  });
 
-    const redis = createClient({
-        url: process.env.REDIS_URL || "redis://redis:6379",
-    });
+  const c = new ProcessorV2(db, logger, redis);
 
-    const c = new ProcessorV2(db, logger, redis);
+  const fileNames = fs.readdirSync(batchesFolder).sort();
+  console.log(fileNames);
+  for (const fileName of fileNames) {
+    console.log(`Opening`, fileName);
+    const events: Object[] = JSON.parse(
+      fs.readFileSync(`${batchesFolder}/${fileName}`, "utf8"),
+      reviver
+    );
 
-    const fileNames = fs.readdirSync(batchesFolder).sort();
-    console.log(fileNames);
-    for (const fileName of fileNames) {
-        console.log(`Opening`, fileName)
-        const events: Object[] = JSON.parse(fs.readFileSync(`${batchesFolder}/${fileName}`, 'utf8'), reviver);
-
-        await c.consume(events.map(e => NomadishEvent.fromObject(e)));
-        console.log(`DID batch `, fileName[0])
-    }
-})()
-
+    await c.consume(events.map((e) => NomadishEvent.fromObject(e)));
+    console.log(`DID batch `, fileName[0]);
+  }
+})();
 
 /*
 2	244

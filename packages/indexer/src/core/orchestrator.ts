@@ -62,7 +62,7 @@ export class Orchestrator {
   metrics: IndexerCollector;
   logger: Logger;
   db: DB;
-  redis?: RedisClient
+  redis?: RedisClient;
 
   constructor(
     sdk: BridgeContext,
@@ -70,7 +70,7 @@ export class Orchestrator {
     metrics: IndexerCollector,
     logger: Logger,
     db: DB,
-    redis?: RedisClient,
+    redis?: RedisClient
   ) {
     this.sdk = sdk;
     this.consumer = c;
@@ -91,7 +91,7 @@ export class Orchestrator {
     await this.initalFeedConsumer();
     try {
       await this.checkAllIntegrity();
-    } catch(e) {
+    } catch (e) {
       this.logger.error(`Initial integrity failed:`, e);
       throw e;
     }
@@ -99,11 +99,12 @@ export class Orchestrator {
   }
 
   async checkAllIntegrity(): Promise<void> {
-
-    await Promise.all(this.sdk.domainNumbers.map(async (domain: number) => {
-      let indexer = this.indexers.get(domain)!;
-      await indexer.dummyTestEventsIntegrity()
-    }))
+    await Promise.all(
+      this.sdk.domainNumbers.map(async (domain: number) => {
+        let indexer = this.indexers.get(domain)!;
+        await indexer.dummyTestEventsIntegrity();
+      })
+    );
   }
 
   async indexAll(): Promise<number> {
@@ -114,9 +115,9 @@ export class Orchestrator {
     ).flat();
     events.sort((a, b) => {
       if (a.ts === b.ts) {
-        return eventTypeToOrder(a) - eventTypeToOrder(b) 
+        return eventTypeToOrder(a) - eventTypeToOrder(b);
       } else {
-        return a.ts - b.ts
+        return a.ts - b.ts;
       }
     });
     this.logger.info(`Received ${events.length} events after reindexing`);
@@ -182,9 +183,9 @@ export class Orchestrator {
     ).flat();
     events.sort((a, b) => {
       if (a.ts === b.ts) {
-        return eventTypeToOrder(a) - eventTypeToOrder(b) 
+        return eventTypeToOrder(a) - eventTypeToOrder(b);
       } else {
-        return a.ts - b.ts
+        return a.ts - b.ts;
       }
     });
     await this.consumer.consume(events);
@@ -211,54 +212,84 @@ export class Orchestrator {
   }
 
   subscribeStatisticEvents() {
-    this.consumer.on(
-      "dispatched",
-      (m: NomadMessage, e: NomadishEvent) => {
-        const homeName = this.domain2name(m.origin);
-        const replicaName = this.domain2name(m.destination);
-        this.metrics.observeGasUsage("dispatched", homeName, replicaName, e.gasUsed.toNumber());
-      }
-    );
+    this.consumer.on("dispatched", (m: NomadMessage, e: NomadishEvent) => {
+      const homeName = this.domain2name(m.origin);
+      const replicaName = this.domain2name(m.destination);
+      this.metrics.observeGasUsage(
+        "dispatched",
+        homeName,
+        replicaName,
+        e.gasUsed.toNumber()
+      );
+    });
 
-    this.consumer.on(
-      "updated",
-      (m: NomadMessage, e: NomadishEvent) => {
-        const homeName = this.domain2name(m.origin);
-        const replicaName = this.domain2name(m.destination);
-        this.metrics.observeLatency("updated", homeName, replicaName, m.timings.toUpdate()!);
-        this.metrics.observeGasUsage("updated", homeName, replicaName, e.gasUsed.toNumber());
-      }
-    );
+    this.consumer.on("updated", (m: NomadMessage, e: NomadishEvent) => {
+      const homeName = this.domain2name(m.origin);
+      const replicaName = this.domain2name(m.destination);
+      this.metrics.observeLatency(
+        "updated",
+        homeName,
+        replicaName,
+        m.timings.toUpdate()!
+      );
+      this.metrics.observeGasUsage(
+        "updated",
+        homeName,
+        replicaName,
+        e.gasUsed.toNumber()
+      );
+    });
 
-    this.consumer.on(
-      "relayed",
-      (m: NomadMessage, e: NomadishEvent) => {
-        const homeName = this.domain2name(m.origin);
-        const replicaName = this.domain2name(m.destination);
-        this.metrics.observeLatency("relayed", homeName, replicaName, m.timings.toRelay()!);
-        this.metrics.observeGasUsage("relayed", homeName, replicaName, e.gasUsed.toNumber());
-      }
-    );
+    this.consumer.on("relayed", (m: NomadMessage, e: NomadishEvent) => {
+      const homeName = this.domain2name(m.origin);
+      const replicaName = this.domain2name(m.destination);
+      this.metrics.observeLatency(
+        "relayed",
+        homeName,
+        replicaName,
+        m.timings.toRelay()!
+      );
+      this.metrics.observeGasUsage(
+        "relayed",
+        homeName,
+        replicaName,
+        e.gasUsed.toNumber()
+      );
+    });
 
-    this.consumer.on(
-      "received",
-      (m: NomadMessage, e: NomadishEvent) => {
-        const homeName = this.domain2name(m.origin);
-        const replicaName = this.domain2name(m.destination);
-        this.metrics.observeLatency("received", homeName, replicaName, m.timings.toReceive()!);
-        this.metrics.observeGasUsage("received", homeName, replicaName, e.gasUsed.toNumber());
-      }
-    );
+    this.consumer.on("received", (m: NomadMessage, e: NomadishEvent) => {
+      const homeName = this.domain2name(m.origin);
+      const replicaName = this.domain2name(m.destination);
+      this.metrics.observeLatency(
+        "received",
+        homeName,
+        replicaName,
+        m.timings.toReceive()!
+      );
+      this.metrics.observeGasUsage(
+        "received",
+        homeName,
+        replicaName,
+        e.gasUsed.toNumber()
+      );
+    });
 
-    this.consumer.on(
-      "processed",
-      (m: NomadMessage, e: NomadishEvent) => {
-        const homeName = this.domain2name(m.origin);
-        const replicaName = this.domain2name(m.destination);
-        this.metrics.observeLatency("processed", homeName, replicaName, m.timings.toProcess()!);
-        this.metrics.observeGasUsage("processed", homeName, replicaName, e.gasUsed.toNumber());
-      }
-    );
+    this.consumer.on("processed", (m: NomadMessage, e: NomadishEvent) => {
+      const homeName = this.domain2name(m.origin);
+      const replicaName = this.domain2name(m.destination);
+      this.metrics.observeLatency(
+        "processed",
+        homeName,
+        replicaName,
+        m.timings.toProcess()!
+      );
+      this.metrics.observeGasUsage(
+        "processed",
+        homeName,
+        replicaName,
+        e.gasUsed.toNumber()
+      );
+    });
   }
 
   async startConsuming() {

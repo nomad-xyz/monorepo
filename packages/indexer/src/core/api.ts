@@ -43,8 +43,8 @@ export async function run(o: Orchestrator, logger: Logger) {
 
   app.get("/tx/:tx", log, async (req, res) => {
     const p = o.consumer as ProcessorV2;
-    const messages = await p.db.getMessageByEvm(req.params.tx)
-    
+    const messages = await p.db.getMessageByEvm(req.params.tx);
+
     if (messages.length > 0) {
       return res.json(messages[0].serialize());
     } else {
@@ -103,7 +103,10 @@ export async function run(o: Orchestrator, logger: Logger) {
     }
 
     const p = o.consumer as ProcessorV2;
-    const messages = await p.db.getMessagesByOriginAndStateNumber(origin, state);
+    const messages = await p.db.getMessagesByOriginAndStateNumber(
+      origin,
+      state
+    );
     // const messages = Array.from(p.messages).filter(
     //   (m) => m.origin === origin && m.state === state
     // );

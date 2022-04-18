@@ -1,7 +1,12 @@
 import { Orchestrator } from "./orchestrator";
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import fs from "fs";
-import { EventType, NomadishEvent, EventSource, eventTypeToOrder } from "./event";
+import {
+  EventType,
+  NomadishEvent,
+  EventSource,
+  eventTypeToOrder,
+} from "./event";
 import { Home, Replica } from "@nomad-xyz/contracts-core";
 import { ethers } from "ethers";
 import { FailureCounter, KVCache, replacer, retry, reviver } from "./utils";
@@ -12,7 +17,6 @@ import Logger from "bunyan";
 import { createClient } from "redis";
 import { RedisClient } from "./types";
 
-
 type ShortTx = {
   gasPrice?: ethers.BigNumber;
   timestamp: number;
@@ -21,11 +25,16 @@ type ShortTx = {
   gasLimit: ethers.BigNumber;
 };
 
-function blockSpeed(from: number, to: number, start: Date, finish: Date): number {
+function blockSpeed(
+  from: number,
+  to: number,
+  start: Date,
+  finish: Date
+): number {
   const blocks = to - from + 1;
-  const timeS = (finish.valueOf() - start.valueOf())/1000;
-  const speed = blocks/timeS;
-  return speed
+  const timeS = (finish.valueOf() - start.valueOf()) / 1000;
+  const speed = blocks / timeS;
+  return speed;
 }
 
 function txEncode(tx: ShortTx): string {
@@ -105,7 +114,12 @@ export class Indexer {
 
   eventCallback: undefined | ((event: NomadishEvent) => void);
 
-  constructor(domain: number, sdk: BridgeContext, orchestrator: Orchestrator, redis?: RedisClient) {
+  constructor(
+    domain: number,
+    sdk: BridgeContext,
+    orchestrator: Orchestrator,
+    redis?: RedisClient
+  ) {
     this.domain = domain;
     this.sdk = sdk;
     this.orchestrator = orchestrator;
@@ -146,10 +160,12 @@ export class Indexer {
   }
 
   domainToLimit(): number {
-    return {
-      1650811245: 20,
-      6648936: 20,
-    }[this.domain] || 100
+    return (
+      {
+        1650811245: 20,
+        6648936: 20,
+      }[this.domain] || 100
+    );
   }
 
   get provider(): ethers.providers.Provider {
@@ -192,7 +208,6 @@ export class Indexer {
       },
       RETRIES,
       (error: any) => {
-
         this.orchestrator.metrics.incRpcErrors(
           RpcRequestMethod.GetBlockWithTxs,
           this.network,
@@ -374,7 +389,9 @@ export class Indexer {
           this.network,
           error.code
         );
-        this.logger.warn(`Retrying after RPC Error... , Error: ${error.code}, msg: ${error.message}`);
+        this.logger.warn(
+          `Retrying after RPC Error... , Error: ${error.code}, msg: ${error.message}`
+        );
         this.failureCounter.add();
       }
     );
@@ -510,7 +527,9 @@ export class Indexer {
       const events = await fetchEvents(batchFrom, batchTo);
       const finishBatch = new Date();
       if (!events) throw new Error(`KEk`);
-      events.sort((a, b) => a.ts===b.ts?eventTypeToOrder(a)-eventTypeToOrder(b):a.ts - b.ts);
+      events.sort((a, b) =>
+        a.ts === b.ts ? eventTypeToOrder(a) - eventTypeToOrder(b) : a.ts - b.ts
+      );
       await this.persistance.store(...events);
       try {
         if (this.develop) {
@@ -534,11 +553,13 @@ export class Indexer {
           (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash()
         )
       );
-      allEvents.push(
-        ...filteredEvents
-      );
+      allEvents.push(...filteredEvents);
       const speed = blockSpeed(batchFrom, batchTo, startBatch, finishBatch);
-      this.logger.debug(`Fetched batch for domain ${this.domain}. Blocks: ${batchTo - batchFrom + 1} (${speed}b/sec). Got events: ${filteredEvents.length}`);
+      this.logger.debug(
+        `Fetched batch for domain ${this.domain}. Blocks: ${
+          batchTo - batchFrom + 1
+        } (${speed}b/sec). Got events: ${filteredEvents.length}`
+      );
       if (batchTo >= to) break;
       batchFrom = batchTo + 1;
       batchTo = Math.min(to, batchFrom + batchSize);
@@ -546,20 +567,23 @@ export class Indexer {
 
     const finishedAll = new Date();
 
-
     if (!allEvents) throw new Error("kek");
 
     allEvents.sort((a, b) => {
       if (a.ts === b.ts) {
-        return eventTypeToOrder(a) - eventTypeToOrder(b) 
+        return eventTypeToOrder(a) - eventTypeToOrder(b);
       } else {
-        return a.ts - b.ts
+        return a.ts - b.ts;
       }
     });
 
     if (this.develop || true) this.dummyTestEventsIntegrity();
     const speed = blockSpeed(from, to, startAll, finishedAll);
-    this.logger.info(`Fetched all for domain ${this.domain}. Blocks: ${to - from + 1} (${speed}b/sec). Got events: ${allEvents.length}`);
+    this.logger.info(
+      `Fetched all for domain ${this.domain}. Blocks: ${
+        to - from + 1
+      } (${speed}b/sec). Got events: ${allEvents.length}`
+    );
     this.lastBlock = to;
 
     return allEvents;
@@ -1123,16 +1147,17 @@ export abstract class Persistance {
   abstract persist(): void;
 }
 
-
 export class RedisPersistance extends Persistance {
   client: RedisClient;
   domain: number;
 
   constructor(domain: number, client?: RedisClient) {
     super();
-    this.client = client || createClient({
-      url: process.env.REDIS_URL || "redis://redis:6379",
-    });
+    this.client =
+      client ||
+      createClient({
+        url: process.env.REDIS_URL || "redis://redis:6379",
+      });
     this.domain = domain;
 
     this.client.on("error", (err) => console.log("Redis Client Error", err));
@@ -1218,13 +1243,13 @@ export class RedisPersistance extends Persistance {
 
     events.sort((a, b) => {
       if (a.ts === b.ts) {
-        return eventTypeToOrder(a) - eventTypeToOrder(b) 
+        return eventTypeToOrder(a) - eventTypeToOrder(b);
       } else {
-        return a.ts - b.ts
+        return a.ts - b.ts;
       }
     });
     // console.log(`Returning all events for ${this.domain}`)
-    
+
     return events;
   }
   persist(): void {}

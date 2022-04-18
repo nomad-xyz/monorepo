@@ -87,11 +87,15 @@ export class DB {
     return messages.map((m) => NomadMessage.deserialize(m, this.logger));
   }
 
-  async getMessagesByOriginAndStateNumber(origin: number, state: number): Promise<NomadMessage[]> {
+  async getMessagesByOriginAndStateNumber(
+    origin: number,
+    state: number
+  ): Promise<NomadMessage[]> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const messages = await this.client.messages.findMany({
       where: {
-        origin, state
+        origin,
+        state,
       },
     });
 
@@ -99,46 +103,53 @@ export class DB {
   }
 
   async getMessagesByOriginAndRoot(
-    origin: number, root: string
+    origin: number,
+    root: string
   ): Promise<NomadMessage[]> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const messages = await this.client.messages.findMany({
       where: {
         origin,
-        root
+        root,
       },
     });
-    return messages.map(m => NomadMessage.deserialize(m, this.logger))
+    return messages.map((m) => NomadMessage.deserialize(m, this.logger));
   }
 
-  async getAllMessages() : Promise<NomadMessage[]> {
+  async getAllMessages(): Promise<NomadMessage[]> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const messages = await this.client.messages.findMany();
     return messages.map((m) => NomadMessage.deserialize(m, this.logger));
   }
 
   async getMessageByOriginAndNonce(
-    origin: number, nonce: number
+    origin: number,
+    nonce: number
   ): Promise<NomadMessage | null> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const message = await this.client.messages.findFirst({
       where: {
         origin,
-        nonce
+        nonce,
       },
     });
     return message ? NomadMessage.deserialize(message, this.logger) : null;
     // return message ? NomadMessage.deserialize(message, this.logger) : null
   }
 
-  async getMessageBySendValues(destination: number, recipient: Padded, amount: ethers.BigNumber, dispatchBlock: number): Promise<NomadMessage | null> {
+  async getMessageBySendValues(
+    destination: number,
+    recipient: Padded,
+    amount: ethers.BigNumber,
+    dispatchBlock: number
+  ): Promise<NomadMessage | null> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const message = await this.client.messages.findFirst({
       where: {
         destination,
         recipient: recipient.valueOf(), // need to make sure it is right
         amount: amount.toHexString(),
-        dispatchBlock
+        dispatchBlock,
         // tokenId: tokenId.valueOf()
       },
     });
@@ -146,9 +157,7 @@ export class DB {
     return message ? NomadMessage.deserialize(message, this.logger) : null;
   }
 
-  async getMessageByHash(
-    messageHash: string
-  ): Promise<NomadMessage | null> {
+  async getMessageByHash(messageHash: string): Promise<NomadMessage | null> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const message = await this.client.messages.findUnique({
       where: {
