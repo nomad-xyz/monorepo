@@ -524,25 +524,23 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const core = this.context.mustGetCore(this.domain);
     const governance = core.governanceRouter.address;
 
-    const contracts = [this.tokenRegistryContract, this.bridgeRouterContract];
     const deployer = await this.deployer.getAddress();
 
-    // conditional to avoid erroring
-    const txns = await Promise.all(
-      contracts.map(async (contract) => {
-        const owner = await contract.owner();
-        if (utils.equalIds(owner, deployer)) {
-          log(`transfer bridge ownership on ${name}`);
-          return await contract.transferOwnership(governance, this.overrides);
-        }
-      }),
-    );
+    // transfer ownership of tokenRegistry to bridge
+    const registryOwner = await this.tokenRegistryContract.owner();
+    if (utils.equalIds(registryOwner, deployer)) {
+      log(`transfer token registry ownership on ${name}`);
+      const tx = await this.tokenRegistryContract.transferOwnership(this.bridgeRouterContract.address, this.overrides);
+      await tx.wait(this.confirmations);
+    }
 
-    await Promise.all(
-      txns.map(async (tx) => {
-        if (tx) await tx.wait(this.confirmations);
-      }),
-    );
+    // transfer ownership of bridgeRouter to governance
+    const bridgeOwner = await this.bridgeRouterContract.owner();
+    if (utils.equalIds(bridgeOwner, deployer)) {
+      log(`transfer bridge router ownership on ${name}`);
+      const tx = await this.bridgeRouterContract.transferOwnership(governance, this.overrides);
+      await tx.wait(this.confirmations);
+    }
   }
 
   async checkDeploy(remoteDomains: string[]): Promise<void> {
@@ -604,8 +602,9 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     assertBeaconProxy(this.data.tokenRegistry, 'TokenRegistry');
     // owner
     const tokenRegistryOwner = await this.tokenRegistryContract.owner();
-    expect(utils.equalIds(tokenRegistryOwner, core.governanceRouter.address)).to
-      .be.true;
+    expect(utils.equalIds(tokenRegistryOwner, this.bridgeRouterContract.address)).to
+        .be.true;
+
     // xAppConnectionManager
     const xAppAddress =
       await this.tokenRegistryContract.xAppConnectionManager();
