@@ -9,7 +9,7 @@ import { BridgeRouter } from "@nomad-xyz/contracts-bridge";
 import pLimit from "p-limit";
 import { RpcRequestMethod } from "./metrics";
 import Logger from "bunyan";
-import { createClient, RedisClientType } from "redis";
+import { createClient } from "redis";
 import { RedisClient } from "./types";
 
 
@@ -503,8 +503,6 @@ export class Indexer {
 
     while (true) {
       const done = Math.floor(((batchTo - from + 1) / (to - from + 1)) * 100);
-
-
       this.logger.debug(
         `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`
       );

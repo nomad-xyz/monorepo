@@ -26,6 +26,7 @@ model messages {
   nonce             Int
   internalSender    String   @map("internal_sender") @db.VarChar(66)
   internalRecipient String   @map("internal_recipient") @db.VarChar(66)
+  msgType           Int      @map("msg_type")
   root              String   @db.VarChar(66)
   state             Int
   dispatchBlock     Int
