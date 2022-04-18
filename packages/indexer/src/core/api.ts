@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { DB, MsgRequest } from "./db";
 import * as dotenv from "dotenv";
 import Logger from "bunyan";
@@ -15,6 +16,7 @@ const PORT = process.env.DEBUG_PORT || "1337";
 
 export async function run(o: Orchestrator, logger: Logger) {
   const app = express();
+  app.use(cors());
 
   const log = (
     req: express.Request,
