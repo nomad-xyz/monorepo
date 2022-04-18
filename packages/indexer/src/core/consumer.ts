@@ -18,27 +18,27 @@ export class StatisticsCollector {
 
   addDispatched(domain: number) {
     this.s.counts.total.dispatched += 1;
-    this.s.counts.domainStatistics.get(domain)!.dispatched += 1;
+    if (this.s.counts.domainStatistics.has(domain)) this.s.counts.domainStatistics.get(domain)!.dispatched += 1;
   }
 
   addUpdated(domain: number) {
     this.s.counts.total.updated += 1;
-    this.s.counts.domainStatistics.get(domain)!.updated += 1;
+    if (this.s.counts.domainStatistics.has(domain)) this.s.counts.domainStatistics.get(domain)!.updated += 1;
   }
 
   addRelayed(domain: number) {
     this.s.counts.total.relayed += 1;
-    this.s.counts.domainStatistics.get(domain)!.relayed += 1;
+    if (this.s.counts.domainStatistics.has(domain)) this.s.counts.domainStatistics.get(domain)!.relayed += 1;
   }
 
   addReceived(domain: number) {
     this.s.counts.total.received += 1;
-    this.s.counts.domainStatistics.get(domain)!.received += 1;
+    if (this.s.counts.domainStatistics.has(domain)) this.s.counts.domainStatistics.get(domain)!.received += 1;
   }
 
   addProcessed(domain: number) {
     this.s.counts.total.processed += 1;
-    this.s.counts.domainStatistics.get(domain)!.processed += 1;
+    if (this.s.counts.domainStatistics.get(domain)) this.s.counts.domainStatistics.get(domain)!.processed += 1;
   }
 
   contributeToCount(m: NomadMessage) {

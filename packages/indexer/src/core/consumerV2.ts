@@ -495,11 +495,11 @@ export class ProcessorV2 extends Consumer {
     logger: Logger;
     
   
-    constructor(db: DB, logger: Logger, redis: RedisClient) {
+    constructor(db: DB, logger: Logger, redis: RedisClient, domains?: number[]) {
       super();
 
       this.pool = new EventsPool(redis);
-      this.domains = [];
+      this.domains = domains || [];
   
       this.db = db;
       this.dbPLimit = pLimit(10);

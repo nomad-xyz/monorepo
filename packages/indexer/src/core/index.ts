@@ -23,7 +23,7 @@ export async function run(
 
   await redis.connect();
 
-  const c = new ProcessorV2(db, logger, redis);
+  const c = new ProcessorV2(db, logger, redis, sdk.domainNumbers);
 
   const o = new Orchestrator(sdk, c, metrics, logger, db, redis);
   o.subscribeStatisticEvents()
