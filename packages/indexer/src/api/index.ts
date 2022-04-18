@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { graphqlHTTP } from "express-graphql";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 
@@ -19,6 +20,7 @@ const PORT = process.env.PORT;
 
 export async function run(db: DB, logger: Logger) {
   const app = express();
+  app.use(cors());
 
   const log = (
     req: express.Request,
