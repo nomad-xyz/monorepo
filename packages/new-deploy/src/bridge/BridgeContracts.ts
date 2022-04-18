@@ -602,8 +602,9 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     assertBeaconProxy(this.data.tokenRegistry, 'TokenRegistry');
     // owner
     const tokenRegistryOwner = await this.tokenRegistryContract.owner();
-    expect(utils.equalIds(tokenRegistryOwner, core.governanceRouter.address)).to
-      .be.true;
+    expect(utils.equalIds(tokenRegistryOwner, this.bridgeRouterContract.address)).to
+        .be.true;
+
     // xAppConnectionManager
     const xAppAddress =
       await this.tokenRegistryContract.xAppConnectionManager();
