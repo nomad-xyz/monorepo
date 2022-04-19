@@ -1199,6 +1199,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nomad-xyz/configuration@npm:^0.1.0-rc.11":
+  version: 0.1.0-rc.11
+  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.11"
+  checksum: 87af058cf23be6f4e02a1450a52f37b5ac469e400873be476d12d10dc57dd50ddb671b51a03477dd1e3d3e5996c918bcfea001c1775fd9074e25ade4339a1a6d
+  languageName: node
+  linkType: hard
+
 "@nomad-xyz/contract-interfaces@npm:1.1.1":
   version: 1.1.1
   resolution: "@nomad-xyz/contract-interfaces@npm:1.1.1"
@@ -1447,7 +1454,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.10
+    "@nomad-xyz/configuration": ^0.1.0-rc.11
     "@nomad-xyz/contracts-bridge": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"
     "@types/chai": ^4.2.21
@@ -1501,7 +1508,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.10
+    "@nomad-xyz/configuration": ^0.1.0-rc.11
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/local-environment": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
