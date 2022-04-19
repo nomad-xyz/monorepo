@@ -60,7 +60,7 @@ function outputConfigAndVerification(outputDir: string, deployContext: DeployCon
       JSON.stringify(deployContext.data, null, 2),
   );
   fs.writeFileSync(
-      `${outputDir}/verification.json`,
+      `${outputDir}/verification-${Date.now()}.json`,
       JSON.stringify(Object.fromEntries(deployContext.verification), null, 2),
   );
 }
