@@ -1,0 +1,305 @@
+{
+  "kovan": [
+    {
+      "name": "UpgradeBeaconController",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconController.sol:UpgradeBeaconController",
+      "address": "0x597B13a44FE189B7dF3158E14459fD1F3bb56902"
+    },
+    {
+      "name": "XAppConnectionManager",
+      "specifier": "packages/contracts-core/contracts/XAppConnectionManager.sol:XAppConnectionManager",
+      "address": "0x4cD0B1eC43be0a9f481648e5532EFB172A358497"
+    },
+    {
+      "name": "UpdaterManager",
+      "specifier": "packages/contracts-core/contracts/UpdaterManager.sol:UpdaterManager",
+      "address": "0x2bB565b0CF9d274bD863f1Fad0481b64A9247754",
+      "constructorArguments": [
+        "0x4177372fd9581ceb2367e0ce84adc5dad9df8d55"
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000004177372fd9581ceb2367e0ce84adc5dad9df8d55"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeacon.sol:UpgradeBeacon",
+      "address": "0x9702858b79aEc857639288d2631A5A4ea2Be7CB1",
+      "constructorArguments": [
+        "0x1bFb2BeeD1AdF224B00261e654e5DB38Bee07705",
+        "0x597b13a44fe189b7df3158e14459fd1f3bb56902"
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000001bfb2beed1adf224b00261e654e5db38bee07705000000000000000000000000597b13a44fe189b7df3158e14459fd1f3bb56902"
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconProxy.sol:UpgradeBeaconProxy",
+      "address": "0xeeA41dc92969b8ba05AEb9962526169FDEc183ED",
+      "constructorArguments": [
+        "0x9702858b79aEc857639288d2631A5A4ea2Be7CB1",
+        "0xc4d66de80000000000000000000000002bb565b0cf9d274bd863f1fad0481b64a9247754"
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000009702858b79aec857639288d2631a5a4ea2be7cb100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000024c4d66de80000000000000000000000002bb565b0cf9d274bd863f1fad0481b64a924775400000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "Home",
+      "specifier": "packages/contracts-core/contracts/Home.sol:Home",
+      "address": "0x1bFb2BeeD1AdF224B00261e654e5DB38Bee07705",
+      "constructorArguments": [
+        2221
+      ],
+      "encodedConstructorArguments": "0x00000000000000000000000000000000000000000000000000000000000008ad"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeacon.sol:UpgradeBeacon",
+      "address": "0xab06b340c3e538ec7Bb69c6EC0f5C4e6Dd80d187",
+      "constructorArguments": [
+        "0xfb82CEAC34e97BfAd7B8547ED6cE94B8a296ac3b",
+        "0x597b13a44fe189b7df3158e14459fd1f3bb56902"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000fb82ceac34e97bfad7b8547ed6ce94b8a296ac3b000000000000000000000000597b13a44fe189b7df3158e14459fd1f3bb56902"
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconProxy.sol:UpgradeBeaconProxy",
+      "address": "0xFB2079853731dB25dF586C60fd515C79473f953E",
+      "constructorArguments": [
+        "0xab06b340c3e538ec7Bb69c6EC0f5C4e6Dd80d187",
+        "0x485cc9550000000000000000000000004cd0b1ec43be0a9f481648e5532efb172a358497000000000000000000000000a4849f1d96b26066f9c631fcdc8f1457d27fb5ec"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000ab06b340c3e538ec7bb69c6ec0f5c4e6dd80d18700000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000044485cc9550000000000000000000000004cd0b1ec43be0a9f481648e5532efb172a358497000000000000000000000000a4849f1d96b26066f9c631fcdc8f1457d27fb5ec00000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "GovernanceRouter",
+      "specifier": "packages/contracts-core/contracts/governance/GovernanceRouter.sol:GovernanceRouter",
+      "address": "0xfb82CEAC34e97BfAd7B8547ED6cE94B8a296ac3b",
+      "constructorArguments": [
+        2221,
+        180
+      ],
+      "encodedConstructorArguments": "0x00000000000000000000000000000000000000000000000000000000000008ad00000000000000000000000000000000000000000000000000000000000000b4"
+    },
+    {
+      "name": "Replica",
+      "specifier": "packages/contracts-core/contracts/Replica.sol:Replica",
+      "address": "0x4545531d2B62c3Ece1B475C35729b97De5ebDe18",
+      "constructorArguments": [
+        2221,
+        850000,
+        15000
+      ],
+      "encodedConstructorArguments": "0x00000000000000000000000000000000000000000000000000000000000008ad00000000000000000000000000000000000000000000000000000000000cf8500000000000000000000000000000000000000000000000000000000000003a98"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeacon.sol:UpgradeBeacon",
+      "address": "0x737485c36ebA583a5A63BEE9D845F6C03487Fd0E",
+      "constructorArguments": [
+        "0x4545531d2B62c3Ece1B475C35729b97De5ebDe18",
+        "0x597b13a44fe189b7df3158e14459fd1f3bb56902"
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000004545531d2b62c3ece1b475c35729b97de5ebde18000000000000000000000000597b13a44fe189b7df3158e14459fd1f3bb56902"
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconProxy.sol:UpgradeBeaconProxy",
+      "address": "0x8795641FF6bcefF5250626E8d3027DFDb6e5E8d8",
+      "constructorArguments": [
+        "0x737485c36ebA583a5A63BEE9D845F6C03487Fd0E",
+        "0xe7e7a7b700000000000000000000000000000000000000000000000000000000000004570000000000000000000000004177372fd9581ceb2367e0ce84adc5dad9df8d550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000737485c36eba583a5a63bee9d845f6c03487fd0e00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000084e7e7a7b700000000000000000000000000000000000000000000000000000000000004570000000000000000000000004177372fd9581ceb2367e0ce84adc5dad9df8d550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "rinkeby": [
+    {
+      "name": "UpgradeBeaconController",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconController.sol:UpgradeBeaconController",
+      "address": "0xd5F0C8942B9eF892Edcc4a1903d7985Be7257044"
+    },
+    {
+      "name": "XAppConnectionManager",
+      "specifier": "packages/contracts-core/contracts/XAppConnectionManager.sol:XAppConnectionManager",
+      "address": "0x4200D524508E6625120de53cE92a02f9c13e7c42"
+    },
+    {
+      "name": "UpdaterManager",
+      "specifier": "packages/contracts-core/contracts/UpdaterManager.sol:UpdaterManager",
+      "address": "0x87d3777CB4efA5F537acd0C02CA772c9c4f57Cc7",
+      "constructorArguments": [
+        "0x4177372fd9581ceb2367e0ce84adc5dad9df8d55"
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000004177372fd9581ceb2367e0ce84adc5dad9df8d55"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeacon.sol:UpgradeBeacon",
+      "address": "0x6d964C696A537B0d939141b60a027Bd2D9C6620e",
+      "constructorArguments": [
+        "0xa6371f4EDD4DcF41608b26654b1AbC4023b1cc62",
+        "0xd5f0c8942b9ef892edcc4a1903d7985be7257044"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000a6371f4edd4dcf41608b26654b1abc4023b1cc62000000000000000000000000d5f0c8942b9ef892edcc4a1903d7985be7257044"
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconProxy.sol:UpgradeBeaconProxy",
+      "address": "0xa585E3bc819805Fa3f6835E442524BCF8d18d90c",
+      "constructorArguments": [
+        "0x6d964C696A537B0d939141b60a027Bd2D9C6620e",
+        "0xc4d66de800000000000000000000000087d3777cb4efa5f537acd0c02ca772c9c4f57cc7"
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000006d964c696a537b0d939141b60a027bd2d9c6620e00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000024c4d66de800000000000000000000000087d3777cb4efa5f537acd0c02ca772c9c4f57cc700000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "Home",
+      "specifier": "packages/contracts-core/contracts/Home.sol:Home",
+      "address": "0xa6371f4EDD4DcF41608b26654b1AbC4023b1cc62",
+      "constructorArguments": [
+        1111
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000000000000000000000000000000000000000000457"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeacon.sol:UpgradeBeacon",
+      "address": "0xEa0643983B66cCD38cb241d2595b5ed752707598",
+      "constructorArguments": [
+        "0xEA03CE1A115D14Da2D0CE6bF1Ba6a6E88170df7f",
+        "0xd5f0c8942b9ef892edcc4a1903d7985be7257044"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000ea03ce1a115d14da2d0ce6bf1ba6a6e88170df7f000000000000000000000000d5f0c8942b9ef892edcc4a1903d7985be7257044"
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconProxy.sol:UpgradeBeaconProxy",
+      "address": "0x9d79F00eF08590823aF9F6c257a582E1684F6557",
+      "constructorArguments": [
+        "0xEa0643983B66cCD38cb241d2595b5ed752707598",
+        "0x485cc9550000000000000000000000004200d524508e6625120de53ce92a02f9c13e7c42000000000000000000000000a4849f1d96b26066f9c631fcdc8f1457d27fb5ec"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000ea0643983b66ccd38cb241d2595b5ed75270759800000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000044485cc9550000000000000000000000004200d524508e6625120de53ce92a02f9c13e7c42000000000000000000000000a4849f1d96b26066f9c631fcdc8f1457d27fb5ec00000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "GovernanceRouter",
+      "specifier": "packages/contracts-core/contracts/governance/GovernanceRouter.sol:GovernanceRouter",
+      "address": "0xEA03CE1A115D14Da2D0CE6bF1Ba6a6E88170df7f",
+      "constructorArguments": [
+        1111,
+        180
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000000000000000000000000000000000000000045700000000000000000000000000000000000000000000000000000000000000b4"
+    },
+    {
+      "name": "Replica",
+      "specifier": "packages/contracts-core/contracts/Replica.sol:Replica",
+      "address": "0xcf6555Da4d5028a73F90a9112f2Cca30Bd2C8E44",
+      "constructorArguments": [
+        1111,
+        850000,
+        15000
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000000000000000000000000000000000000000045700000000000000000000000000000000000000000000000000000000000cf8500000000000000000000000000000000000000000000000000000000000003a98"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeacon.sol:UpgradeBeacon",
+      "address": "0xA95c2E4a6eBd43B9A823f26c50822D5BAC923375",
+      "constructorArguments": [
+        "0xcf6555Da4d5028a73F90a9112f2Cca30Bd2C8E44",
+        "0xd5f0c8942b9ef892edcc4a1903d7985be7257044"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000cf6555da4d5028a73f90a9112f2cca30bd2c8e44000000000000000000000000d5f0c8942b9ef892edcc4a1903d7985be7257044"
+    }
+  ],
+  "goerli": [
+    {
+      "name": "UpgradeBeaconController",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconController.sol:UpgradeBeaconController",
+      "address": "0x1b5A76f4536c8F10EA1bD9f15c5F85e2CD8F21f5"
+    },
+    {
+      "name": "XAppConnectionManager",
+      "specifier": "packages/contracts-core/contracts/XAppConnectionManager.sol:XAppConnectionManager",
+      "address": "0x55E1A7c95c1baAB8ce0E23D8b44AB26362A9860C"
+    },
+    {
+      "name": "UpdaterManager",
+      "specifier": "packages/contracts-core/contracts/UpdaterManager.sol:UpdaterManager",
+      "address": "0x89669F9bbFf400773270EdAbCE4b8B458a1e8a05",
+      "constructorArguments": [
+        "0x4177372fd9581ceb2367e0ce84adc5dad9df8d55"
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000004177372fd9581ceb2367e0ce84adc5dad9df8d55"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeacon.sol:UpgradeBeacon",
+      "address": "0xef0c30e3eA919e15F43F902e4d1780D0E8c047B1",
+      "constructorArguments": [
+        "0x6FE896ECB6867AcC9560C43eD7f759F6bc660055",
+        "0x1b5a76f4536c8f10ea1bd9f15c5f85e2cd8f21f5"
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000006fe896ecb6867acc9560c43ed7f759f6bc6600550000000000000000000000001b5a76f4536c8f10ea1bd9f15c5f85e2cd8f21f5"
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconProxy.sol:UpgradeBeaconProxy",
+      "address": "0xB110ADA3771d4E75a07Ee1C623827Ce25AB18dAc",
+      "constructorArguments": [
+        "0xef0c30e3eA919e15F43F902e4d1780D0E8c047B1",
+        "0xc4d66de800000000000000000000000089669f9bbff400773270edabce4b8b458a1e8a05"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000ef0c30e3ea919e15f43f902e4d1780d0e8c047b100000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000024c4d66de800000000000000000000000089669f9bbff400773270edabce4b8b458a1e8a0500000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "Home",
+      "specifier": "packages/contracts-core/contracts/Home.sol:Home",
+      "address": "0x6FE896ECB6867AcC9560C43eD7f759F6bc660055",
+      "constructorArguments": [
+        3331
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000000000000000000000000000000000000000000d03"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeacon.sol:UpgradeBeacon",
+      "address": "0x8B6215216aaC35F772CD954B8F53808065f92043",
+      "constructorArguments": [
+        "0x91fE9c48646FE3f89aD35c4C21587F28FaF6dEc3",
+        "0x1b5a76f4536c8f10ea1bd9f15c5f85e2cd8f21f5"
+      ],
+      "encodedConstructorArguments": "0x00000000000000000000000091fe9c48646fe3f89ad35c4c21587f28faf6dec30000000000000000000000001b5a76f4536c8f10ea1bd9f15c5f85e2cd8f21f5"
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconProxy.sol:UpgradeBeaconProxy",
+      "address": "0x60c6B23791c34A46cE3e072eC2718990377C9B9F",
+      "constructorArguments": [
+        "0x8B6215216aaC35F772CD954B8F53808065f92043",
+        "0x485cc95500000000000000000000000055e1a7c95c1baab8ce0e23d8b44ab26362a9860c000000000000000000000000a4849f1d96b26066f9c631fcdc8f1457d27fb5ec"
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000008b6215216aac35f772cd954b8f53808065f9204300000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000044485cc95500000000000000000000000055e1a7c95c1baab8ce0e23d8b44ab26362a9860c000000000000000000000000a4849f1d96b26066f9c631fcdc8f1457d27fb5ec00000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "GovernanceRouter",
+      "specifier": "packages/contracts-core/contracts/governance/GovernanceRouter.sol:GovernanceRouter",
+      "address": "0x91fE9c48646FE3f89aD35c4C21587F28FaF6dEc3",
+      "constructorArguments": [
+        3331,
+        180
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000000000000000000000000000000000000000000d0300000000000000000000000000000000000000000000000000000000000000b4"
+    },
+    {
+      "name": "Replica",
+      "specifier": "packages/contracts-core/contracts/Replica.sol:Replica",
+      "address": "0x3F795866a1235Ca73b70ea247FE79e55DC054D44",
+      "constructorArguments": [
+        3331,
+        850000,
+        15000
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000000000000000000000000000000000000000000d0300000000000000000000000000000000000000000000000000000000000cf8500000000000000000000000000000000000000000000000000000000000003a98"
+    }
+  ]
+}
