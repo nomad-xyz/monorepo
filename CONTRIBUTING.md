@@ -122,6 +122,7 @@ Before publishing any package to `npm` perform the following steps:
 - Ensure that your package has a sensible `.npmignore`
 - Ensure that the `main` and `types` keys in your package are set correctly
 - Bump the version number in `package.json` (https://semver.org/, consult a senior dev if unsure)
+- Update changelog
 - Commit the above changes
 - Create a PR
 - AFTER the PR is merged, checkout main and tag the commit (git tag -s <package-to-release>@<new-package-version> <commit>)

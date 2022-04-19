@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### 1.0.0-rc.8
+
+- chore: bump configuration to v0.1.0-rc.11
+
 ### 1.0.0-rc.7
 
 - chore: bump configuration to v0.1.0-rc.10
