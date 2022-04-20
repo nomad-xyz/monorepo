@@ -1,14 +1,9 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity >=0.6.11;
 
-import {Vm} from "forge-std/Vm.sol";
-import {stdCheats, stdError} from "forge-std/stdlib.sol";
-import {console} from "forge-std/console.sol";
-import {DSTest} from "ds-test/test.sol";
+import "forge-std/Test.sol";
 
-contract NomadTest is DSTest, stdCheats {
-    Vm public constant vm = Vm(HEVM_ADDRESS);
-
+contract NomadTest is Test {
     uint256 updaterPK = 1;
     address updater = vm.addr(updaterPK);
     address fakeUpdater = vm.addr(2);

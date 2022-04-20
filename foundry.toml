@@ -8,6 +8,7 @@ remappings = [
 ]
 [core]
 src = 'packages/contracts-core/contracts'
+test = 'packages/contracts-core/contracts/foundry-tests'
 out = 'packages/contracts-core/foundry_artifacts'
 
 [router]

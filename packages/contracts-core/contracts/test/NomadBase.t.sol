@@ -19,6 +19,7 @@ contract NomadBaseTest is NomadTest {
     function testAcceptUpdaterSignature() public {
         bytes32 oldRoot = "old Root";
         bytes32 newRoot = "new Root";
+        vm.prank(updater);
         bytes memory sig = signUpdate(updaterPK, oldRoot, newRoot);
         assert(nbh.isUpdaterSignature(oldRoot, newRoot, sig));
     }
