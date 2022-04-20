@@ -1,4 +1,4 @@
-import { providers, Signer } from 'ethers';
+import { providers, Signer, BigNumber, ContractTransaction } from 'ethers';
 
 import { MultiProvider } from '@nomad-xyz/multi-provider';
 import * as core from '@nomad-xyz/contracts-core';
@@ -172,6 +172,43 @@ export class NomadContext extends MultiProvider<config.Domain> {
    */
   governorCore(): CoreContracts<this> {
     return this.mustGetCore(this.governor.domain);
+  }
+
+  async process(txId: string): Promise<ContractTransaction>{
+    const isProduction = this.conf.environment === 'production'
+    const nomadAPI = isProduction
+      ? 'https://bridge-indexer.prod.madlads.tools/tx/'
+      : 'https://bridge-indexer.dev.madlads.tools/tx/'
+    const s3URL = isProduction
+      ? 'https://nomadxyz-production-proofs.s3.us-west-2.amazonaws.com/'
+      : 'https://nomadxyz-development-proofs.s3.us-west-2.amazonaws.com/'
+
+    // get transfer message
+    const res = await fetch(`${nomadAPI}${txId}`)
+    const tx = (await res.json())[0] as any
+
+    // get proof
+    const index = BigNumber.from(tx.leafIndex).toNumber()
+    const originName = this.resolveDomainName(tx.origin)
+    const s3Res = await fetch(`${s3URL}${originName}_${index}`)
+    const data = (await s3Res.json()) as any
+    console.log('proof: ', data)
+
+    // get replica contract
+    const replica = this.getReplicaFor(tx.origin, tx.destination)
+
+    if (!replica) throw new Error('missing replica, unable to process transaction')
+
+    // get signer and connect replica
+    const signer = this.getSigner(tx.destination)
+    if (!signer) throw new Error('missing signer, unable to process transaction')
+    replica.connect(signer)
+
+    return await replica.proveAndProcess(
+      data.message,
+      data.proof.path,
+      data.proof.index
+    )
   }
 
   blacklist(): Set<number> {
