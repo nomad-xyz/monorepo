@@ -36,6 +36,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
       }
     }
 
+    // instantiate the CallBatch *after* the providers have been registered
     this._callBatch = CallBatch.fromContext(this.asNomadContext);
   }
 
