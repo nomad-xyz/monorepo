@@ -68,8 +68,8 @@ describe('sdk', async () => {
       const conf = config.getBuiltin('development');
       const context = new NomadContext(conf);
       const signer = new VoidSigner(constants.AddressZero);
-      const err = 'Missing provider for domain: 2000 : rinkeby';
-      expect(() => context.registerSigner(2000, signer)).to.throw(err);
+      const err = 'Missing provider for domain: 1001 : rinkeby.\nHint: Have you called `context.registerProvider(1001, provider)` yet?';
+      expect(() => context.registerSigner(1001, signer)).to.throw(err);
     });
 
     // TODO:
@@ -77,12 +77,12 @@ describe('sdk', async () => {
 
     it('gets replica by name or domain', () => {
       const context = new NomadContext('development');
-      context.registerRpcProvider(2000, 'http://dummy-rpc-url');
-      context.registerRpcProvider(3000, 'http://dummy-rpc-url');
-      const core = context.mustGetCore(2000);
-      const replica = core.getReplica(3000);
+      context.registerRpcProvider(2001, 'http://dummy-rpc-url');
+      context.registerRpcProvider(3001, 'http://dummy-rpc-url');
+      const core = context.mustGetCore(2001);
+      const replica = core.getReplica(3001);
       expect(replica).to.not.be.undefined;
-      const replicaFor = context.getReplicaFor(2000, 3000);
+      const replicaFor = context.getReplicaFor(2001, 3001);
       expect(replicaFor).to.not.be.undefined;
     });
 
@@ -94,13 +94,13 @@ describe('sdk', async () => {
       context.domainNames.forEach((domain) => {
         context.registerProvider(domain, provider);
       });
-      context.registerSigner(2000, signer);
-      context.registerSigner(3000, signer);
-      context.unregisterSigner(2000);
-      expect(context.getConnection(2000)).to.not.be.undefined;
+      context.registerSigner(2001, signer);
+      context.registerSigner(3001, signer);
+      context.unregisterSigner(2001);
+      expect(context.getConnection(2001)).to.not.be.undefined;
       context.clearSigners();
-      expect(context.getConnection(2000)).to.not.be.undefined;
-      expect(context.getConnection(3000)).to.not.be.undefined;
+      expect(context.getConnection(2001)).to.not.be.undefined;
+      expect(context.getConnection(3001)).to.not.be.undefined;
     });
   });
 
