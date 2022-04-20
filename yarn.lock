@@ -1018,6 +1018,43 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-tools/merge@npm:8.2.10":
+  version: 8.2.10
+  resolution: "@graphql-tools/merge@npm:8.2.10"
+  dependencies:
+    "@graphql-tools/utils": 8.6.9
+    tslib: ~2.3.0
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: 7059d9f68cfb9b7c04d6024f528e5638fab165e681b3307877a6bad0fc461686595d19375350875bb5f4f7572b21d10272a1e4b08a8af5b6a67950a4a950012b
+  languageName: node
+  linkType: hard
+
+"@graphql-tools/schema@npm:^8.3.5":
+  version: 8.3.10
+  resolution: "@graphql-tools/schema@npm:8.3.10"
+  dependencies:
+    "@graphql-tools/merge": 8.2.10
+    "@graphql-tools/utils": 8.6.9
+    tslib: ~2.3.0
+    value-or-promise: 1.0.11
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: 8b225f4ae87d3f1d8d9772df605a27dfde069a2372f2af0a1459859c4310c5fef8243c1276c1959e316420f1584d739b9f52c55dd230d2ad177cde1019155b81
+  languageName: node
+  linkType: hard
+
+"@graphql-tools/utils@npm:8.6.9":
+  version: 8.6.9
+  resolution: "@graphql-tools/utils@npm:8.6.9"
+  dependencies:
+    tslib: ~2.3.0
+  peerDependencies:
+    graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
+  checksum: 73b9569a9c2409f86a6a9005f19026cfab6d136bf884dfbff436996a47fb0561ae24d3f6bb2abcfd600197aab85d6dfc177b9a0cbaba23905ba0c7591ef12110
+  languageName: node
+  linkType: hard
+
 "@humanwhocodes/config-array@npm:^0.5.0":
   version: 0.5.0
   resolution: "@humanwhocodes/config-array@npm:0.5.0"
@@ -1165,6 +1202,63 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@node-redis/bloom@npm:1.0.1":
+  version: 1.0.1
+  resolution: "@node-redis/bloom@npm:1.0.1"
+  peerDependencies:
+    "@node-redis/client": ^1.0.0
+  checksum: b80cd54ae81f6165456c21645d339d37c4fdc46a0adc00f132f73f94e510f9d241614254add443e817b7a661dbafe844c3e610246c2504454f079520cdbe721b
+  languageName: node
+  linkType: hard
+
+"@node-redis/client@npm:1.0.5":
+  version: 1.0.5
+  resolution: "@node-redis/client@npm:1.0.5"
+  dependencies:
+    cluster-key-slot: 1.1.0
+    generic-pool: 3.8.2
+    redis-parser: 3.0.0
+    yallist: 4.0.0
+  checksum: cea9c4e339605afe805b5fb762b35d614dffbc40d8290f7050ae4994604c9f74b57d71433f50d3aa090d04b1f5c593ff52170b5cbc13a00ae3222b4282f47b2a
+  languageName: node
+  linkType: hard
+
+"@node-redis/graph@npm:1.0.0":
+  version: 1.0.0
+  resolution: "@node-redis/graph@npm:1.0.0"
+  peerDependencies:
+    "@node-redis/client": ^1.0.0
+  checksum: 967ea4a61cfcc2e22f354268ee58351d0d15df40036331444ef1ec79a9408849ee9333684eb4f898e164fa148c00e1b9caebdcac2a7bcb5c29dd188e2d57f4b2
+  languageName: node
+  linkType: hard
+
+"@node-redis/json@npm:1.0.2":
+  version: 1.0.2
+  resolution: "@node-redis/json@npm:1.0.2"
+  peerDependencies:
+    "@node-redis/client": ^1.0.0
+  checksum: ef89735d8117b52ff580bc022932cb358e92e5e7d4e01b459654b8dd8caee5105e64e531fd83943889c04807c18970b32b56a786a0fb3a9f55d6306fdeefc935
+  languageName: node
+  linkType: hard
+
+"@node-redis/search@npm:1.0.5":
+  version: 1.0.5
+  resolution: "@node-redis/search@npm:1.0.5"
+  peerDependencies:
+    "@node-redis/client": ^1.0.0
+  checksum: 3ef636d2386c79df3567bd5d2540932f544da7e097c2c6c0953410a0d11f9f214e4d98e4f3a61aa66690b1c77de5501f754adcb0ae2c9ba03cf07d649fc57ac8
+  languageName: node
+  linkType: hard
+
+"@node-redis/time-series@npm:1.0.2":
+  version: 1.0.2
+  resolution: "@node-redis/time-series@npm:1.0.2"
+  peerDependencies:
+    "@node-redis/client": ^1.0.0
+  checksum: 70787aa22a81d274bc6a97a9e25db150b5c76603597fc00c8980d2c416b157f42c7e47947ea75cadea3a114802b0a93094aedd7d4f5977054d10f10fcbdf946c
+  languageName: node
+  linkType: hard
+
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -1210,7 +1304,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
+"@nomad-xyz/contracts-bridge@1.0.0-rc.2, @nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge"
   dependencies:
@@ -1329,6 +1423,39 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nomad-xyz/indexer@workspace:packages/indexer":
+  version: 0.0.0-use.local
+  resolution: "@nomad-xyz/indexer@workspace:packages/indexer"
+  dependencies:
+    "@graphql-tools/schema": ^8.3.5
+    "@nomad-xyz/contracts-bridge": 1.0.0-rc.2
+    "@nomad-xyz/multi-provider": ^1.0.0-rc.4
+    "@nomad-xyz/sdk": ^2.0.0-rc.7
+    "@nomad-xyz/sdk-bridge": ^1.0.0-rc.7
+    "@nomad-xyz/sdk-govern": ^1.0.0-rc.6
+    "@prisma/client": ^3.9.1
+    "@types/bunyan": ^1.8.7
+    "@types/cors": ^2.8.12
+    "@types/express": ^4.17.13
+    axios: ^0.26.0
+    bunyan: ^1.8.15
+    cors: ^2.8.5
+    dotenv: ^10.0.0
+    ethers: ^5.4.6
+    express: ^4.17.2
+    express-graphql: ^0.12.0
+    express-prom-bundle: ^6.4.1
+    graphql: ^15.3.0
+    p-limit: ^3.1.0
+    prettier: ^2.4.1
+    prisma: ^3.9.1
+    prom-client: ^14.0.0
+    redis: ^4.0.4
+    ts-node: ^10.4.0
+    typescript: ^4.4.3
+  languageName: unknown
+  linkType: soft
+
 "@nomad-xyz/local-environment@workspace:^, @nomad-xyz/local-environment@workspace:packages/local-environment":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/local-environment@workspace:packages/local-environment"
@@ -1391,7 +1518,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/multi-provider@workspace:^, @nomad-xyz/multi-provider@workspace:packages/multi-provider":
+"@nomad-xyz/multi-provider@^1.0.0-rc.4, @nomad-xyz/multi-provider@workspace:^, @nomad-xyz/multi-provider@workspace:packages/multi-provider":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/multi-provider@workspace:packages/multi-provider"
   dependencies:
@@ -1443,7 +1570,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
+"@nomad-xyz/sdk-bridge@^1.0.0-rc.7, @nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
@@ -1469,7 +1596,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk-govern@workspace:^, @nomad-xyz/sdk-govern@workspace:packages/sdk-govern":
+"@nomad-xyz/sdk-govern@^1.0.0-rc.6, @nomad-xyz/sdk-govern@workspace:^, @nomad-xyz/sdk-govern@workspace:packages/sdk-govern":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-govern@workspace:packages/sdk-govern"
   dependencies:
@@ -1497,7 +1624,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
+"@nomad-xyz/sdk@^2.0.0-rc.7, @nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -2074,6 +2201,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/cors@npm:^2.8.12":
+  version: 2.8.12
+  resolution: "@types/cors@npm:2.8.12"
+  checksum: 8c45f112c7d1d2d831b4b266f2e6ed33a1887a35dcbfe2a18b28370751fababb7cd045e745ef84a523c33a25932678097bf79afaa367c6cb3fa0daa7a6438257
+  languageName: node
+  linkType: hard
+
 "@types/d3@npm:^3":
   version: 3.5.46
   resolution: "@types/d3@npm:3.5.46"
@@ -2619,7 +2753,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"accepts@npm:~1.3.8":
+"accepts@npm:^1.3.7, accepts@npm:~1.3.8":
   version: 1.3.8
   resolution: "accepts@npm:1.3.8"
   dependencies:
@@ -4831,6 +4965,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cluster-key-slot@npm:1.1.0":
+  version: 1.1.0
+  resolution: "cluster-key-slot@npm:1.1.0"
+  checksum: fc953c75209b1ef9088081bab4e40a0b2586491c974ab93460569c014515ca5a2e31c043f185285e177007162fc353d07836d98f570c171dbe055775430e495b
+  languageName: node
+  linkType: hard
+
 "code-point-at@npm:^1.0.0":
   version: 1.1.0
   resolution: "code-point-at@npm:1.1.0"
@@ -5146,7 +5287,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"content-type@npm:~1.0.4":
+"content-type@npm:^1.0.4, content-type@npm:~1.0.4":
   version: 1.0.4
   resolution: "content-type@npm:1.0.4"
   checksum: 3d93585fda985d1554eca5ebd251994327608d2e200978fdbfba21c0c679914d5faf266d17027de44b34a72c7b0745b18584ecccaa7e1fdfb6a68ac7114f12e0
@@ -5218,7 +5359,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cors@npm:^2.8.1":
+"cors@npm:^2.8.1, cors@npm:^2.8.5":
   version: 2.8.5
   resolution: "cors@npm:2.8.5"
   dependencies:
@@ -7296,6 +7437,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"express-graphql@npm:^0.12.0":
+  version: 0.12.0
+  resolution: "express-graphql@npm:0.12.0"
+  dependencies:
+    accepts: ^1.3.7
+    content-type: ^1.0.4
+    http-errors: 1.8.0
+    raw-body: ^2.4.1
+  peerDependencies:
+    graphql: ^14.7.0 || ^15.3.0
+  checksum: c1417718edea0ef337b5efafaf9e09554fc154db241fc073d42d2cc8ebfe1b0316a5651cccf9df02bf4e9a492cdd94799e4894bc89d4b80c8d49ffeb83a97075
+  languageName: node
+  linkType: hard
+
 "express-prom-bundle@npm:^6.4.1":
   version: 6.4.1
   resolution: "express-prom-bundle@npm:6.4.1"
@@ -8147,6 +8302,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"generic-pool@npm:3.8.2":
+  version: 3.8.2
+  resolution: "generic-pool@npm:3.8.2"
+  checksum: f549077d90265e5e4d32a2410205b357ec61cf73d17861f1013637984390e09fe7bf537129a2c6ed30ae57662a57c8d54194f80046408d3349836330f422dbde
+  languageName: node
+  linkType: hard
+
 "gensync@npm:^1.0.0-beta.2":
   version: 1.0.0-beta.2
   resolution: "gensync@npm:1.0.0-beta.2"
@@ -8695,6 +8857,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"graphql@npm:^15.3.0":
+  version: 15.8.0
+  resolution: "graphql@npm:15.8.0"
+  checksum: 423325271db8858428641b9aca01699283d1fe5b40ef6d4ac622569ecca927019fce8196208b91dd1d8eb8114f00263fe661d241d0eb40c10e5bfd650f86ec5e
+  languageName: node
+  linkType: hard
+
 "grid-index@npm:^1.1.0":
   version: 1.1.0
   resolution: "grid-index@npm:1.1.0"
@@ -9078,6 +9247,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"http-errors@npm:1.8.0":
+  version: 1.8.0
+  resolution: "http-errors@npm:1.8.0"
+  dependencies:
+    depd: ~1.1.2
+    inherits: 2.0.4
+    setprototypeof: 1.2.0
+    statuses: ">= 1.5.0 < 2"
+    toidentifier: 1.0.0
+  checksum: 873d997bada0340b31cc69cbe8376e47ee142f60375b81447fa3ad7be512dd4026afb3b46ed2257ee59472d43782a34151994b34264b204bcaad02e67ad836cb
+  languageName: node
+  linkType: hard
+
 "http-errors@npm:1.8.1":
   version: 1.8.1
   resolution: "http-errors@npm:1.8.1"
@@ -9284,28 +9466,6 @@ __metadata:
   checksum: 824cfb9929d031dabf059bebfe08cf3137365e112019086ed3dcff6a0a7b698cb80cf67ccccde0e25b9e2d7527aa6cc1fed1ac490c752162496caba3e6699612
   languageName: node
   linkType: hard
-
-"indexer@workspace:packages/indexer":
-  version: 0.0.0-use.local
-  resolution: "indexer@workspace:packages/indexer"
-  dependencies:
-    "@prisma/client": ^3.9.1
-    "@types/bunyan": ^1.8.7
-    "@types/express": ^4.17.13
-    axios: ^0.26.0
-    bunyan: ^1.8.15
-    dotenv: ^10.0.0
-    ethers: ^5.4.6
-    express: ^4.17.2
-    express-prom-bundle: ^6.4.1
-    p-limit: ^3.1.0
-    prettier: ^2.4.1
-    prisma: ^3.9.1
-    prom-client: ^14.0.0
-    ts-node: ^10.4.0
-    typescript: ^4.4.3
-  languageName: unknown
-  linkType: soft
 
 "infer-owner@npm:^1.0.4":
   version: 1.0.4
@@ -13481,6 +13641,36 @@ __metadata:
   languageName: node
   linkType: hard
 
+"redis-errors@npm:^1.0.0":
+  version: 1.2.0
+  resolution: "redis-errors@npm:1.2.0"
+  checksum: f28ac2692113f6f9c222670735aa58aeae413464fd58ccf3fce3f700cae7262606300840c802c64f2b53f19f65993da24dc918afc277e9e33ac1ff09edb394f4
+  languageName: node
+  linkType: hard
+
+"redis-parser@npm:3.0.0":
+  version: 3.0.0
+  resolution: "redis-parser@npm:3.0.0"
+  dependencies:
+    redis-errors: ^1.0.0
+  checksum: 89290ae530332f2ae37577647fa18208d10308a1a6ba750b9d9a093e7398f5e5253f19855b64c98757f7129cccce958e4af2573fdc33bad41405f87f1943459a
+  languageName: node
+  linkType: hard
+
+"redis@npm:^4.0.4":
+  version: 4.0.6
+  resolution: "redis@npm:4.0.6"
+  dependencies:
+    "@node-redis/bloom": 1.0.1
+    "@node-redis/client": 1.0.5
+    "@node-redis/graph": 1.0.0
+    "@node-redis/json": 1.0.2
+    "@node-redis/search": 1.0.5
+    "@node-redis/time-series": 1.0.2
+  checksum: 1b15d5703a1298e75125b2818ca5fc923f66f6e0d6463932a98890d6455db88f1bddb492172f5707f8273a124a5e9b807f4cd692e1c8edd6e3a63826401c2220
+  languageName: node
+  linkType: hard
+
 "regenerate@npm:^1.2.1":
   version: 1.4.2
   resolution: "regenerate@npm:1.4.2"
@@ -15643,6 +15833,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"toidentifier@npm:1.0.0":
+  version: 1.0.0
+  resolution: "toidentifier@npm:1.0.0"
+  checksum: 199e6bfca1531d49b3506cff02353d53ec987c9ee10ee272ca6484ed97f1fc10fb77c6c009079ca16d5c5be4a10378178c3cacdb41ce9ec954c3297c74c6053e
+  languageName: node
+  linkType: hard
+
 "toidentifier@npm:1.0.1":
   version: 1.0.1
   resolution: "toidentifier@npm:1.0.1"
@@ -15827,6 +16024,13 @@ __metadata:
   version: 1.14.1
   resolution: "tslib@npm:1.14.1"
   checksum: dbe628ef87f66691d5d2959b3e41b9ca0045c3ee3c7c7b906cc1e328b39f199bb1ad9e671c39025bd56122ac57dfbf7385a94843b1cc07c60a4db74795829acd
+  languageName: node
+  linkType: hard
+
+"tslib@npm:~2.3.0":
+  version: 2.3.1
+  resolution: "tslib@npm:2.3.1"
+  checksum: de17a98d4614481f7fcb5cd53ffc1aaf8654313be0291e1bfaee4b4bb31a20494b7d218ff2e15017883e8ea9626599b3b0e0229c18383ba9dce89da2adf15cb9
   languageName: node
   linkType: hard
 
@@ -16535,6 +16739,13 @@ __metadata:
   version: 1.0.1
   resolution: "validate.io-string-primitive@npm:1.0.1"
   checksum: 7c4c542ab948d7b8e1462242c2a9899c92872a113970a24aae453f02ffcec794a575f55d47dbf954764bcc1758397402d35eb43e4715b7b9233acd8f7bee6ae2
+  languageName: node
+  linkType: hard
+
+"value-or-promise@npm:1.0.11":
+  version: 1.0.11
+  resolution: "value-or-promise@npm:1.0.11"
+  checksum: 13f8f2ef620118c73b4d1beee8ce6045d7182bbf15090ecfbcafb677ec43698506a5e9ace6bea5ea35c32bc612c9b1f824bb59b6581cdfb5c919052745c277d5
   languageName: node
   linkType: hard
 
@@ -17558,17 +17769,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"yallist@npm:4.0.0, yallist@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "yallist@npm:4.0.0"
+  checksum: 343617202af32df2a15a3be36a5a8c0c8545208f3d3dfbc6bb7c3e3b7e8c6f8e7485432e4f3b88da3031a6e20afa7c711eded32ddfb122896ac5d914e75848d5
+  languageName: node
+  linkType: hard
+
 "yallist@npm:^3.0.0, yallist@npm:^3.0.2, yallist@npm:^3.1.1":
   version: 3.1.1
   resolution: "yallist@npm:3.1.1"
   checksum: 48f7bb00dc19fc635a13a39fe547f527b10c9290e7b3e836b9a8f1ca04d4d342e85714416b3c2ab74949c9c66f9cebb0473e6bc353b79035356103b47641285d
-  languageName: node
-  linkType: hard
-
-"yallist@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "yallist@npm:4.0.0"
-  checksum: 343617202af32df2a15a3be36a5a8c0c8545208f3d3dfbc6bb7c3e3b7e8c6f8e7485432e4f3b88da3031a6e20afa7c711eded32ddfb122896ac5d914e75848d5
   languageName: node
   linkType: hard
 
