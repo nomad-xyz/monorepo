@@ -20,6 +20,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
   overrides: Map<string, ethers.Overrides>;
   protected _data: config.NomadConfig;
   protected _verification: Map<string, Array<Verification>>;
+  protected _callBatch: CallBatch;
 
   constructor(data: config.NomadConfig) {
     super();
@@ -34,6 +35,8 @@ export class DeployContext extends MultiProvider<config.Domain> {
         this.registerRpcProvider(network, this.data.rpcs[network][0]);
       }
     }
+
+    this._callBatch = CallBatch.fromContext(this.asNomadContext);
   }
 
   get asNomadContext(): NomadContext {
@@ -67,6 +70,10 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
   get verification(): Readonly<Map<string, ReadonlyArray<Verification>>> {
     return this._verification;
+  }
+
+  get callBatch(): Readonly<CallBatch> {
+    return this._callBatch;
   }
 
   validate(): void {
@@ -195,12 +202,12 @@ export class DeployContext extends MultiProvider<config.Domain> {
   // Deploys all configured connections and enrolls them if possible.
   // For any connection that cannot be enrolled, outputs the governance
   // action required to enroll them
-  async ensureCoreConnections(): Promise<CallBatch | undefined> {
+  async ensureCoreConnections(): Promise<void> {
     // ensure all core contracts are deployed
     await this.ensureCores();
     // ensure all core contracts are enrolled in each other
-    const batches = await Promise.all(
-      this.networks.map(async (network): Promise<CallBatch | undefined> => {
+    await Promise.all(
+      this.networks.map(async (network): Promise<void> => {
         const core = this.mustGetCore(network);
         const name = this.resolveDomainName(network);
         const remoteDomains = this.data.protocol.networks[name]?.connections;
@@ -209,22 +216,20 @@ export class DeployContext extends MultiProvider<config.Domain> {
         if (remoteDomains.length == 0) return;
 
         const [firstDomain, ...restDomains] = remoteDomains;
+
         // wait on the first replica deploy to ensure that the implementation and beacon are deployed
-
         const firstReplicaTxns = await core.enrollRemote(firstDomain);
-        // perform subsequent replica deploys concurrently (will use same implementation and beacon)
-        const batches = await Promise.all(
-          restDomains.map((remote) => core.enrollRemote(remote)),
-        );
+        this._callBatch.append(firstReplicaTxns);
 
-        return CallBatch.flatten(this.asNomadContext, [
-          firstReplicaTxns,
-          ...batches,
-        ]);
+        // perform subsequent replica deploys concurrently (will use same implementation and beacon)
+        await Promise.all(
+          restDomains.map(async (remote) => {
+            const batch = await core.enrollRemote(remote);
+            if (batch) this._callBatch.append(batch);
+          }),
+        );
       }),
     );
-
-    return CallBatch.flatten(this.asNomadContext, batches);
   }
 
   /// Deploys all configured bridges.
@@ -233,32 +238,30 @@ export class DeployContext extends MultiProvider<config.Domain> {
     await Promise.all(toDeploy.map((net) => this.deployBridge(net)));
   }
 
-  async ensureBridgeConnections(): Promise<CallBatch | undefined> {
+  async ensureBridgeConnections(): Promise<void> {
     // first, ensure all bridge contracts are deployed
     await this.ensureBridges();
     // next, ensure all bridge contracts are enrolled in each other
     // and all custom tokens are also enrolled
-    const batches = await Promise.all(
-      this.networks.map(async (network): Promise<CallBatch> => {
+    await Promise.all(
+      this.networks.map(async (network): Promise<void> => {
         const bridge = this.mustGetBridge(network);
         const name = this.resolveDomainName(network);
         const remoteDomains = this.data.protocol.networks[name]?.connections;
         // the following "unreachable" error performs type-narrowing for the compiler
         if (!remoteDomains) throw new utils.UnreachableError();
-        const batches = await Promise.all(
-          remoteDomains.map((remote) => bridge.enrollBridgeRouter(remote)),
+        await Promise.all(
+          remoteDomains.map(async (remote) => {
+            const batch = await bridge.enrollBridgeRouter(remote);
+            if (batch) this._callBatch.append(batch);
+          }),
         );
 
         // deploy and enroll custom tokens
         const customs = await bridge.deployCustomTokens();
-
-        const batch = CallBatch.flatten(this.asNomadContext, batches);
-        if (customs) batch.append(customs);
-        return batch;
+        if (customs) this._callBatch.append(customs);
       }),
     );
-
-    return CallBatch.flatten(this.asNomadContext, batches);
   }
 
   async relinquishOwnership(): Promise<void> {
@@ -272,12 +275,19 @@ export class DeployContext extends MultiProvider<config.Domain> {
   }
 
   // Intended entrypoint.
-  async deployAndRelinquish(): Promise<CallBatch | undefined> {
+  async deployAndRelinquish(): Promise<void> {
     // validate the config input
     this.validate();
 
-    // ensure the presence of all core + bridge contracts, and enroll all core + bridge contracts with each other
-    const batch = await this.ensureCoreAndBridgeConnections();
+    // Checks for connections that are present in the config,
+    // but lack the on-chain state to be connected,
+    // such as missing deployed contracts or
+    // missing on-chain configuration transactions.
+    // Deploys all missing contracts.
+    // Attempts to submit any missing configuration transactions;
+    // if unable to submit the transaction, adds them to callBatch as governance actions.
+    await this.ensureCoreConnections();
+    await this.ensureBridgeConnections();
 
     // relinquish control of all other contracts from deployer to governance
     await this.relinquishOwnership();
@@ -288,24 +298,6 @@ export class DeployContext extends MultiProvider<config.Domain> {
         this.mustGetCore(network).appointGovernor(),
       ),
     );
-
-    return batch;
-  }
-
-  // Checks for connections that are configured but lack a corresponding bridge
-  // connection. Attempts to enroll the bridge routers on eachother.
-  // For any connection that cannot be enrolled, outputs the governance
-  // action required to enroll them
-  protected async ensureCoreAndBridgeConnections(): Promise<
-    CallBatch | undefined
-  > {
-    const coreBatch = await this.ensureCoreConnections();
-    const bridgeBatch = await this.ensureBridgeConnections();
-    // short circuit if no core txns
-    if (!coreBatch) return bridgeBatch;
-    // combine if there are some of each
-    if (bridgeBatch) coreBatch.append(bridgeBatch);
-    return coreBatch;
   }
 
   // perform validation checks on core and bridges
