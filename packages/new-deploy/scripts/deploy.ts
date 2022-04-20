@@ -35,7 +35,7 @@ async function run() {
 
     outputConfigAndVerification(outputDir, deployContext);
 
-    if (governanceBatch) {
+    if (governanceBatch && !governanceBatch.isEmpty()) {
       // build & write governance batch
       await governanceBatch.build();
       fs.writeFileSync(

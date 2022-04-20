@@ -111,6 +111,14 @@ export class CallBatch {
     return Array.from(this.remote.keys());
   }
 
+  get remoteDomains(): number[] {
+    return Array.from(this.remote.keys());
+  }
+
+  isEmpty(): boolean {
+    return this.local.length == 0 && this.remoteDomains.length == 0;
+  }
+
   pushLocal(call: Call): void {
     if (this.built)
       throw new Error('Batch has been built. Cannot push more calls');
