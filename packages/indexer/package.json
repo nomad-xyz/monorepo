@@ -16,8 +16,7 @@
     "build_docker": "npm run pack_all && docker-compose build",
     "start": "npm run migrate && npm run any",
     "migrate": "prisma db push",
-    "release-docker": "docker buildx build --platform linux/amd64,linux/arm64 --push -t gcr.io/nomad-xyz/nomad-indexer:sha-$(git rev-parse --short HEAD) .",
-    "get_sdk": "cd ../../typescript/nomad-sdk && npm i && npm run build && npm pack && cd ../../tools/indexer && mv ../../typescript/nomad-sdk/nomad-xyz-sdk-1.3.5.tgz ."
+    "release-docker": "docker buildx build --platform linux/amd64,linux/arm64 --push -t gcr.io/nomad-xyz/nomad-indexer:sha-$(git rev-parse --short HEAD) ."
   },
   "dependencies": {
     "@prisma/client": "^3.9.1",
