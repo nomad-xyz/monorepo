@@ -9,8 +9,8 @@ process based on the Nomad configuration format.
 This package is feature-complete and we have big plans for the future :)
 
 - Run a fresh deploy with no networks
-- Extend a current deployment
-- Future: gracefully resume partial deployments
+- Extend a current deployment with new networks or connections
+- Gracefully resume partial deployments by re-running the script
 - Future: automatically submit gnosis SAFE batches if configured
 
 ### Invocation
@@ -23,7 +23,16 @@ $ yarn run ts-node scripts/deploy.ts path/to/config.json path/to/overrides.json
 ```
 
 The deployer will output the new config file, the contract verification
-information, and any governance actions that need to be taken
+information, and any governance actions that need to be taken.
+
+If the deploy script errors during the process, the partial config 
+and verification inputs will still be output, so that contracts deployed
+are not lost. 
+
+Governance transactions are idempotent;
+if the state on-chain doesn't change,
+the same config will deterministically produce 
+the same set of governance transactions.
 
 ### Verification
 
