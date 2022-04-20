@@ -53,14 +53,19 @@ async function run() {
 }
 
 function outputConfigAndVerification(outputDir: string, deployContext: DeployContext) {
-  // output the updated config & verification inputs
+  // output the config
   fs.mkdirSync(outputDir, {recursive: true});
   fs.writeFileSync(
       `${outputDir}/config.json`,
       JSON.stringify(deployContext.data, null, 2),
   );
-  fs.writeFileSync(
-      `${outputDir}/verification-${Date.now()}.json`,
-      JSON.stringify(Object.fromEntries(deployContext.verification), null, 2),
-  );
+  // if new contracts were deployed,
+  const verification = Object.fromEntries(deployContext.verification);
+  if (Object.keys(verification).length > 0) {
+    // output the verification inputs
+    fs.writeFileSync(
+        `${outputDir}/verification-${Date.now()}.json`,
+        JSON.stringify(verification, null, 2),
+    );
+  }
 }
