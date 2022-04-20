@@ -10,3 +10,4 @@
 - chore: bump sdk to v2.0.0-rc.6
 - chore: bump sdk-govern to v1.0.0-rc.5
 - feature: make deploys re-start safe
+- store governance CallBatch on DeployContext instead of returning
