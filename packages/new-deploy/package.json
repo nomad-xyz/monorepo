@@ -27,7 +27,7 @@
     "prettier": "prettier --write ./src",
     "lint": "eslint --fix ./src",
     "test": "ts-mocha ./tests/*.ts",
-    "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts",
+    "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts"
   },
   "author": "Illusory Systems Inc.",
   "license": "MIT OR Apache-2.0",
