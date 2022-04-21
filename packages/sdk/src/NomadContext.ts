@@ -5,8 +5,15 @@ import * as core from '@nomad-xyz/contracts-core';
 import * as config from '@nomad-xyz/configuration';
 
 import { CoreContracts } from './CoreContracts';
+import { NomadMessage } from './messages/NomadMessage'
 
 export type Address = string;
+
+const s3URLs: { [key: string]: string } = {
+  production: 'https://nomadxyz-production-proofs.s3.us-west-2.amazonaws.com/',
+  development: 'https://nomadxyz-development-proofs.s3.us-west-2.amazonaws.com/',
+  staging: 'https://nomadxyz-staging-proofs.s3.us-west-2.amazonaws.com/'
+}
 
 /**
  * The NomadContext manages connections to Nomad core and Bridge contracts.
@@ -173,33 +180,41 @@ export class NomadContext extends MultiProvider<config.Domain> {
     return this.mustGetCore(this.governor.domain);
   }
 
-  async process(txId: string): Promise<ContractTransaction>{
-    const isProduction = this.conf.environment === 'production'
-    const nomadAPI = isProduction
-      ? 'https://bridge-indexer.prod.madlads.tools/tx/'
-      : 'https://bridge-indexer.dev.madlads.tools/tx/'
-    const s3URL = isProduction
-      ? 'https://nomadxyz-production-proofs.s3.us-west-2.amazonaws.com/'
-      : 'https://nomadxyz-development-proofs.s3.us-west-2.amazonaws.com/'
+  /**
+   * Proves and Processes a transaction on the destination chain. This is subsidize and
+   * automatic on non-Ethereum destinations
+   * 
+   * @dev Ensure that a transaction is ready to be processed. You should ensure the following
+   * criteria have been met prior to calling this function:
+   *  1. the tx has been relayed
+   *  2. the `confirmAt` timestamp for the tx is in the past
+   *  3. the user is on the destination chain in their wallet
+   *
+   * @returns The Contract Transaction receipt
+   */
+  async process(origin: string | number, txId: string): Promise<ContractTransaction>{
+    // get s3 proof URL for environment
+    const { environment } = this.conf
+    const s3URL = s3URLs[environment]
 
-    // get transfer message
-    const res = await fetch(`${nomadAPI}${txId}`)
-    const tx = (await res.json())[0] as any
+    const message = (await NomadMessage.baseFromTransactionHash(
+      this,
+      origin,
+      txId
+    ))[0]
 
-    // get proof
-    const index = BigNumber.from(tx.leafIndex).toNumber()
-    const originName = this.resolveDomainName(tx.origin)
-    const s3Res = await fetch(`${s3URL}${originName}_${index}`)
+    const originNetwork = this.resolveDomainName(message.origin)
+    const destNetwork = this.resolveDomainName(message.destination)
+    const index = message.leafIndex.toString()
+    const s3Res = await fetch(`${s3URL}${originNetwork}_${index}`)
     const data = (await s3Res.json()) as any
-    console.log('proof: ', data)
 
     // get replica contract
-    const replica = this.getReplicaFor(tx.origin, tx.destination)
-
+    const replica = this.getReplicaFor(originNetwork, destNetwork)
     if (!replica) throw new Error('missing replica, unable to process transaction')
 
     // get signer and connect replica
-    const signer = this.getSigner(tx.destination)
+    const signer = this.getSigner(destNetwork)
     if (!signer) throw new Error('missing signer, unable to process transaction')
     replica.connect(signer)
 
