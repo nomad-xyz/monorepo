@@ -28,24 +28,24 @@ async function run() {
     deployContext.registerSigner(network, signer);
     deployContext.overrides.set(network, OVERRIDES[network]);
   }
-  // run the deploy script
   const outputDir = './output';
   try {
-    const governanceBatch = await deployContext.deployAndRelinquish();
+    // run the deploy script
+    await deployContext.deployAndRelinquish();
 
+    // output the updated config & verification
     outputConfigAndVerification(outputDir, deployContext);
 
-    if (governanceBatch && !governanceBatch.isEmpty()) {
-      // build & write governance batch
-      await governanceBatch.build();
-      fs.writeFileSync(
-          `${outputDir}/governanceTransactions.json`,
-          JSON.stringify(governanceBatch, null, 2),
-      );
-    }
+    // output the governance transactions when the deploy succeeds
+    // (if the deploy script throws, the callBatch will be
+    // re-generated idempotently when the script ultimately succeeds)
+    await outputCallBatch(outputDir, deployContext);
 
     console.log(`DONE!`);
   } catch (e) {
+    // if the deploy script fails,
+    // output the updated config & verification
+    // then re-run the script to pick up where it left off
     outputConfigAndVerification(outputDir, deployContext);
     
     throw e;
@@ -66,6 +66,18 @@ function outputConfigAndVerification(outputDir: string, deployContext: DeployCon
     fs.writeFileSync(
         `${outputDir}/verification-${Date.now()}.json`,
         JSON.stringify(verification, null, 2),
+    );
+  }
+}
+
+async function outputCallBatch(outputDir: string, deployContext: DeployContext) {
+  const governanceBatch = deployContext.callBatch;
+  if (!governanceBatch.isEmpty()) {
+    // build & write governance batch
+    await governanceBatch.build();
+    fs.writeFileSync(
+        `${outputDir}/governanceTransactions.json`,
+        JSON.stringify(governanceBatch, null, 2),
     );
   }
 }
