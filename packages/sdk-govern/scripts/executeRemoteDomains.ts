@@ -21,16 +21,13 @@ async function run() {
         throw new Error('Add SIGNER_KEY to .env');
     }
 
-    // TODO const OVERRIDES = getOverrides();
+    const OVERRIDES = getOverrides();
 
     // add deploy signer and overrides for each network
     for (const domain of batch.domains) {
         const provider = context.mustGetProvider(domain);
         const signer = new ethers.Wallet(SIGNER_KEY, provider);
         context.registerSigner(domain, signer);
-        // TODO: should you be able to set overrides on the SDK?
-        // const name = context.resolveDomainName(domain);
-        // context.overrides.set(name, OVERRIDES[name]);
     }
 
     // for each domain, execute the batch calls
@@ -42,7 +39,7 @@ async function run() {
         if (status !== BatchStatus.Received) continue;
         // execute the batch
         console.log(`Executing Batch on ${domainName}...`);
-        const tx = await batch.executeDomain(domain);
+        const tx = await batch.executeDomain(domain, OVERRIDES[domainName]);
         const receipt = await tx.wait();
         // print details of execution tx
         console.log(`Executed Batch on ${domainName}!!`);

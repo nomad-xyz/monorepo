@@ -201,12 +201,13 @@ export class CallBatch {
   // @dev ensure waitDomain returns before attempting to executeDomain
   async executeDomain(
     nameOrDomain: number | string,
+    overrides: ethers.Overrides = {}
   ): Promise<ethers.providers.TransactionResponse> {
     const domain = this.context.resolveDomain(nameOrDomain);
     const calls = this.remote.get(domain);
     if (!calls) throw new Error(`Not found calls for remote ${domain}`);
     const governanceRouter = this.context.mustGetCore(domain).governanceRouter;
-    return governanceRouter.executeCallBatch(calls);
+    return governanceRouter.executeCallBatch(calls, overrides);
   }
 
   // Waits for a specified domain to receive its batch
