@@ -22,31 +22,31 @@ async function run() {
         throw new Error('Add SIGNER_KEY to .env');
     }
 
+    // setup provider & signer
     const domain = context.governor.domain;
     const provider = context.mustGetProvider(domain);
     const signer = new ethers.Wallet(SIGNER_KEY, provider);
     context.registerSigner(domain, signer);
 
-    const domainName = context.resolveDomainName(domain);
-    // TODO: should you be able to set overrides on the MultiProvider?
-    // const OVERRIDES = getOverrides();
-    // context.overrides.set(domainName, OVERRIDES[domainName]);
+    // get block explorer
+    const blockExplorer = CONFIG.protocol.networks[context.resolveDomainName(domain)].specs.blockExplorer;
 
     // get governor address
-    const governor = await context.governorCore().governanceRouter.governor();
+    const governorCore = await context.governorCore();
+    const governor = await governorCore.governanceRouter.governor();
 
     // if provided signer is the governor, execute the batch directly
     // otherwise, send the built transaction to the governor gnosis safe
     if (equalIds(governor, signer.address)) {
-        console.log('Sending governance tx...');
+        console.log("Sending governance tx...");
         const txResponse = await batch.execute();
         const receipt = await txResponse.wait();
-        console.log(`Governance tx mined!!`);
-        console.log(`   Transaction Hash: ${receipt.transactionHash}`);
-        console.log(`   Block Explorer: ${CONFIG.protocol.networks[domainName].specs.blockExplorer}`);
+        console.log("Governance tx mined!!");
+        console.log("   Transaction Hash: ", receipt.transactionHash);
+        console.log("   Block Explorer: ", blockExplorer);
     } else {
         // TODO: send to gnosis safe directly
     }
 
-    console.log(`DONE!`);
+    console.log("DONE!");
 }
