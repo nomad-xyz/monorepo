@@ -40,6 +40,10 @@ Deployment will produce a verification json output. Set the `ETHERSCAN_KEY` env
 var in your `.env` file, then run:
 
 ```sh
-# Verify script args are 'environment' 'verification_json'
+# Verify script args are 'config_json' 'verification_json'
+$ yarn run ts-node ./scripts/verify path/to/config.json path/to/verification.json
+
+# OR 'environment' 'verification_json'
+# to use environments in the published configuration package
 $ yarn run ts-node ./scripts/verify development path/to/verification.json
 ```
