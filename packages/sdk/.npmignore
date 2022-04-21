@@ -4,3 +4,5 @@ tmp.ts
 config/
 scripts/
 tests/
+tsconfig.json
+tsconfig.tsbuildinfo

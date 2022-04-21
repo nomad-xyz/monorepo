@@ -5,8 +5,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: Install Foundry
+        uses: onbjerg/foundry-toolchain@v1
+        with:
+          version: nightly
+
       - run: |
           yarn install
+      - run: |
+          yarn lint
       - run: |
           yarn build
       - run: |

@@ -4,3 +4,5 @@ dist/
 .env
 config/
 scripts/
+tsconfig.json
+tsconfig.tsbuildinfo
