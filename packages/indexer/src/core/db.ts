@@ -1,9 +1,11 @@
-import { NomadMessage } from "./consumer";
+import { NomadMessage } from "./consumerV2";
 
 import { Prisma, PrismaClient } from "@prisma/client";
 import { DbRequestType, IndexerCollector } from "./metrics";
 import Logger from "bunyan";
 import pLimit from "p-limit";
+import { Padded } from "./utils";
+import { ethers } from "ethers";
 
 // function fromDb(m: messages): NomadMessage {
 //   return
@@ -85,9 +87,77 @@ export class DB {
     return messages.map((m) => NomadMessage.deserialize(m, this.logger));
   }
 
-  async getMessageByHash(
-    messageHash: string
-  ): Promise<NomadMessage | undefined> {
+  async getMessagesByOriginAndStateNumber(
+    origin: number,
+    state: number
+  ): Promise<NomadMessage[]> {
+    this.metrics.incDbRequests(DbRequestType.Select);
+    const messages = await this.client.messages.findMany({
+      where: {
+        origin,
+        state,
+      },
+    });
+
+    return messages.map((m) => NomadMessage.deserialize(m, this.logger));
+  }
+
+  async getMessagesByOriginAndRoot(
+    origin: number,
+    root: string
+  ): Promise<NomadMessage[]> {
+    this.metrics.incDbRequests(DbRequestType.Select);
+    const messages = await this.client.messages.findMany({
+      where: {
+        origin,
+        root,
+      },
+    });
+    return messages.map((m) => NomadMessage.deserialize(m, this.logger));
+  }
+
+  async getAllMessages(): Promise<NomadMessage[]> {
+    this.metrics.incDbRequests(DbRequestType.Select);
+    const messages = await this.client.messages.findMany();
+    return messages.map((m) => NomadMessage.deserialize(m, this.logger));
+  }
+
+  async getMessageByOriginAndNonce(
+    origin: number,
+    nonce: number
+  ): Promise<NomadMessage | null> {
+    this.metrics.incDbRequests(DbRequestType.Select);
+    const message = await this.client.messages.findFirst({
+      where: {
+        origin,
+        nonce,
+      },
+    });
+    return message ? NomadMessage.deserialize(message, this.logger) : null;
+    // return message ? NomadMessage.deserialize(message, this.logger) : null
+  }
+
+  async getMessageBySendValues(
+    destination: number,
+    recipient: Padded,
+    amount: ethers.BigNumber,
+    dispatchBlock: number
+  ): Promise<NomadMessage | null> {
+    this.metrics.incDbRequests(DbRequestType.Select);
+    const message = await this.client.messages.findFirst({
+      where: {
+        destination,
+        recipient: recipient.valueOf(), // need to make sure it is right
+        amount: amount.toHexString(),
+        dispatchBlock,
+        // tokenId: tokenId.valueOf()
+      },
+    });
+
+    return message ? NomadMessage.deserialize(message, this.logger) : null;
+  }
+
+  async getMessageByHash(messageHash: string): Promise<NomadMessage | null> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const message = await this.client.messages.findUnique({
       where: {
@@ -95,7 +165,7 @@ export class DB {
       },
     });
 
-    return message ? NomadMessage.deserialize(message, this.logger) : undefined;
+    return message ? NomadMessage.deserialize(message, this.logger) : null;
   }
 
   async getMessages(req: MsgRequest): Promise<NomadMessage[]> {
@@ -130,7 +200,7 @@ export class DB {
   async insertMessage(messages: NomadMessage[]) {
     if (!messages.length) return;
 
-    this.metrics.incDbRequests(DbRequestType.Insert);
+    this.metrics.incDbRequests(DbRequestType.Insert, messages.length);
     await this.client.messages.createMany({
       data: messages.map((message) => {
         message.logger.debug(`Message created in DB`);
@@ -153,6 +223,7 @@ export class DB {
           this.metrics.incDbRequests(DbRequestType.Update);
 
           const serialized = m.serialize();
+
           await this.client.messages.update({
             where: {
               messageHash: m.messageHash,

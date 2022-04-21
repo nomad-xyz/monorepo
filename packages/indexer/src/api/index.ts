@@ -129,12 +129,15 @@ export async function run(db: DB, logger: Logger) {
       allTokens: () => {
         return db.client.token.findMany();
       },
-      tokenReplicas: (_: any, {id, domain}: {id: string, domain: number}) => {
+      tokenReplicas: (
+        _: any,
+        { id, domain }: { id: string; domain: number }
+      ) => {
         return db.client.replica.findMany({
           where: {
             tokenId: id,
             tokenDomain: domain,
-          }
+          },
         });
       },
     },

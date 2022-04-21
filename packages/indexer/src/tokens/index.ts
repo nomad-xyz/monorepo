@@ -71,14 +71,13 @@ class TokenFetcher {
     let totalSupply: ethers.BigNumber;
     let balance: ethers.BigNumber;
     try {
-      [[name], [decimals], [symbol], [totalSupply], [balance]] = await new MakeFun(
-        token
-      )
-        .with("name", "decimals", "symbol", "totalSupply", [
-          "balanceOf",
-          this.sdk.mustGetBridge(domain).bridgeRouter.address,
-        ])
-        .celebrate();
+      [[name], [decimals], [symbol], [totalSupply], [balance]] =
+        await new MakeFun(token)
+          .with("name", "decimals", "symbol", "totalSupply", [
+            "balanceOf",
+            this.sdk.mustGetBridge(domain).bridgeRouter.address,
+          ])
+          .celebrate();
     } catch (e) {
       this.logger.error(`Failed getting info for ${id} ${domain}`);
       return;
@@ -107,7 +106,6 @@ class TokenFetcher {
     });
 
     this.logger.debug(`Updated token [${domain}, ${id}]`);
-
 
     // Determine remotes whether network is gov or not
     let remotes: number[];
@@ -141,7 +139,9 @@ class TokenFetcher {
         let _symbol: string;
         let _totalSupply: ethers.BigNumber;
         try {
-          [[_name], [_decimals], [_symbol], [_totalSupply]] = await new MakeFun(token)
+          [[_name], [_decimals], [_symbol], [_totalSupply]] = await new MakeFun(
+            token
+          )
             .with("name", "decimals", "symbol", "totalSupply")
             .celebrate();
         } catch (e) {
@@ -149,9 +149,18 @@ class TokenFetcher {
           return;
         }
 
-        if (name !== _name) this.logger.warn(`Original token name !== replica's _name in TokenFetcher.fetch(): ${name} !== ${_name}. Domain: ${remoteDomain}, id: ${remoteId}`);
-        if (decimals !== _decimals) throw new Error(`Original token decimals !== replica's _decimals in TokenFetcher.fetch(): ${decimals} !== ${_decimals}. Domain: ${remoteDomain}, id: ${remoteId}`);
-        if (symbol !== _symbol) this.logger.warn(`Original token symbol !== replica's _symbol in TokenFetcher.fetch(): ${symbol} !== ${_symbol}. Domain: ${remoteDomain}, id: ${remoteId}`);
+        if (name !== _name)
+          this.logger.warn(
+            `Original token name !== replica's _name in TokenFetcher.fetch(): ${name} !== ${_name}. Domain: ${remoteDomain}, id: ${remoteId}`
+          );
+        if (decimals !== _decimals)
+          throw new Error(
+            `Original token decimals !== replica's _decimals in TokenFetcher.fetch(): ${decimals} !== ${_decimals}. Domain: ${remoteDomain}, id: ${remoteId}`
+          );
+        if (symbol !== _symbol)
+          this.logger.warn(
+            `Original token symbol !== replica's _symbol in TokenFetcher.fetch(): ${symbol} !== ${_symbol}. Domain: ${remoteDomain}, id: ${remoteId}`
+          );
         // if (!balance.eq(_totalSupply)) console.warn(`totalSupply of ${symbol} (from ${domain}) at ${remoteDomain}\nis ${_totalSupply.toString()}\n want: ${balance}`);
 
         const data = {
@@ -180,12 +189,13 @@ class TokenFetcher {
           create: data,
         });
 
-        this.logger.debug(`Updated Replica at doamin ${remoteDomain} for [${domain}, ${id}]`);
+        this.logger.debug(
+          `Updated Replica at doamin ${remoteDomain} for [${domain}, ${id}]`
+        );
       })
     );
   }
 }
-
 
 // const tokens: [string, number][] = [
 //   [
@@ -230,9 +240,12 @@ class TokenFetcher {
 //   ],
 // ];
 
-
-
-export async function startTokenUpdater(sdk: BridgeContext, db: DB, logger: Logger): Promise<[() => void, Promise<void>]> { // Promise<[() => void, Promise<null>]>
+export async function startTokenUpdater(
+  sdk: BridgeContext,
+  db: DB,
+  logger: Logger
+): Promise<[() => void, Promise<void>]> {
+  // Promise<[() => void, Promise<null>]>
   const f = new TokenFetcher(db.client, sdk, logger);
   await f.connect();
 
@@ -242,17 +255,23 @@ export async function startTokenUpdater(sdk: BridgeContext, db: DB, logger: Logg
         tokenId: true,
         tokenDomain: true,
       },
-      distinct: ['tokenId', 'tokenDomain'],
-      where: {}
+      distinct: ["tokenId", "tokenDomain"],
+      where: {},
     });
     logger.debug(`Found tokens:`, tokens.length);
-    const result = await Promise.all(tokens.filter(({tokenId, tokenDomain}) => tokenId && tokenDomain).map(({tokenId, tokenDomain}) => f.fetch(tokenId!, tokenDomain!)));
-    return result
-  }
+    const result = await Promise.all(
+      tokens
+        .filter(({ tokenId, tokenDomain }) => tokenId && tokenDomain)
+        .map(({ tokenId, tokenDomain }) => f.fetch(tokenId!, tokenDomain!))
+    );
+    return result;
+  };
 
   let stopper = false;
 
-  const ff = () => {stopper = true};
+  const ff = () => {
+    stopper = true;
+  };
 
   const p: Promise<void> = new Promise(async (resolve, reject) => {
     while (true) {
@@ -262,8 +281,8 @@ export async function startTokenUpdater(sdk: BridgeContext, db: DB, logger: Logg
       }
       try {
         await x();
-        await sleep(5*60*1000) 
-      } catch(e) {
+        await sleep(5 * 60 * 1000);
+      } catch (e) {
         logger.error(`Failed updating tokens:`, e);
       }
     }

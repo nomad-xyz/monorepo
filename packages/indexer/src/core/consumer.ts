@@ -8,8 +8,9 @@ import { DB } from "./db";
 import Logger from "bunyan";
 import { Padded } from "./utils";
 import EventEmitter from "events";
+import { NomadMessage } from "./consumerV2";
 
-class StatisticsCollector {
+export class StatisticsCollector {
   s: Statistics;
   constructor(domains: number[]) {
     this.s = new Statistics(domains);
@@ -17,27 +18,32 @@ class StatisticsCollector {
 
   addDispatched(domain: number) {
     this.s.counts.total.dispatched += 1;
-    this.s.counts.domainStatistics.get(domain)!.dispatched += 1;
+    if (this.s.counts.domainStatistics.has(domain))
+      this.s.counts.domainStatistics.get(domain)!.dispatched += 1;
   }
 
   addUpdated(domain: number) {
     this.s.counts.total.updated += 1;
-    this.s.counts.domainStatistics.get(domain)!.updated += 1;
+    if (this.s.counts.domainStatistics.has(domain))
+      this.s.counts.domainStatistics.get(domain)!.updated += 1;
   }
 
   addRelayed(domain: number) {
     this.s.counts.total.relayed += 1;
-    this.s.counts.domainStatistics.get(domain)!.relayed += 1;
+    if (this.s.counts.domainStatistics.has(domain))
+      this.s.counts.domainStatistics.get(domain)!.relayed += 1;
   }
 
   addReceived(domain: number) {
     this.s.counts.total.received += 1;
-    this.s.counts.domainStatistics.get(domain)!.received += 1;
+    if (this.s.counts.domainStatistics.has(domain))
+      this.s.counts.domainStatistics.get(domain)!.received += 1;
   }
 
   addProcessed(domain: number) {
     this.s.counts.total.processed += 1;
-    this.s.counts.domainStatistics.get(domain)!.processed += 1;
+    if (this.s.counts.domainStatistics.get(domain))
+      this.s.counts.domainStatistics.get(domain)!.processed += 1;
   }
 
   contributeToCount(m: NomadMessage) {
@@ -69,7 +75,7 @@ class StatisticsCollector {
 
 export abstract class Consumer extends EventEmitter {
   abstract consume(evens: NomadishEvent[]): Promise<void>;
-  abstract stats(): Statistics;
+  abstract stats(): Promise<Statistics>;
 }
 
 enum MsgState {
@@ -80,7 +86,7 @@ enum MsgState {
   Processed,
 }
 
-class GasUsed {
+export class GasUsed {
   dispatch: ethers.BigNumber;
   update: ethers.BigNumber;
   relay: ethers.BigNumber;
@@ -122,7 +128,7 @@ class GasUsed {
   }
 }
 
-class Timings {
+export class Timings {
   dispatchedAt: number;
   updatedAt: number;
   relayedAt: number;
@@ -212,6 +218,8 @@ class Timings {
     return t;
   }
 }
+
+/*
 
 enum MessageType {
   NoMessage,
@@ -315,20 +323,13 @@ export class NomadMessage {
     this.logger = logger.child({ messageHash });
   }
 
-  // PADDED!
-  /**
-   * PADDED!
-   */
   recipient(): Padded | undefined {
     return this.transferMessage
       ? new Padded(this.transferMessage!.action.to)
       : undefined;
   }
 
-  // PADDED!
-  /**
-   * PADDED!
-   */
+ 
   tokenId(): Padded | undefined {
     return this.transferMessage
       ? new Padded(this.transferMessage!.token.id as string)
@@ -868,7 +869,7 @@ export class Processor extends Consumer {
     return this.messages.find((m) => m.nonce === nonce && m.origin === origin);
   }
 
-  stats(): Statistics {
+  async stats(): Promise<Statistics> {
     const collector = new StatisticsCollector(this.domains);
 
     this.messages.forEach((m) => {
@@ -878,3 +879,6 @@ export class Processor extends Consumer {
     return collector.stats();
   }
 }
+
+
+*/

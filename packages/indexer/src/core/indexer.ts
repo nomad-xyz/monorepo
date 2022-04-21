@@ -1,7 +1,12 @@
 import { Orchestrator } from "./orchestrator";
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import fs from "fs";
-import { ContractType, EventType, NomadishEvent, EventSource, eventTypeToOrder } from "./event";
+import {
+  EventType,
+  NomadishEvent,
+  EventSource,
+  eventTypeToOrder,
+} from "./event";
 import { Home, Replica } from "@nomad-xyz/contracts-core";
 import { ethers } from "ethers";
 import { FailureCounter, KVCache, replacer, retry, reviver } from "./utils";
@@ -9,6 +14,8 @@ import { BridgeRouter } from "@nomad-xyz/contracts-bridge";
 import pLimit from "p-limit";
 import { RpcRequestMethod } from "./metrics";
 import Logger from "bunyan";
+import { createClient } from "redis";
+import { RedisClient } from "./types";
 
 type ShortTx = {
   gasPrice?: ethers.BigNumber;
@@ -18,11 +25,16 @@ type ShortTx = {
   gasLimit: ethers.BigNumber;
 };
 
-function blockSpeed(from: number, to: number, start: Date, finish: Date): number {
+function blockSpeed(
+  from: number,
+  to: number,
+  start: Date,
+  finish: Date
+): number {
   const blocks = to - from + 1;
-  const timeS = (finish.valueOf() - start.valueOf())/1000;
-  const speed = blocks/timeS;
-  return speed
+  const timeS = (finish.valueOf() - start.valueOf()) / 1000;
+  const speed = blocks / timeS;
+  return speed;
 }
 
 function txEncode(tx: ShortTx): string {
@@ -82,7 +94,9 @@ const BATCH_SIZE = process.env.BATCH_SIZE
   ? parseInt(process.env.BATCH_SIZE)
   : 2000;
 const RETRIES = 100;
-const INTENTIONAL_BLOCK_LAG = 2;
+const INTENTIONAL_BLOCK_LAG = 0;
+const EXTRA_BLOCKS_BEHIND = 3;
+
 
 export class Indexer {
   domain: number;
@@ -102,7 +116,12 @@ export class Indexer {
 
   eventCallback: undefined | ((event: NomadishEvent) => void);
 
-  constructor(domain: number, sdk: BridgeContext, orchestrator: Orchestrator) {
+  constructor(
+    domain: number,
+    sdk: BridgeContext,
+    orchestrator: Orchestrator,
+    redis?: RedisClient
+  ) {
     this.domain = domain;
     this.sdk = sdk;
     this.orchestrator = orchestrator;
@@ -112,7 +131,7 @@ export class Indexer {
         `/tmp/persistance_${this.domain}.json`
       );
     } else {
-      this.persistance = new RedisPersistance(domain);
+      this.persistance = new RedisPersistance(domain, redis);
     }
     this.blockCache = new KVCache(
       "b_" + String(this.domain),
@@ -143,10 +162,12 @@ export class Indexer {
   }
 
   domainToLimit(): number {
-    return {
-      1650811245: 20,
-      6648936: 20,
-    }[this.domain] || 100
+    return (
+      {
+        1650811245: 20,
+        6648936: 20,
+      }[this.domain] || 100
+    );
   }
 
   get provider(): ethers.providers.Provider {
@@ -189,7 +210,6 @@ export class Indexer {
       },
       RETRIES,
       (error: any) => {
-
         this.orchestrator.metrics.incRpcErrors(
           RpcRequestMethod.GetBlockWithTxs,
           this.network,
@@ -371,7 +391,9 @@ export class Indexer {
           this.network,
           error.code
         );
-        this.logger.warn(`Retrying after RPC Error... , Error: ${error.code}, msg: ${error.message}`);
+        this.logger.warn(
+          `Retrying after RPC Error... , Error: ${error.code}, msg: ${error.message}`
+        );
         this.failureCounter.add();
       }
     );
@@ -500,22 +522,25 @@ export class Indexer {
 
     while (true) {
       const done = Math.floor(((batchTo - from + 1) / (to - from + 1)) * 100);
-
-
       this.logger.debug(
         `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`
       );
+
+      const insuredBatchFrom = batchFrom - EXTRA_BLOCKS_BEHIND;
+
       const startBatch = new Date();
-      const events = await fetchEvents(batchFrom, batchTo);
+      const events = await fetchEvents(insuredBatchFrom, batchTo);
       const finishBatch = new Date();
       if (!events) throw new Error(`KEk`);
-      events.sort((a, b) => a.ts===b.ts?eventTypeToOrder(a)-eventTypeToOrder(b):a.ts - b.ts);
+      events.sort((a, b) =>
+        a.ts === b.ts ? eventTypeToOrder(a) - eventTypeToOrder(b) : a.ts - b.ts
+      );
       await this.persistance.store(...events);
       try {
         if (this.develop) {
           this.dummyTestEventsIntegrity(batchTo);
           this.logger.debug(
-            `Integrity test PASSED between ${batchFrom} and ${batchTo}`
+            `Integrity test PASSED between ${insuredBatchFrom} and ${batchTo}`
           );
         }
       } catch (e) {
@@ -533,11 +558,13 @@ export class Indexer {
           (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash()
         )
       );
-      allEvents.push(
-        ...filteredEvents
-      );
+      allEvents.push(...filteredEvents);
       const speed = blockSpeed(batchFrom, batchTo, startBatch, finishBatch);
-      this.logger.debug(`Fetched batch for domain ${this.domain}. Blocks: ${batchTo - batchFrom + 1} (${speed}b/sec). Got events: ${filteredEvents.length}`);
+      this.logger.debug(
+        `Fetched batch for domain ${this.domain}. Blocks: ${
+          batchTo - batchFrom + 1
+        } (${speed}b/sec). Got events: ${filteredEvents.length}`
+      );
       if (batchTo >= to) break;
       batchFrom = batchTo + 1;
       batchTo = Math.min(to, batchFrom + batchSize);
@@ -545,20 +572,23 @@ export class Indexer {
 
     const finishedAll = new Date();
 
-
     if (!allEvents) throw new Error("kek");
 
     allEvents.sort((a, b) => {
       if (a.ts === b.ts) {
-        return eventTypeToOrder(a) - eventTypeToOrder(b) 
+        return eventTypeToOrder(a) - eventTypeToOrder(b);
       } else {
-        return a.ts - b.ts
+        return a.ts - b.ts;
       }
     });
 
     if (this.develop || true) this.dummyTestEventsIntegrity();
     const speed = blockSpeed(from, to, startAll, finishedAll);
-    this.logger.info(`Fetched all for domain ${this.domain}. Blocks: ${to - from + 1} (${speed}b/sec). Got events: ${allEvents.length}`);
+    this.logger.info(
+      `Fetched all for domain ${this.domain}. Blocks: ${
+        to - from + 1
+      } (${speed}b/sec). Got events: ${allEvents.length}`
+    );
     this.lastBlock = to;
 
     return allEvents;
@@ -722,9 +752,12 @@ export class Indexer {
           return new NomadishEvent(
             this.domain,
             EventType.BridgeRouterSend,
-            ContractType.BridgeRouter,
             0,
             timestamp,
+            event.blockNumber,
+            EventSource.Fresh,
+            gasUsed,
+            event.transactionHash,
             {
               token: event.args[0],
               from: event.args[1],
@@ -732,12 +765,7 @@ export class Indexer {
               toId: event.args[3],
               amount: event.args[4],
               fastLiquidityEnabled: event.args[5],
-              evmHash: event.transactionHash,
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
+            }
           );
         })
       );
@@ -792,20 +820,19 @@ export class Indexer {
           return new NomadishEvent(
             this.domain,
             EventType.BridgeRouterReceive,
-            ContractType.BridgeRouter,
             0,
             timestamp,
+            event.blockNumber,
+            EventSource.Fresh,
+            gasUsed,
+            event.transactionHash,
             {
               originAndNonce: event.args[0],
               token: event.args[1],
               recipient: event.args[2],
               liquidityProvider: event.args[3],
               amount: event.args[4],
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
+            }
           );
         })
       );
@@ -869,20 +896,19 @@ export class Indexer {
           return new NomadishEvent(
             this.domain,
             EventType.HomeDispatch,
-            ContractType.Home,
             0,
             timestamp,
+            event.blockNumber,
+            EventSource.Fresh,
+            gasUsed,
+            event.transactionHash,
             {
               messageHash: event.args[0],
               leafIndex: event.args[1],
               destinationAndNonce: event.args[2],
               committedRoot: event.args[3],
               message: event.args[4],
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
+            }
           );
         })
       );
@@ -939,19 +965,18 @@ export class Indexer {
           return new NomadishEvent(
             this.domain,
             EventType.HomeUpdate,
-            ContractType.Home,
             0,
             timestamp,
+            event.blockNumber,
+            EventSource.Fresh,
+            gasUsed,
+            event.transactionHash,
             {
               homeDomain: event.args[0],
               oldRoot: event.args[1],
               newRoot: event.args[2],
               signature: event.args[3],
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
+            }
           );
         })
       );
@@ -1018,19 +1043,18 @@ export class Indexer {
           return new NomadishEvent(
             this.domain,
             EventType.ReplicaUpdate,
-            ContractType.Replica,
             domain,
             timestamp,
+            event.blockNumber,
+            EventSource.Fresh,
+            gasUsed,
+            event.transactionHash,
             {
               homeDomain: event.args[0],
               oldRoot: event.args[1],
               newRoot: event.args[2],
               signature: event.args[3],
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
+            }
           );
         })
       );
@@ -1091,18 +1115,17 @@ export class Indexer {
           return new NomadishEvent(
             this.domain,
             EventType.ReplicaProcess,
-            ContractType.Replica,
             domain,
             timestamp,
+            event.blockNumber,
+            EventSource.Fresh,
+            gasUsed,
+            event.transactionHash,
             {
               messageHash: event.args[0],
               success: event.args[1],
               returnData: event.args[2],
-            },
-            event.blockNumber,
-            EventSource.Fetch,
-            gasUsed,
-            event.transactionHash
+            }
           );
         })
       );
@@ -1129,17 +1152,17 @@ export abstract class Persistance {
   abstract persist(): void;
 }
 
-import { createClient, RedisClientType } from "redis";
-
 export class RedisPersistance extends Persistance {
-  client: RedisClientType;
+  client: RedisClient;
   domain: number;
 
-  constructor(domain: number) {
+  constructor(domain: number, client?: RedisClient) {
     super();
-    this.client = createClient({
-      url: process.env.REDIS_URL || "redis://redis:6379",
-    });
+    this.client =
+      client ||
+      createClient({
+        url: process.env.REDIS_URL || "redis://redis:6379",
+      });
     this.domain = domain;
 
     this.client.on("error", (err) => console.log("Redis Client Error", err));
@@ -1197,7 +1220,7 @@ export class RedisPersistance extends Persistance {
     await Promise.all(promises);
   }
   async init(): Promise<void> {
-    await this.client.connect();
+    // await this.client.connect();
 
     const from = await this.client.hGet(`from`, String(this.domain));
     const height = await this.client.hGet(`height`, String(this.domain));
@@ -1225,13 +1248,13 @@ export class RedisPersistance extends Persistance {
 
     events.sort((a, b) => {
       if (a.ts === b.ts) {
-        return eventTypeToOrder(a) - eventTypeToOrder(b) 
+        return eventTypeToOrder(a) - eventTypeToOrder(b);
       } else {
-        return a.ts - b.ts
+        return a.ts - b.ts;
       }
     });
     // console.log(`Returning all events for ${this.domain}`)
-    
+
     return events;
   }
   persist(): void {}

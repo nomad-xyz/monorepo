@@ -58,7 +58,10 @@ export function reviver(key: any, value: any): any {
   if (typeof value === "object" && value !== null) {
     if (value.dataType === "Map") {
       return new Map(value.value);
-    } else if (value.dataType === "NomadEvent" || value.dataType == "NomadishEvent") {
+    } else if (
+      value.dataType === "NomadEvent" ||
+      value.dataType == "NomadishEvent"
+    ) {
       return NomadishEvent.fromObject(value.value);
     } else if (value.dataType === "BigNumber") {
       return ethers.BigNumber.from(value.value);
@@ -125,12 +128,33 @@ export class Padded {
     this.s = s.toLowerCase();
   }
 
+  static fromEVM(s: string): Padded {
+    if (s.length !== 42)
+      throw new Error(`Input string length must be 42, got: ${s.length}`);
+
+    return new Padded("0x" + "00".repeat(12) + s.slice(2));
+  }
+
+  static fromWhatever(s: string | Padded): Padded {
+    if (typeof s === "string") {
+      if (s.length === 42) return Padded.fromEVM(s);
+
+      return new Padded(s);
+    }
+    return s;
+  }
+
   toEVMAddress() {
     return "0x" + this.s.slice(26);
   }
 
   valueOf(): string {
     return this.s;
+  }
+
+  eq(another: Padded | string) {
+    const theOther = Padded.fromWhatever(another);
+    return this.valueOf() === theOther.valueOf();
   }
 }
 
@@ -152,4 +176,44 @@ export class FailureCounter {
     this.container = cleanDates;
     return cleanDates.length;
   }
+}
+
+export function retain<V>(arr: V[], predicate: (v: V) => boolean): V[] {
+  const result = [];
+  for (let i = arr.length; i >= 0; i--) {
+    if (arr[i] && predicate(arr[i])) {
+      result.push(arr.splice(i, 1)[0]);
+    }
+  }
+  return result.reverse();
+}
+
+export function filter<V>(arr: V[], predicate: (v: V) => boolean): V[] {
+  const result = [];
+  for (let i = arr.length; i >= 0; i--) {
+    if (arr[i] && predicate(arr[i])) {
+      result.push(arr[i]);
+    }
+  }
+  return result.reverse();
+}
+
+export function shuffle<V>(array: V[]): V[] {
+  let currentIndex = array.length,
+    randomIndex;
+
+  // While there remain elements to shuffle.
+  while (currentIndex != 0) {
+    // Pick a remaining element.
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex],
+      array[currentIndex],
+    ];
+  }
+
+  return array;
 }
