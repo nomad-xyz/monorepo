@@ -83,15 +83,18 @@ class VerificationInfo {
 
   readonly chainId: number;
   readonly compiler: string;
+  readonly network: string;
   readonly optimizations: number;
 
   constructor(
     v: Verification,
+    network: string,
     chainId = 1,
     compiler = 'v0.7.6+commit.7338295f',
     optimizations = 999999,
   ) {
     this._data = v;
+    this.network = network;
     this.chainId = chainId;
     this.compiler = compiler;
     this.optimizations = optimizations;
@@ -162,13 +165,13 @@ class VerificationInfo {
 
   async verify(): Promise<void> {
     if (this.verified) {
-      console.log(this.name, 'Already Verified');
+      console.log(this.network, " ", this.name, 'Already Verified');
       return;
     }
 
     const toRun = this.verifyCommand;
     try {
-      console.log(`verifying ${this.name}@${this.address}`);
+      console.log(`verifying ${this.network} ${this.name}@${this.address}`);
       const res = await execAsync(toRun);
       this.GUID = extractGuidFromFoundry(res);
       if (!this.GUID) this.verified = true;
@@ -228,7 +231,7 @@ async function run() {
   const verifications: Record<string, Array<VerificationInfo>> = {};
   Object.entries(verificationInput).forEach(([network, list]) => {
     const chainId = context.mustGetDomain(network).specs.chainId;
-    verifications[network] = list.map((v) => new VerificationInfo(v, chainId));
+    verifications[network] = list.map((v) => new VerificationInfo(v, network, chainId));
   });
 
   // run verification
