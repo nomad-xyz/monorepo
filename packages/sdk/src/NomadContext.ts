@@ -1,4 +1,4 @@
-import { providers, Signer, BigNumber, ContractTransaction } from 'ethers';
+import { providers, Signer, ContractTransaction } from 'ethers';
 
 import { MultiProvider } from '@nomad-xyz/multi-provider';
 import * as core from '@nomad-xyz/contracts-core';
