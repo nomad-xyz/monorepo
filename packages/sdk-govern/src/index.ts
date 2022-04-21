@@ -28,22 +28,9 @@ export interface CallBatchContents {
 }
 
 export enum BatchStatus {
-  NOT_RECEIVED,
-  RECEIVED,
-  EXECUTED,
-}
-
-export function BatchStatusText(status: number): string {
-  switch (status) {
-    case BatchStatus.NOT_RECEIVED:
-      return 'Not Received';
-    case BatchStatus.RECEIVED:
-      return 'Received';
-    case BatchStatus.EXECUTED:
-      return 'Executed';
-    default:
-      return 'Invalid';
-  }
+  NotReceived,
+  Received,
+  Executed,
 }
 
 export class CallBatch {

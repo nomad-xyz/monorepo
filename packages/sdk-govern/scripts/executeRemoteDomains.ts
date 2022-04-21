@@ -1,7 +1,7 @@
 import * as config from '@nomad-xyz/configuration';
 import {NomadContext} from "@nomad-xyz/sdk";
-import {getCallBatch, getConfig} from './utils';
-import {CallBatch, CallBatchContents, BatchStatusText, BatchStatus} from "../dist";
+import {getCallBatch, getConfig, getOverrides} from './utils';
+import {CallBatch, CallBatchContents, BatchStatus} from "../dist";
 import * as dotenv from 'dotenv';
 import * as ethers from "ethers";
 dotenv.config();
@@ -38,8 +38,8 @@ async function run() {
         const domainName = context.resolveDomainName(domain);
         // check that the batch has been received, but not executed
         const status = await batch.status(domain);
-        console.log(`Batch status on ${domainName}: ${BatchStatusText(status)}!`);
-        if (status !== BatchStatus.RECEIVED) continue;
+        console.log(`Batch status on ${domainName}: ${BatchStatus[status]}!`);
+        if (status !== BatchStatus.Received) continue;
         // execute the batch
         console.log(`Executing Batch on ${domainName}...`);
         const tx = await batch.executeDomain(domain);
