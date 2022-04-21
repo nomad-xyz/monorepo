@@ -94,7 +94,9 @@ const BATCH_SIZE = process.env.BATCH_SIZE
   ? parseInt(process.env.BATCH_SIZE)
   : 2000;
 const RETRIES = 100;
-const INTENTIONAL_BLOCK_LAG = 2;
+const INTENTIONAL_BLOCK_LAG = 0;
+const EXTRA_BLOCKS_BEHIND = 3;
+
 
 export class Indexer {
   domain: number;
@@ -523,8 +525,11 @@ export class Indexer {
       this.logger.debug(
         `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`
       );
+
+      const insuredBatchFrom = batchFrom - EXTRA_BLOCKS_BEHIND;
+
       const startBatch = new Date();
-      const events = await fetchEvents(batchFrom, batchTo);
+      const events = await fetchEvents(insuredBatchFrom, batchTo);
       const finishBatch = new Date();
       if (!events) throw new Error(`KEk`);
       events.sort((a, b) =>
@@ -535,7 +540,7 @@ export class Indexer {
         if (this.develop) {
           this.dummyTestEventsIntegrity(batchTo);
           this.logger.debug(
-            `Integrity test PASSED between ${batchFrom} and ${batchTo}`
+            `Integrity test PASSED between ${insuredBatchFrom} and ${batchTo}`
           );
         }
       } catch (e) {
