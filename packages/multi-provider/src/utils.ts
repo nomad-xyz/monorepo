@@ -1,5 +1,7 @@
 import { arrayify, BytesLike, hexlify } from '@ethersproject/bytes';
 import { ethers } from 'ethers';
+import { MultiProvider } from './provider';
+import { Domain } from './domains';
 
 export type Address = string;
 
@@ -7,6 +9,12 @@ export type Address = string;
 const chainIdToDomainMapping: Map<number, number> = new Map([
   [1, 0x657468], // Ethereum ('eth interpreted as int)
   [1284, 0x6265616d], // Moonbeam ('beam interpreted as int)
+  [2001, 25393], // MilkomedaC1
+  [4, 2000], // Rinkeby
+  [42, 3000], // Kovan
+  [1287, 5000], // Moonbase Alpha
+  [200101, 8000], // Milkomeda Testnet
+  [9000, 9000], // Evmos Testnet
 ]);
 
 /**
@@ -59,9 +67,7 @@ export function getDomainFromString(name: string): number {
  * @returns A Uint8Array of length 32
  * @throws if the input is undefined, or not exactly 20 or 32 bytes long
  */
-export function canonizeId(data?: BytesLike): Uint8Array {
-  if (!data) throw new Error('Bad input. Undefined');
-
+export function canonizeId(data: BytesLike): Uint8Array {
   const buf = ethers.utils.arrayify(data);
   if (buf.length > 32) throw new Error('Too long');
   if (buf.length !== 20 && buf.length != 32) {
@@ -123,4 +129,78 @@ export function delay(ms: number): Promise<void> {
  */
 export function parseInt(input: string | number): number {
   return ethers.BigNumber.from(input).toNumber();
+}
+
+/**
+ * Unreachable error. Useful for type narrowing.
+ */
+export class UnreachableError extends Error {
+  constructor(extra?: string) {
+    super(
+      `Unreachable. You should not see this Error. Please file an issue at https://github.com/nomad-xyz/monorepo, including the full error output. Extra info: ${
+        extra ?? 'none'
+      }`,
+    );
+  }
+}
+
+/**
+ * An error containing a multi-provider-based context
+ */
+export abstract class WithContext<
+  D extends Domain,
+  T extends MultiProvider<D>,
+> extends Error {
+  provider: T;
+
+  constructor(provider: T, msg: string) {
+    super(msg);
+    this.provider = provider;
+  }
+}
+
+/**
+ * Thrown when attempting to access a domain not registered on the context
+ */
+export class UnknownDomainError<
+  D extends Domain,
+  T extends MultiProvider<D>,
+> extends WithContext<D, T> {
+  domain: string | number;
+
+  constructor(provider: T, domain: string | number) {
+    super(
+      provider,
+      `Attempted to access an unknown domain: ${domain}.\nHint: have you called \`context.registerDomain(...)\` yet?`,
+    );
+    this.name = 'UnknownDomainError';
+    this.domain = domain;
+  }
+}
+
+/**
+ * Thrown when attempting to access contract data on a domain with no
+ * registered provider
+ */
+export class NoProviderError<
+  D extends Domain,
+  T extends MultiProvider<D>,
+> extends WithContext<D, T> {
+  domain: string | number;
+  domainName: string;
+  domainNumber: number;
+
+  constructor(provider: T, domain: string | number) {
+    const domainName = provider.resolveDomainName(domain);
+    const domainNumber = provider.resolveDomain(domain);
+
+    super(
+      provider,
+      `Missing provider for domain: ${domainNumber} : ${domainName}.\nHint: Have you called \`context.registerProvider(${domain}, provider)\` yet?`,
+    );
+    this.name = 'NoProviderError';
+    this.domain = domain;
+    this.domainName = domainName;
+    this.domainNumber = domainNumber;
+  }
 }

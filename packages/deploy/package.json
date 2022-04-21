@@ -17,11 +17,7 @@
     "src/**/*"
   ],
   "scripts": {
-    "add-dev-bridges": "ts-node scripts/development/governance/deployNewBridge.ts",
-    "add-dev-core": "ts-node scripts/development/governance/deployNewCore.ts",
-    "add-staging-bridges": "ts-node scripts/staging/governance/deployNewBridge.ts",
-    "add-staging-core": "ts-node scripts/staging/governance/deployNewCore.ts",
-    "build": "tsc",
+    "build": "tsc --build",
     "calculate-domain": "ts-node scripts/calculateDomain.ts",
     "check": "tsc --noEmit",
     "check-dev": "ts-node scripts/development/governance/checkNewChain.ts",

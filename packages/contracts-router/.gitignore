@@ -7,3 +7,4 @@ coverage.json
 src.ts/
 src/
 dist/
+foundry_artifacts/

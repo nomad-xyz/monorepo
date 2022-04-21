@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/multi-provider",
-  "version": "1.0.0-rc.3",
+  "version": "1.0.0-rc.4",
   "description": "A wrapper for multiple ethers.js providers, suitable for multi-chain applications",
   "keywords": [
     "nomad",
@@ -26,7 +26,8 @@
     "prettier": "prettier --write ./src ./tests",
     "lint": "eslint --fix ./src ./tests",
     "lint:fix": "eslint --fix ./src ./tests",
-    "test": "ts-mocha ./tests/*.ts"
+    "test": "yarn build && ts-mocha ./tests/*.ts",
+    "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts"
   },
   "dependencies": {
     "ethers": "^5.4.6",
@@ -42,6 +43,7 @@
     "eslint-config-prettier": "^8.3.0",
     "fs": "0.0.1-security",
     "mocha": "^9.2.1",
+    "nyc": "^15.1.0",
     "prettier": "^2.4.1",
     "ts-mocha": "^9.0.2",
     "typescript": "^4.4.3"

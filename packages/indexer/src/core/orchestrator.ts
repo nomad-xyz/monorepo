@@ -92,10 +92,6 @@ export class Orchestrator {
       throw e;
     }
     this.collectStatistics();
-    // console.log(`Checked integrity`);
-    
-    // console.log(`EXITING!`);
-    // process.exit(0);
   }
 
   async checkAllIntegrity(): Promise<void> {

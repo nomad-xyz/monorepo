@@ -25,7 +25,8 @@ export class BridgeContext extends NomadContext {
 
     this.bridges = new Map();
     const bridges = this.conf.networks.map(
-      (network) => new BridgeContracts(network, this.conf.bridge[network]),
+      (network) =>
+        new BridgeContracts(this, network, this.conf.bridge[network]),
     );
 
     bridges.forEach((bridge) => {
@@ -48,25 +49,6 @@ export class BridgeContext extends NomadContext {
   }
 
   /**
-   * Ensure that the contracts on a given domain are connected to the
-   * currently-registered signer or provider.
-   *
-   * @param domain the domain to reconnect
-   */
-  protected reconnect(nameOrDomain: string | number): void {
-    const domain = this.resolveDomainName(nameOrDomain);
-    super.reconnect(domain);
-    const connection = this.getConnection(domain);
-    if (!connection) {
-      throw new Error(`Reconnect failed: no connection for ${domain}`);
-    }
-    const bridge = this.bridges.get(domain);
-    if (bridge) {
-      bridge.connect(connection);
-    }
-  }
-
-  /**
    * Get the {@link BridgeContracts} for a given domain (or undefined)
    *
    * @param nameOrDomain A domain name or number.
@@ -76,6 +58,7 @@ export class BridgeContext extends NomadContext {
     const domain = this.resolveDomainName(nameOrDomain);
     return this.bridges.get(domain);
   }
+
   /**
    * Get the {@link BridgeContracts} for a given domain (or throw an error)
    *
@@ -267,7 +250,10 @@ export class BridgeContext extends NomadContext {
 
     await this.checkHome(fromDomain);
     if (this.blacklist().has(fromDomain)) {
-      throw new FailedHomeError('Attempted to send token to failed home!');
+      throw new FailedHomeError(
+        this,
+        'Attempted to send token to failed home!',
+      );
     }
 
     const fromBridge = this.mustGetBridge(from);
@@ -337,7 +323,10 @@ export class BridgeContext extends NomadContext {
 
     await this.checkHome(fromDomain);
     if (this.blacklist().has(fromDomain)) {
-      throw new FailedHomeError('Attempted to send token to failed home!');
+      throw new FailedHomeError(
+        this,
+        'Attempted to send token to failed home!',
+      );
     }
 
     const ethHelper = this.mustGetBridge(from).ethHelper;

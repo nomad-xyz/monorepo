@@ -2,11 +2,17 @@ import { ethers } from 'ethers';
 import { NomadContext, CoreContracts } from '@nomad-xyz/sdk';
 
 import * as utils from './utils';
+import { UnreachableError } from '@nomad-xyz/multi-provider';
 export { parseAction, Action } from './GovernanceMessage';
 
 export type Address = string;
 
 export interface Call {
+  to: Address;
+  data?: ethers.utils.BytesLike;
+}
+
+export interface NormalizedCall {
   to: Address;
   data: ethers.utils.BytesLike;
 }
@@ -18,12 +24,13 @@ export interface RemoteContents {
 export interface CallBatchContents {
   local: Call[];
   remote: RemoteContents;
+  built?: ethers.PopulatedTransaction;
 }
 
 export class CallBatch {
-  readonly local: Readonly<Call>[];
-  readonly remote: Map<number, Readonly<Call>[]>;
-  private governorCore: CoreContracts;
+  readonly local: Readonly<NormalizedCall>[];
+  readonly remote: Map<number, Readonly<NormalizedCall>[]>;
+  private governorCore: CoreContracts<NomadContext>;
   private context: NomadContext;
   private built?: ethers.PopulatedTransaction;
 
@@ -43,9 +50,11 @@ export class CallBatch {
     this.local = [];
   }
 
-  static async fromContext(context: NomadContext): Promise<CallBatch> {
-    const governorDomain = context.governor.domain;
-    return new CallBatch(context, governorDomain, true);
+  static fromContext(context: NomadContext | string): CallBatch {
+    const ctx =
+      typeof context === 'string' ? new NomadContext(context) : context;
+    const governorDomain = ctx.governor.domain;
+    return new CallBatch(ctx, governorDomain, true);
   }
 
   static async fromJSON(
@@ -64,21 +73,59 @@ export class CallBatch {
         batch.pushRemote(parseInt(domain), call);
       }
     }
+
+    if (batchContents.built) {
+      batch.build();
+      if (!batch.built) throw new Error('unreachable');
+      if (
+        batch.built.data !== batchContents.built.data ||
+        batch.built.to !== batchContents.built.to
+      )
+        throw new Error(
+          'Attempted to load an invalid pre-built CallBatch from JSON.',
+        );
+    }
+
     // return the constructed batch
     return batch;
+  }
+
+  /// Serialize for JSON storage
+  toJSON(): Readonly<CallBatchContents> {
+    const local = this.local;
+    const remote: RemoteContents = {};
+
+    for (const key of this.remote.keys()) {
+      const calls = this.remote.get(key);
+      if (calls) remote[this.context.resolveDomainName(key)] = calls;
+    }
+
+    return {
+      local,
+      remote,
+      built: this.built,
+    };
   }
 
   get domains(): number[] {
     return Array.from(this.remote.keys());
   }
 
-  pushLocal(call: Partial<Call>): void {
+  get remoteDomains(): number[] {
+    return Array.from(this.remote.keys());
+  }
+
+  isEmpty(): boolean {
+    return this.local.length == 0 && this.remoteDomains.length == 0;
+  }
+
+  pushLocal(call: Call): void {
     if (this.built)
       throw new Error('Batch has been built. Cannot push more calls');
     this.local.push(utils.normalizeCall(call));
   }
 
-  pushRemote(domain: number, call: Partial<Call>): void {
+  pushRemote(domain: number, call: Call): void {
     if (this.built)
       throw new Error('Batch has been built. Cannot push more calls');
     if (!this.context.getCore(domain))
@@ -92,6 +139,16 @@ export class CallBatch {
     }
   }
 
+  push(domain: number, call: Call | Array<Call>): void {
+    const calls = Array.isArray(call) ? call : [call];
+
+    if (domain === this.context.governor.domain) {
+      calls.forEach((call) => this.pushLocal(call));
+      return;
+    }
+    calls.forEach((call) => this.pushRemote(domain, call));
+  }
+
   // Build a governance transaction from this callbatch
   async build(): Promise<ethers.PopulatedTransaction> {
     if (this.built) return this.built;
@@ -102,6 +159,7 @@ export class CallBatch {
         domains,
         remoteCalls,
       );
+    if (!this.built) throw new UnreachableError('built is undefined');
     return this.built;
   }
 
@@ -169,5 +227,38 @@ export class CallBatch {
   // Note that this does not call execute
   async waitAll(): Promise<ethers.providers.TransactionReceipt[]> {
     return Promise.all(this.domains.map((domain) => this.waitDomain(domain)));
+  }
+
+  /// Append another call batch to this one.
+  append(that: CallBatch): void {
+    if (this.built)
+      throw new Error('Batch has been built. Cannot push more calls');
+
+    that.local.forEach((call) => this.pushLocal(call));
+    this.local.push.apply(that.local);
+
+    const thisKeys = this.remote.keys();
+    const thatKeys = that.remote.keys();
+
+    for (const key of thisKeys) {
+      that.remote.get(key)?.forEach((call) => this.pushRemote(key, call));
+    }
+    for (const key of thatKeys) {
+      if (this.remote.has(key)) continue; // covered in previous loop
+      this.remote.set(key, that.remote.get(key) ?? []);
+    }
+  }
+
+  /// Return a new batch that is the concatenation of all batches in the
+  /// argument
+  static flatten(
+    context: NomadContext,
+    batches: Array<CallBatch | undefined>,
+  ): CallBatch {
+    const batch = CallBatch.fromContext(context);
+    for (const b of batches) {
+      if (b) batch.append(b);
+    }
+    return batch;
   }
 }

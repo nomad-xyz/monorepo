@@ -1,13 +1,13 @@
 import { utils as mpUtils } from '@nomad-xyz/multi-provider';
-import * as ethers from 'ethers';
+import ethers from 'ethers';
 
 /*
  * Encoded call to a function,
  * where to and data is encoded.
  */
 export type CallData = {
-  to: ethers.ethers.utils.BytesLike;
-  data: ethers.ethers.utils.BytesLike;
+  to: ethers.utils.BytesLike;
+  data: ethers.utils.BytesLike;
 };
 
 /*
@@ -22,7 +22,7 @@ export type CallData = {
 export function formatCall(
   destinationContract: ethers.Contract,
   functionStr: string,
-  functionArgs: any[],
+  functionArgs: ReadonlyArray<unknown>,
 ): CallData {
   // Set up data for call message
   const func = destinationContract.interface.getFunction(functionStr);

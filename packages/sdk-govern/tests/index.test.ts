@@ -11,7 +11,7 @@ describe('sdk-govern', async () => {
   //
   // });
 
-  it('', async () => {
+  it.skip('TODO', async () => {
     expect(true).to.be.true;
   });
 });
