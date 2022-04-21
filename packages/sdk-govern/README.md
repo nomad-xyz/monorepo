@@ -10,3 +10,26 @@ conjunction with a `NomadContext` object.
 ```
 yarn build
 ```
+
+### Scripts
+
+Submit a batch of governance transactions to the `GovernanceRouter` the governing domain:
+
+```sh
+# script args are 'configuration file' 'call batch file'
+$ yarn run ts-node scripts/executeGovernorDomain.ts path/to/config.json path/to/callBatch.json
+```
+
+Check whether governance batches have been delivered to remote domains:
+
+```sh
+# script args are 'configuration file' 'call batch file'
+$ yarn run ts-node scripts/printStatus.ts path/to/config.json path/to/callBatch.json
+```
+
+Execute governance batches on remote domains (this process is permissionless once the batch has been delivered):
+
+```sh
+# script args are 'configuration file' 'call batch file' 'transaction overrides file'
+$ yarn run ts-node scripts/executeRemoteDomains.ts path/to/config.json path/to/callBatch.json path/to/overrides.json
+```

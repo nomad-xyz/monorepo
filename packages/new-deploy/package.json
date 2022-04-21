@@ -28,8 +28,6 @@
     "lint": "eslint --fix ./src",
     "test": "ts-mocha ./tests/*.ts",
     "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts",
-    "deploy": "ts-node scripts/deploy.ts config/config.json config/overrides-production.json",
-    "check-deploy": "ts-node scripts/check.ts config/config.json"
   },
   "author": "Illusory Systems Inc.",
   "license": "MIT OR Apache-2.0",

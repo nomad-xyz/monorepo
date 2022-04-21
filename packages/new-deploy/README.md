@@ -38,6 +38,15 @@ if the state on-chain doesn't change,
 the same config will deterministically produce 
 the same set of governance transactions.
 
+### Validation
+
+Run checks against a deployed set of contracts:
+
+```sh
+# check script arg is 'configuration file'
+$ yarn run ts-node scripts/check.ts path/to/config.json
+```
+
 ### Verification
 
 Deployment will produce a verification json output. Set the `ETHERSCAN_KEY` env
