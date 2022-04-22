@@ -262,12 +262,8 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
   async relinquishOwnership(): Promise<void> {
     // relinquish deployer control
-    await Promise.all([
-      ...this.networks.map((network) => this.mustGetCore(network).relinquish()),
-      ...this.networks.map((network) =>
-        this.mustGetBridge(network).relinquish(),
-      ),
-    ]);
+    await Promise.all(this.networks.map((network) => this.mustGetCore(network).relinquish()));
+    await Promise.all(this.networks.map((network) => this.mustGetBridge(network).relinquish()));
   }
 
   // Intended entrypoint.

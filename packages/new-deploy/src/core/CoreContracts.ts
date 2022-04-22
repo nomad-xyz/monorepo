@@ -352,10 +352,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const proxy = await this.newProxy(home.address, initData);
     this._data.home = proxy;
 
-    await Promise.all([
-      this.xAppConnectionManager.setHome(proxy.proxy),
-      this.updaterManager.setHome(proxy.proxy),
-    ]);
+    await this.xAppConnectionManager.setHome(proxy.proxy);
+    await this.updaterManager.setHome(proxy.proxy);
 
     this.context.pushVerification(name, {
       name: 'Home',
@@ -584,19 +582,16 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       return batch;
     }
 
-    // If we can use deployer ownership
-    const txns = await Promise.all(
-      watchersToEnroll.map((watcher) =>
-        this.xAppConnectionManager.setWatcherPermission(
+    // If we can use deployer ownership, send the transaction directly
+    for (const watcher of watchersToEnroll) {
+        const tx = await this.xAppConnectionManager.setWatcherPermission(
           utils.evmId(watcher),
           remoteConfig.domain,
           true,
-          this.overrides,
-        ),
-      ),
-    );
-    await Promise.race(txns.map((tx) => tx.wait(this.confirmations)));
-    return;
+          this.overrides,)
+        ;
+        await tx.wait(this.confirmations);
+    }
   }
 
   async enrollGovernanceRouter(
@@ -642,11 +637,11 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
   async enrollRemote(remoteDomain: string | number): Promise<CallBatch> {
     await this.deployUnenrolledReplica(remoteDomain);
-    const batches = await Promise.all([
-      this.enrollReplica(remoteDomain),
-      this.enrollWatchers(remoteDomain),
-      this.enrollGovernanceRouter(remoteDomain),
-    ]);
+
+    const batches = [];
+    batches.push(await this.enrollReplica(remoteDomain));
+    batches.push(await this.enrollWatchers(remoteDomain));
+    batches.push(await this.enrollGovernanceRouter(remoteDomain));
 
     return CallBatch.flatten(this.context.asNomadContext, batches);
   }
@@ -665,21 +660,14 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     ];
 
     // conditional to avoid erroring
-    const txns = await Promise.all(
-      contracts.map(async (contract) => {
+    for (const contract of contracts) {
         const owner = await contract.owner();
         if (utils.equalIds(owner, deployer)) {
           log(`transfer core ownership on ${local}`);
-          return await contract.transferOwnership(governance, this.overrides);
+          const tx =  await contract.transferOwnership(governance, this.overrides);
+          await tx.wait(this.confirmations);
         }
-      }),
-    );
-
-    await Promise.race(
-      txns.map(async (tx) => {
-        if (tx) await tx.wait();
-      }),
-    );
+    }
   }
 
   /// Transfers governorship on this core to the appropriate remote domain or
