@@ -5,13 +5,13 @@
     "rinkeby",
     "kovan",
     "goerli",
-    "evmostest"
+    "evmostestnet"
   ],
   "rpcs": {
     "rinkeby": ["https://rinkeby-light.eth.linkpool.io"],
     "goerli": ["https://goerli-light.eth.linkpool.io"],
     "kovan": ["https://kovan.poa.network"],
-    "evmostest": ["https://eth.bd.evmos.dev:8545"]
+    "evmostestnet": ["https://eth.bd.evmos.dev:8545"]
   },
   "protocol": {
     "governor": {
@@ -23,7 +23,7 @@
         "name": "kovan",
         "domain": 2001,
         "connections": [
-          "evmosTest",
+          "evmosTestnet",
           "rinkeby",
           "goerli"
         ],
@@ -62,7 +62,7 @@
         "domain": 3001,
         "connections": [
           "rinkeby",
-          "evmosTest",
+          "evmosTestnet",
           "kovan"
         ],
         "configuration": {
@@ -100,7 +100,7 @@
         "domain": 1001,
         "connections": [
           "kovan",
-          "evmosTest",
+          "evmosTestnet",
           "goerli"
         ],
         "configuration": {
@@ -133,8 +133,8 @@
           "deployGas": 850000
         }
       },
-      "evmostest": {
-        "name": "evmostest",
+      "evmostestnet": {
+        "name": "evmostestnet",
         "domain": 4001,
         "connections": [
           "goerli",
@@ -195,7 +195,7 @@
           "proxy": "0x9969e1b2a9f81fc9066897b4865b58443967024b",
           "beacon": "0x6c6b091665520088dbfe8ccb1ecb1d0556814e0d"
         },
-        "evmostest": {
+        "evmostestnet": {
           "implementation": "0x18f4019f6620e1593059b5a0518ceed6a6634373",
           "proxy": "0x5dcbdfe40ef9e865b3cc2c90c517c557b2fa91c8",
           "beacon": "0x6c6b091665520088dbfe8ccb1ecb1d0556814e0d"
@@ -223,7 +223,7 @@
         "beacon": "0x25ec670059754b859fdcbdb6802c7644fd0a1af5"
       },
       "replicas": {
-        "evmostest": {
+        "evmostestnet": {
           "implementation": "0x8a36fbccc8d844aaacbca71e7ec8847215bb82f2",
           "proxy": "0xf1b83d100860887aef35e50b3794e28dc744e5ce",
           "beacon": "0x4a455cbabd96dc9b0dba2f0ccbb58a2dad403df2"
@@ -240,7 +240,7 @@
         }
       }
     },
-    "evmostest": {
+    "evmostestnet": {
       "deployHeight": 942883,
       "upgradeBeaconController": "0xbe288f49557a2e70bc54840c5a96e84747aa9431",
       "xAppConnectionManager": "0x224f3558770ad0740ed94bbdea79e197e51852bd",
@@ -299,7 +299,7 @@
           "proxy": "0x097a3eb6cd351ab28de67a0a0bda9e0e32733da7",
           "beacon": "0x8dc1c77718b6f97f4a1e06e234ba2c8defd9cf9a"
         },
-        "evmostest": {
+        "evmostestnet": {
           "implementation": "0xad74bef73458ddb8646af7a2e9a56734fa44694c",
           "proxy": "0x423b1eced988959067834b13b501c8ab78a28576",
           "beacon": "0x8dc1c77718b6f97f4a1e06e234ba2c8defd9cf9a"
@@ -308,7 +308,7 @@
     }
   },
   "bridge": {
-    "evmostest": {
+    "evmostestnet": {
       "deployHeight": 943064,
       "bridgeRouter": {
         "implementation": "0x52dbd0c2b9387ded247022806b645dc8a5aee8ff",
@@ -412,7 +412,7 @@
         "subsidizedRemotes": [
           "rinkeby",
           "kovan",
-          "evmostest"
+          "evmostestnet"
         ],
         "s3": {
           "bucket": "nomadxyz-development-proofs",
@@ -455,7 +455,7 @@
         "subsidizedRemotes": [
           "rinkeby",
           "goerli",
-          "evmostest"
+          "evmostestnet"
         ],
         "s3": {
           "bucket": "nomadxyz-development-proofs",
@@ -498,7 +498,7 @@
         "subsidizedRemotes": [
           "kovan",
           "goerli",
-          "evmostest"
+          "evmostestnet"
         ],
         "s3": {
           "bucket": "nomadxyz-development-proofs",
@@ -519,7 +519,7 @@
         "enabled": true
       }
     },
-    "evmostest": {
+    "evmostestnet": {
       "rpcStyle": "ethereum",
       "db": "/usr/share/nomad",
       "metrics": 9090,
@@ -591,7 +591,7 @@
       "manualProcessing": true,
       "connextEnabled": true
     },
-    "evmostest": {
+    "evmostestnet": {
       "displayName": "Evmos Testnet",
       "nativeTokenSymbol": "tEVMOS",
       "connections": [
