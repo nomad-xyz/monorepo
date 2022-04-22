@@ -94,8 +94,8 @@ const BATCH_SIZE = process.env.BATCH_SIZE
   ? parseInt(process.env.BATCH_SIZE)
   : 2000;
 const RETRIES = 100;
-const INTENTIONAL_BLOCK_LAG = 0;
-const EXTRA_BLOCKS_BEHIND = 3;
+const TO_BLOCK_LAG = 2;
+const FROM_BLOCK_LAG = 2;
 
 
 export class Indexer {
@@ -465,7 +465,7 @@ export class Indexer {
           this.network,
           new Date().valueOf() - start
         );
-        return r - INTENTIONAL_BLOCK_LAG;
+        return r - TO_BLOCK_LAG;
       },
       RETRIES,
       (error: any) => {
@@ -526,7 +526,7 @@ export class Indexer {
         `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`
       );
 
-      const insuredBatchFrom = batchFrom - EXTRA_BLOCKS_BEHIND;
+      const insuredBatchFrom = batchFrom - FROM_BLOCK_LAG;
 
       const startBatch = new Date();
       const events = await fetchEvents(insuredBatchFrom, batchTo);
