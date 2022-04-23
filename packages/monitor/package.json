@@ -12,7 +12,6 @@
     "health": "ts-node src/run.ts health",
     "health-local": "ts-node src/run.ts health | ./node_modules/.bin/bunyan",
     "lint": "echo 'TODO'",
-    "lint:fix": "echo 'TODO'",
     "monitor-all": "ts-node src/runAll.ts | ./node_modules/.bin/bunyan",
     "monitor-once": "ts-node src/bridgeHealth/monitor.ts once | ./node_modules/.bin/bunyan",
     "prettier": "prettier --write .",
