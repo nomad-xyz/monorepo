@@ -15,7 +15,11 @@ This package is feature-complete and we have big plans for the future :)
 
 ### Invocation
 
-Invoke the deployer as follows:
+Set the `DEPLOYER_PRIVATE_KEY` env var in your `.env` file.
+Supply a private key for an account funded with 
+sufficient gas tokens on each chain where contracts will be deployed.
+
+Then, Invoke the deployer as follows:
 
 ```sh
 # deploy script args are 'configuration file' 'overrides file'
@@ -33,6 +37,15 @@ Governance transactions are idempotent;
 if the state on-chain doesn't change,
 the same config will deterministically produce 
 the same set of governance transactions.
+
+### Validation
+
+Run checks against a deployed set of contracts:
+
+```sh
+# check script arg is 'configuration file'
+$ yarn run ts-node scripts/check.ts path/to/config.json
+```
 
 ### Verification
 

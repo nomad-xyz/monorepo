@@ -5,6 +5,7 @@
 - update typescript eslint packages to fix lint script
 - remove unnecessary lint:fix script
 - standardize prettier
+- register RPC providers from config in NomadContext constructor
 
 ### 2.0.0-rc.8
 

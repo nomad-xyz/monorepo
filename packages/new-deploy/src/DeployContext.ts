@@ -42,7 +42,6 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
   get asNomadContext(): NomadContext {
     const ctx = new NomadContext(this.data);
-
     for (const [domain, provider] of this.providers.entries()) {
       ctx.registerProvider(domain, provider);
     }

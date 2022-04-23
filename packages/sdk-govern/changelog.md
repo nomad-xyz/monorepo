@@ -5,6 +5,11 @@
 - update typescript eslint packages to fix lint script
 - remove unnecessary lint:fix script
 - standardize prettier
+- feature: upgrade functions to accept nameOrDomain (not just domain)
+- fix: await batch.build in fromJSON
+- domains() return *all* domains - governor and remote
+- feature: add optional transaction overrides to executeDomain function 
+- feature: add status function which checks batch status using call, rather than events (which are brittle for some chains)
 
 ### 1.0.0-rc.7
 

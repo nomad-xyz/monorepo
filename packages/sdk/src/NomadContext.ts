@@ -35,19 +35,20 @@ export class NomadContext extends MultiProvider<config.Domain> {
 
     config.validateConfig(conf);
     this.conf = conf;
-
-    const domains = conf.networks.map(
-      (network) => conf.protocol.networks[network],
-    );
-    domains.forEach((domain) => this.registerDomain(domain));
     this._cores = new Map();
-    const cores = conf.networks.map(
-      (network) => new CoreContracts(this, network, conf.core[network]),
-    );
-    cores.forEach((core) => {
-      this._cores.set(core.domain, core);
-    });
     this._blacklist = new Set();
+
+    for (const network of this.conf.networks) {
+      // register domain
+      this.registerDomain(this.conf.protocol.networks[network]);
+      // register RPC provider
+      if (this.conf.rpcs[network] && this.conf.rpcs[network].length > 0) {
+        this.registerRpcProvider(network, this.conf.rpcs[network][0]);
+      }
+      // set core contracts
+      const core = new CoreContracts(this, network, this.conf.core[network])
+      this._cores.set(core.domain, core);
+    }
   }
 
   get governor(): config.NomadLocator {
@@ -169,7 +170,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
    *
    * @returns The identifier of the governing domain
    */
-  async governorCore(): Promise<CoreContracts<this>> {
+  governorCore(): CoreContracts<this> {
     return this.mustGetCore(this.governor.domain);
   }
 
