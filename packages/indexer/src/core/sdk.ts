@@ -34,7 +34,8 @@ export async function getSdk(environment: string | NomadConfig): Promise<BridgeC
   sdk.domainNumbers.forEach((domain: number) => {
     const name = sdk.mustGetDomain(domain).name.toUpperCase();
     const rpcEnvKey = `${name}_RPC`;
-    const rpc = process.env[rpcEnvKey];
+    const defaultRPC = sdk.conf.rpcs[name]?.[0];
+    const rpc = process.env[rpcEnvKey] || defaultRPC;
 
     if (!rpc)
       throw new Error(

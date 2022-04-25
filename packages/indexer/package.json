@@ -39,10 +39,10 @@
     "prom-client": "^14.0.0",
     "redis": "^4.0.4",
     "ts-node": "^10.4.0",
-    "typescript": "^4.4.3"
+    "typescript": "^4.4.3",
+    "axios": "^0.26.0"
   },
   "devDependencies": {
-    "@types/redis": "^4.0.11",
-    "axios": "^0.26.0"
+    "@types/redis": "^4.0.11"
   }
 }
