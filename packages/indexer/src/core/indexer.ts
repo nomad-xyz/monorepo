@@ -414,7 +414,7 @@ export class Indexer {
   ): Promise<{ timestamp: number; gasUsed: ethers.BigNumber; from: string }> {
     const { timestamp } = await this.getTransaction(
       hash,
-      !this.orchestrator.chaseMode
+      false
     );
 
     const { gasUsed, from } = await this.getTransactionReceipt(hash);
