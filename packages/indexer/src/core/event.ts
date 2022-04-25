@@ -238,7 +238,7 @@ export class NomadishEvent {
       this.domain.toString(),
       this.eventType,
       this.replicaOrigin.toString(),
-      this.block.toString(),
+      // this.block.toString(),
       uniqueHash(this.eventData),
       this.gasUsed.toString(),
       this.tx
@@ -267,4 +267,11 @@ function parseDestinationAndNonce(
     "0x" + without0x.slice(destinationLength)
   );
   return [destinationHex.toNumber(), nonceHex.toNumber()];
+}
+
+export function onlyUniqueEvents(arr: NomadishEvent[]): NomadishEvent[] {
+  const hashfull: [string, NomadishEvent][] = arr.map(e => [e.uniqueHash(), e]);
+  return hashfull.filter(([h, _], i, arr) => {
+    return arr.findIndex(([hh, _]) => hh === h) === i
+  }).map(([_, e]) => e);
 }

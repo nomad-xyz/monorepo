@@ -63,6 +63,8 @@ export function reviver(key: any, value: any): any {
       value.dataType == "NomadishEvent"
     ) {
       return NomadishEvent.fromObject(value.value);
+    } else if (!!value.eventType && typeof value.eventType === 'string') {
+      return NomadishEvent.fromObject(value);
     } else if (value.dataType === "BigNumber") {
       return ethers.BigNumber.from(value.value);
     } else if (value.type === "BigNumber") {
@@ -216,4 +218,8 @@ export function shuffle<V>(array: V[]): V[] {
   }
 
   return array;
+}
+
+export function onlyUnique<T>(value: T, index: number, self: T[]): boolean {
+  return self.indexOf(value) === index;
 }

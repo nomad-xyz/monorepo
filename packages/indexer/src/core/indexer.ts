@@ -6,6 +6,7 @@ import {
   NomadishEvent,
   EventSource,
   eventTypeToOrder,
+  onlyUniqueEvents,
 } from "./event";
 import { Home, Replica } from "@nomad-xyz/contracts-core";
 import { ethers } from "ethers";
@@ -94,7 +95,7 @@ const BATCH_SIZE = process.env.BATCH_SIZE
   ? parseInt(process.env.BATCH_SIZE)
   : 2000;
 const RETRIES = 100;
-const TO_BLOCK_LAG = 2;
+const TO_BLOCK_LAG = 1;
 const FROM_BLOCK_LAG = 2;
 
 
@@ -1197,16 +1198,18 @@ export class RedisPersistance extends Persistance {
       }
     }
 
-    for (const [block, events] of block2Events) {
-      promises.push(
-        this.client.hSet(
-          `${this.domain}nomad_message`,
-          String(block),
-          JSON.stringify(events, replacer)
-        )
-      );
+    await Promise.all(Array.from(block2Events.entries()).map(async ([block, events]) => {
+      const eventsBefore: NomadishEvent[]  = JSON.parse(await this.client.hGet(`${this.domain}nomad_message`, String(block),) || '[]', reviver);
+      const eventsToAdd = events.filter(e => {
+        return eventsBefore.findIndex(eb => e.uniqueHash() != eb.uniqueHash()) === -1
+      });
+      promises.push(this.client.hSet(
+        `${this.domain}nomad_message`,
+        String(block),
+        JSON.stringify([...eventsBefore, ...eventsToAdd], replacer)
+      ));
       promises.push(this.client.sAdd(`${this.domain}blocks`, String(block)));
-    }
+    }));
 
     if (fromChanged)
       promises.push(
@@ -1244,9 +1247,11 @@ export class RedisPersistance extends Persistance {
       .map((s) => JSON.parse(s!, reviver) as NomadishEvent[])
       .flat();
 
+    const uniqueEvents = onlyUniqueEvents(events);
+
     // console.log(`Sorting all events for ${this.domain}`)
 
-    events.sort((a, b) => {
+    uniqueEvents.sort((a, b) => {
       if (a.ts === b.ts) {
         return eventTypeToOrder(a) - eventTypeToOrder(b);
       } else {
@@ -1255,7 +1260,7 @@ export class RedisPersistance extends Persistance {
     });
     // console.log(`Returning all events for ${this.domain}`)
 
-    return events;
+    return uniqueEvents;
   }
   persist(): void {}
 }

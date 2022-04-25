@@ -10,6 +10,7 @@ export type NomadEnvironment = "development" | "staging" | "production";
 export type Program = "api" | "core";
 
 const environment = process.env.ENVIRONMENT! as NomadEnvironment;
+const configOverrideLocation = process.env.CONFIG_OVERRIDE_LOCATION;
 const program = process.env.PROGRAM! as Program;
 
 (async () => {
@@ -19,7 +20,7 @@ const program = process.env.PROGRAM! as Program;
   const db = new DB(m, logger);
   await db.connect();
 
-  const sdk = getSdk(environment);
+  const sdk = await getSdk(configOverrideLocation || environment);
 
   if (program === "api") {
     /* const [s, p] = */ await startTokenUpdater(sdk, db, logger);
