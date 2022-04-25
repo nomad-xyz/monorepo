@@ -1,4 +1,4 @@
-import { providers, Signer, ContractTransaction } from 'ethers';
+import { providers, Signer, ContractTransaction, BytesLike } from 'ethers';
 
 import { MultiProvider } from '@nomad-xyz/multi-provider';
 import * as core from '@nomad-xyz/contracts-core';
@@ -8,11 +8,13 @@ import { CoreContracts } from './CoreContracts';
 import { NomadMessage } from './messages/NomadMessage'
 
 export type Address = string;
-
-const s3URLs: { [key: string]: string } = {
-  production: 'https://nomadxyz-production-proofs.s3.us-west-2.amazonaws.com/',
-  development: 'https://nomadxyz-development-proofs.s3.us-west-2.amazonaws.com/',
-  staging: 'https://nomadxyz-staging-proofs.s3.us-west-2.amazonaws.com/'
+type MessageProof = {
+  message: BytesLike;
+  proof: {
+    leaf: BytesLike;
+    index: number;
+    path: [BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike];
+  }
 }
 
 /**
@@ -59,6 +61,10 @@ export class NomadContext extends MultiProvider<config.Domain> {
 
   get governor(): config.NomadLocator {
     return this.conf.protocol.governor;
+  }
+
+  get environment(): string {
+    return this.conf.environment
   }
 
   /**
@@ -186,39 +192,31 @@ export class NomadContext extends MultiProvider<config.Domain> {
    * 
    * @dev Ensure that a transaction is ready to be processed. You should ensure the following
    * criteria have been met prior to calling this function:
-   *  1. the tx has been relayed
-   *  2. the `confirmAt` timestamp for the tx is in the past
-   *  3. the user is on the destination chain in their wallet
+   *  1. The tx has been relayed (has status of 2):
+   *       `const { status } = await NomadMessage.events()`
+   *  2. The `confirmAt` timestamp for the tx is in the past:
+   *       `const confirmAt = await NomadMessage.confirmAt()`
    *
+   * @param message NomadMessage
    * @returns The Contract Transaction receipt
    */
-  async process(origin: string | number, txId: string): Promise<ContractTransaction>{
-    // get s3 proof URL for environment
-    const { environment } = this.conf
-    const s3URL = s3URLs[environment]
-
-    const message = (await NomadMessage.baseFromTransactionHash(
-      this,
-      origin,
-      txId
-    ))[0]
+  async process(message: NomadMessage<NomadContext>): Promise<ContractTransaction>{
+    const s3URL = `https://nomadxyz-${this.environment}-proofs.s3.us-west-2.amazonaws.com/`
 
     const originNetwork = this.resolveDomainName(message.origin)
     const destNetwork = this.resolveDomainName(message.destination)
     const index = message.leafIndex.toString()
     const s3Res = await fetch(`${s3URL}${originNetwork}_${index}`)
-    const data = (await s3Res.json()) as any
+    const data: MessageProof = await s3Res.json()
 
     // get replica contract
-    const replica = this.getReplicaFor(originNetwork, destNetwork)
-    if (!replica) throw new Error('missing replica, unable to process transaction')
+    const replica = this.mustGetReplicaFor(originNetwork, destNetwork)
 
     // get signer and connect replica
-    const signer = this.getSigner(destNetwork)
-    if (!signer) throw new Error('missing signer, unable to process transaction')
+    const signer = this.mustGetSigner(destNetwork)
     replica.connect(signer)
 
-    return await replica.proveAndProcess(
+    return replica.proveAndProcess(
       data.message,
       data.proof.path,
       data.proof.index
