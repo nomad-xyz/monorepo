@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/sdk-bridge",
-  "version": "1.0.0-rc.8",
+  "version": "1.0.0-rc.9",
   "description": "Nomad bridge SDK",
   "keywords": [
     "nomad",
@@ -32,7 +32,7 @@
     "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts"
   },
   "dependencies": {
-    "@nomad-xyz/configuration": "^0.1.0-rc.12",
+    "@nomad-xyz/configuration": "^0.1.0-rc.15",
     "@nomad-xyz/contracts-bridge": "workspace:^",
     "@nomad-xyz/sdk": "workspace:^",
     "ethers": "^5.0.0",

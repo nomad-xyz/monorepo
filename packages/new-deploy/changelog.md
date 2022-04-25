@@ -13,3 +13,4 @@
 - store governance CallBatch on DeployContext instead of returning
 - update typescript eslint packages to fix lint script
 - standardize prettier
+- chore: bump configuration to v0.1.0-rc.14

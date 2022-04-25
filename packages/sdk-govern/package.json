@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/sdk-govern",
-  "version": "1.0.0-rc.7",
+  "version": "1.0.0-rc.9",
   "description": "Nomad governance SDK",
   "keywords": [
     "nomad",
@@ -35,7 +35,7 @@
     "@gnosis.pm/safe-core-sdk": "^2.0.0",
     "@gnosis.pm/safe-ethers-adapters": "^0.1.0-alpha.8",
     "@gnosis.pm/safe-ethers-lib": "^1.0.0",
-    "@nomad-xyz/configuration": "^0.1.0-rc.12",
+    "@nomad-xyz/configuration": "^0.1.0-rc.15",
     "@nomad-xyz/sdk": "workspace:^",
     "ethers": "^5.4.6",
     "web3": "^1.6.1"

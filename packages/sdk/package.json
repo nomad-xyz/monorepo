@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/sdk",
-  "version": "2.0.0-rc.8",
+  "version": "2.0.0-rc.9",
   "description": "Nomad SDK",
   "keywords": [
     "nomad",
@@ -31,7 +31,7 @@
     "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts"
   },
   "dependencies": {
-    "@nomad-xyz/configuration": "^0.1.0-rc.12",
+    "@nomad-xyz/configuration": "^0.1.0-rc.15",
     "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/multi-provider": "workspace:^",
     "ethers": "^5.0.0"

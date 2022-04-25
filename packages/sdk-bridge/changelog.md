@@ -2,9 +2,12 @@
 
 ### Unreleased
 
+### 1.0.0-rc.9
+
 - update typescript eslint packages to fix lint script
 - remove unnecessary lint:fix script
 - standardize prettier
+- chore: bump configuration to v0.1.0-rc.14
 
 ### 1.0.0-rc.8
 
