@@ -191,7 +191,8 @@ export class NomadMessage {
     const optimisticSecondsUnknown =
       this.sdk.conf.protocol.networks[
         this.sdk.resolveDomainName(this.destination)
-      ]!.configuration.optimisticSeconds;
+      ].configuration.optimisticSeconds;
+    if (!optimisticSecondsUnknown) return 0;
 
     if (typeof optimisticSecondsUnknown === "string") {
       return this.timings.relayedAt + parseInt(optimisticSecondsUnknown);
