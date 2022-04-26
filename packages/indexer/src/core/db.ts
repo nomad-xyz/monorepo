@@ -6,6 +6,7 @@ import Logger from "bunyan";
 import pLimit from "p-limit";
 import { Padded } from "./utils";
 import { ethers } from "ethers";
+import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 
 // function fromDb(m: messages): NomadMessage {
 //   return
@@ -56,12 +57,14 @@ export class DB {
   syncedOnce: boolean;
   metrics: IndexerCollector;
   logger: Logger;
+  sdk: BridgeContext;
 
-  constructor(metrics: IndexerCollector, logger: Logger) {
+  constructor(metrics: IndexerCollector, logger: Logger, sdk: BridgeContext) {
     this.syncedOnce = false;
     this.client = new PrismaClient();
     this.metrics = metrics;
     this.logger = logger.child({ span: "DB" });
+    this.sdk = sdk;
   }
 
   async connect() {}
@@ -84,7 +87,7 @@ export class DB {
       },
     });
 
-    return messages.map((m) => NomadMessage.deserialize(m, this.logger));
+    return messages.map((m) => NomadMessage.deserialize(m, this.logger, this.sdk));
   }
 
   async getMessagesByOriginAndStateNumber(
@@ -99,7 +102,7 @@ export class DB {
       },
     });
 
-    return messages.map((m) => NomadMessage.deserialize(m, this.logger));
+    return messages.map((m) => NomadMessage.deserialize(m, this.logger, this.sdk));
   }
 
   async getMessagesByOriginAndRoot(
@@ -113,13 +116,13 @@ export class DB {
         root,
       },
     });
-    return messages.map((m) => NomadMessage.deserialize(m, this.logger));
+    return messages.map((m) => NomadMessage.deserialize(m, this.logger, this.sdk));
   }
 
   async getAllMessages(): Promise<NomadMessage[]> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const messages = await this.client.messages.findMany();
-    return messages.map((m) => NomadMessage.deserialize(m, this.logger));
+    return messages.map((m) => NomadMessage.deserialize(m, this.logger, this.sdk));
   }
 
   async getMessageByOriginAndNonce(
@@ -133,7 +136,7 @@ export class DB {
         nonce,
       },
     });
-    return message ? NomadMessage.deserialize(message, this.logger) : null;
+    return message ? NomadMessage.deserialize(message, this.logger, this.sdk) : null;
     // return message ? NomadMessage.deserialize(message, this.logger) : null
   }
 
@@ -154,7 +157,7 @@ export class DB {
       },
     });
 
-    return message ? NomadMessage.deserialize(message, this.logger) : null;
+    return message ? NomadMessage.deserialize(message, this.logger, this.sdk) : null;
   }
 
   async getMessageByHash(messageHash: string): Promise<NomadMessage | null> {
@@ -165,7 +168,7 @@ export class DB {
       },
     });
 
-    return message ? NomadMessage.deserialize(message, this.logger) : null;
+    return message ? NomadMessage.deserialize(message, this.logger, this.sdk) : null;
   }
 
   async getMessages(req: MsgRequest): Promise<NomadMessage[]> {
@@ -185,7 +188,7 @@ export class DB {
       skip,
     });
 
-    return messages.map((m) => NomadMessage.deserialize(m, this.logger));
+    return messages.map((m) => NomadMessage.deserialize(m, this.logger, this.sdk));
   }
 
   async getMessageCount(origin: number): Promise<number> {

@@ -17,10 +17,11 @@ const program = process.env.PROGRAM! as Program;
   const logger = createLogger("indexer", environment);
   const m = new IndexerCollector(environment, logger);
 
-  const db = new DB(m, logger);
+  const sdk = await getSdk(configOverrideLocation || environment);
+
+  const db = new DB(m, logger, sdk);
   await db.connect();
 
-  const sdk = await getSdk(configOverrideLocation || environment);
 
   if (program === "api") {
     /* const [s, p] = */ await startTokenUpdater(sdk, db, logger);

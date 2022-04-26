@@ -35,6 +35,7 @@ model messages {
   relayedAt         Int      @map("relayed_at")
   receivedAt        Int      @map("received_at")
   processedAt       Int      @map("processed_at")
+  confirmAt         Int      @map("confirm_at")
   sender            String?  @db.VarChar(66)
   recipient         String?  @db.VarChar(66)
   amount            String?  @db.VarChar(256)

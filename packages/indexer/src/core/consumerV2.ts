@@ -1,6 +1,6 @@
 import { parseAction } from "@nomad-xyz/sdk-govern";
-import { parseMessage } from "@nomad-xyz/sdk";
-import { parseBody, ParsedTransferMessage } from "@nomad-xyz/sdk-bridge";
+import { NomadContext, parseMessage } from "@nomad-xyz/sdk";
+import { BridgeContext, parseBody, ParsedTransferMessage } from "@nomad-xyz/sdk-bridge";
 import { AnyGovernanceMessage } from "@nomad-xyz/sdk-govern/dist/GovernanceMessage";
 import Logger from "bunyan";
 import { BigNumber, ethers } from "ethers";
@@ -77,6 +77,7 @@ export type ExtendedSerializedNomadMessage = MinimumSerializedNomadMessage & {
   detailsHash: string | null;
   tokenDomain: number | null;
   tokenId: string | null;
+  confirmAt: number;
 };
 
 class Checkbox {
@@ -129,6 +130,8 @@ export class NomadMessage {
   logger: Logger;
   checkbox: Checkbox;
 
+  sdk: BridgeContext;
+
   constructor(
     origin: number,
     destination: number,
@@ -140,6 +143,7 @@ export class NomadMessage {
     dispatchedAt: number,
     dispatchBlock: number,
     logger: Logger,
+    sdk: BridgeContext,
     gasUsed?: GasUsed
   ) {
     this.origin = origin;
@@ -163,6 +167,7 @@ export class NomadMessage {
     this.gasUsed = gasUsed || new GasUsed();
     this.logger = logger.child({ messageHash });
     this.checkbox = new Checkbox();
+    this.sdk = sdk;
   }
 
   recipient(): Padded | undefined {
@@ -175,6 +180,17 @@ export class NomadMessage {
     return this.transferMessage
       ? new Padded(this.transferMessage!.token.id as string)
       : undefined;
+  }
+
+  get confirmAt(): number {
+    if (this.timings.receivedAt === 0) return 0;
+    const optimisticSecondsUnknown = this.sdk.conf.protocol.networks[this.sdk.resolveDomainName(this.destination)]!.configuration.optimisticSeconds;
+
+    if (typeof optimisticSecondsUnknown === 'string') {
+      return this.timings.receivedAt + parseInt(optimisticSecondsUnknown)
+    } else {
+      return this.timings.receivedAt + optimisticSecondsUnknown
+    }
   }
 
   tokenDomain(): number | undefined {
@@ -273,7 +289,7 @@ export class NomadMessage {
     return false;
   }
 
-  static deserialize(s: MinimumSerializedNomadMessage, logger: Logger) {
+  static deserialize(s: MinimumSerializedNomadMessage, logger: Logger, sdk: BridgeContext) {
     const m = new NomadMessage(
       s.origin,
       s.destination,
@@ -284,7 +300,8 @@ export class NomadMessage {
       s.body,
       s.dispatchedAt * 1000,
       s.dispatchBlock,
-      logger.child({ messageSource: "deserialize" })
+      logger.child({ messageSource: "deserialize" }),
+      sdk,
     );
     m.timings.updated(s.updatedAt * 1000);
     m.timings.relayed(s.relayedAt * 1000);
@@ -334,6 +351,7 @@ export class NomadMessage {
       tokenId: this.tokenId()?.valueOf() || null,
       ...this.gasUsed.serialize(),
       ...this.checkbox.serialize(),
+      confirmAt: this.confirmAt,
     };
   }
 
@@ -507,12 +525,15 @@ export class ProcessorV2 extends Consumer {
   db: DB;
   dbPLimit: pLimit.Limit;
   logger: Logger;
+  sdk: BridgeContext;
 
-  constructor(db: DB, logger: Logger, redis: RedisClient, domains?: number[]) {
+  constructor(db: DB, logger: Logger, redis: RedisClient, sdk: BridgeContext) {
     super();
 
     this.pool = new EventsPool(redis);
-    this.domains = domains || [];
+    this.domains = sdk.domainNumbers || [];
+
+    this.sdk = sdk;
 
     this.db = db;
     this.dbPLimit = pLimit(10);
@@ -553,7 +574,8 @@ export class ProcessorV2 extends Consumer {
       message,
       e.ts,
       e.block,
-      this.logger.child({ messageSource: "consumer" })
+      this.logger.child({ messageSource: "consumer" }),
+      this.sdk
     );
 
     let logger = m.logger.child({ eventName: "dispatched" });
