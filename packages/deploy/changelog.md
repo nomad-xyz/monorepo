@@ -14,3 +14,4 @@
 - update typescript eslint packages to fix lint script
 - standardize prettier
 - chore: bump configuration to v0.1.0-rc.15
+- chore: rename package from new-deploy -> deploy
