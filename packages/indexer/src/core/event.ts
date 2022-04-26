@@ -1,11 +1,45 @@
 import { ethers } from "ethers";
 import { hash } from "./utils";
 
-export enum ContractType {
-  Home = "home",
-  Replica = "replica",
-  BridgeRouter = "bridgeRouter",
+export interface Dispatch {
+  messageHash: string;
+  leafIndex: ethers.BigNumber;
+  destinationAndNonce: ethers.BigNumber;
+  committedRoot: string;
+  message: string;
 }
+
+export interface Send {
+  token: string;
+  from: string;
+  toDomain: number;
+  toId: string;
+  amount: ethers.BigNumber;
+  fastLiquidityEnabled: boolean;
+}
+
+export interface Update {
+  homeDomain: number;
+  oldRoot: string;
+  newRoot: string;
+  signature: string;
+}
+
+export interface Receive {
+  originAndNonce: ethers.BigNumber;
+  token: string;
+  recipient: string;
+  liquidityProvider: string;
+  amount: ethers.BigNumber;
+}
+
+export interface Process {
+  messageHash: string;
+  success: boolean;
+  returnData: string;
+}
+
+export type EventDataNormal = Dispatch | Send | Update | Receive | Process;
 
 export enum EventType {
   HomeDispatch = "homeDispatch",
@@ -16,8 +50,28 @@ export enum EventType {
   BridgeRouterReceive = "bridgeRouterReceive",
 }
 
+export function eventTypeToOrder(eventType: NomadishEvent) {
+  switch (eventType.eventType) {
+    case EventType.HomeDispatch:
+      return 0;
+    case EventType.BridgeRouterSend:
+      return 1;
+    case EventType.HomeUpdate:
+      return 2;
+    case EventType.ReplicaUpdate:
+      return 3;
+    case EventType.BridgeRouterReceive:
+      return 5;
+    case EventType.ReplicaProcess:
+      return 4;
+    default:
+      console.log(eventType);
+      throw new Error(`Unknown event type: ${eventType.eventType}`);
+  }
+}
+
 export enum EventSource {
-  Fetch = "fetch",
+  Fresh = "fresh",
   Storage = "storage",
 }
 
@@ -48,64 +102,68 @@ export type EventData = {
 
 export function uniqueHash(d: EventData): string {
   return hash(
-    d.messageHash || 'undefined',
-    d.leafIndex?.toHexString()  || 'undefined',
-    d.destinationAndNonce?.toHexString() || 'undefined',
-    d.committedRoot || 'undefined',
-    d.oldRoot || 'undefined',
-    d.newRoot || 'undefined',
-    d.success ? 'true' : 'false',
-    d.returnData?.toString()  || 'undefined',
-    d.message || 'undefined',
-    d.signature || 'undefined',
-    d.homeDomain?.toString()  || 'undefined',
-    d.token || 'undefined',
-    d.from || 'undefined',
-    d.toDomain?.toString()  || 'undefined',
-    d.toId || 'undefined',
-    d.amount?.toHexString()  || 'undefined',
-    d.fastLiquidityEnabled ? 'true' : 'false',
-    d.originAndNonce?.toHexString()  || 'undefined',
-    d.recipient || 'undefined',
-    d.liquidityProvider || 'undefined',
-    d.evmHash || 'undefined',
-  )
+    d.messageHash || "undefined",
+    d.leafIndex?.toHexString() || "undefined",
+    d.destinationAndNonce?.toHexString() || "undefined",
+    d.committedRoot || "undefined",
+    d.oldRoot || "undefined",
+    d.newRoot || "undefined",
+    d.success ? "true" : "false",
+    d.returnData?.toString() || "undefined",
+    d.message || "undefined",
+    d.signature || "undefined",
+    d.homeDomain?.toString() || "undefined",
+    d.token || "undefined",
+    d.from || "undefined",
+    d.toDomain?.toString() || "undefined",
+    d.toId || "undefined",
+    d.amount?.toHexString() || "undefined",
+    d.fastLiquidityEnabled ? "true" : "false",
+    d.originAndNonce?.toHexString() || "undefined",
+    d.recipient || "undefined",
+    d.liquidityProvider || "undefined",
+    d.evmHash || "undefined"
+  );
 }
 
-export class NomadEvent {
+export class NomadishEvent {
   domain: number;
   eventType: EventType;
-  contractType: ContractType;
   replicaOrigin: number;
   ts: number;
-  eventData: EventData;
   block: number;
   source: EventSource;
   gasUsed: ethers.BigNumber;
   tx: string;
+  eventData: EventDataNormal;
 
   constructor(
     domain: number,
     eventType: EventType,
-    contractType: ContractType,
     replicaOrigin: number,
     ts: number,
-    eventData: EventData,
     block: number,
     source: EventSource,
     gasUsed: ethers.BigNumber,
     tx: string,
+    eventData: EventDataNormal,
+    restore = false
   ) {
     this.domain = domain;
     this.eventType = eventType;
-    this.contractType = contractType;
     this.replicaOrigin = replicaOrigin;
     this.ts =
-      /*source === EventSource.Fetch && */ contractType == ContractType.Home ||
-      contractType == ContractType.BridgeRouter
-        ? ts - 45000
+      !restore &&
+      (eventType === EventType.HomeDispatch ||
+        eventType === EventType.HomeUpdate ||
+        eventType === EventType.BridgeRouterSend)
+        ? ts - 90000
         : ts; // if the event was fetched from RPC for past (we asked RPC when event happened) happened on another chain we want to make sure that event at chain of origin happened before it was relayed to destination
+
+    // checkEventData(eventData, eventType);
+
     this.eventData = eventData;
+
     this.block = block;
     this.source = source;
     this.gasUsed = gasUsed;
@@ -119,7 +177,7 @@ export class NomadEvent {
       );
     }
     const [destination, nonce] = parseDestinationAndNonce(
-      this.eventData.destinationAndNonce!
+      (this.eventData as Dispatch).destinationAndNonce!
     );
     return [destination, nonce];
   }
@@ -131,7 +189,7 @@ export class NomadEvent {
       );
     }
     const [origin, nonce] = parseDestinationAndNonce(
-      this.eventData.originAndNonce!
+      (this.eventData as Receive).originAndNonce!
     );
     return [origin, nonce];
   }
@@ -140,7 +198,6 @@ export class NomadEvent {
     return {
       domain: this.domain,
       eventType: this.eventType,
-      contractType: this.contractType,
       replicaOrigin: this.replicaOrigin,
       ts: this.ts,
       eventData: this.eventData,
@@ -151,34 +208,41 @@ export class NomadEvent {
     };
   }
 
-  static fromObject(v: any): NomadEvent {
+  static fromObject(v: any): NomadishEvent {
     const e = v as {
       domain: number;
       eventType: EventType;
-      contractType: ContractType;
       replicaOrigin: number;
       ts: number;
-      eventData: EventData;
+      eventData: EventDataNormal;
       block: number;
       gasUsed: ethers.BigNumber;
       tx: string;
     };
-    return new NomadEvent(
+    return new NomadishEvent(
       e.domain,
       e.eventType,
-      e.contractType,
       e.replicaOrigin,
       e.ts,
-      e.eventData,
       e.block,
       EventSource.Storage,
       e.gasUsed,
       e.tx,
+      e.eventData,
+      true
     );
   }
 
   uniqueHash(): string {
-    return hash(this.domain.toString(), this.eventType, this.replicaOrigin.toString(), this.block.toString(), uniqueHash(this.eventData), this.gasUsed.toString(), this.tx)
+    return hash(
+      this.domain.toString(),
+      this.eventType,
+      this.replicaOrigin.toString(),
+      // this.block.toString(),
+      uniqueHash(this.eventData),
+      this.gasUsed.toString(),
+      this.tx
+    );
   }
 }
 
@@ -203,4 +267,16 @@ function parseDestinationAndNonce(
     "0x" + without0x.slice(destinationLength)
   );
   return [destinationHex.toNumber(), nonceHex.toNumber()];
+}
+
+export function onlyUniqueEvents(arr: NomadishEvent[]): NomadishEvent[] {
+  const hashfull: [string, NomadishEvent][] = arr.map((e) => [
+    e.uniqueHash(),
+    e,
+  ]);
+  return hashfull
+    .filter(([h, _], i, arr) => {
+      return arr.findIndex(([hh, _]) => hh === h) === i;
+    })
+    .map(([_, e]) => e);
 }

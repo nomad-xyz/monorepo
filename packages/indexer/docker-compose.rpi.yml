@@ -25,3 +25,14 @@ services:
     environment:
       - PROGRAM=api
       - DATABASE_URL=postgresql://postgres:postgres@192.168.1.107:5432/postgres?connect_timeout=300&schema=public
+
+  redis:
+    image: redis:latest
+    restart: always
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - ./redis-data:/data
+    ports:
+      - '6379:6379'
+    expose:
+      - 6379

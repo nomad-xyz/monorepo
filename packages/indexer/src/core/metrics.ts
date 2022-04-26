@@ -5,22 +5,21 @@ import { register } from "prom-client";
 import express, { Response } from "express";
 export const prefix = `nomad_indexer`;
 
-
 export enum RpcRequestMethod {
-  GetBlock = 'eth_getBlock',
-  GetBlockWithTxs = 'eth_getBlockWithTransactions',
-  GetTx = 'eth_getTransaction',
-  GetTxReceipt = 'eth_getTransactionReceipt',
-  GetBlockNumber = 'eth_getBlockNumber',
-  GetLogs = 'eth_getLogs',
-};
+  GetBlock = "eth_getBlock",
+  GetBlockWithTxs = "eth_getBlockWithTransactions",
+  GetTx = "eth_getTransaction",
+  GetTxReceipt = "eth_getTransactionReceipt",
+  GetBlockNumber = "eth_getBlockNumber",
+  GetLogs = "eth_getLogs",
+}
 
 export enum DbRequestType {
-  Select = 'select',
-  Insert = 'insert',
-  Update = 'update',
-  Upsert = 'upsert',
-};
+  Select = "select",
+  Insert = "insert",
+  Update = "update",
+  Upsert = "upsert",
+}
 
 const buckets = [
   1 * 60, // 1 min
@@ -65,10 +64,10 @@ export class MetricsCollector {
       },
       "Prometheus metrics exposed"
     );
+
     server.listen(port);
   }
 }
-
 
 export class IndexerCollector extends MetricsCollector {
   private numMessages: Gauge<string>;
@@ -83,11 +82,6 @@ export class IndexerCollector extends MetricsCollector {
   private rpcRequests: Counter<string>;
   private rpcLatency: Histogram<string>;
   private rpcErrors: Counter<string>;
-  
-
-
-
-
 
   constructor(environment: string, logger: Logger) {
     super(environment, logger);
@@ -125,8 +119,6 @@ export class IndexerCollector extends MetricsCollector {
       labelNames: ["code", "method", "network", "environment"],
     });
 
-    
-
     // Time Histograms
 
     this.latency = new Histogram({
@@ -157,49 +149,44 @@ export class IndexerCollector extends MetricsCollector {
   /**
    * Sets the state for a bridge.
    */
-  setHomeState(
-    network: string,
-    homeFailed: boolean
-  ) {
+  setHomeState(network: string, homeFailed: boolean) {
     this.homeFailedGauge.set(
       { network, environment: this.environment },
       homeFailed ? 1 : 0
     );
   }
 
-  
-
   incNumMessages(stage: string, network: string) {
-    this.numMessages.labels(stage, network, this.environment).inc()
+    this.numMessages.labels(stage, network, this.environment).inc();
   }
   decNumMessages(stage: string, network: string) {
-    this.numMessages.labels(stage, network, this.environment).dec()
+    this.numMessages.labels(stage, network, this.environment).dec();
   }
   setNumMessages(stage: string, network: string, count: number) {
-    this.numMessages.labels(stage, network, this.environment).set(count)
+    this.numMessages.labels(stage, network, this.environment).set(count);
   }
 
   observeLatency(stage: string, home: string, replica: string, ms: number) {
-    this.latency.labels(stage, home, replica, this.environment).observe(ms)
+    this.latency.labels(stage, home, replica, this.environment).observe(ms);
   }
 
   observeGasUsage(stage: string, home: string, replica: string, gas: number) {
-    this.gasUsage.labels(stage, home, replica, this.environment).observe(gas)
+    this.gasUsage.labels(stage, home, replica, this.environment).observe(gas);
   }
 
   incDbRequests(type: DbRequestType, req?: number) {
-    this.dbRequests.labels(type, this.environment).inc(req)
+    this.dbRequests.labels(type, this.environment).inc(req);
   }
 
   incRpcRequests(method: RpcRequestMethod, network: string, req?: number) {
-    this.rpcRequests.labels(method, network, this.environment).inc(req)
+    this.rpcRequests.labels(method, network, this.environment).inc(req);
   }
 
   observeRpcLatency(method: RpcRequestMethod, network: string, ms: number) {
-    this.rpcLatency.labels(method, network, this.environment).observe(ms)
+    this.rpcLatency.labels(method, network, this.environment).observe(ms);
   }
 
   incRpcErrors(method: RpcRequestMethod, network: string, code: string) {
-    this.rpcErrors.labels(code, method, network, this.environment).inc()
+    this.rpcErrors.labels(code, method, network, this.environment).inc();
   }
 }

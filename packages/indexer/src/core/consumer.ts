@@ -1,6 +1,6 @@
 import { parseMessage } from "@nomad-xyz/sdk";
 import { BigNumber, ethers } from "ethers";
-import { EventType, NomadEvent } from "./event";
+import { EventType, NomadishEvent } from "./event";
 import { Statistics } from "./types";
 import { parseBody, ParsedTransferMessage } from "@nomad-xyz/sdk-bridge";
 import { parseAction } from "@nomad-xyz/sdk-govern";
@@ -8,8 +8,9 @@ import { DB } from "./db";
 import Logger from "bunyan";
 import { Padded } from "./utils";
 import EventEmitter from "events";
+import { NomadMessage } from "./consumerV2";
 
-class StatisticsCollector {
+export class StatisticsCollector {
   s: Statistics;
   constructor(domains: number[]) {
     this.s = new Statistics(domains);
@@ -17,29 +18,33 @@ class StatisticsCollector {
 
   addDispatched(domain: number) {
     this.s.counts.total.dispatched += 1;
-    this.s.counts.domainStatistics.get(domain)!.dispatched += 1;
+    if (this.s.counts.domainStatistics.has(domain))
+      this.s.counts.domainStatistics.get(domain)!.dispatched += 1;
   }
 
   addUpdated(domain: number) {
     this.s.counts.total.updated += 1;
-    this.s.counts.domainStatistics.get(domain)!.updated += 1;
+    if (this.s.counts.domainStatistics.has(domain))
+      this.s.counts.domainStatistics.get(domain)!.updated += 1;
   }
 
   addRelayed(domain: number) {
     this.s.counts.total.relayed += 1;
-    this.s.counts.domainStatistics.get(domain)!.relayed += 1;
+    if (this.s.counts.domainStatistics.has(domain))
+      this.s.counts.domainStatistics.get(domain)!.relayed += 1;
   }
 
   addReceived(domain: number) {
     this.s.counts.total.received += 1;
-    this.s.counts.domainStatistics.get(domain)!.received += 1;
+    if (this.s.counts.domainStatistics.has(domain))
+      this.s.counts.domainStatistics.get(domain)!.received += 1;
   }
 
   addProcessed(domain: number) {
     this.s.counts.total.processed += 1;
-    this.s.counts.domainStatistics.get(domain)!.processed += 1;
+    if (this.s.counts.domainStatistics.get(domain))
+      this.s.counts.domainStatistics.get(domain)!.processed += 1;
   }
-
 
   contributeToCount(m: NomadMessage) {
     switch (m.state) {
@@ -69,8 +74,8 @@ class StatisticsCollector {
 }
 
 export abstract class Consumer extends EventEmitter {
-  abstract consume(evens: NomadEvent[]): Promise<void>;
-  abstract stats(): Statistics;
+  abstract consume(evens: NomadishEvent[]): Promise<void>;
+  abstract stats(): Promise<Statistics>;
 }
 
 enum MsgState {
@@ -81,7 +86,7 @@ enum MsgState {
   Processed,
 }
 
-class GasUsed {
+export class GasUsed {
   dispatch: ethers.BigNumber;
   update: ethers.BigNumber;
   relay: ethers.BigNumber;
@@ -103,29 +108,27 @@ class GasUsed {
       gasAtRelay: this.relay.toHexString(),
       gasAtReceive: this.receive.toHexString(),
       gasAtProcess: this.process.toHexString(),
-    }
+    };
   }
 
   static deserialize(o: {
-    gasAtDispatch: string,
-    gasAtUpdate: string,
-    gasAtRelay: string,
-    gasAtReceive: string,
-    gasAtProcess: string,
+    gasAtDispatch: string;
+    gasAtUpdate: string;
+    gasAtRelay: string;
+    gasAtReceive: string;
+    gasAtProcess: string;
   }): GasUsed {
-    let g =  new GasUsed();
+    let g = new GasUsed();
     g.dispatch = ethers.BigNumber.from(o.gasAtDispatch);
     g.update = ethers.BigNumber.from(o.gasAtUpdate);
     g.relay = ethers.BigNumber.from(o.gasAtRelay);
     g.receive = ethers.BigNumber.from(o.gasAtReceive);
     g.process = ethers.BigNumber.from(o.gasAtProcess);
-    return g
+    return g;
   }
-
 }
 
-
-class Timings {
+export class Timings {
   dispatchedAt: number;
   updatedAt: number;
   relayedAt: number;
@@ -183,11 +186,8 @@ class Timings {
   toProcess(): number | undefined {
     if (this.processedAt) {
       return (
-        this.processedAt -
-        ( // Attention:   this.receivedAt is not what we are interested here 
-          this.relayedAt ||
-          this.updatedAt ||
-          this.dispatchedAt)
+        this.processedAt - // Attention:   this.receivedAt is not what we are interested here
+        (this.relayedAt || this.updatedAt || this.dispatchedAt)
       ); // because of the problem with time that it is not ideal from RPC we could have skipped some stages. we take the last available
     }
     return undefined;
@@ -195,12 +195,12 @@ class Timings {
 
   serialize() {
     return {
-      dispatchedAt: Math.floor(this.dispatchedAt/1000),
-      updatedAt: Math.floor(this.updatedAt/1000),
-      relayedAt: Math.floor(this.relayedAt/1000),
-      processedAt: Math.floor(this.processedAt/1000),
-      receivedAt: Math.floor(this.receivedAt/1000),
-    }
+      dispatchedAt: Math.floor(this.dispatchedAt / 1000),
+      updatedAt: Math.floor(this.updatedAt / 1000),
+      relayedAt: Math.floor(this.relayedAt / 1000),
+      processedAt: Math.floor(this.processedAt / 1000),
+      receivedAt: Math.floor(this.receivedAt / 1000),
+    };
   }
 
   static deserialize(s: {
@@ -209,15 +209,17 @@ class Timings {
     relayedAt: number;
     processedAt: number;
     receivedAt: number;
-}): Timings {
-    const t = new Timings(s.dispatchedAt*1000);
-    t.updatedAt = s.updatedAt*1000;
-    t.relayedAt = s.relayedAt*1000;
-    t.processedAt = s.processedAt*1000;
-    t.receivedAt = s.receivedAt*1000;
+  }): Timings {
+    const t = new Timings(s.dispatchedAt * 1000);
+    t.updatedAt = s.updatedAt * 1000;
+    t.relayedAt = s.relayedAt * 1000;
+    t.processedAt = s.processedAt * 1000;
+    t.receivedAt = s.receivedAt * 1000;
     return t;
   }
 }
+
+/*
 
 enum MessageType {
   NoMessage,
@@ -226,41 +228,41 @@ enum MessageType {
 }
 
 export type MinimumSerializedNomadMessage = {
-  origin: number,// m.origin,
-  destination: number,//   m.destination,
-  nonce: number,//   m.nonce,
-  root: string,//   m.root,
-  messageHash: string,//   m.hash,
-  leafIndex: string,//   BigNumber.from(m.leaf_index),
-  body: string,//   m.raw,
-  dispatchBlock: number,//   m.block,
-  dispatchedAt: number,//   Number(m.dispatched_at),
-  updatedAt: number,//   Number(m.updated_at),
-  relayedAt: number,//   Number(m.relayed_at),
-  receivedAt: number,//   Number(m.received_at),
-  processedAt: number,//   Number(m.processed_at),
-  sender: string | null,//   m.sender || '',
-  tx: string | null,//   m.evm || ''
-  state: MsgState,
-  gasAtDispatch: string | null,
-  gasAtUpdate: string | null,
-  gasAtRelay: string | null,
-  gasAtReceive: string | null,
-  gasAtProcess: string | null,
-}
+  origin: number; // m.origin,
+  destination: number; //   m.destination,
+  nonce: number; //   m.nonce,
+  root: string; //   m.root,
+  messageHash: string; //   m.hash,
+  leafIndex: string; //   BigNumber.from(m.leaf_index),
+  body: string; //   m.raw,
+  dispatchBlock: number; //   m.block,
+  dispatchedAt: number; //   Number(m.dispatched_at),
+  updatedAt: number; //   Number(m.updated_at),
+  relayedAt: number; //   Number(m.relayed_at),
+  receivedAt: number; //   Number(m.received_at),
+  processedAt: number; //   Number(m.processed_at),
+  sender: string | null; //   m.sender || '',
+  tx: string | null; //   m.evm || ''
+  state: MsgState;
+  gasAtDispatch: string;
+  gasAtUpdate: string;
+  gasAtRelay: string;
+  gasAtReceive: string;
+  gasAtProcess: string;
+};
 
 export type ExtendedSerializedNomadMessage = MinimumSerializedNomadMessage & {
-  internalSender: string,// PADDED! // internalSender: this.internalSender,
-  internalRecipient: string,// PADDED! // internalRecipient: this.internalRecipient,
+  internalSender: string; // PADDED! // internalSender: this.internalSender,
+  internalRecipient: string; // PADDED! // internalRecipient: this.internalRecipient,
   // hasMessage: MessageType | null,// hasMessage: this.hasMessage,
   // bridgeMsgType: this.transferMessage.action.type,
-  recipient: string | null,// PADDED!// bridgeMsgTo: this.recipient(), // PADDED!
-  amount: string | null,// bridgeMsgAmount: this.transferMessage.action.amount.toHexString(),
-  allowFast: boolean | null,// bridgeMsgAllowFast: this.transferMessage.action.allowFast,
-  detailsHash: string | null,// bridgeMsgDetailsHash: this.transferMessage.action.detailsHash,
-  tokenDomain: number | null,// bridgeMsgTokenDomain: this.tokenDomain(),
-  tokenId: string | null,// PADDED! // bridgeMsgTokenId: this.tokenId(), // PADDED!
-}
+  recipient: string | null; // PADDED!// bridgeMsgTo: this.recipient(), // PADDED!
+  amount: string | null; // bridgeMsgAmount: this.transferMessage.action.amount.toHexString(),
+  allowFast: boolean; // bridgeMsgAllowFast: this.transferMessage.action.allowFast,
+  detailsHash: string | null; // bridgeMsgDetailsHash: this.transferMessage.action.detailsHash,
+  tokenDomain: number | null; // bridgeMsgTokenDomain: this.tokenDomain(),
+  tokenId: string | null; // PADDED! // bridgeMsgTokenId: this.tokenId(), // PADDED!
+};
 
 export class NomadMessage {
   origin: number;
@@ -297,7 +299,7 @@ export class NomadMessage {
     dispatchedAt: number,
     dispatchBlock: number,
     logger: Logger,
-    gasUsed?: GasUsed,
+    gasUsed?: GasUsed
   ) {
     this.origin = origin;
     this.destination = destination;
@@ -318,118 +320,136 @@ export class NomadMessage {
     this.timings = new Timings(dispatchedAt);
     this.dispatchBlock = dispatchBlock;
     this.gasUsed = gasUsed || new GasUsed();
-    this.logger = logger.child({messageHash});
+    this.logger = logger.child({ messageHash });
   }
 
-  // PADDED!
-  /** 
-   * PADDED!
-  */
   recipient(): Padded | undefined {
-    return this.transferMessage ? new Padded(this.transferMessage!.action.to) : undefined
+    return this.transferMessage
+      ? new Padded(this.transferMessage!.action.to)
+      : undefined;
   }
 
-  // PADDED!
-  /** 
-   * PADDED!
-  */
+ 
   tokenId(): Padded | undefined {
-    return this.transferMessage ? new Padded(this.transferMessage!.token.id as string) : undefined
+    return this.transferMessage
+      ? new Padded(this.transferMessage!.token.id as string)
+      : undefined;
   }
 
   tokenDomain(): number | undefined {
-    return this.transferMessage ? this.transferMessage?.token.domain as number : undefined
+    return this.transferMessage
+      ? (this.transferMessage?.token.domain as number)
+      : undefined;
   }
 
   amount(): BigNumber | undefined {
-    return this.transferMessage ? this.transferMessage?.action.amount : undefined
+    return this.transferMessage
+      ? this.transferMessage?.action.amount
+      : undefined;
   }
 
-  allowFast(): boolean | undefined {
-    return this.transferMessage ? this.transferMessage?.action.allowFast : undefined
+  allowFast(): boolean {
+    return !!this.transferMessage?.action.allowFast;
   }
 
   detailsHash(): string | undefined {
-    return this.transferMessage ? this.transferMessage?.action.detailsHash : undefined
+    return this.transferMessage
+      ? this.transferMessage?.action.detailsHash
+      : undefined;
   }
 
   update(ts: number, gasUsed: BigNumber) {
     if (this.state < MsgState.Updated) {
-      this.logger.debug(`Updated message from state ${this.state} to ${MsgState.Updated} (Updated)`);
+      this.logger.debug(
+        `Updated message from state ${this.state} to ${MsgState.Updated} (Updated)`
+      );
       this.state = MsgState.Updated;
       this.timings.updated(ts);
       this.gasUsed.update = gasUsed;
       return true;
     }
-    this.logger.debug(`The message is in the higher state for being Updated. Want < ${MsgState.Updated}, is ${this.state}`);
+    this.logger.debug(
+      `The message is in the higher state for being Updated. Want < ${MsgState.Updated}, is ${this.state}`
+    );
     return false;
-    
   }
 
   relay(ts: number, gasUsed: BigNumber) {
     if (this.state < MsgState.Relayed) {
-      this.logger.debug(`Updated message from state ${this.state} to ${MsgState.Relayed} (Relayed)`);
+      this.logger.debug(
+        `Updated message from state ${this.state} to ${MsgState.Relayed} (Relayed)`
+      );
       this.state = MsgState.Relayed;
       this.timings.relayed(ts);
       this.gasUsed.relay = gasUsed;
       return true;
     }
-    this.logger.debug(`The message is in the higher state for being Relayed. Want < ${MsgState.Relayed}, is ${this.state}`);
+    this.logger.debug(
+      `The message is in the higher state for being Relayed. Want < ${MsgState.Relayed}, is ${this.state}`
+    );
     return false;
   }
 
   receive(ts: number, gasUsed: BigNumber) {
     if (this.state < MsgState.Received) {
-      this.logger.debug(`Updated message from state ${this.state} to ${MsgState.Received} (Received)`);
+      this.logger.debug(
+        `Updated message from state ${this.state} to ${MsgState.Received} (Received)`
+      );
       this.state = MsgState.Received;
       this.timings.received(ts);
       this.gasUsed.receive = gasUsed;
       return true;
     }
-    this.logger.debug(`The message is in the higher state for being Received. Want < ${MsgState.Received}, is ${this.state}`);
+    this.logger.debug(
+      `The message is in the higher state for being Received. Want < ${MsgState.Received}, is ${this.state}`
+    );
     return false;
   }
 
   process(ts: number, gasUsed: BigNumber) {
     if (this.state < MsgState.Processed) {
-      this.logger.debug(`Updated message from state ${this.state} to ${MsgState.Processed} (Processed)`);
+      this.logger.debug(
+        `Updated message from state ${this.state} to ${MsgState.Processed} (Processed)`
+      );
       this.state = MsgState.Processed;
       this.timings.processed(ts);
       this.gasUsed.process = gasUsed;
       return true;
     }
-    this.logger.debug(`The message is in the higher state for being Proce. Want < ${MsgState.Processed}, is ${this.state}`);
+    this.logger.debug(
+      `The message is in the higher state for being Proce. Want < ${MsgState.Processed}, is ${this.state}`
+    );
     return false;
   }
 
   static deserialize(s: MinimumSerializedNomadMessage, logger: Logger) {
     const m = new NomadMessage(
-          s.origin,
-          s.destination,
-          s.nonce,
-          s.root,
-          s.messageHash,
-          BigNumber.from(s.leafIndex),
-          s.body,
-          s.dispatchedAt*1000,
-          s.dispatchBlock,
-          logger.child({messageSource: 'deserialize'})
-        );
-        m.timings.updated(s.updatedAt*1000);
-        m.timings.relayed(s.relayedAt*1000);
-        m.timings.received(s.receivedAt*1000);
-        m.timings.processed(s.processedAt*1000);
+      s.origin,
+      s.destination,
+      s.nonce,
+      s.root,
+      s.messageHash,
+      BigNumber.from(s.leafIndex),
+      s.body,
+      s.dispatchedAt * 1000,
+      s.dispatchBlock,
+      logger.child({ messageSource: "deserialize" })
+    );
+    m.timings.updated(s.updatedAt * 1000);
+    m.timings.relayed(s.relayedAt * 1000);
+    m.timings.received(s.receivedAt * 1000);
+    m.timings.processed(s.processedAt * 1000);
 
-        m.gasUsed.dispatch = (ethers.BigNumber.from(s.gasAtDispatch));
-        m.gasUsed.update = (ethers.BigNumber.from(s.gasAtUpdate));
-        m.gasUsed.relay = (ethers.BigNumber.from(s.gasAtRelay));
-        m.gasUsed.receive = (ethers.BigNumber.from(s.gasAtReceive));
-        m.gasUsed.process = (ethers.BigNumber.from(s.gasAtProcess));
+    m.gasUsed.dispatch = ethers.BigNumber.from(s.gasAtDispatch);
+    m.gasUsed.update = ethers.BigNumber.from(s.gasAtUpdate);
+    m.gasUsed.relay = ethers.BigNumber.from(s.gasAtRelay);
+    m.gasUsed.receive = ethers.BigNumber.from(s.gasAtReceive);
+    m.gasUsed.process = ethers.BigNumber.from(s.gasAtProcess);
 
-        m.sender = s.sender || undefined;
-        m.tx = s.tx || undefined;
-        m.state = s.state;
-        return m;
+    m.sender = s.sender || undefined;
+    m.tx = s.tx || undefined;
+    m.state = s.state;
+    return m;
   }
 
   serialize(): ExtendedSerializedNomadMessage {
@@ -451,11 +471,11 @@ export class NomadMessage {
       // hasMessage: this.hasMessage,
       recipient: this.recipient()?.valueOf() || null,
       amount: this.amount()?.toHexString() || null,
-      allowFast: this.allowFast() || null,
+      allowFast: this.allowFast(),
       detailsHash: this.detailsHash() || null,
       tokenDomain: this.tokenDomain() || null,
       tokenId: this.tokenId()?.valueOf() || null,
-      ...this.gasUsed.serialize()
+      ...this.gasUsed.serialize(),
     };
   }
 
@@ -490,24 +510,22 @@ export class NomadMessage {
     }
   }
 
-
   get originAndRoot(): string {
     return `${this.origin}${this.root}`;
   }
-
 }
 
 class SenderLostAndFound {
   p: Processor;
-  dispatchEventsWithMessages: [NomadEvent, NomadMessage][];
-  bridgeRouterSendEvents: NomadEvent[];
+  dispatchEventsWithMessages: [NomadishEvent, NomadMessage][];
+  bridgeRouterSendEvents: NomadishEvent[];
   constructor(p: Processor) {
     this.p = p;
     this.dispatchEventsWithMessages = [];
     this.bridgeRouterSendEvents = [];
   }
 
-  bridgeRouterSend(e: NomadEvent): string | undefined {
+  bridgeRouterSend(e: NomadishEvent): string | undefined {
     // check if we have dispatch events with block >= current && block <= current + 4;
     const hash = this.findMatchingDispatchAndUpdateAndRemove(e);
     if (hash) {
@@ -519,7 +537,7 @@ class SenderLostAndFound {
     }
   }
   findMatchingDispatchAndUpdateAndRemove(
-    brSend: NomadEvent
+    brSend: NomadishEvent
   ): string | undefined {
     const index = this.dispatchEventsWithMessages.findIndex(([dispatch, m]) =>
       this.match(dispatch, brSend, m)
@@ -538,7 +556,7 @@ class SenderLostAndFound {
     return undefined;
   }
 
-  match(dispatch: NomadEvent, brSend: NomadEvent, m: NomadMessage): boolean {
+  match(dispatch: NomadishEvent, brSend: NomadishEvent, m: NomadMessage): boolean {
     return (
       brSend.eventData.toDomain! === m.destination && //brSend.eventData.token?.toLowerCase() === m.bridgeMsgTokenId?.toLowerCase() &&
       new Padded(brSend.eventData.toId!).toEVMAddress() ===
@@ -549,7 +567,7 @@ class SenderLostAndFound {
   }
 
   findMatchingBRSendUpdateAndRemove(
-    dispatch: NomadEvent,
+    dispatch: NomadishEvent,
     m: NomadMessage
   ): boolean {
     const index = this.bridgeRouterSendEvents.findIndex((brSend) =>
@@ -567,14 +585,16 @@ class SenderLostAndFound {
     return false;
   }
 
-  dispatch(e: NomadEvent, m: NomadMessage): boolean {
+  dispatch(e: NomadishEvent, m: NomadMessage): boolean {
     if (m.hasMessage !== MessageType.TransferMessage) return false;
 
     if (this.findMatchingBRSendUpdateAndRemove(e, m)) {
-      m.logger.info(`SenderLostAndFound found existing Sent event`)
+      m.logger.info(`SenderLostAndFound found existing Sent event`);
       return true;
     } else {
-      m.logger.info(`SenderLostAndFound haven't found existing Sent event, pushing to dispatched`)
+      m.logger.info(
+        `SenderLostAndFound haven't found existing Sent event, pushing to dispatched`
+      );
       this.dispatchEventsWithMessages.push([e, m]);
       return false;
     }
@@ -603,10 +623,10 @@ export class Processor extends Consumer {
     this.senderRegistry = new SenderLostAndFound(this);
 
     this.db = db;
-    this.logger = logger.child({span: 'consumer'});
+    this.logger = logger.child({ span: "consumer" });
   }
 
-  async consume(events: NomadEvent[]): Promise<void> {
+  async consume(events: NomadishEvent[]): Promise<void> {
     for (const event of events) {
       if (event.eventType === EventType.HomeDispatch) {
         this.dispatched(event);
@@ -647,11 +667,18 @@ export class Processor extends Consumer {
 
   async getMsgForSync(): Promise<[NomadMessage[], NomadMessage[]]> {
     let existingHashes = await this.db.getExistingHashes();
-    
-    const msgsForSync = this.syncQueue.reduce((acc: [string[], string[]], hash, i) => {
-      existingHashes.indexOf(hash) < 0 ? acc[0].push(hash) : acc[1].push(hash);
-      return acc;
-    }, [[],[]]).map(this.hash2msg.bind(this)) as [NomadMessage[], NomadMessage[]];
+
+    const msgsForSync = this.syncQueue
+      .reduce(
+        (acc: [string[], string[]], hash, i) => {
+          existingHashes.indexOf(hash) < 0
+            ? acc[0].push(hash)
+            : acc[1].push(hash);
+          return acc;
+        },
+        [[], []]
+      )
+      .map(this.hash2msg.bind(this)) as [NomadMessage[], NomadMessage[]];
 
     this.syncQueue = [];
 
@@ -662,7 +689,7 @@ export class Processor extends Consumer {
     return hashes.map((hash) => this.getMsg(hash)!).filter((m) => !!m);
   }
 
-  dispatched(e: NomadEvent) {
+  dispatched(e: NomadishEvent) {
     const m = new NomadMessage(
       e.domain,
       ...e.destinationAndNonce(),
@@ -672,98 +699,136 @@ export class Processor extends Consumer {
       e.eventData.message!,
       e.ts,
       e.block,
-      this.logger.child({messageSource: 'consumer'}),
+      this.logger.child({ messageSource: "consumer" })
     );
 
-    let logger = m.logger.child({eventName: "dispatched"});
+    let logger = m.logger.child({ eventName: "dispatched" });
 
     m.gasUsed.dispatch = e.gasUsed;
 
-    this.senderRegistry.dispatch(e, m, );
+    this.senderRegistry.dispatch(e, m);
 
     this.add(m);
     this.addToSyncQueue(m.messageHash);
     const gas = e.gasUsed.toNumber();
     // this.logger.warn(`!Gas for dispatched from ${m.origin, m.destination} to ${m.origin, m.destination} (${e.tx}) = ${gas} (${e.gasUsed})`);
-    this.emit("dispatched", m.origin, m.destination, gas)
+    this.emit("dispatched", m.origin, m.destination, gas);
     logger.debug(`Created message`);
 
     if (!this.domains.includes(e.domain)) this.domains.push(e.domain);
   }
 
-  homeUpdate(e: NomadEvent) {
-    let logger = this.logger.child({eventName: "updated"});
+  homeUpdate(e: NomadishEvent) {
+    let logger = this.logger.child({ eventName: "updated" });
     const ms = this.getMsgsByOriginAndRoot(e.domain, e.eventData.oldRoot!);
     if (ms.length) {
       ms.forEach((m) => {
         if (m.update(e.ts, e.gasUsed)) {
           this.addToSyncQueue(m.messageHash);
 
-          this.emit("updated", m.origin, m.destination, m.timings.toUpdate(), e.gasUsed.toNumber());
+          this.emit(
+            "updated",
+            m.origin,
+            m.destination,
+            m.timings.toUpdate(),
+            e.gasUsed.toNumber()
+          );
         }
       });
     } else {
-      logger.warn({origin: e.replicaOrigin, root: e.eventData.oldRoot!}, `Haven't found a message for Update event`)
+      logger.warn(
+        { origin: e.replicaOrigin, root: e.eventData.oldRoot! },
+        `Haven't found a message for Update event`
+      );
     }
   }
 
-  replicaUpdate(e: NomadEvent) {
-    let logger = this.logger.child({eventName: "relayed"});
+  replicaUpdate(e: NomadishEvent) {
+    let logger = this.logger.child({ eventName: "relayed" });
     const ms = this.getMsgsByOriginAndRoot(
       e.replicaOrigin,
       e.eventData.oldRoot!
     );
-    
+
     if (ms.length) {
       ms.forEach((m) => {
         if (m.relay(e.ts, e.gasUsed)) {
           this.addToSyncQueue(m.messageHash);
-          this.emit("relayed", m.origin, m.destination, m.timings.toRelay(), e.gasUsed.toNumber());
+          this.emit(
+            "relayed",
+            m.origin,
+            m.destination,
+            m.timings.toRelay(),
+            e.gasUsed.toNumber()
+          );
         }
       });
     } else {
-      logger.warn({origin: e.replicaOrigin, root: e.eventData.oldRoot!}, `Haven't found a message for ReplicaUpdate event`)
+      logger.warn(
+        { origin: e.replicaOrigin, root: e.eventData.oldRoot! },
+        `Haven't found a message for ReplicaUpdate event`
+      );
     }
   }
 
-  process(e: NomadEvent) {
-    let logger = this.logger.child({eventName: "processed"});
+  process(e: NomadishEvent) {
+    let logger = this.logger.child({ eventName: "processed" });
     const m = this.getMsg(e.eventData.messageHash!);
     if (m) {
       if (m.process(e.ts, e.gasUsed)) {
         this.addToSyncQueue(m.messageHash);
-        this.emit("processed", m.origin, m.destination, m.timings.toProcess(), e.gasUsed.toNumber())
+        this.emit(
+          "processed",
+          m.origin,
+          m.destination,
+          m.timings.toProcess(),
+          e.gasUsed.toNumber()
+        );
       }
     } else {
-      logger.warn({messageHash: e.eventData.messageHash!}, `Haven't found a message for Processed event`)
+      logger.warn(
+        { messageHash: e.eventData.messageHash! },
+        `Haven't found a message for Processed event`
+      );
     }
   }
 
-  bridgeRouterSend(e: NomadEvent) {
-    let logger = this.logger.child({eventName: "bridgeSent",});
+  bridgeRouterSend(e: NomadishEvent) {
+    let logger = this.logger.child({ eventName: "bridgeSent" });
     const hash = this.senderRegistry.bridgeRouterSend(e);
     if (hash) {
-      logger.child({messageHash: hash}).debug(`Found dispatched message`);
+      logger.child({ messageHash: hash }).debug(`Found dispatched message`);
       this.addToSyncQueue(hash);
     } else {
-      let [origin, nonce] = e.originAndNonce();
-      logger.warn({origin, nonce}, `Haven't found a message for BridgeReceived event`);
+      logger.warn(
+        { tx: e.tx, domain: e.domain },
+        `Haven't found a message for BridgeReceived event`
+      );
     }
   }
 
-  bridgeRouterReceive(e: NomadEvent) {
+  bridgeRouterReceive(e: NomadishEvent) {
     const m = this.getMsgsByOriginAndNonce(...e.originAndNonce());
-    let logger = this.logger.child({eventName: "bridgeReceived"});
+    let logger = this.logger.child({ eventName: "bridgeReceived" });
 
     if (m) {
       if (m.receive(e.ts, e.gasUsed)) {
         this.addToSyncQueue(m.messageHash);
         const gas = e.gasUsed.toNumber();
-        this.emit("received", m.origin, m.destination, m.timings.toReceive(), gas);
+        this.emit(
+          "received",
+          m.origin,
+          m.destination,
+          m.timings.toReceive(),
+          gas
+        );
       }
     } else {
       let [origin, nonce] = e.originAndNonce();
-      logger.warn({origin, nonce}, `Haven't found a message for BridgeReceived event`)
+      logger.warn(
+        { origin, nonce },
+        `Haven't found a message for BridgeReceived event`
+      );
     }
   }
 
@@ -804,7 +869,7 @@ export class Processor extends Consumer {
     return this.messages.find((m) => m.nonce === nonce && m.origin === origin);
   }
 
-  stats(): Statistics {
+  async stats(): Promise<Statistics> {
     const collector = new StatisticsCollector(this.domains);
 
     this.messages.forEach((m) => {
@@ -814,3 +879,6 @@ export class Processor extends Consumer {
     return collector.stats();
   }
 }
+
+
+*/
