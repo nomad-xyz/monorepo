@@ -5,8 +5,9 @@ import "forge-std/Test.sol";
 
 contract NomadTest is Test {
     uint256 updaterPK = 1;
+    uint256 fakeUpdaterPK = 2;
     address updater = vm.addr(updaterPK);
-    address fakeUpdater = vm.addr(2);
+    address fakeUpdater = vm.addr(fakeUpdaterPK);
     address signer = vm.addr(3);
     address fakeSigner = vm.addr(4);
 
@@ -21,6 +22,7 @@ contract NomadTest is Test {
 
     function getMessage(bytes32 oldRoot, bytes32 newRoot)
         public
+        view
         returns (bytes memory)
     {
         bytes memory message = abi.encodePacked(
