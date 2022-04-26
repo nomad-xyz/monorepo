@@ -98,7 +98,6 @@ const RETRIES = 100;
 const TO_BLOCK_LAG = 1;
 const FROM_BLOCK_LAG = 2;
 
-
 export class Indexer {
   domain: number;
   sdk: BridgeContext;
@@ -412,10 +411,7 @@ export class Indexer {
   async getAdditionalInfo(
     hash: string
   ): Promise<{ timestamp: number; gasUsed: ethers.BigNumber; from: string }> {
-    const { timestamp } = await this.getTransaction(
-      hash,
-      false
-    );
+    const { timestamp } = await this.getTransaction(hash, false);
 
     const { gasUsed, from } = await this.getTransactionReceipt(hash);
 
@@ -676,13 +672,12 @@ export class Indexer {
         break;
       }
     }
-    if (homeRootsTotal !== 0)
-      {
-        // fs.writeFileSync(`/outputs/kek${this.domain}.json`, JSON.stringify(allEvents, replacer));
-        throw new Error(
-          `${this.domain}: Left roots for home supposed to be 0, but is ${homeRootsTotal} from total of ${homeRootsObserved}`
-        );
-      }
+    if (homeRootsTotal !== 0) {
+      // fs.writeFileSync(`/outputs/kek${this.domain}.json`, JSON.stringify(allEvents, replacer));
+      throw new Error(
+        `${this.domain}: Left roots for home supposed to be 0, but is ${homeRootsTotal} from total of ${homeRootsObserved}`
+      );
+    }
 
     for (const [domain, replica] of initialReplica) {
       let root = replica.root;
@@ -1203,18 +1198,32 @@ export class RedisPersistance extends Persistance {
       }
     }
 
-    await Promise.all(Array.from(block2Events.entries()).map(async ([block, events]) => {
-      const eventsBefore: NomadishEvent[]  = JSON.parse(await this.client.hGet(`${this.domain}nomad_message`, String(block),) || '[]', reviver);
-      const eventsToAdd = events.filter(e => {
-        return eventsBefore.findIndex(eb => e.uniqueHash() != eb.uniqueHash()) === -1
-      });
-      promises.push(this.client.hSet(
-        `${this.domain}nomad_message`,
-        String(block),
-        JSON.stringify([...eventsBefore, ...eventsToAdd], replacer)
-      ));
-      promises.push(this.client.sAdd(`${this.domain}blocks`, String(block)));
-    }));
+    await Promise.all(
+      Array.from(block2Events.entries()).map(async ([block, events]) => {
+        const eventsBefore: NomadishEvent[] = JSON.parse(
+          (await this.client.hGet(
+            `${this.domain}nomad_message`,
+            String(block)
+          )) || "[]",
+          reviver
+        );
+        const eventsToAdd = events.filter((e) => {
+          return (
+            eventsBefore.findIndex(
+              (eb) => e.uniqueHash() != eb.uniqueHash()
+            ) === -1
+          );
+        });
+        promises.push(
+          this.client.hSet(
+            `${this.domain}nomad_message`,
+            String(block),
+            JSON.stringify([...eventsBefore, ...eventsToAdd], replacer)
+          )
+        );
+        promises.push(this.client.sAdd(`${this.domain}blocks`, String(block)));
+      })
+    );
 
     if (fromChanged)
       promises.push(

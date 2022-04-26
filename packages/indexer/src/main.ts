@@ -22,7 +22,6 @@ const program = process.env.PROGRAM! as Program;
   const db = new DB(m, logger, sdk);
   await db.connect();
 
-
   if (program === "api") {
     /* const [s, p] = */ await startTokenUpdater(sdk, db, logger);
     await api.run(db, logger);

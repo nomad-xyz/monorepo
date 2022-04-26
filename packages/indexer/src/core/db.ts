@@ -87,7 +87,9 @@ export class DB {
       },
     });
 
-    return messages.map((m) => NomadMessage.deserialize(m, this.logger, this.sdk));
+    return messages.map((m) =>
+      NomadMessage.deserialize(m, this.logger, this.sdk)
+    );
   }
 
   async getMessagesByOriginAndStateNumber(
@@ -102,7 +104,9 @@ export class DB {
       },
     });
 
-    return messages.map((m) => NomadMessage.deserialize(m, this.logger, this.sdk));
+    return messages.map((m) =>
+      NomadMessage.deserialize(m, this.logger, this.sdk)
+    );
   }
 
   async getMessagesByOriginAndRoot(
@@ -116,13 +120,17 @@ export class DB {
         root,
       },
     });
-    return messages.map((m) => NomadMessage.deserialize(m, this.logger, this.sdk));
+    return messages.map((m) =>
+      NomadMessage.deserialize(m, this.logger, this.sdk)
+    );
   }
 
   async getAllMessages(): Promise<NomadMessage[]> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const messages = await this.client.messages.findMany();
-    return messages.map((m) => NomadMessage.deserialize(m, this.logger, this.sdk));
+    return messages.map((m) =>
+      NomadMessage.deserialize(m, this.logger, this.sdk)
+    );
   }
 
   async getMessageByOriginAndNonce(
@@ -136,7 +144,9 @@ export class DB {
         nonce,
       },
     });
-    return message ? NomadMessage.deserialize(message, this.logger, this.sdk) : null;
+    return message
+      ? NomadMessage.deserialize(message, this.logger, this.sdk)
+      : null;
     // return message ? NomadMessage.deserialize(message, this.logger) : null
   }
 
@@ -157,7 +167,9 @@ export class DB {
       },
     });
 
-    return message ? NomadMessage.deserialize(message, this.logger, this.sdk) : null;
+    return message
+      ? NomadMessage.deserialize(message, this.logger, this.sdk)
+      : null;
   }
 
   async getMessageByHash(messageHash: string): Promise<NomadMessage | null> {
@@ -168,7 +180,9 @@ export class DB {
       },
     });
 
-    return message ? NomadMessage.deserialize(message, this.logger, this.sdk) : null;
+    return message
+      ? NomadMessage.deserialize(message, this.logger, this.sdk)
+      : null;
   }
 
   async getMessages(req: MsgRequest): Promise<NomadMessage[]> {
@@ -188,7 +202,9 @@ export class DB {
       skip,
     });
 
-    return messages.map((m) => NomadMessage.deserialize(m, this.logger, this.sdk));
+    return messages.map((m) =>
+      NomadMessage.deserialize(m, this.logger, this.sdk)
+    );
   }
 
   async getMessageCount(origin: number): Promise<number> {

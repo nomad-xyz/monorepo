@@ -1,6 +1,10 @@
 import { parseAction } from "@nomad-xyz/sdk-govern";
 import { NomadContext, parseMessage } from "@nomad-xyz/sdk";
-import { BridgeContext, parseBody, ParsedTransferMessage } from "@nomad-xyz/sdk-bridge";
+import {
+  BridgeContext,
+  parseBody,
+  ParsedTransferMessage,
+} from "@nomad-xyz/sdk-bridge";
 import { AnyGovernanceMessage } from "@nomad-xyz/sdk-govern/dist/GovernanceMessage";
 import Logger from "bunyan";
 import { BigNumber, ethers } from "ethers";
@@ -184,12 +188,15 @@ export class NomadMessage {
 
   get confirmAt(): number {
     if (this.timings.receivedAt === 0) return 0;
-    const optimisticSecondsUnknown = this.sdk.conf.protocol.networks[this.sdk.resolveDomainName(this.destination)]!.configuration.optimisticSeconds;
+    const optimisticSecondsUnknown =
+      this.sdk.conf.protocol.networks[
+        this.sdk.resolveDomainName(this.destination)
+      ]!.configuration.optimisticSeconds;
 
-    if (typeof optimisticSecondsUnknown === 'string') {
-      return this.timings.receivedAt + parseInt(optimisticSecondsUnknown)
+    if (typeof optimisticSecondsUnknown === "string") {
+      return this.timings.receivedAt + parseInt(optimisticSecondsUnknown);
     } else {
-      return this.timings.receivedAt + optimisticSecondsUnknown
+      return this.timings.receivedAt + optimisticSecondsUnknown;
     }
   }
 
@@ -289,7 +296,11 @@ export class NomadMessage {
     return false;
   }
 
-  static deserialize(s: MinimumSerializedNomadMessage, logger: Logger, sdk: BridgeContext) {
+  static deserialize(
+    s: MinimumSerializedNomadMessage,
+    logger: Logger,
+    sdk: BridgeContext
+  ) {
     const m = new NomadMessage(
       s.origin,
       s.destination,
@@ -301,7 +312,7 @@ export class NomadMessage {
       s.dispatchedAt * 1000,
       s.dispatchBlock,
       logger.child({ messageSource: "deserialize" }),
-      sdk,
+      sdk
     );
     m.timings.updated(s.updatedAt * 1000);
     m.timings.relayed(s.relayedAt * 1000);

@@ -63,7 +63,7 @@ export function reviver(key: any, value: any): any {
       value.dataType == "NomadishEvent"
     ) {
       return NomadishEvent.fromObject(value.value);
-    } else if (!!value.eventType && typeof value.eventType === 'string') {
+    } else if (!!value.eventType && typeof value.eventType === "string") {
       return NomadishEvent.fromObject(value);
     } else if (value.dataType === "BigNumber") {
       return ethers.BigNumber.from(value.value);

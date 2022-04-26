@@ -270,8 +270,13 @@ function parseDestinationAndNonce(
 }
 
 export function onlyUniqueEvents(arr: NomadishEvent[]): NomadishEvent[] {
-  const hashfull: [string, NomadishEvent][] = arr.map(e => [e.uniqueHash(), e]);
-  return hashfull.filter(([h, _], i, arr) => {
-    return arr.findIndex(([hh, _]) => hh === h) === i
-  }).map(([_, e]) => e);
+  const hashfull: [string, NomadishEvent][] = arr.map((e) => [
+    e.uniqueHash(),
+    e,
+  ]);
+  return hashfull
+    .filter(([h, _], i, arr) => {
+      return arr.findIndex(([hh, _]) => hh === h) === i;
+    })
+    .map(([_, e]) => e);
 }
