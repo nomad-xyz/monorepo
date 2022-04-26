@@ -583,16 +583,18 @@ export class Indexer {
       }
     });
 
+    const allEventsUnique = onlyUniqueEvents(allEvents);
+
     if (this.develop || true) this.dummyTestEventsIntegrity();
     const speed = blockSpeed(from, to, startAll, finishedAll);
     this.logger.info(
       `Fetched all for domain ${this.domain}. Blocks: ${
         to - from + 1
-      } (${speed}b/sec). Got events: ${allEvents.length}`
+      } (${speed}b/sec). Got events: ${allEventsUnique.length}`
     );
     this.lastBlock = to;
 
-    return allEvents;
+    return allEventsUnique;
   }
 
   // TODO: Just the last ones received
@@ -675,9 +677,12 @@ export class Indexer {
       }
     }
     if (homeRootsTotal !== 0)
-      throw new Error(
-        `${this.domain}: Left roots for home supposed to be 0, but is ${homeRootsTotal} from total of ${homeRootsObserved}`
-      );
+      {
+        // fs.writeFileSync(`/outputs/kek${this.domain}.json`, JSON.stringify(allEvents, replacer));
+        throw new Error(
+          `${this.domain}: Left roots for home supposed to be 0, but is ${homeRootsTotal} from total of ${homeRootsObserved}`
+        );
+      }
 
     for (const [domain, replica] of initialReplica) {
       let root = replica.root;
