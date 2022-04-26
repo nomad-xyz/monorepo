@@ -3,7 +3,6 @@ import { expect } from 'chai';
 import { constants, getDefaultProvider, VoidSigner } from 'ethers';
 import { NomadContext, CoreContracts } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
-import { NoProviderError } from '@nomad-xyz/multi-provider';
 
 const ENVIRONMENTS = ['test', 'development', 'staging', 'production'];
 
@@ -64,14 +63,6 @@ describe('sdk', async () => {
       }
     });
 
-    it('errors if signer is registered without a provider', () => {
-      const conf = config.getBuiltin('development');
-      const context = new NomadContext(conf);
-      const signer = new VoidSigner(constants.AddressZero);
-      const err = 'Missing provider for domain: 1001 : rinkeby.\nHint: Have you called `context.registerProvider(1001, provider)` yet?';
-      expect(() => context.registerSigner(1001, signer)).to.throw(err);
-    });
-
     // TODO:
     it.skip('fails if given bad rpc provider string');
 
@@ -116,15 +107,6 @@ describe('sdk', async () => {
         context,
         'rinkeby',
         conf.core['rinkeby'],
-      );
-    });
-
-    it('errors if no provider or signer', () => {
-      expect(() => coreContracts.getReplica('kovan')).to.throw(NoProviderError);
-      expect(() => coreContracts.home).to.throw(NoProviderError);
-      expect(() => coreContracts.governanceRouter).to.throw(NoProviderError);
-      expect(() => coreContracts.xAppConnectionManager).to.throw(
-        NoProviderError,
       );
     });
 

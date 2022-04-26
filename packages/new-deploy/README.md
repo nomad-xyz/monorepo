@@ -15,7 +15,11 @@ This package is feature-complete and we have big plans for the future :)
 
 ### Invocation
 
-Invoke the deployer as follows:
+Set the `DEPLOYER_PRIVATE_KEY` env var in your `.env` file.
+Supply a private key for an account funded with 
+sufficient gas tokens on each chain where contracts will be deployed.
+
+Then, Invoke the deployer as follows:
 
 ```sh
 # deploy script args are 'configuration file' 'overrides file'
@@ -34,12 +38,25 @@ if the state on-chain doesn't change,
 the same config will deterministically produce 
 the same set of governance transactions.
 
+### Validation
+
+Run checks against a deployed set of contracts:
+
+```sh
+# check script arg is 'configuration file'
+$ yarn run ts-node scripts/check.ts path/to/config.json
+```
+
 ### Verification
 
 Deployment will produce a verification json output. Set the `ETHERSCAN_KEY` env
 var in your `.env` file, then run:
 
 ```sh
-# Verify script args are 'environment' 'verification_json'
+# Verify script args are 'config_json' 'verification_json'
+$ yarn run ts-node ./scripts/verify path/to/config.json path/to/verification.json
+
+# OR 'environment' 'verification_json'
+# to use environments in the published configuration package
 $ yarn run ts-node ./scripts/verify development path/to/verification.json
 ```

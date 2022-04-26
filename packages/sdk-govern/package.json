@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/sdk-govern",
-  "version": "1.0.0-rc.7",
+  "version": "1.0.0-rc.9",
   "description": "Nomad governance SDK",
   "keywords": [
     "nomad",
@@ -27,7 +27,6 @@
     "build": "tsc --build",
     "check": "tsc --noEmit",
     "lint": "eslint --fix ./src ./tests",
-    "lint:fix": "eslint --fix ./src ./tests",
     "prettier": "prettier --write ./src ./tests",
     "test": "yarn build && ts-mocha ./tests/*.ts",
     "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts"
@@ -36,7 +35,7 @@
     "@gnosis.pm/safe-core-sdk": "^2.0.0",
     "@gnosis.pm/safe-ethers-adapters": "^0.1.0-alpha.8",
     "@gnosis.pm/safe-ethers-lib": "^1.0.0",
-    "@nomad-xyz/configuration": "^0.1.0-rc.12",
+    "@nomad-xyz/configuration": "^0.1.0-rc.15",
     "@nomad-xyz/sdk": "workspace:^",
     "ethers": "^5.4.6",
     "web3": "^1.6.1"
@@ -45,8 +44,8 @@
     "@types/chai": "^4.2.21",
     "@types/mocha": "^9.1.0",
     "@types/node": "^16.9.1",
-    "@typescript-eslint/eslint-plugin": "^4.33.0",
-    "@typescript-eslint/parser": "^4.33.0",
+    "@typescript-eslint/eslint-plugin": "^5.20.0",
+    "@typescript-eslint/parser": "^5.20.0",
     "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
@@ -55,6 +54,7 @@
     "nyc": "^15.1.0",
     "prettier": "^2.4.1",
     "ts-mocha": "^9.0.2",
+    "ts-node": "^10.1.0",
     "typescript": "^4.4.3"
   }
 }

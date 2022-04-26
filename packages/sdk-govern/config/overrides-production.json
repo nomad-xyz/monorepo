@@ -12,10 +12,5 @@
     "maxFeePerGas": "20000000000",
     "maxPriorityFeePerGas": "2500000000",
     "gasLimit": "7000000"
-  },
-  "avalanche": {
-    "maxFeePerGas": "150000000000",
-    "maxPriorityFeePerGas": "2500000000",
-    "gasLimit": "7000000"
   }
 }

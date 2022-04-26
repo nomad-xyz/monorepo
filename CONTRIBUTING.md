@@ -63,6 +63,8 @@ $ curl -L https://foundry.paradigm.xyz | bash
 $ foundryup
 ```
 
+If needed, reference Foundry's [Troubleshooting Installation](https://github.com/foundry-rs/foundry#troubleshooting-installation) guide to resolve any errors.
+
 Then run the following:
 
 ```

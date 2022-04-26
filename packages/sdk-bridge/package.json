@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/sdk-bridge",
-  "version": "1.0.0-rc.8",
+  "version": "1.0.0-rc.9",
   "description": "Nomad bridge SDK",
   "keywords": [
     "nomad",
@@ -27,13 +27,12 @@
     "build": "tsc --build",
     "check": "tsc --noEmit",
     "lint": "eslint --fix ./src ./tests",
-    "lint:fix": "eslint --fix ./src ./tests",
     "prettier": "prettier --write ./src ./tests",
     "test": "yarn build && ts-mocha ./tests/*.ts",
     "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts"
   },
   "dependencies": {
-    "@nomad-xyz/configuration": "^0.1.0-rc.12",
+    "@nomad-xyz/configuration": "^0.1.0-rc.15",
     "@nomad-xyz/contracts-bridge": "workspace:^",
     "@nomad-xyz/sdk": "workspace:^",
     "ethers": "^5.0.0",
@@ -43,8 +42,8 @@
     "@types/chai": "^4.2.21",
     "@types/mocha": "^9.1.0",
     "@types/node": "^16.9.1",
-    "@typescript-eslint/eslint-plugin": "^4.33.0",
-    "@typescript-eslint/parser": "^4.33.0",
+    "@typescript-eslint/eslint-plugin": "^5.20.0",
+    "@typescript-eslint/parser": "^5.20.0",
     "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
