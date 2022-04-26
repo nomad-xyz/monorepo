@@ -2,8 +2,9 @@ import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 import "hardhat-packager";
 
-import { task } from "hardhat/config";
-import { verifyCoreDeploy } from "@nomad-xyz/deploy/src/verification/verifyDeploy";
+// import { task } from "hardhat/config";
+// TODO: the old deploy (what is currently published to npm) has been deprecated
+// import { verifyCoreDeploy } from "@nomad-xyz/deploy/src/verification/verifyDeploy";
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -11,14 +12,14 @@ dotenv.config();
 const etherscanKey = process.env.ETHERSCAN_API_KEY;
 const infuraKey = process.env.INFURA_API_KEY;
 
-task("verify-deploy", "Verifies the source code of the latest contract deploy")
-  .addParam("environment", "dev, staging or prod")
-  .setAction(async (args: any, hre: any) => {
-    if (!etherscanKey) {
-      throw new Error("set ETHERSCAN_API_KEY");
-    }
-    await verifyCoreDeploy(hre, etherscanKey, args.environment);
-  });
+// task("verify-deploy", "Verifies the source code of the latest contract deploy")
+//   .addParam("environment", "dev, staging or prod")
+//   .setAction(async (args: any, hre: any) => {
+//     if (!etherscanKey) {
+//       throw new Error("set ETHERSCAN_API_KEY");
+//     }
+//     await verifyCoreDeploy(hre, etherscanKey, args.environment);
+//   });
 
 /**
  * @type import('hardhat/config').HardhatUserConfig

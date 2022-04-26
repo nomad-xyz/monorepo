@@ -1,31 +1,30 @@
 {
   "extends": "../tsconfig.package.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "composite": true
+    "outDir": "./dist/",
+    "rootDir": "./src/"
   },
   "exclude": [
-    "./node_modules",
-    "./dist",
-    "./config",
-    "./scripts",
+    "./node_modules/",
+    "./dist/",
+    "./config/",
+    "./scripts/",
     "./tmp.ts"
   ],
   "include": [
     "./src/*.ts",
-    "./src/contracts-core/*.ts",
-    "./src/contracts-bridge/*.ts",
+    "./src/core/*.ts",
+    "./src/bridge/*.ts",
     "./src/verification/*.ts",
     "./src/incremental/*.ts"
   ],
   "references": [
-    { "path": "../sdk" },
     { "path": "../contracts-core" },
     { "path": "../contracts-bridge" },
     { "path": "../contracts-router" },
+    { "path": "../multi-provider" },
+    { "path": "../sdk" },
     { "path": "../sdk-bridge" },
-    { "path": "../sdk-govern" },
-    { "path": "../multi-provider" }
+    { "path": "../sdk-govern" }
   ]
 }

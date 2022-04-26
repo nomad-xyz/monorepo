@@ -6,6 +6,7 @@ import { Key } from "./key";
 import { Agent, AgentType, agentTypeToString, LocalAgent } from "./agent";
 import { Updater } from './updater'
 
+// TODO: the old deploy (what is currently published to npm) has been deprecated
 import {
   Chain,
   CoreDeployAddresses,
