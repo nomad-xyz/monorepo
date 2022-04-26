@@ -217,10 +217,6 @@ export class NomadContext extends MultiProvider<config.Domain> {
     // get replica contract
     const replica = this.mustGetReplicaFor(originNetwork, destNetwork);
 
-    // get signer and connect replica
-    const signer = this.mustGetSigner(destNetwork);
-    replica.connect(signer);
-
     return replica.proveAndProcess(
       data.message,
       data.proof.path,
