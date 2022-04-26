@@ -211,6 +211,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
     const destNetwork = this.resolveDomainName(message.destination)
     const index = message.leafIndex.toString()
     const s3Res = await fetch(`${s3URL}${originNetwork}_${index}`)
+    if (!s3Res) throw new Error('Not able to fetch proof')
     const data: MessageProof = await s3Res.json()
 
     // get replica contract
