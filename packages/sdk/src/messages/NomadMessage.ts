@@ -435,7 +435,7 @@ export class NomadMessage<T extends NomadContext> {
   }
 
   async process(): Promise<ContractTransaction> {
-    return this.process()
+    return this.context.process(this)
   }
 
   /**
