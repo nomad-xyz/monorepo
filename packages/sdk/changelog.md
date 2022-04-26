@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- feature: process function for NomadContext/NomadMessage
+
 ### 2.0.0-rc.9
 
 - update typescript eslint packages to fix lint script
