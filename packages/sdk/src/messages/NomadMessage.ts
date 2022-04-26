@@ -1,4 +1,4 @@
-import { ContractTransaction } from 'ethers'
+import { ContractTransaction } from 'ethers';
 import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
@@ -435,7 +435,7 @@ export class NomadMessage<T extends NomadContext> {
   }
 
   async process(): Promise<ContractTransaction> {
-    return this.context.process(this)
+    return this.context.process(this);
   }
 
   /**

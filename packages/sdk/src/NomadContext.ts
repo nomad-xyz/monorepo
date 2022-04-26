@@ -5,7 +5,7 @@ import * as core from '@nomad-xyz/contracts-core';
 import * as config from '@nomad-xyz/configuration';
 
 import { CoreContracts } from './CoreContracts';
-import { NomadMessage } from './messages/NomadMessage'
+import { NomadMessage } from './messages/NomadMessage';
 
 export type Address = string;
 
@@ -58,7 +58,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
         this.registerRpcProvider(network, this.conf.rpcs[network][0]);
       }
       // set core contracts
-      const core = new CoreContracts(this, network, this.conf.core[network])
+      const core = new CoreContracts(this, network, this.conf.core[network]);
       this._cores.set(core.domain, core);
     }
   }
@@ -68,7 +68,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
   }
 
   get environment(): string {
-    return this.conf.environment
+    return this.conf.environment;
   }
 
   /**
@@ -205,27 +205,27 @@ export class NomadContext extends MultiProvider<config.Domain> {
    * @returns The Contract Transaction receipt
    */
   async process(message: NomadMessage<NomadContext>): Promise<ContractTransaction>{
-    const s3URL = `https://nomadxyz-${this.environment}-proofs.s3.us-west-2.amazonaws.com/`
+    const s3URL = `https://nomadxyz-${this.environment}-proofs.s3.us-west-2.amazonaws.com/`;
 
-    const originNetwork = this.resolveDomainName(message.origin)
-    const destNetwork = this.resolveDomainName(message.destination)
-    const index = message.leafIndex.toString()
-    const s3Res = await fetch(`${s3URL}${originNetwork}_${index}`)
-    if (!s3Res) throw new Error('Not able to fetch proof')
-    const data: MessageProof = await s3Res.json()
+    const originNetwork = this.resolveDomainName(message.origin);
+    const destNetwork = this.resolveDomainName(message.destination);
+    const index = message.leafIndex.toString();
+    const s3Res = await fetch(`${s3URL}${originNetwork}_${index}`);
+    if (!s3Res) throw new Error('Not able to fetch proof');
+    const data: MessageProof = await s3Res.json();
 
     // get replica contract
-    const replica = this.mustGetReplicaFor(originNetwork, destNetwork)
+    const replica = this.mustGetReplicaFor(originNetwork, destNetwork);
 
     // get signer and connect replica
-    const signer = this.mustGetSigner(destNetwork)
-    replica.connect(signer)
+    const signer = this.mustGetSigner(destNetwork);
+    replica.connect(signer);
 
     return replica.proveAndProcess(
       data.message,
       data.proof.path,
       data.proof.index
-    )
+    );
   }
 
   blacklist(): Set<number> {
