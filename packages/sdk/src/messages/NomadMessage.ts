@@ -1,3 +1,4 @@
+import { ContractTransaction } from 'ethers'
 import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
@@ -431,6 +432,10 @@ export class NomadMessage<T extends NomadContext> {
     }
     const { newRoot } = update.event.args;
     return this.replica.confirmAt(newRoot);
+  }
+
+  async process(): Promise<ContractTransaction> {
+    return this.process()
   }
 
   /**
