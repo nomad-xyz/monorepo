@@ -55,4 +55,15 @@ contract NomadBaseTest is NomadTest {
         nbh.doubleUpdate(oldRoot, roots, sig, sig2);
         assertEq(uint256(nbh.state()), 2);
     }
+
+    function test_notFailOnInvalidDoubleUpdateProof() public {
+        bytes32 newRoot2 = newRoot;
+        bytes memory sig = signUpdate(updaterPK, oldRoot, newRoot);
+        bytes memory sig2 = signUpdate(updaterPK, oldRoot, newRoot2);
+        bytes32[2] memory roots;
+        roots[0] = newRoot;
+        roots[1] = newRoot2;
+        nbh.doubleUpdate(oldRoot, roots, sig, sig2);
+        assertEq(uint256(nbh.state()), 1);
+    }
 }
