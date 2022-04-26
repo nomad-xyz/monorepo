@@ -8,7 +8,7 @@
 - remove unnecessary lint:fix script
 - standardize prettier
 - register RPC providers from config in NomadContext constructor
-- chore: bump configuration to v0.1.0-rc.14
+- chore: bump configuration to v0.1.0-rc.15
 
 ### 2.0.0-rc.8
 

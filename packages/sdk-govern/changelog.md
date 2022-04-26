@@ -12,7 +12,7 @@
 - domains() return _all_ domains - governor and remote
 - feature: add optional transaction overrides to executeDomain function
 - feature: add status function which checks batch status using call, rather than events (which are brittle for some chains)
-- chore: bump configuration to v0.1.0-rc.14
+- chore: bump configuration to v0.1.0-rc.15
 
 ### 1.0.0-rc.8
 
