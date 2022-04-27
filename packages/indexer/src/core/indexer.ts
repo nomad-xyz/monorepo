@@ -327,6 +327,7 @@ export class Indexer {
       }
     );
     if (!tx) {
+      this.logger.error(`An RPC error occured, retried exhausted. TX hash: ${hash} Error: ${error}`)
       throw new Error(
         `An RPC foo error occured, retried exhausted. TX hash: ${hash} Error: ${error}`
       );
@@ -398,8 +399,9 @@ export class Indexer {
       }
     );
     if (!receipt) {
+      this.logger.error(`An RPC error occured, retried exhausted. TX hash: ${hash} Error: ${error}`)
       throw new Error(
-        `An RPC foo error occured, retried exhausted. TX hash: ${hash} Error: ${error}`
+        `An RPC receipt error occured, retried exhausted. TX hash: ${hash} Error: ${error}`
       );
     }
 

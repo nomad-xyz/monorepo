@@ -213,82 +213,102 @@ export class Orchestrator {
 
   subscribeStatisticEvents() {
     this.consumer.on("dispatched", (m: NomadMessage, e: NomadishEvent) => {
-      const homeName = this.domain2name(m.origin);
-      const replicaName = this.domain2name(m.destination);
-      this.metrics.observeGasUsage(
-        "dispatched",
-        homeName,
-        replicaName,
-        e.gasUsed.toNumber()
-      );
+      try {  
+        const homeName = this.domain2name(m.origin);
+        const replicaName = this.domain2name(m.destination);
+        this.metrics.observeGasUsage(
+          "dispatched",
+          homeName,
+          replicaName,
+          e.gasUsed.toNumber()
+        );
+      } catch(e) {
+        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`)
+      }
     });
 
     this.consumer.on("updated", (m: NomadMessage, e: NomadishEvent) => {
-      const homeName = this.domain2name(m.origin);
-      const replicaName = this.domain2name(m.destination);
-      this.metrics.observeLatency(
-        "updated",
-        homeName,
-        replicaName,
-        m.timings.toUpdate()!
-      );
-      this.metrics.observeGasUsage(
-        "updated",
-        homeName,
-        replicaName,
-        e.gasUsed.toNumber()
-      );
+      try {  
+        const homeName = this.domain2name(m.origin);
+        const replicaName = this.domain2name(m.destination);
+        this.metrics.observeLatency(
+          "updated",
+          homeName,
+          replicaName,
+          m.timings.toUpdate()!
+        );
+        this.metrics.observeGasUsage(
+          "updated",
+          homeName,
+          replicaName,
+          e.gasUsed.toNumber()
+        );
+      } catch(e) {
+        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`)
+      }
     });
 
     this.consumer.on("relayed", (m: NomadMessage, e: NomadishEvent) => {
-      const homeName = this.domain2name(m.origin);
-      const replicaName = this.domain2name(m.destination);
-      this.metrics.observeLatency(
-        "relayed",
-        homeName,
-        replicaName,
-        m.timings.toRelay()!
-      );
-      this.metrics.observeGasUsage(
-        "relayed",
-        homeName,
-        replicaName,
-        e.gasUsed.toNumber()
-      );
+      try {  
+        const homeName = this.domain2name(m.origin);
+        const replicaName = this.domain2name(m.destination);
+        this.metrics.observeLatency(
+          "relayed",
+          homeName,
+          replicaName,
+          m.timings.toRelay()!
+        );
+        this.metrics.observeGasUsage(
+          "relayed",
+          homeName,
+          replicaName,
+          e.gasUsed.toNumber()
+        );
+      } catch(e) {
+        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`)
+      }
     });
 
     this.consumer.on("received", (m: NomadMessage, e: NomadishEvent) => {
-      const homeName = this.domain2name(m.origin);
-      const replicaName = this.domain2name(m.destination);
-      this.metrics.observeLatency(
-        "received",
-        homeName,
-        replicaName,
-        m.timings.toReceive()!
-      );
-      this.metrics.observeGasUsage(
-        "received",
-        homeName,
-        replicaName,
-        e.gasUsed.toNumber()
-      );
+      try {  
+        const homeName = this.domain2name(m.origin);
+        const replicaName = this.domain2name(m.destination);
+        this.metrics.observeLatency(
+          "received",
+          homeName,
+          replicaName,
+          m.timings.toReceive()!
+        );
+        this.metrics.observeGasUsage(
+          "received",
+          homeName,
+          replicaName,
+          e.gasUsed.toNumber()
+        );
+      } catch(e) {
+        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`)
+      }
     });
 
     this.consumer.on("processed", (m: NomadMessage, e: NomadishEvent) => {
-      const homeName = this.domain2name(m.origin);
-      const replicaName = this.domain2name(m.destination);
-      this.metrics.observeLatency(
-        "processed",
-        homeName,
-        replicaName,
-        m.timings.toProcess()!
-      );
-      this.metrics.observeGasUsage(
-        "processed",
-        homeName,
-        replicaName,
-        e.gasUsed.toNumber()
-      );
+      try {  
+        const homeName = this.domain2name(m.origin);
+        const replicaName = this.domain2name(m.destination);
+        this.metrics.observeLatency(
+          "processed",
+          homeName,
+          replicaName,
+          m.timings.toProcess()!
+        );
+        this.metrics.observeGasUsage(
+          "processed",
+          homeName,
+          replicaName,
+          e.gasUsed.toNumber()
+        );
+      } catch(e) {
+        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`)
+      }
     });
   }
 
