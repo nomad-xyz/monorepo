@@ -188,6 +188,8 @@ export class NomadMessage {
 
   get confirmAt(): number {
     if (this.timings.relayedAt === 0) return 0;
+    if (!this.sdk.domainNumbers.includes(this.destination)) return 0;
+    
     const optimisticSecondsUnknown =
       this.sdk.conf.protocol.networks[
         this.sdk.resolveDomainName(this.destination)
