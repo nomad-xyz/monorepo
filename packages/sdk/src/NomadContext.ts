@@ -1,12 +1,24 @@
-import { providers, Signer } from 'ethers';
+import { providers, Signer, ContractTransaction, BytesLike } from 'ethers';
 
 import { MultiProvider } from '@nomad-xyz/multi-provider';
 import * as core from '@nomad-xyz/contracts-core';
 import * as config from '@nomad-xyz/configuration';
 
 import { CoreContracts } from './CoreContracts';
+import { NomadMessage } from './messages/NomadMessage';
 
 export type Address = string;
+
+type Path = [BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike];
+
+type MessageProof = {
+  message: BytesLike;
+  proof: {
+    leaf: BytesLike;
+    index: number;
+    path: Path;
+  }
+}
 
 /**
  * The NomadContext manages connections to Nomad core and Bridge contracts.
@@ -46,13 +58,17 @@ export class NomadContext extends MultiProvider<config.Domain> {
         this.registerRpcProvider(network, this.conf.rpcs[network][0]);
       }
       // set core contracts
-      const core = new CoreContracts(this, network, this.conf.core[network])
+      const core = new CoreContracts(this, network, this.conf.core[network]);
       this._cores.set(core.domain, core);
     }
   }
 
   get governor(): config.NomadLocator {
     return this.conf.protocol.governor;
+  }
+
+  get environment(): string {
+    return this.conf.environment;
   }
 
   /**
@@ -172,6 +188,40 @@ export class NomadContext extends MultiProvider<config.Domain> {
    */
   governorCore(): CoreContracts<this> {
     return this.mustGetCore(this.governor.domain);
+  }
+
+  /**
+   * Proves and Processes a transaction on the destination chain. This is subsidize and
+   * automatic on non-Ethereum destinations
+   * 
+   * @dev Ensure that a transaction is ready to be processed. You should ensure the following
+   * criteria have been met prior to calling this function:
+   *  1. The tx has been relayed (has status of 2):
+   *       `const { status } = await NomadMessage.events()`
+   *  2. The `confirmAt` timestamp for the tx is in the past:
+   *       `const confirmAt = await NomadMessage.confirmAt()`
+   *
+   * @param message NomadMessage
+   * @returns The Contract Transaction receipt
+   */
+  async process(message: NomadMessage<NomadContext>): Promise<ContractTransaction>{
+    const s3URL = `https://nomadxyz-${this.environment}-proofs.s3.us-west-2.amazonaws.com/`;
+
+    const originNetwork = this.resolveDomainName(message.origin);
+    const destNetwork = this.resolveDomainName(message.destination);
+    const index = message.leafIndex.toString();
+    const s3Res = await fetch(`${s3URL}${originNetwork}_${index}`);
+    if (!s3Res) throw new Error('Not able to fetch proof');
+    const data: MessageProof = await s3Res.json();
+
+    // get replica contract
+    const replica = this.mustGetReplicaFor(originNetwork, destNetwork);
+
+    return replica.proveAndProcess(
+      data.message,
+      data.proof.path,
+      data.proof.index
+    );
   }
 
   blacklist(): Set<number> {
