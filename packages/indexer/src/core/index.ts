@@ -1,22 +1,22 @@
-import { BridgeContext } from "@nomad-xyz/sdk-bridge";
-import { ProcessorV2 } from "./consumerV2";
-import { Orchestrator } from "./orchestrator";
-import * as dotenv from "dotenv";
-import { IndexerCollector } from "./metrics";
-import { DB } from "./db";
-import Logger from "bunyan";
-import { run as runApi } from "./api";
-import { createClient } from "redis";
+import { BridgeContext } from '@nomad-xyz/sdk-bridge';
+import { ProcessorV2 } from './consumerV2';
+import { Orchestrator } from './orchestrator';
+import * as dotenv from 'dotenv';
+import { IndexerCollector } from './metrics';
+import { DB } from './db';
+import Logger from 'bunyan';
+import { run as runApi } from './api';
+import { createClient } from 'redis';
 dotenv.config({});
 
 export async function run(
   sdk: BridgeContext,
   db: DB,
   logger: Logger,
-  metrics: IndexerCollector
+  metrics: IndexerCollector,
 ) {
   const redis = createClient({
-    url: process.env.REDIS_URL || "redis://redis:6379",
+    url: process.env.REDIS_URL || 'redis://redis:6379',
   });
 
   await redis.connect();
@@ -26,7 +26,7 @@ export async function run(
   const o = new Orchestrator(sdk, c, metrics, logger, db, redis);
   o.subscribeStatisticEvents();
 
-  if (!!process.env.DEBUG_PORT) runApi(o, logger.child({ span: "debugApi" }));
+  if (process.env.DEBUG_PORT) runApi(o, logger.child({ span: 'debugApi' }));
 
   await o.init();
   await o.startConsuming();

@@ -1,10 +1,10 @@
-import { ethers } from "ethers";
-import { NomadishEvent } from "./event";
-import fs from "fs";
-import { Mean } from "./types";
-import { DB } from "./db";
-import Logger from "bunyan";
-import pLimit from "p-limit";
+import { ethers } from 'ethers';
+import { NomadishEvent } from './event';
+import fs from 'fs';
+import { Mean } from './types';
+import { DB } from './db';
+import Logger from 'bunyan';
+import pLimit from 'p-limit';
 
 export function sleep(ms: number) {
   return new Promise((resolve) => {
@@ -15,9 +15,9 @@ export function sleep(ms: number) {
 export async function retry<T>(
   callback: () => Promise<T>,
   tries: number,
-  onError: ((e: any) => Promise<void> | void) | undefined
+  onError: ((e: any) => Promise<void> | void) | undefined,
 ): Promise<[T | undefined, any]> {
-  let timeout = 2000;
+  const timeout = 2000;
   let lastError: any = undefined;
   for (let attempt = 0; attempt < tries; attempt++) {
     try {
@@ -34,17 +34,17 @@ export async function retry<T>(
 export function replacer(key: any, value: any): any {
   if (value instanceof Map) {
     return {
-      dataType: "Map",
+      dataType: 'Map',
       value: Array.from(value.entries()), // or with spread: value: [...value]
     };
   } else if (value instanceof NomadishEvent) {
     return {
-      dataType: "NomadishEvent",
+      dataType: 'NomadishEvent',
       value: value.toObject(), // or with spread: value: [...value]
     };
   } else if (value instanceof ethers.BigNumber) {
     return {
-      dataType: "BigNumber",
+      dataType: 'BigNumber',
       value: value.toHexString(), // or with spread: value: [...value]
     };
   } else if (value instanceof Mean) {
@@ -55,19 +55,19 @@ export function replacer(key: any, value: any): any {
 }
 
 export function reviver(key: any, value: any): any {
-  if (typeof value === "object" && value !== null) {
-    if (value.dataType === "Map") {
+  if (typeof value === 'object' && value !== null) {
+    if (value.dataType === 'Map') {
       return new Map(value.value);
     } else if (
-      value.dataType === "NomadEvent" ||
-      value.dataType == "NomadishEvent"
+      value.dataType === 'NomadEvent' ||
+      value.dataType == 'NomadishEvent'
     ) {
       return NomadishEvent.fromObject(value.value);
-    } else if (!!value.eventType && typeof value.eventType === "string") {
+    } else if (!!value.eventType && typeof value.eventType === 'string') {
       return NomadishEvent.fromObject(value);
-    } else if (value.dataType === "BigNumber") {
+    } else if (value.dataType === 'BigNumber') {
       return ethers.BigNumber.from(value.value);
-    } else if (value.type === "BigNumber") {
+    } else if (value.type === 'BigNumber') {
       return ethers.BigNumber.from(value.hex);
     }
   }
@@ -99,22 +99,22 @@ export class KVCache {
 }
 
 export function logToFile(s: string) {
-  fs.appendFileSync("/tmp/log.log", s + "\n");
+  fs.appendFileSync('/tmp/log.log', s + '\n');
 }
 
-import crypto from "crypto";
+import crypto from 'crypto';
 
 export function hash(...vals: string[]): string {
-  const hash = crypto.createHash("md5");
+  const hash = crypto.createHash('md5');
   vals.forEach((v) => hash.update(v));
-  return hash.digest("hex");
+  return hash.digest('hex');
 }
 
 export function createLogger(name: string, environment: string) {
   return Logger.createLogger({
     name,
     serializers: Logger.stdSerializers,
-    level: "debug",
+    level: 'debug',
     environment: environment,
   });
 }
@@ -125,7 +125,7 @@ export class Padded {
   constructor(s: string) {
     if (s.length !== 66)
       throw new Error(`Input string length must be 66, got: ${s.length}`);
-    if (s.slice(0, 2) !== "0x")
+    if (s.slice(0, 2) !== '0x')
       throw new Error(`Input string length must start with '0x', got: ${s}`);
     this.s = s.toLowerCase();
   }
@@ -134,11 +134,11 @@ export class Padded {
     if (s.length !== 42)
       throw new Error(`Input string length must be 42, got: ${s.length}`);
 
-    return new Padded("0x" + "00".repeat(12) + s.slice(2));
+    return new Padded('0x' + '00'.repeat(12) + s.slice(2));
   }
 
   static fromWhatever(s: string | Padded): Padded {
-    if (typeof s === "string") {
+    if (typeof s === 'string') {
       if (s.length === 42) return Padded.fromEVM(s);
 
       return new Padded(s);
@@ -147,7 +147,7 @@ export class Padded {
   }
 
   toEVMAddress() {
-    return "0x" + this.s.slice(26);
+    return '0x' + this.s.slice(26);
   }
 
   valueOf(): string {
@@ -171,9 +171,9 @@ export class FailureCounter {
     this.container.push(new Date());
   }
   num(): number {
-    let now = new Date();
+    const now = new Date();
     const cleanDates = this.container.filter(
-      (d) => now.valueOf() - d.valueOf() <= 1000 * 60 * this.period
+      (d) => now.valueOf() - d.valueOf() <= 1000 * 60 * this.period,
     ); // millisec * 60 sec * period in mins
     this.container = cleanDates;
     return cleanDates.length;

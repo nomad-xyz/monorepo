@@ -1,18 +1,18 @@
-import express from "express";
-import cors from "cors";
-import { DB, MsgRequest } from "./db";
-import * as dotenv from "dotenv";
-import Logger from "bunyan";
-import { Orchestrator } from "./orchestrator";
-import { ProcessorV2 } from "./consumerV2";
-import { replacer } from "./utils";
+import express from 'express';
+import cors from 'cors';
+import { DB, MsgRequest } from './db';
+import * as dotenv from 'dotenv';
+import Logger from 'bunyan';
+import { Orchestrator } from './orchestrator';
+import { ProcessorV2 } from './consumerV2';
+import { replacer } from './utils';
 dotenv.config({});
 
 function fail(res: any, code: number, reason: string) {
   return res.status(code).json({ error: reason });
 }
 
-const PORT = process.env.DEBUG_PORT || "1337";
+const PORT = process.env.DEBUG_PORT || '1337';
 
 export async function run(o: Orchestrator, logger: Logger) {
   const app = express();
@@ -21,17 +21,17 @@ export async function run(o: Orchestrator, logger: Logger) {
   const log = (
     req: express.Request,
     res: express.Response,
-    next: express.NextFunction
+    next: express.NextFunction,
   ) => {
     logger.info(`request to ${req.url}`);
     next();
   };
 
-  app.get("/healthcheck", log, (req, res) => {
-    res.send("OK!");
+  app.get('/healthcheck', log, (req, res) => {
+    res.send('OK!');
   });
 
-  app.get("/hash/:hash", log, async (req, res) => {
+  app.get('/hash/:hash', log, async (req, res) => {
     const p = o.consumer as ProcessorV2;
     const message = await p.getMsg(req.params.hash);
     if (message) {
@@ -41,7 +41,7 @@ export async function run(o: Orchestrator, logger: Logger) {
     }
   });
 
-  app.get("/tx/:tx", log, async (req, res) => {
+  app.get('/tx/:tx', log, async (req, res) => {
     const p = o.consumer as ProcessorV2;
     const messages = await p.db.getMessageByEvm(req.params.tx);
 
@@ -52,7 +52,7 @@ export async function run(o: Orchestrator, logger: Logger) {
     }
   });
 
-  app.get("/status", log, async (req, res) => {
+  app.get('/status', log, async (req, res) => {
     const promises: Promise<
       [
         number,
@@ -60,7 +60,7 @@ export async function run(o: Orchestrator, logger: Logger) {
           lastIndexed: number;
           numMessages: number;
           numRpcFailures: number;
-        }
+        },
       ]
     >[] = Array.from(o.indexers.entries()).map(
       async ([domain, indexer]): Promise<
@@ -70,7 +70,7 @@ export async function run(o: Orchestrator, logger: Logger) {
             lastIndexed: number;
             numMessages: number;
             numRpcFailures: number;
-          }
+          },
         ]
       > => {
         return [
@@ -81,7 +81,7 @@ export async function run(o: Orchestrator, logger: Logger) {
             numRpcFailures: indexer.failureCounter.num(),
           },
         ];
-      }
+      },
     );
     const entries = await Promise.all(promises);
 
@@ -89,7 +89,7 @@ export async function run(o: Orchestrator, logger: Logger) {
     return res.json(JSON.stringify(x, replacer));
   });
 
-  app.get("/msg/:origin/:state", log, async (req, res) => {
+  app.get('/msg/:origin/:state', log, async (req, res) => {
     const { origin: originStr, state: stateStr } = req.params;
     let origin: number, state: number;
 
@@ -105,7 +105,7 @@ export async function run(o: Orchestrator, logger: Logger) {
     const p = o.consumer as ProcessorV2;
     const messages = await p.db.getMessagesByOriginAndStateNumber(
       origin,
-      state
+      state,
     );
     // const messages = Array.from(p.messages).filter(
     //   (m) => m.origin === origin && m.state === state

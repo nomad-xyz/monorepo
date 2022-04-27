@@ -1,20 +1,20 @@
-import { utils } from "@nomad-xyz/multi-provider";
-import { BridgeContext } from "@nomad-xyz/sdk-bridge";
-import * as dotenv from "dotenv";
-import { ethers } from "ethers";
+import { utils } from '@nomad-xyz/multi-provider';
+import { BridgeContext } from '@nomad-xyz/sdk-bridge';
+import * as dotenv from 'dotenv';
+import { ethers } from 'ethers';
 dotenv.config({});
 
-import { PrismaClient } from "@prisma/client";
-import { DB } from "../core/db";
-import Logger, { createLogger } from "bunyan";
-import { sleep } from "../core/utils";
+import { PrismaClient } from '@prisma/client';
+import { DB } from '../core/db';
+import Logger, { createLogger } from 'bunyan';
+import { sleep } from '../core/utils';
 
 const abi = [
-  "function name() public view returns (string)",
-  "function balanceOf(address owner) view returns (uint256)",
-  "function decimals() view returns (uint8)",
-  "function symbol() view returns (string)",
-  "function totalSupply() public view returns (uint256)",
+  'function name() public view returns (string)',
+  'function balanceOf(address owner) view returns (uint256)',
+  'function decimals() view returns (uint8)',
+  'function symbol() view returns (string)',
+  'function totalSupply() public view returns (uint256)',
 ];
 
 function erc20(id: string, provider: ethers.providers.Provider) {
@@ -33,7 +33,7 @@ class MakeFun {
 
   with(...skills: FrenSkills[]) {
     for (const skill of skills) {
-      if (typeof skill === "string") {
+      if (typeof skill === 'string') {
         this.presents.push(this.fren.functions[skill]());
       } else {
         this.presents.push(this.fren.functions[skill.shift()](...skill));
@@ -73,8 +73,8 @@ class TokenFetcher {
     try {
       [[name], [decimals], [symbol], [totalSupply], [balance]] =
         await new MakeFun(token)
-          .with("name", "decimals", "symbol", "totalSupply", [
-            "balanceOf",
+          .with('name', 'decimals', 'symbol', 'totalSupply', [
+            'balanceOf',
             this.sdk.mustGetBridge(domain).bridgeRouter.address,
           ])
           .celebrate();
@@ -111,7 +111,7 @@ class TokenFetcher {
     let remotes: number[];
     if (domain === this.sdk.governor.domain) {
       remotes = this.sdk.domainNumbers.filter(
-        (remoteDomain) => remoteDomain !== domain
+        (remoteDomain) => remoteDomain !== domain,
       );
     } else {
       remotes = [this.sdk.governor.domain];
@@ -125,10 +125,10 @@ class TokenFetcher {
             .mustGetBridge(remoteDomain)
             .tokenRegistry.getRepresentationAddress(domain, id);
         } catch (e: any) {
-          if (e?.code !== "CALL_EXCEPTION") throw e;
+          if (e?.code !== 'CALL_EXCEPTION') throw e;
           return;
         }
-        if (remoteId === "0x" + "00".repeat(20)) {
+        if (remoteId === '0x' + '00'.repeat(20)) {
           return;
         }
         const provider = this.sdk.mustGetProvider(remoteDomain);
@@ -140,9 +140,9 @@ class TokenFetcher {
         let _totalSupply: ethers.BigNumber;
         try {
           [[_name], [_decimals], [_symbol], [_totalSupply]] = await new MakeFun(
-            token
+            token,
           )
-            .with("name", "decimals", "symbol", "totalSupply")
+            .with('name', 'decimals', 'symbol', 'totalSupply')
             .celebrate();
         } catch (e) {
           this.logger.error(`Failed getting info for ${domain} ${id}`);
@@ -151,15 +151,15 @@ class TokenFetcher {
 
         if (name !== _name)
           this.logger.warn(
-            `Original token name !== replica's _name in TokenFetcher.fetch(): ${name} !== ${_name}. Domain: ${remoteDomain}, id: ${remoteId}`
+            `Original token name !== replica's _name in TokenFetcher.fetch(): ${name} !== ${_name}. Domain: ${remoteDomain}, id: ${remoteId}`,
           );
         if (decimals !== _decimals)
           throw new Error(
-            `Original token decimals !== replica's _decimals in TokenFetcher.fetch(): ${decimals} !== ${_decimals}. Domain: ${remoteDomain}, id: ${remoteId}`
+            `Original token decimals !== replica's _decimals in TokenFetcher.fetch(): ${decimals} !== ${_decimals}. Domain: ${remoteDomain}, id: ${remoteId}`,
           );
         if (symbol !== _symbol)
           this.logger.warn(
-            `Original token symbol !== replica's _symbol in TokenFetcher.fetch(): ${symbol} !== ${_symbol}. Domain: ${remoteDomain}, id: ${remoteId}`
+            `Original token symbol !== replica's _symbol in TokenFetcher.fetch(): ${symbol} !== ${_symbol}. Domain: ${remoteDomain}, id: ${remoteId}`,
           );
         // if (!balance.eq(_totalSupply)) console.warn(`totalSupply of ${symbol} (from ${domain}) at ${remoteDomain}\nis ${_totalSupply.toString()}\n want: ${balance}`);
 
@@ -190,9 +190,9 @@ class TokenFetcher {
         });
 
         this.logger.debug(
-          `Updated Replica at doamin ${remoteDomain} for [${domain}, ${id}]`
+          `Updated Replica at doamin ${remoteDomain} for [${domain}, ${id}]`,
         );
-      })
+      }),
     );
   }
 }
@@ -243,7 +243,7 @@ class TokenFetcher {
 export async function startTokenUpdater(
   sdk: BridgeContext,
   db: DB,
-  logger: Logger
+  logger: Logger,
 ): Promise<[() => void, Promise<void>]> {
   // Promise<[() => void, Promise<null>]>
   const f = new TokenFetcher(db.client, sdk, logger);
@@ -255,14 +255,14 @@ export async function startTokenUpdater(
         tokenId: true,
         tokenDomain: true,
       },
-      distinct: ["tokenId", "tokenDomain"],
+      distinct: ['tokenId', 'tokenDomain'],
       where: {},
     });
     logger.debug(`Found tokens:`, tokens.length);
     const result = await Promise.all(
       tokens
         .filter(({ tokenId, tokenDomain }) => tokenId && tokenDomain)
-        .map(({ tokenId, tokenDomain }) => f.fetch(tokenId!, tokenDomain!))
+        .map(({ tokenId, tokenDomain }) => f.fetch(tokenId!, tokenDomain!)),
     );
     return result;
   };

@@ -23,16 +23,17 @@
     "contracts-core": "yarn workspace @nomad-xyz/contracts-core",
     "contracts-router": "yarn workspace @nomad-xyz/contracts-router",
     "deploy": "yarn workspace @nomad-xyz/deploy",
-    "new-deploy": "yarn workspace @nomad-xyz/new-deploy",
-    "lint": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy  --exclude @nomad-xyz/local-environment run lint",
+    "indexer": "yarn workspace @nomad-xyz/indexer",
+    "lint": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment run lint",
     "local-environment": "yarn workspace @nomad-xyz/local-environment",
     "monitor": "yarn workspace @nomad-xyz/monitor",
     "multi-provider": "yarn workspace @nomad-xyz/multi-provider",
+    "new-deploy": "yarn workspace @nomad-xyz/new-deploy",
     "prettier": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/monitor --exclude @nomad-xyz/local-environment run prettier",
     "sdk": "yarn workspace @nomad-xyz/sdk",
     "sdk-bridge": "yarn workspace @nomad-xyz/sdk-bridge",
     "sdk-govern": "yarn workspace @nomad-xyz/sdk-govern",
-    "test": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy  --exclude @nomad-xyz/local-environment run test"
+    "test": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment run test"
   },
   "packageManager": "yarn@3.2.0"
 }

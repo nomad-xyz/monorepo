@@ -1,5 +1,5 @@
-import { ethers } from "ethers";
-import { hash } from "./utils";
+import { ethers } from 'ethers';
+import { hash } from './utils';
 
 export interface Dispatch {
   messageHash: string;
@@ -42,12 +42,12 @@ export interface Process {
 export type EventDataNormal = Dispatch | Send | Update | Receive | Process;
 
 export enum EventType {
-  HomeDispatch = "homeDispatch",
-  HomeUpdate = "homeUpdate",
-  ReplicaUpdate = "replicaUpdate",
-  ReplicaProcess = "replicaProcess",
-  BridgeRouterSend = "bridgeRouterSend",
-  BridgeRouterReceive = "bridgeRouterReceive",
+  HomeDispatch = 'homeDispatch',
+  HomeUpdate = 'homeUpdate',
+  ReplicaUpdate = 'replicaUpdate',
+  ReplicaProcess = 'replicaProcess',
+  BridgeRouterSend = 'bridgeRouterSend',
+  BridgeRouterReceive = 'bridgeRouterReceive',
 }
 
 export function eventTypeToOrder(eventType: NomadishEvent) {
@@ -71,8 +71,8 @@ export function eventTypeToOrder(eventType: NomadishEvent) {
 }
 
 export enum EventSource {
-  Fresh = "fresh",
-  Storage = "storage",
+  Fresh = 'fresh',
+  Storage = 'storage',
 }
 
 export type EventData = {
@@ -102,27 +102,27 @@ export type EventData = {
 
 export function uniqueHash(d: EventData): string {
   return hash(
-    d.messageHash || "undefined",
-    d.leafIndex?.toHexString() || "undefined",
-    d.destinationAndNonce?.toHexString() || "undefined",
-    d.committedRoot || "undefined",
-    d.oldRoot || "undefined",
-    d.newRoot || "undefined",
-    d.success ? "true" : "false",
-    d.returnData?.toString() || "undefined",
-    d.message || "undefined",
-    d.signature || "undefined",
-    d.homeDomain?.toString() || "undefined",
-    d.token || "undefined",
-    d.from || "undefined",
-    d.toDomain?.toString() || "undefined",
-    d.toId || "undefined",
-    d.amount?.toHexString() || "undefined",
-    d.fastLiquidityEnabled ? "true" : "false",
-    d.originAndNonce?.toHexString() || "undefined",
-    d.recipient || "undefined",
-    d.liquidityProvider || "undefined",
-    d.evmHash || "undefined"
+    d.messageHash || 'undefined',
+    d.leafIndex?.toHexString() || 'undefined',
+    d.destinationAndNonce?.toHexString() || 'undefined',
+    d.committedRoot || 'undefined',
+    d.oldRoot || 'undefined',
+    d.newRoot || 'undefined',
+    d.success ? 'true' : 'false',
+    d.returnData?.toString() || 'undefined',
+    d.message || 'undefined',
+    d.signature || 'undefined',
+    d.homeDomain?.toString() || 'undefined',
+    d.token || 'undefined',
+    d.from || 'undefined',
+    d.toDomain?.toString() || 'undefined',
+    d.toId || 'undefined',
+    d.amount?.toHexString() || 'undefined',
+    d.fastLiquidityEnabled ? 'true' : 'false',
+    d.originAndNonce?.toHexString() || 'undefined',
+    d.recipient || 'undefined',
+    d.liquidityProvider || 'undefined',
+    d.evmHash || 'undefined',
   );
 }
 
@@ -147,7 +147,7 @@ export class NomadishEvent {
     gasUsed: ethers.BigNumber,
     tx: string,
     eventData: EventDataNormal,
-    restore = false
+    restore = false,
   ) {
     this.domain = domain;
     this.eventType = eventType;
@@ -173,11 +173,11 @@ export class NomadishEvent {
   destinationAndNonce(): [number, number] {
     if (this.eventType !== EventType.HomeDispatch) {
       throw new Error(
-        `Destination method is not availiable for non home-dispatch`
+        `Destination method is not availiable for non home-dispatch`,
       );
     }
     const [destination, nonce] = parseDestinationAndNonce(
-      (this.eventData as Dispatch).destinationAndNonce!
+      (this.eventData as Dispatch).destinationAndNonce!,
     );
     return [destination, nonce];
   }
@@ -185,11 +185,11 @@ export class NomadishEvent {
   originAndNonce(): [number, number] {
     if (this.eventType !== EventType.BridgeRouterReceive) {
       throw new Error(
-        `Destination method is not availiable for non BridgeRouterReceive`
+        `Destination method is not availiable for non BridgeRouterReceive`,
       );
     }
     const [origin, nonce] = parseDestinationAndNonce(
-      (this.eventData as Receive).originAndNonce!
+      (this.eventData as Receive).originAndNonce!,
     );
     return [origin, nonce];
   }
@@ -229,7 +229,7 @@ export class NomadishEvent {
       e.gasUsed,
       e.tx,
       e.eventData,
-      true
+      true,
     );
   }
 
@@ -241,15 +241,15 @@ export class NomadishEvent {
       // this.block.toString(),
       uniqueHash(this.eventData),
       this.gasUsed.toString(),
-      this.tx
+      this.tx,
     );
   }
 }
 
 function parseDestinationAndNonce(
-  h: ethers.BigNumber | { hex?: string; _hex?: string }
+  h: ethers.BigNumber | { hex?: string; _hex?: string },
 ): [number, number] {
-  let hexString = "";
+  let hexString = '';
   if (h instanceof ethers.BigNumber) {
     hexString = h.toHexString();
   } else {
@@ -261,10 +261,10 @@ function parseDestinationAndNonce(
   const without0x = hexString.slice(2);
   const destinationLength = without0x.length - 8;
   const destinationHex = ethers.BigNumber.from(
-    "0x" + without0x.slice(0, destinationLength)
+    '0x' + without0x.slice(0, destinationLength),
   );
   const nonceHex = ethers.BigNumber.from(
-    "0x" + without0x.slice(destinationLength)
+    '0x' + without0x.slice(destinationLength),
   );
   return [destinationHex.toNumber(), nonceHex.toNumber()];
 }
