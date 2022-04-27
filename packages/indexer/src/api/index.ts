@@ -88,6 +88,7 @@ export async function run(db: DB, logger: Logger) {
       gasAtReceive: String!
       gasAtProcess: String!
       createdAt: Int!
+      confirmAt: Int!
     }
 
     type Token {
@@ -136,6 +137,16 @@ export async function run(db: DB, logger: Logger) {
         return db.client.replica.findMany({
           where: {
             tokenId: id,
+            tokenDomain: domain,
+          },
+        });
+      },
+      tokenReplicasAtDomain: (
+        _: any,
+        { domain }: { domain: number }
+      ) => {
+        return db.client.replica.findMany({
+          where: {
             tokenDomain: domain,
           },
         });
