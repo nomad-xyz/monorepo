@@ -213,7 +213,7 @@ export class Orchestrator {
 
   subscribeStatisticEvents() {
     this.consumer.on("dispatched", (m: NomadMessage, e: NomadishEvent) => {
-      try {  
+      try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
         this.metrics.observeGasUsage(
@@ -222,13 +222,13 @@ export class Orchestrator {
           replicaName,
           e.gasUsed.toNumber()
         );
-      } catch(e) {
-        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`)
+      } catch (e) {
+        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
     });
 
     this.consumer.on("updated", (m: NomadMessage, e: NomadishEvent) => {
-      try {  
+      try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
         this.metrics.observeLatency(
@@ -243,13 +243,13 @@ export class Orchestrator {
           replicaName,
           e.gasUsed.toNumber()
         );
-      } catch(e) {
-        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`)
+      } catch (e) {
+        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
     });
 
     this.consumer.on("relayed", (m: NomadMessage, e: NomadishEvent) => {
-      try {  
+      try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
         this.metrics.observeLatency(
@@ -264,13 +264,13 @@ export class Orchestrator {
           replicaName,
           e.gasUsed.toNumber()
         );
-      } catch(e) {
-        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`)
+      } catch (e) {
+        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
     });
 
     this.consumer.on("received", (m: NomadMessage, e: NomadishEvent) => {
-      try {  
+      try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
         this.metrics.observeLatency(
@@ -285,13 +285,13 @@ export class Orchestrator {
           replicaName,
           e.gasUsed.toNumber()
         );
-      } catch(e) {
-        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`)
+      } catch (e) {
+        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
     });
 
     this.consumer.on("processed", (m: NomadMessage, e: NomadishEvent) => {
-      try {  
+      try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
         this.metrics.observeLatency(
@@ -306,8 +306,8 @@ export class Orchestrator {
           replicaName,
           e.gasUsed.toNumber()
         );
-      } catch(e) {
-        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`)
+      } catch (e) {
+        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
     });
   }
