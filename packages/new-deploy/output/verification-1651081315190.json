@@ -1,0 +1,82 @@
+{
+  "evmos": [
+    {
+      "name": "UpgradeBeaconController",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconController.sol:UpgradeBeaconController",
+      "address": "0x2e09EdD238EeaEA6e4da705fbe5922B1979e03aC"
+    },
+    {
+      "name": "UpdaterManager",
+      "specifier": "packages/contracts-core/contracts/UpdaterManager.sol:UpdaterManager",
+      "address": "0xdB378579c2Af11817EEA21474A39F95B5b9DfD7e",
+      "constructorArguments": [
+        "0xc8e344d4698b6462187c88b9bb58f26ca3b5ed31"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000c8e344d4698b6462187c88b9bb58f26ca3b5ed31"
+    },
+    {
+      "name": "XAppConnectionManager",
+      "specifier": "packages/contracts-core/contracts/XAppConnectionManager.sol:XAppConnectionManager",
+      "address": "0x9272C9d5fa902Ef3804EC81e0333Ae420D57f715"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeacon.sol:UpgradeBeacon",
+      "address": "0x8F184D6Aa1977fd2F9d9024317D0ea5cF5815b6f",
+      "constructorArguments": [
+        "0xFe8874778f946Ac2990A29eba3CFd50760593B2F",
+        "0x2e09edd238eeaea6e4da705fbe5922b1979e03ac"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000fe8874778f946ac2990a29eba3cfd50760593b2f0000000000000000000000002e09edd238eeaea6e4da705fbe5922b1979e03ac"
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconProxy.sol:UpgradeBeaconProxy",
+      "address": "0x063e871f8DB991CEAd34B557A00B157B360084cc",
+      "constructorArguments": [
+        "0x8F184D6Aa1977fd2F9d9024317D0ea5cF5815b6f",
+        "0xc4d66de8000000000000000000000000db378579c2af11817eea21474a39f95b5b9dfd7e"
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000008f184d6aa1977fd2f9d9024317d0ea5cf5815b6f00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000024c4d66de8000000000000000000000000db378579c2af11817eea21474a39f95b5b9dfd7e00000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "Home",
+      "specifier": "packages/contracts-core/contracts/Home.sol:Home",
+      "address": "0xFe8874778f946Ac2990A29eba3CFd50760593B2F",
+      "constructorArguments": [
+        1702260083
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000000000000000000000000000000000000065766d73"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeacon.sol:UpgradeBeacon",
+      "address": "0x569D80f7FC17316B4C83f072b92EF37B72819DE0",
+      "constructorArguments": [
+        "0xA84e233A12b36125A731e1362121d8d4ea030c91",
+        "0x2e09edd238eeaea6e4da705fbe5922b1979e03ac"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000a84e233a12b36125a731e1362121d8d4ea030c910000000000000000000000002e09edd238eeaea6e4da705fbe5922b1979e03ac"
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconProxy.sol:UpgradeBeaconProxy",
+      "address": "0x67833a48b3F509d4252ac2c19cd604556eD6c981",
+      "constructorArguments": [
+        "0x569D80f7FC17316B4C83f072b92EF37B72819DE0",
+        "0x485cc9550000000000000000000000009272c9d5fa902ef3804ec81e0333ae420d57f715000000000000000000000000ea24ac04defb338ca8595c3750e20166f3b4998a"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000569d80f7fc17316b4c83f072b92ef37b72819de000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000044485cc9550000000000000000000000009272c9d5fa902ef3804ec81e0333ae420d57f715000000000000000000000000ea24ac04defb338ca8595c3750e20166f3b4998a00000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "GovernanceRouter",
+      "specifier": "packages/contracts-core/contracts/governance/GovernanceRouter.sol:GovernanceRouter",
+      "address": "0xA84e233A12b36125A731e1362121d8d4ea030c91",
+      "constructorArguments": [
+        1702260083,
+        86400
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000000000000000000000000000000000000065766d730000000000000000000000000000000000000000000000000000000000015180"
+    }
+  ]
+}
