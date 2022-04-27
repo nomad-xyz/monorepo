@@ -114,6 +114,7 @@ export async function run(db: DB, logger: Logger) {
       messageByHash(txHash: String!): Message
       allTokens: [Token!]!
       tokenReplicas(id: String!, domain: Int!): [Replica!]!
+      tokenReplicasByDomain(domain: Int!): [Replica!]!
     }
   `;
 
@@ -141,7 +142,7 @@ export async function run(db: DB, logger: Logger) {
           },
         });
       },
-      tokenReplicasAtDomain: (
+      tokenReplicasByDomain: (
         _: any,
         { domain }: { domain: number }
       ) => {
