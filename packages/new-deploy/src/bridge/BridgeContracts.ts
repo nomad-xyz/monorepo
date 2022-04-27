@@ -623,6 +623,59 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     } else {
       expect(this.data.ethHelper).to.be.undefined;
     }
+
+    //  ========= custom tokens =========
+
+    if (this.data.customs) {
+      for (const custom of this.data.customs) {
+        const addresses = custom.addresses;
+        assertBeaconProxy(addresses, 'Custom Token');
+
+        expect(
+          utils.equalIds(
+            addresses.implementation,
+            this.data.bridgeToken.implementation,
+          ),
+        ).to.be.true;
+        expect(utils.equalIds(addresses.beacon, this.data.bridgeToken.beacon))
+          .to.be.false;
+        expect(
+          utils.equalIds(
+            custom.controller,
+            core.upgradeBeaconController.address,
+          ),
+        ).to.be.false;
+
+        const tokenContract = await contracts.BridgeToken__factory.connect(
+          utils.evmId(addresses.proxy),
+          this.connection,
+        );
+
+        const name = await tokenContract.name();
+        const symbol = await tokenContract.symbol();
+        const decimals = await tokenContract.decimals();
+        const owner = await tokenContract.owner();
+
+        expect(utils.equalIds(owner, this.bridgeRouterContract.address)).to.be
+          .true;
+
+        expect(name).to.eq(custom.name);
+        expect(symbol).to.eq(custom.symbol);
+        expect(decimals).to.eq(custom.decimals);
+
+        const tokenId =
+          await this.tokenRegistryContract.representationToCanonical(
+            addresses.proxy,
+          );
+        expect(tokenId.domain).to.eq(custom.token.domain);
+        expect(utils.equalIds(tokenId.id, custom.token.id)).to.be.true;
+
+        // TODO: calculate tokenId in javascript
+        // const tokenId = "";
+        // const addr = await this.tokenRegistryContract.canonicalToRepresentation(tokenId);
+        // expect(utils.equalIds(addr, addresses.proxy)).to.be.true;
+      }
+    }
   }
 
   checkVerificationInput(name: string, addr: string): void {
