@@ -12,11 +12,30 @@ contract NomadBaseTest is NomadTest {
     bytes32 oldRoot = "old Root";
     bytes32 newRoot = "new Root";
 
+    event NewUpdater(address oldUpdater, address newUpdater);
+
     function setUp() public override {
         super.setUp();
         nbh = new NomadBaseHarness(domain);
+        vm.expectEmit(false, false, false, true);
+        emit NewUpdater(address(0), updater);
         nbh.initialize(updater);
         vm.label(address(nbh), "Nomad Base Harness");
+    }
+
+    function test_failInitializeTwice() public {
+        vm.expectRevert(
+            bytes("Initializable: contract is already initialized")
+        );
+        nbh.initialize(updater);
+    }
+
+    function test_ownerIsContractCreator() public {
+        assertEq(nbh.owner(), address(this));
+    }
+
+    function test_stateIsActiveAfterInit() public {
+        assertEq(uint256(nbh.state()), 1);
     }
 
     function test_acceptUpdaterSignature() public {
@@ -29,6 +48,13 @@ contract NomadBaseTest is NomadTest {
         vm.prank(fakeUpdater);
         bytes memory sig = signUpdate(fakeUpdaterPK, oldRoot, newRoot);
         assert(nbh.isUpdaterSignature(oldRoot, newRoot, sig) == false);
+    }
+
+    function test_homeDomainHash() public {
+        assertEq(
+            nbh.homeDomainHash(),
+            keccak256(abi.encodePacked(domain, "NOMAD"))
+        );
     }
 
     event DoubleUpdate(
