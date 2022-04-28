@@ -1,4 +1,4 @@
-import { BigNumberish, ethers } from 'ethers';
+import { BigNumberish, BigNumber, ethers } from 'ethers';
 import { utils as mpUtils } from '@nomad-xyz/multi-provider';
 import * as bridge from '@nomad-xyz/contracts-bridge';
 import { FailedHomeError, NomadContext } from '@nomad-xyz/sdk';
@@ -279,8 +279,8 @@ export class BridgeContext extends NomadContext {
       enableFast,
       overrides,
     );
-    // kludge: increase gas limit by 20%
-    tx.gasLimit = tx.gasLimit?.mul(120).div(100);
+    // kludge: double average gas usage
+    tx.gasLimit = BigNumber.from(500000);
     const dispatch = await this.mustGetSigner(from).sendTransaction(tx);
     const receipt = await dispatch.wait();
 
@@ -339,8 +339,8 @@ export class BridgeContext extends NomadContext {
       enableFast,
       overrides,
     );
-    // patch fix: increase gas limit by 10%
-    tx.gasLimit = tx.gasLimit?.mul(110).div(100);
+    // patch fix: increase gas limit by 50%
+    tx.gasLimit = tx.gasLimit?.mul(150).div(100);
     const dispatch = await this.mustGetSigner(from).sendTransaction(tx);
     const receipt = await dispatch.wait();
 
