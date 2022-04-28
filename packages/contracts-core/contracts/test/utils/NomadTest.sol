@@ -2,6 +2,7 @@
 pragma solidity >=0.6.11;
 
 import "forge-std/Test.sol";
+import "../../UpdaterManager.sol";
 
 contract NomadTest is Test {
     uint256 updaterPK = 1;
@@ -45,5 +46,14 @@ contract NomadTest is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, digest);
         bytes memory signature = abi.encodePacked(r, s, v);
         return signature;
+    }
+}
+
+contract NomadTestWithUpdaterManager is NomadTest {
+    UpdaterManager updaterManager;
+
+    function setUp() public virtual override {
+        super.setUp();
+        updaterManager = new UpdaterManager(updater);
     }
 }
