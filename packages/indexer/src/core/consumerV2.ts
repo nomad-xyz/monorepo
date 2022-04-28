@@ -188,16 +188,20 @@ export class NomadMessage {
 
   get confirmAt(): number {
     if (this.timings.relayedAt === 0) return 0;
+    if (!this.sdk.domainNumbers.includes(this.destination)) return 0;
+
     const optimisticSecondsUnknown =
       this.sdk.conf.protocol.networks[
         this.sdk.resolveDomainName(this.destination)
       ].configuration.optimisticSeconds;
     if (!optimisticSecondsUnknown) return 0;
 
+    const relayedAt = Math.floor(this.timings.relayedAt / 1000);
+
     if (typeof optimisticSecondsUnknown === "string") {
-      return this.timings.relayedAt + parseInt(optimisticSecondsUnknown);
+      return relayedAt + parseInt(optimisticSecondsUnknown);
     } else {
-      return this.timings.relayedAt + optimisticSecondsUnknown;
+      return relayedAt + optimisticSecondsUnknown;
     }
   }
 

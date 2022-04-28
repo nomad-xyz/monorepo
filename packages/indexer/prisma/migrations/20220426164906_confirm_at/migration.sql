@@ -5,4 +5,4 @@
 
 */
 -- AlterTable
-ALTER TABLE "messages" ADD COLUMN     "confirm_at" INTEGER NOT NULL;
+ALTER TABLE "messages" ADD COLUMN     "confirm_at" INTEGER NOT NULL DEFAULT 0;
