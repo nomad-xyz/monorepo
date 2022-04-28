@@ -148,30 +148,21 @@ export async function run(db: DB, logger: Logger) {
           },
         });
       },
-      tokenReplicas: (
-        _: any,
-        { id }: { id: string }
-      ) => {
+      tokenReplicas: (_: any, { id }: { id: string }) => {
         return db.client.replica.findMany({
           where: {
             tokenId: id,
           },
         });
       },
-      tokenReplicasByOrigin: (
-        _: any,
-        { domain }: { domain: number }
-      ) => {
+      tokenReplicasByOrigin: (_: any, { domain }: { domain: number }) => {
         return db.client.replica.findMany({
           where: {
             tokenDomain: domain,
           },
         });
       },
-      tokenReplicasByDestination: (
-        _: any,
-        { domain }: { domain: number }
-      ) => {
+      tokenReplicasByDestination: (_: any, { domain }: { domain: number }) => {
         return db.client.replica.findMany({
           where: {
             domain,
