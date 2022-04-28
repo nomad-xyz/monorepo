@@ -279,8 +279,8 @@ export class BridgeContext extends NomadContext {
       enableFast,
       overrides,
     );
-    // kludge: increase gas limit by 10%
-    tx.gasLimit = tx.gasLimit?.mul(110).div(100);
+    // kludge: increase gas limit by 15%
+    tx.gasLimit = tx.gasLimit?.mul(115).div(100);
     const dispatch = await this.mustGetSigner(from).sendTransaction(tx);
     const receipt = await dispatch.wait();
 
