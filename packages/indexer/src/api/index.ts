@@ -113,8 +113,11 @@ export async function run(db: DB, logger: Logger) {
       allMessages: [Message!]!
       messageByHash(txHash: String!): Message
       allTokens: [Token!]!
-      tokenReplicas(id: String!, domain: Int!): [Replica!]!
-      tokenReplicasByDomain(domain: Int!): [Replica!]!
+      allReplicas: [Replica!]!
+      tokenReplica(id: String!, domain: Int!): Replica!
+      tokenReplicas(id: String!): [Replica!]!
+      tokenReplicasByOrigin(domain: Int!): [Replica!]!
+      tokenReplicasByDestination(domain: Int!): [Replica!]!
     }
   `;
 
@@ -131,24 +134,47 @@ export async function run(db: DB, logger: Logger) {
       allTokens: () => {
         return db.client.token.findMany();
       },
-      tokenReplicas: (
+      allReplicas: () => {
+        return db.client.replica.findMany();
+      },
+      tokenReplica: (
         _: any,
         { id, domain }: { id: string; domain: number }
       ) => {
-        return db.client.replica.findMany({
+        return db.client.replica.findFirst({
           where: {
             tokenId: id,
             tokenDomain: domain,
           },
         });
       },
-      tokenReplicasByDomain: (
+      tokenReplicas: (
+        _: any,
+        { id }: { id: string }
+      ) => {
+        return db.client.replica.findMany({
+          where: {
+            tokenId: id,
+          },
+        });
+      },
+      tokenReplicasByOrigin: (
         _: any,
         { domain }: { domain: number }
       ) => {
         return db.client.replica.findMany({
           where: {
             tokenDomain: domain,
+          },
+        });
+      },
+      tokenReplicasByDestination: (
+        _: any,
+        { domain }: { domain: number }
+      ) => {
+        return db.client.replica.findMany({
+          where: {
+            domain,
           },
         });
       },
