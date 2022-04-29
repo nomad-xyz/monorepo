@@ -1,38 +1,22 @@
-import { utils as mpUtils } from '@nomad-xyz/multi-provider';
 import ethers from 'ethers';
+import { expect } from 'chai';
+import * as config from '@nomad-xyz/configuration';
 
-/*
- * Encoded call to a function,
- * where to and data is encoded.
- */
-export type CallData = {
-  to: ethers.utils.BytesLike;
-  data: ethers.utils.BytesLike;
-};
+export type SignerOrProvider = ethers.providers.Provider | ethers.Signer;
 
-/*
- * Formats function call into {to, data} struct,
- * where to and data is encoded.
- *
- * @param destinationContract - contract to be called
- * @param functionStr - name of the function
- * @param functionArgs - arguments to the call
- * @return The encoded call
- */
-export function formatCall(
-  destinationContract: ethers.Contract,
-  functionStr: string,
-  functionArgs: ReadonlyArray<unknown>,
-): CallData {
-  // Set up data for call message
-  const func = destinationContract.interface.getFunction(functionStr);
-  const data = destinationContract.interface.encodeFunctionData(
-    func,
-    functionArgs,
-  );
+export function log(str: string): void {
+  console.log(str);
+}
 
-  return {
-    to: mpUtils.canonizeId(destinationContract.address),
-    data: data,
-  };
+export function _unreachable(): void {
+  throw new Error('unreachable');
+}
+
+export function assertBeaconProxy(
+  beaconProxy: config.Proxy,
+  message?: string,
+): void {
+  expect(beaconProxy.beacon, message).to.not.be.undefined;
+  expect(beaconProxy.proxy, message).to.not.be.undefined;
+  expect(beaconProxy.implementation, message).to.not.be.undefined;
 }

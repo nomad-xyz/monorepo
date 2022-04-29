@@ -1,4 +1,5 @@
 
+// TODO: the old deploy (what is currently published to npm) has been deprecated
 import {
   BridgeDeploy,
   ExistingBridgeDeploy,
