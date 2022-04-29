@@ -1,24 +1,24 @@
-import { Gauge, Histogram, Counter } from "prom-client";
-import Logger from "bunyan";
+import { Gauge, Histogram, Counter } from 'prom-client';
+import Logger from 'bunyan';
 
-import { register } from "prom-client";
-import express, { Response } from "express";
+import { register } from 'prom-client';
+import express, { Response } from 'express';
 export const prefix = `nomad_indexer`;
 
 export enum RpcRequestMethod {
-  GetBlock = "eth_getBlock",
-  GetBlockWithTxs = "eth_getBlockWithTransactions",
-  GetTx = "eth_getTransaction",
-  GetTxReceipt = "eth_getTransactionReceipt",
-  GetBlockNumber = "eth_getBlockNumber",
-  GetLogs = "eth_getLogs",
+  GetBlock = 'eth_getBlock',
+  GetBlockWithTxs = 'eth_getBlockWithTransactions',
+  GetTx = 'eth_getTransaction',
+  GetTxReceipt = 'eth_getTransactionReceipt',
+  GetBlockNumber = 'eth_getBlockNumber',
+  GetLogs = 'eth_getLogs',
 }
 
 export enum DbRequestType {
-  Select = "select",
-  Insert = "insert",
-  Update = "update",
-  Upsert = "upsert",
+  Select = 'select',
+  Insert = 'insert',
+  Update = 'update',
+  Upsert = 'upsert',
 }
 
 const buckets = [
@@ -53,8 +53,8 @@ export class MetricsCollector {
     }
     const server = express();
 
-    server.get("/metrics", async (_, res: Response) => {
-      res.set("Content-Type", register.contentType);
+    server.get('/metrics', async (_, res: Response) => {
+      res.set('Content-Type', register.contentType);
       res.end(await register.metrics());
     });
 
@@ -62,7 +62,7 @@ export class MetricsCollector {
       {
         endpoint: `http://0.0.0.0:${port}/metrics`,
       },
-      "Prometheus metrics exposed"
+      'Prometheus metrics exposed',
     );
 
     server.listen(port);
@@ -89,60 +89,60 @@ export class IndexerCollector extends MetricsCollector {
     // Count
 
     this.numMessages = new Gauge({
-      name: prefix + "_number_messages",
-      help: "Gauge that indicates how many messages are in dispatch, update, relay, receive or process stages",
-      labelNames: ["stage", "network", "environment"],
+      name: prefix + '_number_messages',
+      help: 'Gauge that indicates how many messages are in dispatch, update, relay, receive or process stages',
+      labelNames: ['stage', 'network', 'environment'],
     });
 
     this.dbRequests = new Counter({
-      name: prefix + "_db_requests",
-      help: "Count that indicates how many requests are coming to the db",
-      labelNames: ["type", "environment"],
+      name: prefix + '_db_requests',
+      help: 'Count that indicates how many requests are coming to the db',
+      labelNames: ['type', 'environment'],
     });
 
     this.rpcRequests = new Counter({
-      name: prefix + "_rpc_requests",
-      help: "Count that indicates how many PRC requests are made",
-      labelNames: ["method", "network", "environment"],
+      name: prefix + '_rpc_requests',
+      help: 'Count that indicates how many PRC requests are made',
+      labelNames: ['method', 'network', 'environment'],
     });
 
     this.rpcLatency = new Histogram({
-      name: prefix + "_rpc_latency",
-      help: "Histogram that tracks latency of how long does it take to make request in ms",
-      labelNames: ["method", "network", "environment"],
+      name: prefix + '_rpc_latency',
+      help: 'Histogram that tracks latency of how long does it take to make request in ms',
+      labelNames: ['method', 'network', 'environment'],
       buckets,
     });
 
     this.rpcErrors = new Counter({
-      name: prefix + "_rpc_errors",
-      help: "Counter that tracks error codes from RPC endpoint",
-      labelNames: ["code", "method", "network", "environment"],
+      name: prefix + '_rpc_errors',
+      help: 'Counter that tracks error codes from RPC endpoint',
+      labelNames: ['code', 'method', 'network', 'environment'],
     });
 
     // Time Histograms
 
     this.latency = new Histogram({
-      name: prefix + "_latency",
-      help: "Histogram that tracks latency of how long does it take to move between dispatch, update, relay, receive or process stages in ms",
-      labelNames: ["stage", "home", "replica", "environment"],
+      name: prefix + '_latency',
+      help: 'Histogram that tracks latency of how long does it take to move between dispatch, update, relay, receive or process stages in ms',
+      labelNames: ['stage', 'home', 'replica', 'environment'],
       buckets,
     });
 
     // Gas
 
     this.gasUsage = new Histogram({
-      name: prefix + "_gas_usage",
-      help: "Histogram that tracks gas usage in wei of a transaction that initiated at dispatch, update, relay, receive or process stages.",
-      labelNames: ["stage", "home", "replica", "environment"],
+      name: prefix + '_gas_usage',
+      help: 'Histogram that tracks gas usage in wei of a transaction that initiated at dispatch, update, relay, receive or process stages.',
+      labelNames: ['stage', 'home', 'replica', 'environment'],
       buckets,
     });
 
     // Home Health
 
     this.homeFailedGauge = new Gauge({
-      name: "nomad_monitor_home_failed",
-      help: "Gauge that indicates if home of a network is in failed state.",
-      labelNames: ["network", "environment"],
+      name: 'nomad_monitor_home_failed',
+      help: 'Gauge that indicates if home of a network is in failed state.',
+      labelNames: ['network', 'environment'],
     });
   }
 
@@ -152,7 +152,7 @@ export class IndexerCollector extends MetricsCollector {
   setHomeState(network: string, homeFailed: boolean) {
     this.homeFailedGauge.set(
       { network, environment: this.environment },
-      homeFailed ? 1 : 0
+      homeFailed ? 1 : 0,
     );
   }
 

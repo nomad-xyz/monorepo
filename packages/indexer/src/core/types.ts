@@ -76,7 +76,7 @@ export class RootTimingStatistic {
     return {
       total: this.total.toObject(),
       domainStatistics: Array.from(this.domainStatistics.entries()).map(
-        ([d, v]) => [d, v.toObject()]
+        ([d, v]) => [d, v.toObject()],
       ),
     };
   }
@@ -88,7 +88,7 @@ export class RootCountStagesStatistic {
   constructor(domains: number[]) {
     this.total = new BasicCountStages();
     this.domainStatistics = new Map(
-      domains.map((d) => [d, new BasicCountStages()])
+      domains.map((d) => [d, new BasicCountStages()]),
     );
   }
 
@@ -96,7 +96,7 @@ export class RootCountStagesStatistic {
     return {
       total: this.total.toObject(),
       domainStatistics: Array.from(this.domainStatistics.entries()).map(
-        ([d, v]) => [d, v.toObject()]
+        ([d, v]) => [d, v.toObject()],
       ),
     };
   }
@@ -127,5 +127,5 @@ export class Statistics {
   }
 }
 
-import { createClient } from "redis";
+import { createClient } from 'redis';
 export type RedisClient = ReturnType<typeof createClient>;

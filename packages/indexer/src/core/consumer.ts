@@ -1,14 +1,14 @@
-import { parseMessage } from "@nomad-xyz/sdk";
-import { BigNumber, ethers } from "ethers";
-import { EventType, NomadishEvent } from "./event";
-import { Statistics } from "./types";
-import { parseBody, ParsedTransferMessage } from "@nomad-xyz/sdk-bridge";
-import { parseAction } from "@nomad-xyz/sdk-govern";
-import { DB } from "./db";
-import Logger from "bunyan";
-import { Padded } from "./utils";
-import EventEmitter from "events";
-import { NomadMessage } from "./consumerV2";
+import { parseMessage } from '@nomad-xyz/sdk';
+import { BigNumber, ethers } from 'ethers';
+import { EventType, NomadishEvent } from './event';
+import { Statistics } from './types';
+import { parseBody, ParsedTransferMessage } from '@nomad-xyz/sdk-bridge';
+import { parseAction } from '@nomad-xyz/sdk-govern';
+import { DB } from './db';
+import Logger from 'bunyan';
+import { Padded } from './utils';
+import EventEmitter from 'events';
+import { NomadMessage } from './consumerV2';
 
 export class StatisticsCollector {
   s: Statistics;
@@ -118,7 +118,7 @@ export class GasUsed {
     gasAtReceive: string;
     gasAtProcess: string;
   }): GasUsed {
-    let g = new GasUsed();
+    const g = new GasUsed();
     g.dispatch = ethers.BigNumber.from(o.gasAtDispatch);
     g.update = ethers.BigNumber.from(o.gasAtUpdate);
     g.relay = ethers.BigNumber.from(o.gasAtRelay);

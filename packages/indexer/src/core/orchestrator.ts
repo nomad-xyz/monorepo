@@ -1,15 +1,15 @@
-import { RedisClientType } from "@node-redis/client";
-import { Home } from "@nomad-xyz/contracts-core";
-import { NomadMessage } from "./consumerV2";
-import { BridgeContext } from "@nomad-xyz/sdk-bridge";
-import Logger from "bunyan";
-import { Consumer } from "./consumer";
-import { DB } from "./db";
-import { eventTypeToOrder, NomadishEvent } from "./event";
-import { Indexer } from "./indexer";
-import { IndexerCollector } from "./metrics";
-import { RedisClient, Statistics } from "./types";
-import { logToFile, replacer, sleep } from "./utils";
+import { RedisClientType } from '@node-redis/client';
+import { Home } from '@nomad-xyz/contracts-core';
+import { NomadMessage } from './consumerV2';
+import { BridgeContext } from '@nomad-xyz/sdk-bridge';
+import Logger from 'bunyan';
+import { Consumer } from './consumer';
+import { DB } from './db';
+import { eventTypeToOrder, NomadishEvent } from './event';
+import { Indexer } from './indexer';
+import { IndexerCollector } from './metrics';
+import { RedisClient, Statistics } from './types';
+import { logToFile, replacer, sleep } from './utils';
 
 class HomeHealth {
   home: Home;
@@ -21,7 +21,7 @@ class HomeHealth {
     domain: number,
     ctx: BridgeContext,
     logger: Logger,
-    metrics: IndexerCollector
+    metrics: IndexerCollector,
   ) {
     this.domain = domain;
     this.home = ctx.mustGetCore(domain).home;
@@ -39,7 +39,7 @@ class HomeHealth {
       }
     } catch (e: any) {
       this.logger.warn(
-        `Couldn't collect home state for ${this.domain} domain. Error: ${e.message}`
+        `Couldn't collect home state for ${this.domain} domain. Error: ${e.message}`,
       );
       // TODO! something
     }
@@ -70,7 +70,7 @@ export class Orchestrator {
     metrics: IndexerCollector,
     logger: Logger,
     db: DB,
-    redis?: RedisClient
+    redis?: RedisClient,
   ) {
     this.sdk = sdk;
     this.consumer = c;
@@ -101,16 +101,16 @@ export class Orchestrator {
   async checkAllIntegrity(): Promise<void> {
     await Promise.all(
       this.sdk.domainNumbers.map(async (domain: number) => {
-        let indexer = this.indexers.get(domain)!;
+        const indexer = this.indexers.get(domain)!;
         await indexer.dummyTestEventsIntegrity();
-      })
+      }),
     );
   }
 
   async indexAll(): Promise<number> {
     const events = (
       await Promise.all(
-        this.sdk.domainNumbers.map((domain: number) => this.index(domain))
+        this.sdk.domainNumbers.map((domain: number) => this.index(domain)),
       )
     ).flat();
     events.sort((a, b) => {
@@ -126,7 +126,7 @@ export class Orchestrator {
   }
 
   async index(domain: number) {
-    let indexer = this.indexers.get(domain)!;
+    const indexer = this.indexers.get(domain)!;
 
     let replicas = [];
     if (domain === this.gov) {
@@ -145,14 +145,14 @@ export class Orchestrator {
       const network = this.domain2name(domain);
       try {
         const s = stats.forDomain(domain).counts;
-        this.metrics.setNumMessages("dispatched", network, s.dispatched);
-        this.metrics.setNumMessages("updated", network, s.updated);
-        this.metrics.setNumMessages("relayed", network, s.relayed);
-        this.metrics.setNumMessages("received", network, s.received);
-        this.metrics.setNumMessages("processed", network, s.processed);
+        this.metrics.setNumMessages('dispatched', network, s.dispatched);
+        this.metrics.setNumMessages('updated', network, s.updated);
+        this.metrics.setNumMessages('relayed', network, s.relayed);
+        this.metrics.setNumMessages('received', network, s.received);
+        this.metrics.setNumMessages('processed', network, s.processed);
       } catch (e: any) {
         this.logger.error(
-          `Tried to collect statistics for domain ${domain}, but error happened: ${e.message}`
+          `Tried to collect statistics for domain ${domain}, but error happened: ${e.message}`,
         );
       }
     });
@@ -162,14 +162,14 @@ export class Orchestrator {
     await Promise.all(
       this.sdk.domainNumbers.map(async (domain: number) => {
         await this.checkHealth(domain);
-      })
+      }),
     );
   }
 
   async checkHealth(domain: number) {
     this.metrics.setHomeState(
       this.domain2name(domain),
-      (await this.healthCheckers.get(domain)!.healthy()) !== true
+      (await this.healthCheckers.get(domain)!.healthy()) !== true,
     );
   }
 
@@ -177,8 +177,8 @@ export class Orchestrator {
     const events = (
       await Promise.all(
         Array.from(this.indexers.values()).map((indexer) =>
-          indexer.persistance.allEvents()
-        )
+          indexer.persistance.allEvents(),
+        ),
       )
     ).flat();
     events.sort((a, b) => {
@@ -205,106 +205,106 @@ export class Orchestrator {
         domain,
         this.sdk,
         this.logger,
-        this.metrics
+        this.metrics,
       );
       this.healthCheckers.set(domain, checker);
     }
   }
 
   subscribeStatisticEvents() {
-    this.consumer.on("dispatched", (m: NomadMessage, e: NomadishEvent) => {
+    this.consumer.on('dispatched', (m: NomadMessage, e: NomadishEvent) => {
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
         this.metrics.observeGasUsage(
-          "dispatched",
+          'dispatched',
           homeName,
           replicaName,
-          e.gasUsed.toNumber()
+          e.gasUsed.toNumber(),
         );
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
     });
 
-    this.consumer.on("updated", (m: NomadMessage, e: NomadishEvent) => {
+    this.consumer.on('updated', (m: NomadMessage, e: NomadishEvent) => {
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
         this.metrics.observeLatency(
-          "updated",
+          'updated',
           homeName,
           replicaName,
-          m.timings.toUpdate()!
+          m.timings.toUpdate()!,
         );
         this.metrics.observeGasUsage(
-          "updated",
+          'updated',
           homeName,
           replicaName,
-          e.gasUsed.toNumber()
+          e.gasUsed.toNumber(),
         );
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
     });
 
-    this.consumer.on("relayed", (m: NomadMessage, e: NomadishEvent) => {
+    this.consumer.on('relayed', (m: NomadMessage, e: NomadishEvent) => {
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
         this.metrics.observeLatency(
-          "relayed",
+          'relayed',
           homeName,
           replicaName,
-          m.timings.toRelay()!
+          m.timings.toRelay()!,
         );
         this.metrics.observeGasUsage(
-          "relayed",
+          'relayed',
           homeName,
           replicaName,
-          e.gasUsed.toNumber()
+          e.gasUsed.toNumber(),
         );
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
     });
 
-    this.consumer.on("received", (m: NomadMessage, e: NomadishEvent) => {
+    this.consumer.on('received', (m: NomadMessage, e: NomadishEvent) => {
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
         this.metrics.observeLatency(
-          "received",
+          'received',
           homeName,
           replicaName,
-          m.timings.toReceive()!
+          m.timings.toReceive()!,
         );
         this.metrics.observeGasUsage(
-          "received",
+          'received',
           homeName,
           replicaName,
-          e.gasUsed.toNumber()
+          e.gasUsed.toNumber(),
         );
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
     });
 
-    this.consumer.on("processed", (m: NomadMessage, e: NomadishEvent) => {
+    this.consumer.on('processed', (m: NomadMessage, e: NomadishEvent) => {
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
         this.metrics.observeLatency(
-          "processed",
+          'processed',
           homeName,
           replicaName,
-          m.timings.toProcess()!
+          m.timings.toProcess()!,
         );
         this.metrics.observeGasUsage(
-          "processed",
+          'processed',
           homeName,
           replicaName,
-          e.gasUsed.toNumber()
+          e.gasUsed.toNumber(),
         );
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
@@ -329,7 +329,7 @@ export class Orchestrator {
       this.logger.info(
         `Finished reindexing after ${
           (new Date().valueOf() - start) / 1000
-        } seconds`
+        } seconds`,
       );
 
       this.reportAllMetrics();
@@ -343,7 +343,7 @@ export class Orchestrator {
       const network = this.domain2name(domain);
       this.metrics.setHomeState(
         network,
-        this.healthCheckers.get(domain)!.failed
+        this.healthCheckers.get(domain)!.failed,
       );
     }
   }

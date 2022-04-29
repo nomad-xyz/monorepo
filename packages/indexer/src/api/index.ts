@@ -1,14 +1,14 @@
-import express from "express";
-import cors from "cors";
-import { graphqlHTTP } from "express-graphql";
-import { makeExecutableSchema } from "@graphql-tools/schema";
+import express from 'express';
+import cors from 'cors';
+import { graphqlHTTP } from 'express-graphql';
+import { makeExecutableSchema } from '@graphql-tools/schema';
 
-import { DB, MsgRequest } from "../core/db";
-import { prefix } from "../core/metrics";
+import { DB, MsgRequest } from '../core/db';
+import { prefix } from '../core/metrics';
 
-import * as dotenv from "dotenv";
-import Logger from "bunyan";
-import promBundle from "express-prom-bundle";
+import * as dotenv from 'dotenv';
+import Logger from 'bunyan';
+import promBundle from 'express-prom-bundle';
 
 dotenv.config({});
 
@@ -25,18 +25,18 @@ export async function run(db: DB, logger: Logger) {
   const log = (
     req: express.Request,
     res: express.Response,
-    next: express.NextFunction
+    next: express.NextFunction,
   ) => {
     logger.info(`request to ${req.url}`);
     next();
   };
 
   const metricsMiddleware = promBundle({
-    httpDurationMetricName: prefix + "_api",
+    httpDurationMetricName: prefix + '_api',
     buckets: [0.1, 0.3, 0.6, 1, 1.5, 2.5, 5],
     includeMethod: true,
     includePath: true,
-    metricsPath: "/metrics",
+    metricsPath: '/metrics',
   });
   metricsMiddleware;
 
@@ -51,8 +51,8 @@ export async function run(db: DB, logger: Logger) {
   //   prefix: prefix + '_api',
   // }));
 
-  app.get("/healthcheck", log, (req, res) => {
-    res.send("OK!");
+  app.get('/healthcheck', log, (req, res) => {
+    res.send('OK!');
   });
 
   const typeDefs = `
@@ -139,7 +139,7 @@ export async function run(db: DB, logger: Logger) {
       },
       tokenReplica: (
         _: any,
-        { id, domain }: { id: string; domain: number }
+        { id, domain }: { id: string; domain: number },
       ) => {
         return db.client.replica.findFirst({
           where: {
@@ -178,36 +178,36 @@ export async function run(db: DB, logger: Logger) {
   });
 
   app.use(
-    "/graphql",
+    '/graphql',
     graphqlHTTP({
       schema,
       graphiql: true,
-    })
+    }),
   );
 
-  app.get("/tx/:tx", log, async (req, res) => {
+  app.get('/tx/:tx', log, async (req, res) => {
     const messages = await db.getMessageByEvm(req.params.tx);
     return res.json(messages.map((m) => m.serialize()));
   });
 
-  app.get("/hash/:hash", log, async (req, res) => {
+  app.get('/hash/:hash', log, async (req, res) => {
     const message = await db.getMessageByHash(req.params.hash);
     if (!message) return res.status(404).json({});
     return res.json(message.serialize());
   });
 
   app.get(
-    "/tx",
+    '/tx',
     log,
     async (req: express.Request<{}, {}, {}, MsgRequest>, res) => {
       const { size } = req.query;
 
-      if (size && size > 30) return fail(res, 403, "maximum page size is 30");
+      if (size && size > 30) return fail(res, 403, 'maximum page size is 30');
 
       const messages = await db.getMessages(req.query);
 
       return res.json(messages.map((m) => m.serialize()));
-    }
+    },
   );
 
   app.listen(PORT, () => {
