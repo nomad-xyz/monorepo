@@ -1,12 +1,6 @@
-import { parseMessage } from '@nomad-xyz/sdk';
-import { BigNumber, ethers } from 'ethers';
-import { EventType, NomadishEvent } from './event';
+import { ethers } from 'ethers';
+import { NomadishEvent } from './event';
 import { Statistics } from './types';
-import { parseBody, ParsedTransferMessage } from '@nomad-xyz/sdk-bridge';
-import { parseAction } from '@nomad-xyz/sdk-govern';
-import { DB } from './db';
-import Logger from 'bunyan';
-import { Padded } from './utils';
 import EventEmitter from 'events';
 import { NomadMessage } from './consumerV2';
 

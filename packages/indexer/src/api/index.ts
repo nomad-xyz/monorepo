@@ -115,7 +115,10 @@ export async function run(db: DB, logger: Logger) {
 
     type Query {
       allMessages: [Message!]!
-      messageByHash(txHash: String!): Message
+      messageByTx(tx: String!): Message
+      messageByHash(hash: String!): Message
+      messagesBySender(senderLike: String!): [Message!]!
+      messagesByRecipient(recipientLike: String!): [Message!]!
       allTokens: [Token!]!
       allReplicas: [Replica!]!
       tokenReplica(id: String!, domain: Int!): Replica!
@@ -130,9 +133,53 @@ export async function run(db: DB, logger: Logger) {
       allMessages: () => {
         return db.client.messages.findMany();
       },
-      messageByHash: (args: { txHash: string }) => {
+      messageByTx: (_: any, { tx }: { tx: string }) => {
         return db.client.messages.findFirst({
-          where: { tx: args.txHash || undefined },
+          where: {
+            tx: {
+              contains: tx || undefined,
+              mode: "insensitive",
+            },
+          },
+        });
+      },
+      messageByHash: (_: any, { hash }: { hash: string }) => {
+        return db.client.messages.findFirst({
+          where: {
+            messageHash: {
+              contains: hash || undefined,
+              mode: "insensitive",
+            },
+          },
+        });
+      },
+      messagesBySender: (_: any, { senderLike }: { senderLike: string }) => {
+        return db.client.messages.findMany({
+          where: {
+            sender: {
+              contains: senderLike,
+              mode: "insensitive",
+            },
+          },
+          orderBy: {
+            dispatchedAt: "desc",
+          },
+        });
+      },
+      messagesByRecipient: (
+        _: any,
+        { recipientLike }: { recipientLike: string }
+      ) => {
+        return db.client.messages.findMany({
+          where: {
+            recipient: {
+              contains: recipientLike,
+              mode: "insensitive",
+            },
+          },
+          orderBy: {
+            dispatchedAt: "desc",
+          },
         });
       },
       allTokens: () => {
