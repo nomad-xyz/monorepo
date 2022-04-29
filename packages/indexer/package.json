@@ -9,11 +9,11 @@
     "any": "ts-node main",
     "api": "PROGRAMM=api ts-node main",
     "build": "prisma generate",
-    "build_docker": "docker-compose build",
+    "build_docker": "docker-compose build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD)",
     "core": "PROGRAMM=core ts-node main",
     "lint": "eslint --fix ./src",
     "migrate": "prisma db push",
-    "release-docker": "docker buildx build --platform linux/amd64,linux/arm64 --push -t gcr.io/nomad-xyz/nomad-indexer:sha-$(git rev-parse --short HEAD) .",
+    "release-docker": "docker buildx build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) --platform linux/amd64,linux/arm64 --push -t gcr.io/nomad-xyz/nomad-indexer:sha-$(git rev-parse --short HEAD) .",
     "start": "npm run migrate && npm run any"
   },
   "dependencies": {

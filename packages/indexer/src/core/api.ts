@@ -31,6 +31,10 @@ export async function run(o: Orchestrator, logger: Logger) {
     res.send('OK!');
   });
 
+  app.get('/version', log, (_, res) => {
+    res.send(process.env.GIT_COMMIT);
+  });
+
   app.get('/hash/:hash', log, async (req, res) => {
     const p = o.consumer as ProcessorV2;
     const message = await p.getMsg(req.params.hash);

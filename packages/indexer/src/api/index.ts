@@ -55,6 +55,10 @@ export async function run(db: DB, logger: Logger) {
     res.send('OK!');
   });
 
+  app.get("/version", log, (_, res) => {
+    res.send(process.env.GIT_COMMIT);
+  });
+
   const typeDefs = `
     type Message {
       id: Int!
