@@ -1,4 +1,3 @@
-import { RedisClientType } from '@node-redis/client';
 import { Home } from '@nomad-xyz/contracts-core';
 import { NomadMessage } from './consumerV2';
 import { BridgeContext } from '@nomad-xyz/sdk-bridge';
@@ -8,8 +7,10 @@ import { DB } from './db';
 import { eventTypeToOrder, NomadishEvent } from './event';
 import { Indexer } from './indexer';
 import { IndexerCollector } from './metrics';
-import { RedisClient, Statistics } from './types';
-import { logToFile, replacer, sleep } from './utils';
+import { RedisClient } from './types';
+import {  sleep } from './utils';
+
+const TBD = !!process.env.TBD && process.env.TBD !== '';
 
 class HomeHealth {
   home: Home;
@@ -107,7 +108,59 @@ export class Orchestrator {
     );
   }
 
-  async indexAll(): Promise<number> {
+  async indexAllUnrelated(): Promise<void> {
+    let finished = false;
+
+    const promises = this.sdk.domainNumbers.map(async (domain: number) => {
+      while (!finished) {
+        try {
+          const eventsForDomain = await this.index(domain);
+
+          eventsForDomain.sort((a, b) => {
+            if (a.ts === b.ts) {
+              return eventTypeToOrder(a) - eventTypeToOrder(b);
+            } else {
+              return a.ts - b.ts;
+            }
+          });
+
+          this.logger.info(
+            `Received ${eventsForDomain.length} events after reindexing for domain: ${domain}`,
+          );
+          await this.consumer.consume(eventsForDomain);
+          await this.checkHealth(domain);
+
+          if (eventsForDomain.length) await this.collectStatistics();
+          this.reportAllMetrics();
+
+          await sleep(5000);
+        } catch (e) {
+          this.logger.error(`Error at Indexing ${domain}`, e);
+          finished = true;
+        }
+      }
+    });
+
+    // const events = (
+    //   await Promise.all(
+    //     this.sdk.domainNumbers.map((domain: number) => this.index(domain)),
+    //   )
+    // ).flat();
+    // events.sort((a, b) => {
+    //   if (a.ts === b.ts) {
+    //     return eventTypeToOrder(a) - eventTypeToOrder(b);
+    //   } else {
+    //     return a.ts - b.ts;
+    //   }
+    // });
+    // this.logger.info(`Received ${events.length} events after reindexing`);
+    // await this.consumer.consume(events);
+    await Promise.all(promises);
+
+    return;
+  }
+
+  async indexAllRelated(): Promise<number> {
     const events = (
       await Promise.all(
         this.sdk.domainNumbers.map((domain: number) => this.index(domain)),
@@ -312,11 +365,22 @@ export class Orchestrator {
     });
   }
 
-  async startConsuming() {
+  async consumeUnrelated() {
+    this.logger.info(`Started to index`);
+    const start = new Date().valueOf();
+    await this.indexAllUnrelated();
+    this.logger.info(
+      `Finished reindexing after ${
+        (new Date().valueOf() - start) / 1000
+      } seconds`,
+    );
+  }
+
+  async consumeRelated() {
     while (!this.done) {
       this.logger.info(`Started to reindex`);
       const start = new Date().valueOf();
-      const eventsLength = await this.indexAll();
+      const eventsLength = await this.indexAllRelated();
       await this.checkAllHealth();
 
       if (eventsLength > 0) await this.collectStatistics();
@@ -335,6 +399,14 @@ export class Orchestrator {
       this.reportAllMetrics();
 
       await sleep(5000);
+    }
+  }
+
+  async startConsuming() {
+    if (TBD) {
+      await this.consumeUnrelated();
+    } else {
+      await this.consumeRelated();
     }
   }
 

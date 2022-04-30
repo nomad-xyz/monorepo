@@ -1,12 +1,12 @@
-import { NomadMessage } from "./consumerV2";
+import { NomadMessage } from './consumerV2';
 
-import { Prisma, PrismaClient } from "@prisma/client";
-import { DbRequestType, IndexerCollector } from "./metrics";
-import Logger from "bunyan";
-import pLimit from "p-limit";
-import { Padded } from "./utils";
-import { ethers } from "ethers";
-import { BridgeContext } from "@nomad-xyz/sdk-bridge";
+import { Prisma, PrismaClient } from '@prisma/client';
+import { DbRequestType, IndexerCollector } from './metrics';
+import Logger from 'bunyan';
+import pLimit from 'p-limit';
+import { Padded } from './utils';
+import { ethers } from 'ethers';
+import { BridgeContext } from '@nomad-xyz/sdk-bridge';
 
 // function fromDb(m: messages): NomadMessage {
 //   return
@@ -63,7 +63,7 @@ export class DB {
     this.syncedOnce = false;
     this.client = new PrismaClient();
     this.metrics = metrics;
-    this.logger = logger.child({ span: "DB" });
+    this.logger = logger.child({ span: 'DB' });
     this.sdk = sdk;
   }
 
@@ -88,13 +88,13 @@ export class DB {
     });
 
     return messages.map((m) =>
-      NomadMessage.deserialize(m, this.logger, this.sdk)
+      NomadMessage.deserialize(m, this.logger, this.sdk),
     );
   }
 
   async getMessagesByOriginAndStateNumber(
     origin: number,
-    state: number
+    state: number,
   ): Promise<NomadMessage[]> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const messages = await this.client.messages.findMany({
@@ -105,13 +105,13 @@ export class DB {
     });
 
     return messages.map((m) =>
-      NomadMessage.deserialize(m, this.logger, this.sdk)
+      NomadMessage.deserialize(m, this.logger, this.sdk),
     );
   }
 
   async getMessagesByOriginAndRoot(
     origin: number,
-    root: string
+    root: string,
   ): Promise<NomadMessage[]> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const messages = await this.client.messages.findMany({
@@ -121,7 +121,7 @@ export class DB {
       },
     });
     return messages.map((m) =>
-      NomadMessage.deserialize(m, this.logger, this.sdk)
+      NomadMessage.deserialize(m, this.logger, this.sdk),
     );
   }
 
@@ -129,13 +129,13 @@ export class DB {
     this.metrics.incDbRequests(DbRequestType.Select);
     const messages = await this.client.messages.findMany();
     return messages.map((m) =>
-      NomadMessage.deserialize(m, this.logger, this.sdk)
+      NomadMessage.deserialize(m, this.logger, this.sdk),
     );
   }
 
   async getMessageByOriginAndNonce(
     origin: number,
-    nonce: number
+    nonce: number,
   ): Promise<NomadMessage | null> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const message = await this.client.messages.findFirst({
@@ -154,7 +154,7 @@ export class DB {
     destination: number,
     recipient: Padded,
     amount: ethers.BigNumber,
-    dispatchBlock: number
+    dispatchBlock: number,
   ): Promise<NomadMessage | null> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const message = await this.client.messages.findFirst({
@@ -203,7 +203,7 @@ export class DB {
     });
 
     return messages.map((m) =>
-      NomadMessage.deserialize(m, this.logger, this.sdk)
+      NomadMessage.deserialize(m, this.logger, this.sdk),
     );
   }
 
@@ -253,7 +253,7 @@ export class DB {
           //   `Message updated in DB. updated: ${serialized.updatedAt}, relayed: ${serialized.relayedAt}, received: ${serialized.receivedAt}, processed: ${serialized.processedAt}`
           // );
         });
-      })
+      }),
     );
 
     return;
@@ -285,7 +285,7 @@ export class DB {
 
   async getKeyPair(
     namespace: string,
-    key: string
+    key: string,
   ): Promise<string | undefined> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const row = await this.client.kv_storage.findUnique({
@@ -306,7 +306,7 @@ export class DB {
   async setKeyPair(
     namespace: string,
     key: string,
-    value: string
+    value: string,
   ): Promise<void> {
     const where: Prisma.kv_storageWhereUniqueInput = {
       namespace_key: {

@@ -55,7 +55,7 @@ export async function run(db: DB, logger: Logger) {
     res.send('OK!');
   });
 
-  app.get("/version", log, (_, res) => {
+  app.get('/version', log, (_, res) => {
     res.send(process.env.GIT_COMMIT);
   });
 
@@ -138,7 +138,7 @@ export async function run(db: DB, logger: Logger) {
           where: {
             tx: {
               contains: tx || undefined,
-              mode: "insensitive",
+              mode: 'insensitive',
             },
           },
         });
@@ -148,7 +148,7 @@ export async function run(db: DB, logger: Logger) {
           where: {
             messageHash: {
               contains: hash || undefined,
-              mode: "insensitive",
+              mode: 'insensitive',
             },
           },
         });
@@ -158,27 +158,27 @@ export async function run(db: DB, logger: Logger) {
           where: {
             sender: {
               contains: senderLike,
-              mode: "insensitive",
+              mode: 'insensitive',
             },
           },
           orderBy: {
-            dispatchedAt: "desc",
+            dispatchedAt: 'desc',
           },
         });
       },
       messagesByRecipient: (
         _: any,
-        { recipientLike }: { recipientLike: string }
+        { recipientLike }: { recipientLike: string },
       ) => {
         return db.client.messages.findMany({
           where: {
             recipient: {
               contains: recipientLike,
-              mode: "insensitive",
+              mode: 'insensitive',
             },
           },
           orderBy: {
-            dispatchedAt: "desc",
+            dispatchedAt: 'desc',
           },
         });
       },

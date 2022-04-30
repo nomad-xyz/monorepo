@@ -1,5 +1,5 @@
 import { parseAction } from '@nomad-xyz/sdk-govern';
-import { NomadContext, parseMessage } from '@nomad-xyz/sdk';
+import {  parseMessage } from '@nomad-xyz/sdk';
 import {
   BridgeContext,
   parseBody,
@@ -14,6 +14,7 @@ import {
   EventType,
   NomadishEvent,
   Process,
+  Receive,
   Send,
   Update,
 } from './event';
@@ -22,7 +23,7 @@ import { DB } from './db';
 import { Statistics, RedisClient } from './types';
 import fs from 'fs';
 import pLimit from 'p-limit';
-import { createClient } from 'redis';
+import { getRedis } from './redis';
 
 function fsLog(s: string, l?: string) {
   fs.appendFileSync(l || './lol.txt', s + '\n');
@@ -418,11 +419,7 @@ class EventsPool {
   };
 
   constructor(redis?: RedisClient) {
-    this.redis =
-      redis ||
-      createClient({
-        url: process.env.REDIS_URL || 'redis://redis:6379',
-      });
+    this.redis = redis || getRedis();
     this.pool = {
       send: new Map(),
       update: new Map(),
@@ -476,7 +473,11 @@ class EventsPool {
       }
     } else if (e.eventType === EventType.BridgeRouterReceive) {
       const [origin, nonce] = e.originAndNonce();
-      const key = `${origin};${nonce}`;
+      const eventData = e.eventData as Receive;
+
+      const key = `${origin};${nonce};${
+        eventData.amount?.toHexString() || '-'
+      };${Padded.fromWhatever(eventData.recipient).valueOf()}`;
       await this.redis.hSet('receive', key, value);
       // fsLog(`store event BridgeRouterReceive ${JSON.stringify(e.toObject())} {origin:${origin},nonce:${nonce}}`, )
     } else if (e.eventType === EventType.ReplicaProcess) {
@@ -526,8 +527,12 @@ class EventsPool {
   async getReceive(
     origin: number,
     nonce: number,
+    amount: BigNumber | undefined,
+    recipient: Padded | undefined,
   ): Promise<NomadishEvent | null> {
-    const key = `${origin};${nonce}`;
+    const key = `${origin};${nonce};${amount?.toHexString() || '-'};${
+      recipient?.valueOf() || '-'
+    }`;
     const value = await this.redis.hGet('receive', key);
     if (!value) return null;
 
@@ -688,6 +693,8 @@ export class ProcessorV2 extends Consumer {
     const event: NomadishEvent | null = await this.pool.getReceive(
       m.origin,
       m.nonce,
+      m.amount(),
+      m.recipient(),
     );
     // fsLog(`checkAndUpdateReceive with messageHash , event found: ${!!event} {hash:${m.messageHash}}`)
     if (event) {
@@ -725,7 +732,7 @@ export class ProcessorV2 extends Consumer {
     const logger = this.logger.child({ eventName: 'updated' });
     const oldRoot = (e.eventData as Update).oldRoot;
     const ms = await this.getMsgsByOriginAndRoot(e.domain, oldRoot);
-    fsLog(`HomeUpdate actually happened {root:${oldRoot},origin:${e.domain}}`);
+    // fsLog(`HomeUpdate actually happened {root:${oldRoot},origin:${e.domain}}`);
 
     // IMPORTANT! we still store the event for update and relay even though it is already appliable, but it needs to be checked for dups
     await this.pool.storeEvent(e);
@@ -749,9 +756,9 @@ export class ProcessorV2 extends Consumer {
   async replicaUpdate(e: NomadishEvent) {
     const logger = this.logger.child({ eventName: 'relayed' });
     const oldRoot = (e.eventData as Update).oldRoot;
-    fsLog(
-      `ReplicaUpdate actually happened {root:${oldRoot},origin:${e.domain}}`,
-    );
+    // fsLog(
+    //   `ReplicaUpdate actually happened {root:${oldRoot},origin:${e.domain}}`,
+    // );
     const ms = await this.getMsgsByOriginAndRoot(e.replicaOrigin, oldRoot);
 
     // IMPORTANT! we still store the event for update and relay even though it is already appliable, but it needs to be checked for dups
