@@ -464,6 +464,9 @@ export class Indexer {
   }
 
   async updateAll(replicas: number[]) {
+    this.logger.info(
+      `Starting to update all with persist: ${this.persistance.height}, lastBlock: ${this.lastBlock}`,
+    );
     let from = Math.max(
       this.lastBlock + 1,
       this.persistance.height,

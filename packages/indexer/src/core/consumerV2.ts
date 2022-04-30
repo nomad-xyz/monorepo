@@ -1,5 +1,5 @@
 import { parseAction } from '@nomad-xyz/sdk-govern';
-import {  parseMessage } from '@nomad-xyz/sdk';
+import { parseMessage } from '@nomad-xyz/sdk';
 import {
   BridgeContext,
   parseBody,

@@ -129,11 +129,9 @@ export async function run(o: Orchestrator, logger: Logger) {
     for (const { domain, block } of heights) {
       const indexer = o.indexers.get(domain);
       if (!indexer) {
-        return res
-          .status(404)
-          .json({
-            error: `Indexer for domain ${domain} not found, please check the query`,
-          });
+        return res.status(404).json({
+          error: `Indexer for domain ${domain} not found, please check the query`,
+        });
       }
 
       indexer.setForceFrom(block);

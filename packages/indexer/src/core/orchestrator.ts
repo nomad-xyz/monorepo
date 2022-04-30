@@ -8,7 +8,7 @@ import { eventTypeToOrder, NomadishEvent } from './event';
 import { Indexer } from './indexer';
 import { IndexerCollector } from './metrics';
 import { RedisClient } from './types';
-import {  sleep } from './utils';
+import { sleep } from './utils';
 
 const TBD = !!process.env.TBD && process.env.TBD !== '';
 
@@ -64,6 +64,7 @@ export class Orchestrator {
   logger: Logger;
   db: DB;
   redis?: RedisClient;
+  forbiddenDomains: number[];
 
   constructor(
     sdk: BridgeContext,
@@ -84,6 +85,7 @@ export class Orchestrator {
     this.logger = logger;
     this.db = db;
     this.redis = redis;
+    this.forbiddenDomains = [2019844457];
   }
 
   async init() {
@@ -99,9 +101,15 @@ export class Orchestrator {
     await this.collectStatistics();
   }
 
+  get allowedDomains(): number[] {
+    return this.sdk.domainNumbers.filter(
+      (domain) => !this.forbiddenDomains.includes(domain),
+    );
+  }
+
   async checkAllIntegrity(): Promise<void> {
     await Promise.all(
-      this.sdk.domainNumbers.map(async (domain: number) => {
+      this.allowedDomains.map(async (domain: number) => {
         const indexer = this.indexers.get(domain)!;
         await indexer.dummyTestEventsIntegrity();
       }),
@@ -111,7 +119,7 @@ export class Orchestrator {
   async indexAllUnrelated(): Promise<void> {
     let finished = false;
 
-    const promises = this.sdk.domainNumbers.map(async (domain: number) => {
+    const promises = this.allowedDomains.map(async (domain: number) => {
       while (!finished) {
         try {
           const eventsForDomain = await this.index(domain);
@@ -163,7 +171,7 @@ export class Orchestrator {
   async indexAllRelated(): Promise<number> {
     const events = (
       await Promise.all(
-        this.sdk.domainNumbers.map((domain: number) => this.index(domain)),
+        this.allowedDomains.map((domain: number) => this.index(domain)),
       )
     ).flat();
     events.sort((a, b) => {
@@ -183,7 +191,7 @@ export class Orchestrator {
 
     let replicas = [];
     if (domain === this.gov) {
-      replicas = this.sdk.domainNumbers.filter((d) => d != this.gov);
+      replicas = this.allowedDomains.filter((d) => d != this.gov);
     } else {
       replicas = [this.gov];
     }
@@ -194,7 +202,7 @@ export class Orchestrator {
   async collectStatistics() {
     const stats = await this.consumer.stats();
 
-    this.sdk.domainNumbers.forEach(async (domain: number) => {
+    this.allowedDomains.forEach(async (domain: number) => {
       const network = this.domain2name(domain);
       try {
         const s = stats.forDomain(domain).counts;
@@ -213,7 +221,7 @@ export class Orchestrator {
 
   async checkAllHealth() {
     await Promise.all(
-      this.sdk.domainNumbers.map(async (domain: number) => {
+      this.allowedDomains.map(async (domain: number) => {
         await this.checkHealth(domain);
       }),
     );
@@ -245,7 +253,7 @@ export class Orchestrator {
   }
 
   async initIndexers() {
-    for (const domain of this.sdk.domainNumbers) {
+    for (const domain of this.allowedDomains) {
       const indexer = new Indexer(domain, this.sdk, this, this.redis);
       await indexer.init();
       this.indexers.set(domain, indexer);
@@ -253,7 +261,7 @@ export class Orchestrator {
   }
 
   async initHealthCheckers() {
-    for (const domain of this.sdk.domainNumbers) {
+    for (const domain of this.allowedDomains) {
       const checker = new HomeHealth(
         domain,
         this.sdk,
@@ -411,7 +419,7 @@ export class Orchestrator {
   }
 
   reportAllMetrics() {
-    for (const domain of this.sdk.domainNumbers) {
+    for (const domain of this.allowedDomains) {
       const network = this.domain2name(domain);
       this.metrics.setHomeState(
         network,
