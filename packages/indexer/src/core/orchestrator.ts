@@ -10,8 +10,6 @@ import { IndexerCollector } from './metrics';
 import { RedisClient } from './types';
 import { sleep } from './utils';
 
-const TBD = !!process.env.TBD && process.env.TBD !== '';
-
 class HomeHealth {
   home: Home;
   domain: number;
@@ -411,11 +409,8 @@ export class Orchestrator {
   }
 
   async startConsuming() {
-    if (TBD) {
-      await this.consumeUnrelated();
-    } else {
-      await this.consumeRelated();
-    }
+    await this.consumeUnrelated();
+    // await this.consumeRelated();
   }
 
   reportAllMetrics() {
