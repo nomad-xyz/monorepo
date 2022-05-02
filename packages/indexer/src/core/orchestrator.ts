@@ -10,6 +10,20 @@ import { IndexerCollector } from './metrics';
 import { RedisClient } from './types';
 import { sleep } from './utils';
 
+interface TbdPackage {
+  ts: Date;
+  domain: number;
+  error: Error;
+}
+class OrchestratorError extends Error {
+  errors: TbdPackage[];
+
+  constructor(msg: string, errors: TbdPackage[]) {
+    super(msg);
+    this.errors = errors;
+  }
+}
+
 class HomeHealth {
   home: Home;
   domain: number;
@@ -114,9 +128,9 @@ export class Orchestrator {
     );
   }
 
-  async indexAllUnrelated(): Promise<[number, Date, any][]> {
+  async indexAllUnrelated(): Promise<void> {
     let finished = false;
-    const errors: [number, Date, any][] = [];
+    const errors: TbdPackage[] = [];
 
     const promises = this.allowedDomains.map(async (domain: number) => {
       while (!finished) {
@@ -141,12 +155,15 @@ export class Orchestrator {
           this.reportAllMetrics();
 
           // await sleep(5000);
-        } catch (e) {
+        } catch (e: any) {
           this.logger.error(`Error at Indexing ${domain}`, e);
           await sleep(5000);
-          errors.push([domain, new Date(), e]);
-          if (errors.length >= 100) {
-            finished = true;
+          errors.push({ domain, ts: new Date(), error: e });
+          if (errors.length >= this.allowedDomains.length * 5) {
+            throw new OrchestratorError(
+              `Too many errors in indexer(s)`,
+              errors,
+            );
           }
           // finished = true;
         }
@@ -171,7 +188,7 @@ export class Orchestrator {
     // await this.consumer.consume(events);
     await Promise.all(promises);
 
-    return errors;
+    return;
   }
 
   async indexAllRelated(): Promise<number> {
@@ -382,19 +399,26 @@ export class Orchestrator {
   async consumeUnrelated() {
     this.logger.info(`Started to index`);
     const start = new Date().valueOf();
-    const errors = await this.indexAllUnrelated();
+    try {
+      await this.indexAllUnrelated();
+    } catch (e) {
+      if (e instanceof OrchestratorError) {
+        // TODO: something with it
+        this.logger.error(
+          `Orchestrator cought many indexer's errors:`,
+          e.errors,
+        );
+      }
+      this.logger.error(`Some error cought:`, e);
+
+      process.exit(1);
+    }
+
     this.logger.info(
       `Finished reindexing after ${
         (new Date().valueOf() - start) / 1000
       } seconds`,
     );
-
-    if (errors.length > 0) {
-      this.logger.error(`Collected errors in multiple indexers:`, errors);
-      process.exit(1);
-    }
-
-    process.exit(0);
   }
 
   async consumeRelated() {

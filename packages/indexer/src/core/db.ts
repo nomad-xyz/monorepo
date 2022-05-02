@@ -133,15 +133,17 @@ export class DB {
     );
   }
 
-  async getMessageByOriginAndNonce(
+  async getMsgByOriginNonceAndDestination(
     origin: number,
     nonce: number,
+    destination: number,
   ): Promise<NomadMessage | null> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const message = await this.client.messages.findFirst({
       where: {
         origin,
         nonce,
+        destination: destination,
       },
     });
     return message

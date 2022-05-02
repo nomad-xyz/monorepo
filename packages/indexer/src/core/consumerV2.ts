@@ -473,11 +473,8 @@ class EventsPool {
       }
     } else if (e.eventType === EventType.BridgeRouterReceive) {
       const [origin, nonce] = e.originAndNonce();
-      const eventData = e.eventData as Receive;
 
-      const key = `${origin};${nonce};${
-        eventData.amount?.toHexString() || '-'
-      };${Padded.fromWhatever(eventData.recipient).valueOf()}`;
+      const key = `${origin};${nonce};${e.domain}`;
       await this.redis.hSet('receive', key, value);
       // fsLog(`store event BridgeRouterReceive ${JSON.stringify(e.toObject())} {origin:${origin},nonce:${nonce}}`, )
     } else if (e.eventType === EventType.ReplicaProcess) {
@@ -527,12 +524,9 @@ class EventsPool {
   async getReceive(
     origin: number,
     nonce: number,
-    amount: BigNumber | undefined,
-    recipient: Padded | undefined,
+    destination: number,
   ): Promise<NomadishEvent | null> {
-    const key = `${origin};${nonce};${amount?.toHexString() || '-'};${
-      recipient?.valueOf() || '-'
-    }`;
+    const key = `${origin};${nonce};${destination}`;
     const value = await this.redis.hGet('receive', key);
     if (!value) return null;
 
@@ -693,8 +687,7 @@ export class ProcessorV2 extends Consumer {
     const event: NomadishEvent | null = await this.pool.getReceive(
       m.origin,
       m.nonce,
-      m.amount(),
-      m.recipient(),
+      m.destination,
     );
     // fsLog(`checkAndUpdateReceive with messageHash , event found: ${!!event} {hash:${m.messageHash}}`)
     if (event) {
@@ -830,7 +823,10 @@ export class ProcessorV2 extends Consumer {
   }
 
   async bridgeRouterReceive(e: NomadishEvent) {
-    const m = await this.getMsgByOriginAndNonce(...e.originAndNonce());
+    const m = await this.getMsgByOriginNonceAndDestination(
+      ...e.originAndNonce(),
+      e.domain,
+    );
     const logger = this.logger.child({ eventName: 'bridgeReceived' });
 
     if (m) {
@@ -881,11 +877,16 @@ export class ProcessorV2 extends Consumer {
     return await this.db.getMessagesByOriginAndRoot(origin, root);
   }
 
-  async getMsgByOriginAndNonce(
+  async getMsgByOriginNonceAndDestination(
     origin: number,
     nonce: number,
+    destination: number,
   ): Promise<NomadMessage | null> {
-    return await this.db.getMessageByOriginAndNonce(origin, nonce);
+    return await this.db.getMsgByOriginNonceAndDestination(
+      origin,
+      nonce,
+      destination,
+    );
   }
 
   async stats(): Promise<Statistics> {
