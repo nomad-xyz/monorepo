@@ -592,7 +592,7 @@ export class Indexer {
       this.logger.debug(
         `Fetched batch for domain ${this.domain}. Blocks: ${
           batchTo - batchFrom + 1
-        } (${speed}b/sec). Got events: ${filteredEvents.length}`,
+        } (${speed.toFixed(1)}b/sec). Got events: ${filteredEvents.length}`,
       );
       if (batchTo >= to) break;
       batchFrom = batchTo + 1;
@@ -618,7 +618,7 @@ export class Indexer {
     this.logger.info(
       `Fetched all for domain ${this.domain}. Blocks: ${
         to - from + 1
-      } (${speed}b/sec). Got events: ${allEventsUnique.length}`,
+      } (${speed.toFixed(1)}b/sec). Got events: ${allEventsUnique.length}`,
     );
     this.lastBlock = to;
 

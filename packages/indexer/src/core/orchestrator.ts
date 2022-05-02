@@ -114,8 +114,9 @@ export class Orchestrator {
     );
   }
 
-  async indexAllUnrelated(): Promise<void> {
+  async indexAllUnrelated(): Promise<[number, Date, any][]> {
     let finished = false;
+    const errors: [number, Date, any][] = [];
 
     const promises = this.allowedDomains.map(async (domain: number) => {
       while (!finished) {
@@ -139,13 +140,20 @@ export class Orchestrator {
           if (eventsForDomain.length) await this.collectStatistics();
           this.reportAllMetrics();
 
-          await sleep(5000);
+          // await sleep(5000);
         } catch (e) {
           this.logger.error(`Error at Indexing ${domain}`, e);
-          finished = true;
+          await sleep(5000);
+          errors.push([domain, new Date(), e]);
+          if (errors.length >= 100) {
+            finished = true;
+          }
+          // finished = true;
         }
       }
     });
+
+    // return errors;
 
     // const events = (
     //   await Promise.all(
@@ -163,7 +171,7 @@ export class Orchestrator {
     // await this.consumer.consume(events);
     await Promise.all(promises);
 
-    return;
+    return errors;
   }
 
   async indexAllRelated(): Promise<number> {
@@ -374,12 +382,19 @@ export class Orchestrator {
   async consumeUnrelated() {
     this.logger.info(`Started to index`);
     const start = new Date().valueOf();
-    await this.indexAllUnrelated();
+    const errors = await this.indexAllUnrelated();
     this.logger.info(
       `Finished reindexing after ${
         (new Date().valueOf() - start) / 1000
       } seconds`,
     );
+
+    if (errors.length > 0) {
+      this.logger.error(`Collected errors in multiple indexers:`, errors);
+      process.exit(1);
+    }
+
+    process.exit(0);
   }
 
   async consumeRelated() {
