@@ -630,7 +630,7 @@ export class Indexer {
         
       }
       
-    } while (tries >= 3 || passed);
+    } while (tries < 3 && !passed);
 
     const finishedAll = new Date();
     const speed = blockSpeed(from, to, startAll, finishedAll);
