@@ -1,7 +1,7 @@
 import * as core from './core';
 import * as api from './api';
 import { DB } from './core/db';
-import { createLogger } from './core/utils';
+import { BunyanLevel, createLogger } from './core/utils';
 import { IndexerCollector } from './core/metrics';
 import { getSdk } from './core/sdk';
 import { startTokenUpdater } from './tokens';
@@ -12,9 +12,10 @@ export type Program = 'api' | 'core';
 const environment = process.env.ENVIRONMENT! as NomadEnvironment;
 const configOverrideLocation = process.env.CONFIG_OVERRIDE_LOCATION;
 const program = process.env.PROGRAM! as Program;
+const logLevel = (process.env.LOG_LEVEL || 'debug') as BunyanLevel;
 
 (async () => {
-  const logger = createLogger('indexer', environment);
+  const logger = createLogger('indexer', environment, logLevel);
   const m = new IndexerCollector(environment, logger);
 
   const sdk = await getSdk(configOverrideLocation || environment);

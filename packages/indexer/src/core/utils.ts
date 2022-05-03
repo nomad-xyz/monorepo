@@ -110,11 +110,20 @@ export function hash(...vals: string[]): string {
   return hash.digest('hex');
 }
 
-export function createLogger(name: string, environment: string) {
+export enum BunyanLevel {
+  FATAL = "fatal",
+  ERROR = "error",
+  WARN = "warn",
+  INFO = "info",
+  DEBUG = "debug",
+  TRACE = "trace",
+}
+
+export function createLogger(name: string, environment: string, level?: BunyanLevel) {
   return Logger.createLogger({
     name,
     serializers: Logger.stdSerializers,
-    level: 'debug',
+    level: level || 'debug',
     environment: environment,
   });
 }
