@@ -452,7 +452,7 @@ export class Indexer {
   }
 
   get deployHeight(): number {
-    return this.sdk.mustGetBridge(this.domain).deployHeight
+    return this.sdk.mustGetBridge(this.domain).deployHeight;
   }
 
   home(): Home {
@@ -534,7 +534,6 @@ export class Indexer {
     this.targetTo = to;
 
     do {
-  
       const fetchEvents = async (
         from: number,
         to: number,
@@ -544,36 +543,37 @@ export class Indexer {
           await Promise.all(replicas.map((r) => this.fetchReplica(r, from, to)))
         ).flat();
         const bridgeRouterEvents = await this.fetchBridgeRouter(from, to);
-  
+
         return [...homeEvents, ...replicasEvents, ...bridgeRouterEvents];
       };
-  
+
       const allEvents: NomadishEvent[] = [];
-  
+
       const domain2batchSize = new Map([
         [1650811245, 500],
         [6648936, 5000],
       ]);
-  
+
       const batchSize = domain2batchSize.get(this.domain) || BATCH_SIZE;
       let batchFrom = from;
       let batchTo = Math.min(to, from + batchSize);
-      
-  
+
       while (true) {
         const done = Math.floor(((batchTo - from + 1) / (to - from + 1)) * 100);
         this.logger.debug(
           `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`,
         );
-  
+
         const insuredBatchFrom = batchFrom - FROM_BLOCK_LAG;
-  
+
         const startBatch = new Date();
         const events = await fetchEvents(insuredBatchFrom, batchTo);
         const finishBatch = new Date();
         if (!events) throw new Error(`KEk`);
         events.sort((a, b) =>
-          a.ts === b.ts ? eventTypeToOrder(a) - eventTypeToOrder(b) : a.ts - b.ts,
+          a.ts === b.ts
+            ? eventTypeToOrder(a) - eventTypeToOrder(b)
+            : a.ts - b.ts,
         );
         await this.persistance.store(...events);
         this.lastBlock = batchTo;
@@ -610,11 +610,9 @@ export class Indexer {
         batchFrom = batchTo + 1;
         batchTo = Math.min(to, batchFrom + batchSize);
       }
-  
-      
-  
+
       if (!allEvents) throw new Error('kek');
-  
+
       allEvents.sort((a, b) => {
         if (a.ts === b.ts) {
           return eventTypeToOrder(a) - eventTypeToOrder(b);
@@ -622,28 +620,27 @@ export class Indexer {
           return a.ts - b.ts;
         }
       });
-  
+
       allEventsUnique = onlyUniqueEvents(allEvents);
-  
+
       try {
         tries += 1;
         this.dummyTestEventsIntegrity();
         passed = true;
-      } catch(e) {
+      } catch (e) {
         this.logger.warn(`Dummy test not passed:`, e);
         from -= batchSize;
       }
-      
     } while (tries < 10 && !passed);
 
     const finishedAll = new Date();
     const speed = blockSpeed(from, to, startAll, finishedAll);
-      this.logger.info(
-        `Fetched all for domain ${this.domain}. Blocks: ${
-          to - from + 1
-        } (${speed.toFixed(1)}b/sec). Got events: ${allEventsUnique.length}`,
-      );
-      this.lastBlock = to;
+    this.logger.info(
+      `Fetched all for domain ${this.domain}. Blocks: ${
+        to - from + 1
+      } (${speed.toFixed(1)}b/sec). Got events: ${allEventsUnique.length}`,
+    );
+    this.lastBlock = to;
 
     return allEventsUnique;
   }

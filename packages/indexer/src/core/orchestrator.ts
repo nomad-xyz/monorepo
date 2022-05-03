@@ -125,8 +125,8 @@ export class Orchestrator {
         const indexer = this.indexers.get(domain)!;
         try {
           await indexer.dummyTestEventsIntegrity();
-        } catch(e) {
-          indexer.setForceFrom(indexer.deployHeight)
+        } catch (e) {
+          indexer.setForceFrom(indexer.deployHeight);
         }
       }),
     );
