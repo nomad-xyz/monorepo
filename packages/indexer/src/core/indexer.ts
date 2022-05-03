@@ -464,6 +464,10 @@ export class Indexer {
   }
 
   async updateAll(replicas: number[]) {
+    let tries = 0;
+    let passed = true;
+    let allEventsUnique: NomadishEvent[] = [];
+
     this.logger.info(
       `Starting to update all with persist: ${this.persistance.height}, lastBlock: ${this.lastBlock}`,
     );
@@ -519,108 +523,123 @@ export class Indexer {
       return [];
     }
 
-    this.targetTo = to;
-
     this.logger.info(`Fetching events for from: ${from}, to: ${to}`);
 
-    const fetchEvents = async (
-      from: number,
-      to: number,
-    ): Promise<NomadishEvent[]> => {
-      const homeEvents = await this.fetchHome(from, to);
-      const replicasEvents = (
-        await Promise.all(replicas.map((r) => this.fetchReplica(r, from, to)))
-      ).flat();
-      const bridgeRouterEvents = await this.fetchBridgeRouter(from, to);
-
-      return [...homeEvents, ...replicasEvents, ...bridgeRouterEvents];
-    };
-
-    const allEvents: NomadishEvent[] = [];
-
-    const domain2batchSize = new Map([
-      [1650811245, 500],
-      [6648936, 5000],
-    ]);
-
-    const batchSize = domain2batchSize.get(this.domain) || BATCH_SIZE;
-    let batchFrom = from;
-    let batchTo = Math.min(to, from + batchSize);
     const startAll = new Date();
 
-    while (true) {
-      const done = Math.floor(((batchTo - from + 1) / (to - from + 1)) * 100);
-      this.logger.debug(
-        `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`,
-      );
+    this.targetTo = to;
 
-      const insuredBatchFrom = batchFrom - FROM_BLOCK_LAG;
-
-      const startBatch = new Date();
-      const events = await fetchEvents(insuredBatchFrom, batchTo);
-      const finishBatch = new Date();
-      if (!events) throw new Error(`KEk`);
-      events.sort((a, b) =>
-        a.ts === b.ts ? eventTypeToOrder(a) - eventTypeToOrder(b) : a.ts - b.ts,
-      );
-      await this.persistance.store(...events);
-      this.lastBlock = batchTo;
-      try {
-        if (this.develop) {
-          this.dummyTestEventsIntegrity(batchTo);
-          this.logger.debug(
-            `Integrity test PASSED between ${insuredBatchFrom} and ${batchTo}`,
-          );
-        }
-      } catch (e) {
-        const pastFrom = batchFrom;
-        const pastTo = batchTo;
-        batchFrom = batchFrom - batchSize / 2;
-        batchTo = batchFrom + batchSize;
-        this.logger.warn(
-          `Integrity test not passed between ${pastFrom} and ${pastTo}, recollecting between ${batchFrom} and ${batchTo}: ${e}`,
+    do {
+  
+      const fetchEvents = async (
+        from: number,
+        to: number,
+      ): Promise<NomadishEvent[]> => {
+        const homeEvents = await this.fetchHome(from, to);
+        const replicasEvents = (
+          await Promise.all(replicas.map((r) => this.fetchReplica(r, from, to)))
+        ).flat();
+        const bridgeRouterEvents = await this.fetchBridgeRouter(from, to);
+  
+        return [...homeEvents, ...replicasEvents, ...bridgeRouterEvents];
+      };
+  
+      const allEvents: NomadishEvent[] = [];
+  
+      const domain2batchSize = new Map([
+        [1650811245, 500],
+        [6648936, 5000],
+      ]);
+  
+      const batchSize = domain2batchSize.get(this.domain) || BATCH_SIZE;
+      let batchFrom = from;
+      let batchTo = Math.min(to, from + batchSize);
+      
+  
+      while (true) {
+        const done = Math.floor(((batchTo - from + 1) / (to - from + 1)) * 100);
+        this.logger.debug(
+          `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`,
         );
-        continue;
+  
+        const insuredBatchFrom = batchFrom - FROM_BLOCK_LAG;
+  
+        const startBatch = new Date();
+        const events = await fetchEvents(insuredBatchFrom, batchTo);
+        const finishBatch = new Date();
+        if (!events) throw new Error(`KEk`);
+        events.sort((a, b) =>
+          a.ts === b.ts ? eventTypeToOrder(a) - eventTypeToOrder(b) : a.ts - b.ts,
+        );
+        await this.persistance.store(...events);
+        this.lastBlock = batchTo;
+        try {
+          if (this.develop) {
+            this.dummyTestEventsIntegrity(batchTo);
+            this.logger.debug(
+              `Integrity test PASSED between ${insuredBatchFrom} and ${batchTo}`,
+            );
+          }
+        } catch (e) {
+          const pastFrom = batchFrom;
+          const pastTo = batchTo;
+          batchFrom = batchFrom - batchSize / 2;
+          batchTo = batchFrom + batchSize;
+          this.logger.warn(
+            `Integrity test not passed between ${pastFrom} and ${pastTo}, recollecting between ${batchFrom} and ${batchTo}: ${e}`,
+          );
+          continue;
+        }
+        const filteredEvents = events.filter((newEvent) =>
+          allEvents.every(
+            (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash(),
+          ),
+        );
+        allEvents.push(...filteredEvents);
+        const speed = blockSpeed(batchFrom, batchTo, startBatch, finishBatch);
+        this.logger.debug(
+          `Fetched batch for domain ${this.domain}. Blocks: ${
+            batchTo - batchFrom + 1
+          } (${speed.toFixed(1)}b/sec). Got events: ${filteredEvents.length}`,
+        );
+        if (batchTo >= to) break;
+        batchFrom = batchTo + 1;
+        batchTo = Math.min(to, batchFrom + batchSize);
       }
-      const filteredEvents = events.filter((newEvent) =>
-        allEvents.every(
-          (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash(),
-        ),
-      );
-      allEvents.push(...filteredEvents);
-      const speed = blockSpeed(batchFrom, batchTo, startBatch, finishBatch);
-      this.logger.debug(
-        `Fetched batch for domain ${this.domain}. Blocks: ${
-          batchTo - batchFrom + 1
-        } (${speed.toFixed(1)}b/sec). Got events: ${filteredEvents.length}`,
-      );
-      if (batchTo >= to) break;
-      batchFrom = batchTo + 1;
-      batchTo = Math.min(to, batchFrom + batchSize);
-    }
+  
+      
+  
+      if (!allEvents) throw new Error('kek');
+  
+      allEvents.sort((a, b) => {
+        if (a.ts === b.ts) {
+          return eventTypeToOrder(a) - eventTypeToOrder(b);
+        } else {
+          return a.ts - b.ts;
+        }
+      });
+  
+      allEventsUnique = onlyUniqueEvents(allEvents);
+  
+      try {
+        tries += 1;
+        this.dummyTestEventsIntegrity();
+        passed = true;
+      } catch(e) {
+        this.logger.warn(`Dummy test not passed:`, e);
+        
+      }
+      
+    } while (tries >= 3 || passed);
 
     const finishedAll = new Date();
-
-    if (!allEvents) throw new Error('kek');
-
-    allEvents.sort((a, b) => {
-      if (a.ts === b.ts) {
-        return eventTypeToOrder(a) - eventTypeToOrder(b);
-      } else {
-        return a.ts - b.ts;
-      }
-    });
-
-    const allEventsUnique = onlyUniqueEvents(allEvents);
-
-    if (this.develop || true) this.dummyTestEventsIntegrity();
     const speed = blockSpeed(from, to, startAll, finishedAll);
-    this.logger.info(
-      `Fetched all for domain ${this.domain}. Blocks: ${
-        to - from + 1
-      } (${speed.toFixed(1)}b/sec). Got events: ${allEventsUnique.length}`,
-    );
-    this.lastBlock = to;
+      this.logger.info(
+        `Fetched all for domain ${this.domain}. Blocks: ${
+          to - from + 1
+        } (${speed.toFixed(1)}b/sec). Got events: ${allEventsUnique.length}`,
+      );
+      this.lastBlock = to;
 
     return allEventsUnique;
   }
