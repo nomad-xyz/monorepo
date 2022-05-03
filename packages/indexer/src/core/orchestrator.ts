@@ -97,7 +97,7 @@ export class Orchestrator {
     this.logger = logger;
     this.db = db;
     this.redis = redis;
-    this.forbiddenDomains = [2019844457];
+    this.forbiddenDomains = []; // 2019844457
   }
 
   async init() {
