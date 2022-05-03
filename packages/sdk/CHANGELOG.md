@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- fix: make paginated event querying use the new config layout
+
 ### 2.0.0-rc.10
 
 - feature: process function for NomadContext/NomadMessage
