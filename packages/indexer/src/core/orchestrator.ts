@@ -123,7 +123,11 @@ export class Orchestrator {
     await Promise.all(
       this.allowedDomains.map(async (domain: number) => {
         const indexer = this.indexers.get(domain)!;
-        await indexer.dummyTestEventsIntegrity();
+        try {
+          await indexer.dummyTestEventsIntegrity();
+        } catch(e) {
+          indexer.setForceFrom(indexer.deployHeight)
+        }
       }),
     );
   }

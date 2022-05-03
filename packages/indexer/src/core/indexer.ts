@@ -451,6 +451,10 @@ export class Indexer {
     return this.persistance.from;
   }
 
+  get deployHeight(): number {
+    return this.sdk.mustGetBridge(this.domain).deployHeight
+  }
+
   home(): Home {
     return this.sdk.getCore(this.domain)!.home;
   }
@@ -474,7 +478,7 @@ export class Indexer {
     let from = Math.max(
       this.lastBlock + 1,
       this.persistance.height,
-      this.sdk.getBridge(this.domain)?.deployHeight || 0,
+      this.deployHeight,
     );
 
     if (this.forceFrom !== -1) {
@@ -627,10 +631,10 @@ export class Indexer {
         passed = true;
       } catch(e) {
         this.logger.warn(`Dummy test not passed:`, e);
-        
+        from -= batchSize;
       }
       
-    } while (tries < 3 && !passed);
+    } while (tries < 10 && !passed);
 
     const finishedAll = new Date();
     const speed = blockSpeed(from, to, startAll, finishedAll);
