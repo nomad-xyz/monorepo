@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### 1.0.0-rc.13
+
+- fix: allow max balance send
+
 ### 1.0.0-rc.12
 
 - fix: increase gas more

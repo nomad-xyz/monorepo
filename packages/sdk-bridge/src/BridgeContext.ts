@@ -266,10 +266,11 @@ export class BridgeContext extends NomadContext {
 
     const approved = await fromToken.allowance(senderAddress, bridgeAddress);
     // Approve if necessary
-    if (approved.lt(amount)) {
-      const tx = await fromToken.approve(bridgeAddress, amount, overrides);
-      await tx.wait();
+    if (approved.gt(amount)) {
+      throw new Error('Not enough funds for transfer');
     }
+    const approval = await fromToken.approve(bridgeAddress, amount, overrides);
+    await approval.wait();
 
     const tx = await fromBridge.bridgeRouter.populateTransaction.send(
       fromToken.address,
