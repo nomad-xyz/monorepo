@@ -95,7 +95,7 @@ const BATCH_SIZE = process.env.BATCH_SIZE
   : 2000;
 const RETRIES = 100;
 const TO_BLOCK_LAG = 1;
-const FROM_BLOCK_LAG = 2;
+const FROM_BLOCK_LAG = 40;
 
 export class Indexer {
   domain: number;
