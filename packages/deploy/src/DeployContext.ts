@@ -161,11 +161,9 @@ export class DeployContext extends MultiProvider<config.Domain> {
     const core = new CoreContracts(this, domain.name);
     await core.recordStartBlock();
 
-    await Promise.all([
-      core.deployUpgradeBeaconController(),
-      core.deployUpdaterManager(),
-      core.deployXAppConnectionManager(),
-    ]);
+    await core.deployUpgradeBeaconController();
+    await core.deployUpdaterManager();
+    await core.deployXAppConnectionManager();
 
     await core.deployHome();
     await core.deployGovernanceRouter();
@@ -222,12 +220,10 @@ export class DeployContext extends MultiProvider<config.Domain> {
         this._callBatch.append(firstReplicaTxns);
 
         // perform subsequent replica deploys concurrently (will use same implementation and beacon)
-        await Promise.all(
-          restDomains.map(async (remote) => {
-            const batch = await core.enrollRemote(remote);
-            if (batch) this._callBatch.append(batch);
-          }),
-        );
+        for (const remote of restDomains) {
+          const batch = await core.enrollRemote(remote);
+          if (batch) this._callBatch.append(batch);
+        }
       }),
     );
   }
@@ -250,12 +246,11 @@ export class DeployContext extends MultiProvider<config.Domain> {
         const remoteDomains = this.data.protocol.networks[name]?.connections;
         // the following "unreachable" error performs type-narrowing for the compiler
         if (!remoteDomains) throw new utils.UnreachableError();
-        await Promise.all(
-          remoteDomains.map(async (remote) => {
-            const batch = await bridge.enrollBridgeRouter(remote);
-            if (batch) this._callBatch.append(batch);
-          }),
-        );
+
+        for (const remote of remoteDomains) {
+          const batch = await bridge.enrollBridgeRouter(remote);
+          if (batch) this._callBatch.append(batch);
+        }
 
         // deploy and enroll custom tokens
         const customs = await bridge.deployCustomTokens();
@@ -266,12 +261,12 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
   async relinquishOwnership(): Promise<void> {
     // relinquish deployer control
-    await Promise.all([
-      ...this.networks.map((network) => this.mustGetCore(network).relinquish()),
-      ...this.networks.map((network) =>
-        this.mustGetBridge(network).relinquish(),
-      ),
-    ]);
+    await Promise.all(
+      this.networks.map((network) => this.mustGetCore(network).relinquish()),
+    );
+    await Promise.all(
+      this.networks.map((network) => this.mustGetBridge(network).relinquish()),
+    );
   }
 
   // Intended entrypoint.
