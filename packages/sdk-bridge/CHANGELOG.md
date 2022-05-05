@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- fix: hard code gas limit for sendNative
+
 ### 1.0.0-rc.12
 
 - fix: increase gas more
