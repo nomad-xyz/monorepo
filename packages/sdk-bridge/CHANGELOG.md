@@ -5,6 +5,7 @@
 ### 1.0.0-rc.13
 
 - fix: hard code gas limit for sendNative
+- chore: bump configuration to v0.1.0-rc.18
 
 ### 1.0.0-rc.12
 
