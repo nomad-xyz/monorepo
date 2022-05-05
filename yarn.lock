@@ -1652,13 +1652,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/configuration@npm:^0.1.0-rc.15":
-  version: 0.1.0-rc.15
-  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.15"
-  checksum: 62bbaa74c45683616013e9f8e5560234935be4b02e0bb6c74affd11738ff20d34ac00dd1774f661df421b4f6a34ffa21262a4c659947d2725c713e18093e6948
-  languageName: node
-  linkType: hard
-
 "@nomad-xyz/configuration@npm:^0.1.0-rc.16":
   version: 0.1.0-rc.16
   resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.16"
@@ -1777,7 +1770,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/deploy@workspace:packages/deploy"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.15
+    "@nomad-xyz/configuration": ^0.1.0-rc.18
     "@nomad-xyz/contracts-bridge": "workspace:^"
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/contracts-router": "workspace:^"
