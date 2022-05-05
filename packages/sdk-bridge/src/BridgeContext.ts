@@ -279,8 +279,7 @@ export class BridgeContext extends NomadContext {
       enableFast,
       overrides,
     );
-    // kludge: double average gas usage
-    tx.gasLimit = BigNumber.from(500000);
+    tx.gasLimit = BigNumber.from(350000);
     const dispatch = await this.mustGetSigner(from).sendTransaction(tx);
     const receipt = await dispatch.wait();
 
@@ -339,8 +338,7 @@ export class BridgeContext extends NomadContext {
       enableFast,
       overrides,
     );
-    // patch fix: increase gas limit by 50%
-    tx.gasLimit = tx.gasLimit?.mul(150).div(100);
+    tx.gasLimit = BigNumber.from(350000);
     const dispatch = await this.mustGetSigner(from).sendTransaction(tx);
     const receipt = await dispatch.wait();
 
