@@ -12,7 +12,8 @@ contract NomadTest is Test {
     address signer = vm.addr(3);
     address fakeSigner = vm.addr(4);
 
-    uint32 domain = 1000;
+    uint32 homeDomain = 1000;
+    uint32 remoteDomain = 1500;
 
     function setUp() public virtual {
         vm.label(updater, "updater");
@@ -21,7 +22,7 @@ contract NomadTest is Test {
         vm.label(fakeSigner, "fake signer");
     }
 
-    function getMessage(bytes32 oldRoot, bytes32 newRoot)
+    function getMessage(bytes32 oldRoot, bytes32 newRoot, uint32 domain)
         public
         view
         returns (bytes memory)
@@ -34,12 +35,27 @@ contract NomadTest is Test {
         return message;
     }
 
-    function signUpdate(
+    function signHomeUpdate(
         uint256 privKey,
         bytes32 oldRoot,
         bytes32 newRoot
     ) public returns (bytes memory) {
-        bytes32 digest = keccak256(getMessage(oldRoot, newRoot));
+        bytes32 digest = keccak256(getMessage(oldRoot, newRoot, homeDomain));
+        digest = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", digest)
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privKey, digest);
+        bytes memory signature = abi.encodePacked(r, s, v);
+        return signature;
+    }
+
+
+    function signRemoteUpdate(
+        uint256 privKey,
+        bytes32 oldRoot,
+        bytes32 newRoot
+    ) public returns (bytes memory) {
+        bytes32 digest = keccak256(getMessage(oldRoot, newRoot, remoteDomain));
         digest = keccak256(
             abi.encodePacked("\x19Ethereum Signed Message:\n32", digest)
         );

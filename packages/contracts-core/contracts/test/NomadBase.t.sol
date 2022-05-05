@@ -16,7 +16,7 @@ contract NomadBaseTest is NomadTest {
 
     function setUp() public override {
         super.setUp();
-        nbh = new NomadBaseHarness(domain);
+        nbh = new NomadBaseHarness(homeDomain);
         vm.expectEmit(false, false, false, true);
         emit NewUpdater(address(0), updater);
         nbh.initialize(updater);
@@ -39,21 +39,19 @@ contract NomadBaseTest is NomadTest {
     }
 
     function test_acceptUpdaterSignature() public {
-        vm.prank(updater);
-        bytes memory sig = signUpdate(updaterPK, oldRoot, newRoot);
+        bytes memory sig = signHomeUpdate(updaterPK, oldRoot, newRoot);
         assert(nbh.isUpdaterSignature(oldRoot, newRoot, sig));
     }
 
     function test_rejectNonUpdaterSignature() public {
-        vm.prank(fakeUpdater);
-        bytes memory sig = signUpdate(fakeUpdaterPK, oldRoot, newRoot);
+        bytes memory sig = signHomeUpdate(fakeUpdaterPK, oldRoot, newRoot);
         assert(nbh.isUpdaterSignature(oldRoot, newRoot, sig) == false);
     }
 
     function test_homeDomainHash() public {
         assertEq(
             nbh.homeDomainHash(),
-            keccak256(abi.encodePacked(domain, "NOMAD"))
+            keccak256(abi.encodePacked(homeDomain, "NOMAD"))
         );
     }
 
@@ -66,8 +64,8 @@ contract NomadBaseTest is NomadTest {
 
     function test_failOnDoubleUpdateProof() public {
         bytes32 newRoot2 = "new Root2";
-        bytes memory sig = signUpdate(updaterPK, oldRoot, newRoot);
-        bytes memory sig2 = signUpdate(updaterPK, oldRoot, newRoot2);
+        bytes memory sig = signHomeUpdate(updaterPK, oldRoot, newRoot);
+        bytes memory sig2 = signHomeUpdate(updaterPK, oldRoot, newRoot2);
         bytes32[2] memory roots;
         roots[0] = newRoot;
         roots[1] = newRoot2;
@@ -84,8 +82,8 @@ contract NomadBaseTest is NomadTest {
 
     function test_notFailOnInvalidDoubleUpdateProof() public {
         bytes32 newRoot2 = newRoot;
-        bytes memory sig = signUpdate(updaterPK, oldRoot, newRoot);
-        bytes memory sig2 = signUpdate(updaterPK, oldRoot, newRoot2);
+        bytes memory sig = signHomeUpdate(updaterPK, oldRoot, newRoot);
+        bytes memory sig2 = signHomeUpdate(updaterPK, oldRoot, newRoot2);
         bytes32[2] memory roots;
         roots[0] = newRoot;
         roots[1] = newRoot2;

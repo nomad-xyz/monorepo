@@ -10,13 +10,13 @@ contract HomeTest is NomadTestWithUpdaterManager {
 
     function setUp() public override {
         super.setUp();
-        home = new Home(domain);
+        home = new Home(homeDomain);
         home.initialize(IUpdaterManager(address(updaterManager)));
     }
 
     function test_homeDomain() public {
         assertEq(
-            keccak256(abi.encodePacked(domain, "NOMAD")),
+            keccak256(abi.encodePacked(homeDomain, "NOMAD")),
             home.homeDomainHash()
         );
     }
@@ -26,12 +26,31 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home.setUpdater(vm.addr(420));
     }
 
+    event Dispatch(
+        bytes32 indexed messageHash,
+        uint256 indexed leafIndex,
+        uint64 indexed destinationAndNonce,
+        bytes32 committedRoot,
+        bytes message
+    );
+
+    // TODO: Fuzzing test
+//    function test_dispatchMessage() public {
+//        uint32 destDomain = 420;
+//        bytes32 destAddr = "0xFe8874778f946Ac2990A29eba3CFd50760593B2F";
+//        bytes memory message = bytes("message");
+//        vm.expectEmit(true, true, true, true);
+//        emit Dispatch(
+//        home.dispatch(destDomain, desAddr, message);
+//
+//    }
+
     function dispatchGetRoot(
         uint32 domain,
         bytes memory message,
         bytes32 recipient
     ) public returns (bytes32 sRoot) {
-        home.dispatch(domain, recipient, message);
+        home.dispatch(homeDomain, recipient, message);
         (, sRoot) = home.suggestUpdate();
     }
 }
