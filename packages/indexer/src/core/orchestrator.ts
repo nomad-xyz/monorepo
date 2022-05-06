@@ -304,12 +304,9 @@ export class Orchestrator {
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
-        this.metrics.observeGasUsage(
-          'dispatched',
-          homeName,
-          replicaName,
-          e.gasUsed.toNumber(),
-        );
+        const g = e.gasUsed.toNumber();
+        if (g)
+          this.metrics.observeGasUsage('dispatched', homeName, replicaName, g);
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
@@ -319,18 +316,11 @@ export class Orchestrator {
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
-        this.metrics.observeLatency(
-          'updated',
-          homeName,
-          replicaName,
-          m.timings.toUpdate()!,
-        );
-        this.metrics.observeGasUsage(
-          'updated',
-          homeName,
-          replicaName,
-          e.gasUsed.toNumber(),
-        );
+        const t = m.timings.toUpdate();
+        const g = e.gasUsed.toNumber();
+        if (t) this.metrics.observeLatency('updated', homeName, replicaName, t);
+        if (g)
+          this.metrics.observeGasUsage('updated', homeName, replicaName, g);
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
@@ -340,18 +330,11 @@ export class Orchestrator {
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
-        this.metrics.observeLatency(
-          'relayed',
-          homeName,
-          replicaName,
-          m.timings.toRelay()!,
-        );
-        this.metrics.observeGasUsage(
-          'relayed',
-          homeName,
-          replicaName,
-          e.gasUsed.toNumber(),
-        );
+        const t = m.timings.toRelay();
+        const g = e.gasUsed.toNumber();
+        if (t) this.metrics.observeLatency('relayed', homeName, replicaName, t);
+        if (g)
+          this.metrics.observeGasUsage('relayed', homeName, replicaName, g);
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
@@ -361,18 +344,12 @@ export class Orchestrator {
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
-        this.metrics.observeLatency(
-          'received',
-          homeName,
-          replicaName,
-          m.timings.toReceive()!,
-        );
-        this.metrics.observeGasUsage(
-          'received',
-          homeName,
-          replicaName,
-          e.gasUsed.toNumber(),
-        );
+        const t = m.timings.toReceive();
+        const g = e.gasUsed.toNumber();
+        if (t)
+          this.metrics.observeLatency('received', homeName, replicaName, t);
+        if (g)
+          this.metrics.observeGasUsage('received', homeName, replicaName, g);
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
@@ -382,18 +359,12 @@ export class Orchestrator {
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
-        this.metrics.observeLatency(
-          'processed',
-          homeName,
-          replicaName,
-          m.timings.toProcess()!,
-        );
-        this.metrics.observeGasUsage(
-          'processed',
-          homeName,
-          replicaName,
-          e.gasUsed.toNumber(),
-        );
+        const t = m.timings.toProcess();
+        const g = e.gasUsed.toNumber();
+        if (t)
+          this.metrics.observeLatency('processed', homeName, replicaName, t);
+        if (g)
+          this.metrics.observeGasUsage('processed', homeName, replicaName, g);
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
