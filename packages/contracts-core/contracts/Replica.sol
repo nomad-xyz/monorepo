@@ -308,6 +308,8 @@ contract Replica is Version0, NomadBase {
         return block.timestamp >= _time;
     }
 
+    event log(bytes32 calcRoot);
+
     /**
      * @notice Attempts to prove the validity of message given its leaf, the
      * merkle proof of inclusion for the leaf, and the index of the leaf.
@@ -330,6 +332,7 @@ contract Replica is Version0, NomadBase {
         // calculate the expected root based on the proof
         bytes32 _calculatedRoot = MerkleLib.branchRoot(_leaf, _proof, _index);
         // if the root is valid, change status to Proven
+        emit log(_calculatedRoot);
         if (acceptableRoot(_calculatedRoot)) {
             messages[_leaf] = MessageStatus.Proven;
             return true;

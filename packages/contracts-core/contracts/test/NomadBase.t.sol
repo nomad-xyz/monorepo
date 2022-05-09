@@ -40,12 +40,12 @@ contract NomadBaseTest is NomadTest {
 
     function test_acceptUpdaterSignature() public {
         bytes memory sig = signHomeUpdate(updaterPK, oldRoot, newRoot);
-        assert(nbh.isUpdaterSignature(oldRoot, newRoot, sig));
+        assertTrue(nbh.isUpdaterSignature(oldRoot, newRoot, sig));
     }
 
     function test_rejectNonUpdaterSignature() public {
         bytes memory sig = signHomeUpdate(fakeUpdaterPK, oldRoot, newRoot);
-        assert(nbh.isUpdaterSignature(oldRoot, newRoot, sig) == false);
+        assertFalse(nbh.isUpdaterSignature(oldRoot, newRoot, sig));
     }
 
     function test_homeDomainHash() public {

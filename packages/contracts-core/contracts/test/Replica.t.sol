@@ -1,25 +1,23 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity >=0.6.11;
 
-import {Replica} from "../Replica.sol";
-import {MerkleTest} from "./utils/MerkleTest.sol";
-import {MerkleLib} from "../libs/Merkle.sol";
+import {ReplicaHarness} from "./harnesses/ReplicaHarness.sol";
+import {NomadTest} from "./utils/NomadTest.sol";
 
-contract ReplicaTest is MerkleTest {
+    contract ReplicaTest is NomadTest{
 
-    // Libraries
-    using MerkleLib for MerkleLib.Tree;
-
-    Replica replica;
+    ReplicaHarness replica;
 
     uint256 optimisticSeconds;
+    bytes32 committedRoot;
 
     function setUp() public override {
         super.setUp();
         uint256 processGas = 850_000;
         uint256 reserveGas = 15_000;
+        committedRoot = "commited root";
 
-        replica  = new Replica(homeDomain, processGas, reserveGas);
+        replica  = new ReplicaHarness(homeDomain, processGas, reserveGas);
 
         assertEq(replica.PROCESS_GAS(), processGas);
         assertEq(replica.RESERVE_GAS(), reserveGas);
@@ -75,14 +73,46 @@ contract ReplicaTest is MerkleTest {
         replica.update(oldRoot, newRoot, sig);
     }
 
-    function test_succesfulMessageProofProcess() public {
-        bytes32 leaf = committedRoot;
-
-        bytes32[32] memory proof = ;
-        bytes memory message
-        replica.proveAndProcess(message, proof, _index);
-
+    function test_succesfulMessageProof() public {
+        bytes32 root = stringToBytes32("18f2f1646fee335a1eaf5191a8ce58ea772080057d0fda687df59c45e47e6f68");
+        replica.setCommittedRoot(root);
+        vm.warp(block.timestamp + replica.optimisticSeconds());
+        bytes32 leaf = stringToBytes32("f0fe7c99ef23ace1835385e83dd61c9ecb6192d6514fcc13356ef912788eaa8a");
+        uint256 index = 0;
+        bytes32[32] memory proof = [
+           stringToBytes32("65ad6b7c39c687dad3edc05bec09300b742363f5c1f42db586bdce40c9fc5eef"),
+           stringToBytes32("e9884debea0619a2ce25ba3bbe6a4438a42bc11b2308f62c65ed43be0b43d445"),
+           stringToBytes32("b4c11951957c6f8f642c4af61cd6b24640fec6dc7fc607ee8206a99e92410d30"),
+           stringToBytes32("21ddb9a356815c3fac1026b6dec5df3124afbadb485c9ba5a3e3398a04b7ba85"),
+           stringToBytes32("e58769b32a1beaf1ea27375a44095a0d1fb664ce2dd358e7fcbfb78c26a19344"),
+           stringToBytes32("0eb01ebfc9ed27500cd4dfc979272d1f0913cc9f66540d7e8005811109e1cf2d"),
+           stringToBytes32("887c22bd8750d34016ac3c66b5ff102dacdd73f6b014e710b51e8022af9a1968"),
+           stringToBytes32("ffd70157e48063fc33c97a050f7f640233bf646cc98d9524c6b92bcf3ab56f83"),
+           stringToBytes32("9867cc5f7f196b93bae1e27e6320742445d290f2263827498b54fec539f756af"),
+           stringToBytes32("cefad4e508c098b9a7e1d8feb19955fb02ba9675585078710969d3440f5054e0"),
+           stringToBytes32("f9dc3e7fe016e050eff260334f18a5d4fe391d82092319f5964f2e2eb7c1c3a5"),
+           stringToBytes32("f8b13a49e282f609c317a833fb8d976d11517c571d1221a265d25af778ecf892"),
+           stringToBytes32("3490c6ceeb450aecdc82e28293031d10c7d73bf85e57bf041a97360aa2c5d99c"),
+           stringToBytes32("c1df82d9c4b87413eae2ef048f94b4d3554cea73d92b0f7af96e0271c691e2bb"),
+           stringToBytes32("5c67add7c6caf302256adedf7ab114da0acfe870d449a3a489f781d659e8becc"),
+           stringToBytes32("da7bce9f4e8618b6bd2f4132ce798cdc7a60e7e1460a7299e3c6342a579626d2"),
+           stringToBytes32("2733e50f526ec2fa19a22b31e8ed50f23cd1fdf94c9154ed3a7609a2f1ff981f"),
+           stringToBytes32("e1d3b5c807b281e4683cc6d6315cf95b9ade8641defcb32372f1c126e398ef7a"),
+           stringToBytes32("5a2dce0a8a7f68bb74560f8f71837c2c2ebbcbf7fffb42ae1896f13f7c7479a0"),
+           stringToBytes32("b46a28b6f55540f89444f63de0378e3d121be09e06cc9ded1c20e65876d36aa0"),
+           stringToBytes32("c65e9645644786b620e2dd2ad648ddfcbf4a7e5b1a3a4ecfe7f64667a3f0b7e2"),
+           stringToBytes32("f4418588ed35a2458cffeb39b93d26f18d2ab13bdce6aee58e7b99359ec2dfd9"),
+           stringToBytes32("5a9c16dc00d6ef18b7933a6f8dc65ccb55667138776f7dea101070dc8796e377"),
+           stringToBytes32("4df84f40ae0c8229d0d6069e5c8f39a7c299677a09d367fc7b05e3bc380ee652"),
+           stringToBytes32("cdc72595f74c7b1043d0e1ffbab734648c838dfb0527d971b602bc216c9619ef"),
+           stringToBytes32("0abf5ac974a1ed57f4050aa510dd9c74f508277b39d7973bb2dfccc5eeb0618d"),
+           stringToBytes32("b8cd74046ff337f0a7bf2c8e03e10f642c1886798d71806ab1e888d9e5ee87d0"),
+           stringToBytes32("838c5655cb21c6cb83313b5a631175dff4963772cce9108188b34ac87c81c41e"),
+           stringToBytes32("662ee4dd2dd7b2bc707961b1e646c4047669dcb6584f0d8d770daf5d7e7deb2e"),
+           stringToBytes32("388ab20e2573d171a88108e79d820e98f26c0b84aa8b2f4aa4968dbb818ea322"),
+           stringToBytes32("93237c50ba75ee485f4c22adf2f741400bdf8d6a9cc7df7ecae576221665d735"),
+           stringToBytes32("8448818bb4ae4562849e949e17ac16e0be16688e156b5cf15e098c627c0056a9")
+         ];
+        assertTrue(replica.prove(leaf, proof, index));
     }
-
-
 }
