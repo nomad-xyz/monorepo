@@ -73,6 +73,8 @@ import {NomadTest} from "./utils/NomadTest.sol";
         replica.update(oldRoot, newRoot, sig);
     }
 
+    // Pre-computed values come from the nomad-xyz/rust test fixtures
+    // https://github.com/nomad-xyz/rust/blob/main/fixtures/merkle.json
     function test_succesfulMessageProof() public {
         bytes32 root = stringToBytes32("18f2f1646fee335a1eaf5191a8ce58ea772080057d0fda687df59c45e47e6f68");
         replica.setCommittedRoot(root);
