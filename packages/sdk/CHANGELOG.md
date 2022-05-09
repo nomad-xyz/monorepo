@@ -2,7 +2,11 @@
 
 ### Unreleased
 
+- add s3 name and URI getters
+- add getProof async method for retrieving proofs from s3
+
 ### 2.0.0-rc.13
+
 - fix: make paginated event querying use the new config layout
 - chore: bump configuration to v0.1.0-rc.18
 

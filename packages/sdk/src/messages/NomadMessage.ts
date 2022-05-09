@@ -23,6 +23,8 @@ import {
 
 import { queryAnnotatedEvents } from '..';
 import { keccak256 } from 'ethers/lib/utils';
+import { MessageProof } from '../NomadContext';
+import axios from 'axios';
 
 export type ParsedMessage = {
   from: number;
@@ -592,5 +594,21 @@ export class NomadMessage<T extends NomadContext> {
    */
   get committedRoot(): string {
     return this.dispatch.event.args.committedRoot;
+  }
+
+  /**
+   * Get the proof associated with this message
+   *
+   * @returns a proof, or undefined if no proof available
+   * @throws if s3 is not configured for this env
+   */
+  async getProof(): Promise<MessageProof | undefined> {
+    const uri = this.s3Uri;
+    if (!uri) throw new Error('No s3 configuration');
+    const res = await axios.get(uri);
+    const { data, status, statusText } = res;
+    if (status !== 200) throw new Error(statusText);
+    if (data.proof && data.message) return data as MessageProof;
+    throw new Error('Server returned invalid proof');
   }
 }
