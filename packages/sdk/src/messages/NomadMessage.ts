@@ -503,7 +503,18 @@ export class NomadMessage<T extends NomadContext> {
    */
   get s3Name(): string {
     const index = this.leafIndex.toNumber();
-    return `${this.originName}_${index}.json`;
+    return `${this.originName}_${index}`;
+  }
+
+  /**
+   * Get the URI for the proof in S3
+   */
+  get s3Uri(): string | undefined {
+    const s3 = this.context.conf.s3;
+    if (!s3) return;
+    const { bucket, region } = s3;
+    const root = `https://${bucket}.s3.${region}.amazonaws.com`;
+    return `${root}/${this.s3Name}`;
   }
 
   /**
