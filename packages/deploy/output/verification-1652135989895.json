@@ -1,0 +1,19 @@
+{
+  "binanceSmartChain": [
+    {
+      "name": "BridgeToken",
+      "specifier": "packages/contracts-bridge/contracts/BridgeToken.sol:BridgeToken",
+      "address": "0xfBea6D67DDd90E1f726C2622c6C42b016fDad5a7"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeacon.sol:UpgradeBeacon",
+      "address": "0x15fdA9F60310d09FEA54E3c99d1197DfF5107248",
+      "constructorArguments": [
+        "0xfBea6D67DDd90E1f726C2622c6C42b016fDad5a7",
+        "0x5e5ea959686c73ed32c1bc71892f7f317d13a267"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000fbea6d67ddd90e1f726c2622c6c42b016fdad5a70000000000000000000000005e5ea959686c73ed32c1bc71892f7f317d13a267"
+    }
+  ]
+}
