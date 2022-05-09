@@ -378,7 +378,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       const tx =
         await this.bridgeRouterContract.populateTransaction.enrollRemoteRouter(
           remoteDomain,
-          utils.canonizeId(remoteRouter)
+          utils.canonizeId(remoteRouter),
         );
       // safe as populateTransaction always sets `to`
       batch.push(this.domainNumber, tx as Call);
@@ -469,12 +469,13 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
             custom.name,
             custom.symbol,
             custom.decimals,
+            this.overrides,
           )
         ).wait(this.confirmations);
 
         // transfer ownership to the bridge router
         await (
-          await tokenProxy.transferOwnership(bridge)
+          await tokenProxy.transferOwnership(bridge, this.overrides)
         ).wait(this.confirmations);
 
         // add custom to data
@@ -501,7 +502,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
             await this.tokenRegistryContract.populateTransaction.enrollCustom(
               custom.token.domain,
               utils.canonizeId(custom.token.id),
-              proxy.address
+              proxy.address,
             ),
           ];
         }
@@ -533,7 +534,10 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const registryOwner = await this.tokenRegistryContract.owner();
     if (utils.equalIds(registryOwner, deployer)) {
       log(`transfer token registry ownership on ${name}`);
-      const tx = await this.tokenRegistryContract.transferOwnership(this.bridgeRouterContract.address, this.overrides);
+      const tx = await this.tokenRegistryContract.transferOwnership(
+        this.bridgeRouterContract.address,
+        this.overrides,
+      );
       await tx.wait(this.confirmations);
     }
 
@@ -541,7 +545,10 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const bridgeOwner = await this.bridgeRouterContract.owner();
     if (utils.equalIds(bridgeOwner, deployer)) {
       log(`transfer bridge router ownership on ${name}`);
-      const tx = await this.bridgeRouterContract.transferOwnership(governance, this.overrides);
+      const tx = await this.bridgeRouterContract.transferOwnership(
+        governance,
+        this.overrides,
+      );
       await tx.wait(this.confirmations);
     }
   }
@@ -605,8 +612,9 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     assertBeaconProxy(this.data.tokenRegistry, 'TokenRegistry');
     // owner
     const tokenRegistryOwner = await this.tokenRegistryContract.owner();
-    expect(utils.equalIds(tokenRegistryOwner, this.bridgeRouterContract.address)).to
-        .be.true;
+    expect(
+      utils.equalIds(tokenRegistryOwner, this.bridgeRouterContract.address),
+    ).to.be.true;
 
     // xAppConnectionManager
     const xAppAddress =
