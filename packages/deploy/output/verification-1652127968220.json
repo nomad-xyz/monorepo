@@ -1,0 +1,79 @@
+{
+  "neontestnet": [
+    {
+      "name": "BridgeToken",
+      "specifier": "packages/contracts-bridge/contracts/BridgeToken.sol:BridgeToken",
+      "address": "0x579b5c2d973cF47E5AE0294A0beba9CB2076F220"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeacon.sol:UpgradeBeacon",
+      "address": "0xcCAb5cB48aFb5105c3C90c1F594FaD75708A6669",
+      "constructorArguments": [
+        "0x579b5c2d973cF47E5AE0294A0beba9CB2076F220",
+        "0xe5cd1d85d4bd5d28f8f0c9a0a9c140919f9000e2"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000579b5c2d973cf47e5ae0294a0beba9cb2076f220000000000000000000000000e5cd1d85d4bd5d28f8f0c9a0a9c140919f9000e2"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeacon.sol:UpgradeBeacon",
+      "address": "0xA1A6eB9dE15A69fAa90a12B36a589Dfd0C272e4d",
+      "constructorArguments": [
+        "0xbEab447203a8CAa05D60B8aa56b8f1C1b4D5D4eB",
+        "0xe5cd1d85d4bd5d28f8f0c9a0a9c140919f9000e2"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000beab447203a8caa05d60b8aa56b8f1c1b4d5d4eb000000000000000000000000e5cd1d85d4bd5d28f8f0c9a0a9c140919f9000e2"
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconProxy.sol:UpgradeBeaconProxy",
+      "address": "0x59Dd6DFe0E3F8c0c39D67D98B6b6C12B0D432900",
+      "constructorArguments": [
+        "0xA1A6eB9dE15A69fAa90a12B36a589Dfd0C272e4d",
+        "0x485cc955000000000000000000000000ccab5cb48afb5105c3c90c1f594fad75708a6669000000000000000000000000eb43d0bad300267bdc1b8afafa70b274c14698ef"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000a1a6eb9de15a69faa90a12b36a589dfd0c272e4d00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000044485cc955000000000000000000000000ccab5cb48afb5105c3c90c1f594fad75708a6669000000000000000000000000eb43d0bad300267bdc1b8afafa70b274c14698ef00000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "TokenRegistry",
+      "specifier": "packages/contracts-bridge/contracts/TokenRegistry.sol:TokenRegistry",
+      "address": "0xbEab447203a8CAa05D60B8aa56b8f1C1b4D5D4eB"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeacon.sol:UpgradeBeacon",
+      "address": "0x56A9200981d6c61F286c7E1824fed723457EE7c4",
+      "constructorArguments": [
+        "0xbA48e1EA33e92263192C97496507586a5baf2C23",
+        "0xe5cd1d85d4bd5d28f8f0c9a0a9c140919f9000e2"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000ba48e1ea33e92263192c97496507586a5baf2c23000000000000000000000000e5cd1d85d4bd5d28f8f0c9a0a9c140919f9000e2"
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconProxy.sol:UpgradeBeaconProxy",
+      "address": "0xaB308Abb7DBD8edA27BB19c6069929Ea2b637aba",
+      "constructorArguments": [
+        "0x56A9200981d6c61F286c7E1824fed723457EE7c4",
+        "0x485cc95500000000000000000000000059dd6dfe0e3f8c0c39d67d98b6b6c12b0d432900000000000000000000000000eb43d0bad300267bdc1b8afafa70b274c14698ef"
+      ],
+      "encodedConstructorArguments": "0x00000000000000000000000056a9200981d6c61f286c7e1824fed723457ee7c400000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000044485cc95500000000000000000000000059dd6dfe0e3f8c0c39d67d98b6b6c12b0d432900000000000000000000000000eb43d0bad300267bdc1b8afafa70b274c14698ef00000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "BridgeRouter",
+      "specifier": "packages/contracts-bridge/contracts/BridgeRouter.sol:BridgeRouter",
+      "address": "0xbA48e1EA33e92263192C97496507586a5baf2C23"
+    },
+    {
+      "name": "ETHHelper",
+      "specifier": "packages/contracts-bridge/contracts/ETHHelper.sol:ETHHelper",
+      "address": "0xD0D596fb4985EdDF2859EEaE7C7E80f00403FbB7",
+      "constructorArguments": [
+        "0xf8ad328e98f85fccbf09e43b16dcbbda7e84beab",
+        "0xaB308Abb7DBD8edA27BB19c6069929Ea2b637aba"
+      ],
+      "encodedConstructorArguments": "0x000000000000000000000000f8ad328e98f85fccbf09e43b16dcbbda7e84beab000000000000000000000000ab308abb7dbd8eda27bb19c6069929ea2b637aba"
+    }
+  ]
+}
