@@ -352,8 +352,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const proxy = await this.newProxy(home.address, initData);
     this._data.home = proxy;
 
-    await this.xAppConnectionManager.setHome(proxy.proxy);
-    await this.updaterManager.setHome(proxy.proxy);
+    await this.xAppConnectionManager.setHome(proxy.proxy, this.overrides);
+    await this.updaterManager.setHome(proxy.proxy, this.overrides);
 
     this.context.pushVerification(name, {
       name: 'Home',
@@ -507,7 +507,6 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         await this.xAppConnectionManager.populateTransaction.ownerEnrollReplica(
           replica,
           remoteConfig.domain,
-          this.overrides,
         );
       const batch = CallBatch.fromContext(this.context.asNomadContext);
       // safe as populateTransaction always sets `to`
@@ -565,7 +564,6 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
             utils.evmId(watcher),
             remoteConfig.domain,
             true,
-            this.overrides,
           );
         }),
       );
@@ -624,6 +622,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const tx = await this.governanceRouter.setRouterLocal(
       remoteConfig.domain,
       utils.canonizeId(remoteCore.governanceRouter.address),
+      this.overrides,
     );
     await tx.wait(this.confirmations);
     return;

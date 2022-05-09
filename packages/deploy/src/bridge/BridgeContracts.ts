@@ -466,12 +466,13 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
             custom.name,
             custom.symbol,
             custom.decimals,
+            this.overrides,
           )
         ).wait(this.confirmations);
 
         // transfer ownership to the bridge router
         await (
-          await tokenProxy.transferOwnership(bridge)
+          await tokenProxy.transferOwnership(bridge, this.overrides)
         ).wait(this.confirmations);
 
         // add custom to data
