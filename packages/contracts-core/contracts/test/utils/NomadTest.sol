@@ -73,3 +73,5 @@ contract NomadTestWithUpdaterManager is NomadTest {
         updaterManager = new UpdaterManager(updater);
     }
 }
+
+

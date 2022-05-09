@@ -2,13 +2,16 @@
 pragma solidity >=0.6.11;
 
 import {Replica} from "../Replica.sol";
-import {NomadTest} from "./utils/NomadTest.sol";
+import {MerkleTest} from "./utils/MerkleTest.sol";
+import {MerkleLib} from "../libs/Merkle.sol";
 
-contract ReplicaTest is NomadTest {
+contract ReplicaTest is MerkleTest {
+
+    // Libraries
+    using MerkleLib for MerkleLib.Tree;
 
     Replica replica;
 
-    bytes32 committedRoot;
     uint256 optimisticSeconds;
 
     function setUp() public override {
@@ -28,7 +31,6 @@ contract ReplicaTest is NomadTest {
     function initializeReplica() public {
 
         optimisticSeconds = 10;
-        committedRoot = "committed root";
 
         replica.initialize(remoteDomain, updater, committedRoot, optimisticSeconds);
         assertEq(uint256(replica.remoteDomain()), uint256(remoteDomain));
@@ -72,4 +74,15 @@ contract ReplicaTest is NomadTest {
         vm.expectRevert("!updater sig");
         replica.update(oldRoot, newRoot, sig);
     }
+
+    function test_succesfulMessageProofProcess() public {
+        bytes32 leaf = committedRoot;
+
+        bytes32[32] memory proof = ;
+        bytes memory message
+        replica.proveAndProcess(message, proof, _index);
+
+    }
+
+
 }
