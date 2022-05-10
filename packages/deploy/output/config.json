@@ -41,7 +41,7 @@
           "neontestnet"
         ],
         "configuration": {
-          "optimisticSeconds": 10,
+          "optimisticSeconds": 1800,
           "processGas": 850000,
           "reserveGas": 15000,
           "maximumGas": 1000000,
@@ -80,7 +80,7 @@
           "neontestnet"
         ],
         "configuration": {
-          "optimisticSeconds": 10,
+          "optimisticSeconds": 1800,
           "processGas": 850000,
           "reserveGas": 15000,
           "maximumGas": 1000000,
@@ -158,7 +158,7 @@
           "neontestnet"
         ],
         "configuration": {
-          "optimisticSeconds": 10,
+          "optimisticSeconds": 1800,
           "processGas": 850000,
           "reserveGas": 15000,
           "maximumGas": 1000000,
@@ -197,7 +197,7 @@
           "neontestnet"
         ],
         "configuration": {
-          "optimisticSeconds": 10,
+          "optimisticSeconds": 1800,
           "processGas": 850000,
           "reserveGas": 15000,
           "maximumGas": 1000000,
@@ -411,6 +411,11 @@
           "implementation": "0xb10252d7c83cd5db1e3e295720c298682a56a4ff",
           "proxy": "0x3b02a61ce383c473dece1bb66b2aeda18c742115",
           "beacon": "0xe1fbad342c8f2967f74dcef5db8c774a07b41dab"
+        },
+        "neontestnet": {
+          "implementation": "0xb10252d7c83cd5db1e3e295720c298682a56a4ff",
+          "beacon": "0xe1fbad342c8f2967f74dcef5db8c774a07b41dab",
+          "proxy": "0xDa6A17839b25DE8DD848E291A467Efb705C15525"
         }
       }
     }
