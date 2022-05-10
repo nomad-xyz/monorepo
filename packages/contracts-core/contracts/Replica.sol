@@ -54,7 +54,7 @@ contract Replica is Version0, NomadBase {
     mapping(bytes32 => uint256) public confirmAt;
     // Mapping of message leaves to MessageStatus
     mapping(bytes32 => MessageStatus) public messages;
-    
+
     // ============ Upgrade Gap ============
 
     // gap for upgrade safety

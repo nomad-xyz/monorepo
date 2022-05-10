@@ -173,7 +173,7 @@ contract ReplicaTest is NomadTest{
         );
         replica.setMessageStatus(message, Replica.MessageStatus.Proven);
         vm.expectEmit(true, true, true, true);
-        bytes memory returnData = bytes('0x');
+        bytes memory returnData = hex'';
         emit Process(message.ref(0).keccak(), true, returnData);
         replica.process(message);
     }
@@ -216,5 +216,6 @@ contract ReplicaTest is NomadTest{
         vm.expectRevert("!proven");
         replica.process(message);
     }
+
 
 }
