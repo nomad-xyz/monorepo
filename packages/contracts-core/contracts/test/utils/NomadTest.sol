@@ -14,8 +14,8 @@ contract NomadTest is Test {
     address signer = vm.addr(3);
     address fakeSigner = vm.addr(4);
 
-    uint32 homeDomain = 1000;
-    uint32 remoteDomain = 1500;
+    uint32 homeDomain = 1500;
+    uint32 remoteDomain = 1000;
 
     function setUp() public virtual {
         vm.label(updater, "updater");
@@ -86,4 +86,9 @@ contract NomadTestWithUpdaterManager is NomadTest {
     }
 }
 
+contract ReplicaTest is NomadTest {
+
+
+
+}
 

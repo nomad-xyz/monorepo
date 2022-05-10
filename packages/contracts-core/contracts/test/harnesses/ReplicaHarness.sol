@@ -2,8 +2,14 @@
 pragma solidity >=0.6.11;
 
 import {Replica} from "../../Replica.sol";
+import {Message} from "../../libs/Message.sol";
+import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 
 contract ReplicaHarness is Replica {
+
+    using TypedMemView for bytes;
+    using TypedMemView for bytes29;
+    using Message for bytes29;
 
     constructor(
         uint32 _localDomain,
@@ -14,4 +20,10 @@ contract ReplicaHarness is Replica {
         committedRoot = root;
         confirmAt[root] = 1;
     }
+
+    function setMessageStatus(bytes memory message, MessageStatus status) public {
+        bytes29 m = message.ref(0);
+        messages[m.keccak()] = status;
+    }
+
 }
