@@ -198,7 +198,7 @@ contract ReplicaTest is NomadTest{
         replica.process(message);
     }
 
-    function test_rejectUnprovenMessage() public {
+    function test_rejectProcessUnprovenMessage() public {
         replica.setCommittedRoot(exampleRoot);
         replica.prove(exampleLeaf, exampleProof, exampleLeafIndex);
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
@@ -216,6 +216,35 @@ contract ReplicaTest is NomadTest{
         vm.expectRevert("!proven");
         replica.process(message);
     }
+
+    function  test_setOptimisticTimeoutOnlyOwner() public {
+        vm.prank(replica.owner());
+        replica.setOptimisticTimeout(10);
+        vm.prank(vm.addr(1453));
+        vm.expectRevert("Ownable: caller is not the owner");
+        replica.setOptimisticTimeout(10);
+    }
+
+    function test_setUpdaterOnlyOwner() public {
+        vm.prank(replica.owner());
+        replica.setUpdater(vm.addr(10));
+        vm.prank(vm.addr(1453));
+        vm.expectRevert("Ownable: caller is not the owner");
+        replica.setUpdater(vm.addr(10));
+    }
+
+
+    function test_setConfirmationOnlyOwner() public {
+        bytes32 newRoot = "new root";
+        uint256 newConfirmAt = 100;
+        vm.prank(replica.owner());
+        replica.setConfirmation(newRoot, newConfirmAt);
+        vm.prank(vm.addr(1453));
+        vm.expectRevert("Ownable: caller is not the owner");
+        replica.setConfirmation(newRoot, newConfirmAt);
+    }
+
+
 
 
 }
