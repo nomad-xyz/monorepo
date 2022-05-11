@@ -318,7 +318,12 @@ export class Orchestrator {
         const replicaName = this.domain2name(m.destination);
         const t = m.timings.toUpdate();
         const g = e.gasUsed.toNumber();
-        if (t) this.metrics.observeLatency('updated', homeName, replicaName, t);
+        if (t) {
+          this.metrics.observeLatency('updated', homeName, replicaName, t);
+          if (t < 0) {
+            this.logger.warn({origin: m.origin, destination: m.destination, stage: 'updated', value: t}, `Replorted timings is below zero`)
+          }
+        }
         if (g)
           this.metrics.observeGasUsage('updated', homeName, replicaName, g);
       } catch (e) {
@@ -332,7 +337,12 @@ export class Orchestrator {
         const replicaName = this.domain2name(m.destination);
         const t = m.timings.toRelay();
         const g = e.gasUsed.toNumber();
-        if (t) this.metrics.observeLatency('relayed', homeName, replicaName, t);
+        if (t) {
+          this.metrics.observeLatency('relayed', homeName, replicaName, t);
+          if (t < 0) {
+            this.logger.warn({origin: m.origin, destination: m.destination, stage: 'relayed', value: t}, `Replorted timings is below zero`)
+          }
+        }
         if (g)
           this.metrics.observeGasUsage('relayed', homeName, replicaName, g);
       } catch (e) {
@@ -346,8 +356,12 @@ export class Orchestrator {
         const replicaName = this.domain2name(m.destination);
         const t = m.timings.toReceive();
         const g = e.gasUsed.toNumber();
-        if (t)
-          this.metrics.observeLatency('received', homeName, replicaName, t);
+        if (t) {
+            this.metrics.observeLatency('received', homeName, replicaName, t);
+            if (t < 0) {
+              this.logger.warn({origin: m.origin, destination: m.destination, stage: 'received', value: t}, `Replorted timings is below zero`)
+            }
+          }
         if (g)
           this.metrics.observeGasUsage('received', homeName, replicaName, g);
       } catch (e) {
@@ -361,8 +375,12 @@ export class Orchestrator {
         const replicaName = this.domain2name(m.destination);
         const t = m.timings.toProcess();
         const g = e.gasUsed.toNumber();
-        if (t)
+        if (t) {
           this.metrics.observeLatency('processed', homeName, replicaName, t);
+          if (t < 0) {
+            this.logger.warn({origin: m.origin, destination: m.destination, stage: 'processed', value: t}, `Replorted timings is below zero`)
+          }
+        }
         if (g)
           this.metrics.observeGasUsage('processed', homeName, replicaName, g);
       } catch (e) {

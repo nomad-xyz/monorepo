@@ -157,14 +157,22 @@ export class NomadMessage {
     this.root = root.toLowerCase();
     this.messageHash = messageHash.toLowerCase();
     this.leafIndex = leafIndex;
+    this.sdk = sdk;
 
     this.body = body;
     const parsed = parseMessage(body);
     this.internalSender = new Padded(parsed.sender);
     this.internalRecipient = new Padded(parsed.recipient);
-    this.msgType = MessageType.NoMessage;
 
-    this.tryParseMessage(parsed.body);
+    if (this.isBridgeMessage()) {
+      this.tryParseTransferMessage(parsed.body);
+      this.msgType = MessageType.TransferMessage;
+    } else if (this.isGovernanceMessage()) {
+      this.tryParseGovernanceMessage(parsed.body);
+      this.msgType = MessageType.GovernanceMessage;
+    } else {
+      this.msgType = MessageType.NoMessage;
+    }
 
     this.state = MsgState.Dispatched;
     this.timings = new Timings(dispatchedAt);
@@ -172,7 +180,37 @@ export class NomadMessage {
     this.gasUsed = gasUsed || new GasUsed();
     this.logger = logger.child({ messageHash });
     this.checkbox = new Checkbox();
-    this.sdk = sdk;
+  }
+
+  messageTypeStr(): string {
+    switch (this.msgType) {
+      case MessageType.GovernanceMessage:
+        return 'governance';
+      case MessageType.TransferMessage:
+        return 'transfer';
+      default:
+        return 'empty';
+    }
+  }
+
+  isGovernanceMessage() {
+    const govRouterAddress = this.sdk.governorCore().governanceRouter.address;
+    if (govRouterAddress) {
+      const internalSenderIsGovRouter = Padded.fromWhatever(govRouterAddress).eq(this.internalSender);
+      return internalSenderIsGovRouter;
+    } else {
+      return false;
+    }
+  }
+
+  isBridgeMessage() {
+    const bridgeRouterAddress = this.sdk.getBridge(this.origin)?.bridgeRouter.address;
+    if (bridgeRouterAddress) {
+      const internalSenderIsBridgeRouter = Padded.fromWhatever(bridgeRouterAddress).eq(this.internalSender);
+      return internalSenderIsBridgeRouter;
+    } else {
+      return false;
+    }
   }
 
   recipient(): Padded | undefined {
