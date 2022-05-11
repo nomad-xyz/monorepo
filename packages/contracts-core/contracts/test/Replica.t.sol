@@ -156,7 +156,7 @@ contract ReplicaTest is NomadTest{
         bytes indexed returnData
     );
 
-    function test_processProvenMessage() public {
+    function test_processProvenMessageNonExistentAddress() public {
         replica.setCommittedRoot(exampleRoot);
         replica.prove(exampleLeaf, exampleProof, exampleLeafIndex);
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
@@ -178,6 +178,26 @@ contract ReplicaTest is NomadTest{
         replica.process(message);
     }
 
+    function test_rejectProcessUnderGas() public {
+        replica.setCommittedRoot(exampleRoot);
+        replica.prove(exampleLeaf, exampleProof, exampleLeafIndex);
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32 receiver= bytes32(uint256(uint160(vm.addr(431))));
+        uint32 nonce = 0;
+        bytes memory messageBody = '0x';
+        bytes memory message = Message.formatMessage(
+            remoteDomain,
+            sender,
+            nonce,
+            homeDomain,
+            receiver,
+            messageBody
+        );
+        replica.setMessageStatus(message, Replica.MessageStatus.Proven);
+        vm.expectRevert(bytes("!gas"));
+        replica.process{gas: 500_000}(message);
+
+    }
     function test_rejectProcessWrongDestination() public {
         replica.setCommittedRoot(exampleRoot);
         replica.prove(exampleLeaf, exampleProof, exampleLeafIndex);
