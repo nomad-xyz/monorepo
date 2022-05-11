@@ -150,6 +150,7 @@ export class NomadMessage {
     logger: Logger,
     sdk: BridgeContext,
     gasUsed?: GasUsed,
+    tx?: string,
   ) {
     this.origin = origin;
     this.destination = destination;
@@ -180,6 +181,7 @@ export class NomadMessage {
     this.gasUsed = gasUsed || new GasUsed();
     this.logger = logger.child({ messageHash });
     this.checkbox = new Checkbox();
+    this.tx = tx;
   }
 
   messageTypeStr(): string {
@@ -357,6 +359,8 @@ export class NomadMessage {
       s.dispatchBlock,
       logger.child({ messageSource: 'deserialize' }),
       sdk,
+      undefined,
+      s.tx || undefined
     );
     m.timings.updated(s.updatedAt * 1000);
     m.timings.relayed(s.relayedAt * 1000);
@@ -629,6 +633,8 @@ export class ProcessorV2 extends Consumer {
       e.block,
       this.logger.child({ messageSource: 'consumer' }),
       this.sdk,
+      undefined,
+      e.tx
     );
 
     const logger = m.logger.child({ eventName: 'dispatched' });
