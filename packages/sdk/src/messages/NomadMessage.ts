@@ -492,6 +492,21 @@ export class NomadMessage<T extends NomadContext> {
   }
 
   /**
+   * The name of the domain from which the message was sent
+   */
+  get originName(): string {
+    return this.context.resolveDomainName(this.origin);
+  }
+
+  /**
+   * Get the name of this file in the s3 bucket
+   */
+  get s3Name(): string {
+    const index = this.leafIndex.toNumber();
+    return `${this.originName}_${index}.json`;
+  }
+
+  /**
    * The identifier for the sender of this message
    */
   get sender(): string {

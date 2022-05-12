@@ -260,6 +260,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     const factory = new contracts.TokenRegistry__factory(this.deployer);
     const implementation = await factory.deploy(this.overrides);
+    await implementation.deployTransaction.wait(this.confirmations);
 
     this._data.tokenRegistry = await this.newProxy(
       implementation.address,
@@ -295,6 +296,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       // config.bridgeConfiguration.deployGas, // future
       this.overrides,
     );
+    await implementation.deployTransaction.wait(this.confirmations);
 
     this._data.bridgeRouter = await this.newProxy(
       implementation.address,
@@ -331,6 +333,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       constructorArguments[1],
       this.overrides,
     );
+    await helper.deployTransaction.wait(this.confirmations);
 
     this._data.ethHelper = helper.address;
     this.context.pushVerification(name, {
