@@ -4,6 +4,7 @@ pragma solidity >=0.6.11;
 import "forge-std/Test.sol";
 import "forge-std/console2.sol";
 import "../../UpdaterManager.sol";
+import "./BadXapps.sol";
 
 
 contract NomadTest is Test {
@@ -86,9 +87,25 @@ contract NomadTestWithUpdaterManager is NomadTest {
     }
 }
 
-contract ReplicaTest is NomadTest {
+contract ReplicaHandlers is NomadTest {
+    BadXappAssemblyRevert badXappAssemblyRevert;
+    BadXappAssemblyReturnZero badXappAssemblyReturnZero;
+    BadXappRevertData badXappRevertData;
+    BadXappRevertRequireString badXappRevertRequireString;
+    BadXappRevertRequire badXappRevertRequire;
 
+    function setUp() override virtual public {
+        super.setUp();
+        setUpBadHandlers();
+    }
 
+    function setUpBadHandlers() public {
+        badXappAssemblyRevert = new BadXappAssemblyRevert();
+        badXappAssemblyReturnZero = new BadXappAssemblyReturnZero();
+        badXappRevertData = new BadXappRevertData();
+        badXappRevertRequireString = new BadXappRevertRequireString();
+        badXappRevertRequire = new BadXappRevertRequire();
+    }
 
 }
 

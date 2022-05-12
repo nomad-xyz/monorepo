@@ -3,13 +3,13 @@ pragma solidity >=0.6.11;
 
 import {ReplicaHarness} from "./harnesses/ReplicaHarness.sol";
 import {Replica} from "../Replica.sol";
-import {NomadTest} from "./utils/NomadTest.sol";
+import {ReplicaHandlers} from "./utils/NomadTest.sol";
 import {Message} from "../libs/Message.sol";
 
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 
 
-contract ReplicaTest is NomadTest{
+contract ReplicaTest is ReplicaHandlers {
 
     // Read about memview:
     using TypedMemView for bytes;
@@ -156,9 +156,7 @@ contract ReplicaTest is NomadTest{
         bytes indexed returnData
     );
 
-    function test_processProvenMessageNonExistentAddress() public {
-        replica.setCommittedRoot(exampleRoot);
-        replica.prove(exampleLeaf, exampleProof, exampleLeafIndex);
+    function test_processProvenMessageEmptyAddress() public {
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
         bytes32 receiver= bytes32(uint256(uint160(vm.addr(431))));
         uint32 nonce = 0;
@@ -178,7 +176,68 @@ contract ReplicaTest is NomadTest{
         replica.process(message);
     }
 
-    function test_rejectProcessUnderGas() public {
+    function test_processProvenMessageBadHandlers() public {
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32[1] memory receiver = [
+            bytes32(uint256(uint160(address(badXappAssemblyReturnZero))))
+        ];
+        bytes[1] memory returnData = [
+            bytes("")
+        ];
+        for(uint256 i;i<1;i++){
+            uint32 nonce = 0;
+            bytes memory messageBody = '0x';
+            bytes memory message = Message.formatMessage(
+                remoteDomain,
+                sender,
+                nonce,
+                homeDomain,
+                receiver[i],
+                messageBody
+            );
+            replica.setMessageStatus(message, Replica.MessageStatus.Proven);
+            vm.expectEmit(true, true, true, true);
+            emit Process(message.ref(0).keccak(), true, returnData[i]);
+            assertTrue(replica.process(message));
+        }
+    }
+
+    function test_processProvenMessageRevertingHandlers() public {
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32[4] memory receiver = [
+            bytes32(uint256(uint160(address(badXappAssemblyRevert)))),
+            bytes32(uint256(uint160(address(badXappRevertData)))),
+            bytes32(uint256(uint160(address(badXappRevertRequireString)))),
+            bytes32(uint256(uint160(address(badXappRevertRequire))))
+        ];
+        bytes memory padded = hex'0000000000000000000000000000000000000000000000000000000000abcdef';
+        bytes[4] memory returnData = [
+            bytes(""),
+            padded,
+            abi.encodeWithSignature("Error(string)", "no can do"),
+            bytes("")
+
+        ];
+        for(uint256 i;i<4;i++){
+            uint32 nonce = 0;
+            bytes memory messageBody = '0x';
+            bytes memory message = Message.formatMessage(
+                remoteDomain,
+                sender,
+                nonce,
+                homeDomain,
+                receiver[i],
+                messageBody
+            );
+            replica.setMessageStatus(message, Replica.MessageStatus.Proven);
+            vm.expectEmit(true, true, true, true);
+            emit Process(message.ref(0).keccak(), false, returnData[i]);
+            assertFalse(replica.process(message));
+        }
+    }
+
+
+    function test_notProcessUnderGas() public {
         replica.setCommittedRoot(exampleRoot);
         replica.prove(exampleLeaf, exampleProof, exampleLeafIndex);
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
@@ -198,7 +257,7 @@ contract ReplicaTest is NomadTest{
         replica.process{gas: 500_000}(message);
 
     }
-    function test_rejectProcessWrongDestination() public {
+    function test_notProcessWrongDestination() public {
         replica.setCommittedRoot(exampleRoot);
         replica.prove(exampleLeaf, exampleProof, exampleLeafIndex);
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
@@ -218,7 +277,7 @@ contract ReplicaTest is NomadTest{
         replica.process(message);
     }
 
-    function test_rejectProcessUnprovenMessage() public {
+    function test_notProcessUnprovenMessage() public {
         replica.setCommittedRoot(exampleRoot);
         replica.prove(exampleLeaf, exampleProof, exampleLeafIndex);
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
@@ -261,6 +320,7 @@ contract ReplicaTest is NomadTest{
         uint256 previousConfirmAt,
         uint256 newConfirmAt
     );
+
     function test_setConfirmationOnlyOwner() public {
         bytes32 newRoot = "new root";
         uint256 newConfirmAt = 100;
