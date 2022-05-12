@@ -147,18 +147,12 @@ export class NomadishEvent {
     gasUsed: ethers.BigNumber,
     tx: string,
     eventData: EventDataNormal,
-    restore = false,
+    // restore = false,
   ) {
     this.domain = domain;
     this.eventType = eventType;
     this.replicaOrigin = replicaOrigin;
-    this.ts =
-      !restore &&
-      (eventType === EventType.HomeDispatch ||
-        eventType === EventType.HomeUpdate ||
-        eventType === EventType.BridgeRouterSend)
-        ? ts - 90000
-        : ts; // if the event was fetched from RPC for past (we asked RPC when event happened) happened on another chain we want to make sure that event at chain of origin happened before it was relayed to destination
+    this.ts = ts;
 
     // checkEventData(eventData, eventType);
 
@@ -229,7 +223,7 @@ export class NomadishEvent {
       e.gasUsed,
       e.tx,
       e.eventData,
-      true,
+      // true,
     );
   }
 

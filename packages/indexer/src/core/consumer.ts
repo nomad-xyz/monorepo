@@ -155,23 +155,26 @@ export class Timings {
 
   toUpdate(): number | undefined {
     if (this.updatedAt) {
-      return this.updatedAt - this.dispatchedAt;
+      return Math.floor((this.updatedAt - this.dispatchedAt) / 1000);
     }
     return undefined;
   }
 
   toRelay(): number | undefined {
     if (this.relayedAt) {
-      return this.relayedAt - (this.updatedAt || this.dispatchedAt); // because of the problem with time that it is not ideal from RPC we could have skipped some stages. we take the last available
+      return Math.floor(
+        (this.relayedAt - Math.max(this.updatedAt, this.dispatchedAt)) / 1000,
+      ); // because of the problem with time that it is not ideal from RPC we could have skipped some stages. we take the last available
     }
     return undefined;
   }
 
   toReceive(): number | undefined {
     if (this.receivedAt) {
-      return (
-        this.receivedAt -
-        (this.relayedAt || this.updatedAt || this.dispatchedAt)
+      return Math.floor(
+        (this.receivedAt -
+          Math.max(this.relayedAt, this.updatedAt, this.dispatchedAt)) /
+          1000,
       ); // because of the problem with time that it is not ideal from RPC we could have skipped some stages. we take the last available
     }
     return undefined;
@@ -179,9 +182,10 @@ export class Timings {
 
   toProcess(): number | undefined {
     if (this.processedAt) {
-      return (
-        this.processedAt - // Attention:   this.receivedAt is not what we are interested here
-        (this.relayedAt || this.updatedAt || this.dispatchedAt)
+      return Math.floor(
+        (this.processedAt - // Attention:   this.receivedAt is not what we are interested here
+          Math.max(this.relayedAt, this.updatedAt, this.dispatchedAt)) /
+          1000,
       ); // because of the problem with time that it is not ideal from RPC we could have skipped some stages. we take the last available
     }
     return undefined;

@@ -1660,9 +1660,9 @@ __metadata:
   linkType: hard
 
 "@nomad-xyz/configuration@npm:^0.1.0-rc.18":
-  version: 0.1.0-rc.19
-  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.19"
-  checksum: 221e936b7abe1d18cca1d2097839c26c3ba6df29797b07c16f8cf5331c1fd624087840faa56ce10923e30aa8ed599e15c9706fc26508770bbe5b498d88072120
+  version: 0.1.0-rc.20
+  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.20"
+  checksum: df1852233cbd55a6605443d03f40530a00163f80dc7b377a249871ffafb620a77f8d204885c2a9905e5d4d91e4229e99da56549c17add45bb3d7c5e7dbe8e663
   languageName: node
   linkType: hard
 
@@ -1803,9 +1803,9 @@ __metadata:
     "@graphql-tools/schema": ^8.3.5
     "@nomad-xyz/contracts-bridge": 1.0.0-rc.2
     "@nomad-xyz/multi-provider": ^1.0.0-rc.4
-    "@nomad-xyz/sdk": ^2.0.0-rc.8
-    "@nomad-xyz/sdk-bridge": ^1.0.0-rc.8
-    "@nomad-xyz/sdk-govern": ^1.0.0-rc.7
+    "@nomad-xyz/sdk": ^2.0.0-rc.13
+    "@nomad-xyz/sdk-bridge": ^1.0.0-rc.13
+    "@nomad-xyz/sdk-govern": ^1.0.0-rc.10
     "@prisma/client": ^3.9.1
     "@types/bunyan": ^1.8.7
     "@types/cors": ^2.8.12
@@ -1917,7 +1917,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk-bridge@^1.0.0-rc.8, @nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
+"@nomad-xyz/sdk-bridge@^1.0.0-rc.13, @nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
@@ -1943,7 +1943,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk-govern@^1.0.0-rc.7, @nomad-xyz/sdk-govern@workspace:^, @nomad-xyz/sdk-govern@workspace:packages/sdk-govern":
+"@nomad-xyz/sdk-govern@^1.0.0-rc.10, @nomad-xyz/sdk-govern@workspace:^, @nomad-xyz/sdk-govern@workspace:packages/sdk-govern":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-govern@workspace:packages/sdk-govern"
   dependencies:
@@ -1972,7 +1972,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk@^2.0.0-rc.8, @nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
+"@nomad-xyz/sdk@^2.0.0-rc.13, @nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -7396,7 +7396,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
+  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
   languageName: node
   linkType: hard
 

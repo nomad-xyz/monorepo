@@ -1,4 +1,3 @@
-import { RedisClientType } from '@node-redis/client';
 import { Home } from '@nomad-xyz/contracts-core';
 import { NomadMessage } from './consumerV2';
 import { BridgeContext } from '@nomad-xyz/sdk-bridge';
@@ -8,8 +7,22 @@ import { DB } from './db';
 import { eventTypeToOrder, NomadishEvent } from './event';
 import { Indexer } from './indexer';
 import { IndexerCollector } from './metrics';
-import { RedisClient, Statistics } from './types';
-import { logToFile, replacer, sleep } from './utils';
+import { RedisClient } from './types';
+import { sleep } from './utils';
+
+interface TbdPackage {
+  ts: Date;
+  domain: number;
+  error: Error;
+}
+class OrchestratorError extends Error {
+  errors: TbdPackage[];
+
+  constructor(msg: string, errors: TbdPackage[]) {
+    super(msg);
+    this.errors = errors;
+  }
+}
 
 class HomeHealth {
   home: Home;
@@ -63,6 +76,7 @@ export class Orchestrator {
   logger: Logger;
   db: DB;
   redis?: RedisClient;
+  forbiddenDomains: number[];
 
   constructor(
     sdk: BridgeContext,
@@ -83,6 +97,7 @@ export class Orchestrator {
     this.logger = logger;
     this.db = db;
     this.redis = redis;
+    this.forbiddenDomains = []; // 2019844457
   }
 
   async init() {
@@ -98,19 +113,92 @@ export class Orchestrator {
     await this.collectStatistics();
   }
 
+  get allowedDomains(): number[] {
+    return this.sdk.domainNumbers.filter(
+      (domain) => !this.forbiddenDomains.includes(domain),
+    );
+  }
+
   async checkAllIntegrity(): Promise<void> {
     await Promise.all(
-      this.sdk.domainNumbers.map(async (domain: number) => {
+      this.allowedDomains.map(async (domain: number) => {
         const indexer = this.indexers.get(domain)!;
-        await indexer.dummyTestEventsIntegrity();
+        try {
+          await indexer.dummyTestEventsIntegrity();
+        } catch (e) {
+          indexer.setForceFrom(indexer.deployHeight);
+        }
       }),
     );
   }
 
-  async indexAll(): Promise<number> {
+  async indexAllUnrelated(): Promise<void> {
+    let finished = false;
+    const errors: TbdPackage[] = [];
+
+    const promises = this.allowedDomains.map(async (domain: number) => {
+      while (!finished) {
+        try {
+          const eventsForDomain = await this.index(domain);
+
+          eventsForDomain.sort((a, b) => {
+            if (a.ts === b.ts) {
+              return eventTypeToOrder(a) - eventTypeToOrder(b);
+            } else {
+              return a.ts - b.ts;
+            }
+          });
+
+          this.logger.info(
+            `Received ${eventsForDomain.length} events after reindexing for domain: ${domain}`,
+          );
+          await this.consumer.consume(eventsForDomain);
+          await this.checkHealth(domain);
+
+          if (eventsForDomain.length) await this.collectStatistics();
+          this.reportAllMetrics();
+
+          // await sleep(5000);
+        } catch (e: any) {
+          this.logger.error(`Error at Indexing ${domain}`, e);
+          await sleep(5000);
+          errors.push({ domain, ts: new Date(), error: e });
+          if (errors.length >= this.allowedDomains.length * 5) {
+            throw new OrchestratorError(
+              `Too many errors in indexer(s)`,
+              errors,
+            );
+          }
+          // finished = true;
+        }
+      }
+    });
+
+    // return errors;
+
+    // const events = (
+    //   await Promise.all(
+    //     this.sdk.domainNumbers.map((domain: number) => this.index(domain)),
+    //   )
+    // ).flat();
+    // events.sort((a, b) => {
+    //   if (a.ts === b.ts) {
+    //     return eventTypeToOrder(a) - eventTypeToOrder(b);
+    //   } else {
+    //     return a.ts - b.ts;
+    //   }
+    // });
+    // this.logger.info(`Received ${events.length} events after reindexing`);
+    // await this.consumer.consume(events);
+    await Promise.all(promises);
+
+    return;
+  }
+
+  async indexAllRelated(): Promise<number> {
     const events = (
       await Promise.all(
-        this.sdk.domainNumbers.map((domain: number) => this.index(domain)),
+        this.allowedDomains.map((domain: number) => this.index(domain)),
       )
     ).flat();
     events.sort((a, b) => {
@@ -130,7 +218,7 @@ export class Orchestrator {
 
     let replicas = [];
     if (domain === this.gov) {
-      replicas = this.sdk.domainNumbers.filter((d) => d != this.gov);
+      replicas = this.allowedDomains.filter((d) => d != this.gov);
     } else {
       replicas = [this.gov];
     }
@@ -141,7 +229,7 @@ export class Orchestrator {
   async collectStatistics() {
     const stats = await this.consumer.stats();
 
-    this.sdk.domainNumbers.forEach(async (domain: number) => {
+    this.allowedDomains.forEach(async (domain: number) => {
       const network = this.domain2name(domain);
       try {
         const s = stats.forDomain(domain).counts;
@@ -160,7 +248,7 @@ export class Orchestrator {
 
   async checkAllHealth() {
     await Promise.all(
-      this.sdk.domainNumbers.map(async (domain: number) => {
+      this.allowedDomains.map(async (domain: number) => {
         await this.checkHealth(domain);
       }),
     );
@@ -192,7 +280,7 @@ export class Orchestrator {
   }
 
   async initIndexers() {
-    for (const domain of this.sdk.domainNumbers) {
+    for (const domain of this.allowedDomains) {
       const indexer = new Indexer(domain, this.sdk, this, this.redis);
       await indexer.init();
       this.indexers.set(domain, indexer);
@@ -200,7 +288,7 @@ export class Orchestrator {
   }
 
   async initHealthCheckers() {
-    for (const domain of this.sdk.domainNumbers) {
+    for (const domain of this.allowedDomains) {
       const checker = new HomeHealth(
         domain,
         this.sdk,
@@ -216,12 +304,9 @@ export class Orchestrator {
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
-        this.metrics.observeGasUsage(
-          'dispatched',
-          homeName,
-          replicaName,
-          e.gasUsed.toNumber(),
-        );
+        const g = e.gasUsed.toNumber();
+        if (g)
+          this.metrics.observeGasUsage('dispatched', homeName, replicaName, g);
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
@@ -231,18 +316,24 @@ export class Orchestrator {
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
-        this.metrics.observeLatency(
-          'updated',
-          homeName,
-          replicaName,
-          m.timings.toUpdate()!,
-        );
-        this.metrics.observeGasUsage(
-          'updated',
-          homeName,
-          replicaName,
-          e.gasUsed.toNumber(),
-        );
+        const t = m.timings.toUpdate();
+        const g = e.gasUsed.toNumber();
+        if (t) {
+          this.metrics.observeLatency('updated', homeName, replicaName, t);
+          if (t < 0) {
+            this.logger.warn(
+              {
+                origin: m.origin,
+                destination: m.destination,
+                stage: 'updated',
+                value: t,
+              },
+              `Replorted timings is below zero`,
+            );
+          }
+        }
+        if (g)
+          this.metrics.observeGasUsage('updated', homeName, replicaName, g);
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
@@ -252,18 +343,24 @@ export class Orchestrator {
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
-        this.metrics.observeLatency(
-          'relayed',
-          homeName,
-          replicaName,
-          m.timings.toRelay()!,
-        );
-        this.metrics.observeGasUsage(
-          'relayed',
-          homeName,
-          replicaName,
-          e.gasUsed.toNumber(),
-        );
+        const t = m.timings.toRelay();
+        const g = e.gasUsed.toNumber();
+        if (t) {
+          this.metrics.observeLatency('relayed', homeName, replicaName, t);
+          if (t < 0) {
+            this.logger.warn(
+              {
+                origin: m.origin,
+                destination: m.destination,
+                stage: 'relayed',
+                value: t,
+              },
+              `Replorted timings is below zero`,
+            );
+          }
+        }
+        if (g)
+          this.metrics.observeGasUsage('relayed', homeName, replicaName, g);
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
@@ -273,18 +370,24 @@ export class Orchestrator {
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
-        this.metrics.observeLatency(
-          'received',
-          homeName,
-          replicaName,
-          m.timings.toReceive()!,
-        );
-        this.metrics.observeGasUsage(
-          'received',
-          homeName,
-          replicaName,
-          e.gasUsed.toNumber(),
-        );
+        const t = m.timings.toReceive();
+        const g = e.gasUsed.toNumber();
+        if (t) {
+          this.metrics.observeLatency('received', homeName, replicaName, t);
+          if (t < 0) {
+            this.logger.warn(
+              {
+                origin: m.origin,
+                destination: m.destination,
+                stage: 'received',
+                value: t,
+              },
+              `Replorted timings is below zero`,
+            );
+          }
+        }
+        if (g)
+          this.metrics.observeGasUsage('received', homeName, replicaName, g);
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
@@ -294,29 +397,60 @@ export class Orchestrator {
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
-        this.metrics.observeLatency(
-          'processed',
-          homeName,
-          replicaName,
-          m.timings.toProcess()!,
-        );
-        this.metrics.observeGasUsage(
-          'processed',
-          homeName,
-          replicaName,
-          e.gasUsed.toNumber(),
-        );
+        const t = m.timings.toProcess();
+        const g = e.gasUsed.toNumber();
+        if (t) {
+          this.metrics.observeLatency('processed', homeName, replicaName, t);
+          if (t < 0) {
+            this.logger.warn(
+              {
+                origin: m.origin,
+                destination: m.destination,
+                stage: 'processed',
+                value: t,
+              },
+              `Replorted timings is below zero`,
+            );
+          }
+        }
+        if (g)
+          this.metrics.observeGasUsage('processed', homeName, replicaName, g);
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
     });
   }
 
-  async startConsuming() {
+  async consumeUnrelated() {
+    this.logger.info(`Started to index`);
+    const start = new Date().valueOf();
+    try {
+      await this.indexAllUnrelated();
+    } catch (e) {
+      if (e instanceof OrchestratorError) {
+        // TODO: something with it
+        this.logger.error(
+          `Orchestrator cought many indexer's errors:`,
+          e.errors,
+        );
+      }
+      this.logger.error(`Some error cought:`, e);
+
+      process.exit(1);
+    }
+
+    this.logger.info(
+      `Finished reindexing after ${
+        (new Date().valueOf() - start) / 1000
+      } seconds`,
+    );
+  }
+
+  async consumeRelated() {
     while (!this.done) {
       this.logger.info(`Started to reindex`);
       const start = new Date().valueOf();
-      const eventsLength = await this.indexAll();
+      const eventsLength = await this.indexAllRelated();
       await this.checkAllHealth();
 
       if (eventsLength > 0) await this.collectStatistics();
@@ -338,8 +472,13 @@ export class Orchestrator {
     }
   }
 
+  async startConsuming() {
+    await this.consumeUnrelated();
+    // await this.consumeRelated();
+  }
+
   reportAllMetrics() {
-    for (const domain of this.sdk.domainNumbers) {
+    for (const domain of this.allowedDomains) {
       const network = this.domain2name(domain);
       this.metrics.setHomeState(
         network,

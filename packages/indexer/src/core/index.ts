@@ -6,7 +6,7 @@ import { IndexerCollector } from './metrics';
 import { DB } from './db';
 import Logger from 'bunyan';
 import { run as runApi } from './api';
-import { createClient } from 'redis';
+import { getRedis } from './redis';
 dotenv.config({});
 
 export async function run(
@@ -15,9 +15,7 @@ export async function run(
   logger: Logger,
   metrics: IndexerCollector,
 ) {
-  const redis = createClient({
-    url: process.env.REDIS_URL || 'redis://redis:6379',
-  });
+  const redis = getRedis();
 
   await redis.connect();
 

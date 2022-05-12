@@ -1,6 +1,5 @@
 import { Orchestrator } from './orchestrator';
 import { BridgeContext } from '@nomad-xyz/sdk-bridge';
-import fs from 'fs';
 import {
   EventType,
   NomadishEvent,
@@ -15,8 +14,8 @@ import { BridgeRouter } from '@nomad-xyz/contracts-bridge';
 import pLimit from 'p-limit';
 import { RpcRequestMethod } from './metrics';
 import Logger from 'bunyan';
-import { createClient } from 'redis';
 import { RedisClient } from './types';
+import { getRedis } from './redis';
 
 type ShortTx = {
   gasPrice?: ethers.BigNumber;
@@ -96,7 +95,7 @@ const BATCH_SIZE = process.env.BATCH_SIZE
   : 2000;
 const RETRIES = 100;
 const TO_BLOCK_LAG = 1;
-const FROM_BLOCK_LAG = 2;
+const FROM_BLOCK_LAG = 40;
 
 export class Indexer {
   domain: number;
@@ -113,6 +112,8 @@ export class Indexer {
   lastIndexed: Date;
   failureCounter: FailureCounter;
   develop: boolean;
+  targetTo: number;
+  forceFrom: number; // One time value, once changed only the next .updateAll() will fetch blocks starting from this value
 
   eventCallback: undefined | ((event: NomadishEvent) => void);
 
@@ -126,13 +127,7 @@ export class Indexer {
     this.sdk = sdk;
     this.orchestrator = orchestrator;
     this.develop = false;
-    if (this.develop) {
-      this.persistance = new RamPersistance(
-        `/tmp/persistance_${this.domain}.json`,
-      );
-    } else {
-      this.persistance = new RedisPersistance(domain, redis);
-    }
+    this.persistance = new RedisPersistance(domain, redis);
     this.blockCache = new KVCache(
       'b_' + String(this.domain),
       this.orchestrator.db,
@@ -152,6 +147,7 @@ export class Indexer {
     // 20 concurrent requests per indexer
     this.limit = pLimit(this.domainToLimit());
     this.lastBlock = 0;
+    this.forceFrom = -1;
     this.logger = orchestrator.logger.child({
       span: 'indexer',
       network: this.network,
@@ -159,6 +155,24 @@ export class Indexer {
     });
     this.lastIndexed = new Date(0);
     this.failureCounter = new FailureCounter(60); // 1 hour
+    this.targetTo = 0;
+  }
+
+  setForceFrom(newFrom: number) {
+    if (newFrom > this.height) {
+      throw new Error(
+        `Shouldn't be able to set forceFrom lower than height: newFrom ${newFrom}, height ${this.height}`,
+      );
+    }
+
+    this.forceFrom = newFrom;
+  }
+
+  // not good
+  async lowerHeight(newHeight: number): Promise<void> {
+    this.lastBlock = newHeight;
+    await this.persistance.lowerHeight(newHeight);
+    this.forceFrom = newHeight;
   }
 
   domainToLimit(): number {
@@ -437,6 +451,10 @@ export class Indexer {
     return this.persistance.from;
   }
 
+  get deployHeight(): number {
+    return this.sdk.mustGetBridge(this.domain).deployHeight;
+  }
+
   home(): Home {
     return this.sdk.getCore(this.domain)!.home;
   }
@@ -450,11 +468,24 @@ export class Indexer {
   }
 
   async updateAll(replicas: number[]) {
-    const from = Math.max(
+    let tries = 0;
+    let passed = true;
+    let allEventsUnique: NomadishEvent[] = [];
+
+    this.logger.info(
+      `Starting to update all with persist: ${this.persistance.height}, lastBlock: ${this.lastBlock}`,
+    );
+    let from = Math.max(
       this.lastBlock + 1,
       this.persistance.height,
-      this.sdk.getBridge(this.domain)?.deployHeight || 0,
+      this.deployHeight,
     );
+
+    if (this.forceFrom !== -1) {
+      from = this.forceFrom;
+      this.forceFrom = -1;
+    }
+
     const [to, error] = await retry(
       async () => {
         this.orchestrator.metrics.incRpcRequests(
@@ -498,101 +529,116 @@ export class Indexer {
 
     this.logger.info(`Fetching events for from: ${from}, to: ${to}`);
 
-    const fetchEvents = async (
-      from: number,
-      to: number,
-    ): Promise<NomadishEvent[]> => {
-      const homeEvents = await this.fetchHome(from, to);
-      const replicasEvents = (
-        await Promise.all(replicas.map((r) => this.fetchReplica(r, from, to)))
-      ).flat();
-      const bridgeRouterEvents = await this.fetchBridgeRouter(from, to);
-
-      return [...homeEvents, ...replicasEvents, ...bridgeRouterEvents];
-    };
-
-    const allEvents: NomadishEvent[] = [];
-
-    const domain2batchSize = new Map([
-      [1650811245, 500],
-      [6648936, 5000],
-    ]);
-
-    const batchSize = domain2batchSize.get(this.domain) || BATCH_SIZE;
-    let batchFrom = from;
-    let batchTo = Math.min(to, from + batchSize);
     const startAll = new Date();
 
-    while (true) {
-      const done = Math.floor(((batchTo - from + 1) / (to - from + 1)) * 100);
-      this.logger.debug(
-        `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`,
-      );
+    this.targetTo = to;
 
-      const insuredBatchFrom = batchFrom - FROM_BLOCK_LAG;
+    do {
+      const fetchEvents = async (
+        from: number,
+        to: number,
+      ): Promise<NomadishEvent[]> => {
+        const homeEvents = await this.fetchHome(from, to);
+        const replicasEvents = (
+          await Promise.all(replicas.map((r) => this.fetchReplica(r, from, to)))
+        ).flat();
+        const bridgeRouterEvents = await this.fetchBridgeRouter(from, to);
 
-      const startBatch = new Date();
-      const events = await fetchEvents(insuredBatchFrom, batchTo);
-      const finishBatch = new Date();
-      if (!events) throw new Error(`KEk`);
-      events.sort((a, b) =>
-        a.ts === b.ts ? eventTypeToOrder(a) - eventTypeToOrder(b) : a.ts - b.ts,
-      );
-      await this.persistance.store(...events);
-      try {
-        if (this.develop) {
-          this.dummyTestEventsIntegrity(batchTo);
-          this.logger.debug(
-            `Integrity test PASSED between ${insuredBatchFrom} and ${batchTo}`,
-          );
-        }
-      } catch (e) {
-        const pastFrom = batchFrom;
-        const pastTo = batchTo;
-        batchFrom = batchFrom - batchSize / 2;
-        batchTo = batchFrom + batchSize;
-        this.logger.warn(
-          `Integrity test not passed between ${pastFrom} and ${pastTo}, recollecting between ${batchFrom} and ${batchTo}: ${e}`,
+        return [...homeEvents, ...replicasEvents, ...bridgeRouterEvents];
+      };
+
+      const allEvents: NomadishEvent[] = [];
+
+      const domain2batchSize = new Map([
+        [1650811245, 500],
+        [6648936, 5000],
+      ]);
+
+      const batchSize = domain2batchSize.get(this.domain) || BATCH_SIZE;
+      let batchFrom = from;
+      let batchTo = Math.min(to, from + batchSize);
+
+      while (true) {
+        const done = Math.floor(((batchTo - from + 1) / (to - from + 1)) * 100);
+        this.logger.debug(
+          `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`,
         );
-        continue;
+
+        const insuredBatchFrom = batchFrom - FROM_BLOCK_LAG;
+
+        const startBatch = new Date();
+        const events = await fetchEvents(insuredBatchFrom, batchTo);
+        const finishBatch = new Date();
+        if (!events) throw new Error(`KEk`);
+        events.sort((a, b) =>
+          a.ts === b.ts
+            ? eventTypeToOrder(a) - eventTypeToOrder(b)
+            : a.ts - b.ts,
+        );
+        await this.persistance.store(...events);
+        this.lastBlock = batchTo;
+        try {
+          if (this.develop) {
+            this.dummyTestEventsIntegrity(batchTo);
+            this.logger.debug(
+              `Integrity test PASSED between ${insuredBatchFrom} and ${batchTo}`,
+            );
+          }
+        } catch (e) {
+          const pastFrom = batchFrom;
+          const pastTo = batchTo;
+          batchFrom = batchFrom - batchSize / 2;
+          batchTo = batchFrom + batchSize;
+          this.logger.warn(
+            `Integrity test not passed between ${pastFrom} and ${pastTo}, recollecting between ${batchFrom} and ${batchTo}: ${e}`,
+          );
+          continue;
+        }
+        const filteredEvents = events.filter((newEvent) =>
+          allEvents.every(
+            (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash(),
+          ),
+        );
+        allEvents.push(...filteredEvents);
+        const speed = blockSpeed(batchFrom, batchTo, startBatch, finishBatch);
+        this.logger.debug(
+          `Fetched batch for domain ${this.domain}. Blocks: ${
+            batchTo - batchFrom + 1
+          } (${speed.toFixed(1)}b/sec). Got events: ${filteredEvents.length}`,
+        );
+        if (batchTo >= to) break;
+        batchFrom = batchTo + 1;
+        batchTo = Math.min(to, batchFrom + batchSize);
       }
-      const filteredEvents = events.filter((newEvent) =>
-        allEvents.every(
-          (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash(),
-        ),
-      );
-      allEvents.push(...filteredEvents);
-      const speed = blockSpeed(batchFrom, batchTo, startBatch, finishBatch);
-      this.logger.debug(
-        `Fetched batch for domain ${this.domain}. Blocks: ${
-          batchTo - batchFrom + 1
-        } (${speed}b/sec). Got events: ${filteredEvents.length}`,
-      );
-      if (batchTo >= to) break;
-      batchFrom = batchTo + 1;
-      batchTo = Math.min(to, batchFrom + batchSize);
-    }
+
+      if (!allEvents) throw new Error('kek');
+
+      allEvents.sort((a, b) => {
+        if (a.ts === b.ts) {
+          return eventTypeToOrder(a) - eventTypeToOrder(b);
+        } else {
+          return a.ts - b.ts;
+        }
+      });
+
+      allEventsUnique = onlyUniqueEvents(allEvents);
+
+      try {
+        tries += 1;
+        this.dummyTestEventsIntegrity();
+        passed = true;
+      } catch (e) {
+        this.logger.warn(`Dummy test not passed:`, e);
+        from -= batchSize;
+      }
+    } while (tries < 10 && !passed);
 
     const finishedAll = new Date();
-
-    if (!allEvents) throw new Error('kek');
-
-    allEvents.sort((a, b) => {
-      if (a.ts === b.ts) {
-        return eventTypeToOrder(a) - eventTypeToOrder(b);
-      } else {
-        return a.ts - b.ts;
-      }
-    });
-
-    const allEventsUnique = onlyUniqueEvents(allEvents);
-
-    if (this.develop || true) this.dummyTestEventsIntegrity();
     const speed = blockSpeed(from, to, startAll, finishedAll);
     this.logger.info(
       `Fetched all for domain ${this.domain}. Blocks: ${
         to - from + 1
-      } (${speed}b/sec). Got events: ${allEventsUnique.length}`,
+      } (${speed.toFixed(1)}b/sec). Got events: ${allEventsUnique.length}`,
     );
     this.lastBlock = to;
 
@@ -1157,6 +1203,8 @@ export abstract class Persistance {
   abstract sortSorage(): void;
   abstract allEvents(): Promise<NomadishEvent[]>;
   abstract persist(): void;
+  abstract updateFromTo(block: number): Promise<void>;
+  abstract lowerHeight(newHeight: number): Promise<void>;
 }
 
 export class RedisPersistance extends Persistance {
@@ -1165,21 +1213,57 @@ export class RedisPersistance extends Persistance {
 
   constructor(domain: number, client?: RedisClient) {
     super();
-    this.client =
-      client ||
-      createClient({
-        url: process.env.REDIS_URL || 'redis://redis:6379',
-      });
+    this.client = client || getRedis();
     this.domain = domain;
 
     this.client.on('error', (err) => console.log('Redis Client Error', err));
   }
 
+  async lowerHeight(newHeight: number): Promise<void> {
+    if (newHeight > this.height)
+      throw new Error(
+        `Attempt to lower height ${this.height} with ${newHeight} for domain ${this.domain}`,
+      );
+
+    const promises = [];
+
+    this.height = newHeight;
+    promises.push(
+      this.client.hSet(`height`, String(this.domain), String(this.height)),
+    );
+
+    if (this.from > newHeight) {
+      this.from = newHeight;
+      promises.push(
+        this.client.hSet(`from`, String(this.domain), String(this.from)),
+      );
+    }
+
+    await Promise.all(promises);
+  }
+
   async updateFromTo(block: number) {
-    if (block < this.from || this.from === -1) this.from = block;
-    if (block > this.height || this.height === -1) this.height = block;
-    await this.client.hSet(`from`, String(this.domain), String(this.from));
-    await this.client.hSet(`height`, String(this.domain), String(this.height));
+    let fromChanged = false;
+    let heightChanged = false;
+    if (block < this.from || this.from === -1) {
+      this.from = block;
+      fromChanged = true;
+    }
+    if (block > this.height || this.height === -1) {
+      this.height = block;
+      heightChanged = true;
+    }
+    const promises = [];
+    if (fromChanged)
+      promises.push(
+        this.client.hSet(`from`, String(this.domain), String(this.from)),
+      );
+    if (heightChanged)
+      promises.push(
+        this.client.hSet(`height`, String(this.domain), String(this.height)),
+      );
+
+    await Promise.all(promises);
   }
 
   async store(...events: NomadishEvent[]): Promise<void> {
@@ -1285,6 +1369,7 @@ export class RedisPersistance extends Persistance {
   persist(): void {}
 }
 
+/*
 export class RamPersistance extends Persistance {
   block2events: Map<number, NomadishEvent[]>;
   blocks: number[];
@@ -1297,9 +1382,11 @@ export class RamPersistance extends Persistance {
     this.storePath = storePath;
   }
 
-  updateFromTo(block: number) {
+  updateFromTo(block: number): Promise<void> {
     if (block < this.from || this.from === -1) this.from = block;
     if (block > this.height || this.height === -1) this.height = block;
+
+    return Promise.resolve()
   }
 
   async store(...events: NomadishEvent[]): Promise<void> {
@@ -1443,3 +1530,5 @@ export class EventsRange implements Iterable<NomadishEvent> {
     return this;
   }
 }
+
+*/
