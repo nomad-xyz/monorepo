@@ -34,7 +34,15 @@ def create_transaction(sender_key:str, recipient_address:int, amount:int, nonce:
     w3 = Web3(Web3.HTTPProvider(endpoint))
     recipient_address = Web3.toChecksumAddress(recipient_address)
     chain_id = w3.eth.chain_id
-    gas = 100000 * 100 if "arb-rinkeby" in endpoint else 100000 
+
+    # Quick and Dirty fix: Will move this as a config
+    if "arb-rinkeby" in endpoint:
+        gas = 100000 * 100
+    elif "devnet.neonlabs" in endpoint:
+        gas = 1579040
+    else:
+        gas = 100000
+
     # sign transaction 
     tx_params = dict(
         nonce=nonce,
