@@ -321,7 +321,15 @@ export class Orchestrator {
         if (t) {
           this.metrics.observeLatency('updated', homeName, replicaName, t);
           if (t < 0) {
-            this.logger.warn({origin: m.origin, destination: m.destination, stage: 'updated', value: t}, `Replorted timings is below zero`)
+            this.logger.warn(
+              {
+                origin: m.origin,
+                destination: m.destination,
+                stage: 'updated',
+                value: t,
+              },
+              `Replorted timings is below zero`,
+            );
           }
         }
         if (g)
@@ -340,7 +348,15 @@ export class Orchestrator {
         if (t) {
           this.metrics.observeLatency('relayed', homeName, replicaName, t);
           if (t < 0) {
-            this.logger.warn({origin: m.origin, destination: m.destination, stage: 'relayed', value: t}, `Replorted timings is below zero`)
+            this.logger.warn(
+              {
+                origin: m.origin,
+                destination: m.destination,
+                stage: 'relayed',
+                value: t,
+              },
+              `Replorted timings is below zero`,
+            );
           }
         }
         if (g)
@@ -357,11 +373,19 @@ export class Orchestrator {
         const t = m.timings.toReceive();
         const g = e.gasUsed.toNumber();
         if (t) {
-            this.metrics.observeLatency('received', homeName, replicaName, t);
-            if (t < 0) {
-              this.logger.warn({origin: m.origin, destination: m.destination, stage: 'received', value: t}, `Replorted timings is below zero`)
-            }
+          this.metrics.observeLatency('received', homeName, replicaName, t);
+          if (t < 0) {
+            this.logger.warn(
+              {
+                origin: m.origin,
+                destination: m.destination,
+                stage: 'received',
+                value: t,
+              },
+              `Replorted timings is below zero`,
+            );
           }
+        }
         if (g)
           this.metrics.observeGasUsage('received', homeName, replicaName, g);
       } catch (e) {
@@ -378,7 +402,15 @@ export class Orchestrator {
         if (t) {
           this.metrics.observeLatency('processed', homeName, replicaName, t);
           if (t < 0) {
-            this.logger.warn({origin: m.origin, destination: m.destination, stage: 'processed', value: t}, `Replorted timings is below zero`)
+            this.logger.warn(
+              {
+                origin: m.origin,
+                destination: m.destination,
+                stage: 'processed',
+                value: t,
+              },
+              `Replorted timings is below zero`,
+            );
           }
         }
         if (g)

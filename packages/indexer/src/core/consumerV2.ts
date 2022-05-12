@@ -198,7 +198,9 @@ export class NomadMessage {
   isGovernanceMessage() {
     const govRouterAddress = this.sdk.governorCore().governanceRouter.address;
     if (govRouterAddress) {
-      const internalSenderIsGovRouter = Padded.fromWhatever(govRouterAddress).eq(this.internalSender);
+      const internalSenderIsGovRouter = Padded.fromWhatever(
+        govRouterAddress,
+      ).eq(this.internalSender);
       return internalSenderIsGovRouter;
     } else {
       return false;
@@ -206,9 +208,12 @@ export class NomadMessage {
   }
 
   isBridgeMessage() {
-    const bridgeRouterAddress = this.sdk.getBridge(this.origin)?.bridgeRouter.address;
+    const bridgeRouterAddress = this.sdk.getBridge(this.origin)?.bridgeRouter
+      .address;
     if (bridgeRouterAddress) {
-      const internalSenderIsBridgeRouter = Padded.fromWhatever(bridgeRouterAddress).eq(this.internalSender);
+      const internalSenderIsBridgeRouter = Padded.fromWhatever(
+        bridgeRouterAddress,
+      ).eq(this.internalSender);
       return internalSenderIsBridgeRouter;
     } else {
       return false;
@@ -360,7 +365,7 @@ export class NomadMessage {
       logger.child({ messageSource: 'deserialize' }),
       sdk,
       undefined,
-      s.tx || undefined
+      s.tx || undefined,
     );
     m.timings.updated(s.updatedAt * 1000);
     m.timings.relayed(s.relayedAt * 1000);
@@ -479,7 +484,6 @@ class EventsPool {
         eventData.toId,
       ).toEVMAddress()};${eventData.amount.toHexString()};${e.block}`;
       await this.redis.hSet('send', key, value);
-
     } else if (e.eventType === EventType.HomeUpdate) {
       const eventData = e.eventData as Update;
       const key = `${eventData.homeDomain};${eventData.oldRoot}`;
@@ -519,7 +523,6 @@ class EventsPool {
       const eventData = e.eventData as Process;
       const key = eventData.messageHash;
       await this.redis.hSet('process', key, value);
-
     }
   }
 
@@ -629,7 +632,7 @@ export class ProcessorV2 extends Consumer {
       this.logger.child({ messageSource: 'consumer' }),
       this.sdk,
       undefined,
-      e.tx
+      e.tx,
     );
 
     const logger = m.logger.child({ eventName: 'dispatched' });

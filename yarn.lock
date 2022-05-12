@@ -1663,7 +1663,6 @@ __metadata:
   version: 0.1.0-rc.20
   resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.20"
   checksum: df1852233cbd55a6605443d03f40530a00163f80dc7b377a249871ffafb620a77f8d204885c2a9905e5d4d91e4229e99da56549c17add45bb3d7c5e7dbe8e663
-
   languageName: node
   linkType: hard
 
@@ -1678,7 +1677,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/contracts-bridge@1.0.0-rc.2, @nomad-xyz/contracts-bridge@^1.0.0-rc.2, @nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
+"@nomad-xyz/contracts-bridge@1.0.0-rc.2, @nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge"
   dependencies:
@@ -1709,7 +1708,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/contracts-core@^1.0.0-rc.2, @nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
+"@nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-core@workspace:packages/contracts-core"
   dependencies:
@@ -1918,20 +1917,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk-bridge@npm:^1.0.0-rc.13":
-  version: 1.0.0-rc.13
-  resolution: "@nomad-xyz/sdk-bridge@npm:1.0.0-rc.13"
-  dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.18
-    "@nomad-xyz/contracts-bridge": ^1.0.0-rc.2
-    "@nomad-xyz/sdk": ^2.0.0-rc.13
-    ethers: ^5.0.0
-    web3: ^1.6.1
-  checksum: 2ff6cb492ecbe455bbd321261b76a85dffe23403312bd46fad1a56daa65bbc13b5722c5e00f42e39eedc7b39aa49f41d84921ca8f9a2e6c18f9df431a8362485
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
+"@nomad-xyz/sdk-bridge@^1.0.0-rc.13, @nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
@@ -1986,19 +1972,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk@npm:^2.0.0-rc.13":
-  version: 2.0.0-rc.13
-  resolution: "@nomad-xyz/sdk@npm:2.0.0-rc.13"
-  dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.18
-    "@nomad-xyz/contracts-core": ^1.0.0-rc.2
-    "@nomad-xyz/multi-provider": ^1.0.0-rc.4
-    ethers: ^5.0.0
-  checksum: 6b16491f1eb625444520b1410da3092f9333f189d4a64b6611d29049e0dbb628bf91b5bce374aa6b88ccec17382c521ca068e2ea88f54fb939819edb21a04408
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
+"@nomad-xyz/sdk@^2.0.0-rc.13, @nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
