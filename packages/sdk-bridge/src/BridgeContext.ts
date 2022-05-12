@@ -281,7 +281,7 @@ export class BridgeContext extends NomadContext {
     );
     tx.gasLimit = BigNumber.from(350000);
 
-    return tx
+    return tx;
   }
 
   /**

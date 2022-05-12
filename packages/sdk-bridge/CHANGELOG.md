@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### 1.0.0-rc.14
+
+- add: prepareSend, prepareSendNative
+
 ### 1.0.0-rc.13
 
 - fix: hard code gas limit for sendNative
