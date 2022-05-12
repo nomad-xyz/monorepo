@@ -1,15 +1,26 @@
 [default]
-solc_version = '0.7.6'
-optimizer_runs = 999999
-bytecodeHash = 'none'
-remappings = [
+solc_version = '0.7.6'        # Version of solc that we use
+remappings = [                # Libraries that we use from node_modules and are used by the smart contracts
 "@openzeppelin/=node_modules/@openzeppelin/",
 "@summa-tx/=node_modules/@summa-tx/"
 ]
+offline = true                # Disable downloading of missing solc version(s)
+optimizer = true              # Enable or disable the solc optimizer
+optimizer_runs = 999999       # The number of optimizer runs
+verbosity = 3                 # The verbosity of tests
+bytecode_hash = "none"        # For deterministic code
+block_timestamp = 1622400000  # Timestamp for tests (non-zero)
+
 [core]
 src = 'packages/contracts-core/contracts'
 test = 'packages/contracts-core/contracts/foundry-tests'
 out = 'packages/contracts-core/foundry_artifacts'
+
+[core-ci]
+src = 'packages/contracts-core/contracts'
+test = 'packages/contracts-core/contracts/foundry-tests'
+out = 'packages/contracts-core/foundry_artifacts'
+fuzz-runs = 10_000
 
 [router]
 src = 'packages/contracts-router/contracts'
@@ -18,3 +29,5 @@ out = 'packages/contracts-router/foundry_artifacts'
 [bridge]
 src = 'packages/contracts-bridge/contracts'
 out = 'packages/contracts-bridge/foundry_artifacts'
+
+
