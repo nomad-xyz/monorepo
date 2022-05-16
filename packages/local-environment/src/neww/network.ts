@@ -1,5 +1,5 @@
 import { Agents } from "./agent";
-import { NetworkSpecs, ContractConfig, BridgeConfiguration, Domain, CoreContracts, BridgeContracts, AgentConfig, AppConfig } from '@nomad-xyz/configuration';
+import { NetworkSpecs, ContractConfig, BridgeConfiguration, Domain, CoreContracts, BridgeContracts, AgentConfig, AppConfig, NomadGasConfig } from '@nomad-xyz/configuration';
 import { DockerizedActor } from "./actor";
 import Dockerode from "dockerode";
 import { sleep } from "../utils";
@@ -28,6 +28,7 @@ export abstract class Network {
     agentConfig?: AgentConfig;
     bridgeGui?: AppConfig;
 
+    gasConfig: NomadGasConfig;
 
     abstract get specs(): NetworkSpecs;
     abstract get rpcs(): string[];
@@ -45,6 +46,83 @@ export abstract class Network {
         this.chainId = chainId;
 
         this.deployOverrides = {};
+
+        try {
+          this.gasConfig = {
+            core: {
+              home: {
+                update: {
+                  base: 100000,
+                  perMessage: 10000
+                },
+                improperUpdate: {
+                  base: 100000,
+                  perMessage: 10000
+                },
+                doubleUpdate: 200000
+              },
+              replica: {
+                update: 140000,
+                prove: 200000,
+                process: 1700000,
+                proveAndProcess: 1900000,
+                doubleUpdate: 200000
+              },
+              connectionManager: {
+                ownerUnenrollReplica: 120000,
+                unenrollReplica: 120000
+              }
+            },
+            bridge: {
+              bridgeRouter: {
+                send: 500000
+              },
+              ethHelper: {
+                send: 800000,
+                sendToEvmLike: 800000
+              }
+            }
+          }
+        } catch(e) {
+          console.log(e)
+        }
+
+        this.gasConfig = {
+          core: {
+            home: {
+              update: {
+                base: 100000,
+                perMessage: 10000
+              },
+              improperUpdate: {
+                base: 100000,
+                perMessage: 10000
+              },
+              doubleUpdate: 200000
+            },
+            replica: {
+              update: 140000,
+              prove: 200000,
+              process: 1700000,
+              proveAndProcess: 1900000,
+              doubleUpdate: 200000
+            },
+            connectionManager: {
+              ownerUnenrollReplica: 120000,
+              unenrollReplica: 120000
+            }
+          },
+          bridge: {
+            bridgeRouter: {
+              send: 500000
+            },
+            ethHelper: {
+              send: 800000,
+              sendToEvmLike: 800000
+            }
+          }
+        }
+        
     }
 
     get connections(): string[] {
@@ -68,6 +146,7 @@ export abstract class Network {
 
 }
 
+let ports = 1337;
 
 export class DockerizedNetworkActor extends DockerizedActor {
     port: number;
@@ -75,7 +154,7 @@ export class DockerizedNetworkActor extends DockerizedActor {
 
     constructor(name: string) {
         super(name, 'network');
-        this.port = 1337;
+        this.port = ports++;
         this.blockTime = 1*1000;
     }
 
@@ -133,14 +212,14 @@ export class HardhatNetwork extends Network {
 
     constructor(name: string, domain: number) {
         super(name, domain, domain);
-        this.handler = new DockerizedNetworkActor(this.name+'xxx');
+        this.handler = new DockerizedNetworkActor(this.name+'kek');
         this.blockTime = 5;
         this.firstStart = false;
 
-        this.updater = '';
-        this.watcher = '';
-        this.recoveryManager = '';
-        this.weth = '';
+        this.updater = '0x'+'01'.repeat(20);
+        this.watcher = '0x'+'01'.repeat(20);
+        this.recoveryManager = '0x'+'01'.repeat(20);
+        this.weth = '0x'+'01'.repeat(20);
     }
 
     get connections(): string[] {
@@ -148,7 +227,7 @@ export class HardhatNetwork extends Network {
     }
 
     get rpcs(): string[] {
-        return [];
+        return [`http://localhost:${this.handler.port}`];
     }
 
     get specs(): NetworkSpecs {
@@ -178,7 +257,7 @@ export class HardhatNetwork extends Network {
     }
     get bridgeConfig(): BridgeConfiguration {
         return {
-            weth: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2KEK",
+            weth: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
             customs: [],
             mintGas: 200000,
             deployGas: 850000
