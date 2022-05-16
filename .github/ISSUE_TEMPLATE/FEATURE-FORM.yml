@@ -1,0 +1,41 @@
+name: Feature request
+description: Suggest a feature
+labels: ["T-feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please ensure that the feature has not already been requested in the issue tracker.
+
+        Thanks for helping us improve Nomad!
+  - type: dropdown
+    attributes:
+      label: Package
+      description: What package is the feature for?
+      multiple: true
+      options:
+        - contracts-bridge
+        - contracts-core
+        - contracts-router
+        - deploy
+        - indexer
+        - keymaster
+        - local-environment
+        - monitor
+        - multi-provider
+        - sdk-bridge
+        - sdk-govern
+        - sdk
+        - not applicable (please describe)
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Describe the feature you would like
+      description: Please also describe what the feature is aiming to solve, if relevant.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Add any other context to the feature (like screenshots, resources)

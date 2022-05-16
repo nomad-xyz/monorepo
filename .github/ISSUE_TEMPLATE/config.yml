@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://docs.nomad.xyz/
+    about: Nomad documentation
+  - name: Support
+    url: https://discord.gg/nomadxyz
+    about: This issue tracker is only for bugs and feature requests. Support is available on Discord!
