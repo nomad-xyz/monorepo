@@ -11,11 +11,11 @@ import { Home, Replica } from '@nomad-xyz/contracts-core';
 import { ethers } from 'ethers';
 import { FailureCounter, KVCache, replacer, retry, reviver } from './utils';
 import { BridgeRouter } from '@nomad-xyz/contracts-bridge';
-import pLimit from 'p-limit';
 import { RpcRequestMethod } from './metrics';
 import Logger from 'bunyan';
 import { RedisClient } from './types';
 import { getRedis } from './redis';
+import { getRateLimit, RPCRateLimiter } from './rateLimiting';
 
 type ShortTx = {
   gasPrice?: ethers.BigNumber;
@@ -106,7 +106,7 @@ export class Indexer {
   blockTimestampCache: KVCache;
   txCache: KVCache;
   txReceiptCache: KVCache;
-  limit: pLimit.Limit;
+  limit: RPCRateLimiter;
   lastBlock: number;
   logger: Logger;
   lastIndexed: Date;
@@ -145,7 +145,9 @@ export class Indexer {
       this.orchestrator.db,
     );
     // 20 concurrent requests per indexer
-    this.limit = pLimit(this.domainToLimit());
+    const strategy = getRateLimit(sdk, this.domain);
+    this.limit = new RPCRateLimiter(strategy);
+
     this.lastBlock = 0;
     this.forceFrom = -1;
     this.logger = orchestrator.logger.child({
@@ -176,6 +178,7 @@ export class Indexer {
   }
 
   domainToLimit(): number {
+    this.provider.getNetwork()
     return (
       {
         1650811245: 20,
@@ -207,20 +210,19 @@ export class Indexer {
 
     const [block, error] = await retry(
       async () => {
-        return await this.limit(async () => {
-          this.orchestrator.metrics.incRpcRequests(
-            RpcRequestMethod.GetBlockWithTxs,
-            this.network,
-          );
-          const start = new Date().valueOf();
-          const r = await this.provider.getBlockWithTransactions(blockNumber);
-          this.orchestrator.metrics.observeRpcLatency(
-            RpcRequestMethod.GetBlockWithTxs,
-            this.network,
-            new Date().valueOf() - start,
-          );
-          return r;
-        });
+        this.orchestrator.metrics.incRpcRequests(
+          RpcRequestMethod.GetBlockWithTxs,
+          this.network,
+        );
+        const start = new Date().valueOf();
+        await this.limit.getBlockWithTransactions();
+        const r = await this.provider.getBlockWithTransactions(blockNumber);
+        this.orchestrator.metrics.observeRpcLatency(
+          RpcRequestMethod.GetBlockWithTxs,
+          this.network,
+          new Date().valueOf() - start,
+        );
+        return r;
       },
       RETRIES,
       (error: any) => {
@@ -263,20 +265,19 @@ export class Indexer {
 
     const [block, error] = await retry(
       async () => {
-        return await this.limit(async () => {
-          this.orchestrator.metrics.incRpcRequests(
-            RpcRequestMethod.GetBlock,
-            this.network,
-          );
-          const start = new Date().valueOf();
-          const r = await this.provider.getBlock(blockNumber);
-          this.orchestrator.metrics.observeRpcLatency(
-            RpcRequestMethod.GetBlock,
-            this.network,
-            new Date().valueOf() - start,
-          );
-          return r;
-        });
+        this.orchestrator.metrics.incRpcRequests(
+          RpcRequestMethod.GetBlock,
+          this.network,
+        );
+        const start = new Date().valueOf();
+        await this.limit.getBlock();
+        const r = await this.provider.getBlock(blockNumber);
+        this.orchestrator.metrics.observeRpcLatency(
+          RpcRequestMethod.GetBlock,
+          this.network,
+          new Date().valueOf() - start,
+        );
+        return r;
       },
       RETRIES,
       (error: any) => {
@@ -312,20 +313,19 @@ export class Indexer {
 
     const [tx, error] = await retry(
       async () => {
-        return await this.limit(async () => {
-          this.orchestrator.metrics.incRpcRequests(
-            RpcRequestMethod.GetTx,
-            this.network,
-          );
-          const start = new Date().valueOf();
-          const r = await this.provider.getTransaction(hash);
-          this.orchestrator.metrics.observeRpcLatency(
-            RpcRequestMethod.GetTx,
-            this.network,
-            new Date().valueOf() - start,
-          );
-          return r;
-        });
+        this.orchestrator.metrics.incRpcRequests(
+          RpcRequestMethod.GetTx,
+          this.network,
+        );
+        const start = new Date().valueOf();
+        await this.limit.getTransaction();
+        const r = await this.provider.getTransaction(hash);
+        this.orchestrator.metrics.observeRpcLatency(
+          RpcRequestMethod.GetTx,
+          this.network,
+          new Date().valueOf() - start,
+        );
+        return r;
       },
       RETRIES,
       (error: any) => {
@@ -386,20 +386,19 @@ export class Indexer {
 
     const [receipt, error] = await retry(
       async () => {
-        return await this.limit(async () => {
-          this.orchestrator.metrics.incRpcRequests(
-            RpcRequestMethod.GetTxReceipt,
-            this.network,
-          );
-          const start = new Date().valueOf();
-          const r = await this.provider.getTransactionReceipt(hash);
-          this.orchestrator.metrics.observeRpcLatency(
-            RpcRequestMethod.GetTxReceipt,
-            this.network,
-            new Date().valueOf() - start,
-          );
-          return r;
-        });
+        this.orchestrator.metrics.incRpcRequests(
+          RpcRequestMethod.GetTxReceipt,
+          this.network,
+        );
+        const start = new Date().valueOf();
+        await this.limit.getTransactionReceipt();
+        const r = await this.provider.getTransactionReceipt(hash);
+        this.orchestrator.metrics.observeRpcLatency(
+          RpcRequestMethod.GetTxReceipt,
+          this.network,
+          new Date().valueOf() - start,
+        );
+        return r;
       },
       RETRIES,
       (error: any) => {
@@ -493,6 +492,7 @@ export class Indexer {
           this.network,
         );
         const start = new Date().valueOf();
+        await this.limit.getBlockNumber();
         const r = await this.provider.getBlockNumber();
         this.orchestrator.metrics.observeRpcLatency(
           RpcRequestMethod.GetBlockNumber,
@@ -764,6 +764,7 @@ export class Indexer {
             RpcRequestMethod.GetLogs,
             this.network,
           );
+          await this.limit.getLogs();
           const start = new Date().valueOf();
           const r = await br.queryFilter(br.filters.Send(), from, to);
           this.orchestrator.metrics.observeRpcLatency(
@@ -832,6 +833,7 @@ export class Indexer {
             RpcRequestMethod.GetLogs,
             this.network,
           );
+          await this.limit.getLogs();
           const start = new Date().valueOf();
           const r = await br.queryFilter(br.filters.Receive(), from, to);
           this.orchestrator.metrics.observeRpcLatency(
@@ -906,6 +908,7 @@ export class Indexer {
             RpcRequestMethod.GetLogs,
             this.network,
           );
+          await this.limit.getLogs();
           const start = new Date().valueOf();
           const r = await home.queryFilter(home.filters.Dispatch(), from, to);
           this.orchestrator.metrics.observeRpcLatency(
@@ -976,6 +979,7 @@ export class Indexer {
             RpcRequestMethod.GetLogs,
             this.network,
           );
+          await this.limit.getLogs();
           const start = new Date().valueOf();
           const r = await home.queryFilter(home.filters.Update(), from, to);
           this.orchestrator.metrics.observeRpcLatency(
@@ -1050,6 +1054,7 @@ export class Indexer {
             RpcRequestMethod.GetLogs,
             this.network,
           );
+          await this.limit.getLogs();
           const start = new Date().valueOf();
           const r = await replica.queryFilter(
             replica.filters.Update(),
@@ -1121,6 +1126,7 @@ export class Indexer {
             RpcRequestMethod.GetLogs,
             this.network,
           );
+          await this.limit.getLogs();
           const start = new Date().valueOf();
           const r = await replica.queryFilter(
             replica.filters.Process(),
