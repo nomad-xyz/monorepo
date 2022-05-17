@@ -1659,14 +1659,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/configuration@npm:^0.1.0-rc.18":
-  version: 0.1.0-rc.20
-  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.20"
-  checksum: df1852233cbd55a6605443d03f40530a00163f80dc7b377a249871ffafb620a77f8d204885c2a9905e5d4d91e4229e99da56549c17add45bb3d7c5e7dbe8e663
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/configuration@npm:^0.1.0-rc.20":
+"@nomad-xyz/configuration@npm:^0.1.0-rc.18, @nomad-xyz/configuration@npm:^0.1.0-rc.20":
   version: 0.1.0-rc.20
   resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.20"
   checksum: df1852233cbd55a6605443d03f40530a00163f80dc7b377a249871ffafb620a77f8d204885c2a9905e5d4d91e4229e99da56549c17add45bb3d7c5e7dbe8e663
