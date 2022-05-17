@@ -280,7 +280,7 @@ contract Replica is Version0, NomadBase {
         uint256 _index
     ) public returns (bool) {
         // ensure that message has not been proven or processed
-        require(messages[_leaf] == bytes32(uint256(0)), "!MessageStatus.None");
+        require(messages[_leaf] == bytes32(0), "!MessageStatus.None");
         // calculate the expected root based on the proof
         bytes32 _calculatedRoot = MerkleLib.branchRoot(_leaf, _proof, _index);
         // if the root is valid, change status to Proven
