@@ -25,6 +25,7 @@ import { queryAnnotatedEvents } from '..';
 import { keccak256 } from 'ethers/lib/utils';
 import { MessageProof } from '../NomadContext';
 import axios from 'axios';
+import { ethers } from 'ethers';
 
 export type ParsedMessage = {
   from: number;
@@ -447,7 +448,12 @@ export class NomadMessage<T extends NomadContext> {
    * status of the message.
    */
   async replicaStatus(): Promise<ReplicaMessageStatus> {
-    return this.replica.messages(this.leaf);
+    const root = await this.replica.messages(this.leaf);
+    if (root === ethers.constants.HashZero) return ReplicaMessageStatus.None;
+    if (root === `0x${'00'.repeat(31)}02`)
+      return ReplicaMessageStatus.Processed;
+
+    return ReplicaMessageStatus.Proven;
   }
 
   /**
