@@ -68,9 +68,18 @@ If needed, reference Foundry's [Troubleshooting Installation](https://github.com
 Then run the following:
 
 ```
-$ yarn
-$ yarn bootstrap
+$ yarn install
+$ yarn build
+$ yarn compile
 ```
+
+After that, go to the `configuration` folder found in the [rust repo](https://github.com/nomad-xyz/rust). Pull whichever config you want from there, and place that inside your config folder in `/packages/deploy/config`.
+
+Finally, run the following
+
+`yarn run ts-node scripts/deploy.ts ./config/development.json ./config/overrides-development.json`
+
+You have successfully installed dependencies and deployed Nomad's contracts on testnet. 
 
 ### Common yarn scripts
 
