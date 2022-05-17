@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- feat: add config fetching
 - add s3 name and URI getters
 - add getProof async method for retrieving proofs from s3
 
