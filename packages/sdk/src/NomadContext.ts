@@ -9,16 +9,49 @@ import { NomadMessage } from './messages/NomadMessage';
 
 export type Address = string;
 
-type Path = [BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike, BytesLike];
+type Path = [
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+];
 
-type MessageProof = {
+export type MessageProof = {
   message: BytesLike;
   proof: {
     leaf: BytesLike;
     index: number;
     path: Path;
-  }
-}
+  };
+};
 
 /**
  * The NomadContext manages connections to Nomad core and Bridge contracts.
@@ -193,7 +226,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
   /**
    * Proves and Processes a transaction on the destination chain. This is subsidize and
    * automatic on non-Ethereum destinations
-   * 
+   *
    * @dev Ensure that a transaction is ready to be processed. You should ensure the following
    * criteria have been met prior to calling this function:
    *  1. The tx has been relayed (has status of 2):
@@ -204,7 +237,9 @@ export class NomadContext extends MultiProvider<config.Domain> {
    * @param message NomadMessage
    * @returns The Contract Transaction receipt
    */
-  async process(message: NomadMessage<NomadContext>): Promise<ContractTransaction>{
+  async process(
+    message: NomadMessage<NomadContext>,
+  ): Promise<ContractTransaction> {
     const s3URL = `https://nomadxyz-${this.environment}-proofs.s3.us-west-2.amazonaws.com/`;
 
     const originNetwork = this.resolveDomainName(message.origin);
@@ -220,7 +255,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
     return replica.proveAndProcess(
       data.message,
       data.proof.path,
-      data.proof.index
+      data.proof.index,
     );
   }
 
