@@ -274,6 +274,7 @@ export async function startTokenUpdater(
   };
 
   const p: Promise<void> = new Promise(async (resolve, reject) => {
+    let t = 0;
     while (true) {
       if (stopper) {
         resolve();
@@ -281,9 +282,14 @@ export async function startTokenUpdater(
       }
       try {
         await x();
+        t = 0;
         await sleep(5 * 60 * 1000);
       } catch (e) {
         logger.error(`Failed updating tokens:`, e);
+        if (t++ > 10) {
+          break;
+        }
+
       }
     }
   });
