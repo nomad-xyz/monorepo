@@ -68,8 +68,8 @@ If needed, reference Foundry's [Troubleshooting Installation](https://github.com
 Then run the following:
 
 ```
-$ yarn
-$ yarn bootstrap
+$ yarn install
+$ yarn build
 ```
 
 ### Common yarn scripts
