@@ -24,18 +24,6 @@ contract Replica is Version0, NomadBase {
     using TypedMemView for bytes29;
     using Message for bytes29;
 
-    // ============ Enums ============
-
-    // Status of Message:
-    //   0 - None - message has not been proven or processed
-    //   1 - Proven - message inclusion proof has been validated
-    //   2 - Processed - message has been dispatched to recipient
-    enum MessageStatus {
-        None,
-        Proven,
-        Processed
-    }
-
     // ============ Public Storage ============
 
     // Domain of home chain
@@ -47,7 +35,7 @@ contract Replica is Version0, NomadBase {
     // Mapping of roots to allowable confirmation times
     mapping(bytes32 => uint256) public confirmAt;
     // Mapping of message leaves to MessageStatus
-    mapping(bytes32 => MessageStatus) public messages;
+    mapping(bytes32 => bytes32) public messages;
 
     // ============ Upgrade Gap ============
 
@@ -191,12 +179,12 @@ contract Replica is Version0, NomadBase {
         require(_m.destination() == localDomain, "!destination");
         // ensure message has been proven
         bytes32 _messageHash = _m.keccak();
-        require(messages[_messageHash] == MessageStatus.Proven, "!proven");
+        require(acceptableRoot(messages[_messageHash]), "!proven");
         // check re-entrancy guard
         require(entered == 1, "!reentrant");
         entered = 0;
         // update message status as processed
-        messages[_messageHash] = MessageStatus.Processed;
+        messages[_messageHash] = bytes32(uint256(2));
         // call handle function
         IMessageRecipient(_m.recipientAddress()).handle(
             _m.origin(),
@@ -263,6 +251,10 @@ contract Replica is Version0, NomadBase {
      * @return TRUE iff root has been submitted & timeout has expired
      */
     function acceptableRoot(bytes32 _root) public view returns (bool) {
+        // this is a backwards-compatibility for previous versions which
+        if (_root == bytes32(uint256(1))) return true;
+        if (_root == bytes32(uint256(2))) return false;
+
         uint256 _time = confirmAt[_root];
         if (_time == 0) {
             return false;
@@ -288,12 +280,12 @@ contract Replica is Version0, NomadBase {
         uint256 _index
     ) public returns (bool) {
         // ensure that message has not been proven or processed
-        require(messages[_leaf] == MessageStatus.None, "!MessageStatus.None");
+        require(messages[_leaf] == bytes32(uint256(0)), "!MessageStatus.None");
         // calculate the expected root based on the proof
         bytes32 _calculatedRoot = MerkleLib.branchRoot(_leaf, _proof, _index);
         // if the root is valid, change status to Proven
         if (acceptableRoot(_calculatedRoot)) {
-            messages[_leaf] = MessageStatus.Proven;
+            messages[_leaf] = _calculatedRoot;
             return true;
         }
         return false;
