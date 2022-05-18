@@ -188,30 +188,30 @@ export class DB {
   }
 
   async getMessages(req: MsgRequest): Promise<NomadMessage[]> {
-    const take = req.size? parseInt(req.size) : 15;
-    const page = req.page? parseInt(req.page) - 1 : 0;
+    const take = req.size ? parseInt(req.size) : 15;
+    const page = req.page ? parseInt(req.page) - 1 : 0;
     if (page < 0) {
       throw new Error(`Page is less than a 0`);
     }
     const skip = page * take;
 
     let where: {
-      sender?: string,
-      recipient?: string,
-      origin?: number,
-      destination?: number,
+      sender?: string;
+      recipient?: string;
+      origin?: number;
+      destination?: number;
     } = {
       sender: req.sender,
       recipient: req.recipient,
     };
 
-      if (req.origin) {
-        where.origin = parseInt(req.origin);
-      }
+    if (req.origin) {
+      where.origin = parseInt(req.origin);
+    }
 
-      if (req.destination) {
-        where.destination = parseInt(req.destination);
-      }
+    if (req.destination) {
+      where.destination = parseInt(req.destination);
+    }
 
     this.metrics.incDbRequests(DbRequestType.Select);
     const messages = await this.client.messages.findMany({
