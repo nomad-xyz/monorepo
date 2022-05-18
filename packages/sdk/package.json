@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/sdk",
-  "version": "2.0.0-rc.15",
+  "version": "2.0.0-rc.16",
   "description": "Nomad SDK",
   "keywords": [
     "nomad",

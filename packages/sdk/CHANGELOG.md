@@ -2,6 +2,12 @@
 
 ### Unreleased
 
+### 2.0.0-rc.16
+
+- re-publish to npm with correct package.json
+
+### 2.0.0-rc.15 (DEPRECATED)
+
 - feat: add config fetching
 - add s3 name and URI getters
 - add getProof async method for retrieving proofs from s3
