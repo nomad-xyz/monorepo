@@ -6,6 +6,7 @@ import * as config from '@nomad-xyz/configuration';
 
 import { CoreContracts } from './CoreContracts';
 import { NomadMessage } from './messages/NomadMessage';
+import axios from 'axios';
 
 export type Address = string;
 
@@ -276,6 +277,48 @@ export class NomadContext extends MultiProvider<config.Domain> {
       this._blacklist.add(domain);
     } else {
       this._blacklist.delete(domain);
+    }
+  }
+
+  /**
+   * Fetch a config from the Nomad config static site.
+   *
+   * @param environment the environment name to attempt to fetch
+   * @returns A NomadConfig
+   * @throws If the site is down, the config is not on the site, or the config
+   *         is not of a valid format
+   */
+  static async fetchConfig(environment: string): Promise<config.NomadConfig> {
+    const uri = `https://nomad-xyz.github.io/config/${environment}.json`;
+    const confStr: string = await (await axios.get(uri)).data;
+    return config.configFromString(confStr);
+  }
+
+  /**
+   * Fetch a config from the Nomad config static site and instantiate a context
+   * from it. If there is an issue, this function will fallback to the latest
+   * version of the config shipped with the configuration package.
+   *
+   * Fallback may be disabled by setting `allowFallback` to false
+   *
+   * @param this this type for the descendant
+   * @param env the environment name to attempt to fetch
+   * @param allowFallback allow fallback to the builtin env configuration
+   * @returns A NomadContext with the latest configuration for the specified env
+   * @throws If `allowFallback` is false and the site is down, the config is
+   *         not on the site, or the config is not of a valid format
+   */
+  static async fetch<T extends NomadContext>(
+    this: new (env: string | config.NomadConfig) => T,
+    env: string,
+    allowFallback = true,
+  ): Promise<T> {
+    try {
+      const config = await NomadContext.fetchConfig(env);
+      return new this(config);
+    } catch (e: unknown) {
+      if (allowFallback) return new this(env);
+      throw e;
     }
   }
 }
