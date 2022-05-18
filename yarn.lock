@@ -1652,17 +1652,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/configuration@npm:^0.1.0-rc.16":
-  version: 0.1.0-rc.16
-  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.16"
-  checksum: ffaca02f4acbd87eef22d642ae7a83e57a87cf262a3b286e67f854f9dbbe8a7571e119ec6c6df57663c99c06c598b0f881fbd272e935dc7c7812e244b40c3e95
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/configuration@npm:^0.1.0-rc.18, @nomad-xyz/configuration@npm:^0.1.0-rc.20":
+"@nomad-xyz/configuration@npm:^0.1.0-rc.18":
   version: 0.1.0-rc.20
   resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.20"
   checksum: df1852233cbd55a6605443d03f40530a00163f80dc7b377a249871ffafb620a77f8d204885c2a9905e5d4d91e4229e99da56549c17add45bb3d7c5e7dbe8e663
+  languageName: node
+  linkType: hard
+
+"@nomad-xyz/configuration@npm:^0.1.0-rc.21":
+  version: 0.1.0-rc.21
+  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.21"
+  checksum: 28e1e52b890a347c2de48589766474ae8630932920a193e7e4ea2f1e63b743e276f0249b9d30c392ed9e716c89f5f19dd387fe46a0fe0ca75ac55583e1fc665b
   languageName: node
   linkType: hard
 
@@ -1921,7 +1921,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.18
+    "@nomad-xyz/configuration": ^0.1.0-rc.21
     "@nomad-xyz/contracts-bridge": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"
     "@types/chai": ^4.2.21
@@ -1950,7 +1950,7 @@ __metadata:
     "@gnosis.pm/safe-core-sdk": ^2.0.0
     "@gnosis.pm/safe-ethers-adapters": ^0.1.0-alpha.8
     "@gnosis.pm/safe-ethers-lib": ^1.0.0
-    "@nomad-xyz/configuration": ^0.1.0-rc.16
+    "@nomad-xyz/configuration": ^0.1.0-rc.21
     "@nomad-xyz/sdk": "workspace:^"
     "@types/chai": ^4.2.21
     "@types/mocha": ^9.1.0
@@ -1976,7 +1976,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.20
+    "@nomad-xyz/configuration": ^0.1.0-rc.21
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/local-environment": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
@@ -7407,7 +7407,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 
