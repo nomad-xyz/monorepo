@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### 2.0.0-rc.17
+
+- chore: bump configuration to v0.1.0-rc.22
+
 ### 2.0.0-rc.16
 
 - re-publish to npm with correct package.json

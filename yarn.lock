@@ -1652,17 +1652,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/configuration@npm:^0.1.0-rc.18":
-  version: 0.1.0-rc.20
-  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.20"
-  checksum: df1852233cbd55a6605443d03f40530a00163f80dc7b377a249871ffafb620a77f8d204885c2a9905e5d4d91e4229e99da56549c17add45bb3d7c5e7dbe8e663
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/configuration@npm:^0.1.0-rc.21":
-  version: 0.1.0-rc.21
-  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.21"
-  checksum: 28e1e52b890a347c2de48589766474ae8630932920a193e7e4ea2f1e63b743e276f0249b9d30c392ed9e716c89f5f19dd387fe46a0fe0ca75ac55583e1fc665b
+"@nomad-xyz/configuration@npm:^0.1.0-rc.22":
+  version: 0.1.0-rc.22
+  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.22"
+  checksum: d5fb539fffe4070ee029ae539718849cb82ebcb6561fa69db191a8adf83f0cbf4675265ed8bdca60a64f58787a9b090fef2e16f1ea9d7a8bcd9e48cc22ab973c
   languageName: node
   linkType: hard
 
@@ -1770,7 +1763,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/deploy@workspace:packages/deploy"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.18
+    "@nomad-xyz/configuration": ^0.1.0-rc.22
     "@nomad-xyz/contracts-bridge": "workspace:^"
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/contracts-router": "workspace:^"
@@ -1921,7 +1914,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.21
+    "@nomad-xyz/configuration": ^0.1.0-rc.22
     "@nomad-xyz/contracts-bridge": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"
     "@types/chai": ^4.2.21
@@ -1950,7 +1943,7 @@ __metadata:
     "@gnosis.pm/safe-core-sdk": ^2.0.0
     "@gnosis.pm/safe-ethers-adapters": ^0.1.0-alpha.8
     "@gnosis.pm/safe-ethers-lib": ^1.0.0
-    "@nomad-xyz/configuration": ^0.1.0-rc.21
+    "@nomad-xyz/configuration": ^0.1.0-rc.22
     "@nomad-xyz/sdk": "workspace:^"
     "@types/chai": ^4.2.21
     "@types/mocha": ^9.1.0
@@ -1976,7 +1969,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.21
+    "@nomad-xyz/configuration": ^0.1.0-rc.22
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/local-environment": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
