@@ -6,6 +6,8 @@
 
 - re-publish to npm with correct package.json
 
+### 1.0.0-rc.15 (DEPRECATED)
+
 ### 1.0.0-rc.10
 
 - chore: bump configuration to v0.1.0-rc.16
