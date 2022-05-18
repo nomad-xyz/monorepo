@@ -57,7 +57,6 @@ abstract contract NomadBase is Initializable, OwnableUpgradeable {
      * @param newRoot New merkle root
      * @param signature Updater's signature on `oldRoot` and `newRoot`
      */
-
     event Update(
         uint32 indexed homeDomain,
         bytes32 indexed oldRoot,

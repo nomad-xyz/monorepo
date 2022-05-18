@@ -16,7 +16,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "bootstrap": "yarn clean && yarn build",
-    "build": "yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=core forge build",
+    "build": "yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && foundry install && foundry update && FOUNDRY_PROFILE=core forge build",
     "clean": "hardhat clean && rm -rf dist && rm -rf src",
     "compile": "hardhat compile",
     "copy-definitions": "cp src/*.d.ts dist/src",
@@ -24,7 +24,9 @@
     "lint:fix": "solhint --fix contracts/*.sol",
     "prettier": "prettier --write './contracts'",
     "prepublish": "yarn bootstrap && yarn build",
-    "test": "FOUNDRY_PROFILE=core-ci forge snapshot --check && FOUNDRY_PROFILE=core-ci forge test"
+    "test": "yarn snapshot --check && FOUNDRY_PROFILE=core forge test",
+    "test:ci": "yarn snapshot --check && FOUNDRY_PROFILE=core-ci forge test",
+    "snapshot": "forge clean && FOUNDRY_PROFILE=core forge snapshot"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.2",

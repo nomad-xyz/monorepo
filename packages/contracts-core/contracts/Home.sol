@@ -58,7 +58,6 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
      * @param committedRoot the latest notarized root submitted in the last signed Update
      * @param message Raw bytes of message
      */
-
     event Dispatch(
         bytes32 indexed messageHash,
         uint256 indexed leafIndex,
