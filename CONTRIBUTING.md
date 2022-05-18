@@ -119,14 +119,18 @@ Yes this is a lot, we intend to automate it later :)
 
 Before publishing any package to `npm` perform the following steps:
 
-- Run yarn to ensure the lockfile is up to date
-- Format, lint, test, and build your package using the standard scripts
-- Ensure that your package has a sensible `.npmignore`
-- Ensure that the `main` and `types` keys in your package are set correctly
-- Bump the version number in `package.json` (https://semver.org/, consult a senior dev if unsure)
-- Commit the above changes
-- Create a PR
-- AFTER the PR is merged, checkout main and tag the commit (git tag -s <package-to-release>@<new-package-version> <commit>)
-- Push tags (git push --tags)
-- From the tagged commit, ensure your working tree is clean with `git status`
-- Publish to npm (yarn <package-to-release> npm publish --access public)
+1. Run `yarn` to ensure the lockfile is up to date
+2. Run `yarn lint` to ensure all packages are linted
+3. Run `yarn test` to ensure all tests are passing
+4. Run `yarn build` to build all the packages
+5. Ensure that your package has a sensible `.npmignore`
+6. Ensure that the `main` and `types` keys in your package are set correctly
+7. Bump the version number in `package.json` (https://semver.org/, ask the team if you're unsure)
+8. Commit the above changes to a branch
+9. Create a PR and get approval
+10. Merge the PR to main
+11. **Pull and checkout _latest_ main** and tag the commit (`git tag -s <package-to-release>@<new-package-version> <commit>`)
+12. Push tags (`git push --tags`)
+13. From the tagged commit, ensure your working tree is clean with `git status`
+14. Ensure that you are on the root of the monorepo before publishing. Publishing from the individual package folder will not replace versions with `workspace:^` with the actual versions in the package.json that is uploaded to npm. This will cause errors when you try to install the packages from npm.
+15. Publish to npm (run this from the root `yarn <package-to-release> npm publish --access public`)
