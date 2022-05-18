@@ -122,7 +122,7 @@ export async function run(db: DB, logger: Logger) {
       messagesByRecipient(recipientLike: String!): [Message!]!
       allTokens: [Token!]!
       allReplicas: [Replica!]!
-      tokenReplica(id: String!, domain: Int!): Replica!
+      tokenReplica(id: String!, domain: Int!): Replica
       tokenReplicas(id: String!): [Replica!]!
       tokenReplicasByOrigin(domain: Int!): [Replica!]!
       tokenReplicasByDestination(domain: Int!): [Replica!]!
@@ -196,7 +196,7 @@ export async function run(db: DB, logger: Logger) {
         return db.client.replica.findFirst({
           where: {
             tokenId: id,
-            tokenDomain: domain,
+            domain,
           },
         });
       },
