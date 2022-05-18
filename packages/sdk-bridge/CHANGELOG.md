@@ -2,6 +2,12 @@
 
 ### Unreleased
 
+### 1.0.0-rc.16
+
+- re-publish to npm with correct package.json
+
+### 1.0.0-rc.15 (DEPRECATED)
+
 ### 1.0.0-rc.14
 
 - add: prepareSend, prepareSendNative
