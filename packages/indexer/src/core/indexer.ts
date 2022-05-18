@@ -178,7 +178,7 @@ export class Indexer {
   }
 
   domainToLimit(): number {
-    this.provider.getNetwork()
+    this.provider.getNetwork();
     return (
       {
         1650811245: 20,

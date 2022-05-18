@@ -255,17 +255,15 @@ export async function run(db: DB, logger: Logger) {
       const { size: sizeStr } = req.query;
 
       try {
+        if (sizeStr && parseInt(sizeStr) > 30)
+          return fail(res, 403, 'maximum page size is 30');
 
-        if (sizeStr && parseInt(sizeStr) > 30) return fail(res, 403, 'maximum page size is 30');
-
-        const messages = await db.getMessages(req.query, );
+        const messages = await db.getMessages(req.query);
 
         return res.json(messages.map((m) => m.serialize()));
-      } catch(e) {
+      } catch (e) {
         fail(res, 403, 'something went wrong');
       }
-
-      
     },
   );
 

@@ -291,7 +291,6 @@ export async function startTokenUpdater(
           break;
         }
         await sleep(10 * 1000);
-
       }
     }
   });
