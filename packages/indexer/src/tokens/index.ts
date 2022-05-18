@@ -249,7 +249,7 @@ export async function startTokenUpdater(
   const f = new TokenFetcher(db.client, sdk, logger);
   await f.connect();
 
-  const x = async () => {
+  const updateTokens = async () => {
     const tokens = await db.client.messages.findMany({
       select: {
         tokenId: true,
@@ -281,26 +281,20 @@ export async function startTokenUpdater(
         break;
       }
       try {
-        await x();
+        await updateTokens();
         t = 0;
         await sleep(5 * 60 * 1000);
       } catch (e) {
         logger.error(`Failed updating tokens:`, e);
         if (t++ > 10) {
+          reject();
           break;
         }
+        await sleep(10 * 1000);
 
       }
     }
   });
 
-  // console.log(`xxxxxxx->`)
-  // const interval = setInterval(() => {
-  //   console.log(`----->`);
-  //   x()
-  // }, 15*1000);
-  // console.log(`xxxxxxx-<`)
-
-  // return interval;
   return [ff, p];
 }

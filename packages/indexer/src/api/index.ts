@@ -21,6 +21,7 @@ const PORT = process.env.PORT;
 export async function run(db: DB, logger: Logger) {
   const app = express();
   app.use(cors());
+  app.disable('x-powered-by');
 
   const log = (
     req: express.Request,
@@ -251,13 +252,20 @@ export async function run(db: DB, logger: Logger) {
     '/tx',
     log,
     async (req: express.Request<{}, {}, {}, MsgRequest>, res) => {
-      const { size } = req.query;
+      const { size: sizeStr } = req.query;
 
-      if (size && size > 30) return fail(res, 403, 'maximum page size is 30');
+      try {
 
-      const messages = await db.getMessages(req.query);
+        if (sizeStr && parseInt(sizeStr) > 30) return fail(res, 403, 'maximum page size is 30');
 
-      return res.json(messages.map((m) => m.serialize()));
+        const messages = await db.getMessages(req.query, );
+
+        return res.json(messages.map((m) => m.serialize()));
+      } catch(e) {
+        fail(res, 403, 'something went wrong');
+      }
+
+      
     },
   );
 
