@@ -32,7 +32,7 @@
     "test": "yarn build && ts-mocha ./tests/*.ts"
   },
   "dependencies": {
-    "@nomad-xyz/configuration": "^0.1.0-rc.22",
+    "@nomad-xyz/configuration": "^0.1.0-rc.23",
     "@nomad-xyz/contracts-bridge": "workspace:^",
     "@nomad-xyz/sdk": "workspace:^",
     "ethers": "^5.0.0",

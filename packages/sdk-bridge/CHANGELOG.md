@@ -4,7 +4,7 @@
 
 ### 1.0.0-rc.17
 
-- chore: bump configuration to v0.1.0-rc.22
+- chore: bump configuration to v0.1.0-rc.23
 
 ### 1.0.0-rc.16
 
