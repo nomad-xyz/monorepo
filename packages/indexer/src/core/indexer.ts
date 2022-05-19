@@ -126,7 +126,7 @@ export class Indexer {
     this.domain = domain;
     this.sdk = sdk;
     this.orchestrator = orchestrator;
-    this.develop = !!(process.env.NODE_ENV && process.env.NODE_ENV === 'development');//false;
+    this.develop = !!(process.env.NODE_ENV && process.env.NODE_ENV === 'development'); //false;
     this.persistance = new RedisPersistance(domain, redis);
     this.blockCache = new KVCache(
       'b_' + String(this.domain),
