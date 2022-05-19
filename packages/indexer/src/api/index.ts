@@ -1,7 +1,14 @@
+import "reflect-metadata";
+
 import express from 'express';
 import cors from 'cors';
-import { graphqlHTTP } from 'express-graphql';
-import { makeExecutableSchema } from '@graphql-tools/schema';
+// import { graphqlHTTP } from 'express-graphql';
+import { ApolloServer } from 'apollo-server-express';
+
+import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
+
+import http from 'http';
+// import { makeExecutableSchema } from '@graphql-tools/schema';
 
 import { DB, MsgRequest } from '../core/db';
 import { prefix } from '../core/metrics';
@@ -9,6 +16,14 @@ import { prefix } from '../core/metrics';
 import * as dotenv from 'dotenv';
 import Logger from 'bunyan';
 import promBundle from 'express-prom-bundle';
+
+import { resolvers } from "@generated/type-graphql";
+// import { buildSchema } from 'graphql';
+// import { buildSchema } from 'typegraphql-prisma';
+import { buildSchema } from "type-graphql";
+// import { buildSchema } from 'graphql';
+
+
 
 dotenv.config({});
 
@@ -20,7 +35,7 @@ const PORT = process.env.PORT;
 
 export async function run(db: DB, logger: Logger) {
   const app = express();
-  app.use(cors());
+  // app.use(cors());
   app.disable('x-powered-by');
 
   const log = (
@@ -60,6 +75,8 @@ export async function run(db: DB, logger: Logger) {
     res.send(process.env.GIT_COMMIT);
   });
 
+
+  /*
   const typeDefs = `
     type Message {
       id: Int!
@@ -224,9 +241,18 @@ export async function run(db: DB, logger: Logger) {
     },
   };
 
+
+  
+  
+
   const schema = makeExecutableSchema({
     resolvers,
     typeDefs,
+  });
+
+  const schema = await buildSchema({
+    resolvers,
+    validate: false,
   });
 
   app.use(
@@ -236,6 +262,37 @@ export async function run(db: DB, logger: Logger) {
       graphiql: true,
     }),
   );
+
+  */
+
+  const schema = await buildSchema({
+    resolvers,
+    validate: false,
+  });
+
+  const httpServer = http.createServer(app);
+
+  const server = new ApolloServer({
+
+    // typeDefs,
+    // resolvers,
+    schema,
+
+    csrfPrevention: true,
+
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+
+    introspection: true,
+
+    context: {
+      prisma: db.client,
+    }
+
+  });
+
+  
+
+  
 
   app.get('/tx/:tx', log, async (req, res) => {
     const messages = await db.getMessageByEvm(req.params.tx);
@@ -267,8 +324,14 @@ export async function run(db: DB, logger: Logger) {
     },
   );
 
-  app.listen(PORT, () => {
-    console.log(process.env.DATABASE_URL);
-    logger.info(`Server is running at https://localhost:${PORT}`);
-  });
+  // app.listen(PORT, () => {
+  //   console.log(process.env.DATABASE_URL);
+  //   logger.info(`Server is running at https://localhost:${PORT}`);
+  // });
+
+  await server.start();
+
+  server.applyMiddleware({ app });
+
+  await new Promise<void>(resolve => httpServer.listen({ port: PORT }, resolve));
 }
