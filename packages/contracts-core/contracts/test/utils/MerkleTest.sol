@@ -23,11 +23,7 @@ contract MerkleTest is Test {
         input[5] = "-i";
         input[6] = "0";
         bytes memory result = vm.ffi(input);
-        console2.logBytes(result);
          (bytes32 root, bytes32 leaf, uint256 index, bytes32[32] memory proof) = abi.decode(result, (bytes32, bytes32, uint256,bytes32[32]));
-        console2.logBytes32(root);
-        console2.logBytes32(leaf);
-        console2.log("index", index);
         return (root, leaf, index, proof);
     }
 
