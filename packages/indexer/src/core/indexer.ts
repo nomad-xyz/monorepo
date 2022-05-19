@@ -126,7 +126,7 @@ export class Indexer {
     this.domain = domain;
     this.sdk = sdk;
     this.orchestrator = orchestrator;
-    this.develop = false;
+    this.develop = !!(process.env.NODE_ENV && process.env.NODE_ENV === 'development');//false;
     this.persistance = new RedisPersistance(domain, redis);
     this.blockCache = new KVCache(
       'b_' + String(this.domain),
@@ -623,14 +623,17 @@ export class Indexer {
 
       allEventsUnique = onlyUniqueEvents(allEvents);
 
-      try {
-        tries += 1;
-        this.dummyTestEventsIntegrity();
-        passed = true;
-      } catch (e) {
-        this.logger.warn(`Dummy test not passed:`, e);
-        from -= batchSize;
+      if (this.develop) {
+        try {
+          tries += 1;
+          this.dummyTestEventsIntegrity();
+          passed = true;
+        } catch (e) {
+          this.logger.warn(`Dummy test not passed:`, e);
+          from -= batchSize;
+        }
       }
+      
     } while (tries < 10 && !passed);
 
     const finishedAll = new Date();

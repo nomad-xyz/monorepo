@@ -155,11 +155,11 @@ class TokenFetcher {
           );
         if (decimals !== _decimals)
           throw new Error(
-            `Original token decimals !== replica's _decimals in TokenFetcher.fetch(): ${decimals} !== ${_decimals}. Domain: ${remoteDomain}, id: ${remoteId}`,
+            `Original token decimals !== replica's _decimals in TokenFetcher.fetch(): ${decimals} !== ${_decimals}. Domain: ${remoteDomain}, id: ${remoteId}, name: ${name}, remote name: ${_name}`,
           );
         if (symbol !== _symbol)
           this.logger.warn(
-            `Original token symbol !== replica's _symbol in TokenFetcher.fetch(): ${symbol} !== ${_symbol}. Domain: ${remoteDomain}, id: ${remoteId}`,
+            `Original token symbol !== replica's _symbol in TokenFetcher.fetch(): ${symbol} !== ${_symbol}. Domain: ${remoteDomain}, id: ${remoteId}, name: ${name}`,
           );
         // if (!balance.eq(_totalSupply)) console.warn(`totalSupply of ${symbol} (from ${domain}) at ${remoteDomain}\nis ${_totalSupply.toString()}\n want: ${balance}`);
 
@@ -243,8 +243,9 @@ export async function startTokenUpdater(
         t = 0;
         await sleep(5 * 60 * 1000);
       } catch (e) {
-        logger.error(`Failed updating tokens:`, e);
+        logger.warn(`Failed updating tokens:`, e);
         if (t++ > 10) {
+          logger.error(`Exhausted updating tokens retries (${t} retries). Going down... (probably with unhandled promise rejection)`);
           reject();
           break;
         }
