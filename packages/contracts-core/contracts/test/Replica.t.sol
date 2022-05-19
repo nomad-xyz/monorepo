@@ -4,6 +4,7 @@ pragma solidity >=0.6.11;
 import {ReplicaHarness} from "./harnesses/ReplicaHarness.sol";
 import {Replica} from "../Replica.sol";
 import {ReplicaHandlers} from "./utils/NomadTest.sol";
+import {MerkleTest} from "./utils/MerkleTest.sol";
 import {Message} from "../libs/Message.sol";
 
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
@@ -17,6 +18,7 @@ contract ReplicaTest is ReplicaHandlers {
     using Message for bytes29;
 
     ReplicaHarness replica;
+    MerkleTest merkleTest;
 
     uint256 optimisticSeconds;
     bytes32 committedRoot;
@@ -25,6 +27,7 @@ contract ReplicaTest is ReplicaHandlers {
     bytes32 exampleLeaf;
     uint256 exampleLeafIndex;
     bytes32[32] exampleProof;
+
 
     function setUp() public override {
         super.setUp();
@@ -39,6 +42,8 @@ contract ReplicaTest is ReplicaHandlers {
 
         setUpExampleProof();
         initializeReplica();
+
+        merkleTest = new MerkleTest();
 
     }
 
@@ -155,6 +160,27 @@ contract ReplicaTest is ReplicaHandlers {
         bool indexed success,
         bytes indexed returnData
     );
+
+    function test_proveAndProcess() public {
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32 receiver= bytes32(uint256(uint160(vm.addr(431))));
+        uint32 nonce = 0;
+        bytes memory messageBody = '0x';
+        bytes memory message = Message.formatMessage(
+            remoteDomain,
+            sender,
+            nonce,
+            homeDomain,
+            receiver,
+            messageBody
+        );
+        (bytes32 root, bytes32 leaf, uint256 index, bytes32[32] memory proof) = merkleTest.getProof(message);
+        vm.expectEmit(true, true, true, true);
+        bytes memory returnData = hex'';
+        emit Process(message.ref(0).keccak(), true, returnData);
+        replica.setCommittedRoot(root);
+        replica.proveAndProcess(message, proof, index);
+    }
 
     function test_processProvenMessageEmptyAddress() public {
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
