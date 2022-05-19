@@ -15,6 +15,7 @@ block_timestamp = 1622400000  # Timestamp for tests (non-zero)
 src = 'packages/contracts-core/contracts'
 test = 'packages/contracts-core/contracts/foundry-tests'
 out = 'packages/contracts-core/foundry_artifacts'
+ffi = true
 
 [core-ci]
 src = 'packages/contracts-core/contracts'
