@@ -27,7 +27,7 @@ contract NomadTest is Test {
 
     function getMessage(bytes32 oldRoot, bytes32 newRoot, uint32 domain)
         public
-        view
+        pure
         returns (bytes memory)
     {
         bytes memory message = abi.encodePacked(
@@ -67,7 +67,7 @@ contract NomadTest is Test {
         return signature;
     }
 
-    function stringToBytes32(string memory source) public view returns (bytes32 result) {
+    function stringToBytes32(string memory source) public pure returns (bytes32 result) {
         bytes memory tempEmptyStringTest = bytes(source);
         if (tempEmptyStringTest.length == 0) {
             return 0x0;
