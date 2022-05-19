@@ -1773,6 +1773,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nomad-xyz/configuration@npm:^0.1.0-rc.23":
+  version: 0.1.0-rc.23
+  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.23"
+  checksum: 45f5e5efb0394d06299304f09b681e53deece1c8dd8b17fe1091fc09286f3ae26c3ccae8daf523c63d5e3614492845680b844fd50677788fe9e371de767fabdc
+  languageName: node
+  linkType: hard
+
 "@nomad-xyz/contract-interfaces@npm:1.1.1":
   version: 1.1.1
   resolution: "@nomad-xyz/contract-interfaces@npm:1.1.1"
@@ -1910,9 +1917,9 @@ __metadata:
     "@graphql-tools/schema": ^8.3.5
     "@nomad-xyz/contracts-bridge": 1.0.0-rc.2
     "@nomad-xyz/multi-provider": ^1.0.0-rc.4
-    "@nomad-xyz/sdk": ^2.0.0-rc.16
-    "@nomad-xyz/sdk-bridge": ^1.0.0-rc.16
-    "@nomad-xyz/sdk-govern": ^1.0.0-rc.16
+    "@nomad-xyz/sdk": ^2.0.0-rc.17
+    "@nomad-xyz/sdk-bridge": ^1.0.0-rc.17
+    "@nomad-xyz/sdk-govern": ^1.0.0-rc.17
     "@prisma/client": ^3.14.0
     "@types/bunyan": ^1.8.7
     "@types/cors": ^2.8.12
@@ -2032,16 +2039,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk-bridge@npm:^1.0.0-rc.16":
-  version: 1.0.0-rc.16
-  resolution: "@nomad-xyz/sdk-bridge@npm:1.0.0-rc.16"
+"@nomad-xyz/sdk-bridge@npm:^1.0.0-rc.17":
+  version: 1.0.0-rc.17
+  resolution: "@nomad-xyz/sdk-bridge@npm:1.0.0-rc.17"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.21
+    "@nomad-xyz/configuration": ^0.1.0-rc.23
     "@nomad-xyz/contracts-bridge": ^1.0.0-rc.2
-    "@nomad-xyz/sdk": ^2.0.0-rc.16
+    "@nomad-xyz/sdk": ^2.0.0-rc.17
     ethers: ^5.0.0
     web3: ^1.6.1
-  checksum: 33b2e5b7f8ae5609dd07056f702cc54923a958c9e2333f769976792d18b1017c7cfd4a963714b9842edfd4bc64a9b24a906b0e504dcd39fb7c788337a60cf6b5
+  checksum: 3a6ee6c05b8cbe87c42d164739749c97b2b5d5dff5a53e6c9a9a1073b19dda30229dad82bc31e1edb84ecea361e8bc99a11d7e26bd284ada0e292c71b258bd44
   languageName: node
   linkType: hard
 
@@ -2071,18 +2078,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk-govern@npm:^1.0.0-rc.16":
-  version: 1.0.0-rc.16
-  resolution: "@nomad-xyz/sdk-govern@npm:1.0.0-rc.16"
+"@nomad-xyz/sdk-govern@npm:^1.0.0-rc.17":
+  version: 1.0.0-rc.17
+  resolution: "@nomad-xyz/sdk-govern@npm:1.0.0-rc.17"
   dependencies:
     "@gnosis.pm/safe-core-sdk": ^2.0.0
     "@gnosis.pm/safe-ethers-adapters": ^0.1.0-alpha.8
     "@gnosis.pm/safe-ethers-lib": ^1.0.0
-    "@nomad-xyz/configuration": ^0.1.0-rc.21
-    "@nomad-xyz/sdk": ^2.0.0-rc.16
+    "@nomad-xyz/configuration": ^0.1.0-rc.23
+    "@nomad-xyz/sdk": ^2.0.0-rc.17
     ethers: ^5.4.6
     web3: ^1.6.1
-  checksum: 327cfa8c3a253f7290b52cf513c6747d0d9815285d4f5cda9264f8e50243334f24a2c48ea339e6f3495f69d5c6e9584e9a72abf2ef1bac4292539f3d5a20a549
+  checksum: c2a7d1905d9b7e6a7123310eb6d01a8c05779f69a500d2d9f6891d7a01462fb18b0d80ef5972ba88ee79fc5c9f2d72af54eedeaf6d86c63f7a43c515ea8e5998
   languageName: node
   linkType: hard
 
@@ -2115,16 +2122,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk@npm:^2.0.0-rc.16":
-  version: 2.0.0-rc.16
-  resolution: "@nomad-xyz/sdk@npm:2.0.0-rc.16"
+"@nomad-xyz/sdk@npm:^2.0.0-rc.17":
+  version: 2.0.0-rc.17
+  resolution: "@nomad-xyz/sdk@npm:2.0.0-rc.17"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.21
+    "@nomad-xyz/configuration": ^0.1.0-rc.23
     "@nomad-xyz/contracts-core": ^1.0.0-rc.2
     "@nomad-xyz/multi-provider": ^1.0.0-rc.4
     axios: ^0.27.2
     ethers: ^5.0.0
-  checksum: e8d727cd6d455244221fb248333742575bea67efb28f6756da4d35a99700ae5a29e8afacbdb340449f26247a84d59efd3267c36afbb6622780e409d09804bd77
+  checksum: 31694539411754a30b96ea222d32f568cc5b0626e42fae2e6f5c60dac5bb9fcb85fe608c6cdcc3ee434088bec81545762718c1223c981c7c0e219015d85de25d
   languageName: node
   linkType: hard
 
