@@ -126,9 +126,7 @@ export class Indexer {
     this.domain = domain;
     this.sdk = sdk;
     this.orchestrator = orchestrator;
-    this.develop = !!(
-      process.env.NODE_ENV && process.env.NODE_ENV === 'development'
-    ); //false;
+    this.develop = process.env.NODE_ENV === 'development';
     this.persistance = new RedisPersistance(domain, redis);
     this.blockCache = new KVCache(
       'b_' + String(this.domain),
@@ -146,7 +144,6 @@ export class Indexer {
       'txr_' + String(this.domain),
       this.orchestrator.db,
     );
-    // 20 concurrent requests per indexer
     const strategy = getRateLimit(sdk, this.domain);
     this.limit = new RPCRateLimiter(strategy);
 
@@ -216,8 +213,8 @@ export class Indexer {
           RpcRequestMethod.GetBlockWithTxs,
           this.network,
         );
-        const start = new Date().valueOf();
         await this.limit.getBlockWithTransactions();
+        const start = new Date().valueOf();
         const r = await this.provider.getBlockWithTransactions(blockNumber);
         this.orchestrator.metrics.observeRpcLatency(
           RpcRequestMethod.GetBlockWithTxs,
@@ -255,7 +252,6 @@ export class Indexer {
       String(blockNumber),
       `${time}.${senders2hashesStr}`,
     );
-    // await this.block2timeCache.set(String(blockNumber), String(block.transactions.map(tx => tx.from).join(',')));
     return [time, senders2hashes];
   }
 
@@ -271,8 +267,8 @@ export class Indexer {
           RpcRequestMethod.GetBlock,
           this.network,
         );
-        const start = new Date().valueOf();
         await this.limit.getBlock();
+        const start = new Date().valueOf();
         const r = await this.provider.getBlock(blockNumber);
         this.orchestrator.metrics.observeRpcLatency(
           RpcRequestMethod.GetBlock,
@@ -319,8 +315,8 @@ export class Indexer {
           RpcRequestMethod.GetTx,
           this.network,
         );
-        const start = new Date().valueOf();
         await this.limit.getTransaction();
+        const start = new Date().valueOf();
         const r = await this.provider.getTransaction(hash);
         this.orchestrator.metrics.observeRpcLatency(
           RpcRequestMethod.GetTx,
@@ -392,8 +388,8 @@ export class Indexer {
           RpcRequestMethod.GetTxReceipt,
           this.network,
         );
-        const start = new Date().valueOf();
         await this.limit.getTransactionReceipt();
+        const start = new Date().valueOf();
         const r = await this.provider.getTransactionReceipt(hash);
         this.orchestrator.metrics.observeRpcLatency(
           RpcRequestMethod.GetTxReceipt,
@@ -493,8 +489,8 @@ export class Indexer {
           RpcRequestMethod.GetBlockNumber,
           this.network,
         );
-        const start = new Date().valueOf();
         await this.limit.getBlockNumber();
+        const start = new Date().valueOf();
         const r = await this.provider.getBlockNumber();
         this.orchestrator.metrics.observeRpcLatency(
           RpcRequestMethod.GetBlockNumber,
@@ -581,7 +577,7 @@ export class Indexer {
         this.lastBlock = batchTo;
         try {
           if (this.develop) {
-            this.dummyTestEventsIntegrity(batchTo);
+            await this.dummyTestEventsIntegrity(batchTo);
             this.logger.debug(
               `Integrity test PASSED between ${insuredBatchFrom} and ${batchTo}`,
             );
@@ -628,7 +624,7 @@ export class Indexer {
       if (this.develop) {
         try {
           tries += 1;
-          this.dummyTestEventsIntegrity();
+          await this.dummyTestEventsIntegrity();
           passed = true;
         } catch (e) {
           this.logger.warn(`Dummy test not passed:`, e);
@@ -729,7 +725,6 @@ export class Indexer {
       }
     }
     if (homeRootsTotal !== 0) {
-      // fs.writeFileSync(`/outputs/kek${this.domain}.json`, JSON.stringify(allEvents, replacer));
       throw new Error(
         `${this.domain}: Left roots for home supposed to be 0, but is ${homeRootsTotal} from total of ${homeRootsObserved}`,
       );
@@ -1337,8 +1332,6 @@ export class RedisPersistance extends Persistance {
     await Promise.all(promises);
   }
   async init(): Promise<void> {
-    // await this.client.connect();
-
     const from = await this.client.hGet(`from`, String(this.domain));
     const height = await this.client.hGet(`height`, String(this.domain));
 
@@ -1347,7 +1340,6 @@ export class RedisPersistance extends Persistance {
   }
   sortSorage(): void {}
   async allEvents(): Promise<NomadishEvent[]> {
-    // console.log(`Getting all events for ${this.domain}`)
     const blocks = (await this.client.sMembers(`${this.domain}blocks`))
       .map((s) => parseInt(s))
       .sort();
@@ -1363,8 +1355,6 @@ export class RedisPersistance extends Persistance {
 
     const uniqueEvents = onlyUniqueEvents(events);
 
-    // console.log(`Sorting all events for ${this.domain}`)
-
     uniqueEvents.sort((a, b) => {
       if (a.ts === b.ts) {
         return eventTypeToOrder(a) - eventTypeToOrder(b);
@@ -1372,173 +1362,8 @@ export class RedisPersistance extends Persistance {
         return a.ts - b.ts;
       }
     });
-    // console.log(`Returning all events for ${this.domain}`)
 
     return uniqueEvents;
   }
   persist(): void {}
 }
-
-/*
-export class RamPersistance extends Persistance {
-  block2events: Map<number, NomadishEvent[]>;
-  blocks: number[];
-  storePath: string;
-
-  constructor(storePath: string) {
-    super();
-    this.block2events = new Map();
-    this.blocks = [];
-    this.storePath = storePath;
-  }
-
-  updateFromTo(block: number): Promise<void> {
-    if (block < this.from || this.from === -1) this.from = block;
-    if (block > this.height || this.height === -1) this.height = block;
-
-    return Promise.resolve()
-  }
-
-  async store(...events: NomadishEvent[]): Promise<void> {
-    for (const event of events) {
-      const block = this.block2events.get(event.block);
-      if (block) {
-        if (block.some((e) => e.uniqueHash() === event.uniqueHash())) {
-          continue;
-        }
-        block.push(event);
-      } else {
-        this.block2events.set(event.block, [event]);
-      }
-      this.updateFromTo(event.block);
-      if (this.blocks.indexOf(event.block) < 0) {
-        this.blocks.push(event.block);
-        this.blocks = this.blocks.sort();
-      }
-    }
-    this.persist();
-  }
-  async init(): Promise<void> {
-    try {
-      await this.load();
-    } catch (_) {}
-    return;
-  }
-  sortSorage() {
-    this.blocks = this.blocks.sort();
-  }
-
-  iter(): EventsRange {
-    return new EventsRange(this);
-  }
-
-  persistToFile() {
-    fs.writeFileSync(
-      this.storePath,
-      JSON.stringify(
-        {
-          block2events: this.block2events,
-          blocks: this.blocks,
-          initiated: this.initiated,
-          from: this.from,
-          height: this.height,
-          storePath: this.storePath,
-        },
-        replacer,
-      ),
-    );
-  }
-
-  persistToDB() {}
-
-  persist() {
-    this.persistToFile();
-    this.persistToDB();
-  }
-
-  async load() {
-    this.loadFromFile();
-  }
-
-  loadFromFile() {
-    const object = JSON.parse(
-      fs.readFileSync(this.storePath, 'utf8'),
-      reviver,
-    ) as {
-      block2events: Map<number, NomadishEvent[]>;
-      blocks: number[];
-      initiated: boolean;
-      from: number;
-      height: number;
-    };
-    this.block2events = object.block2events;
-    this.blocks = object.blocks;
-    this.initiated = object.initiated;
-    this.from = object.from;
-    this.height = object.height;
-  }
-
-  async allEvents(): Promise<NomadishEvent[]> {
-    return Array.from(this.iter());
-  }
-}
-
-export class EventsRange implements Iterable<NomadishEvent> {
-  private _p: RamPersistance;
-  private _cacheBlockIndex: number;
-  private _position: number;
-  private nextDone: boolean;
-
-  constructor(p: RamPersistance) {
-    this._p = p;
-    this._cacheBlockIndex = 0;
-    this._position = 0;
-    this.nextDone = false;
-  }
-  cachedBlockIndex(index: number): number | undefined {
-    return this._p.blocks.at(index);
-  }
-
-  next(value?: any): IteratorResult<NomadishEvent> {
-    if (this.nextDone) return { done: true, value: undefined };
-    const done = false;
-    const blockNumber = this.cachedBlockIndex(this._cacheBlockIndex);
-    if (!blockNumber) {
-      return { done: true, value: undefined };
-    }
-    const block = this._p.block2events.get(blockNumber);
-    if (!block) {
-      return { done: true, value: undefined };
-    }
-    const _value = block.at(this._position)!;
-
-    // calculating next positions
-    if (this._position + 1 < block.length) {
-      this._position += 1;
-    } else {
-      const nextIndex = this._cacheBlockIndex + 1;
-      const nextBlockNumber = this.cachedBlockIndex(nextIndex);
-      if (!nextBlockNumber) {
-        this.nextDone = true;
-      } else {
-        if (this._p.block2events.get(nextBlockNumber)) {
-          this._cacheBlockIndex = nextIndex;
-          this._position = 0;
-        } else {
-          this.nextDone = true;
-        }
-      }
-    }
-
-    return {
-      done,
-      value: _value,
-    };
-  }
-
-  [Symbol.iterator]() {
-    return this;
-  }
-}
-
-*/

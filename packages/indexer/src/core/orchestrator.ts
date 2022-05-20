@@ -160,8 +160,6 @@ export class Orchestrator {
 
           if (eventsForDomain.length) await this.collectStatistics();
           this.reportAllMetrics();
-
-          // await sleep(5000);
         } catch (e: any) {
           this.logger.error(`Error at Indexing ${domain}`, e);
           await sleep(5000);
@@ -172,27 +170,9 @@ export class Orchestrator {
               errors,
             );
           }
-          // finished = true;
         }
       }
     });
-
-    // return errors;
-
-    // const events = (
-    //   await Promise.all(
-    //     this.sdk.domainNumbers.map((domain: number) => this.index(domain)),
-    //   )
-    // ).flat();
-    // events.sort((a, b) => {
-    //   if (a.ts === b.ts) {
-    //     return eventTypeToOrder(a) - eventTypeToOrder(b);
-    //   } else {
-    //     return a.ts - b.ts;
-    //   }
-    // });
-    // this.logger.info(`Received ${events.length} events after reindexing`);
-    // await this.consumer.consume(events);
     await Promise.all(promises);
 
     return;
@@ -460,7 +440,6 @@ export class Orchestrator {
 
       if (this.chaseMode) {
         this.chaseMode = false;
-        // this.subscribeStatisticEvents();
       }
 
       this.logger.info(
@@ -477,7 +456,6 @@ export class Orchestrator {
 
   async startConsuming() {
     await this.consumeUnrelated();
-    // await this.consumeRelated();
   }
 
   reportAllMetrics() {

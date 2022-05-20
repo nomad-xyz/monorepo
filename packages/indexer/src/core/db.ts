@@ -8,41 +8,6 @@ import { Padded } from './utils';
 import { ethers } from 'ethers';
 import { BridgeContext } from '@nomad-xyz/sdk-bridge';
 
-// function fromDb(m: messages): NomadMessage {
-//   return
-
-// }
-
-// function toDb(m: NomadMessage): Prisma.messagesCreateManyInput {
-//   return {
-//     hash: m.hash,
-//     origin: m.origin,
-//     destination: m.destination,
-//     nonce: m.nonce,
-//     nomad_sender: m.nomadSender,
-//     nomad_recipient: m.nomadRecipient,
-//     root: m.root,
-//     state: m.state,
-//     block: m.block,
-//     dispatched_at: m.timings.dispatchedAt,
-//     updated_at: m.timings.updatedAt,
-//     relayed_at: m.timings.relayedAt,
-//     received_at: m.timings.receivedAt,
-//     processed_at: m.timings.processedAt,
-//     sender: m.sender,
-//     bridge_msg_type: m.bridgeMsgType,
-//     recipient: m.bridgeMsgTo,
-//     bridge_msg_amount: m.bridgeMsgAmount?.toHexString() || undefined,
-//     bridge_msg_allow_fast: m.bridgeMsgAllowFast,
-//     bridge_msg_details_hash: m.bridgeMsgDetailsHash,
-//     bridge_msg_token_domain: m.bridgeMsgTokenDomain,
-//     bridge_msg_token_id: m.bridgeMsgTokenId,
-//     raw: m.raw,
-//     leaf_index: m.leafIndex.toHexString(),
-//     evm: m.evm,
-//   }
-// }
-
 export interface MsgRequest {
   size?: string;
   page?: string;
@@ -149,7 +114,6 @@ export class DB {
     return message
       ? NomadMessage.deserialize(message, this.logger, this.sdk)
       : null;
-    // return message ? NomadMessage.deserialize(message, this.logger) : null
   }
 
   async getMessageBySendValues(
@@ -165,7 +129,6 @@ export class DB {
         recipient: recipient.valueOf(), // need to make sure it is right
         amount: amount.toHexString(),
         dispatchBlock,
-        // tokenId: tokenId.valueOf()
       },
     });
 
@@ -189,10 +152,12 @@ export class DB {
 
   async getMessages(req: MsgRequest): Promise<NomadMessage[]> {
     const take = req.size ? parseInt(req.size) : 15;
-    const page = req.page ? parseInt(req.page) - 1 : 0;
-    if (page < 0) {
-      throw new Error(`Page is less than a 0`);
-    }
+    const page = req.page ? parseInt(req.page) : 0;
+
+    if (take < 0) throw new Error(`Cannot take less than 0`);
+    if (take > 15) throw new Error(`Cannot take more than 15`);
+    if (page < 0) throw new Error(`Page is less than a 0`);
+
     const skip = page * take;
 
     let where: {
@@ -267,9 +232,6 @@ export class DB {
             },
             data: serialized,
           });
-          // m.logger.debug(
-          //   `Message updated in DB. updated: ${serialized.updatedAt}, relayed: ${serialized.relayedAt}, received: ${serialized.receivedAt}, processed: ${serialized.processedAt}`
-          // );
         });
       }),
     );
@@ -347,17 +309,5 @@ export class DB {
       update,
       create,
     });
-
-    // const found = await this.getKeyPair(namespace, key);
-    // if (found) {
-    //   await this.client.kv_storage.update({
-    //     where,
-    //     data: update,
-    //   })
-    // } else {
-    //   await this.client.kv_storage.create({
-    //     data: create
-    //   })
-    // }
   }
 }

@@ -456,7 +456,6 @@ export class NomadMessage {
 
 class EventsPool {
   redis: RedisClient;
-  // db: DB;
   pool: {
     send: Map<string, string>;
     update: Map<string, string[]>;
@@ -596,9 +595,6 @@ export class ProcessorV2 extends Consumer {
   }
 
   async consume(events: NomadishEvent[]): Promise<void> {
-    // just to prevent from running for now.
-    // fs.writeFileSync(`/Users/daniilnaumetc/code/nomad/monorepo/checks_to_main/packages/indexer/batches/${iii++}_${events.length}.json`, JSON.stringify(events.map(e => e.toObject())))
-
     events = shuffle(events);
     for (const event of events) {
       if (event.eventType === EventType.HomeDispatch) {
@@ -650,7 +646,6 @@ export class ProcessorV2 extends Consumer {
   async checkAndUpdateSend(m: NomadMessage) {
     if (m.msgType !== MessageType.TransferMessage)
       throw new Error(`Message not a transfer message`);
-    // destination, new Padded(recipient), amount, block, token . destination: number, recipient: Padded, amount: ethers.BigNumber, block: number, tokenId: Padded
     const event: NomadishEvent | null = await this.pool.getSend(
       m.destination,
       m.recipient()!,

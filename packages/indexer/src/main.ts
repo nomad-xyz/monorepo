@@ -24,26 +24,20 @@ const logLevel = (process.env.LOG_LEVEL || 'debug') as BunyanLevel;
   await db.connect();
 
   if (program === 'api') {
-    /* const [s, p] = */ await startTokenUpdater(sdk, db, logger);
+    await startTokenUpdater(sdk, db, logger);
     await api.run(db, logger);
     logger.info(`Finished api run`);
-    // s();
-    // await p;
-    // clearInterval(i);
   } else if (program === 'core') {
     m.startServer(3000);
     await core.run(sdk, db, logger, m);
   } else {
     logger.warn(`Starting all on the same process...`);
-    /*const [s, p] = */ await startTokenUpdater(sdk, db, logger);
+    await startTokenUpdater(sdk, db, logger);
     await Promise.all([
       api.run(db, logger),
       core.run(sdk, db, logger, m),
     ]).catch((e) =>
       logger.error(`Error happened during run of api or core:`, e),
     );
-    // s();
-    // await p;
-    // clearInterval(i);
   }
 })();

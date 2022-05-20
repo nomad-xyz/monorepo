@@ -91,7 +91,6 @@ export async function run(o: Orchestrator, logger: Logger) {
     );
     const entries = await Promise.all(promises);
 
-    // const x = new Map(entries);
     return res.json(Object.fromEntries(entries));
   });
 
@@ -113,9 +112,6 @@ export async function run(o: Orchestrator, logger: Logger) {
       origin,
       state,
     );
-    // const messages = Array.from(p.messages).filter(
-    //   (m) => m.origin === origin && m.state === state
-    // );
     if (messages.length) {
       return res.json(messages.map((m) => m.serialize()));
     } else {
