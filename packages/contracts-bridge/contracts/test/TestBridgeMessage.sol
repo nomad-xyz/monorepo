@@ -92,12 +92,11 @@ contract TestBridgeMessage {
     function testFormatTransfer(
         bytes32 _to,
         uint256 _amnt,
-        bytes32 _detailsHash,
-        bool _enableFast
+        bytes32 _detailsHash
     ) external view returns (bytes memory) {
         return
             BridgeMessage
-                .formatTransfer(_to, _amnt, _detailsHash, _enableFast)
+                .formatTransfer(_to, _amnt, _detailsHash)
                 .clone();
     }
 

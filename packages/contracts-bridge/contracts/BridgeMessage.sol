@@ -134,19 +134,17 @@ library BridgeMessage {
      * @notice Formats Transfer
      * @param _to The recipient address as bytes32
      * @param _amnt The transfer amount
-     * @param _enableFast True to format FastTransfer, False to format regular Transfer
+     * @param _detailsHash The hash of the token name, symbol, and decimals
      * @return
      */
     function formatTransfer(
         bytes32 _to,
         uint256 _amnt,
-        bytes32 _detailsHash,
-        bool _enableFast
+        bytes32 _detailsHash
     ) internal pure returns (bytes29) {
-        Types _type = _enableFast ? Types.FastTransfer : Types.Transfer;
         return
-            abi.encodePacked(_type, _to, _amnt, _detailsHash).ref(0).castTo(
-                uint40(_type)
+            abi.encodePacked(Types.Transfer, _to, _amnt, _detailsHash).ref(0).castTo(
+                uint40(Types.Transfer)
             );
     }
 

@@ -27,9 +27,7 @@ contract BridgeRouter is Version0, Router {
 
     // ============ Constants ============
 
-    // 5 bps (0.05%) hardcoded fast liquidity fee. Can be changed by contract upgrade
-    uint256 public constant PRE_FILL_FEE_NUMERATOR = 9995;
-    uint256 public constant PRE_FILL_FEE_DENOMINATOR = 10000;
+    // the amount transferred to bridgoors without gas funds
     uint256 public constant DUST_AMOUNT = 0.06 ether;
 
     // ============ Public Storage ============
@@ -132,15 +130,13 @@ contract BridgeRouter is Version0, Router {
      * @param _amount The token amount
      * @param _destination The destination domain
      * @param _recipient The recipient address
-     * @param _enableFast True to enable fast liquidity
      */
     function send(
         address _token,
         uint256 _amount,
         uint32 _destination,
-        bytes32 _recipient,
-        bool _enableFast
-    ) external {
+        bytes32 _recipient
+    ) public {
         require(_amount > 0, "!amnt");
         require(_recipient != bytes32(0), "!recip");
         // get remote BridgeRouter address; revert if not found
@@ -169,8 +165,7 @@ contract BridgeRouter is Version0, Router {
         bytes29 _action = BridgeMessage.formatTransfer(
             _recipient,
             _amount,
-            _detailsHash,
-            _enableFast
+            _detailsHash
         );
         // get the tokenID
         (uint32 _domain, bytes32 _id) = tokenRegistry.getTokenId(_token);
@@ -188,68 +183,23 @@ contract BridgeRouter is Version0, Router {
             _destination,
             _recipient,
             _amount,
-            _enableFast
+            false
         );
     }
 
-    // ======== External: Fast Liquidity =========
-
     /**
-     * @notice Allows a liquidity provider to give an
-     * end user fast liquidity by pre-filling an
-     * incoming transfer message.
-     * Transfers tokens from the liquidity provider to the end recipient, minus the LP fee;
-     * Records the liquidity provider, who receives
-     * the full token amount when the transfer message is handled.
-     * @dev fast liquidity can only be provided for ONE token transfer
-     * with the same (recipient, amount) at a time.
-     * in the case that multiple token transfers with the same (recipient, amount)
-     * @param _origin The domain of the chain from which the transfer originated
-     * @param _nonce The unique identifier for the message from origin to destination
-     * @param _message The incoming transfer message to pre-fill
+     * @dev For backwards compatibility after
+     * deprecating fast liquidity path.
+     * Simply calls send & omits _enableFast boolean.
      */
-    function preFill(
-        uint32 _origin,
-        uint32 _nonce,
-        bytes calldata _message
+    function send(
+        address _token,
+        uint256 _amount,
+        uint32 _destination,
+        bytes32 _recipient,
+        bool /*_enableFast*/
     ) external {
-        // parse tokenId and action from message
-        bytes29 _msg = _message.ref(0).mustBeMessage();
-        bytes29 _tokenId = _msg.tokenId();
-        bytes29 _action = _msg.action();
-        // ensure that this is a fast transfer message, eligible for fast liquidity
-        require(_action.isFastTransfer(), "!fast transfer");
-        // calculate prefill ID
-        bytes32 _id = BridgeMessage.getPreFillId(
-            _origin,
-            _nonce,
-            _tokenId,
-            _action
-        );
-        // require that transfer has not already been pre-filled
-        require(liquidityProvider[_id] == address(0), "!unfilled");
-        // record liquidity provider so they will be repaid later
-        liquidityProvider[_id] = msg.sender;
-        // load transfer details to memory once
-        IERC20 _token = tokenRegistry.mustHaveLocalToken(
-            _tokenId.domain(),
-            _tokenId.id()
-        );
-        address _liquidityProvider = msg.sender;
-        address _recipient = _action.evmRecipient();
-        uint256 _amount = _applyPreFillFee(_action.amnt());
-        // transfer tokens from liquidity provider to token recipient
-        _token.safeTransferFrom(_liquidityProvider, _recipient, _amount);
-        // dust the recipient if appropriate
-        _dust(_recipient);
-        // emit event
-        emit Receive(
-            _originAndNonce(_origin, _nonce),
-            address(_token),
-            _recipient,
-            _liquidityProvider,
-            _amount
-        );
+        send(_token, _amount, _destination, _recipient);
     }
 
     // ======== External: Custom Tokens =========
@@ -365,25 +315,7 @@ contract BridgeRouter is Version0, Router {
         );
     }
 
-    // ============ Internal: Fast Liquidity ============
-
-    /**
-     * @notice Calculate the token amount after
-     * taking a 5 bps (0.05%) liquidity provider fee
-     * @param _amnt The token amount before the fee is taken
-     * @return _amtAfterFee The token amount after the fee is taken
-     */
-    function _applyPreFillFee(uint256 _amnt)
-        internal
-        pure
-        returns (uint256 _amtAfterFee)
-    {
-        // overflow only possible if (2**256 / 9995) tokens sent once
-        // in which case, probably not a real token
-        _amtAfterFee =
-            (_amnt * PRE_FILL_FEE_NUMERATOR) /
-            PRE_FILL_FEE_DENOMINATOR;
-    }
+    // ============ Internal: Dust with Gas ============
 
     /**
      * @notice Dust the recipient. This feature allows chain operators to use
@@ -406,6 +338,8 @@ contract BridgeRouter is Version0, Router {
             payable(_recipient).send(DUST_AMOUNT);
         }
     }
+
+    // ============ Internal: Utils ============
 
     /**
      * @dev explicit override for compiler inheritance
