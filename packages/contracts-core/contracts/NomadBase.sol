@@ -65,36 +65,11 @@ abstract contract NomadBase is Initializable, OwnableUpgradeable {
     );
 
     /**
-     * @notice Emitted when proof of a double update is submitted,
-     * which sets the contract to FAILED state
-     * @param oldRoot Old root shared between two conflicting updates
-     * @param newRoot Array containing two conflicting new roots
-     * @param signature Signature on `oldRoot` and `newRoot`[0]
-     * @param signature2 Signature on `oldRoot` and `newRoot`[1]
-     */
-    event DoubleUpdate(
-        bytes32 oldRoot,
-        bytes32[2] newRoot,
-        bytes signature,
-        bytes signature2
-    );
-
-    /**
      * @notice Emitted when Updater is rotated
      * @param oldUpdater The address of the old updater
      * @param newUpdater The address of the new updater
      */
     event NewUpdater(address oldUpdater, address newUpdater);
-
-    // ============ Modifiers ============
-
-    /**
-     * @notice Ensures that contract state != FAILED when the function is called
-     */
-    modifier notFailed() {
-        require(state != States.Failed, "failed state");
-        _;
-    }
 
     // ============ Constructor ============
 
@@ -108,35 +83,6 @@ abstract contract NomadBase is Initializable, OwnableUpgradeable {
         __Ownable_init();
         _setUpdater(_updater);
         state = States.Active;
-    }
-
-    // ============ External Functions ============
-
-    /**
-     * @notice Called by external agent. Checks that signatures on two sets of
-     * roots are valid and that the new roots conflict with each other. If both
-     * cases hold true, the contract is failed and a `DoubleUpdate` event is
-     * emitted.
-     * @dev When `fail()` is called on Home, updater is slashed.
-     * @param _oldRoot Old root shared between two conflicting updates
-     * @param _newRoot Array containing two conflicting new roots
-     * @param _signature Signature on `_oldRoot` and `_newRoot`[0]
-     * @param _signature2 Signature on `_oldRoot` and `_newRoot`[1]
-     */
-    function doubleUpdate(
-        bytes32 _oldRoot,
-        bytes32[2] calldata _newRoot,
-        bytes calldata _signature,
-        bytes calldata _signature2
-    ) external notFailed {
-        if (
-            NomadBase._isUpdaterSignature(_oldRoot, _newRoot[0], _signature) &&
-            NomadBase._isUpdaterSignature(_oldRoot, _newRoot[1], _signature2) &&
-            _newRoot[0] != _newRoot[1]
-        ) {
-            _fail();
-            emit DoubleUpdate(_oldRoot, _newRoot, _signature, _signature2);
-        }
     }
 
     // ============ Public Functions ============
@@ -159,22 +105,6 @@ abstract contract NomadBase is Initializable, OwnableUpgradeable {
     {
         return keccak256(abi.encodePacked(_homeDomain, "NOMAD"));
     }
-
-    /**
-     * @notice Set contract state to FAILED
-     * @dev Called when a valid fraud proof is submitted
-     */
-    function _setFailed() internal {
-        state = States.Failed;
-    }
-
-    /**
-     * @notice Moves the contract into failed state
-     * @dev Called when fraud is proven
-     * (Double Update is submitted on Home or Replica,
-     * or Improper Update is submitted on Home)
-     */
-    function _fail() internal virtual;
 
     /**
      * @notice Set the Updater
