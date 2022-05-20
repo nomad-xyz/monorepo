@@ -26,6 +26,6 @@ contract TestHome is Home {
     }
 
     function setFailed() public {
-        _setFailed();
+        state = States.Failed;
     }
 }

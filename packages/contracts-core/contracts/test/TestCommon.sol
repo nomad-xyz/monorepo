@@ -24,8 +24,4 @@ contract TestNomadBase is NomadBase {
     function homeDomainHash() public view override returns (bytes32) {
         return keccak256(abi.encodePacked(localDomain, "NOMAD"));
     }
-
-    function _fail() internal override {
-        _setFailed();
-    }
 }
