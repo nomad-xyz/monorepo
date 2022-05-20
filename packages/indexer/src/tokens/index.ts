@@ -154,7 +154,7 @@ class TokenFetcher {
             `Original token name !== replica's _name in TokenFetcher.fetch(): ${name} !== ${_name}. Domain: ${remoteDomain}, id: ${remoteId}`,
           );
         if (decimals !== _decimals)
-          throw new Error(
+          this.logger.warn(
             `Original token decimals !== replica's _decimals in TokenFetcher.fetch(): ${decimals} !== ${_decimals}. Domain: ${remoteDomain}, id: ${remoteId}, name: ${name}, remote name: ${_name}`,
           );
         if (symbol !== _symbol)
