@@ -137,7 +137,7 @@ contract BridgeRouter is Version0, Router {
         uint32 _destination,
         bytes32 _recipient,
         bool /*_enableFast - deprecated field, left argument for backwards compatibility */
-    ) public {
+    ) external {
         require(_amount > 0, "!amnt");
         require(_recipient != bytes32(0), "!recip");
         // get remote BridgeRouter address; revert if not found
