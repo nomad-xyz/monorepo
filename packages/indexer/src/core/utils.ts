@@ -134,33 +134,33 @@ export function createLogger(
 
 function formatEVM(s: string) {
   s = s.toLowerCase();
-  if (s.length === 42 && s.substring(0,2) === '0x') {
+  if (s.length === 42 && s.substring(0, 2) === '0x') {
     s = s.substring(2);
   } else if (s.length !== 40) {
     throw new Error(`Not EVM address`);
   }
-  
+
   const digest = keccak256(toUtf8Bytes(s)).substring(2);
 
   for (let i = 0; i < s.length; i++) {
-      const targetChar = digest[i];
-      let upper = true;
-      try {
-          let n: number = parseInt(targetChar);
-          if (n <= 7) {
-              upper = false;
-          }
-      } catch(e) {}
-      let newChar;
-      if (upper) {
-          newChar = s[i].toUpperCase();
-      } else {
-          newChar = s[i].toLowerCase();
+    const targetChar = digest[i];
+    let upper = true;
+    try {
+      let n: number = parseInt(targetChar);
+      if (n <= 7) {
+        upper = false;
       }
-      s = s.substring(0,i) + newChar + s.substring(i+1);
+    } catch (e) {}
+    let newChar;
+    if (upper) {
+      newChar = s[i].toUpperCase();
+    } else {
+      newChar = s[i].toLowerCase();
+    }
+    s = s.substring(0, i) + newChar + s.substring(i + 1);
   }
 
-  return '0x' + s
+  return '0x' + s;
 }
 
 export class Padded {

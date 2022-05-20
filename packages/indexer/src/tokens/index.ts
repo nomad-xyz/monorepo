@@ -197,7 +197,6 @@ class TokenFetcher {
   }
 }
 
-
 export async function startTokenUpdater(
   sdk: BridgeContext,
   db: DB,
@@ -245,7 +244,9 @@ export async function startTokenUpdater(
       } catch (e) {
         logger.warn(`Failed updating tokens:`, e);
         if (t++ > 10) {
-          logger.error(`Exhausted updating tokens retries (${t} retries). Going down... (probably with unhandled promise rejection)`);
+          logger.error(
+            `Exhausted updating tokens retries (${t} retries). Going down... (probably with unhandled promise rejection)`,
+          );
           reject();
           break;
         }

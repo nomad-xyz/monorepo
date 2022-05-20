@@ -1,4 +1,4 @@
-import "reflect-metadata";
+import 'reflect-metadata';
 
 import express from 'express';
 import cors from 'cors';
@@ -17,13 +17,11 @@ import * as dotenv from 'dotenv';
 import Logger from 'bunyan';
 import promBundle from 'express-prom-bundle';
 
-import { resolvers } from "@generated/type-graphql";
+import { resolvers } from '@generated/type-graphql';
 // import { buildSchema } from 'graphql';
 // import { buildSchema } from 'typegraphql-prisma';
-import { buildSchema } from "type-graphql";
+import { buildSchema } from 'type-graphql';
 // import { buildSchema } from 'graphql';
-
-
 
 dotenv.config({});
 
@@ -74,7 +72,6 @@ export async function run(db: DB, logger: Logger) {
   app.get('/version', log, (_, res) => {
     res.send(process.env.GIT_COMMIT);
   });
-
 
   /*
   const typeDefs = `
@@ -273,7 +270,6 @@ export async function run(db: DB, logger: Logger) {
   const httpServer = http.createServer(app);
 
   const server = new ApolloServer({
-
     // typeDefs,
     // resolvers,
     schema,
@@ -286,13 +282,8 @@ export async function run(db: DB, logger: Logger) {
 
     context: {
       prisma: db.client,
-    }
-
+    },
   });
-
-  
-
-  
 
   app.get('/tx/:tx', log, async (req, res) => {
     const messages = await db.getMessageByEvm(req.params.tx);
@@ -333,5 +324,7 @@ export async function run(db: DB, logger: Logger) {
 
   server.applyMiddleware({ app });
 
-  await new Promise<void>(resolve => httpServer.listen({ port: PORT }, resolve));
+  await new Promise<void>((resolve) =>
+    httpServer.listen({ port: PORT }, resolve),
+  );
 }
