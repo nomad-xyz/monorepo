@@ -33,7 +33,7 @@ const PORT = process.env.PORT;
 
 export async function run(db: DB, logger: Logger) {
   const app = express();
-  // app.use(cors());
+  app.use(cors());
   app.disable('x-powered-by');
 
   const log = (
