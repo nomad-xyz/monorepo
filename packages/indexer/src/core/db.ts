@@ -155,7 +155,7 @@ export class DB {
     const page = req.page ? parseInt(req.page) : 0;
 
     if (take < 0) throw new Error(`Cannot take less than 0`);
-    if (take > 15) throw new Error(`Cannot take more than 15`);
+    if (take > 50) throw new Error(`Cannot take more than 50`);
     if (page < 0) throw new Error(`Page is less than a 0`);
 
     const skip = page * take;
