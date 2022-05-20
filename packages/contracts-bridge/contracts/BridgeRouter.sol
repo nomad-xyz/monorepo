@@ -135,7 +135,8 @@ contract BridgeRouter is Version0, Router {
         address _token,
         uint256 _amount,
         uint32 _destination,
-        bytes32 _recipient
+        bytes32 _recipient,
+        bool /*_enableFast - deprecated field, left argument for backwards compatibility */
     ) public {
         require(_amount > 0, "!amnt");
         require(_recipient != bytes32(0), "!recip");
@@ -185,21 +186,6 @@ contract BridgeRouter is Version0, Router {
             _amount,
             false
         );
-    }
-
-    /**
-     * @dev For backwards compatibility after
-     * deprecating fast liquidity path.
-     * Simply calls send & omits _enableFast boolean.
-     */
-    function send(
-        address _token,
-        uint256 _amount,
-        uint32 _destination,
-        bytes32 _recipient,
-        bool /*_enableFast*/
-    ) external {
-        send(_token, _amount, _destination, _recipient);
     }
 
     // ======== External: Custom Tokens =========
