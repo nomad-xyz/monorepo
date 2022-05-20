@@ -6,7 +6,7 @@
   "license": "Apache 2.0",
   "author": "Illusory Systems Inc.",
   "scripts": {
-    "any": "ts-node main",
+    "any": "NODE_OPTIONS=--max-old-space-size=4096 ts-node main",
     "api": "PROGRAMM=api ts-node main",
     "build": "prisma generate",
     "build_docker": "docker-compose build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD)",
