@@ -120,16 +120,19 @@ export class Orchestrator {
   }
 
   async checkAllIntegrity(): Promise<void> {
+    this.logger.debug(`Started integrity test for all domains`);
     await Promise.all(
       this.allowedDomains.map(async (domain: number) => {
         const indexer = this.indexers.get(domain)!;
         try {
           await indexer.dummyTestEventsIntegrity();
         } catch (e) {
+          this.logger.warn(`Integrity test for domain ${domain} failed`);
           indexer.setForceFrom(indexer.deployHeight);
         }
       }),
     );
+    this.logger.debug(`Finished integrity test for all domains`);
   }
 
   async indexAllUnrelated(): Promise<void> {
