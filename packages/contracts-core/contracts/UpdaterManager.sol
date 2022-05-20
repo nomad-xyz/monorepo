@@ -101,4 +101,13 @@ contract UpdaterManager is IUpdaterManager, Ownable {
     function updater() external view override returns (address) {
         return _updater;
     }
+
+    /**
+    * @dev should be impossible to renounce ownership;
+     * we override OpenZeppelin Ownable implementation
+     * of renounceOwnership to make it a no-op
+     */
+    function renounceOwnership() public override onlyOwner {
+        // do nothing
+    }
 }
