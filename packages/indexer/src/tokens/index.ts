@@ -108,15 +108,9 @@ class TokenFetcher {
     this.logger.debug(`Updated token [${domain}, ${id}]`);
 
     // Determine remotes whether network is gov or not
-    let remotes: number[];
-    if (domain === this.sdk.governor.domain) {
-      remotes = this.sdk.domainNumbers.filter(
-        (remoteDomain) => remoteDomain !== domain,
-      );
-    } else {
-      remotes = [this.sdk.governor.domain];
-    }
-
+    let remotes = this.sdk.domainNumbers.filter(
+      (remoteDomain) => remoteDomain !== domain,
+    );
     await Promise.all(
       remotes.map(async (remoteDomain) => {
         let remoteId: string;
@@ -125,10 +119,12 @@ class TokenFetcher {
             .mustGetBridge(remoteDomain)
             .tokenRegistry.getRepresentationAddress(domain, id);
         } catch (e: any) {
+          this.logger.debug(`Failed searching for replica from ${domain} at ${remoteDomain}. id: ${id}`)
           if (e?.code !== 'CALL_EXCEPTION') throw e;
           return;
         }
         if (remoteId === '0x' + '00'.repeat(20)) {
+          this.logger.debug(`Haven't found the replica from ${domain} at ${remoteDomain}. id: ${id}`)
           return;
         }
         const provider = this.sdk.mustGetProvider(remoteDomain);
@@ -145,7 +141,7 @@ class TokenFetcher {
             .with('name', 'decimals', 'symbol', 'totalSupply')
             .celebrate();
         } catch (e) {
-          this.logger.error(`Failed getting info for ${domain} ${id}`);
+          this.logger.error(`Failed getting info for replica from ${domain} as ${remoteDomain} id: ${id}, remoteId: ${remoteId}`);
           return;
         }
 

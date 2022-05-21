@@ -34,6 +34,11 @@ import {
   GroupByMessagesResolver,
   GroupByReplicaResolver,
   GroupByTokenResolver,
+  ReplicaRelationsResolver,
+  TokenOrderByWithRelationInput,
+  TokenRelationFilter,
+  TokenRelationsResolver,
+  ReplicaOrderByRelationAggregateInput,
 } from '@generated/type-graphql';
 import { buildSchema } from 'type-graphql';
 
@@ -101,6 +106,12 @@ export async function run(db: DB, logger: Logger) {
           GroupByMessagesResolver,
           GroupByReplicaResolver,
           GroupByTokenResolver,
+
+          ReplicaRelationsResolver,
+          TokenRelationsResolver,
+          TokenOrderByWithRelationInput,
+          TokenRelationFilter,
+          ReplicaOrderByRelationAggregateInput,
         ];
 
   const schema = await buildSchema({
