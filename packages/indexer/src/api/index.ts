@@ -50,9 +50,7 @@ function fail(res: any, code: number, reason: string) {
 
 const PORT = process.env.PORT;
 
-const useAllResolvers =
-  process.env.API_USE_ALL_RESOLVERS &&
-  process.env.API_USE_ALL_RESOLVERS === 'TRUE';
+const useAllResolvers = process.env.API_USE_ALL_RESOLVERS === 'TRUE';
 
 export async function run(db: DB, logger: Logger) {
   const app = express();
@@ -109,6 +107,7 @@ export async function run(db: DB, logger: Logger) {
 
           ReplicaRelationsResolver,
           TokenRelationsResolver,
+          // additional, may be thrown. [Need to check!]
           TokenOrderByWithRelationInput,
           TokenRelationFilter,
           ReplicaOrderByRelationAggregateInput,
