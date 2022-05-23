@@ -204,4 +204,13 @@ abstract contract NomadBase is Initializable, OwnableUpgradeable {
         _digest = ECDSA.toEthSignedMessageHash(_digest);
         return (ECDSA.recover(_digest, _signature) == updater);
     }
+
+    /**
+     * @dev should be impossible to renounce ownership;
+     * we override OpenZeppelin OwnableUpgradeable's
+     * implementation of renounceOwnership to make it a no-op
+     */
+    function renounceOwnership() public override onlyOwner {
+        // do nothing
+    }
 }

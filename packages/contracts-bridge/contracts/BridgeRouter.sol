@@ -436,4 +436,13 @@ contract BridgeRouter is Version0, Router {
     {
         return (uint64(_origin) << 32) | _nonce;
     }
+
+    /**
+    * @dev should be impossible to renounce ownership;
+     * we override OpenZeppelin OwnableUpgradeable's
+     * implementation of renounceOwnership to make it a no-op
+     */
+    function renounceOwnership() public override onlyOwner {
+        // do nothing
+    }
 }

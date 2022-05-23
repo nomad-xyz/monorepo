@@ -242,4 +242,13 @@ contract BridgeToken is Version0, IBridgeToken, OwnableUpgradeable, ERC20 {
     {
         OwnableUpgradeable.transferOwnership(_newOwner);
     }
+
+    /**
+    * @dev should be impossible to renounce ownership;
+     * we override OpenZeppelin OwnableUpgradeable's
+     * implementation of renounceOwnership to make it a no-op
+     */
+    function renounceOwnership() public override onlyOwner {
+        // do nothing
+    }
 }
