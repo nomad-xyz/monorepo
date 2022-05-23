@@ -2,7 +2,8 @@ import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 import "hardhat-packager";
 
-import { task } from "hardhat/config";
+import { task, subtask } from "hardhat/config";
+import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from "hardhat/builtin-tasks/task-names";
 import { verifyCoreDeploy } from "@nomad-xyz/deploy/src/verification/verifyDeploy";
 
 import * as dotenv from "dotenv";
@@ -13,24 +14,20 @@ const infuraKey = process.env.INFURA_API_KEY;
 
 task("verify-deploy", "Verifies the source code of the latest contract deploy")
   .addParam("environment", "dev, staging or prod")
-  .setAction(async (args: any, hre: any) => {
+  .setAction(async (args, hre) => {
     if (!etherscanKey) {
       throw new Error("set ETHERSCAN_API_KEY");
     }
     await verifyCoreDeploy(hre, etherscanKey, args.environment);
   });
 
+subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
+  async (_, __, runSuper) => {
+    const paths: string[] = await runSuper();
 
-const {subtask} = require("hardhat/config");
-const {TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS} = require("hardhat/builtin-tasks/task-names")
-
-subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS)
-  .setAction(async (_, __, runSuper) => {
-    const paths = await runSuper();
-
-    return paths.filter(p => !p.endsWith(".t.sol"));
-  });
-
+    return paths.filter((p) => !p.endsWith(".t.sol") && !p.includes("test"));
+  }
+);
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -93,5 +90,5 @@ module.exports = {
   etherscan: {
     apiKey: etherscanKey,
   },
-  paths: { cache: 'hh-cache' },
+  paths: { cache: "hh-cache" },
 };
