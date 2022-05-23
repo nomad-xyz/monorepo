@@ -116,10 +116,14 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
 
     /**
      * @notice Set a new Updater
+     * @dev To be set when rotating Updater after Fraud
      * @param _updater the new Updater
      */
     function setUpdater(address _updater) external onlyUpdaterManager {
         _setUpdater(_updater);
+        // set the Home state to Active
+        // now that Updater has been rotated
+        state = States.Active;
     }
 
     /**
