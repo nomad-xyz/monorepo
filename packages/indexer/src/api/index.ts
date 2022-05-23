@@ -41,6 +41,7 @@ import {
   ReplicaOrderByRelationAggregateInput,
 } from '@generated/type-graphql';
 import { buildSchema } from 'type-graphql';
+import { Domain } from '@nomad-xyz/multi-provider';
 
 dotenv.config({});
 
@@ -141,7 +142,7 @@ export async function run(db: DB, logger: Logger) {
     return res.json(messages.map((m) => m.serialize()));
   });
 
-  app.get('/domainName/:domain', log, async (req, res) => {
+  app.get('/domain/:domain', log, async (req, res) => {
     const {domain: domainStr} =  req.params;
 
     let domain: number|string;
@@ -153,12 +154,16 @@ export async function run(db: DB, logger: Logger) {
     }
 
     const sdk = db.sdk; // Should not get sdk like that, but it is ok for now
-    const nomadDomain = sdk.getDomain(domain);
-    if (nomadDomain) {
-      res.json({data: nomadDomain.name});
-    } else {
-      fail(res, 404, 'Domain not found');
-    }
+    try {
+      const nomadDomain = sdk.getDomain(domain);
+      if (nomadDomain) {
+        const {name, domain} = nomadDomain;
+        res.json({data: {name, domain}});
+        return ;
+      }
+    } catch(e) {}
+    fail(res, 404, 'Domain not found');
+    
     return ;
   });
 
