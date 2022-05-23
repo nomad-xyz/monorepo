@@ -3,7 +3,12 @@ import { DeployContext } from "../../../deploy/src/DeployContext";
 import { HardhatNetwork, Network } from "./network";
 import ethers from 'ethers';
 import { NonceManager } from "@ethersproject/experimental";
+import fs from 'fs';
+import * as dotenv from 'dotenv';
 
+dotenv.config();
+
+run();
 
 class Env {
     networks: Network[];
@@ -26,7 +31,7 @@ class Env {
     }
 
     async deployFresh(): Promise<void> {
-
+        
     }
 
     async deploy(): Promise<void> {
@@ -47,6 +52,10 @@ class Env {
     // }
 
     get deployerKey(): string {
+        const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
+        if (!DEPLOYER_PRIVATE_KEY) {
+          throw new Error('Add DEPLOYER_PRIVATE_KEY to .env');
+        }
         return '1000000000000000000000000000000000000000000000000000000000000001';
     }
 
