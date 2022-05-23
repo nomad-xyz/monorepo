@@ -147,8 +147,7 @@ export async function run(db: DB, logger: Logger) {
     let domain: number|string;
 
     try {
-      const domainNumber = parseInt(domainStr);
-      domain = domainNumber;
+      domain = parseInt(domainStr);
     } catch(e) {
       domain = domainStr;
     }
@@ -156,7 +155,7 @@ export async function run(db: DB, logger: Logger) {
     const sdk = db.sdk; // Should not get sdk like that, but it is ok for now
     const nomadDomain = sdk.getDomain(domain);
     if (nomadDomain) {
-      res.json({data: nomadDomain});
+      res.json({data: nomadDomain.name});
     } else {
       fail(res, 404, 'Domain not found');
     }
