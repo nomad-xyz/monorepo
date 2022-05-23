@@ -89,6 +89,5 @@ module.exports = {
 
   etherscan: {
     apiKey: etherscanKey,
-  },
-  paths: { cache: "hh-cache" },
+  }
 };
