@@ -161,7 +161,7 @@ export async function run(db: DB, logger: Logger) {
         res.json({data: {name, domain}});
         return ;
       } else {
-        logger.warn(`No domain found for '${domain}'`); // debug
+        logger.warn(`No domain found for '${domain}'`); // debug 
       }
     } catch(e) {
       logger.warn(`Failed getting domain for request '${domain}', error: ${e}`); // debug
