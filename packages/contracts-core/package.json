@@ -26,6 +26,8 @@
     "prepublish": "yarn bootstrap && yarn build",
     "test": "yarn snapshot --check && FOUNDRY_PROFILE=core forge test",
     "test:ci": "yarn snapshot --check && FOUNDRY_PROFILE=core-ci forge test",
+    "link:node_modules": "ln -s ../../node_modules",
+    "test:static-analyze": "rm -rf node_modules && yarn link:node_modules && slither .",
     "snapshot": "forge clean && FOUNDRY_PROFILE=core forge snapshot"
   },
   "dependencies": {
