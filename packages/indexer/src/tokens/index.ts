@@ -79,7 +79,7 @@ class TokenFetcher {
           ])
           .celebrate();
     } catch (e) {
-      this.logger.error(`Failed getting info for ${id} ${domain}`);
+      this.logger.error(`Failed having fun with ${id} ${domain}`);
       return;
     }
 

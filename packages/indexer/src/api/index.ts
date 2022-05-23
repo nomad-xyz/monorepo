@@ -141,6 +141,28 @@ export async function run(db: DB, logger: Logger) {
     return res.json(messages.map((m) => m.serialize()));
   });
 
+  app.get('/domainName/:domain', log, async (req, res) => {
+    const {domain: domainStr} =  req.params;
+
+    let domain: number|string;
+
+    try {
+      const domainNumber = parseInt(domainStr);
+      domain = domainNumber;
+    } catch(e) {
+      domain = domainStr;
+    }
+
+    const sdk = db.sdk; // Should not get sdk like that, but it is ok for now
+    const nomadDomain = sdk.getDomain(domain);
+    if (nomadDomain) {
+      res.json({data: nomadDomain});
+    } else {
+      fail(res, 404, 'Domain not found');
+    }
+    return ;
+  });
+
   app.get('/hash/:hash', log, async (req, res) => {
     const message = await db.getMessageByHash(req.params.hash);
     if (!message) return res.status(404).json({});
