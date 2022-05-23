@@ -160,8 +160,12 @@ export async function run(db: DB, logger: Logger) {
         const {name, domain} = nomadDomain;
         res.json({data: {name, domain}});
         return ;
+      } else {
+        logger.warn(`No domain found for '${domain}'`); // debug
       }
-    } catch(e) {}
+    } catch(e) {
+      logger.warn(`Failed getting domain for request '${domain}', error: ${e}`); // debug
+    }
     fail(res, 404, 'Domain not found');
     
     return ;
