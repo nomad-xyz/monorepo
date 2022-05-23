@@ -20,6 +20,18 @@ task("verify-deploy", "Verifies the source code of the latest contract deploy")
     await verifyCoreDeploy(hre, etherscanKey, args.environment);
   });
 
+
+const {subtask} = require("hardhat/config");
+const {TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS} = require("hardhat/builtin-tasks/task-names")
+
+subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS)
+  .setAction(async (_, __, runSuper) => {
+    const paths = await runSuper();
+
+    return paths.filter(p => !p.endsWith(".t.sol"));
+  });
+
+
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
@@ -81,4 +93,5 @@ module.exports = {
   etherscan: {
     apiKey: etherscanKey,
   },
+  paths: { cache: 'hh-cache' },
 };
