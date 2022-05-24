@@ -45,11 +45,6 @@ library GovernanceMessage {
         TransferGovernor // 2 - A TransferGovernor message
     }
 
-    modifier typeAssert(bytes29 _view, Types _t) {
-        _view.assertType(uint40(_t));
-        _;
-    }
-
     // Read the type of a message
     function messageType(bytes29 _view) internal pure returns (Types) {
         return Types(uint8(_view.typeOf()));

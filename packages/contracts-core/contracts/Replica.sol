@@ -95,7 +95,6 @@ contract Replica is Version0, NomadBase {
 
     // ============ Constructor ============
 
-    // solhint-disable-next-line no-empty-blocks
     constructor(
         uint32 _localDomain,
         uint256 _processGas,
