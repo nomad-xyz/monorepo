@@ -51,11 +51,13 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
 
     /**
      * @notice Emitted when a new message is dispatched via Nomad
+     * @param messageHash Hash of message; the leaf inserted to the Merkle tree
+     *        for the message
      * @param leafIndex Index of message's leaf in merkle tree
      * @param destinationAndNonce Destination and destination-specific
-     * nonce combined in single field ((destination << 32) & nonce)
-     * @param messageHash Hash of message; the leaf inserted to the Merkle tree for the message
-     * @param committedRoot the latest notarized root submitted in the last signed Update
+     *        nonce combined in single field ((destination << 32) & nonce)
+     * @param committedRoot the latest notarized root submitted in the last
+     *        signed Update
      * @param message Raw bytes of message
      */
     event Dispatch(
@@ -163,7 +165,7 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
     // ============ External Functions  ============
 
     /**
-     * @notice Dispatch the message it to the destination domain & recipient
+     * @notice Dispatch the message to the destination domain & recipient
      * @dev Format the message, insert its hash into Merkle tree,
      * enqueue the new Merkle root, and emit `Dispatch` event with message information.
      * @param _destinationDomain Domain of destination chain

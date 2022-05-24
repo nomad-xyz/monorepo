@@ -56,7 +56,8 @@ abstract contract XAppConnectionClient is OwnableUpgradeable {
     }
 
     /**
-     * @notice Determine whether _potentialReplcia is an enrolled Replica from the xAppConnectionManager
+     * @notice Determine whether _potentialReplica is an enrolled Replica from the xAppConnectionManager
+     * @param _potentialReplica The candidate to be tested. Violently.
      * @return True if _potentialReplica is an enrolled Replica
      */
     function _isReplica(address _potentialReplica)
