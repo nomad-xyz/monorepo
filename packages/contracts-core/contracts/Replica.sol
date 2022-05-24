@@ -232,7 +232,10 @@ contract Replica is Version0, NomadBase {
             // decode the return values
             bool _canProcess;
             uint256 _requestedGas;
-            (_canProcess, _requestedGas) = abi.decode(_returnData, (bool, uint256));
+            (_canProcess, _requestedGas) = abi.decode(
+                _returnData,
+                (bool, uint256)
+            );
             // We ask the app permission to process the message.
             // If the app does not grant permission,
             // we revert the entire transaction & try again later
@@ -248,7 +251,7 @@ contract Replica is Version0, NomadBase {
             // enough gas to process and still return.
             // We then delegate only the minimum processing gas.
             if (_requestedGas <= MAX_PROCESS_GAS) {
-                _processGas =  _requestedGas;
+                _processGas = _requestedGas;
             }
         }
         // require there is enough gas left perform processing

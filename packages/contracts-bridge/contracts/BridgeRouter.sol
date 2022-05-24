@@ -136,14 +136,13 @@ contract BridgeRouter is Version0, Router, IPreflight {
         }
     }
 
-
     // ======== External: Request Handle =========
 
     // TODO: function docs
     function preflight(
-        uint32 /*_origin*/,
-        uint32 /*_nonce*/,
-        bytes32 /*_sender*/,
+        uint32, /*_origin*/
+        uint32, /*_nonce*/
+        bytes32, /*_sender*/
         bytes memory _message
     ) external view override returns (bool _canProcess, uint256 _processGas) {
         // give permission to the Replica
@@ -156,7 +155,11 @@ contract BridgeRouter is Version0, Router, IPreflight {
     }
 
     // TODO: function docs
-    function _getProcessGas(bytes memory _message) internal view returns (uint256 _processGas) {
+    function _getProcessGas(bytes memory _message)
+        internal
+        view
+        returns (uint256 _processGas)
+    {
         // parse tokenId and action from message
         bytes29 _msg = _message.ref(0).mustBeMessage();
         bytes29 _tokenId = _msg.tokenId();
