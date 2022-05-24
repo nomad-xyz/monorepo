@@ -16,7 +16,7 @@
     "packages/indexer"
   ],
   "scripts": {
-    "bootstrap": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment --exclude @nomad-xyz/monitor run bootstrap",
+    "bootstrap": "yarn build:accumulator-cli && yarn workspaces foreach -Atv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment --exclude @nomad-xyz/monitor run bootstrap",
     "build": "yarn build:accumulator-cli && yarn workspaces foreach -Atv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment --exclude @nomad-xyz/monitor run build",
     "build:accumulator-cli": "curl https://sh.rustup.rs -sSf | sh -s -- -y -c cargo && cd scripts && ./build-acli.sh",
     "compile": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment --exclude @nomad-xyz/monitor run compile",
