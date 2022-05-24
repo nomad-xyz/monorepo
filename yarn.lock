@@ -1705,6 +1705,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-core@workspace:packages/contracts-core"
   dependencies:
+    "@nomad-xyz/excessively-safe-call": 0.0.1-rc.1
     "@nomiclabs/hardhat-ethers": ^2.0.4
     "@nomiclabs/hardhat-etherscan": ^2.1.2
     "@nomiclabs/hardhat-waffle": ^2.0.1
@@ -1788,6 +1789,13 @@ __metadata:
     typescript: ^4.5.5
   languageName: unknown
   linkType: soft
+
+"@nomad-xyz/excessively-safe-call@npm:0.0.1-rc.1":
+  version: 0.0.1-rc.1
+  resolution: "@nomad-xyz/excessively-safe-call@npm:0.0.1-rc.1"
+  checksum: da9400a35e2d42bea823aba28c9b2354052d79b1144f50f26d526f3f026a67b04670c910c158b8e6568864f9a5ced3731c71a38a35d1b7a641ded07b60d40a27
+  languageName: node
+  linkType: hard
 
 "@nomad-xyz/indexer@workspace:packages/indexer":
   version: 0.0.0-use.local
