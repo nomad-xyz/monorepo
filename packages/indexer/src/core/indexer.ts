@@ -159,6 +159,10 @@ export class Indexer {
     this.targetTo = 0;
   }
 
+  get wantDummyStuff(): boolean {
+    return false;
+  }
+
   setForceFrom(newFrom: number) {
     if (newFrom > this.height) {
       throw new Error(
@@ -575,23 +579,25 @@ export class Indexer {
         );
         await this.persistance.store(...events);
         this.lastBlock = batchTo;
-        try {
-          if (this.develop) {
+
+        if (this.wantDummyStuff) {
+          try {
             await this.dummyTestEventsIntegrity(batchTo);
             this.logger.debug(
               `Integrity test PASSED between ${insuredBatchFrom} and ${batchTo}`,
             );
+          } catch (e) {
+            const pastFrom = batchFrom;
+            const pastTo = batchTo;
+            batchFrom = batchFrom - batchSize / 2;
+            batchTo = batchFrom + batchSize;
+            this.logger.warn(
+              `Integrity test not passed between ${pastFrom} and ${pastTo}, recollecting between ${batchFrom} and ${batchTo}: ${e}`,
+            );
+            continue;
           }
-        } catch (e) {
-          const pastFrom = batchFrom;
-          const pastTo = batchTo;
-          batchFrom = batchFrom - batchSize / 2;
-          batchTo = batchFrom + batchSize;
-          this.logger.warn(
-            `Integrity test not passed between ${pastFrom} and ${pastTo}, recollecting between ${batchFrom} and ${batchTo}: ${e}`,
-          );
-          continue;
         }
+        
         const filteredEvents = events.filter((newEvent) =>
           allEvents.every(
             (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash(),
@@ -621,7 +627,7 @@ export class Indexer {
 
       allEventsUnique = onlyUniqueEvents(allEvents);
 
-      if (this.develop) {
+      if (this.wantDummyStuff) {
         try {
           tries += 1;
           await this.dummyTestEventsIntegrity();

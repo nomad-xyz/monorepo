@@ -112,7 +112,9 @@ export class Orchestrator {
       this.logger.error(`Initial integrity failed:`, e);
       throw e;
     }
+    this.logger.error(`collectStatistic starting`);
     await this.collectStatistics();
+    this.logger.error(`init finished`);
   }
 
   get allowedDomains(): number[] {
@@ -249,7 +251,7 @@ export class Orchestrator {
   }
 
   async initalFeedConsumer() {
-    this.logger.error(`Initial processor feed started:`);
+    this.logger.error(`Initial processor feed started`);
 
     const events = (
       await Promise.all(
@@ -267,6 +269,8 @@ export class Orchestrator {
       }
     });
     await this.consumer.consume(events);
+    this.logger.error(`Initial processor feed finished`);
+
   }
 
   async initIndexers() {
