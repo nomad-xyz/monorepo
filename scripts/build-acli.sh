@@ -2,6 +2,14 @@
 
 set -e
 
+# Make sure that the working directory is always the directory of the script
+cd "$(dirname "$0")"
+# If acli is already built, skip building it
+if command -v ./accumulator-cli ; then
+  echo "accumulator-cli is already built. Skipping build.."
+  exit 1
+fi
+# If cargo is not installed, inform user on how to install it and then exit
 if [[ $(which cargo) == "" ]]; then
   echo "Cargo is not installed"
   echo "To build the accumulator-cli, you will need the Rust toolchain. Run the following in your terminal and then execute 'build-acli.sh' again"
