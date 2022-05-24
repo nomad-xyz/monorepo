@@ -220,9 +220,11 @@ export class Orchestrator {
   }
 
   async collectStatistics() {
+    this.logger.error(`collectStatistics starts`)
     const stats = await this.consumer.stats();
+    this.logger.error(`collectStatistics stats collected`)
 
-    this.allowedDomains.forEach(async (domain: number) => {
+    this.allowedDomains.forEach((domain: number) => {
       const network = this.domain2name(domain);
       try {
         const s = stats.forDomain(domain).counts;
@@ -237,6 +239,8 @@ export class Orchestrator {
         );
       }
     });
+
+    this.logger.error(`collectStatistics finished`)
   }
 
   async checkAllHealth() {
