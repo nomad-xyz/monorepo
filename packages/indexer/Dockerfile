@@ -9,9 +9,10 @@ WORKDIR /app
 COPY package.json ./package.json
 RUN yarn install
 
-ADD src /app/
 ADD prisma /app/prisma
-
 RUN yarn build
+
+ADD src /app/
+
 
 CMD [ "yarn", "start" ]
