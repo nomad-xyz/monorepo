@@ -240,7 +240,7 @@ export class Orchestrator {
       }
     });
 
-    this.logger.error(`collectStatistics finished`)
+    this.logger.error(`collectStatistics finished`);
   }
 
   async checkAllHealth() {
