@@ -8,8 +8,6 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-run();
-
 class Env {
     networks: Network[];
     governor: NomadLocator;
@@ -31,7 +29,27 @@ class Env {
     }
 
     async deployFresh(): Promise<void> {
+
+        console.log(`Deploying!`, JSON.stringify(this.nomadConfig(), null, 4));
+
+        const outputDir = './output';
+        const governanceBatch = await this.deployContext.deployAndRelinquish();
+        console.log(`Deployed! gov batch:`, governanceBatch);
         
+        fs.mkdirSync(outputDir, {recursive: true});
+        fs.writeFileSync(
+            `${outputDir}/config.json`,
+            JSON.stringify(this.deployContext.data, null, 2),
+        );
+        // if new contracts were deployed,
+        const verification = Object.fromEntries(this.deployContext.verification);
+        if (Object.keys(verification).length > 0) {
+          // output the verification inputs
+          fs.writeFileSync(
+              `${outputDir}/verification-${Date.now()}.json`,
+              JSON.stringify(verification, null, 2),
+          );
+        }
     }
 
     async deploy(): Promise<void> {
@@ -43,8 +61,25 @@ class Env {
 
         console.log(`Deploying!`, JSON.stringify(this.nomadConfig(), null, 4));
 
+        const outputDir = './output';
         const governanceBatch = await this.deployContext.deployAndRelinquish();
         console.log(`Deployed! gov batch:`, governanceBatch);
+
+        // outputs config & verification
+        fs.mkdirSync(outputDir, {recursive: true});
+        fs.writeFileSync(
+            `${outputDir}/config.json`,
+            JSON.stringify(this.deployContext.data, null, 2),
+        );
+        // if new contracts were deployed,
+        const verification = Object.fromEntries(this.deployContext.verification);
+        if (Object.keys(verification).length > 0) {
+          // output the verification inputs
+          fs.writeFileSync(
+              `${outputDir}/verification-${Date.now()}.json`,
+              JSON.stringify(verification, null, 2),
+          );
+        }
     }
 
     // deployedOnce(): boolean {
@@ -52,11 +87,11 @@ class Env {
     // }
 
     get deployerKey(): string {
-        const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
-        if (!DEPLOYER_PRIVATE_KEY) {
-          throw new Error('Add DEPLOYER_PRIVATE_KEY to .env');
+        const DEPLOYERKEY = "" + process.env.DEPLOYER_PRIVATE_KEY + "";
+        if (!this.deployerKey) {
+            throw new Error('Add deployer private key to .env');
         }
-        return '1000000000000000000000000000000000000000000000000000000000000001';
+        return DEPLOYERKEY;
     }
 
     get deployContext(): DeployContext {
