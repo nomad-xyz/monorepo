@@ -8,7 +8,8 @@ if [[ $(which cargo) == "" ]]; then
   echo "curl https://sh.rustup.rs -sSf | sh -s -- -y -c cargo"
   exit 1
 fi
-rm -rf acli; echo "Building accumulator-cli from source.."
+rm -rf acli;
+echo "Building accumulator-cli from source.."
 git clone https://github.com/odyslam/accumulator-cli acli
 cd acli
 cargo build --release

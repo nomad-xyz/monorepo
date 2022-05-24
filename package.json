@@ -17,8 +17,8 @@
   ],
   "scripts": {
     "bootstrap": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment --exclude @nomad-xyz/monitor run bootstrap",
-    "build": "yarn workspaces foreach -Atv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment --exclude @nomad-xyz/monitor run build",
-    "build:accumulator-cli": "curl https://sh.rustup.rs -sSf | sh -s -- -y -c cargo && cd packages/contracts-core/scripts && ./build-acli.sh",
+    "build": "yarn build:accumulator-cli && yarn workspaces foreach -Atv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment --exclude @nomad-xyz/monitor run build",
+    "build:accumulator-cli": "curl https://sh.rustup.rs -sSf | sh -s -- -y -c cargo && cd /scripts && ./build-acli.sh",
     "compile": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment --exclude @nomad-xyz/monitor run compile",
     "contracts-bridge": "yarn workspace @nomad-xyz/contracts-bridge",
     "contracts-core": "yarn workspace @nomad-xyz/contracts-core",
@@ -33,7 +33,7 @@
     "sdk": "yarn workspace @nomad-xyz/sdk",
     "sdk-bridge": "yarn workspace @nomad-xyz/sdk-bridge",
     "sdk-govern": "yarn workspace @nomad-xyz/sdk-govern",
-    "test": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy  --exclude @nomad-xyz/local-environment run test" ,
+    "test": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy  --exclude @nomad-xyz/local-environment run test",
     "gen-proof": "./packages/contracts-core/scripts/accumulator-cli"
   },
   "packageManager": "yarn@3.2.0"
