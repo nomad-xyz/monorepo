@@ -42,10 +42,10 @@ contract Replica is Version0, NomadBase {
 
     // Default minimum gas for message processing
     uint256 public immutable PROCESS_GAS;
+    // Maximum gas that an app is allowed to request for message processing
+    uint256 public immutable MAX_PROCESS_GAS;
     // Reserved gas (to ensure tx completes in case message processing runs out)
     uint256 public immutable RESERVE_GAS;
-    // Maximum gas that an app is allowed to request for message processing
-    uint256 public immutable MAXIMUM_GAS;
 
     // ============ Public Storage ============
 
@@ -113,7 +113,7 @@ contract Replica is Version0, NomadBase {
         require(_reserveGas >= 15_000, "!reserve gas");
         PROCESS_GAS = _processGas;
         RESERVE_GAS = _reserveGas;
-        MAXIMUM_GAS = _maximumGas;
+        MAX_PROCESS_GAS = _maximumGas;
     }
 
     // ============ Initializer ============
@@ -192,7 +192,7 @@ contract Replica is Version0, NomadBase {
      * if message has not been proven,
      * or if not enough gas is provided for the dispatch transaction.
      * @param _message Formatted message
-     * @return _success TRUE iff dispatch transaction succeeded
+     * @return _success TRUE iff processing the message succeeded without reverting
      */
     function process(bytes memory _message) public returns (bool _success) {
         bytes29 _m = _message.ref(0);
@@ -206,18 +206,10 @@ contract Replica is Version0, NomadBase {
         entered = 0;
         // update message status as processed
         messages[_messageHash] = MessageStatus.Processed;
-        // A call running out of gas TYPICALLY errors the whole tx. We want to
-        // a) ensure the call has a sufficient amount of gas to make a
-        //    meaningful state change.
-        // b) ensure that if the subcall runs out of gas, that the tx as a whole
-        //    does not revert (i.e. we still mark the message processed)
-        // To do this, we require that we have enough gas to process
-        // and still return. We then delegate only the minimum processing gas.
-        // get the message recipient
+        // Query the app before handling to
+        // (1) request permission to process the message
+        // (2) determine how much gas needed to process the message
         address _recipient = _m.recipientAddress();
-        // first we run a preflight to see how much gas the recipient recommends
-        bool _preflightSuccess;
-        bytes memory _encodedGas;
         bytes memory _calldata = abi.encodeWithSelector(
             IPreflight.preflight.selector,
             _m.origin(),
@@ -225,31 +217,50 @@ contract Replica is Version0, NomadBase {
             _m.sender(),
             _m.body().clone()
         );
-        (_preflightSuccess, _encodedGas) = _recipient.excessivelySafeStaticCall(
+        // perform the excessively safe call
+        bytes memory _returnData;
+        (_success, _returnData) = _recipient.excessivelySafeStaticCall(
+            // provide 50k gas to the call
             50_000,
-            32,
+            // allow up to 64 bytes return data (32 bytes boolean + 32 bytes uint256)
+            64,
+            // pass the encoded preflight calldata
             _calldata
         );
-        // Parse the gas from the preflight response, if necessary
-        uint256 _reqGas = PROCESS_GAS;
-        if (_preflightSuccess && _encodedGas.length == 32) {
-            uint256 _ret;
-            assembly {
-                _ret := mload(add(_encodedGas, 0x20))
-            }
-            if (_ret <= MAXIMUM_GAS) {
-                _reqGas = _ret;
+        uint256 _processGas = PROCESS_GAS;
+        if (_success && _returnData.length == 64) {
+            // decode the return values
+            bool _canProcess;
+            uint256 _requestedGas;
+            (_canProcess, _requestedGas) = abi.decode(_returnData, (bool, uint256));
+            // We ask the app permission to process the message.
+            // If the app does not grant permission,
+            // we revert the entire transaction & try again later
+            require(_canProcess, "!allowed process"); // TODO: message?!
+            // We want to
+            // a) ensure the process call has a
+            //    sufficient amount of gas to make a
+            //    meaningful state change.
+            // b) ensure that if the process call runs out of gas,
+            //    the message is still marked as processed
+            //    (e.g. the whole tx does not revert)
+            // To guarantee (b), we require that we have
+            // enough gas to process and still return.
+            // We then delegate only the minimum processing gas.
+            if (_requestedGas <= MAX_PROCESS_GAS) {
+                _processGas =  _requestedGas;
             }
         }
-        require(gasleft() >= _reqGas + RESERVE_GAS, "!gas");
-        // Now we make the call itself
+        // require there is enough gas left perform processing
+        // (ensures that a malicious processor cannot force messages to fail)
+        require(gasleft() >= _processGas + RESERVE_GAS, "!gas");
+        // now, make the call to the xApp itself
         ExcessivelySafeCall.swapSelector(
             IMessageRecipient.handle.selector,
             _calldata
         );
-        bytes memory _returnData;
         (_success, _returnData) = _recipient.excessivelySafeCall(
-            _reqGas,
+            _processGas,
             256,
             _calldata
         );

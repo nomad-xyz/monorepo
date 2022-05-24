@@ -136,6 +136,40 @@ contract BridgeRouter is Version0, Router, IPreflight {
         }
     }
 
+
+    // ======== External: Request Handle =========
+
+    // TODO: function docs
+    function preflight(
+        uint32 /*_origin*/,
+        uint32 /*_nonce*/,
+        bytes32 /*_sender*/,
+        bytes memory _message
+    ) external view override returns (bool _canProcess, uint256 _processGas) {
+        // give permission to the Replica
+        // to process the message IFF the Replica
+        // is currently enrolled in the xAppConnectionManager
+        _canProcess = _isEnrolledReplica(msg.sender);
+        // provide gas estimate based on whether
+        // token needs to be deployed or just minted
+        _processGas = _getProcessGas(_message);
+    }
+
+    // TODO: function docs
+    function _getProcessGas(bytes memory _message) internal view returns (uint256 _processGas) {
+        // parse tokenId and action from message
+        bytes29 _msg = _message.ref(0).mustBeMessage();
+        bytes29 _tokenId = _msg.tokenId();
+        address _local = tokenRegistry.getLocalAddress(
+            _tokenId.domain(),
+            _tokenId.id()
+        );
+        if (_local == address(0)) {
+            return DEPLOY_GAS;
+        }
+        return MINT_GAS;
+    }
+
     // ======== External: Send Token =========
 
     /**
@@ -369,26 +403,6 @@ contract BridgeRouter is Version0, Router, IPreflight {
         returns (uint64)
     {
         return (uint64(_origin) << 32) | _nonce;
-    }
-
-    // gas preflighting
-    function preflight(
-        uint32,
-        uint32,
-        bytes32,
-        bytes memory _message
-    ) external view override returns (uint256) {
-        // parse tokenId and action from message
-        bytes29 _msg = _message.ref(0).mustBeMessage();
-        bytes29 _tokenId = _msg.tokenId();
-        address _local = tokenRegistry.getLocalAddress(
-            _tokenId.domain(),
-            _tokenId.id()
-        );
-        if (_local == address(0)) {
-            return DEPLOY_GAS;
-        }
-        return MINT_GAS;
     }
 
     /**

@@ -18,7 +18,7 @@ abstract contract XAppConnectionClient is OwnableUpgradeable {
      * @notice Only accept messages from an Nomad Replica contract
      */
     modifier onlyReplica() {
-        require(_isReplica(msg.sender), "!replica");
+        require(_isEnrolledReplica(msg.sender), "!replica");
         _;
     }
 
@@ -59,7 +59,7 @@ abstract contract XAppConnectionClient is OwnableUpgradeable {
      * @notice Determine whether _potentialReplcia is an enrolled Replica from the xAppConnectionManager
      * @return True if _potentialReplica is an enrolled Replica
      */
-    function _isReplica(address _potentialReplica)
+    function _isEnrolledReplica(address _potentialReplica)
         internal
         view
         returns (bool)
