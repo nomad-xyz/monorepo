@@ -135,7 +135,6 @@ contract Replica is Version0, NomadBase {
      * @param _newRoot New merkle root
      * @param _signature Updater's signature on `_oldRoot` and `_newRoot`
      */
-
     function update(
         bytes32 _oldRoot,
         bytes32 _newRoot,
