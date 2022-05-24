@@ -138,7 +138,17 @@ contract BridgeRouter is Version0, Router, IPreflight {
 
     // ======== External: Request Handle =========
 
-    // TODO: function docs
+    /**
+     * @notice Supplies information to Replica
+     * before it attempts to process a message
+     * @dev Called by the Replica before
+     * it attempts to call handle on the app
+     * @param _message The message being handled
+     * @return _canProcess TRUE if the app wil accept
+     * messages from the Replica at this time
+     * @return _gas The amount of gas needed
+     * to handle the message
+     */
     function preflight(
         uint32, /*_origin*/
         uint32, /*_nonce*/
@@ -154,22 +164,33 @@ contract BridgeRouter is Version0, Router, IPreflight {
         _processGas = _getProcessGas(_message);
     }
 
-    // TODO: function docs
+    /**
+     * @notice Computes the amount of gas needed
+     * to perform operations in handle method
+     * @param _message The message being handled
+     * @return _gas The amount of gas needed
+     */
     function _getProcessGas(bytes memory _message)
         internal
         view
-        returns (uint256 _processGas)
+        returns (uint256 _gas)
     {
         // parse tokenId and action from message
         bytes29 _msg = _message.ref(0).mustBeMessage();
         bytes29 _tokenId = _msg.tokenId();
+        // check if there is a deployed
+        // token contract on this domain
         address _local = tokenRegistry.getLocalAddress(
             _tokenId.domain(),
             _tokenId.id()
         );
+        // if deploying the token is necessary,
+        // return higher gas needed to deploy the contract
         if (_local == address(0)) {
             return DEPLOY_GAS;
         }
+        // if only minting tokens is necessary,
+        // return lower gas needed
         return MINT_GAS;
     }
 
