@@ -328,20 +328,6 @@ contract BridgeRouter is Version0, Router {
     // ============ Internal: Utils ============
 
     /**
-     * @dev explicit override for compiler inheritance
-     * @dev explicit override for compiler inheritance
-     * @return domain of chain on which the contract is deployed
-     */
-    function _localDomain()
-        internal
-        view
-        override(XAppConnectionClient)
-        returns (uint32)
-    {
-        return XAppConnectionClient._localDomain();
-    }
-
-    /**
      * @notice Internal utility function that combines
      * `_origin` and `_nonce`.
      * @dev Both origin and nonce should be less than 2^32 - 1

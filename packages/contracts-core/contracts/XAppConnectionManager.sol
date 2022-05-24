@@ -56,13 +56,6 @@ contract XAppConnectionManager is Ownable {
         bool access
     );
 
-    // ============ Modifiers ============
-
-    modifier onlyReplica() {
-        require(isReplica(msg.sender), "!replica");
-        _;
-    }
-
     // ============ Constructor ============
 
     // solhint-disable-next-line no-empty-blocks

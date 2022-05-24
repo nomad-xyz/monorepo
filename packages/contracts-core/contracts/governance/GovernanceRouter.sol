@@ -160,11 +160,6 @@ contract GovernanceRouter is Version0, Initializable, IMessageRecipient {
         _;
     }
 
-    modifier onlyInRecovery() {
-        require(inRecovery(), "! in recovery");
-        _;
-    }
-
     modifier onlyNotInRecovery() {
         require(!inRecovery(), "in recovery");
         _;

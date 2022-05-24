@@ -41,7 +41,7 @@ contract UpgradeBeacon {
      * @param _initialImplementation Address of the initial implementation contract
      * @param _controller Address of the controller who can upgrade the implementation
      */
-    constructor(address _initialImplementation, address _controller) payable {
+    constructor(address _initialImplementation, address _controller) {
         _setImplementation(_initialImplementation);
         controller = _controller;
     }
