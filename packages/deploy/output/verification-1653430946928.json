@@ -1,0 +1,43 @@
+{
+  "polygon": [
+    {
+      "name": "UpgradeBeaconController",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconController.sol:UpgradeBeaconController",
+      "address": "0x1de7F327125cB535e02B661F06E66856ba772Bb8"
+    },
+    {
+      "name": "UpdaterManager",
+      "specifier": "packages/contracts-core/contracts/UpdaterManager.sol:UpdaterManager",
+      "address": "0xE4184f47207F84167b634982b63e67f8F7c6E7c2",
+      "constructorArguments": [
+        "0x0cc56adf7dbb56c92201e2bb538e7efc2cf26d73"
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000000cc56adf7dbb56c92201e2bb538e7efc2cf26d73"
+    },
+    {
+      "name": "XAppConnectionManager",
+      "specifier": "packages/contracts-core/contracts/XAppConnectionManager.sol:XAppConnectionManager",
+      "address": "0x13bCCCb08cA9Aa14C738b521d1513186DD0e969E"
+    },
+    {
+      "name": "UpgradeBeacon",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeacon.sol:UpgradeBeacon",
+      "address": "0x1d9642960fcBE14736F1cF2cEc639A5fcA0dbc97",
+      "constructorArguments": [
+        "0x56A7A39C413CA3A392F6B09C14eB5DC17a3cA0f8",
+        "0x1de7f327125cb535e02b661f06e66856ba772bb8"
+      ],
+      "encodedConstructorArguments": "0x00000000000000000000000056a7a39c413ca3a392f6b09c14eb5dc17a3ca0f80000000000000000000000001de7f327125cb535e02b661f06e66856ba772bb8"
+    },
+    {
+      "name": "UpgradeBeaconProxy",
+      "specifier": "packages/contracts-core/contracts/upgrade/UpgradeBeaconProxy.sol:UpgradeBeaconProxy",
+      "address": "0xA70Ac1D4F373b9A4C5c844CdF1020Ae7FfEAd6D4",
+      "constructorArguments": [
+        "0x1d9642960fcBE14736F1cF2cEc639A5fcA0dbc97",
+        "0xc4d66de8000000000000000000000000e4184f47207f84167b634982b63e67f8f7c6e7c2"
+      ],
+      "encodedConstructorArguments": "0x0000000000000000000000001d9642960fcbe14736f1cf2cec639a5fca0dbc9700000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000024c4d66de8000000000000000000000000e4184f47207f84167b634982b63e67f8f7c6e7c200000000000000000000000000000000000000000000000000000000"
+    }
+  ]
+}
