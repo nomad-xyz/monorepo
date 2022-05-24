@@ -64,7 +64,7 @@ contract Replica is Version0, NomadBase {
 
     /**
      * @notice Emitted when message is processed
-     * @param messageHash Hash of message that was processed
+     * @param messageHash The keccak256 hash of the message that was processed
      * @param success TRUE if the call was executed successfully,
      * FALSE if the call reverted or threw
      * @param returnData the return data from the external call
@@ -109,6 +109,19 @@ contract Replica is Version0, NomadBase {
 
     // ============ Initializer ============
 
+    /**
+     * @notice Initialize the replica
+     * @dev Performs the following action:
+     *      - initializes inherited contracts
+     *      - initializes re-entrancy guard
+     *      - sets remote domain
+     *      - sets a trusted root, and pre-approves messages under it
+     *      - sets the optimistic timer
+     * @param _remoteDomain The domain of the Home contract this follows
+     * @param _updater The EVM id of the updater
+     * @param _committedRoot A trusted root from which to start the Replica
+     * @param _optimisticSeconds The time a new root must wait to be confirmed
+     */
     function initialize(
         uint32 _remoteDomain,
         address _updater,
@@ -120,6 +133,7 @@ contract Replica is Version0, NomadBase {
         entered = 1;
         remoteDomain = _remoteDomain;
         committedRoot = _committedRoot;
+        // pre-approve the committed root.
         confirmAt[_committedRoot] = 1;
         optimisticSeconds = _optimisticSeconds;
         emit SetOptimisticTimeout(_optimisticSeconds);
