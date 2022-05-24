@@ -145,13 +145,9 @@ export async function run(db: DB, logger: Logger) {
   app.get('/domain/:domain', log, async (req, res) => {
     const {domain: domainStr} =  req.params;
 
-    let domain: number|string;
+    const domainNumber = parseInt(domainStr);
 
-    try {
-      domain = parseInt(domainStr);
-    } catch(e) {
-      domain = domainStr;
-    }
+    const domain: number|string = isNaN(domainNumber) ? domainStr : domainNumber;
 
     const sdk = db.sdk; // Should not get sdk like that, but it is ok for now
     try {
