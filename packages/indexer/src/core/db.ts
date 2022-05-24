@@ -90,9 +90,21 @@ export class DB {
     );
   }
 
-  async getAllMessages(): Promise<NomadMessage[]> {
+  async getAllMessages(take=0, skip=0): Promise<NomadMessage[]> {
+    const args: {take?:number, skip?:number} = {};
+    if (take) {
+      args.take = take;
+    }
+    if (skip) {
+      args.skip = skip;
+    }
     this.metrics.incDbRequests(DbRequestType.Select);
-    const messages = await this.client.messages.findMany();
+    const messages = await this.client.messages.findMany({
+      orderBy: {
+        dispatchedAt: 'asc',
+      },
+      ...args
+    });
     return messages.map((m) =>
       NomadMessage.deserialize(m, this.logger, this.sdk),
     );
