@@ -916,11 +916,22 @@ export class ProcessorV2 extends Consumer {
   async stats(): Promise<Statistics> {
     const collector = new StatisticsCollector(this.domains);
 
-    const messages = await this.db.getAllMessages();
+    let batch = 0;
+    const batchSize = 10000;
 
-    messages.forEach((m) => {
-      collector.contributeToCount(m);
-    });
+    let messages: NomadMessage[];
+    do {
+      messages = await this.db.getAllMessages(batchSize, batchSize * batch++);
+      messages.forEach((m) => {
+        collector.contributeToCount(m);
+      });
+    } while(messages.length >= 0)
+
+    // const messages = await this.db.getAllMessages();
+    // messages.forEach((m) => {
+    //   collector.contributeToCount(m);
+    // });
+   
 
     return collector.stats();
   }
