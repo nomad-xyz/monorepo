@@ -34,7 +34,7 @@
     "sdk-bridge": "yarn workspace @nomad-xyz/sdk-bridge",
     "sdk-govern": "yarn workspace @nomad-xyz/sdk-govern",
     "test": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy  --exclude @nomad-xyz/local-environment run test",
-    "gen-proof": "./packages/contracts-core/scripts/accumulator-cli"
+    "gen-proof": "scripts/accumulator-cli"
   },
   "packageManager": "yarn@3.2.0"
 }
