@@ -105,7 +105,9 @@ export class Orchestrator {
     await this.initHealthCheckers();
     await this.initalFeedConsumer();
     try {
-      await this.checkAllIntegrity();
+      if (process.env.NODE_ENV === 'spooky things') {
+        await this.checkAllIntegrity();
+      }
     } catch (e) {
       this.logger.error(`Initial integrity failed:`, e);
       throw e;
@@ -245,6 +247,8 @@ export class Orchestrator {
   }
 
   async initalFeedConsumer() {
+    this.logger.error(`Initial processor feed started:`);
+
     const events = (
       await Promise.all(
         Array.from(this.indexers.values()).map((indexer) =>
@@ -252,6 +256,7 @@ export class Orchestrator {
         ),
       )
     ).flat();
+
     events.sort((a, b) => {
       if (a.ts === b.ts) {
         return eventTypeToOrder(a) - eventTypeToOrder(b);
