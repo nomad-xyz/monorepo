@@ -110,7 +110,7 @@ contract Replica is Version0, NomadBase {
     // ============ Initializer ============
 
     /**
-     * @notice Iniitalize the replica
+     * @notice Initialize the replica
      * @dev Performs the following action:
      *      - initializes inherited contracts
      *      - initializes re-entrancy guard
