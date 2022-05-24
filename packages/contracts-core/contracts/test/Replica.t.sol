@@ -284,32 +284,6 @@ contract ReplicaTest is ReplicaHandlers {
 
     }
 
-//    function test_notProcessOverMaxGas() public {
-//        replica.setCommittedRoot(exampleRoot);
-//        replica.prove(exampleLeaf, exampleProof, exampleLeafIndex);
-//        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
-//        bytes32 receiver= bytes32(uint256(uint160(vm.addr(431))));
-//        uint32 nonce = 0;
-//        bytes memory messageBody = '0x';
-//        bytes memory message = Message.formatMessage(
-//            remoteDomain,
-//            sender,
-//            nonce,
-//            homeDomain,
-//            receiver,
-//            messageBody
-//        );
-//        replica.setMessageStatus(message, Replica.MessageStatus.Proven);
-//        vm.expectRevert(bytes("!gas"));
-//        replica.process{gas: replica.MAXIMUM_GAS() + 1}(message);
-//    }
-//
-//    function test_preflightReadsCorrectGas() public {}
-//
-//    function test_preflightCallsCorrectGas() public {}
-//
-//    function test_preflightReadsCorrectState() public {}
-
 
     function test_notProcessWrongDestination() public {
         replica.setCommittedRoot(exampleRoot);
