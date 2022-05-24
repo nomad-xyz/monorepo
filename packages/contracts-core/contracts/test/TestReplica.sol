@@ -14,10 +14,6 @@ contract TestReplica is Replica {
         uint256
     ) Replica(_localDomain, 850_000, 15_000) {} // solhint-disable-line no-empty-blocks
 
-    function setFailed() public {
-        _setFailed();
-    }
-
     function setRemoteDomain(uint32 _remoteDomain) external {
         remoteDomain = _remoteDomain;
     }

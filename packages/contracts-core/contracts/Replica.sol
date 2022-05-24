@@ -64,8 +64,9 @@ contract Replica is Version0, NomadBase {
 
     /**
      * @notice Emitted when message is processed
-     * @param messageHash Hash of message that failed to process
-     * @param success TRUE if the call was executed successfully, FALSE if the call reverted
+     * @param messageHash Hash of message that was processed
+     * @param success TRUE if the call was executed successfully,
+     * FALSE if the call reverted or threw
      * @param returnData the return data from the external call
      */
     event Process(
@@ -139,7 +140,7 @@ contract Replica is Version0, NomadBase {
         bytes32 _oldRoot,
         bytes32 _newRoot,
         bytes memory _signature
-    ) external notFailed {
+    ) external {
         // ensure that update is building off the last submitted root
         require(_oldRoot == committedRoot, "not current update");
         // validate updater signature
@@ -344,14 +345,6 @@ contract Replica is Version0, NomadBase {
     }
 
     // ============ Internal Functions ============
-
-    /**
-     * @notice Moves the contract into failed state
-     * @dev Called when a Double Update is submitted
-     */
-    function _fail() internal override {
-        _setFailed();
-    }
 
     /// @notice Hook for potential future use
     // solhint-disable-next-line no-empty-blocks
