@@ -126,11 +126,13 @@ export class Orchestrator {
     await Promise.all(
       this.allowedDomains.map(async (domain: number) => {
         const indexer = this.indexers.get(domain)!;
-        try {
-          await indexer.dummyTestEventsIntegrity();
-        } catch (e) {
-          this.logger.warn(`Integrity test for domain ${domain} failed`);
-          indexer.setForceFrom(indexer.deployHeight);
+        if (indexer.wantDummyStuff) {
+          try {
+            await indexer.dummyTestEventsIntegrity();
+          } catch (e) {
+            this.logger.warn(`Integrity test for domain ${domain} failed`);
+            indexer.setForceFrom(indexer.deployHeight);
+          }
         }
       }),
     );
