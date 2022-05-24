@@ -7,7 +7,7 @@ cd "$(dirname "$0")"
 # If acli is already built, skip building it
 if command -v ./accumulator-cli ; then
   echo "accumulator-cli is already built. Skipping build.."
-  exit 1
+  exit 0
 fi
 # If cargo is not installed, inform user on how to install it and then exit
 if [[ $(which cargo) == "" ]]; then

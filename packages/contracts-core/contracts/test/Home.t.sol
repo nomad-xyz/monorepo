@@ -29,6 +29,12 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home.setUpdater(vm.addr(420));
     }
 
+    function test_nonUpdaterManagerCannotSetUpdater() public {
+        vm.prank(vm.addr(40123));
+        vm.expectRevert("!updaterManager");
+        home.setUpdater(vm.addr(420));
+    }
+
     function test_committedRoot() public{
       bytes32 emptyRoot;
       assertEq(abi.encode(home.committedRoot()), abi.encode(emptyRoot));
@@ -92,12 +98,4 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home.improperUpdate(oldRoot, newRoot, sig);
     }
 
-    function dispatchGetRoot(
-        uint32 domain,
-        bytes memory message,
-        bytes32 recipient
-    ) public returns (bytes32 sRoot) {
-        home.dispatch(homeDomain, recipient, message);
-        (, sRoot) = home.suggestUpdate();
-    }
 }

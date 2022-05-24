@@ -86,8 +86,7 @@ module.exports = {
     ],
     includeFactories: true,
   },
-
   etherscan: {
     apiKey: etherscanKey,
-  }
+  },
 };
