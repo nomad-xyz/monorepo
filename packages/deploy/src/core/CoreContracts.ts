@@ -974,11 +974,16 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     // xAppConnectionManager
     const xAppConnectionManager =
       await this.governanceRouter.xAppConnectionManager();
-    equals(
-      true,
-      utils.equalIds(this.data.xAppConnectionManager, xAppConnectionManager),
-      `xAppConnection manager address is wrong`,
+    exists(
+      this.data.xAppConnectionManager,
+      `xAppConnectionManager is not defined in config`,
     );
+    if (this.data.xAppConnectionManager)
+      equals(
+        true,
+        utils.equalIds(this.data.xAppConnectionManager, xAppConnectionManager),
+        `xAppConnection manager address is wrong`,
+      );
 
     // routers
     for (const domain of remoteDomains) {
