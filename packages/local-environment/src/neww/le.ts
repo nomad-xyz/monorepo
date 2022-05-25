@@ -1,13 +1,11 @@
 import { NomadLocator, NomadConfig } from "@nomad-xyz/configuration";
+import * as dotenv from 'dotenv';
 import { DeployContext } from "../../../deploy/src/DeployContext";
 import { HardhatNetwork, Network } from "./network";
 import ethers from 'ethers';
 import { NonceManager } from "@ethersproject/experimental";
 import fs from 'fs';
-import * as dotenv from 'dotenv';
-
 dotenv.config();
-
 class Env {
     networks: Network[];
     governor: NomadLocator;
@@ -94,9 +92,9 @@ class Env {
     }
 
     get deployerKey(): string {
-        const DEPLOYERKEY = "" + process.env.DEPLOYER_PRIVATE_KEY + "";
+        const DEPLOYERKEY = ``+ process.env.DEPLOYER_PRIVATE_KEY + ``;
         if (!this.deployerKey) {
-            throw new Error('Add deployer private key to .env');
+             throw new Error('Add deployer private key to .env');
         }
         return DEPLOYERKEY;
     }
@@ -106,7 +104,11 @@ class Env {
         // add deploy signer and overrides for each network
         for (const network of this.networks) {
             const name = network.name;
+            console.log(`network ` + name)
             const provider = deployContext.mustGetProvider(name);
+            console.log(`Setting ` + this.deployerKey + ` as deployerKey`);
+            // Current issue: local provider RPC somehow doesn't get registered with mustGetProvider.
+            console.log(`provider:` + provider)
             const wallet = new ethers.Wallet(this.deployerKey, provider);
             const signer = new NonceManager(wallet);
             deployContext.registerSigner(name, signer);
@@ -148,6 +150,8 @@ class Env {
     const le = new Env({domain: t.domainNumber, id: '0x'+'00'.repeat(20)});
     le.addNetwork(t);
     le.addNetwork(j);
+
+    console.log(`Added Tom and Jerry`);
 
     await le.deploy();
 
