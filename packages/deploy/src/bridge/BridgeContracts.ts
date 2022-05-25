@@ -600,7 +600,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     if (this.data.tokenRegistry) {
       const tokenRegistry = await this.bridgeRouterContract.tokenRegistry();
       checklist.equalIds(
-        this.data.tokenRegistry!.proxy,
+        this.data.tokenRegistry.proxy,
         tokenRegistry,
         'TokenRegistry',
       );

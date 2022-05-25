@@ -24,26 +24,26 @@ export function assertBeaconProxy(
 
 export class CheckList {
   ok: string[]; // successful items
-  error: [string, any][]; // failed items with associated error from chai assertion or plain error
+  error: [string, unknown][]; // failed items with associated error from chai assertion or plain error
   constructor() {
     this.ok = [];
     this.error = [];
   }
 
-  check(f: () => void, message: string) {
+  check(f: () => void, message: string): void {
     try {
       f();
       this.ok.push(message);
-    } catch (e: any) {
+    } catch (e: unknown) {
       this.error.push([message, e]);
     }
   }
 
-  exists<T>(value: T, message: string) {
+  exists<T>(value: T, message: string): void {
     this.check(() => expect(value, message).to.exist, message);
   }
 
-  equals<T>(left: T, right: T | undefined, message: string) {
+  equals<T>(left: T, right: T | undefined, message: string): void {
     if (right === undefined) {
       this.error.push([message, new Error(message + ' is undefined')]);
     } else {
@@ -56,7 +56,7 @@ export class CheckList {
   }
 
   // This method tries to assert using expect(), in the worst case, uses utils.equalIds
-  equalIds(left: BytesLike, right: BytesLike | undefined, message: string) {
+  equalIds(left: BytesLike, right: BytesLike | undefined, message: string): void {
     if (right === undefined) {
       this.error.push([message, new Error(message + ' is undefined')]);
     } else {
@@ -73,7 +73,7 @@ export class CheckList {
   }
 
   // This method tries to assert using expect(), in the worst case, uses utils.equalIds
-  notEqualIds(left: BytesLike, right: BytesLike | undefined, message: string) {
+  notEqualIds(left: BytesLike, right: BytesLike | undefined, message: string): void {
     if (right === undefined) {
       this.ok.push(message);
     } else {
