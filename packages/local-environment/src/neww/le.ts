@@ -53,11 +53,12 @@ class Env {
     }
 
     async deploy(): Promise<void> {
-        // if (this.deployedOnce()) {
-        //     this.deployIncrementally()
-        // } else {
-        //     this.deployFresh()
-        // }
+        if (this.deployedOnce()) {
+             
+        } else {
+             this.deployFresh()
+             return
+        }
 
         console.log(`Deploying!`, JSON.stringify(this.nomadConfig(), null, 4));
 
@@ -82,9 +83,14 @@ class Env {
         }
     }
 
-    // deployedOnce(): boolean {
-    //     return false;
-    // }
+    async check(): Promise<void> {
+        await this.deployContext.checkDeployment();
+        console.log(`CHECKS PASS!`);
+    }
+
+    deployedOnce(): boolean {
+        return false;
+    }
 
     get deployerKey(): string {
         const DEPLOYERKEY = "" + process.env.DEPLOYER_PRIVATE_KEY + "";
@@ -144,8 +150,6 @@ class Env {
     await le.deploy();
 
     // let myContracts = le.deploymyproject();
-
-
     
 })()
 
