@@ -1037,9 +1037,9 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       `Governance router address is not owning upgradeBeaconController`,
     );
 
-    if (remoteDomains.length > 0) {
+    if (remoteDomains.length > 0 && replicas) {
       // expect all replicas to have to same implementation and upgradeBeacon
-      const firstReplica = replicas![remoteDomains[0]];
+      const firstReplica = replicas[remoteDomains[0]];
       if (!firstReplica) {
         errors.push(
           new Error(`Replica for domain ${remoteDomains[0]} is not found`),
@@ -1049,7 +1049,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         const replicaBeacon = firstReplica.beacon;
         // check every other implementation/beacon matches the first
         remoteDomains.slice(1).forEach((remoteDomain) => {
-          const replica = replicas![remoteDomain];
+          const replica = replicas[remoteDomain];
           if (!replica) {
             errors.push(
               new Error(`Replica for domain ${remoteDomains[0]} is not found`),
