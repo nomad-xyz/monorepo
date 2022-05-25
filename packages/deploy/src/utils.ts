@@ -14,7 +14,7 @@ export function _unreachable(): void {
 export function assertBeaconProxy(
   beaconProxy: config.Proxy,
   name: string,
-): any[] {
+): Error[] {
   const errors = [];
   if (beaconProxy.beacon === undefined)
     errors.push(new Error(`${name} proxy's beacon is undefined`));

@@ -554,6 +554,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
   async checkDeploy(remoteDomains: string[]): Promise<void> {
     const errors = [];
 
+    // Just a closure that compares 2 values, then creates an error and stores it for later
     const equals = <T>(truth: T, test: T | undefined, resoning: string) => {
       if (!test) {
         errors.push(
@@ -566,7 +567,8 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       }
     };
 
-    const exists = (test: any, resoning: string) => {
+    // Just a closure that takes a value and checks if it exists, then creates an error and stores it for later
+    const exists = <T>(test: T | undefined | false, resoning: string) => {
       if (test) {
         errors.push(new Error(resoning));
       }
