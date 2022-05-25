@@ -377,7 +377,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       const tx =
         await this.bridgeRouterContract.populateTransaction.enrollRemoteRouter(
           remoteDomain,
-          utils.canonizeId(remoteRouter)
+          utils.canonizeId(remoteRouter),
         );
       // safe as populateTransaction always sets `to`
       batch.push(this.domainNumber, tx as Call);
@@ -500,7 +500,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
             await this.tokenRegistryContract.populateTransaction.enrollCustom(
               custom.token.domain,
               utils.canonizeId(custom.token.id),
-              proxy.address
+              proxy.address,
             ),
           ];
         }
@@ -532,7 +532,10 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const registryOwner = await this.tokenRegistryContract.owner();
     if (utils.equalIds(registryOwner, deployer)) {
       log(`transfer token registry ownership on ${name}`);
-      const tx = await this.tokenRegistryContract.transferOwnership(this.bridgeRouterContract.address, this.overrides);
+      const tx = await this.tokenRegistryContract.transferOwnership(
+        this.bridgeRouterContract.address,
+        this.overrides,
+      );
       await tx.wait(this.confirmations);
     }
 
@@ -540,7 +543,10 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const bridgeOwner = await this.bridgeRouterContract.owner();
     if (utils.equalIds(bridgeOwner, deployer)) {
       log(`transfer bridge router ownership on ${name}`);
-      const tx = await this.bridgeRouterContract.transferOwnership(governance, this.overrides);
+      const tx = await this.bridgeRouterContract.transferOwnership(
+        governance,
+        this.overrides,
+      );
       await tx.wait(this.confirmations);
     }
   }
@@ -550,9 +556,13 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     const equals = <T>(truth: T, test: T | undefined, resoning: string) => {
       if (!test) {
-        errors.push(new Error(resoning + ` (${test} is not equal to ${truth})`));
+        errors.push(
+          new Error(resoning + ` (${test} is not equal to ${truth})`),
+        );
       } else if (truth !== test) {
-        errors.push(new Error(resoning + ` (${test} is not equal to ${truth})`));
+        errors.push(
+          new Error(resoning + ` (${test} is not equal to ${truth})`),
+        );
       }
     };
 
@@ -562,11 +572,21 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       }
     };
 
-    exists(this.data.bridgeToken, `BridgeToken is not defined for domain ${this.domain}`);
-    exists(this.data.bridgeRouter, `BridgeRouter is not defined for domain ${this.domain}`);
-    exists(this.data.tokenRegistry, `TokenRegistry is not defined for domain ${this.domain}`);
+    exists(
+      this.data.bridgeToken,
+      `BridgeToken is not defined for domain ${this.domain}`,
+    );
+    exists(
+      this.data.bridgeRouter,
+      `BridgeRouter is not defined for domain ${this.domain}`,
+    );
+    exists(
+      this.data.tokenRegistry,
+      `TokenRegistry is not defined for domain ${this.domain}`,
+    );
 
-    if (this.data.bridgeToken) errors.push(...assertBeaconProxy(this.data.bridgeToken, 'Bridge Token'));
+    if (this.data.bridgeToken)
+      errors.push(...assertBeaconProxy(this.data.bridgeToken, 'Bridge Token'));
 
     /*
     # BridgeRouter
@@ -585,16 +605,30 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     //  ========= BridgeRouter =========
     // BridgeRouter upgrade setup contracts are defined
-    if (this.data.bridgeRouter) errors.push(...assertBeaconProxy(this.data.bridgeRouter, 'BridgeRouter'));
+    if (this.data.bridgeRouter)
+      errors.push(...assertBeaconProxy(this.data.bridgeRouter, 'BridgeRouter'));
     // owner
     const bridgeRouterOwner = await this.bridgeRouterContract.owner();
-    equals(true, utils.equalIds(bridgeRouterOwner, core.governanceRouter.address), `Bridge router owner is wrong`);
+    equals(
+      true,
+      utils.equalIds(bridgeRouterOwner, core.governanceRouter.address),
+      `Bridge router owner is wrong`,
+    );
     // tokenRegistry
     const tokenRegistry = await this.bridgeRouterContract.tokenRegistry();
-    if (this.data.tokenRegistry) equals(true, utils.equalIds(tokenRegistry, this.data.tokenRegistry.proxy), `Token registry owner is wrong`);
+    if (this.data.tokenRegistry)
+      equals(
+        true,
+        utils.equalIds(tokenRegistry, this.data.tokenRegistry.proxy),
+        `Token registry owner is wrong`,
+      );
     // xAppConnectionManager
     const xApp = await this.bridgeRouterContract.xAppConnectionManager();
-    equals(true, utils.equalIds(xApp, core.xAppConnectionManager.address), `xAppConnectionManager address is wrong`);
+    equals(
+      true,
+      utils.equalIds(xApp, core.xAppConnectionManager.address),
+      `xAppConnectionManager address is wrong`,
+    );
     // remotes
     for (const domain of remoteDomains) {
       const remoteDomainNumber = this.context.mustGetDomain(domain).domain;
@@ -607,24 +641,40 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
           this.context.mustGetBridge(domain).bridgeRouterContract.address,
           remoteRouter,
         ),
-        `Remote router address is not correct for domain ${domain}`
+        `Remote router address is not correct for domain ${domain}`,
       );
     }
 
     //  ========= tokenRegistry =========
     // TokenRegistry upgrade setup contracts are defined
-    if (this.data.tokenRegistry) errors.push(...assertBeaconProxy(this.data.tokenRegistry, 'TokenRegistry'));
+    if (this.data.tokenRegistry)
+      errors.push(
+        ...assertBeaconProxy(this.data.tokenRegistry, 'TokenRegistry'),
+      );
     // owner
     const tokenRegistryOwner = await this.tokenRegistryContract.owner();
-    equals(true, utils.equalIds(tokenRegistryOwner, this.bridgeRouterContract.address), `Token registry owner is wrong`);
+    equals(
+      true,
+      utils.equalIds(tokenRegistryOwner, this.bridgeRouterContract.address),
+      `Token registry owner is wrong`,
+    );
 
     // xAppConnectionManager
     const xAppAddress =
       await this.tokenRegistryContract.xAppConnectionManager();
-    equals(true, utils.equalIds(xAppAddress, core.xAppConnectionManager.address), `xAppConnection Manager is wrong`);
+    equals(
+      true,
+      utils.equalIds(xAppAddress, core.xAppConnectionManager.address),
+      `xAppConnection Manager is wrong`,
+    );
     // tokenBeacon
     const tokenBeacon = await this.tokenRegistryContract.tokenBeacon();
-    if (this.data.bridgeToken) equals(true, utils.equalIds(tokenBeacon, this.data.bridgeToken.beacon), `Token beacon address is wrong`);
+    if (this.data.bridgeToken)
+      equals(
+        true,
+        utils.equalIds(tokenBeacon, this.data.bridgeToken.beacon),
+        `Token beacon address is wrong`,
+      );
 
     //  ========= eth helper =========
     const weth = this.context.mustGetDomainConfig(this.domain)

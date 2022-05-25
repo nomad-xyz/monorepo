@@ -16,8 +16,11 @@ export function assertBeaconProxy(
   name: string,
 ): any[] {
   const errors = [];
-  if (beaconProxy.beacon === undefined) errors.push(new Error(`${name} proxy's beacon is undefined`));
-  if (beaconProxy.proxy === undefined) errors.push(new Error(`${name} proxy's proxy is undefined`));
-  if (beaconProxy.implementation === undefined) errors.push(new Error(`${name} proxy's implementation is undefined`));
+  if (beaconProxy.beacon === undefined)
+    errors.push(new Error(`${name} proxy's beacon is undefined`));
+  if (beaconProxy.proxy === undefined)
+    errors.push(new Error(`${name} proxy's proxy is undefined`));
+  if (beaconProxy.implementation === undefined)
+    errors.push(new Error(`${name} proxy's implementation is undefined`));
   return errors;
 }

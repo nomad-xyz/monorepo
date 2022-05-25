@@ -720,9 +720,13 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     const equals = <T>(truth: T, test: T | undefined, resoning: string) => {
       if (!test) {
-        errors.push(new Error(resoning + ` (${test} is not equal to ${truth})`));
+        errors.push(
+          new Error(resoning + ` (${test} is not equal to ${truth})`),
+        );
       } else if (truth !== test) {
-        errors.push(new Error(resoning + ` (${test} is not equal to ${truth})`));
+        errors.push(
+          new Error(resoning + ` (${test} is not equal to ${truth})`),
+        );
       }
     };
 
@@ -733,15 +737,26 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     };
 
     exists(this.data.home, `Home is not defined for domain ${this.domain}`);
-    exists(this.data.updaterManager, `UpdaterManager is not defined for domain ${this.domain}`);
-    exists(this.data.governanceRouter, `GovernanceRouter is not defined for domain ${this.domain}`);
-    
+    exists(
+      this.data.updaterManager,
+      `UpdaterManager is not defined for domain ${this.domain}`,
+    );
+    exists(
+      this.data.governanceRouter,
+      `GovernanceRouter is not defined for domain ${this.domain}`,
+    );
+
     const replicas = this.data.replicas;
 
     exists(replicas, `Replicas is not defined for domain ${this.domain}`);
-    exists(this.data.upgradeBeaconController, `upgradeBeaconController is not defined for domain ${this.domain}`);
-    exists(this.data.xAppConnectionManager, `xAppConnectionManager is not defined for domain ${this.domain}`);
-    
+    exists(
+      this.data.upgradeBeaconController,
+      `upgradeBeaconController is not defined for domain ${this.domain}`,
+    );
+    exists(
+      this.data.xAppConnectionManager,
+      `xAppConnectionManager is not defined for domain ${this.domain}`,
+    );
 
     const isGovernor = governorDomain === this.domainNumber;
     const domainConfig = this.context.mustGetDomainConfig(this.domain);
@@ -782,11 +797,16 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     //  ========= Home =========
     // Home upgrade setup contracts are defined
-    if (this.data.home) errors.push(...assertBeaconProxy(this.data.home, 'Home'));
+    if (this.data.home)
+      errors.push(...assertBeaconProxy(this.data.home, 'Home'));
 
     // updaterManager is set on Home
     const updaterManager = await this.home.updaterManager();
-    equals(updaterManager, this.data.updaterManager, `Updater manager's id is wrong`)
+    equals(
+      updaterManager,
+      this.data.updaterManager,
+      `Updater manager's id is wrong`,
+    );
 
     // state
     const state = await this.home.state();
@@ -794,7 +814,11 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     // updater
     const homeUpdater = await this.home.updater();
-    equals(homeUpdater, domainConfig.configuration.updater, `Home updater is wrong`);
+    equals(
+      homeUpdater,
+      domainConfig.configuration.updater,
+      `Home updater is wrong`,
+    );
 
     // localDomain
     const homeLocalDomain = await this.home.localDomain();
@@ -807,44 +831,65 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     //  ========= UpdaterManager =========
     // updater
     const updaterAtUpdaterManager = await this.updaterManager.updater();
-    equals(updaterAtUpdaterManager, domainConfig.configuration.updater, `Updater at updater manager is wrong`);
+    equals(
+      updaterAtUpdaterManager,
+      domainConfig.configuration.updater,
+      `Updater at updater manager is wrong`,
+    );
 
     // owner
     const updaterManagersOwner = await this.updaterManager.owner();
-    equals(updaterManagersOwner, this.governanceRouter.address, `Updater manager's owner is wrong`);
-
+    equals(
+      updaterManagersOwner,
+      this.governanceRouter.address,
+      `Updater manager's owner is wrong`,
+    );
 
     //  ========= xAppConnectionManager =========
     // home
     const xappHome = await this.xAppConnectionManager.home();
-    if (this.data.home) equals(xappHome, this.data.home?.proxy, `Home at xApp manager is wrong`);
+    if (this.data.home)
+      equals(xappHome, this.data.home?.proxy, `Home at xApp manager is wrong`);
     // owner
     const xappsOwner = await this.xAppConnectionManager.owner();
-    if (this.data.home) equals(xappsOwner, this.governanceRouter.address, `Owner of xApp manager is wrong`);
-
-
+    if (this.data.home)
+      equals(
+        xappsOwner,
+        this.governanceRouter.address,
+        `Owner of xApp manager is wrong`,
+      );
 
     for (const remoteDomain of remoteDomains) {
       const remoteDomainNumber: number =
-          this.context.mustGetDomain(remoteDomain).domain;
+        this.context.mustGetDomain(remoteDomain).domain;
       if (replicas) {
         const replica = replicas[remoteDomain];
         exists(replica, `Replica for remote domain ${remoteDomain} not found`);
         if (replica) {
-          
-          errors.push(...assertBeaconProxy(replica, `${remoteDomain}'s replica`));
-
-          const assumedDomain = await this.xAppConnectionManager.replicaToDomain(
-            replica.proxy,
+          errors.push(
+            ...assertBeaconProxy(replica, `${remoteDomain}'s replica`),
           );
-          equals(assumedDomain, remoteDomainNumber, `Remote replica's domain is wrong`);
+
+          const assumedDomain =
+            await this.xAppConnectionManager.replicaToDomain(replica.proxy);
+          equals(
+            assumedDomain,
+            remoteDomainNumber,
+            `Remote replica's domain is wrong`,
+          );
           // domainToReplica
           const assumedReplicaAddress =
-            await this.xAppConnectionManager.domainToReplica(remoteDomainNumber);
-          equals(assumedReplicaAddress, replica.proxy, `Remote replica's address is wrong`);
+            await this.xAppConnectionManager.domainToReplica(
+              remoteDomainNumber,
+            );
+          equals(
+            assumedReplicaAddress,
+            replica.proxy,
+            `Remote replica's address is wrong`,
+          );
         }
       }
-      
+
       // watcherPermission
 
       const remoteConfig = this.context.mustGetDomainConfig(remoteDomain);
@@ -854,27 +899,41 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
             watcher,
             remoteDomainNumber,
           );
-        equals(true, watcherPermission, `Remote (${remoteDomain}) watcher doesn't have permission on ${this.domainNumber}.`) 
+        equals(
+          true,
+          watcherPermission,
+          `Remote (${remoteDomain}) watcher doesn't have permission on ${this.domainNumber}.`,
+        );
       }
     }
 
     //  ========= GovRouter =========
     // GovernanceRouter upgrade setup contracts are defined
     if (this.data.governanceRouter) {
-      errors.push(...assertBeaconProxy(this.data.governanceRouter, 'Governance router'))
+      errors.push(
+        ...assertBeaconProxy(this.data.governanceRouter, 'Governance router'),
+      );
     } else {
-      errors.push(new Error(`No governance router is present in config`))
+      errors.push(new Error(`No governance router is present in config`));
     }
 
     // localDomain
     const govLocalDomain = await this.governanceRouter.localDomain();
-    equals(govLocalDomain, this.domainNumber, `Governance domain doesn't match current domain number`);
+    equals(
+      govLocalDomain,
+      this.domainNumber,
+      `Governance domain doesn't match current domain number`,
+    );
 
     // recoveryTimelock
     const recoveryTimelock = await this.governanceRouter.recoveryTimelock();
-    equals(true, ethers.BigNumber.from(
-      domainConfig.configuration.governance.recoveryTimelock,
-    ).eq(recoveryTimelock.toHexString()), `Recovery time lock doesn't match current domain`);
+    equals(
+      true,
+      ethers.BigNumber.from(
+        domainConfig.configuration.governance.recoveryTimelock,
+      ).eq(recoveryTimelock.toHexString()),
+      `Recovery time lock doesn't match current domain`,
+    );
 
     // recoveryActiveAt
     const recoveryActiveAt = await this.governanceRouter.recoveryActiveAt();
@@ -882,31 +941,44 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     // recoveryManager
     const recoveryManager = await this.governanceRouter.recoveryManager();
-    equals(true, utils.equalIds(
-      domainConfig.configuration.governance.recoveryManager,
-      recoveryManager,
-    ), `Recovery Manager is wrong`);
+    equals(
+      true,
+      utils.equalIds(
+        domainConfig.configuration.governance.recoveryManager,
+        recoveryManager,
+      ),
+      `Recovery Manager is wrong`,
+    );
 
     // governor
     const govId = await this.governanceRouter.governor();
-    if (!this.context.protocol) errors.push(new Error('Protocol config not defined'))
+    if (!this.context.protocol)
+      errors.push(new Error('Protocol config not defined'));
 
     if (this.context.protocol) {
       const expectedGovId = isGovernor
-      ? this.context.protocol.governor.id
-      : ethers.constants.AddressZero;
-      equals(true, utils.equalIds(expectedGovId, govId), `Governor id is wrong`);
+        ? this.context.protocol.governor.id
+        : ethers.constants.AddressZero;
+      equals(
+        true,
+        utils.equalIds(expectedGovId, govId),
+        `Governor id is wrong`,
+      );
 
       // governorDomain
       const govDomain = await this.governanceRouter.governorDomain();
       const expectedGovDomain = this.context.protocol.governor.domain;
       equals(govDomain, expectedGovDomain, `Governor domain is wrong`);
     }
-    
+
     // xAppConnectionManager
     const xAppConnectionManager =
       await this.governanceRouter.xAppConnectionManager();
-    equals(true, utils.equalIds(this.data.xAppConnectionManager, xAppConnectionManager), `xAppConnection manager address is wrong`);
+    equals(
+      true,
+      utils.equalIds(this.data.xAppConnectionManager, xAppConnectionManager),
+      `xAppConnection manager address is wrong`,
+    );
 
     // routers
     for (const domain of remoteDomains) {
@@ -914,12 +986,13 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       const remoteRouter = await this.governanceRouter.routers(
         remoteDomainNumber,
       );
-      equals( true, 
+      equals(
+        true,
         utils.equalIds(
           this.context.mustGetCore(domain).governanceRouter.address,
           remoteRouter,
         ),
-        `Governance router address is wrong`
+        `Governance router address is wrong`,
       );
     }
     // domains
@@ -930,7 +1003,11 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       connections.map((_, i: number) => this.governanceRouter.domains(i)),
     );
     domainsOnChain.sort();
-    equals(true, connections.every((v, i) => v === domainsOnChain[i]), `Remotes on chain are not the same as remotes in config`);
+    equals(
+      true,
+      connections.every((v, i) => v === domainsOnChain[i]),
+      `Remotes on chain are not the same as remotes in config`,
+    );
 
     let threw = false;
     try {
@@ -938,18 +1015,28 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     } catch (_) {
       threw = true;
     }
-    equals(true, threw, `Governance router on chain has more remotes than expected`);
+    equals(
+      true,
+      threw,
+      `Governance router on chain has more remotes than expected`,
+    );
 
     //  ========= UpgradeBeaconController =========
     // owner
     const beaconOwner = await this.upgradeBeaconController.owner();
-      equals(true, utils.equalIds(beaconOwner, this.governanceRouter.address), `Governance router address is not owning upgradeBeaconController`);
+    equals(
+      true,
+      utils.equalIds(beaconOwner, this.governanceRouter.address),
+      `Governance router address is not owning upgradeBeaconController`,
+    );
 
     if (remoteDomains.length > 0) {
       // expect all replicas to have to same implementation and upgradeBeacon
       const firstReplica = replicas![remoteDomains[0]];
       if (!firstReplica) {
-        errors.push(new Error(`Replica for domain ${remoteDomains[0]} is not found`));
+        errors.push(
+          new Error(`Replica for domain ${remoteDomains[0]} is not found`),
+        );
       } else {
         const replicaImpl = firstReplica.implementation;
         const replicaBeacon = firstReplica.beacon;
@@ -957,16 +1044,25 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         remoteDomains.slice(1).forEach((remoteDomain) => {
           const replica = replicas![remoteDomain];
           if (!replica) {
-            errors.push(new Error(`Replica for domain ${remoteDomains[0]} is not found`));
+            errors.push(
+              new Error(`Replica for domain ${remoteDomains[0]} is not found`),
+            );
           } else {
             const implementation = replica.implementation;
             const beacon = replica.beacon;
-            equals(true, utils.equalIds(implementation, replicaImpl), `Implementation address of replica ${remoteDomain} is wrong`);
-            equals(true, utils.equalIds(beacon, replicaBeacon), `Beacon address of replica ${remoteDomain} is wrong`);
+            equals(
+              true,
+              utils.equalIds(implementation, replicaImpl),
+              `Implementation address of replica ${remoteDomain} is wrong`,
+            );
+            equals(
+              true,
+              utils.equalIds(beacon, replicaBeacon),
+              `Beacon address of replica ${remoteDomain} is wrong`,
+            );
           }
         });
       }
-      
     }
 
     if (errors.length > 0) {
