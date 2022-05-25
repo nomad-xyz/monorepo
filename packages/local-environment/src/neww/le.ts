@@ -17,11 +17,12 @@ class Env {
         this.governor = governor;
     }
 
+    // Adds a network to the array of networks if it's not already there.
     addNetwork(n: Network) {
         if (!this.networks.includes(n)) this.networks.push(n);
     }
     
-
+    // Gets governing network
     get govNetwork(): Network {
         const n = this.networks.find(n => n.domainNumber === this.governor.domain);
         if (!n) throw new Error(`Governing network is not present. GovDomain ${this.governor.domain}, present network domains: ${this.networks.map(n => n.domainNumber).join(', ')}`);
@@ -132,16 +133,17 @@ class Env {
 }
 
 (async () => {
+
+    // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
     const t = new HardhatNetwork('tom', 1);
 
     const j = new HardhatNetwork('jerry', 2);
+
     await Promise.all([
         t.up(),
         j.up(),
     ])
     console.log(`Upped tom and jerry`);
-
-
 
     const le = new Env({domain: t.domainNumber, id: '0x'+'00'.repeat(20)});
     le.addNetwork(t);
