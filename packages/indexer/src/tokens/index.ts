@@ -168,6 +168,9 @@ class TokenFetcher {
         const data = {
           id: remoteId,
           domain: remoteDomain,
+          decimals: _decimals,
+          symbol: _symbol,
+          name: _name,
           token: {
             connect: {
               id_domain: {

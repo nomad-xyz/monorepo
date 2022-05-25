@@ -614,7 +614,7 @@ export class ProcessorV2 extends Consumer {
         await this.bridgeRouterReceive(event);
       }
       const percentage = ((++consumed) * 100 / events.length).toFixed(2);
-      this.logger.warn(`Consumed ${percentage}% (${consumed}/${events.length}) events.`) // debug
+      this.logger.debug(`Consumed ${percentage}% (${consumed}/${events.length}) events.`) // debug
     }
   }
 
