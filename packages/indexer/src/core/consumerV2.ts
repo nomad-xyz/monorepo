@@ -918,25 +918,14 @@ export class ProcessorV2 extends Consumer {
 
     let batch = 0;
     const batchSize = 10000;
-    this.logger.error(`stats()!!!`)
 
     let messages: NomadMessage[];
     do {
-      this.logger.error(`stats(${batch})`)
-
       messages = await this.db.getAllMessages(batchSize, batchSize * batch++);
-      this.logger.error(`stats(${batch}, ${messages.length})`)
       messages.forEach((m) => {
         collector.contributeToCount(m);
       });
-    } while(messages.length > 0)
-
-    // const messages = await this.db.getAllMessages();
-    // messages.forEach((m) => {
-    //   collector.contributeToCount(m);
-    // });
-   
-    this.logger.error(`stats() done!`)
+    } while (messages.length === batchSize)
 
     return collector.stats();
   }

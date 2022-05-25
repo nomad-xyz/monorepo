@@ -101,13 +101,9 @@ export class Orchestrator {
   }
 
   async init() {
-    this.logger.error(`o.init! started`);
     await this.initIndexers();
-    this.logger.error(`o.inited! indexers`);
     await this.initHealthCheckers();
-    this.logger.error(`o.inited! health`);
     await this.initalFeedConsumer();
-    this.logger.error(`o.inited! feed consumer`);
     try {
       if (process.env.NODE_ENV === 'spooky things') {
         await this.checkAllIntegrity();
@@ -116,9 +112,7 @@ export class Orchestrator {
       this.logger.error(`Initial integrity failed:`, e);
       throw e;
     }
-    this.logger.error(`o.inited! collectStatistic`);
     await this.collectStatistics();
-    this.logger.error(`o.init! finished`);
   }
 
   get allowedDomains(): number[] {
@@ -220,9 +214,7 @@ export class Orchestrator {
   }
 
   async collectStatistics() {
-    this.logger.error(`collectStatistics starts`)
     const stats = await this.consumer.stats();
-    this.logger.error(`collectStatistics stats collected`)
 
     this.allowedDomains.forEach((domain: number) => {
       const network = this.domain2name(domain);
@@ -240,7 +232,6 @@ export class Orchestrator {
       }
     });
 
-    this.logger.error(`collectStatistics finished`);
   }
 
   async checkAllHealth() {
@@ -259,8 +250,6 @@ export class Orchestrator {
   }
 
   async initalFeedConsumer() {
-    this.logger.error(`Initial processor feed started`);
-
     const events = (
       await Promise.all(
         Array.from(this.indexers.values()).map((indexer) =>
@@ -277,8 +266,6 @@ export class Orchestrator {
       }
     });
     await this.consumer.consume(events);
-    this.logger.error(`Initial processor feed finished`);
-
   }
 
   async initIndexers() {
