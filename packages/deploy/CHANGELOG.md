@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- feature: deploy script doesn't throw, but collect errors for later
 - chore: bump configuration to rc.23
 - fix: add goerli overrides to overrides.json
 - feature: Added core and bridge checks
