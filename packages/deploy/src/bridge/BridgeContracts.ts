@@ -14,7 +14,6 @@ import * as config from '@nomad-xyz/configuration';
 import Contracts from '../Contracts';
 import { DeployContext } from '../DeployContext';
 import { log, assertBeaconProxy } from '../utils';
-import { expect } from 'chai';
 import { Call, CallBatch } from '@nomad-xyz/sdk-govern';
 
 export abstract class AbstractBridgeDeploy<T> extends Contracts<T> {
@@ -547,15 +546,27 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
   }
 
   async checkDeploy(remoteDomains: string[]): Promise<void> {
-    if (!this.data.bridgeToken)
-      throw new Error(`BridgeToken is not defined for domain ${this.domain}`);
-    if (!this.data.bridgeRouter)
-      throw new Error(`BridgeRouter is not defined for domain ${this.domain}`);
-    if (!this.data.tokenRegistry)
-      throw new Error(`TokenRegistry is not defined for domain ${this.domain}`);
+    const errors = [];
 
-    assertBeaconProxy(this.data.bridgeToken);
-    assertBeaconProxy(this.data.bridgeRouter);
+    const equals = <T>(truth: T, test: T | undefined, resoning: string) => {
+      if (!test) {
+        errors.push(new Error(resoning + ` (${test} is not equal to ${truth})`));
+      } else if (truth !== test) {
+        errors.push(new Error(resoning + ` (${test} is not equal to ${truth})`));
+      }
+    };
+
+    const exists = (test: any, resoning: string) => {
+      if (test) {
+        errors.push(new Error(resoning));
+      }
+    };
+
+    exists(this.data.bridgeToken, `BridgeToken is not defined for domain ${this.domain}`);
+    exists(this.data.bridgeRouter, `BridgeRouter is not defined for domain ${this.domain}`);
+    exists(this.data.tokenRegistry, `TokenRegistry is not defined for domain ${this.domain}`);
+
+    if (this.data.bridgeToken) errors.push(...assertBeaconProxy(this.data.bridgeToken, 'Bridge Token'));
 
     /*
     # BridgeRouter
@@ -574,57 +585,58 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     //  ========= BridgeRouter =========
     // BridgeRouter upgrade setup contracts are defined
-    assertBeaconProxy(this.data.bridgeRouter, 'BridgeRouter');
+    if (this.data.bridgeRouter) errors.push(...assertBeaconProxy(this.data.bridgeRouter, 'BridgeRouter'));
     // owner
     const bridgeRouterOwner = await this.bridgeRouterContract.owner();
-    expect(utils.equalIds(bridgeRouterOwner, core.governanceRouter.address)).to
-      .be.true;
+    equals(true, utils.equalIds(bridgeRouterOwner, core.governanceRouter.address), `Bridge router owner is wrong`);
     // tokenRegistry
     const tokenRegistry = await this.bridgeRouterContract.tokenRegistry();
-    expect(utils.equalIds(tokenRegistry, this.data.tokenRegistry.proxy)).to.be
-      .true;
+    if (this.data.tokenRegistry) equals(true, utils.equalIds(tokenRegistry, this.data.tokenRegistry.proxy), `Token registry owner is wrong`);
     // xAppConnectionManager
     const xApp = await this.bridgeRouterContract.xAppConnectionManager();
-    expect(utils.equalIds(xApp, core.xAppConnectionManager.address)).to.be.true;
+    equals(true, utils.equalIds(xApp, core.xAppConnectionManager.address), `xAppConnectionManager address is wrong`);
     // remotes
     for (const domain of remoteDomains) {
       const remoteDomainNumber = this.context.mustGetDomain(domain).domain;
       const remoteRouter = await this.bridgeRouterContract.remotes(
         remoteDomainNumber,
       );
-      expect(
+      equals(
+        true,
         utils.equalIds(
           this.context.mustGetBridge(domain).bridgeRouterContract.address,
           remoteRouter,
         ),
-      ).to.be.true;
+        `Remote router address is not correct for domain ${domain}`
+      );
     }
 
     //  ========= tokenRegistry =========
     // TokenRegistry upgrade setup contracts are defined
-    assertBeaconProxy(this.data.tokenRegistry, 'TokenRegistry');
+    if (this.data.tokenRegistry) errors.push(...assertBeaconProxy(this.data.tokenRegistry, 'TokenRegistry'));
     // owner
     const tokenRegistryOwner = await this.tokenRegistryContract.owner();
-    expect(utils.equalIds(tokenRegistryOwner, this.bridgeRouterContract.address)).to
-        .be.true;
+    equals(true, utils.equalIds(tokenRegistryOwner, this.bridgeRouterContract.address), `Token registry owner is wrong`);
 
     // xAppConnectionManager
     const xAppAddress =
       await this.tokenRegistryContract.xAppConnectionManager();
-    expect(utils.equalIds(xAppAddress, core.xAppConnectionManager.address)).to
-      .be.true;
+    equals(true, utils.equalIds(xAppAddress, core.xAppConnectionManager.address), `xAppConnection Manager is wrong`);
     // tokenBeacon
     const tokenBeacon = await this.tokenRegistryContract.tokenBeacon();
-    expect(utils.equalIds(tokenBeacon, this.data.bridgeToken.beacon)).to.be
-      .true;
+    if (this.data.bridgeToken) equals(true, utils.equalIds(tokenBeacon, this.data.bridgeToken.beacon), `Token beacon address is wrong`);
 
     //  ========= eth helper =========
     const weth = this.context.mustGetDomainConfig(this.domain)
       .bridgeConfiguration.weth;
     if (weth) {
-      expect(this.data.ethHelper).to.not.be.undefined;
+      exists(this.data.ethHelper, `Eth helper defined`);
     } else {
-      expect(this.data.ethHelper).to.be.undefined;
+      equals(true, !!this.data.ethHelper, `Eth helper defined`);
+    }
+
+    if (errors.length > 0) {
+      throw errors;
     }
   }
 

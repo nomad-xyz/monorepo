@@ -1,5 +1,4 @@
 import ethers from 'ethers';
-import { expect } from 'chai';
 import * as config from '@nomad-xyz/configuration';
 
 export type SignerOrProvider = ethers.providers.Provider | ethers.Signer;
@@ -14,9 +13,11 @@ export function _unreachable(): void {
 
 export function assertBeaconProxy(
   beaconProxy: config.Proxy,
-  message?: string,
-): void {
-  expect(beaconProxy.beacon, message).to.not.be.undefined;
-  expect(beaconProxy.proxy, message).to.not.be.undefined;
-  expect(beaconProxy.implementation, message).to.not.be.undefined;
+  name: string,
+): any[] {
+  const errors = [];
+  if (beaconProxy.beacon === undefined) errors.push(new Error(`${name} proxy's beacon is undefined`));
+  if (beaconProxy.proxy === undefined) errors.push(new Error(`${name} proxy's proxy is undefined`));
+  if (beaconProxy.implementation === undefined) errors.push(new Error(`${name} proxy's implementation is undefined`));
+  return errors;
 }
