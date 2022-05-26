@@ -9,10 +9,8 @@ contract TestReplica is Replica {
     using Message for bytes29;
 
     constructor(
-        uint32 _localDomain,
-        uint256,
-        uint256
-    ) Replica(_localDomain, 850_000, 15_000) {} // solhint-disable-line no-empty-blocks
+        uint32 _localDomain
+    ) Replica(_localDomain) {} // solhint-disable-line no-empty-blocks
 
     function setRemoteDomain(uint32 _remoteDomain) external {
         remoteDomain = _remoteDomain;
