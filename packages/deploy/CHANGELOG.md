@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- deploy from tagged contract versions (1.0.0-rc.2)
 - feature: deploy script doesn't throw, but collect errors
 - chore: bump configuration to rc.23
 - fix: add goerli overrides to overrides.json
