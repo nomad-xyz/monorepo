@@ -24,6 +24,12 @@ contract Replica is Version0, NomadBase {
     using TypedMemView for bytes29;
     using Message for bytes29;
 
+    // ============ Constants ============
+
+    bytes32 public constant LEGACY_STATUS_NONE = bytes32(0);
+    bytes32 public constant LEGACY_STATUS_PROVEN = bytes32(uint256(1));
+    bytes32 public constant LEGACY_STATUS_PROCESSED = bytes32(uint256(2));
+
     // ============ Public Storage ============
 
     // Domain of home chain
@@ -184,7 +190,7 @@ contract Replica is Version0, NomadBase {
         require(entered == 1, "!reentrant");
         entered = 0;
         // update message status as processed
-        messages[_messageHash] = bytes32(uint256(2));
+        messages[_messageHash] = LEGACY_STATUS_PROCESSED;
         // call handle function
         IMessageRecipient(_m.recipientAddress()).handle(
             _m.origin(),
@@ -251,9 +257,10 @@ contract Replica is Version0, NomadBase {
      * @return TRUE iff root has been submitted & timeout has expired
      */
     function acceptableRoot(bytes32 _root) public view returns (bool) {
-        // this is a backwards-compatibility for previous versions which
-        if (_root == bytes32(uint256(1))) return true;
-        if (_root == bytes32(uint256(2))) return false;
+        // this is backwards-compatibility for messages proven/processed
+        // under previous versions
+        if (_root == LEGACY_STATUS_PROVEN) return true;
+        if (_root == LEGACY_STATUS_PROCESSED) return false;
 
         uint256 _time = confirmAt[_root];
         if (_time == 0) {
@@ -279,8 +286,9 @@ contract Replica is Version0, NomadBase {
         bytes32[32] calldata _proof,
         uint256 _index
     ) public returns (bool) {
-        // ensure that message has not been proven or processed
-        require(messages[_leaf] == bytes32(0), "!MessageStatus.None");
+        // ensure that message has not been processed
+        // Note that this allows re-proving under a new root.
+        require(messages[_leaf] != LEGACY_STATUS_PROCESSED, "already processed");
         // calculate the expected root based on the proof
         bytes32 _calculatedRoot = MerkleLib.branchRoot(_leaf, _proof, _index);
         // if the root is valid, change status to Proven
