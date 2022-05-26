@@ -59,9 +59,14 @@ contract Replica is Version0, NomadBase {
     /**
      * @notice Emitted when message is processed
      * @param messageHash The keccak256 hash of the message that was processed
+     * @param success TRUE if the call was executed successfully,
+     * FALSE if the call reverted or threw
+     * @param returnData the return data from the external call
      */
     event Process(
-        bytes32 indexed messageHash
+        bytes32 indexed messageHash,
+        bool indexed success,
+        bytes indexed returnData
     );
 
     /**
@@ -200,7 +205,7 @@ contract Replica is Version0, NomadBase {
             _m.body().clone()
         );
         // emit process results
-        emit Process(_messageHash);
+        emit Process(_messageHash, true, "");
         // reset re-entrancy guard
         entered = 1;
     }
