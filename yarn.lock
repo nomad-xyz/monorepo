@@ -1766,13 +1766,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/configuration@npm:^0.1.0-rc.23":
-  version: 0.1.0-rc.23
-  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.23"
-  checksum: 45f5e5efb0394d06299304f09b681e53deece1c8dd8b17fe1091fc09286f3ae26c3ccae8daf523c63d5e3614492845680b844fd50677788fe9e371de767fabdc
-  languageName: node
-  linkType: hard
-
 "@nomad-xyz/contract-interfaces@npm:1.1.1":
   version: 1.1.1
   resolution: "@nomad-xyz/contract-interfaces@npm:1.1.1"
@@ -1784,7 +1777,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/contracts-bridge@1.0.0-rc.2, @nomad-xyz/contracts-bridge@^1.0.0-rc.2, @nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
+"@nomad-xyz/contracts-bridge@1.0.0-rc.2, @nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge"
   dependencies:
@@ -1815,7 +1808,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/contracts-core@^1.0.0-rc.2, @nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
+"@nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-core@workspace:packages/contracts-core"
   dependencies:
@@ -2032,20 +2025,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk-bridge@npm:^1.0.0-rc.17":
-  version: 1.0.0-rc.17
-  resolution: "@nomad-xyz/sdk-bridge@npm:1.0.0-rc.17"
-  dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.23
-    "@nomad-xyz/contracts-bridge": ^1.0.0-rc.2
-    "@nomad-xyz/sdk": ^2.0.0-rc.17
-    ethers: ^5.0.0
-    web3: ^1.6.1
-  checksum: 3a6ee6c05b8cbe87c42d164739749c97b2b5d5dff5a53e6c9a9a1073b19dda30229dad82bc31e1edb84ecea361e8bc99a11d7e26bd284ada0e292c71b258bd44
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
+"@nomad-xyz/sdk-bridge@^1.0.0-rc.17, @nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
@@ -2071,22 +2051,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk-govern@npm:^1.0.0-rc.17":
-  version: 1.0.0-rc.17
-  resolution: "@nomad-xyz/sdk-govern@npm:1.0.0-rc.17"
-  dependencies:
-    "@gnosis.pm/safe-core-sdk": ^2.0.0
-    "@gnosis.pm/safe-ethers-adapters": ^0.1.0-alpha.8
-    "@gnosis.pm/safe-ethers-lib": ^1.0.0
-    "@nomad-xyz/configuration": ^0.1.0-rc.23
-    "@nomad-xyz/sdk": ^2.0.0-rc.17
-    ethers: ^5.4.6
-    web3: ^1.6.1
-  checksum: c2a7d1905d9b7e6a7123310eb6d01a8c05779f69a500d2d9f6891d7a01462fb18b0d80ef5972ba88ee79fc5c9f2d72af54eedeaf6d86c63f7a43c515ea8e5998
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/sdk-govern@workspace:^, @nomad-xyz/sdk-govern@workspace:packages/sdk-govern":
+"@nomad-xyz/sdk-govern@^1.0.0-rc.17, @nomad-xyz/sdk-govern@workspace:^, @nomad-xyz/sdk-govern@workspace:packages/sdk-govern":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-govern@workspace:packages/sdk-govern"
   dependencies:
@@ -2115,20 +2080,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk@npm:^2.0.0-rc.17":
-  version: 2.0.0-rc.17
-  resolution: "@nomad-xyz/sdk@npm:2.0.0-rc.17"
-  dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.23
-    "@nomad-xyz/contracts-core": ^1.0.0-rc.2
-    "@nomad-xyz/multi-provider": ^1.0.0-rc.4
-    axios: ^0.27.2
-    ethers: ^5.0.0
-  checksum: 31694539411754a30b96ea222d32f568cc5b0626e42fae2e6f5c60dac5bb9fcb85fe608c6cdcc3ee434088bec81545762718c1223c981c7c0e219015d85de25d
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
+"@nomad-xyz/sdk@^2.0.0-rc.17, @nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -8250,7 +8202,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 
