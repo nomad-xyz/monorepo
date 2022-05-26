@@ -56,7 +56,11 @@ export class CheckList {
   }
 
   // This method tries to assert using expect(), in the worst case, uses utils.equalIds
-  equalIds(left: BytesLike, right: BytesLike | undefined, message: string): void {
+  equalIds(
+    left: BytesLike,
+    right: BytesLike | undefined,
+    message: string,
+  ): void {
     if (right === undefined) {
       this.error.push([message, new Error(message + ' is undefined')]);
     } else {
@@ -73,7 +77,11 @@ export class CheckList {
   }
 
   // This method tries to assert using expect(), in the worst case, uses utils.equalIds
-  notEqualIds(left: BytesLike, right: BytesLike | undefined, message: string): void {
+  notEqualIds(
+    left: BytesLike,
+    right: BytesLike | undefined,
+    message: string,
+  ): void {
     if (right === undefined) {
       this.ok.push(message);
     } else {

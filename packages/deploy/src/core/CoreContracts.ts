@@ -979,24 +979,22 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     );
 
     if (remoteDomains.length > 0 && replicas) {
-      if (replicas) {
-        // expect all replicas to have to same implementation and upgradeBeacon
-        const firstReplica = replicas[remoteDomains[0]];
-        const replicaImpl = firstReplica.implementation;
-        const replicaBeacon = firstReplica.beacon;
-        // check every other implementation/beacon matches the first
-        remoteDomains.slice(1).forEach((remoteDomain) => {
-          const replica = replicas[remoteDomain];
-          const implementation = replica.implementation;
-          const beacon = replica.beacon;
-          checklist.equalIds(
-            implementation,
-            replicaImpl,
-            "Replica's implementation",
-          );
-          checklist.equalIds(beacon, replicaBeacon, "Replica's beacon");
-        });
-      }
+      // expect all replicas to have to same implementation and upgradeBeacon
+      const firstReplica = replicas[remoteDomains[0]];
+      const replicaImpl = firstReplica.implementation;
+      const replicaBeacon = firstReplica.beacon;
+      // check every other implementation/beacon matches the first
+      remoteDomains.slice(1).forEach((remoteDomain) => {
+        const replica = replicas[remoteDomain];
+        const implementation = replica.implementation;
+        const beacon = replica.beacon;
+        checklist.equalIds(
+          implementation,
+          replicaImpl,
+          "Replica's implementation",
+        );
+        checklist.equalIds(beacon, replicaBeacon, "Replica's beacon");
+      });
     }
 
     if (checklist.hasErrors()) {
