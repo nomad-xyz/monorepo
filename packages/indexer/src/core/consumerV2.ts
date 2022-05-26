@@ -456,7 +456,6 @@ export class NomadMessage {
 
 class EventsPool {
   redis: RedisClient;
-  // db: DB;
   pool: {
     send: Map<string, string>;
     update: Map<string, string[]>;
@@ -596,10 +595,10 @@ export class ProcessorV2 extends Consumer {
   }
 
   async consume(events: NomadishEvent[]): Promise<void> {
-    // just to prevent from running for now.
-    // fs.writeFileSync(`/Users/daniilnaumetc/code/nomad/monorepo/checks_to_main/packages/indexer/batches/${iii++}_${events.length}.json`, JSON.stringify(events.map(e => e.toObject())))
+    // events = shuffle(events);
+    this.logger.warn(`Consuming ${events.length} events.`) // debug
+    let consumed = 0;
 
-    events = shuffle(events);
     for (const event of events) {
       if (event.eventType === EventType.HomeDispatch) {
         await this.dispatched(event);
@@ -614,6 +613,8 @@ export class ProcessorV2 extends Consumer {
       } else if (event.eventType === EventType.BridgeRouterReceive) {
         await this.bridgeRouterReceive(event);
       }
+      const percentage = ((++consumed) * 100 / events.length).toFixed(2);
+      this.logger.debug(`Consumed ${percentage}% (${consumed}/${events.length}) events.`) // debug
     }
   }
 
@@ -650,7 +651,6 @@ export class ProcessorV2 extends Consumer {
   async checkAndUpdateSend(m: NomadMessage) {
     if (m.msgType !== MessageType.TransferMessage)
       throw new Error(`Message not a transfer message`);
-    // destination, new Padded(recipient), amount, block, token . destination: number, recipient: Padded, amount: ethers.BigNumber, block: number, tokenId: Padded
     const event: NomadishEvent | null = await this.pool.getSend(
       m.destination,
       m.recipient()!,
@@ -916,11 +916,16 @@ export class ProcessorV2 extends Consumer {
   async stats(): Promise<Statistics> {
     const collector = new StatisticsCollector(this.domains);
 
-    const messages = await this.db.getAllMessages();
+    let batch = 0;
+    const batchSize = 10000;
 
-    messages.forEach((m) => {
-      collector.contributeToCount(m);
-    });
+    let messages: NomadMessage[];
+    do {
+      messages = await this.db.getAllMessages(batchSize, batchSize * batch++);
+      messages.forEach((m) => {
+        collector.contributeToCount(m);
+      });
+    } while (messages.length === batchSize)
 
     return collector.stats();
   }

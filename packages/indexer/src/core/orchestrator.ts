@@ -105,7 +105,9 @@ export class Orchestrator {
     await this.initHealthCheckers();
     await this.initalFeedConsumer();
     try {
-      await this.checkAllIntegrity();
+      if (process.env.NODE_ENV === 'spooky things') {
+        await this.checkAllIntegrity();
+      }
     } catch (e) {
       this.logger.error(`Initial integrity failed:`, e);
       throw e;
@@ -120,16 +122,21 @@ export class Orchestrator {
   }
 
   async checkAllIntegrity(): Promise<void> {
+    this.logger.debug(`Started integrity test for all domains`);
     await Promise.all(
       this.allowedDomains.map(async (domain: number) => {
         const indexer = this.indexers.get(domain)!;
-        try {
-          await indexer.dummyTestEventsIntegrity();
-        } catch (e) {
-          indexer.setForceFrom(indexer.deployHeight);
+        if (indexer.wantDummyStuff) {
+          try {
+            await indexer.dummyTestEventsIntegrity();
+          } catch (e) {
+            this.logger.warn(`Integrity test for domain ${domain} failed`);
+            indexer.setForceFrom(indexer.deployHeight);
+          }
         }
       }),
     );
+    this.logger.debug(`Finished integrity test for all domains`);
   }
 
   async indexAllUnrelated(): Promise<void> {
@@ -157,8 +164,6 @@ export class Orchestrator {
 
           if (eventsForDomain.length) await this.collectStatistics();
           this.reportAllMetrics();
-
-          // await sleep(5000);
         } catch (e: any) {
           this.logger.error(`Error at Indexing ${domain}`, e);
           await sleep(5000);
@@ -169,27 +174,9 @@ export class Orchestrator {
               errors,
             );
           }
-          // finished = true;
         }
       }
     });
-
-    // return errors;
-
-    // const events = (
-    //   await Promise.all(
-    //     this.sdk.domainNumbers.map((domain: number) => this.index(domain)),
-    //   )
-    // ).flat();
-    // events.sort((a, b) => {
-    //   if (a.ts === b.ts) {
-    //     return eventTypeToOrder(a) - eventTypeToOrder(b);
-    //   } else {
-    //     return a.ts - b.ts;
-    //   }
-    // });
-    // this.logger.info(`Received ${events.length} events after reindexing`);
-    // await this.consumer.consume(events);
     await Promise.all(promises);
 
     return;
@@ -229,7 +216,7 @@ export class Orchestrator {
   async collectStatistics() {
     const stats = await this.consumer.stats();
 
-    this.allowedDomains.forEach(async (domain: number) => {
+    this.allowedDomains.forEach((domain: number) => {
       const network = this.domain2name(domain);
       try {
         const s = stats.forDomain(domain).counts;
@@ -244,6 +231,7 @@ export class Orchestrator {
         );
       }
     });
+
   }
 
   async checkAllHealth() {
@@ -269,6 +257,7 @@ export class Orchestrator {
         ),
       )
     ).flat();
+
     events.sort((a, b) => {
       if (a.ts === b.ts) {
         return eventTypeToOrder(a) - eventTypeToOrder(b);
@@ -457,7 +446,6 @@ export class Orchestrator {
 
       if (this.chaseMode) {
         this.chaseMode = false;
-        // this.subscribeStatisticEvents();
       }
 
       this.logger.info(
@@ -474,7 +462,6 @@ export class Orchestrator {
 
   async startConsuming() {
     await this.consumeUnrelated();
-    // await this.consumeRelated();
   }
 
   reportAllMetrics() {

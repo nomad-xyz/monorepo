@@ -35,7 +35,7 @@ export async function getSdk(
   }
 
   sdk.domainNumbers.forEach((domain: number) => {
-    const name = sdk.mustGetDomain(domain).name.toUpperCase();
+    const name = sdk.mustGetDomain(domain).name.toUpperCase().replaceAll('-', '_');
     const rpcEnvKey = `${name}_RPC`;
     const defaultRPC = sdk.conf.rpcs[name]?.[0];
     const rpc = process.env[rpcEnvKey] || defaultRPC;

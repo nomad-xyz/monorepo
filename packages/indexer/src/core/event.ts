@@ -147,14 +147,11 @@ export class NomadishEvent {
     gasUsed: ethers.BigNumber,
     tx: string,
     eventData: EventDataNormal,
-    // restore = false,
   ) {
     this.domain = domain;
     this.eventType = eventType;
     this.replicaOrigin = replicaOrigin;
     this.ts = ts;
-
-    // checkEventData(eventData, eventType);
 
     this.eventData = eventData;
 
@@ -223,7 +220,6 @@ export class NomadishEvent {
       e.gasUsed,
       e.tx,
       e.eventData,
-      // true,
     );
   }
 
@@ -232,7 +228,6 @@ export class NomadishEvent {
       this.domain.toString(),
       this.eventType,
       this.replicaOrigin.toString(),
-      // this.block.toString(),
       uniqueHash(this.eventData),
       this.gasUsed.toString(),
       this.tx,
