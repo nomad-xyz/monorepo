@@ -142,6 +142,18 @@ export async function run(db: DB, logger: Logger) {
     return res.json(messages.map((m) => m.serialize()));
   });
 
+  app.get('/wrongReplicas', log, async (req, res) => {
+    const replicas = await db.client.replica.findMany({include: {token: true}});
+
+    const sadReplicas = replicas.filter(r => {
+      const t = r.token;
+      return t.name !== r.name || t.decimals !== r.decimals || t.symbol !== r.symbol
+      });
+
+      return res.json(sadReplicas)
+    }
+  )
+
   app.get('/domain/:domain', log, async (req, res) => {
     const {domain: domainStr} =  req.params;
 
