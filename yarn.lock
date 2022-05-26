@@ -1927,9 +1927,9 @@ __metadata:
     "@types/redis": ^4.0.11
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
-    apollo-server: ^3.7.0
-    apollo-server-core: ^3.7.0
-    apollo-server-express: ^3.7.0
+    apollo-server: 3.7.0
+    apollo-server-core: 3.7.0
+    apollo-server-express: 3.7.0
     axios: ^0.26.0
     bunyan: ^1.8.15
     class-validator: ^0.13.2
@@ -3894,7 +3894,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"apollo-server-core@npm:^3.7.0":
+"apollo-server-core@npm:3.7.0, apollo-server-core@npm:^3.7.0":
   version: 3.7.0
   resolution: "apollo-server-core@npm:3.7.0"
   dependencies:
@@ -3944,7 +3944,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"apollo-server-express@npm:^3.7.0":
+"apollo-server-express@npm:3.7.0, apollo-server-express@npm:^3.7.0":
   version: 3.7.0
   resolution: "apollo-server-express@npm:3.7.0"
   dependencies:
@@ -3990,7 +3990,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"apollo-server@npm:^3.7.0":
+"apollo-server@npm:3.7.0":
   version: 3.7.0
   resolution: "apollo-server@npm:3.7.0"
   dependencies:
