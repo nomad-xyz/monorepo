@@ -106,9 +106,15 @@ class Env {
         // add deploy signer and overrides for each network
         for (const network of this.networks) {
             const name = network.name;
+            console.log("Deploying test network: " + name);
+            deployContext.registerDomain(network.domain);
+            deployContext.registerRpcProvider(name, network.rpcs[0]);
             const provider = deployContext.mustGetProvider(name);
+            console.log(JSON.stringify(provider));
             const wallet = new ethers.Wallet(this.deployerKey, provider);
+            console.log(wallet);
             const signer = new NonceManager(wallet);
+            console.log(signer);
             deployContext.registerSigner(name, signer);
             deployContext.overrides.set(name, network.deployOverrides);
         }
@@ -143,7 +149,7 @@ class Env {
         t.up(),
         j.up(),
     ])
-    console.log(`Upped tom and jerry`);
+    console.log(`Upped Tom and Jerry`);
 
     const le = new Env({domain: t.domainNumber, id: '0x'+'00'.repeat(20)});
     le.addNetwork(t);
