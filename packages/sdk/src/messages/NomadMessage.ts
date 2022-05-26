@@ -448,9 +448,12 @@ export class NomadMessage<T extends NomadContext> {
    * status of the message.
    */
   async replicaStatus(): Promise<ReplicaMessageStatus> {
-    const root = await this.replica.messages(this.leaf);
-    if (root === ethers.constants.HashZero) return ReplicaMessageStatus.None;
-    if (root === `0x${'00'.repeat(31)}02`)
+    // backwards compatibility. Older replica versions returned a number,
+    // newer versions return a hash
+    const root = (await this.replica.messages(this.leaf)) as string | number;
+    if (root === ethers.constants.HashZero || root === 0)
+      return ReplicaMessageStatus.None;
+    if (root === `0x${'00'.repeat(31)}02` || root === 2)
       return ReplicaMessageStatus.Processed;
 
     return ReplicaMessageStatus.Proven;
