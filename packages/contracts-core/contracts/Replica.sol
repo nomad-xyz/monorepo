@@ -208,6 +208,8 @@ contract Replica is Version0, NomadBase {
         emit Process(_messageHash, true, "");
         // reset re-entrancy guard
         entered = 1;
+        // return true
+        return true;
     }
 
     // ============ External Owner Functions ============
