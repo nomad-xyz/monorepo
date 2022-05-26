@@ -11,49 +11,54 @@ interface TokenDetails {
   decimals: number;
 }
 
-async function getConfig(environment: string): Promise<any>{
-  const configUrl = `https://raw.githubusercontent.com/nomad-xyz/rust/b76315abcc5385987f3e71f75d40909dd24b95c3/configuration/configs/${environment}.json`
+async function getConfig(environment: string): Promise<any> {
+  // TODO: remove fetching from github and pull from the configuration package instead
+  const configUrl = `https://raw.githubusercontent.com/nomad-xyz/rust/b76315abcc5385987f3e71f75d40909dd24b95c3/configuration/configs/${environment}.json`;
   const res = await axios(configUrl);
-  const config = await res.data
-  return config
+  return await res.data;
 }
 
 // TODO: move to common file
 async function getRpcProviderFromConfig(
   environment: string,
-  network: string
+  network: string,
 ): Promise<ethers.providers.JsonRpcProvider> {
-  const config = await getConfig(environment)
+  const config = await getConfig(environment);
   let rpcUrl: string;
   try {
     rpcUrl = config.rpcs[network][0];
-  }
-  catch(e){
+  } catch (e) {
     throw new Error(`No RPC url for network ${network}`);
   }
   return new ethers.providers.JsonRpcProvider(rpcUrl);
 }
 
-async function getSigner(environment: string, network: string): Promise<ethers.Signer> {
+async function getSigner(
+  environment: string,
+  network: string,
+): Promise<ethers.Signer> {
   const privKey = process.env.SET_DETAILS_KEY!;
   const provider = await getRpcProviderFromConfig(environment, network);
   return new ethers.Wallet(privKey, provider);
 }
 
 async function getNetworkName(environment: string, domain: number) {
-  const config = await getConfig(environment)
-  const networkNames: number[] = config.networks
-  let lookup: any = {
-    "names": {},
-    "domains": {}
-  }
-  networkNames.forEach(element => {
-    const domain = config.protocol.networks[element].domain
-    lookup.names[element] = domain.toString()
-    lookup.domains[domain] = element.toString()
+  const config = await getConfig(environment);
+  const networkNames: number[] = config.networks;
+  // TODO: improve logic here
+  let lookup: {
+    names: Record<string, string>;
+    domains: Record<string, string>;
+  } = {
+    names: {},
+    domains: {},
+  };
+  networkNames.forEach((element) => {
+    const domain = config.protocol.networks[element].domain;
+    lookup.names[element] = domain.toString();
+    lookup.domains[domain] = element.toString();
   });
-  return lookup.domains[domain]
-
+  return lookup.domains[domain];
 }
 
 async function setDetailsForToken(
@@ -89,22 +94,30 @@ async function setDetailsForToken(
   const args = process.argv.slice(2);
   const environment = args[0];
 
-  const url = `https://bridge-indexer.${environment=="development" ? "dev"  : environment=="staging" ? "staging" : environment=="production" ? "prod" : "prod"}.madlads.tools/wrongReplicas`
-  const res = await axios(url)
-  let wrongReplicas = res.data as any[]
+  // The indexer doesn't use the same name as the environment, so we need to map to the indexer url environment string
+  const envMap: Record<string, string> = {
+    development: 'dev',
+    staging: 'staging',
+    production: 'prod',
+  };
 
-  for (let replica of wrongReplicas){
-   
-    const domain: number = replica["domain"]
-    const networkName = await getNetworkName(environment, domain)
+  const url = `https://bridge-indexer.${envMap[environment]}.madlads.tools/wrongReplicas`;
+  const res = await axios(url);
+  const wrongReplicas = res.data as any[];
+
+  for (let replica of wrongReplicas) {
+    const domain = replica.domain;
+    const networkName = await getNetworkName(environment, domain);
     const signer = await getSigner(environment, networkName);
     const details = {
       address: replica.id,
-      name: replica.token['name'],
-      symbol: replica.token['symbol'],
-      decimals: replica.token['decimals']
+      name: replica.token.name,
+      symbol: replica.token.symbol,
+      decimals: replica.token.decimals,
     };
-    console.log(`Setting details for ${replica.token["name"]} on ${networkName}`)
+    console.log(
+      `Setting details for ${replica.token['name']} on ${networkName}`,
+    );
     await setDetailsForToken(signer, details);
   }
 })();
