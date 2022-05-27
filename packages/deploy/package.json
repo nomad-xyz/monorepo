@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/deploy",
-  "version": "0.1.2",
+  "version": "0.0.0-rc.0",
   "private": true,
   "description": "Nomad deploy tools",
   "keywords": [
@@ -12,50 +12,37 @@
   "author": "Illusory Systems Inc.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist/**/*",
-    "src/**/*"
-  ],
   "scripts": {
     "build": "tsc --build",
-    "calculate-domain": "ts-node scripts/calculateDomain.ts",
     "check": "tsc --noEmit",
-    "check-dev": "ts-node scripts/development/governance/checkNewChain.ts",
-    "check-staging": "ts-node scripts/staging/governance/checkNewChain.ts",
-    "deploy-dev-bridges": "ts-node scripts/development/bridge.ts",
-    "deploy-dev-core": "ts-node scripts/development/core.ts",
-    "deploy-prod-bridges": "ts-node scripts/mainnet/bridge.ts",
-    "deploy-prod-core": "ts-node scripts/mainnet/core.ts",
-    "deploy-staging-bridges": "ts-node scripts/staging/bridge.ts",
-    "deploy-staging-core": "ts-node scripts/staging/core.ts",
-    "enroll-dev": "ts-node scripts/development/governance/enrollNewChain.ts",
-    "enroll-staging": "ts-node scripts/staging/governance/enrollNewChain.ts",
-    "lint": "eslint --fix ./src.ts ./config ./scripts",
-    "prettier": "prettier --write ./src.ts ./config ./scripts"
+    "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts",
+    "lint": "eslint --fix ./src",
+    "prettier": "prettier --write ./src",
+    "test": "ts-mocha ./tests/*.ts"
   },
   "dependencies": {
-    "@ethersproject/experimental": "^5.3.0",
+    "@nomad-xyz/configuration": "^0.1.0-rc.23",
     "@nomad-xyz/contracts-bridge": "workspace:^",
     "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/contracts-router": "workspace:^",
     "@nomad-xyz/multi-provider": "workspace:^",
     "@nomad-xyz/sdk": "workspace:^",
-    "@nomad-xyz/sdk-bridge": "workspace:^",
     "@nomad-xyz/sdk-govern": "workspace:^",
     "axios": "^0.21.3",
     "chai": "^4.3.4"
   },
   "devDependencies": {
     "@types/chai": "^4.2.21",
-    "@types/node": "^17.0.14",
-    "@typescript-eslint/eslint-plugin": "^4.33.0",
-    "@typescript-eslint/parser": "^4.33.0",
+    "@types/node": "^17.0.23",
+    "@typescript-eslint/eslint-plugin": "^5.20.0",
+    "@typescript-eslint/parser": "^5.20.0",
     "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "ethers": "^5.5.1",
     "hardhat-packager": "^1.2.1",
     "prettier": "^2.3.1",
+    "ts-mocha": "^9.0.2",
     "ts-node": "^10.1.0",
     "typechain": "^5.0.0",
     "typescript": "^4.5.5"

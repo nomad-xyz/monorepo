@@ -1,0 +1,35 @@
+{
+  "rinkeby": {
+    "maxFeePerGas": "20000000000",
+    "maxPriorityFeePerGas": "2000000000",
+    "gasLimit": "7000000"
+  },
+  "kovan": {
+    "gasPrice": "10000000000",
+    "gasLimit": "7000000"
+  },
+  "xdai": {
+    "maxFeePerGas": "4000000000",
+    "maxPriorityFeePerGas": "2500000000",
+    "gasLimit": "7000000"
+  },
+  "goerli": {
+    "maxFeePerGas": "4000000000",
+    "maxPriorityFeePerGas": "2500000000",
+    "gasLimit": "7000000"
+  },
+  "moonbasealpha": {
+    "maxFeePerGas": "20000000000",
+    "maxPriorityFeePerGas": "2000000000",
+    "gasLimit": "7000000"
+  },
+  "milkomedaC1testnet": {
+    "gasPrice": "10000000000",
+    "gasLimit": "7000000"
+  },
+  "evmostest": {
+    "maxFeePerGas": "4000000000",
+    "maxPriorityFeePerGas": "2500000000",
+    "gasLimit": "7000000"
+  }
+}

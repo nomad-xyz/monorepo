@@ -1,38 +1,138 @@
-import { utils as mpUtils } from '@nomad-xyz/multi-provider';
-import ethers from 'ethers';
+import ethers, { BytesLike } from 'ethers';
+import { expect } from 'chai';
+import * as config from '@nomad-xyz/configuration';
+import { utils } from '@nomad-xyz/multi-provider';
 
-/*
- * Encoded call to a function,
- * where to and data is encoded.
- */
-export type CallData = {
-  to: ethers.utils.BytesLike;
-  data: ethers.utils.BytesLike;
-};
+export type SignerOrProvider = ethers.providers.Provider | ethers.Signer;
 
-/*
- * Formats function call into {to, data} struct,
- * where to and data is encoded.
- *
- * @param destinationContract - contract to be called
- * @param functionStr - name of the function
- * @param functionArgs - arguments to the call
- * @return The encoded call
- */
-export function formatCall(
-  destinationContract: ethers.Contract,
-  functionStr: string,
-  functionArgs: ReadonlyArray<unknown>,
-): CallData {
-  // Set up data for call message
-  const func = destinationContract.interface.getFunction(functionStr);
-  const data = destinationContract.interface.encodeFunctionData(
-    func,
-    functionArgs,
-  );
+export function log(str: string): void {
+  console.log(str);
+}
 
-  return {
-    to: mpUtils.canonizeId(destinationContract.address),
-    data: data,
-  };
+export function _unreachable(): void {
+  throw new Error('unreachable');
+}
+
+export function assertBeaconProxy(
+  beaconProxy: config.Proxy,
+  message?: string,
+): void {
+  expect(beaconProxy.beacon, message).to.not.be.undefined;
+  expect(beaconProxy.proxy, message).to.not.be.undefined;
+  expect(beaconProxy.implementation, message).to.not.be.undefined;
+}
+
+export class CheckList {
+  ok: string[]; // successful items
+  error: [string, unknown][]; // failed items with associated error from chai assertion or plain error
+  constructor() {
+    this.ok = [];
+    this.error = [];
+  }
+
+  check(f: () => void, message: string): void {
+    try {
+      f();
+      this.ok.push(message);
+    } catch (e: unknown) {
+      this.error.push([message, e]);
+    }
+  }
+
+  exists<T>(value: T, message: string): void {
+    this.check(() => expect(value, message).to.exist, message);
+  }
+
+  equals<T>(left: T, right: T | undefined, message: string): void {
+    if (right === undefined) {
+      this.error.push([message, new Error(message + ' is undefined')]);
+    } else {
+      try {
+        expect(left, message).to.be.equal(right);
+      } catch (e) {
+        this.error.push([message + `(left: ${left}, right: ${right})`, e]);
+      }
+    }
+  }
+
+  // This method tries to assert using expect(), in the worst case, uses utils.equalIds
+  equalIds(
+    left: BytesLike,
+    right: BytesLike | undefined,
+    message: string,
+  ): void {
+    if (right === undefined) {
+      this.error.push([message, new Error(message + ' is undefined')]);
+    } else {
+      try {
+        expect(left, message).to.be.equal(right);
+      } catch (e) {
+        if (utils.equalIds(left, right)) {
+          this.ok.push(message);
+        } else {
+          this.error.push([message + `(left: ${left}, right: ${right})`, e]);
+        }
+      }
+    }
+  }
+
+  // This method tries to assert using expect(), in the worst case, uses utils.equalIds
+  notEqualIds(
+    left: BytesLike,
+    right: BytesLike | undefined,
+    message: string,
+  ): void {
+    if (right === undefined) {
+      this.ok.push(message);
+    } else {
+      try {
+        expect(left, message).to.be.not.equal(right);
+
+        if (utils.equalIds(left, right)) {
+          this.error.push([message, new Error(message)]);
+        } else {
+          this.ok.push(message);
+        }
+      } catch (e) {
+        this.error.push([message, e]);
+      }
+    }
+  }
+
+  assertBeaconProxy(
+    beaconProxy: config.Proxy | undefined,
+    message?: string,
+  ): void {
+    if (beaconProxy) {
+      this.check(
+        () => expect(beaconProxy.beacon, message).to.not.be.undefined,
+        message + ' beacon',
+      );
+      this.check(
+        () => expect(beaconProxy.proxy, message).to.not.be.undefined,
+        message + ' proxy',
+      );
+      this.check(
+        () => expect(beaconProxy.implementation, message).to.not.be.undefined,
+        message + ' implementation',
+      );
+    } else {
+      this.error.push([
+        message + ' beacon',
+        new Error(message + ' beacon is undefined'),
+      ]);
+      this.error.push([
+        message + ' proxy',
+        new Error(message + ' proxy is undefined'),
+      ]);
+      this.error.push([
+        message + ' implementation',
+        new Error(message + ' implementation is undefined'),
+      ]);
+    }
+  }
+
+  hasErrors(): boolean {
+    return this.error.length > 0;
+  }
 }

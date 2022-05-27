@@ -1,0 +1,26 @@
+{
+  
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "composite": true,
+    "noUnusedLocals": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "es2021",
+    "lib": ["es2021", "esnext.asynciterable"]
+  },
+  "exclude": [
+    "./node_modules",
+    "./dist",
+    "./tmp.ts"
+  ],
+  "extends": "../tsconfig.package.json",
+  "include": [
+    "./src/*.ts",
+    "./src/*/*.ts",
+    "./src/*/*/*.ts"
+  ],
+  "references": [
+  ]
+}

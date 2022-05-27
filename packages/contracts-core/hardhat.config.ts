@@ -2,9 +2,9 @@ import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 import "hardhat-packager";
 
-import { task, subtask } from "hardhat/config";
-import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from "hardhat/builtin-tasks/task-names";
-import { verifyCoreDeploy } from "@nomad-xyz/deploy/src/verification/verifyDeploy";
+import {task, subtask} from "hardhat/config";
+import {TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS} from "hardhat/builtin-tasks/task-names";
+import {verifyCoreDeploy} from "@nomad-xyz/deploy/src/verification/verifyDeploy";
 
 import * as dotenv from "dotenv";
 dotenv.config();

@@ -27,6 +27,12 @@ export interface CallBatchContents {
   built?: ethers.PopulatedTransaction;
 }
 
+export enum BatchStatus {
+  NotReceived,
+  Received,
+  Executed,
+}
+
 export class CallBatch {
   readonly local: Readonly<NormalizedCall>[];
   readonly remote: Map<number, Readonly<NormalizedCall>[]>;
@@ -58,7 +64,7 @@ export class CallBatch {
   }
 
   static async fromJSON(
-    context: NomadContext,
+    context: NomadContext | string,
     batchContents: CallBatchContents,
   ): Promise<CallBatch> {
     const batch = await CallBatch.fromContext(context);
@@ -67,15 +73,15 @@ export class CallBatch {
       batch.pushLocal(local);
     }
     // push the remote calls
-    for (const domain of Object.keys(batchContents.remote)) {
-      const calls = batchContents.remote[domain];
+    for (const nameOrDomain of Object.keys(batchContents.remote)) {
+      const calls = batchContents.remote[nameOrDomain];
       for (const call of calls) {
-        batch.pushRemote(parseInt(domain), call);
+        batch.pushRemote(nameOrDomain, call);
       }
     }
 
     if (batchContents.built) {
-      batch.build();
+      await batch.build();
       if (!batch.built) throw new Error('unreachable');
       if (
         batch.built.data !== batchContents.built.data ||
@@ -108,7 +114,17 @@ export class CallBatch {
   }
 
   get domains(): number[] {
+    const localDomain = [this.context.governor.domain];
+    return localDomain.concat(this.remoteDomains);
+  }
+
+  get remoteDomains(): number[] {
     return Array.from(this.remote.keys());
+  }
+
+  isEmpty(): boolean {
+    return this.local.length == 0 && this.remoteDomains.length == 0;
+
   }
 
   pushLocal(call: Call): void {
@@ -117,11 +133,12 @@ export class CallBatch {
     this.local.push(utils.normalizeCall(call));
   }
 
-  pushRemote(domain: number, call: Call): void {
+  pushRemote(nameOrDomain: number | string, call: Call): void {
     if (this.built)
       throw new Error('Batch has been built. Cannot push more calls');
-    if (!this.context.getCore(domain))
+    if (!this.context.getCore(nameOrDomain))
       throw new Error('Domain not registered on NomadContext');
+    const domain = this.context.resolveDomain(nameOrDomain);
     const calls = this.remote.get(domain);
     const normalized = utils.normalizeCall(call);
     if (!calls) {
@@ -131,9 +148,10 @@ export class CallBatch {
     }
   }
 
-  push(domain: number, call: Call | Array<Call>): void {
+  push(nameOrDomain: number | string, call: Call | Array<Call>): void {
     const calls = Array.isArray(call) ? call : [call];
 
+    const domain = this.context.resolveDomain(nameOrDomain);
     if (domain === this.context.governor.domain) {
       calls.forEach((call) => this.pushLocal(call));
       return;
@@ -156,7 +174,8 @@ export class CallBatch {
   }
 
   // Return the batch hash for the specified domain
-  batchHash(domain: number): string {
+  batchHash(nameOrDomain: number | string): string {
+    const domain = this.context.resolveDomain(nameOrDomain);
     const calls = this.remote.get(domain);
     if (!calls) throw new Error(`Not found calls for remote ${domain}`);
     return utils.batchHash(calls);
@@ -181,19 +200,22 @@ export class CallBatch {
   // Execute the remote governance calls for a domain
   // @dev ensure waitDomain returns before attempting to executeDomain
   async executeDomain(
-    domain: number,
+    nameOrDomain: number | string,
+    overrides: ethers.Overrides = {}
   ): Promise<ethers.providers.TransactionResponse> {
+    const domain = this.context.resolveDomain(nameOrDomain);
     const calls = this.remote.get(domain);
     if (!calls) throw new Error(`Not found calls for remote ${domain}`);
     const governanceRouter = this.context.mustGetCore(domain).governanceRouter;
-    return governanceRouter.executeCallBatch(calls);
+    return governanceRouter.executeCallBatch(calls, overrides);
   }
 
   // Waits for a specified domain to receive its batch
   // Note that this does not call execute
   async waitDomain(
-    domain: number,
+    nameOrDomain: number | string,
   ): Promise<ethers.providers.TransactionReceipt> {
+    const domain = this.context.resolveDomain(nameOrDomain);
     const router = this.context.mustGetCore(domain).governanceRouter;
     const hash = this.batchHash(domain);
     const filter = router.filters.BatchReceived(hash);
@@ -213,6 +235,14 @@ export class CallBatch {
     }
     // return the event transaction receipt
     return event.getTransactionReceipt();
+  }
+
+  // Get the status of the batch hash on the remote domain
+  async status(nameOrDomain: number | string): Promise<number> {
+    const domain = this.context.resolveDomain(nameOrDomain);
+    const router = this.context.mustGetCore(domain).governanceRouter;
+    const hash = this.batchHash(domain);
+    return router.inboundCallBatches(hash);
   }
 
   // Waits for all participating domains to receive their batches

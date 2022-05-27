@@ -1,12 +1,58 @@
-import { providers, Signer } from 'ethers';
+import { providers, Signer, ContractTransaction, BytesLike } from 'ethers';
 
 import { MultiProvider } from '@nomad-xyz/multi-provider';
 import * as core from '@nomad-xyz/contracts-core';
 import * as config from '@nomad-xyz/configuration';
 
 import { CoreContracts } from './CoreContracts';
+import { NomadMessage } from './messages/NomadMessage';
+import axios from 'axios';
 
 export type Address = string;
+
+type Path = [
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+  BytesLike,
+];
+
+export type MessageProof = {
+  message: BytesLike;
+  proof: {
+    leaf: BytesLike;
+    index: number;
+    path: Path;
+  };
+};
 
 /**
  * The NomadContext manages connections to Nomad core and Bridge contracts.
@@ -35,23 +81,28 @@ export class NomadContext extends MultiProvider<config.Domain> {
 
     config.validateConfig(conf);
     this.conf = conf;
-
-    const domains = conf.networks.map(
-      (network) => conf.protocol.networks[network],
-    );
-    domains.forEach((domain) => this.registerDomain(domain));
     this._cores = new Map();
-    const cores = conf.networks.map(
-      (network) => new CoreContracts(this, network, conf.core[network]),
-    );
-    cores.forEach((core) => {
-      this._cores.set(core.domain, core);
-    });
     this._blacklist = new Set();
+
+    for (const network of this.conf.networks) {
+      // register domain
+      this.registerDomain(this.conf.protocol.networks[network]);
+      // register RPC provider
+      if (this.conf.rpcs[network] && this.conf.rpcs[network].length > 0) {
+        this.registerRpcProvider(network, this.conf.rpcs[network][0]);
+      }
+      // set core contracts
+      const core = new CoreContracts(this, network, this.conf.core[network]);
+      this._cores.set(core.domain, core);
+    }
   }
 
   get governor(): config.NomadLocator {
     return this.conf.protocol.governor;
+  }
+
+  get environment(): string {
+    return this.conf.environment;
   }
 
   /**
@@ -169,8 +220,44 @@ export class NomadContext extends MultiProvider<config.Domain> {
    *
    * @returns The identifier of the governing domain
    */
-  async governorCore(): Promise<CoreContracts<this>> {
+  governorCore(): CoreContracts<this> {
     return this.mustGetCore(this.governor.domain);
+  }
+
+  /**
+   * Proves and Processes a transaction on the destination chain. This is subsidize and
+   * automatic on non-Ethereum destinations
+   *
+   * @dev Ensure that a transaction is ready to be processed. You should ensure the following
+   * criteria have been met prior to calling this function:
+   *  1. The tx has been relayed (has status of 2):
+   *       `const { status } = await NomadMessage.events()`
+   *  2. The `confirmAt` timestamp for the tx is in the past:
+   *       `const confirmAt = await NomadMessage.confirmAt()`
+   *
+   * @param message NomadMessage
+   * @returns The Contract Transaction receipt
+   */
+  async process(
+    message: NomadMessage<NomadContext>,
+  ): Promise<ContractTransaction> {
+    const s3URL = `https://nomadxyz-${this.environment}-proofs.s3.us-west-2.amazonaws.com/`;
+
+    const originNetwork = this.resolveDomainName(message.origin);
+    const destNetwork = this.resolveDomainName(message.destination);
+    const index = message.leafIndex.toString();
+    const s3Res = await fetch(`${s3URL}${originNetwork}_${index}`);
+    if (!s3Res) throw new Error('Not able to fetch proof');
+    const data: MessageProof = await s3Res.json();
+
+    // get replica contract
+    const replica = this.mustGetReplicaFor(originNetwork, destNetwork);
+
+    return replica.proveAndProcess(
+      data.message,
+      data.proof.path,
+      data.proof.index,
+    );
   }
 
   blacklist(): Set<number> {
@@ -190,6 +277,48 @@ export class NomadContext extends MultiProvider<config.Domain> {
       this._blacklist.add(domain);
     } else {
       this._blacklist.delete(domain);
+    }
+  }
+
+  /**
+   * Fetch a config from the Nomad config static site.
+   *
+   * @param environment the environment name to attempt to fetch
+   * @returns A NomadConfig
+   * @throws If the site is down, the config is not on the site, or the config
+   *         is not of a valid format
+   */
+  static async fetchConfig(environment: string): Promise<config.NomadConfig> {
+    const uri = `https://nomad-xyz.github.io/config/${environment}.json`;
+    const confStr: string = await (await axios.get(uri)).data;
+    return config.configFromString(confStr);
+  }
+
+  /**
+   * Fetch a config from the Nomad config static site and instantiate a context
+   * from it. If there is an issue, this function will fallback to the latest
+   * version of the config shipped with the configuration package.
+   *
+   * Fallback may be disabled by setting `allowFallback` to false
+   *
+   * @param this this type for the descendant
+   * @param env the environment name to attempt to fetch
+   * @param allowFallback allow fallback to the builtin env configuration
+   * @returns A NomadContext with the latest configuration for the specified env
+   * @throws If `allowFallback` is false and the site is down, the config is
+   *         not on the site, or the config is not of a valid format
+   */
+  static async fetch<T extends NomadContext>(
+    this: new (env: string | config.NomadConfig) => T,
+    env: string,
+    allowFallback = true,
+  ): Promise<T> {
+    try {
+      const config = await NomadContext.fetchConfig(env);
+      return new this(config);
+    } catch (e: unknown) {
+      if (allowFallback) return new this(env);
+      throw e;
     }
   }
 }

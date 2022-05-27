@@ -3,3 +3,5 @@ dist/
 tsconfig.tsbuildinfo
 .nyc_output/
 coverage/
+config/config.json
+config/callBatch.json

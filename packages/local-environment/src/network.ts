@@ -5,6 +5,7 @@ import { Key } from ".";
 import { sleep } from "./utils";
 import { DockerizedActor } from "./actors";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+// TODO: the old deploy (what is currently published to npm) has been deprecated
 import { Governor } from "@nomad-xyz/deploy/src/core/CoreDeploy";
 
 export type Networkish = string | number | Network;
