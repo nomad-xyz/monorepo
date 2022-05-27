@@ -109,7 +109,6 @@ export class Indexer {
   limit: RPCRateLimiter;
   lastBlock: number;
   logger: Logger;
-  lastIndexed: Date;
   failureCounter: FailureCounter;
   develop: boolean;
   targetTo: number;
@@ -154,7 +153,6 @@ export class Indexer {
       network: this.network,
       domain: this.domain,
     });
-    this.lastIndexed = new Date(0);
     this.failureCounter = new FailureCounter(60); // 1 hour
     this.targetTo = 0;
   }
@@ -579,6 +577,8 @@ export class Indexer {
         );
         await this.persistance.store(...events);
         this.lastBlock = batchTo;
+
+        // this.orchestrator.metrics.observeBlocks
 
         if (this.wantDummyStuff) {
           try {
