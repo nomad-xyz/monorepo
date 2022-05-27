@@ -147,7 +147,7 @@ export class IndexerCollector extends MetricsCollector {
       labelNames: ['network', 'environment'],
     });
 
-    // Kek
+    // Blocks to tip
 
     this.blocksToTipGauge = new Gauge({
       name: prefix + '_blocks_to_tip',
