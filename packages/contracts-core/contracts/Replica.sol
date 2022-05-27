@@ -363,6 +363,11 @@ contract Replica is Version0, NomadBase {
      * @param _optimisticSeconds New optimistic timeout period
      */
     function _setOptimisticTimeout(uint256 _optimisticSeconds) internal {
+        // This allows us to initialize the value to be very low in test envs,
+        // but does not allow governance action to lower a production env below
+        // the safe value
+        uint256 _current = optimisticSeconds;
+        if (_current != 0 && _current > 1500) require(_optimisticSeconds >= 1500, "optimistic timeout too low");
         // ensure the optimistic timeout is less than 1 year
         // (prevents overflow when adding block.timestamp)
         require(_optimisticSeconds < 31536000, "optimistic timeout too high");
