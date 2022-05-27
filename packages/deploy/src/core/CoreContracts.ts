@@ -460,6 +460,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         localConfig.configuration.reserveGas,
         // localConfig.configuration.maximumGas,  // future
       ];
+
       const replica = await factory.deploy(
         constructorArguments[0],
         constructorArguments[1],
@@ -467,6 +468,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         // localConfig.configuration.maximumGas,  // future
         this.overrides,
       );
+      
       await replica.deployTransaction.wait(this.confirmations);
 
       this.context.pushVerification(local, {
