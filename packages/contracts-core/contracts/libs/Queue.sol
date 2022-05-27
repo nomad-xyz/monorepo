@@ -121,7 +121,7 @@ library QueueLib {
         view
         returns (bool)
     {
-        for (uint256 i = _q.last; i >= _q.first; i--) {
+        for (uint256 i = _q.first; i <= _q.last; i++) {
             if (_q.queue[i] == _item) {
                 return true;
             }
