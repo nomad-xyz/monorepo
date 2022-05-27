@@ -6,6 +6,7 @@ import {Version0} from "./Version0.sol";
 import {NomadBase} from "./NomadBase.sol";
 import {MerkleLib} from "./libs/Merkle.sol";
 import {Message} from "./libs/Message.sol";
+import {IMessageRecipient} from "./interfaces/IMessageRecipient.sol";
 // ============ External Imports ============
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 
@@ -34,13 +35,6 @@ contract Replica is Version0, NomadBase {
         Proven,
         Processed
     }
-
-    // ============ Immutables ============
-
-    // Minimum gas for message processing
-    uint256 public immutable PROCESS_GAS;
-    // Reserved gas (to ensure tx completes in case message processing runs out)
-    uint256 public immutable RESERVE_GAS;
 
     // ============ Public Storage ============
 
@@ -96,15 +90,8 @@ contract Replica is Version0, NomadBase {
     // ============ Constructor ============
 
     constructor(
-        uint32 _localDomain,
-        uint256 _processGas,
-        uint256 _reserveGas
-    ) NomadBase(_localDomain) {
-        require(_processGas >= 850_000, "!process gas");
-        require(_reserveGas >= 15_000, "!reserve gas");
-        PROCESS_GAS = _processGas;
-        RESERVE_GAS = _reserveGas;
-    }
+        uint32 _localDomain
+    ) NomadBase(_localDomain) {}
 
     // ============ Initializer ============
 
@@ -199,8 +186,8 @@ contract Replica is Version0, NomadBase {
      * @return _success TRUE iff dispatch transaction succeeded
      */
     function process(bytes memory _message) public returns (bool _success) {
-        bytes29 _m = _message.ref(0);
         // ensure message was meant for this domain
+        bytes29 _m = _message.ref(0);
         require(_m.destination() == localDomain, "!destination");
         // ensure message has been proven
         bytes32 _messageHash = _m.keccak();
@@ -210,57 +197,19 @@ contract Replica is Version0, NomadBase {
         entered = 0;
         // update message status as processed
         messages[_messageHash] = MessageStatus.Processed;
-        // A call running out of gas TYPICALLY errors the whole tx. We want to
-        // a) ensure the call has a sufficient amount of gas to make a
-        //    meaningful state change.
-        // b) ensure that if the subcall runs out of gas, that the tx as a whole
-        //    does not revert (i.e. we still mark the message processed)
-        // To do this, we require that we have enough gas to process
-        // and still return. We then delegate only the minimum processing gas.
-        require(gasleft() >= PROCESS_GAS + RESERVE_GAS, "!gas");
-        // get the message recipient
-        address _recipient = _m.recipientAddress();
-        // set up for assembly call
-        uint256 _toCopy;
-        uint256 _maxCopy = 256;
-        uint256 _gas = PROCESS_GAS;
-        // allocate memory for returndata
-        bytes memory _returnData = new bytes(_maxCopy);
-        bytes memory _calldata = abi.encodeWithSignature(
-            "handle(uint32,uint32,bytes32,bytes)",
+        // call handle function
+        IMessageRecipient(_m.recipientAddress()).handle(
             _m.origin(),
             _m.nonce(),
             _m.sender(),
             _m.body().clone()
         );
-        // dispatch message to recipient
-        // by assembly calling "handle" function
-        // we call via assembly to avoid memcopying a very large returndata
-        // returned by a malicious contract
-        assembly {
-            _success := call(
-                _gas, // gas
-                _recipient, // recipient
-                0, // ether value
-                add(_calldata, 0x20), // inloc
-                mload(_calldata), // inlen
-                0, // outloc
-                0 // outlen
-            )
-            // limit our copy to 256 bytes
-            _toCopy := returndatasize()
-            if gt(_toCopy, _maxCopy) {
-                _toCopy := _maxCopy
-            }
-            // Store the length of the copied bytes
-            mstore(_returnData, _toCopy)
-            // copy the bytes from returndata[0:_toCopy]
-            returndatacopy(add(_returnData, 0x20), 0, _toCopy)
-        }
         // emit process results
-        emit Process(_messageHash, _success, _returnData);
+        emit Process(_messageHash, true, "");
         // reset re-entrancy guard
         entered = 1;
+        // return true
+        return true;
     }
 
     // ============ External Owner Functions ============
