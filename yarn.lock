@@ -1808,7 +1808,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
+"@nomad-xyz/contracts-core@1.0.0-rc.2, @nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-core@workspace:packages/contracts-core"
   dependencies:
@@ -1836,7 +1836,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/contracts-router@workspace:^, @nomad-xyz/contracts-router@workspace:packages/contracts-router":
+"@nomad-xyz/contracts-router@1.0.0-rc.2, @nomad-xyz/contracts-router@workspace:^, @nomad-xyz/contracts-router@workspace:packages/contracts-router":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-router@workspace:packages/contracts-router"
   dependencies:
@@ -1871,9 +1871,9 @@ __metadata:
   resolution: "@nomad-xyz/deploy@workspace:packages/deploy"
   dependencies:
     "@nomad-xyz/configuration": ^0.1.0-rc.23
-    "@nomad-xyz/contracts-bridge": "workspace:^"
-    "@nomad-xyz/contracts-core": "workspace:^"
-    "@nomad-xyz/contracts-router": "workspace:^"
+    "@nomad-xyz/contracts-bridge": 1.0.0-rc.2
+    "@nomad-xyz/contracts-core": 1.0.0-rc.2
+    "@nomad-xyz/contracts-router": 1.0.0-rc.2
     "@nomad-xyz/multi-provider": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"
     "@nomad-xyz/sdk-govern": "workspace:^"
