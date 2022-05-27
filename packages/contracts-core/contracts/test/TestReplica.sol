@@ -18,7 +18,7 @@ contract TestReplica is Replica {
 
     function setMessagePending(bytes memory _message) external {
         bytes29 _m = _message.ref(0);
-        messages[_m.keccak()] = MessageStatus.Proven;
+        messages[_m.keccak()] = LEGACY_STATUS_PROVEN;
     }
 
     function setCommittedRoot(bytes32 _newRoot) external {
