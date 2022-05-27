@@ -2,6 +2,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator typegraphql {
+  provider = "typegraphql-prisma"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -79,6 +83,9 @@ model Replica {
   domain      Int
   token       Token  @relation(name: "tid", references: [id, domain], fields: [tokenId, tokenDomain])
   totalSupply String @map("total_supply_hex") @db.VarChar
+  name        String @db.VarChar @default("")
+  decimals    Int @default(0)
+  symbol      String @db.VarChar @default("")
 
 
   tokenId     String @map("token_id") @db.VarChar

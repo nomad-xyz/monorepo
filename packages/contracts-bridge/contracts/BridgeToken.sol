@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity >=0.6.11;
+pragma solidity 0.7.6;
 
 // ============ Internal Imports ============
 import {BridgeMessage} from "./BridgeMessage.sol";
@@ -241,5 +241,14 @@ contract BridgeToken is Version0, IBridgeToken, OwnableUpgradeable, ERC20 {
         onlyOwner
     {
         OwnableUpgradeable.transferOwnership(_newOwner);
+    }
+
+    /**
+    * @dev should be impossible to renounce ownership;
+     * we override OpenZeppelin OwnableUpgradeable's
+     * implementation of renounceOwnership to make it a no-op
+     */
+    function renounceOwnership() public override onlyOwner {
+        // do nothing
     }
 }

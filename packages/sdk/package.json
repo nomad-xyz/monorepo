@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/sdk",
-  "version": "2.0.0-rc.10",
+  "version": "2.0.0-rc.17",
   "description": "Nomad SDK",
   "keywords": [
     "nomad",
@@ -25,15 +25,16 @@
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
-    "prettier": "prettier --write ./src ./tests",
+    "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts",
     "lint": "eslint --fix ./src ./tests",
-    "test": "yarn build && ts-mocha ./tests/*.ts",
-    "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts"
+    "prettier": "prettier --write ./src ./tests",
+    "test": "yarn build && ts-mocha ./tests/*.ts"
   },
   "dependencies": {
-    "@nomad-xyz/configuration": "^0.1.0-rc.16",
+    "@nomad-xyz/configuration": "^0.1.0-rc.23",
     "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/multi-provider": "workspace:^",
+    "axios": "^0.27.2",
     "ethers": "^5.0.0"
   },
   "devDependencies": {
@@ -51,6 +52,7 @@
     "nyc": "^15.1.0",
     "prettier": "^2.4.1",
     "ts-mocha": "^9.0.2",
+    "ts-node": "^10.7.0",
     "typescript": "^4.4.3"
   }
 }

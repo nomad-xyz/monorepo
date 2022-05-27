@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity >=0.6.11;
+pragma solidity 0.7.6;
 
 import "../NomadBase.sol";
 
@@ -23,9 +23,5 @@ contract TestNomadBase is NomadBase {
     /// @notice Hash of Home's domain concatenated with "NOMAD"
     function homeDomainHash() public view override returns (bytes32) {
         return keccak256(abi.encodePacked(localDomain, "NOMAD"));
-    }
-
-    function _fail() internal override {
-        _setFailed();
     }
 }

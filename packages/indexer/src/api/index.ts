@@ -1,7 +1,17 @@
+import 'reflect-metadata';
+
 import express from 'express';
 import cors from 'cors';
-import { graphqlHTTP } from 'express-graphql';
-import { makeExecutableSchema } from '@graphql-tools/schema';
+import { ApolloServer } from 'apollo-server-express';
+
+import { NonEmptyArray } from 'type-graphql';
+
+import {
+  ApolloServerPluginDrainHttpServer,
+  ApolloServerPluginLandingPageGraphQLPlayground,
+} from 'apollo-server-core';
+
+import http from 'http';
 
 import { DB, MsgRequest } from '../core/db';
 import { prefix } from '../core/metrics';
@@ -9,6 +19,29 @@ import { prefix } from '../core/metrics';
 import * as dotenv from 'dotenv';
 import Logger from 'bunyan';
 import promBundle from 'express-prom-bundle';
+
+import {
+  resolvers,
+  FindUniqueMessagesResolver,
+  FindUniqueReplicaResolver,
+  FindUniqueTokenResolver,
+  FindFirstMessagesResolver,
+  FindFirstReplicaResolver,
+  FindFirstTokenResolver,
+  FindManyMessagesResolver,
+  FindManyReplicaResolver,
+  FindManyTokenResolver,
+  GroupByMessagesResolver,
+  GroupByReplicaResolver,
+  GroupByTokenResolver,
+  ReplicaRelationsResolver,
+  TokenOrderByWithRelationInput,
+  TokenRelationFilter,
+  TokenRelationsResolver,
+  ReplicaOrderByRelationAggregateInput,
+} from '@generated/type-graphql';
+import { buildSchema } from 'type-graphql';
+import { Domain } from '@nomad-xyz/multi-provider';
 
 dotenv.config({});
 
@@ -18,9 +51,12 @@ function fail(res: any, code: number, reason: string) {
 
 const PORT = process.env.PORT;
 
+const useAllResolvers = process.env.API_USE_ALL_RESOLVERS === 'TRUE';
+
 export async function run(db: DB, logger: Logger) {
   const app = express();
   app.use(cors());
+  app.disable('x-powered-by');
 
   const log = (
     req: express.Request,
@@ -42,203 +78,105 @@ export async function run(db: DB, logger: Logger) {
 
   app.use(metricsMiddleware);
 
-  // app.use(promMid({
-  //   metricsPath: '/metrics',
-  //   collectDefaultMetrics: true,
-  //   requestDurationBuckets: [0.1, 0.5, 1, 1.5],
-  //   requestLengthBuckets: [512, 1024, 5120, 10240, 51200, 102400],
-  //   responseLengthBuckets: [512, 1024, 5120, 10240, 51200, 102400],
-  //   prefix: prefix + '_api',
-  // }));
-
   app.get('/healthcheck', log, (req, res) => {
     res.send('OK!');
   });
 
-  app.get("/version", log, (_, res) => {
+  app.get('/version', log, (_, res) => {
     res.send(process.env.GIT_COMMIT);
   });
 
-  const typeDefs = `
-    type Message {
-      id: Int!
-      messageHash: String!
-      origin: Int!
-      destination: Int!
-      nonce: Int!
-      internalSender: String!
-      internalRecipient: String!
-      root: String!
-      state: Int!
-      dispatchBlock: Int!
-      dispatchedAt: Int!
-      updatedAt: Int!
-      relayedAt: Int!
-      receivedAt: Int!
-      processedAt: Int!
-      sender: String
-      recipient: String
-      amount: String
-      allowFast: Boolean
-      detailsHash: String
-      tokenDomain: Int
-      tokenId: String
-      body: String!
-      leafIndex: String!
-      tx : String
-      gasAtDispatch: String!
-      gasAtUpdate: String!
-      gasAtRelay: String!
-      gasAtReceive: String!
-      gasAtProcess: String!
-      createdAt: Int!
-      confirmAt: Int!
-    }
+  const resolversToBuild: NonEmptyArray<Function> | NonEmptyArray<string> =
+    useAllResolvers
+      ? resolvers
+      : [
+          FindUniqueMessagesResolver,
+          FindUniqueReplicaResolver,
+          FindUniqueTokenResolver,
 
-    type Token {
-      id: String!
-      domain: Int!
-      name: String!
-      decimals: Int!
-      symbol: String!
-      totalSupply: String!
-      balance: String!
-    }
+          FindFirstMessagesResolver,
+          FindFirstReplicaResolver,
+          FindFirstTokenResolver,
 
-    type Replica {
-      id: String!
-      domain: Int!
-      tokenId: String!
-      tokenDomain: Int!
-      totalSupply: String!
-    }
+          FindManyMessagesResolver,
+          FindManyReplicaResolver,
+          FindManyTokenResolver,
 
-    type Query {
-      allMessages: [Message!]!
-      messageByTx(tx: String!): Message
-      messageByHash(hash: String!): Message
-      messagesBySender(senderLike: String!): [Message!]!
-      messagesByRecipient(recipientLike: String!): [Message!]!
-      allTokens: [Token!]!
-      allReplicas: [Replica!]!
-      tokenReplica(id: String!, domain: Int!): Replica!
-      tokenReplicas(id: String!): [Replica!]!
-      tokenReplicasByOrigin(domain: Int!): [Replica!]!
-      tokenReplicasByDestination(domain: Int!): [Replica!]!
-    }
-  `;
+          GroupByMessagesResolver,
+          GroupByReplicaResolver,
+          GroupByTokenResolver,
 
-  const resolvers = {
-    Query: {
-      allMessages: () => {
-        return db.client.messages.findMany();
-      },
-      messageByTx: (_: any, { tx }: { tx: string }) => {
-        return db.client.messages.findFirst({
-          where: {
-            tx: {
-              contains: tx || undefined,
-              mode: "insensitive",
-            },
-          },
-        });
-      },
-      messageByHash: (_: any, { hash }: { hash: string }) => {
-        return db.client.messages.findFirst({
-          where: {
-            messageHash: {
-              contains: hash || undefined,
-              mode: "insensitive",
-            },
-          },
-        });
-      },
-      messagesBySender: (_: any, { senderLike }: { senderLike: string }) => {
-        return db.client.messages.findMany({
-          where: {
-            sender: {
-              contains: senderLike,
-              mode: "insensitive",
-            },
-          },
-          orderBy: {
-            dispatchedAt: "desc",
-          },
-        });
-      },
-      messagesByRecipient: (
-        _: any,
-        { recipientLike }: { recipientLike: string }
-      ) => {
-        return db.client.messages.findMany({
-          where: {
-            recipient: {
-              contains: recipientLike,
-              mode: "insensitive",
-            },
-          },
-          orderBy: {
-            dispatchedAt: "desc",
-          },
-        });
-      },
-      allTokens: () => {
-        return db.client.token.findMany();
-      },
-      allReplicas: () => {
-        return db.client.replica.findMany();
-      },
-      tokenReplica: (
-        _: any,
-        { id, domain }: { id: string; domain: number },
-      ) => {
-        return db.client.replica.findFirst({
-          where: {
-            tokenId: id,
-            tokenDomain: domain,
-          },
-        });
-      },
-      tokenReplicas: (_: any, { id }: { id: string }) => {
-        return db.client.replica.findMany({
-          where: {
-            tokenId: id,
-          },
-        });
-      },
-      tokenReplicasByOrigin: (_: any, { domain }: { domain: number }) => {
-        return db.client.replica.findMany({
-          where: {
-            tokenDomain: domain,
-          },
-        });
-      },
-      tokenReplicasByDestination: (_: any, { domain }: { domain: number }) => {
-        return db.client.replica.findMany({
-          where: {
-            domain,
-          },
-        });
-      },
-    },
-  };
+          ReplicaRelationsResolver,
+          TokenRelationsResolver,
+          // additional, may be thrown. [Need to check!]
+          TokenOrderByWithRelationInput,
+          TokenRelationFilter,
+          ReplicaOrderByRelationAggregateInput,
+        ];
 
-  const schema = makeExecutableSchema({
-    resolvers,
-    typeDefs,
+  const schema = await buildSchema({
+    resolvers: resolversToBuild,
+    validate: false,
   });
 
-  app.use(
-    '/graphql',
-    graphqlHTTP({
-      schema,
-      graphiql: true,
-    }),
-  );
+  const httpServer = http.createServer(app);
+
+  const server = new ApolloServer({
+    schema,
+    csrfPrevention: true,
+
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      ApolloServerPluginLandingPageGraphQLPlayground({}),
+    ],
+
+    introspection: true,
+
+    context: {
+      prisma: db.client,
+    },
+  });
 
   app.get('/tx/:tx', log, async (req, res) => {
     const messages = await db.getMessageByEvm(req.params.tx);
     return res.json(messages.map((m) => m.serialize()));
+  });
+
+  app.get('/wrongReplicas', log, async (req, res) => {
+    const replicas = await db.client.replica.findMany({include: {token: true}});
+
+    const sadReplicas = replicas.filter(r => {
+      const t = r.token;
+      return t.name !== r.name || t.decimals !== r.decimals || t.symbol !== r.symbol
+      });
+
+      return res.json(sadReplicas)
+    }
+  )
+
+  app.get('/domain/:domain', log, async (req, res) => {
+    const {domain: domainStr} =  req.params;
+
+    const domainNumber = parseInt(domainStr);
+
+    const domain: number|string = isNaN(domainNumber) ? domainStr : domainNumber;
+
+    const sdk = db.sdk; // Should not get sdk like that, but it is ok for now
+    try {
+      const nomadDomain = sdk.getDomain(domain);
+      if (nomadDomain) {
+        const {name, domain} = nomadDomain;
+        res.json({data: {name, domain}});
+        return ;
+      } else {
+        logger.warn(`No domain found for '${domain}'`); // debug 
+      }
+    } catch(e) {
+      logger.warn(`Failed getting domain for request '${domain}', error: ${e}`); // debug
+    }
+    fail(res, 404, 'Domain not found');
+    
+    return ;
   });
 
   app.get('/hash/:hash', log, async (req, res) => {
@@ -251,18 +189,26 @@ export async function run(db: DB, logger: Logger) {
     '/tx',
     log,
     async (req: express.Request<{}, {}, {}, MsgRequest>, res) => {
-      const { size } = req.query;
+      const { size: sizeStr } = req.query;
 
-      if (size && size > 30) return fail(res, 403, 'maximum page size is 30');
+      try {
+        if (sizeStr && parseInt(sizeStr) > 100)
+          return fail(res, 403, 'maximum page size is 30');
 
-      const messages = await db.getMessages(req.query);
+        const messages = await db.getMessages(req.query);
 
-      return res.json(messages.map((m) => m.serialize()));
+        return res.json(messages.map((m) => m.serialize()));
+      } catch (e) {
+        fail(res, 403, 'something went wrong');
+      }
     },
   );
 
-  app.listen(PORT, () => {
-    console.log(process.env.DATABASE_URL);
-    logger.info(`Server is running at https://localhost:${PORT}`);
-  });
+  await server.start();
+
+  server.applyMiddleware({ app });
+
+  await new Promise<void>((resolve) =>
+    httpServer.listen({ port: PORT }, resolve),
+  );
 }

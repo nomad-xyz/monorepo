@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/sdk-bridge",
-  "version": "1.0.0-rc.12",
+  "version": "1.0.0-rc.17",
   "description": "Nomad bridge SDK",
   "keywords": [
     "nomad",
@@ -26,13 +26,13 @@
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
+    "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts",
     "lint": "eslint --fix ./src ./tests",
     "prettier": "prettier --write ./src ./tests",
-    "test": "yarn build && ts-mocha ./tests/*.ts",
-    "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts"
+    "test": "yarn build && ts-mocha ./tests/*.ts"
   },
   "dependencies": {
-    "@nomad-xyz/configuration": "^0.1.0-rc.16",
+    "@nomad-xyz/configuration": "^0.1.0-rc.23",
     "@nomad-xyz/contracts-bridge": "workspace:^",
     "@nomad-xyz/sdk": "workspace:^",
     "ethers": "^5.0.0",

@@ -2,6 +2,27 @@
 
 ### Unreleased
 
+- fix: update replica message status getter for new replica mapping
+
+### 2.0.0-rc.17
+
+- chore: bump configuration to v0.1.0-rc.23
+
+### 2.0.0-rc.16
+
+- re-publish to npm with correct package.json
+
+### 2.0.0-rc.15 (DEPRECATED)
+
+- feat: add config fetching
+- add s3 name and URI getters
+- add getProof async method for retrieving proofs from s3
+
+### 2.0.0-rc.13
+
+- fix: make paginated event querying use the new config layout
+- chore: bump configuration to v0.1.0-rc.18
+
 ### 2.0.0-rc.10
 
 - feature: process function for NomadContext/NomadMessage
