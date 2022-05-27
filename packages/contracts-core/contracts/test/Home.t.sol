@@ -15,6 +15,8 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home = new Home(homeDomain);
         home.initialize(IUpdaterManager(address(updaterManager)));
         updaterManager.setHome(address(home));
+        vm.prank(address(updaterManager);
+        
     }
 
     function test_homeDomain() public {
@@ -96,6 +98,23 @@ contract HomeTest is NomadTestWithUpdaterManager {
         vm.expectEmit(false, false, false, true);
         emit ImproperUpdate(oldRoot, newRoot, sig);
         home.improperUpdate(oldRoot, newRoot, sig);
+    }
+
+    event Update(
+        uint32 indexed homeDomain,
+        bytes32 indexed oldRoot,
+        bytes32 indexed newRoot,
+        bytes signature
+    );
+
+    function test_successUpdate() public {
+        bytes32 newRoot = "new root";
+        bytes32 oldRoot = home.committedRoot();
+        bytes memory sig = signHomeUpdate(updaterPK, oldRoot, newRoot);
+        vm.expectEmit(true, true, true, true);
+        emit Update(homeDomain, oldRoot, newRoot, sig);
+        home.update(oldRoot, newRoot, sig);
+        assertEq(newRoot, home.committedRoot());
     }
 
 }
