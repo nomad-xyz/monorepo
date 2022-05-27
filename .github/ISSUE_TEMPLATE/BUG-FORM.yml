@@ -20,7 +20,6 @@ body:
         - deploy
         - indexer
         - keymaster
-        - local-environment
         - monitor
         - multi-provider
         - sdk-bridge

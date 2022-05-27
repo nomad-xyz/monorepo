@@ -38,7 +38,6 @@
     "ethers": "^5.0.0"
   },
   "devDependencies": {
-    "@nomad-xyz/local-environment": "workspace:^",
     "@types/chai": "^4.2.21",
     "@types/mocha": "^9.1.0",
     "@types/node": "^16.9.1",
