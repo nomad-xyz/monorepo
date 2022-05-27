@@ -45,7 +45,7 @@ export abstract class Network {
         this.domainNumber = domainNumber;
         this.chainId = chainId;
 
-        this.deployOverrides = {};
+        this.deployOverrides = { gasLimit: 30000000 };
 
         try {
           this.gasConfig = {
