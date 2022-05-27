@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity 0.7.6;
+pragma solidity >=0.6.11;
 
 import "../Replica.sol";
 
@@ -9,8 +9,14 @@ contract TestReplica is Replica {
     using Message for bytes29;
 
     constructor(
-        uint32 _localDomain
-    ) Replica(_localDomain) {} // solhint-disable-line no-empty-blocks
+        uint32 _localDomain,
+        uint256,
+        uint256
+    ) Replica(_localDomain, 850_000, 15_000) {} // solhint-disable-line no-empty-blocks
+
+    function setFailed() public {
+        _setFailed();
+    }
 
     function setRemoteDomain(uint32 _remoteDomain) external {
         remoteDomain = _remoteDomain;
@@ -18,7 +24,7 @@ contract TestReplica is Replica {
 
     function setMessagePending(bytes memory _message) external {
         bytes29 _m = _message.ref(0);
-        messages[_m.keccak()] = LEGACY_STATUS_PROVEN;
+        messages[_m.keccak()] = MessageStatus.Proven;
     }
 
     function setCommittedRoot(bytes32 _newRoot) external {

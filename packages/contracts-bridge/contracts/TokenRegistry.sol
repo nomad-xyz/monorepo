@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity 0.7.6;
+pragma solidity >=0.6.11;
 
 // ============ Local Contracts ============
 import {BridgeMessage} from "./BridgeMessage.sol";
@@ -152,7 +152,7 @@ contract TokenRegistry is Initializable, XAppConnectionClient, ITokenRegistry {
      * The custom representation MUST be trusted, and MUST allow the router to
      * both mint AND burn tokens at will.
      * @param _domain the domain of the canonical Token to enroll
-     * @param _id the bytes32 ID of the canonical of the Token to enroll
+     * @param _id the bytes32 ID pf tje canonical of the Token to enroll
      * @param _custom the address of the custom implementation to use.
      */
     function enrollCustom(
@@ -278,7 +278,7 @@ contract TokenRegistry is Initializable, XAppConnectionClient, ITokenRegistry {
      * @notice Determine if token is of local origin
      * @return TRUE if token is locally originating
      */
-    function isLocalOrigin(address _token) external view override returns (bool) {
+    function isLocalOrigin(address _token) public view override returns (bool) {
         // If the contract WAS deployed by the TokenRegistry,
         // it will be stored in this mapping.
         // If so, it IS NOT of local origin
@@ -341,9 +341,7 @@ contract TokenRegistry is Initializable, XAppConnectionClient, ITokenRegistry {
     {
         // deploy and initialize the token contract
         _token = address(new UpgradeBeaconProxy(tokenBeacon, ""));
-        // Initialize the token. Normally we initialize during proxy deployment
-        // but due to a proxy quirk, it's clearer to do it explicitly when
-        // calling an initializer with no arguments.
+        // initialize the token separately from the
         IBridgeToken(_token).initialize();
         // set the default token name & symbol
         (string memory _name, string memory _symbol) = _defaultDetails(
@@ -362,10 +360,8 @@ contract TokenRegistry is Initializable, XAppConnectionClient, ITokenRegistry {
 
     /**
      * @notice Get default name and details for a token
-     *         Sets name to "[domain].[id]", and symbol to the first 15
-     *         bytes of the name.
-     * @dev Symbol of 15 bytes is chosen to ensure we don't accidentally break
-     *      the foxy wallet
+     * Sets name to "nomad.[domain].[id]"
+     * and symbol to
      * @param _domain the domain of the canonical token
      * @param _id the bytes32 ID pf the canonical of the token
      */
@@ -384,7 +380,7 @@ contract TokenRegistry is Initializable, XAppConnectionClient, ITokenRegistry {
                 uint32(_secondHalfId) // 4
             )
         );
-        // allocate the memory for a new 15-byte string
+        // allocate the memory for a new 32-byte string
         _symbol = new string(10 + 1 + 4);
         assembly {
             mstore(add(_symbol, 0x20), mload(add(_name, 0x20)))
@@ -403,14 +399,5 @@ contract TokenRegistry is Initializable, XAppConnectionClient, ITokenRegistry {
         returns (uint32)
     {
         return XAppConnectionClient._localDomain();
-    }
-
-    /**
-    * @dev should be impossible to renounce ownership;
-     * we override OpenZeppelin OwnableUpgradeable's
-     * implementation of renounceOwnership to make it a no-op
-     */
-    function renounceOwnership() public override onlyOwner {
-        // do nothing
     }
 }

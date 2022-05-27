@@ -1,9 +1,11 @@
 import express from 'express';
 import cors from 'cors';
+import { DB, MsgRequest } from './db';
 import * as dotenv from 'dotenv';
 import Logger from 'bunyan';
 import { Orchestrator } from './orchestrator';
 import { ProcessorV2 } from './consumerV2';
+import { replacer } from './utils';
 dotenv.config({});
 
 function fail(res: any, code: number, reason: string) {
@@ -15,7 +17,6 @@ const PORT = process.env.DEBUG_PORT || '1337';
 export async function run(o: Orchestrator, logger: Logger) {
   const app = express();
   app.use(cors());
-  app.use(express.json());
 
   const log = (
     req: express.Request,
@@ -63,7 +64,6 @@ export async function run(o: Orchestrator, logger: Logger) {
           lastIndexed: number;
           numMessages: number;
           numRpcFailures: number;
-          blocksToTarget: number;
         },
       ]
     >[] = Array.from(o.indexers.entries()).map(
@@ -74,7 +74,6 @@ export async function run(o: Orchestrator, logger: Logger) {
             lastIndexed: number;
             numMessages: number;
             numRpcFailures: number;
-            blocksToTarget: number;
           },
         ]
       > => {
@@ -84,14 +83,14 @@ export async function run(o: Orchestrator, logger: Logger) {
             lastIndexed: indexer.lastIndexed.valueOf(),
             numMessages: await o.db.getMessageCount(domain),
             numRpcFailures: indexer.failureCounter.num(),
-            blocksToTarget: indexer.targetTo - indexer.lastBlock,
           },
         ];
       },
     );
     const entries = await Promise.all(promises);
 
-    return res.json(Object.fromEntries(entries));
+    const x = new Map(entries);
+    return res.json(JSON.stringify(x, replacer));
   });
 
   app.get('/msg/:origin/:state', log, async (req, res) => {
@@ -112,6 +111,9 @@ export async function run(o: Orchestrator, logger: Logger) {
       origin,
       state,
     );
+    // const messages = Array.from(p.messages).filter(
+    //   (m) => m.origin === origin && m.state === state
+    // );
     if (messages.length) {
       return res.json(messages.map((m) => m.serialize()));
     } else {
@@ -119,29 +121,7 @@ export async function run(o: Orchestrator, logger: Logger) {
     }
   });
 
-  app.post('/redis_height', log, async (req, res) => {
-    const heights = req.body as RedisHeight[];
-
-    for (const { domain, block } of heights) {
-      const indexer = o.indexers.get(domain);
-      if (!indexer) {
-        return res.status(404).json({
-          error: `Indexer for domain ${domain} not found, please check the query`,
-        });
-      }
-
-      indexer.setForceFrom(block);
-    }
-
-    return res.status(200).json({});
-  });
-
   app.listen(PORT, () => {
     logger.info(`Server is running at https://localhost:${PORT}`);
   });
-}
-
-interface RedisHeight {
-  domain: number;
-  block: number;
 }

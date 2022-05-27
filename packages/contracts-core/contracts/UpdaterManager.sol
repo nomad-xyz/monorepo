@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity 0.7.6;
+pragma solidity >=0.6.11;
 
 // ============ Internal Imports ============
 import {IUpdaterManager} from "./interfaces/IUpdaterManager.sol";
@@ -100,14 +100,5 @@ contract UpdaterManager is IUpdaterManager, Ownable {
      */
     function updater() external view override returns (address) {
         return _updater;
-    }
-
-    /**
-    * @dev should be impossible to renounce ownership;
-     * we override OpenZeppelin Ownable implementation
-     * of renounceOwnership to make it a no-op
-     */
-    function renounceOwnership() public override onlyOwner {
-        // do nothing
     }
 }

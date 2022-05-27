@@ -1,36 +1,5 @@
 {
   "name": "@nomad-xyz/deploy",
-  "version": "0.0.0-rc.0",
-  "private": true,
-  "description": "Nomad deploy tools",
-  "keywords": [
-    "nomad",
-    "contracts",
-    "deploy"
-  ],
-  "license": "MIT OR Apache-2.0",
-  "author": "Illusory Systems Inc.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc --build",
-    "check": "tsc --noEmit",
-    "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts",
-    "lint": "eslint --fix ./src",
-    "prettier": "prettier --write ./src",
-    "test": "ts-mocha ./tests/*.ts"
-  },
-  "dependencies": {
-    "@nomad-xyz/configuration": "^0.1.0-rc.23",
-    "@nomad-xyz/contracts-bridge": "workspace:^",
-    "@nomad-xyz/contracts-core": "workspace:^",
-    "@nomad-xyz/contracts-router": "workspace:^",
-    "@nomad-xyz/multi-provider": "workspace:^",
-    "@nomad-xyz/sdk": "workspace:^",
-    "@nomad-xyz/sdk-govern": "workspace:^",
-    "axios": "^0.21.3",
-    "chai": "^4.3.4"
-  },
   "devDependencies": {
     "@types/chai": "^4.2.21",
     "@types/node": "^17.0.23",
@@ -46,5 +15,36 @@
     "ts-node": "^10.1.0",
     "typechain": "^5.0.0",
     "typescript": "^4.5.5"
-  }
+  },
+  "private": true,
+  "version": "0.0.0-rc.0",
+  "description": "Nomad deploy tools",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build",
+    "check": "tsc --noEmit",
+    "prettier": "prettier --write ./src",
+    "lint": "eslint --fix ./src",
+    "test": "ts-mocha ./tests/*.ts",
+    "coverage": "nyc --reporter=html ts-mocha ./tests/*.ts"
+  },
+  "author": "Illusory Systems Inc.",
+  "license": "MIT OR Apache-2.0",
+  "dependencies": {
+    "@nomad-xyz/configuration": "^0.1.0-rc.15",
+    "@nomad-xyz/contracts-bridge": "workspace:^",
+    "@nomad-xyz/contracts-core": "workspace:^",
+    "@nomad-xyz/contracts-router": "workspace:^",
+    "@nomad-xyz/multi-provider": "workspace:^",
+    "@nomad-xyz/sdk": "workspace:^",
+    "@nomad-xyz/sdk-govern": "workspace:^",
+    "axios": "^0.21.3",
+    "chai": "^4.3.4"
+  },
+  "keywords": [
+    "nomad",
+    "contracts",
+    "deploy"
+  ]
 }

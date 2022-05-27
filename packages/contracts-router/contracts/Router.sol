@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity 0.7.6;
+pragma solidity >=0.6.11;
 
 // ============ Internal Imports ============
 import {XAppConnectionClient} from "./XAppConnectionClient.sol";

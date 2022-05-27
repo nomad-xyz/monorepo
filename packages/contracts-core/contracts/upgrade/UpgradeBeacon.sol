@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity >=0.6.11;
 
 // ============ External Imports ============
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
@@ -41,7 +41,7 @@ contract UpgradeBeacon {
      * @param _initialImplementation Address of the initial implementation contract
      * @param _controller Address of the controller who can upgrade the implementation
      */
-    constructor(address _initialImplementation, address _controller) {
+    constructor(address _initialImplementation, address _controller) payable {
         _setImplementation(_initialImplementation);
         controller = _controller;
     }

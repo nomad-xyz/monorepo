@@ -2,25 +2,6 @@
 
 ### Unreleased
 
-### 1.0.0-rc.17
-
-- chore: bump configuration to v0.1.0-rc.23
-
-### 1.0.0-rc.16
-
-- re-publish to npm with correct package.json
-
-### 1.0.0-rc.15 (DEPRECATED)
-
-### 1.0.0-rc.14
-
-- add: prepareSend, prepareSendNative
-
-### 1.0.0-rc.13
-
-- fix: hard code gas limit for sendNative
-- chore: bump configuration to v0.1.0-rc.18
-
 ### 1.0.0-rc.12
 
 - fix: increase gas more
