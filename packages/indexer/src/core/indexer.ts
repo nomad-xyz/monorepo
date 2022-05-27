@@ -578,7 +578,7 @@ export class Indexer {
         await this.persistance.store(...events);
         this.lastBlock = batchTo;
 
-        // this.orchestrator.metrics.observeBlocks
+        // this.orchestrator.metrics.observeBlocksToTarget()
 
         if (this.wantDummyStuff) {
           try {
