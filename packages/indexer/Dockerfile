@@ -14,5 +14,4 @@ RUN yarn build
 
 ADD src /app/
 
-
 CMD [ "yarn", "start" ]
