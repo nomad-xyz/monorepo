@@ -578,7 +578,7 @@ export class Indexer {
         await this.persistance.store(...events);
         this.lastBlock = batchTo;
 
-        this.orchestrator.metrics.observeblocksToTip(this.network, this.targetTo - this.lastBlock);
+        this.orchestrator.metrics.observeBlocksToTip(this.network, this.targetTo - this.lastBlock);
 
         if (this.wantDummyStuff) {
           try {
@@ -647,7 +647,7 @@ export class Indexer {
       } (${speed.toFixed(1)}b/sec). Got events: ${allEventsUnique.length}`,
     );
 
-    this.orchestrator.metrics.observeblocksToTip(this.network, this.targetTo - this.lastBlock);
+    this.orchestrator.metrics.observeBlocksToTip(this.network, this.targetTo - this.lastBlock);
     this.lastBlock = to;
 
     return allEventsUnique;

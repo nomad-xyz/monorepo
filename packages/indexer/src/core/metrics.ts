@@ -184,7 +184,7 @@ export class IndexerCollector extends MetricsCollector {
     this.gasUsage.labels(stage, home, replica, this.environment).observe(gas);
   }
 
-  observeblocksToTip(network: string, count: number) {
+  observeBlocksToTip(network: string, count: number) {
     this.blocksToTipGauge.labels(network, this.environment).set(count);
   }
 
