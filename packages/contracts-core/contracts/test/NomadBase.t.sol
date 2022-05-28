@@ -55,39 +55,4 @@ contract NomadBaseTest is NomadTest {
         );
     }
 
-    event DoubleUpdate(
-        bytes32 oldRoot,
-        bytes32[2] newRoot,
-        bytes signature,
-        bytes signature2
-    );
-
-    function test_failOnDoubleUpdateProof() public {
-        bytes32 newRoot2 = "new Root2";
-        bytes memory sig = signHomeUpdate(updaterPK, oldRoot, newRoot);
-        bytes memory sig2 = signHomeUpdate(updaterPK, oldRoot, newRoot2);
-        bytes32[2] memory roots;
-        roots[0] = newRoot;
-        roots[1] = newRoot2;
-        // We don't have any indexed fields, so we set all index bools to false
-        // We want to check the event's data (unindexed fields), so we set the last arg to true
-        // We emit an event to tell Forge what we expect to be emitted
-        // We assert the enum with a number because internall enums are translated to numbers
-        // based on the order which they are defined. Failed is the third type of the enum, thus 2.
-        vm.expectEmit(false, false, false, true);
-        emit DoubleUpdate(oldRoot, roots, sig, sig2);
-        nbh.doubleUpdate(oldRoot, roots, sig, sig2);
-        assertEq(uint256(nbh.state()), 2);
-    }
-
-    function test_notFailOnInvalidDoubleUpdateProof() public {
-        bytes32 newRoot2 = newRoot;
-        bytes memory sig = signHomeUpdate(updaterPK, oldRoot, newRoot);
-        bytes memory sig2 = signHomeUpdate(updaterPK, oldRoot, newRoot2);
-        bytes32[2] memory roots;
-        roots[0] = newRoot;
-        roots[1] = newRoot2;
-        nbh.doubleUpdate(oldRoot, roots, sig, sig2);
-        assertEq(uint256(nbh.state()), 1);
-    }
 }

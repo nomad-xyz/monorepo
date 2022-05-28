@@ -15,8 +15,8 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home = new Home(homeDomain);
         home.initialize(IUpdaterManager(address(updaterManager)));
         updaterManager.setHome(address(home));
-        vm.prank(address(updaterManager);
-        
+        vm.prank(address(updaterManager));
+
     }
 
     function test_homeDomain() public {
@@ -107,7 +107,7 @@ contract HomeTest is NomadTestWithUpdaterManager {
         bytes signature
     );
 
-    function test_successUpdate() public {
+    function test_successfulUpdate() public {
         bytes32 newRoot = "new root";
         bytes32 oldRoot = home.committedRoot();
         bytes memory sig = signHomeUpdate(updaterPK, oldRoot, newRoot);

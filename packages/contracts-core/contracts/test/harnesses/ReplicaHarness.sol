@@ -12,16 +12,14 @@ contract ReplicaHarness is Replica {
     using Message for bytes29;
 
     constructor(
-        uint32 _localDomain,
-        uint256 _processGas,
-        uint256 _reserveGas) Replica(_localDomain, _processGas, _reserveGas){}
+        uint32 _localDomain) Replica(_localDomain){}
 
     function setCommittedRoot(bytes32 root) public {
         committedRoot = root;
         confirmAt[root] = 1;
     }
 
-    function setMessageStatus(bytes memory message, MessageStatus status) public {
+    function setMessageStatus(bytes memory message, bytes32 status) public {
         bytes29 m = message.ref(0);
         messages[m.keccak()] = status;
     }

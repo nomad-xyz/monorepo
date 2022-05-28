@@ -10,9 +10,6 @@ contract NomadBaseHarness is NomadBase {
         domain = _domain;
     }
 
-    function _fail() internal override {
-        _setFailed();
-    }
 
     function homeDomainHash() public view override returns (bytes32) {
         return _homeDomainHash(domain);

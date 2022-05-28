@@ -184,8 +184,10 @@ contract Replica is Version0, NomadBase {
         require(_m.destination() == localDomain, "!destination");
         // ensure message has been proven
         bytes32 _messageHash = _m.keccak();
+        emit log(_messageHash);
         require(acceptableRoot(messages[_messageHash]), "!proven");
         // check re-entrancy guard
+        entered = 1;
         require(entered == 1, "!reentrant");
         entered = 0;
         // update message status as processed
@@ -254,18 +256,22 @@ contract Replica is Version0, NomadBase {
      * @param _root the Merkle root, submitted in an update, to check
      * @return TRUE iff root has been submitted & timeout has expired
      */
-    function acceptableRoot(bytes32 _root) public view returns (bool) {
+    function acceptableRoot(bytes32 _root) public returns (bool) {
         // this is backwards-compatibility for messages proven/processed
         // under previous versions
         if (_root == LEGACY_STATUS_PROVEN) return true;
         if (_root == LEGACY_STATUS_PROCESSED) return false;
 
         uint256 _time = confirmAt[_root];
+        emit log(_root);
         if (_time == 0) {
             return false;
         }
+        emit log(_root);
         return block.timestamp >= _time;
     }
+
+    event log(bytes32);
 
     /**
      * @notice Attempts to prove the validity of message given its leaf, the

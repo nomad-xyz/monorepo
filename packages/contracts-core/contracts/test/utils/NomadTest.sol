@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import "forge-std/console2.sol";
 import "../../UpdaterManager.sol";
 import "./BadXapps.sol";
+import "./GoodXapps.sol";
 
 
 contract NomadTest is Test {
@@ -88,11 +89,17 @@ contract NomadTestWithUpdaterManager is NomadTest {
 }
 
 contract ReplicaHandlers is NomadTest {
+    // Bad Handlers
+
     BadXappAssemblyRevert badXappAssemblyRevert;
     BadXappAssemblyReturnZero badXappAssemblyReturnZero;
     BadXappRevertData badXappRevertData;
     BadXappRevertRequireString badXappRevertRequireString;
     BadXappRevertRequire badXappRevertRequire;
+
+    // Good Handlers
+
+    GoodXappSimple goodXappSimple;
 
     function setUp() override virtual public {
         super.setUp();
@@ -105,6 +112,8 @@ contract ReplicaHandlers is NomadTest {
         badXappRevertData = new BadXappRevertData();
         badXappRevertRequireString = new BadXappRevertRequireString();
         badXappRevertRequire = new BadXappRevertRequire();
+
+        goodXappSimple = new GoodXappSimple();
     }
 
 }
