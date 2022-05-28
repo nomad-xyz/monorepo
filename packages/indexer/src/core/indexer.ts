@@ -647,8 +647,8 @@ export class Indexer {
       } (${speed.toFixed(1)}b/sec). Got events: ${allEventsUnique.length}`,
     );
 
-    this.lastBlock = to;
     this.orchestrator.metrics.observeblocksToTip(this.network, this.targetTo - this.lastBlock);
+    this.lastBlock = to;
 
     return allEventsUnique;
   }
