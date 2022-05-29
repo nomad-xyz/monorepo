@@ -13,6 +13,7 @@ const environment = process.env.ENVIRONMENT! as NomadEnvironment;
 const configOverrideLocation = process.env.CONFIG_OVERRIDE_LOCATION;
 const program = process.env.PROGRAM! as Program;
 const logLevel = (process.env.LOG_LEVEL || 'debug') as BunyanLevel;
+const metricsPort = parseInt(process.env.METRICS_PORT || "9090");
 
 (async () => {
   const logger = createLogger('indexer', environment, logLevel);
@@ -28,7 +29,7 @@ const logLevel = (process.env.LOG_LEVEL || 'debug') as BunyanLevel;
     await api.run(db, logger);
     logger.info(`Finished api run`);
   } else if (program === 'core') {
-    m.startServer(3000);
+    m.startServer(metricsPort);
     await core.run(sdk, db, logger, m);
   } else {
     logger.warn(`Starting all on the same process...`);
