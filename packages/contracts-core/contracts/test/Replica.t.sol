@@ -169,7 +169,49 @@ contract ReplicaTest is ReplicaHandlers {
         replica.proveAndProcess(message, proof, index);
     }
 
-    function test_processLegacyProvenMessageEmptyAddress() public {
+    function test_processProvenMessage() public {
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32 receiver= bytes32(uint256(uint160(address(goodXappSimple))));
+        uint32 nonce = 0;
+        bytes memory messageBody = '0x';
+        bytes memory message = Message.formatMessage(
+            remoteDomain,
+            sender,
+            nonce,
+            homeDomain,
+            receiver,
+            messageBody
+        );
+        (bytes32 root, bytes32 leaf, uint256 index, bytes32[32] memory proof) = merkleTest.getProof(message);
+        replica.setCommittedRoot(root);
+        assertTrue(replica.prove(leaf, proof, index));
+        assertTrue(replica.process(message));
+    }
+
+    function test_updateProveAndProcessMessage() public {
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32 receiver= bytes32(uint256(uint160(address(goodXappSimple))));
+        uint32 nonce = 0;
+        bytes memory messageBody = '0x';
+        bytes memory message = Message.formatMessage(
+            remoteDomain,
+            sender,
+            nonce,
+            homeDomain,
+            receiver,
+            messageBody
+        );
+        (bytes32 newRoot, bytes32 leaf, uint256 index, bytes32[32] memory proof) = merkleTest.getProof(message);
+        bytes32 oldRoot = committedRoot;
+        bytes memory sig = signRemoteUpdate(updaterPK, oldRoot, newRoot);
+        replica.update(oldRoot, newRoot, sig);
+        vm.warp(block.timestamp + replica.optimisticSeconds());
+        assertTrue(replica.prove(leaf, proof, index));
+        assertTrue(replica.process(message));
+    }
+
+
+    function test_notProcessLegacyProvenMessageEmptyAddress() public {
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
         bytes32 receiver= bytes32(uint256(uint160(vm.addr(431))));
         uint32 nonce = 0;
@@ -187,28 +229,27 @@ contract ReplicaTest is ReplicaHandlers {
         replica.process(message);
     }
 
-    function test_processLegacyProvenMessageBadHandlers() public {
+
+
+    function test_processLegacyProvenMessageReturnZeroHandler() public {
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
-        bytes32[1] memory receiver = [
-            bytes32(uint256(uint160(address(badXappAssemblyReturnZero))))
-        ];
-        for(uint256 i;i<1;i++){
-            uint32 nonce = 0;
-            bytes memory messageBody = hex'';
-            bytes memory message = Message.formatMessage(
-                remoteDomain,
-                sender,
-                nonce,
-                homeDomain,
-                receiver[i],
-                messageBody
-            );
-            replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
-            vm.expectEmit(true, true, true, true);
-            emit Process(message.ref(0).keccak(), true,'');
-            assertTrue(replica.process(message));
-        }
+        bytes32 receiver = bytes32(uint256(uint160(address(badXappAssemblyReturnZero))));
+        uint32 nonce = 0;
+        bytes memory messageBody = hex'';
+        bytes memory message = Message.formatMessage(
+            remoteDomain,
+            sender,
+            nonce,
+            homeDomain,
+            receiver,
+            messageBody
+        );
+        replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
+        vm.expectEmit(true, true, true, true);
+        emit Process(message.ref(0).keccak(), true,'');
+        assertTrue(replica.process(message));
     }
+
     function test_notProcessLegacyProvenMessageRevertingHandlers1() public {
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
         bytes32 receiver =
