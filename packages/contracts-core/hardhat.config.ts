@@ -2,24 +2,14 @@ import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 import "hardhat-packager";
 
-import {task, subtask} from "hardhat/config";
+import {subtask} from "hardhat/config";
 import {TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS} from "hardhat/builtin-tasks/task-names";
-import {verifyCoreDeploy} from "@nomad-xyz/deploy/src/verification/verifyDeploy";
 
 import * as dotenv from "dotenv";
 dotenv.config();
 
 const etherscanKey = process.env.ETHERSCAN_API_KEY;
 const infuraKey = process.env.INFURA_API_KEY;
-
-task("verify-deploy", "Verifies the source code of the latest contract deploy")
-  .addParam("environment", "dev, staging or prod")
-  .setAction(async (args, hre) => {
-    if (!etherscanKey) {
-      throw new Error("set ETHERSCAN_API_KEY");
-    }
-    await verifyCoreDeploy(hre, etherscanKey, args.environment);
-  });
 
 subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
   async (_, __, runSuper) => {
