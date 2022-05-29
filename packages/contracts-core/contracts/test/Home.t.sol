@@ -50,7 +50,7 @@ contract HomeTest is NomadTestWithUpdaterManager {
         bytes message
     );
 
-    function test_dispatch() public {
+    function test_succesfulDispatch() public {
         bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
         address sender = vm.addr(1555);
         bytes memory messageBody = bytes("hey buddy");
@@ -107,8 +107,12 @@ contract HomeTest is NomadTestWithUpdaterManager {
         bytes signature
     );
 
-    function test_successfulUpdate() public {
-        bytes32 newRoot = "new root";
+    function test_successfulDispatchAndUpdate() public {
+        bytes memory messageBody = '';
+        uint32 destinationDomain = remoteDomain;
+        bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
+        home.dispatch(destinationDomain, recipient, messageBody);
+        bytes32 newRoot = home.root();
         bytes32 oldRoot = home.committedRoot();
         bytes memory sig = signHomeUpdate(updaterPK, oldRoot, newRoot);
         vm.expectEmit(true, true, true, true);
