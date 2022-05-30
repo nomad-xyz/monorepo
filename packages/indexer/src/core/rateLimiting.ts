@@ -132,6 +132,8 @@ export function tryLimitStrategyByName(
       return strategyFromRPP(2.1); // 0.93
     case 'avalanche':
       return strategyFromRPP(3.66); // 3.66
+    case 'candle':
+        return strategyFromRPP(2.1); // 0.93
     default:
       return;
   }

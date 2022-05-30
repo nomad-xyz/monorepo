@@ -15,6 +15,7 @@ const chainIdToDomainMapping: Map<number, number> = new Map([
   [1287, 5000], // Moonbase Alpha
   [200101, 8000], // Milkomeda Testnet
   [9000, 9000], // Evmos Testnet
+  [534, 8534], // Candle 
 ]);
 
 /**
