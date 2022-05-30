@@ -31,5 +31,10 @@
     "maxFeePerGas": "4000000000",
     "maxPriorityFeePerGas": "2500000000",
     "gasLimit": "7000000"
+  },
+  "candle": {
+    "maxFeePerGas": "4000000000",
+    "maxPriorityFeePerGas": "2500000000",
+    "gasLimit": "7000000"
   }
 }
