@@ -112,13 +112,16 @@ class TokenFetcher {
     let remotes = this.sdk.domainNumbers.filter(
       (remoteDomain) => remoteDomain !== domain,
     );
+
+    const _id: Padded = Padded.fromWhatever(id);
+
     await Promise.all(
       remotes.map(async (remoteDomain) => {
         let remoteId: string;
         try {
           remoteId = await this.sdk
             .mustGetBridge(remoteDomain)
-            .tokenRegistry.getRepresentationAddress(domain, id);
+            .tokenRegistry.getRepresentationAddress(domain, _id.valueOf());
         } catch (e: any) {
           this.logger.debug(
             `Failed searching for replica from ${domain} at ${remoteDomain}. id: ${id}`,
