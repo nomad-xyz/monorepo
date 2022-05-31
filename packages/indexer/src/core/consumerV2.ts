@@ -404,15 +404,15 @@ export class NomadMessage {
       tx: this.tx || null,
       body: this.body,
       dispatchBlock: this.dispatchBlock,
-      internalSender: this.internalSender.valueOf(),
-      internalRecipient: this.internalRecipient.valueOf(),
+      internalSender: this.internalSender.pretty(),
+      internalRecipient: this.internalRecipient.pretty(),
       msgType: this.msgType,
-      recipient: this.recipient()?.valueOf() || null,
+      recipient: this.recipient()?.pretty() || null,
       amount: this.amount()?.toHexString() || null,
       allowFast: this.allowFast(),
       detailsHash: this.detailsHash() || null,
       tokenDomain: this.tokenDomain() || null,
-      tokenId: this.tokenId()?.valueOf() || null,
+      tokenId: this.tokenId()?.pretty() || null,
       ...this.gasUsed.serialize(),
       ...this.checkbox.serialize(),
       confirmAt: this.confirmAt,
@@ -481,7 +481,7 @@ class EventsPool {
       const eventData = e.eventData as Send;
       const key = `${eventData.toDomain};${Padded.fromWhatever(
         eventData.toId,
-      ).toEVMAddress()};${eventData.amount.toHexString()};${e.block}`;
+      ).pretty()};${eventData.amount.toHexString()};${e.block}`;
       await this.redis.hSet('send', key, value);
     } else if (e.eventType === EventType.HomeUpdate) {
       const eventData = e.eventData as Update;
@@ -531,7 +531,7 @@ class EventsPool {
     amount: ethers.BigNumber,
     block: number,
   ): Promise<NomadishEvent | null> {
-    const key = `${destination};${recipient.toEVMAddress()};${amount.toHexString()};${block}`;
+    const key = `${destination};${recipient.pretty()};${amount.toHexString()};${block}`;
     const value = await this.redis.hGet('send', key);
     if (!value) return null;
 

@@ -132,12 +132,14 @@ export function createLogger(
   });
 }
 
-function formatEVM(s: string) {
+export function formatEVM(s: string) {
   s = s.toLowerCase();
-  if (s.length === 42 && s.substring(0, 2) === '0x') {
+  if (s.substring(0, 2) === '0x') {
     s = s.substring(2);
-  } else if (s.length !== 40) {
-    throw new Error(`Not EVM address`);
+  }
+
+  if (s.length !== 40 && s.length !== 64) {
+    throw new Error(`Neither EVM nor interchain address`);
   }
 
   const digest = keccak256(toUtf8Bytes(s)).substring(2);
@@ -188,6 +190,13 @@ export class Padded {
       return new Padded(s);
     }
     return s;
+  }
+
+  pretty() {
+    if (this.s.substring(2, 24) === '0000000000000000000000') {
+      return this.toEVMAddress();
+    }
+    return formatEVM('0x' + this.s)
   }
 
   toEVMAddress() {
