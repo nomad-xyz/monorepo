@@ -150,7 +150,9 @@ class Env {
     ])
     console.log(`Upped Tom and Jerry`);
 
-    const le = new Env({domain: t.domainNumber, id: '0x'+'11'.repeat(20)});
+    // Initialize governor for each domain
+
+    const le = new Env({domain: t.domainNumber, id: '0x'+'12'.repeat(20)});
     le.addNetwork(t);
     le.addNetwork(j);
 
