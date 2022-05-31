@@ -7,7 +7,7 @@ dotenv.config({});
 import { PrismaClient } from '@prisma/client';
 import { DB } from '../core/db';
 import Logger, { createLogger } from 'bunyan';
-import { sleep } from '../core/utils';
+import { Padded, sleep } from '../core/utils';
 
 const abi = [
   'function name() public view returns (string)',
@@ -18,7 +18,8 @@ const abi = [
 ];
 
 function erc20(id: string, provider: ethers.providers.Provider) {
-  return new ethers.Contract(utils.evmId(id), abi, provider);
+  const padded = Padded.fromWhatever(id);
+  return new ethers.Contract(padded.toEVMAddress(), abi, provider);
 }
 
 type FrenSkills = string | [string, ...any];
