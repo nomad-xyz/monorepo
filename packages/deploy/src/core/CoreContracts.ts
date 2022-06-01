@@ -456,14 +456,10 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
       const constructorArguments = [
         localConfig.domain,
-        localConfig.configuration.processGas,
-        localConfig.configuration.reserveGas,
         // localConfig.configuration.maximumGas,  // future
       ];
       const replica = await factory.deploy(
         constructorArguments[0],
-        constructorArguments[1],
-        constructorArguments[2],
         // localConfig.configuration.maximumGas,  // future
         this.overrides,
       );
