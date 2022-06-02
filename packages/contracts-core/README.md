@@ -14,7 +14,8 @@ Solidity implementations of the core Nomad protocol.
 
 For testing, we use [Foundry](https://getfoundry.sh/).
 
-- Run `yarn build:accumulator-cli` from the root directory of the monorepo. It will build a rust-based cli tool that creates Sparse Merkle Tree proofs for arbitrary data. It's used in our testing suite via the `--ffi` flag for Forge. The binary is built in thre `/scripts` top-level directory of the monorepo
+- Run `yarn build:accumulator-cli` from the root directory of the monorepo. It will build a rust-based cli tool that creates Sparse Merkle Tree proofs for arbitrary data. It's used in our testing suite via the `--ffi` flag for Forge. The binary is built in there `/scripts` top-level directory of the monorepo
+- `--ffi` means that Forge will run arbitrary shell commands as part of the testing suite. You should never run `forge --ffi` without knowing what exactly are the shell commands that will be executed, as the testing suite could be malicious and execute malicious commands. This is why the feature is disabled by default and must be explicitly enabled.
 - `yarn test` will run all tests. Note that `--ffi` is enabled by default,
 - `yarn snapshot --check` will run the test suite and verify that it doesn't produce a different gas snapshot from the existing (`.gas-snapshot`)
 - `yarn snapshot` will create a new `.gas-snapshot`. You can inspect the different gas usage via `git diff`

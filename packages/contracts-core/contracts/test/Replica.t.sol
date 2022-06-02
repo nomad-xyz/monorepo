@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity >=0.6.11;
+pragma solidity 0.7.6;
 
 import {ReplicaHarness} from "./harnesses/ReplicaHarness.sol";
 import {Replica} from "../Replica.sol";
@@ -401,8 +401,42 @@ contract ReplicaTest is ReplicaHandlers {
         replica.setConfirmation(newRoot, newConfirmAt);
     }
 
-    function test_acceptableRoot() public {
+    function test_acceptableRootSuccess() public {
         assertTrue(replica.acceptableRoot(committedRoot));
+    }
+
+    function test_acceptableRootLegacySuccess() public {
+        assertTrue(replica.acceptableRoot(replica.LEGACY_STATUS_PROVEN()));
+    }
+
+    function test_acceptableRootLegacyRejectStatus() public {
+        assertFalse(replica.acceptableRoot(replica.LEGACY_STATUS_PROCESSED()));
+        assertFalse(replica.acceptableRoot(replica.LEGACY_STATUS_NONE()));
+    }
+
+    function test_acceptableRootRejectNotCommited() public {
+        bytes32 notSubmittedRoot = "no";
+        assertFalse(replica.acceptableRoot(notSubmittedRoot));
+    }
+
+    function test_acceptableRootRejectNotTimedOut() public {
+            bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32 receiver= bytes32(uint256(uint160(address(goodXappSimple))));
+        uint32 nonce = 0;
+        bytes memory messageBody = '0x';
+        bytes memory message = Message.formatMessage(
+            remoteDomain,
+            sender,
+            nonce,
+            homeDomain,
+            receiver,
+            messageBody
+        );
+        (bytes32 newRoot, bytes32 leaf, uint256 index, bytes32[32] memory proof) = merkleTest.getProof(message);
+        bytes32 oldRoot = committedRoot;
+        bytes memory sig = signRemoteUpdate(updaterPK, oldRoot, newRoot);
+        replica.update(oldRoot, newRoot, sig);
+        assertFalse(replica.acceptableRoot(newRoot));
     }
 
 }
