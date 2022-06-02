@@ -12,9 +12,8 @@ fi
 # If cargo is not installed, inform user on how to install it and then exit
 if [[ $(which cargo) == "" ]]; then
   echo "Cargo is not installed"
-  echo "To build the accumulator-cli, you will need the Rust toolchain. Run the following in your terminal and then execute 'build-acli.sh' again"
-  echo "curl https://sh.rustup.rs -sSf | sh -s -- -y -c cargo"
-  exit 1
+  echo "To build the accumulator-cli, you will need the Rust toolchain. Installing Rust.."
+  curl https://sh.rustup.rs -sSf | sh -s -- -y -c cargo
 fi
 rm -rf acli;
 echo "Building accumulator-cli from source.."
