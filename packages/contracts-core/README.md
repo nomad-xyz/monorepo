@@ -19,7 +19,20 @@ For testing, we use [Foundry](https://getfoundry.sh/).
 - `yarn test` will run all tests. Note that `--ffi` is enabled by default,
 - `yarn snapshot --check` will run the test suite and verify that it doesn't produce a different gas snapshot from the existing (`.gas-snapshot`)
 - `yarn snapshot` will create a new `.gas-snapshot`. You can inspect the different gas usage via `git diff`
+- 'yarn snapshot:check' will run the test suite and check gas consumption against the **existing** `.gas-snapshot`. It will `pass` only if there is no change in the gas consumption
 - `yarn gen-proof` will execute the `accumulator-cli` binary
+
+### Suggested workflow
+
+- Define feature
+- Write tests based on [Foundry best practices](https://book.getfoundry.sh) and the existing test structure
+- Run test suite with `FOUNDRY_PROFILE=core forge test --ffi -vvv` and verify that your new tests `FAIL`
+- Write the new feature
+- Run again the test suite and verify that the tests `PASS`
+- Run `FOUNDRY_PROFILE=core forge snapshot` to produce the new snapshot. You can't use `forge snapshot --check`, since you added new tests that are not present in the current `.gas-snapshot`
+- Using `git diff .gas-snapshot`, you can easily verify if some change you made resulted to a gas consumption change for the tests that already existed
+
+**Tip**: It is advised to run the forge commands on their own and not via `yarn` or `npm` for faster development cycle. `yarn` will add a few seconds of lag, due to the fact that it has to spin up a `Node` runtime and the interpret the `yarn` source code.
 
 ### Static Analysis
 

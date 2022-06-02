@@ -20,10 +20,14 @@ jobs:
           yarn build
       - run: |
           yarn test
-
       - name: "Static Analysis: Core"
         uses: crytic/slither-action@v0.1.1
         id: slither
         continue-on-error: true
         with:
           target: "packages/contracts-core"
+      - name: "Check Gas snapshot"
+        continue-on-error: true
+        id: snapshot-check
+        run: |
+          yarn snapshot:check
