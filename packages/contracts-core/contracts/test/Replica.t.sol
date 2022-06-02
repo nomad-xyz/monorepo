@@ -375,7 +375,12 @@ contract ReplicaTest is ReplicaHandlers {
         replica.setOptimisticTimeout(10);
     }
 
+    event NewUpdater(address oldUpdater, address newUpdater);
+
     function test_setUpdaterOnlyOwner() public {
+        vm.expectEmit(false, false, false, true);
+        emit NewUpdater(updater, vm.addr(10));
+        vm.prank(replica.owner());
         replica.setUpdater(vm.addr(10));
         vm.prank(vm.addr(1453));
         vm.expectRevert("Ownable: caller is not the owner");
