@@ -16,6 +16,4 @@ RUN npm i
 ADD src /app/
 ADD prisma /app/prisma
 
-RUN yarn build
-
 CMD [ "yarn", "start" ]
