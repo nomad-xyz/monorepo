@@ -10,7 +10,8 @@ import {Message} from "../libs/Message.sol";
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 
 contract ReplicaTest is ReplicaHandlers {
-    // Read about memview:
+
+    // Read about memview: https://github.com/summa-tx/memview-sol
     using TypedMemView for bytes;
     using TypedMemView for bytes29;
     using Message for bytes29;
