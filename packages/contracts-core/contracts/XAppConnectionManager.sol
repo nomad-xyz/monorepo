@@ -218,4 +218,13 @@ contract XAppConnectionManager is Ownable {
         _digest = ECDSA.toEthSignedMessageHash(_digest);
         return ECDSA.recover(_digest, _signature);
     }
+
+    /**
+     * @dev should be impossible to renounce ownership;
+     * we override OpenZeppelin Ownable implementation
+     * of renounceOwnership to make it a no-op
+     */
+    function renounceOwnership() public override onlyOwner {
+        // do nothing
+    }
 }
