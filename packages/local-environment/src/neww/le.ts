@@ -64,23 +64,29 @@ class Env {
         console.log(`Deploying!`, JSON.stringify(this.nomadConfig(), null, 4));
 
         const outputDir = './output';
+        try{
         const governanceBatch = await this.deployContext.deployAndRelinquish();
         console.log(`Deployed! gov batch:`, governanceBatch);
+        }
+        catch (e) {
+            // outputs config & verification
+            fs.mkdirSync(outputDir, {recursive: true});
+            fs.writeFileSync(
+                `${outputDir}/config.json`,
+                JSON.stringify(this.deployContext.data, null, 2),
+            );
 
-        // outputs config & verification
-        fs.mkdirSync(outputDir, {recursive: true});
-        fs.writeFileSync(
-            `${outputDir}/config.json`,
-            JSON.stringify(this.deployContext.data, null, 2),
-        );
-        // if new contracts were deployed,
-        const verification = Object.fromEntries(this.deployContext.verification);
-        if (Object.keys(verification).length > 0) {
-          // output the verification inputs
-          fs.writeFileSync(
+            // if new contracts were deployed,
+            const verification = Object.fromEntries(this.deployContext.verification);
+            if (Object.keys(verification).length > 0) {
+            // output the verification inputs
+            fs.writeFileSync(
               `${outputDir}/verification-${Date.now()}.json`,
               JSON.stringify(verification, null, 2),
-          );
+                );
+            }
+            
+            throw e;
         }
     }
 
