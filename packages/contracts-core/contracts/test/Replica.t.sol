@@ -28,7 +28,6 @@ contract ReplicaTest is ReplicaHandlers {
 
     function setUp() public override {
         super.setUp();
-        uint256 reserveGas = 15_000;
         committedRoot = "commited root";
 
         replica = new ReplicaHarness(homeDomain);
@@ -291,6 +290,7 @@ contract ReplicaTest is ReplicaHandlers {
         assertTrue(replica.process(message));
     }
 
+    /// @notice It should revert because process will call handle() in an empty address
     function test_notProcessLegacyProvenMessageEmptyAddress() public {
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
         bytes32 receiver = bytes32(uint256(uint160(vm.addr(431))));
@@ -309,6 +309,7 @@ contract ReplicaTest is ReplicaHandlers {
         replica.process(message);
     }
 
+    /// @notice It should not revert because process will call handle() and handle will simply return 0
     function test_processLegacyProvenMessageReturnZeroHandler() public {
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
         bytes32 receiver = bytes32(
@@ -329,7 +330,7 @@ contract ReplicaTest is ReplicaHandlers {
         emit Process(message.ref(0).keccak(), true, "");
         assertTrue(replica.process(message));
     }
-
+    /// @notice It should revert because it calls a handle() function that has a require() that is not satisfied
     function test_notProcessLegacyProvenMessageRevertingHandlers1() public {
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
         bytes32 receiver = bytes32(
@@ -349,7 +350,8 @@ contract ReplicaTest is ReplicaHandlers {
         vm.expectRevert();
         replica.process(message);
     }
-
+    /// @notice It revert because it calls a handle() function that has a require() that isn't satisfied. That require
+    //also returns a revert reason string
     function test_notProcessLegacyProvenMessageRevertingHandlers2() public {
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
         bytes32 receiver = bytes32(
@@ -369,7 +371,7 @@ contract ReplicaTest is ReplicaHandlers {
         vm.expectRevert("no can do");
         replica.process(message);
     }
-
+    /// @notice It should revert because it calls a handle() function that has a revert() call in the assembly{} block
     function test_notProcessLegacyProvenMessageRevertingHandlers3() public {
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
         bytes32 receiver = bytes32(
@@ -392,6 +394,7 @@ contract ReplicaTest is ReplicaHandlers {
         replica.process(message);
     }
 
+    /// @notice It should revert because it calls a handle() function that has a revert() call in the assembly{} block
     function test_notProcessLegacyProvenMessageRevertingHandlers4() public {
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
         bytes32 receiver = bytes32(
@@ -412,9 +415,9 @@ contract ReplicaTest is ReplicaHandlers {
         replica.process(message);
     }
 
+    /// @notice It should revert because the message's destination is not this Replica's domain
     function test_notProcessLegacyWrongDestination() public {
         replica.setCommittedRoot(exampleRoot);
-        replica.prove(exampleLeaf, exampleProof, exampleLeafIndex);
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
         bytes32 receiver = bytes32(uint256(uint160(vm.addr(431))));
         uint32 nonce = 0;
@@ -431,10 +434,9 @@ contract ReplicaTest is ReplicaHandlers {
         vm.expectRevert("!destination");
         replica.process(message);
     }
-
+    /// @notice It should revert because the message is not proven, i.e is not included in the committed Root
     function test_notProcessUnprovenMessage() public {
         replica.setCommittedRoot(exampleRoot);
-        replica.prove(exampleLeaf, exampleProof, exampleLeafIndex);
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
         bytes32 receiver = bytes32(uint256(uint160(vm.addr(431))));
         uint32 nonce = 0;
