@@ -4,6 +4,7 @@
 
 ### 1.0.0-rc.17
 
+- feat: support infinite token approval
 - chore: bump configuration to v0.1.0-rc.23
 
 ### 1.0.0-rc.16
