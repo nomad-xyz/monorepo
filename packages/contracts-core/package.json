@@ -34,7 +34,7 @@
     "gen-proof": "../../scripts/accumulator-cli"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^3.4.2",
+    "@openzeppelin/contracts": "^4.4.2",
     "@openzeppelin/contracts-upgradeable": "~3.4.2",
     "@summa-tx/memview-sol": "^2.0.0"
   },
