@@ -103,7 +103,7 @@ contract UpdaterManager is IUpdaterManager, Ownable {
     }
 
     /**
-    * @dev should be impossible to renounce ownership;
+     * @dev should be impossible to renounce ownership;
      * we override OpenZeppelin Ownable implementation
      * of renounceOwnership to make it a no-op
      */

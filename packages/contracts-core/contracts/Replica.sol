@@ -83,9 +83,7 @@ contract Replica is Version0, NomadBase {
 
     // ============ Constructor ============
 
-    constructor(
-        uint32 _localDomain
-    ) NomadBase(_localDomain) {}
+    constructor(uint32 _localDomain) NomadBase(_localDomain) {}
 
     // ============ Initializer ============
 
@@ -286,7 +284,10 @@ contract Replica is Version0, NomadBase {
     ) public returns (bool) {
         // ensure that message has not been processed
         // Note that this allows re-proving under a new root.
-        require(messages[_leaf] != LEGACY_STATUS_PROCESSED, "already processed");
+        require(
+            messages[_leaf] != LEGACY_STATUS_PROCESSED,
+            "already processed"
+        );
         // calculate the expected root based on the proof
         bytes32 _calculatedRoot = MerkleLib.branchRoot(_leaf, _proof, _index);
         // if the root is valid, change status to Proven
@@ -316,7 +317,8 @@ contract Replica is Version0, NomadBase {
         // but does not allow governance action to lower a production env below
         // the safe value
         uint256 _current = optimisticSeconds;
-        if (_current != 0 && _current > 1500) require(_optimisticSeconds >= 1500, "optimistic timeout too low");
+        if (_current != 0 && _current > 1500)
+            require(_optimisticSeconds >= 1500, "optimistic timeout too low");
         // ensure the optimistic timeout is less than 1 year
         // (prevents overflow when adding block.timestamp)
         require(_optimisticSeconds < 31536000, "optimistic timeout too high");
