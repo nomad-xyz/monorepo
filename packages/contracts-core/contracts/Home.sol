@@ -78,7 +78,7 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
     event ImproperUpdate(bytes32 oldRoot, bytes32 newRoot, bytes signature);
 
     /**
-    * @notice Emitted when proof of a double update is submitted,
+     * @notice Emitted when proof of a double update is submitted,
      * which sets the contract to FAILED state
      * @param oldRoot Old root shared between two conflicting updates
      * @param newRoot Array containing two conflicting new roots
@@ -130,7 +130,7 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
     }
 
     /**
-    * @notice Ensures that contract state != FAILED when the function is called
+     * @notice Ensures that contract state != FAILED when the function is called
      */
     modifier notFailed() {
         require(state != States.Failed, "failed state");
@@ -255,7 +255,7 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
     }
 
     /**
-    * @notice Called by external agent. Checks that signatures on two sets of
+     * @notice Called by external agent. Checks that signatures on two sets of
      * roots are valid and that the new roots conflict with each other. If both
      * cases hold true, the contract is failed and a `DoubleUpdate` event is
      * emitted.

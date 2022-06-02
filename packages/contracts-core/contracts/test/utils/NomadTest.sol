@@ -7,7 +7,6 @@ import "../../UpdaterManager.sol";
 import "./BadXapps.sol";
 import "./GoodXapps.sol";
 
-
 contract NomadTest is Test {
     uint256 updaterPK = 1;
     uint256 fakeUpdaterPK = 2;
@@ -26,11 +25,11 @@ contract NomadTest is Test {
         vm.label(fakeSigner, "fake signer");
     }
 
-    function getMessage(bytes32 oldRoot, bytes32 newRoot, uint32 domain)
-        public
-        pure
-        returns (bytes memory)
-    {
+    function getMessage(
+        bytes32 oldRoot,
+        bytes32 newRoot,
+        uint32 domain
+    ) public pure returns (bytes memory) {
         bytes memory message = abi.encodePacked(
             keccak256(abi.encodePacked(domain, "NOMAD")),
             oldRoot,
@@ -53,7 +52,6 @@ contract NomadTest is Test {
         return signature;
     }
 
-
     function signRemoteUpdate(
         uint256 privKey,
         bytes32 oldRoot,
@@ -68,7 +66,11 @@ contract NomadTest is Test {
         return signature;
     }
 
-    function stringToBytes32(string memory source) public pure returns (bytes32 result) {
+    function stringToBytes32(string memory source)
+        public
+        pure
+        returns (bytes32 result)
+    {
         bytes memory tempEmptyStringTest = bytes(source);
         if (tempEmptyStringTest.length == 0) {
             return 0x0;
@@ -101,7 +103,7 @@ contract ReplicaHandlers is NomadTest {
 
     GoodXappSimple goodXappSimple;
 
-    function setUp() override virtual public {
+    function setUp() public virtual override {
         super.setUp();
         setUpBadHandlers();
     }
@@ -115,6 +117,4 @@ contract ReplicaHandlers is NomadTest {
 
         goodXappSimple = new GoodXappSimple();
     }
-
 }
-

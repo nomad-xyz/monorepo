@@ -54,5 +54,4 @@ contract NomadBaseTest is NomadTest {
             keccak256(abi.encodePacked(homeDomain, "NOMAD"))
         );
     }
-
 }

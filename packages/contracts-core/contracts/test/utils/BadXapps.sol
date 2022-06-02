@@ -70,11 +70,9 @@ contract BadXappRevertRequire is IMessageRecipient {
 }
 
 contract BadXappNoHandler {
-
     uint256 fourtwenty = 420;
 
-    function bonk() external view returns(uint256){
+    function bonk() external view returns (uint256) {
         return fourtwenty;
     }
-
 }

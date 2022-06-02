@@ -6,13 +6,11 @@ import {Message} from "../../libs/Message.sol";
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 
 contract ReplicaHarness is Replica {
-
     using TypedMemView for bytes;
     using TypedMemView for bytes29;
     using Message for bytes29;
 
-    constructor(
-        uint32 _localDomain) Replica(_localDomain){}
+    constructor(uint32 _localDomain) Replica(_localDomain) {}
 
     function setCommittedRoot(bytes32 root) public {
         committedRoot = root;
@@ -23,5 +21,4 @@ contract ReplicaHarness is Replica {
         bytes29 m = message.ref(0);
         messages[m.keccak()] = status;
     }
-
 }

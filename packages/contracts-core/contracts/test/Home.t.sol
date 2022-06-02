@@ -6,7 +6,6 @@ import {NomadTestWithUpdaterManager} from "./utils/NomadTest.sol";
 import {IUpdaterManager} from "../interfaces/IUpdaterManager.sol";
 import {Message} from "../libs/Message.sol";
 
-
 contract HomeTest is NomadTestWithUpdaterManager {
     Home home;
 
@@ -16,7 +15,6 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home.initialize(IUpdaterManager(address(updaterManager)));
         updaterManager.setHome(address(home));
         vm.prank(address(updaterManager));
-
     }
 
     function test_homeDomain() public {
@@ -37,9 +35,9 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home.setUpdater(vm.addr(420));
     }
 
-    function test_committedRoot() public{
-      bytes32 emptyRoot;
-      assertEq(abi.encode(home.committedRoot()), abi.encode(emptyRoot));
+    function test_committedRoot() public {
+        bytes32 emptyRoot;
+        assertEq(abi.encode(home.committedRoot()), abi.encode(emptyRoot));
     }
 
     event Dispatch(
@@ -56,16 +54,22 @@ contract HomeTest is NomadTestWithUpdaterManager {
         bytes memory messageBody = bytes("hey buddy");
         uint32 nonce = home.nonces(remoteDomain);
         bytes memory message = Message.formatMessage(
-          homeDomain,
-          bytes32(uint256(uint160(sender))),
-          nonce,
-          remoteDomain,
-          recipient,
-          messageBody
+            homeDomain,
+            bytes32(uint256(uint160(sender))),
+            nonce,
+            remoteDomain,
+            recipient,
+            messageBody
         );
         bytes32 messageHash = keccak256(message);
         vm.expectEmit(true, true, true, true);
-        emit Dispatch(messageHash, 0,(uint64(remoteDomain) << 32) | nonce, home.committedRoot(), message);
+        emit Dispatch(
+            messageHash,
+            0,
+            (uint64(remoteDomain) << 32) | nonce,
+            home.committedRoot(),
+            message
+        );
         vm.prank(sender);
         home.dispatch(remoteDomain, recipient, messageBody);
         assert(home.queueContains(home.root()));
@@ -77,12 +81,12 @@ contract HomeTest is NomadTestWithUpdaterManager {
         bytes memory messageBody = new bytes(2 * 2**10 + 1);
         uint32 nonce = home.nonces(remoteDomain);
         bytes memory message = Message.formatMessage(
-          homeDomain,
-          bytes32(uint256(uint160(sender))),
-          nonce,
-          remoteDomain,
-          recipient,
-          messageBody
+            homeDomain,
+            bytes32(uint256(uint160(sender))),
+            nonce,
+            remoteDomain,
+            recipient,
+            messageBody
         );
         vm.prank(sender);
         vm.expectRevert("msg too long");
@@ -108,7 +112,7 @@ contract HomeTest is NomadTestWithUpdaterManager {
     );
 
     function test_successfulDispatchAndUpdate() public {
-        bytes memory messageBody = '';
+        bytes memory messageBody = "";
         uint32 destinationDomain = remoteDomain;
         bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
         home.dispatch(destinationDomain, recipient, messageBody);
@@ -120,5 +124,4 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home.update(oldRoot, newRoot, sig);
         assertEq(newRoot, home.committedRoot());
     }
-
 }
