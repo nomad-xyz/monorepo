@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity >=0.6.11;
+pragma solidity 0.7.6;
 
 // ============ Internal Imports ============
 import {Version0} from "./Version0.sol";
@@ -51,11 +51,13 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
 
     /**
      * @notice Emitted when a new message is dispatched via Nomad
+     * @param messageHash Hash of message; the leaf inserted to the Merkle tree
+     *        for the message
      * @param leafIndex Index of message's leaf in merkle tree
      * @param destinationAndNonce Destination and destination-specific
-     * nonce combined in single field ((destination << 32) & nonce)
-     * @param messageHash Hash of message; the leaf inserted to the Merkle tree for the message
-     * @param committedRoot the latest notarized root submitted in the last signed Update
+     *        nonce combined in single field ((destination << 32) & nonce)
+     * @param committedRoot the latest notarized root submitted in the last
+     *        signed Update
      * @param message Raw bytes of message
      */
     event Dispatch(
@@ -76,10 +78,6 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
     event ImproperUpdate(bytes32 oldRoot, bytes32 newRoot, bytes signature);
 
     /**
-<<<<<<< HEAD
-=======
-
->>>>>>> 53db42b4348e0ab29b7b5effd7a61b319b5e34c4
      * @notice Emitted when proof of a double update is submitted,
      * which sets the contract to FAILED state
      * @param oldRoot Old root shared between two conflicting updates
@@ -131,10 +129,6 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
         _;
     }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 53db42b4348e0ab29b7b5effd7a61b319b5e34c4
     /**
      * @notice Ensures that contract state != FAILED when the function is called
      */
@@ -147,10 +141,14 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
 
     /**
      * @notice Set a new Updater
+     * @dev To be set when rotating Updater after Fraud
      * @param _updater the new Updater
      */
     function setUpdater(address _updater) external onlyUpdaterManager {
         _setUpdater(_updater);
+        // set the Home state to Active
+        // now that Updater has been rotated
+        state = States.Active;
     }
 
     /**
@@ -167,7 +165,7 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
     // ============ External Functions  ============
 
     /**
-     * @notice Dispatch the message it to the destination domain & recipient
+     * @notice Dispatch the message to the destination domain & recipient
      * @dev Format the message, insert its hash into Merkle tree,
      * enqueue the new Merkle root, and emit `Dispatch` event with message information.
      * @param _destinationDomain Domain of destination chain
@@ -360,9 +358,9 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
      * @notice Slash the Updater and set contract state to FAILED
      * @dev Called when fraud is proven (Improper Update or Double Update)
      */
-    function _fail() internal override {
+    function _fail() internal {
         // set contract to FAILED
-        _setFailed();
+        state = States.Failed;
         // slash Updater
         updaterManager.slashUpdater(msg.sender);
         emit UpdaterSlashed(updater, msg.sender);

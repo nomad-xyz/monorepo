@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity >=0.6.11;
+pragma solidity 0.7.6;
 
 // ============ Internal Imports ============
 import {Home} from "./Home.sol";
@@ -55,13 +55,6 @@ contract XAppConnectionManager is Ownable {
         address watcher,
         bool access
     );
-
-    // ============ Modifiers ============
-
-    modifier onlyReplica() {
-        require(isReplica(msg.sender), "!replica");
-        _;
-    }
 
     // ============ Constructor ============
 

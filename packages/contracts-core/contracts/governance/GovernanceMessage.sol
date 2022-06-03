@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity >=0.6.11;
+pragma solidity 0.7.6;
 pragma experimental ABIEncoderV2;
 
 // ============ External Imports ============
@@ -43,11 +43,6 @@ library GovernanceMessage {
         Invalid, // 0
         Batch, // 1 - A Batch message
         TransferGovernor // 2 - A TransferGovernor message
-    }
-
-    modifier typeAssert(bytes29 _view, Types _t) {
-        _view.assertType(uint40(_t));
-        _;
     }
 
     // Read the type of a message

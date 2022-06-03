@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity >=0.6.11;
+pragma solidity 0.7.6;
 
 // ============ Internal Imports ============
 import {IUpdaterManager} from "./interfaces/IUpdaterManager.sol";
@@ -110,5 +110,4 @@ contract UpdaterManager is IUpdaterManager, Ownable {
     function renounceOwnership() public override onlyOwner {
         // do nothing
     }
-
 }
