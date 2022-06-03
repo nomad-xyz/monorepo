@@ -16,9 +16,6 @@ RUN npm i
 ADD src /app/
 ADD prisma /app/prisma
 
-<<<<<<< HEAD
-=======
 RUN yarn build
 
->>>>>>> efc79e8 (sync with main)
 CMD [ "yarn", "start" ]
