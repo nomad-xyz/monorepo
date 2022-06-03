@@ -30,7 +30,6 @@ class Env {
     }
 
     async deployFresh(): Promise<void> {
-
         console.log(`Deploying!`, JSON.stringify(this.nomadConfig(), null, 4));
 
         const outputDir = './output';
