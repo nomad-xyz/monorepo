@@ -2,7 +2,7 @@ import { NomadLocator, NomadConfig } from "@nomad-xyz/configuration";
 import * as dotenv from 'dotenv';
 import { DeployContext } from "../../../deploy/src/DeployContext";
 import { HardhatNetwork, Network } from "./network";
-import ethers from 'ethers';
+import * as ethers from 'ethers';
 import { NonceManager } from "@ethersproject/experimental";
 import fs from 'fs';
 dotenv.config();
@@ -110,7 +110,6 @@ class Env {
             deployContext.registerDomain(network.domain);
             deployContext.registerRpcProvider(name, network.rpcs[0]);
             const provider = deployContext.mustGetProvider(name);
-            console.log(JSON.stringify(provider));
             const wallet = new ethers.Wallet(this.deployerKey, provider);
             console.log(wallet);
             const signer = new NonceManager(wallet);
