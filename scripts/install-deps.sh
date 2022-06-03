@@ -14,6 +14,6 @@ if [ -d "../lib/forge-std" ]; then
     echo "Dep directory found, but it's empty"
     echo "Cleaning up and installing deps.."
     rm -rf ../lib/forge-std
+  fi
 fi
-  forge install foundry-rs/forge-std@5645100
-fi
+forge install foundry-rs/forge-std@5645100 --no-git
