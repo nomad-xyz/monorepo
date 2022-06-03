@@ -253,6 +253,12 @@ export class NomadContext extends MultiProvider<config.Domain> {
     // get replica contract
     const replica = this.mustGetReplicaFor(originNetwork, destNetwork);
 
+    await replica.callStatic.proveAndProcess(
+      data.message,
+      data.proof.path,
+      data.proof.index,
+    );
+
     return replica.proveAndProcess(
       data.message,
       data.proof.path,

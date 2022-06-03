@@ -292,7 +292,7 @@ export class BridgeContext extends NomadContext {
       overrides,
     );
 
-    return await fromBridge.bridgeRouter.populateTransaction.send(
+    return fromBridge.bridgeRouter.populateTransaction.send(
       fromToken.address,
       amount,
       this.resolveDomain(to),
@@ -397,7 +397,7 @@ export class BridgeContext extends NomadContext {
       overrides,
     );
 
-    return await ethHelper.populateTransaction.sendToEVMLike(
+    return ethHelper.populateTransaction.sendToEVMLike(
       toDomain,
       recipient,
       enableFast,

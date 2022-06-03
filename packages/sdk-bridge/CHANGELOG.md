@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- feat: try send/sendNative and process calls using callStatic
+
 ### 1.0.0-rc.19
 
 - fix: numeric fault overflow when supporting infinite token approval
