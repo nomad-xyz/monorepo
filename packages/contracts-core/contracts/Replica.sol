@@ -94,21 +94,7 @@ contract Replica is Version0, NomadBase {
 
     // ============ Constructor ============
 
-<<<<<<< HEAD
     constructor(uint32 _localDomain) NomadBase(_localDomain) {}
-=======
-    // solhint-disable-next-line no-empty-blocks
-    constructor(
-        uint32 _localDomain,
-        uint256 _processGas,
-        uint256 _reserveGas
-    ) NomadBase(_localDomain) {
-        require(_processGas >= 850_000, "!process gas");
-        require(_reserveGas >= 15_000, "!reserve gas");
-        PROCESS_GAS = _processGas;
-        RESERVE_GAS = _reserveGas;
-    }
->>>>>>> efc79e8 (sync with main)
 
     // ============ Initializer ============
 
@@ -328,17 +314,12 @@ contract Replica is Version0, NomadBase {
         bytes32[32] calldata _proof,
         uint256 _index
     ) public returns (bool) {
-<<<<<<< HEAD
         // ensure that message has not been processed
         // Note that this allows re-proving under a new root.
         require(
             messages[_leaf] != LEGACY_STATUS_PROCESSED,
             "already processed"
         );
-=======
-        // ensure that message has not been proven or processed
-        require(messages[_leaf] == MessageStatus.None, "!MessageStatus.None");
->>>>>>> efc79e8 (sync with main)
         // calculate the expected root based on the proof
         bytes32 _calculatedRoot = MerkleLib.branchRoot(_leaf, _proof, _index);
         // if the root is valid, change status to Proven
@@ -362,7 +343,6 @@ contract Replica is Version0, NomadBase {
      * @notice Moves the contract into failed state
      * @dev Called when a Double Update is submitted
      */
-<<<<<<< HEAD
     function _setOptimisticTimeout(uint256 _optimisticSeconds) internal {
         // This allows us to initialize the value to be very low in test envs,
         // but does not allow governance action to lower a production env below
@@ -376,10 +356,6 @@ contract Replica is Version0, NomadBase {
         // set the optimistic timeout
         optimisticSeconds = _optimisticSeconds;
         emit SetOptimisticTimeout(_optimisticSeconds);
-=======
-    function _fail() internal override {
-        _setFailed();
->>>>>>> efc79e8 (sync with main)
     }
 
     /// @notice Hook for potential future use

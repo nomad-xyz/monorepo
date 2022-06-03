@@ -76,7 +76,6 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
     event ImproperUpdate(bytes32 oldRoot, bytes32 newRoot, bytes signature);
 
     /**
-<<<<<<< HEAD
      * @notice Emitted when proof of a double update is submitted,
      * which sets the contract to FAILED state
      * @param oldRoot Old root shared between two conflicting updates
@@ -92,8 +91,6 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
     );
 
     /**
-=======
->>>>>>> efc79e8 (sync with main)
      * @notice Emitted when the Updater is slashed
      * (should be paired with ImproperUpdater or DoubleUpdate event)
      * @param updater The address of the updater
@@ -130,7 +127,6 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
         _;
     }
 
-<<<<<<< HEAD
     /**
      * @notice Ensures that contract state != FAILED when the function is called
      */
@@ -139,8 +135,6 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
         _;
     }
 
-=======
->>>>>>> efc79e8 (sync with main)
     // ============ External: Updater & UpdaterManager Configuration  ============
 
     /**
@@ -254,7 +248,6 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
         }
     }
 
-<<<<<<< HEAD
     /**
      * @notice Called by external agent. Checks that signatures on two sets of
      * roots are valid and that the new roots conflict with each other. If both
@@ -282,8 +275,6 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
         }
     }
 
-=======
->>>>>>> efc79e8 (sync with main)
     // ============ Public Functions  ============
 
     /**

@@ -101,7 +101,6 @@ contract UpdaterManager is IUpdaterManager, Ownable {
     function updater() external view override returns (address) {
         return _updater;
     }
-<<<<<<< HEAD
 
     /**
      * @dev should be impossible to renounce ownership;
@@ -111,6 +110,5 @@ contract UpdaterManager is IUpdaterManager, Ownable {
     function renounceOwnership() public override onlyOwner {
         // do nothing
     }
-=======
->>>>>>> efc79e8 (sync with main)
+
 }

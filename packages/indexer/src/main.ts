@@ -12,11 +12,8 @@ export type Program = 'api' | 'core';
 const environment = process.env.ENVIRONMENT! as NomadEnvironment;
 const configOverrideLocation = process.env.CONFIG_OVERRIDE_LOCATION;
 const program = process.env.PROGRAM! as Program;
-<<<<<<< HEAD
 const logLevel = (process.env.LOG_LEVEL || 'debug') as BunyanLevel;
 const metricsPort = parseInt(process.env.METRICS_PORT || "9090");
-=======
->>>>>>> efc79e8 (sync with main)
 
 (async () => {
   const logger = createLogger('indexer', environment);
