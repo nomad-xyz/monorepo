@@ -155,7 +155,6 @@ class Env {
     ])
 
     console.log(`Upped Tom and Jerry`);
-
     // Initialize governor for each domain
 
     const le = new Env({domain: t.domainNumber, id: '0x'+'12'.repeat(20)});
@@ -167,5 +166,5 @@ class Env {
     await le.deploy();
 
     // let myContracts = le.deploymyproject();
-    
+
 })()
