@@ -1,10 +1,6 @@
 {
   "name": "@nomad-xyz/sdk-bridge",
-<<<<<<< HEAD
-  "version": "1.0.0-rc.18",
-=======
   "version": "1.0.0-rc.12",
->>>>>>> efc79e8 (sync with main)
   "description": "Nomad bridge SDK",
   "keywords": [
     "nomad",
