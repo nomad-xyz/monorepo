@@ -12,7 +12,8 @@
     "packages/sdk",
     "packages/sdk-bridge",
     "packages/sdk-govern",
-    "packages/indexer"
+    "packages/indexer",
+    "packages/keymaster"
   ],
   "scripts": {
     "compile": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment --exclude @nomad-xyz/monitor run compile",
