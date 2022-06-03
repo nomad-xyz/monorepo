@@ -7,11 +7,18 @@ ENV GIT_COMMIT=$GIT_COMMIT
 WORKDIR /app
 
 COPY package.json ./package.json
+# COPY package-lock.json ./package-lock.json
 RUN yarn install
 
-ADD prisma /app/prisma
-RUN yarn build
+RUN rm -rf node_modules
+RUN npm i
 
 ADD src /app/
+ADD prisma /app/prisma
 
+<<<<<<< HEAD
+=======
+RUN yarn build
+
+>>>>>>> efc79e8 (sync with main)
 CMD [ "yarn", "start" ]

@@ -1,5 +1,5 @@
 import { parseAction } from '@nomad-xyz/sdk-govern';
-import { parseMessage } from '@nomad-xyz/sdk';
+import { NomadContext, parseMessage } from '@nomad-xyz/sdk';
 import {
   BridgeContext,
   parseBody,
@@ -14,7 +14,6 @@ import {
   EventType,
   NomadishEvent,
   Process,
-  Receive,
   Send,
   Update,
 } from './event';
@@ -23,7 +22,7 @@ import { DB } from './db';
 import { Statistics, RedisClient } from './types';
 import fs from 'fs';
 import pLimit from 'p-limit';
-import { getRedis } from './redis';
+import { createClient } from 'redis';
 
 function fsLog(s: string, l?: string) {
   fs.appendFileSync(l || './lol.txt', s + '\n');
@@ -150,7 +149,6 @@ export class NomadMessage {
     logger: Logger,
     sdk: BridgeContext,
     gasUsed?: GasUsed,
-    tx?: string,
   ) {
     this.origin = origin;
     this.destination = destination;
@@ -158,22 +156,14 @@ export class NomadMessage {
     this.root = root.toLowerCase();
     this.messageHash = messageHash.toLowerCase();
     this.leafIndex = leafIndex;
-    this.sdk = sdk;
 
     this.body = body;
     const parsed = parseMessage(body);
     this.internalSender = new Padded(parsed.sender);
     this.internalRecipient = new Padded(parsed.recipient);
+    this.msgType = MessageType.NoMessage;
 
-    if (this.isBridgeMessage()) {
-      this.tryParseTransferMessage(parsed.body);
-      this.msgType = MessageType.TransferMessage;
-    } else if (this.isGovernanceMessage()) {
-      this.tryParseGovernanceMessage(parsed.body);
-      this.msgType = MessageType.GovernanceMessage;
-    } else {
-      this.msgType = MessageType.NoMessage;
-    }
+    this.tryParseMessage(parsed.body);
 
     this.state = MsgState.Dispatched;
     this.timings = new Timings(dispatchedAt);
@@ -181,43 +171,7 @@ export class NomadMessage {
     this.gasUsed = gasUsed || new GasUsed();
     this.logger = logger.child({ messageHash });
     this.checkbox = new Checkbox();
-    this.tx = tx;
-  }
-
-  messageTypeStr(): string {
-    switch (this.msgType) {
-      case MessageType.GovernanceMessage:
-        return 'governance';
-      case MessageType.TransferMessage:
-        return 'transfer';
-      default:
-        return 'empty';
-    }
-  }
-
-  isGovernanceMessage() {
-    const govRouterAddress = this.sdk.governorCore().governanceRouter.address;
-    if (govRouterAddress) {
-      const internalSenderIsGovRouter = Padded.fromWhatever(
-        govRouterAddress,
-      ).eq(this.internalSender);
-      return internalSenderIsGovRouter;
-    } else {
-      return false;
-    }
-  }
-
-  isBridgeMessage() {
-    const bridgeRouterAddress = this.sdk.getBridge(this.origin)?.bridgeRouter
-      .address;
-    if (bridgeRouterAddress) {
-      const internalSenderIsBridgeRouter = Padded.fromWhatever(
-        bridgeRouterAddress,
-      ).eq(this.internalSender);
-      return internalSenderIsBridgeRouter;
-    } else {
-      return false;
-    }
+    this.sdk = sdk;
   }
 
   recipient(): Padded | undefined {
@@ -364,8 +318,6 @@ export class NomadMessage {
       s.dispatchBlock,
       logger.child({ messageSource: 'deserialize' }),
       sdk,
-      undefined,
-      s.tx || undefined,
     );
     m.timings.updated(s.updatedAt * 1000);
     m.timings.relayed(s.relayedAt * 1000);
@@ -456,6 +408,7 @@ export class NomadMessage {
 
 class EventsPool {
   redis: RedisClient;
+  // db: DB;
   pool: {
     send: Map<string, string>;
     update: Map<string, string[]>;
@@ -465,7 +418,11 @@ class EventsPool {
   };
 
   constructor(redis?: RedisClient) {
-    this.redis = redis || getRedis();
+    this.redis =
+      redis ||
+      createClient({
+        url: process.env.REDIS_URL || 'redis://redis:6379',
+      });
     this.pool = {
       send: new Map(),
       update: new Map(),
@@ -483,8 +440,11 @@ class EventsPool {
         eventData.toId,
       ).toEVMAddress()};${eventData.amount.toHexString()};${e.block}`;
       await this.redis.hSet('send', key, value);
+
+      // fsLog(`store event send ${JSON.stringify(e.toObject())} {destination:${eventData.toDomain},recipient:${Padded.fromWhatever(eventData.toId).valueOf()}}`, )
     } else if (e.eventType === EventType.HomeUpdate) {
       const eventData = e.eventData as Update;
+      // fsLog(`store event home updtae ${JSON.stringify(e.toObject())} {origin:${eventData.homeDomain},root:${eventData.oldRoot}}`, );
       const key = `${eventData.homeDomain};${eventData.oldRoot}`;
       const exists = await this.redis.hExists('update', key);
       if (!exists) {
@@ -500,6 +460,7 @@ class EventsPool {
       }
     } else if (e.eventType === EventType.ReplicaUpdate) {
       const eventData = e.eventData as Update;
+      // fsLog(`store event replica updtae ${JSON.stringify(e.toObject())} {origin:${eventData.homeDomain},root:${eventData.oldRoot}}`, )
       const key = `${eventData.homeDomain};${eventData.oldRoot}`;
       const exists = await this.redis.hExists('relay', key);
       if (!exists) {
@@ -515,13 +476,15 @@ class EventsPool {
       }
     } else if (e.eventType === EventType.BridgeRouterReceive) {
       const [origin, nonce] = e.originAndNonce();
-
-      const key = `${origin};${nonce};${e.domain}`;
+      const key = `${origin};${nonce}`;
       await this.redis.hSet('receive', key, value);
+      // fsLog(`store event BridgeRouterReceive ${JSON.stringify(e.toObject())} {origin:${origin},nonce:${nonce}}`, )
     } else if (e.eventType === EventType.ReplicaProcess) {
       const eventData = e.eventData as Process;
       const key = eventData.messageHash;
       await this.redis.hSet('process', key, value);
+
+      // fsLog(`store event process ${JSON.stringify(e.toObject())} {hash:${eventData.messageHash}}`, )
     }
   }
 
@@ -563,9 +526,8 @@ class EventsPool {
   async getReceive(
     origin: number,
     nonce: number,
-    destination: number,
   ): Promise<NomadishEvent | null> {
-    const key = `${origin};${nonce};${destination}`;
+    const key = `${origin};${nonce}`;
     const value = await this.redis.hGet('receive', key);
     if (!value) return null;
 
@@ -595,10 +557,10 @@ export class ProcessorV2 extends Consumer {
   }
 
   async consume(events: NomadishEvent[]): Promise<void> {
-    // events = shuffle(events);
-    this.logger.warn(`Consuming ${events.length} events.`) // debug
-    let consumed = 0;
+    // just to prevent from running for now.
+    // fs.writeFileSync(`/Users/daniilnaumetc/code/nomad/monorepo/checks_to_main/packages/indexer/batches/${iii++}_${events.length}.json`, JSON.stringify(events.map(e => e.toObject())))
 
+    events = shuffle(events);
     for (const event of events) {
       if (event.eventType === EventType.HomeDispatch) {
         await this.dispatched(event);
@@ -613,8 +575,6 @@ export class ProcessorV2 extends Consumer {
       } else if (event.eventType === EventType.BridgeRouterReceive) {
         await this.bridgeRouterReceive(event);
       }
-      const percentage = ((++consumed) * 100 / events.length).toFixed(2);
-      this.logger.debug(`Consumed ${percentage}% (${consumed}/${events.length}) events.`) // debug
     }
   }
 
@@ -632,31 +592,36 @@ export class ProcessorV2 extends Consumer {
       e.block,
       this.logger.child({ messageSource: 'consumer' }),
       this.sdk,
-      undefined,
-      e.tx,
     );
 
     const logger = m.logger.child({ eventName: 'dispatched' });
+
+    // logger.warn(`I HAVEN"T CHECKED IF MESSAGE EXISTS ALREADY`)
 
     this.emit('dispatched', m, e);
     logger.debug(`Created message`);
 
     if (!this.domains.includes(e.domain)) this.domains.push(e.domain);
 
+    // fsLog(`Created message with messageHash {hash:${m.messageHash}}`)
+
     await this.checkAndUpdateAll(m, 'insert');
 
     await this.insertMessage(m);
+    // fsLog(`INSERTED {hash:${m.messageHash}}`)
   }
 
   async checkAndUpdateSend(m: NomadMessage) {
     if (m.msgType !== MessageType.TransferMessage)
       throw new Error(`Message not a transfer message`);
+    // destination, new Padded(recipient), amount, block, token . destination: number, recipient: Padded, amount: ethers.BigNumber, block: number, tokenId: Padded
     const event: NomadishEvent | null = await this.pool.getSend(
       m.destination,
       m.recipient()!,
       m.amount()!,
       m.dispatchBlock,
     );
+    // fsLog(`checkAndUpdateSend with messageHash, event found: ${!!event} {hash:${m.messageHash}}`)
     if (event) {
       this.msgSend(event, m);
     }
@@ -695,6 +660,7 @@ export class ProcessorV2 extends Consumer {
 
   async checkAndUpdateUpdate(m: NomadMessage) {
     const events: NomadishEvent[] = await this.pool.getUpdate(m.origin, m.root);
+    // fsLog(`checkAndUpdateUpdate with messageHash, events found: ${events.length} {hash:${m.messageHash}}`)
     events.forEach((event) => {
       this.msgUpdate(event, m);
     });
@@ -702,6 +668,7 @@ export class ProcessorV2 extends Consumer {
 
   async checkAndUpdateRelay(m: NomadMessage) {
     const events: NomadishEvent[] = await this.pool.getRelay(m.origin, m.root);
+    // fsLog(`checkAndUpdateRelay with messageHash, events found: ${events.length} {hash:${m.messageHash}}`)
     events.forEach((event) => {
       this.msgRelay(event, m);
     });
@@ -711,6 +678,7 @@ export class ProcessorV2 extends Consumer {
     const event: NomadishEvent | null = await this.pool.getProcess(
       m.messageHash,
     );
+    // fsLog(`checkAndUpdateProcess with messageHash , event found: ${!!event} {hash:${m.messageHash}}`)
     if (event) {
       this.msgProcess(event, m);
     }
@@ -720,14 +688,15 @@ export class ProcessorV2 extends Consumer {
     const event: NomadishEvent | null = await this.pool.getReceive(
       m.origin,
       m.nonce,
-      m.destination,
     );
+    // fsLog(`checkAndUpdateReceive with messageHash , event found: ${!!event} {hash:${m.messageHash}}`)
     if (event) {
       this.msgReceive(event, m);
     }
   }
 
   async checkAndUpdateAll(m: NomadMessage, s?: string) {
+    // fsLog(`checkAndUpdateAll after ${s}: ${m.checkbox.sent},${m.checkbox.updated},${m.checkbox.relayed},${m.checkbox.received},${m.checkbox.processed} {hash:${m.messageHash}}`)
     if (!m.checkbox.sent) {
       if (m.msgType === MessageType.TransferMessage) {
         await this.checkAndUpdateSend(m);
@@ -756,6 +725,7 @@ export class ProcessorV2 extends Consumer {
     const logger = this.logger.child({ eventName: 'updated' });
     const oldRoot = (e.eventData as Update).oldRoot;
     const ms = await this.getMsgsByOriginAndRoot(e.domain, oldRoot);
+    fsLog(`HomeUpdate actually happened {root:${oldRoot},origin:${e.domain}}`);
 
     // IMPORTANT! we still store the event for update and relay even though it is already appliable, but it needs to be checked for dups
     await this.pool.storeEvent(e);
@@ -779,6 +749,9 @@ export class ProcessorV2 extends Consumer {
   async replicaUpdate(e: NomadishEvent) {
     const logger = this.logger.child({ eventName: 'relayed' });
     const oldRoot = (e.eventData as Update).oldRoot;
+    fsLog(
+      `ReplicaUpdate actually happened {root:${oldRoot},origin:${e.domain}}`,
+    );
     const ms = await this.getMsgsByOriginAndRoot(e.replicaOrigin, oldRoot);
 
     // IMPORTANT! we still store the event for update and relay even though it is already appliable, but it needs to be checked for dups
@@ -803,6 +776,7 @@ export class ProcessorV2 extends Consumer {
   async process(e: NomadishEvent) {
     const logger = this.logger.child({ eventName: 'processed' });
     const messageHash = (e.eventData as Process).messageHash;
+    // fsLog(`Process actually happened {hash:${messageHash}}`)
     const m = await this.getMsg(messageHash);
     if (m) {
       this.msgProcess(e, m);
@@ -833,6 +807,8 @@ export class ProcessorV2 extends Consumer {
       block,
     );
 
+    // fsLog(`Just received Send and message found: ${!!m} ${JSON.stringify(e.toObject())}... select * from messages where destination = ${destination} and recipient = '${Padded.fromWhatever(recipient).valueOf()}' and amount = '${amount.toHexString()}' and block = ${block} and tokenId = '${Padded.fromWhatever(token).valueOf()}' ... {destination:${destination},recipient:${Padded.fromWhatever(recipient).valueOf()}}`, )
+
     if (m) {
       this.msgSend(e, m);
       await this.checkAndUpdateAll(m, 'bridgeRouterSend');
@@ -847,10 +823,7 @@ export class ProcessorV2 extends Consumer {
   }
 
   async bridgeRouterReceive(e: NomadishEvent) {
-    const m = await this.getMsgByOriginNonceAndDestination(
-      ...e.originAndNonce(),
-      e.domain,
-    );
+    const m = await this.getMsgByOriginAndNonce(...e.originAndNonce());
     const logger = this.logger.child({ eventName: 'bridgeReceived' });
 
     if (m) {
@@ -901,31 +874,21 @@ export class ProcessorV2 extends Consumer {
     return await this.db.getMessagesByOriginAndRoot(origin, root);
   }
 
-  async getMsgByOriginNonceAndDestination(
+  async getMsgByOriginAndNonce(
     origin: number,
     nonce: number,
-    destination: number,
   ): Promise<NomadMessage | null> {
-    return await this.db.getMsgByOriginNonceAndDestination(
-      origin,
-      nonce,
-      destination,
-    );
+    return await this.db.getMessageByOriginAndNonce(origin, nonce);
   }
 
   async stats(): Promise<Statistics> {
     const collector = new StatisticsCollector(this.domains);
 
-    let batch = 0;
-    const batchSize = 10000;
+    const messages = await this.db.getAllMessages();
 
-    let messages: NomadMessage[];
-    do {
-      messages = await this.db.getAllMessages(batchSize, batchSize * batch++);
-      messages.forEach((m) => {
-        collector.contributeToCount(m);
-      });
-    } while (messages.length === batchSize)
+    messages.forEach((m) => {
+      collector.contributeToCount(m);
+    });
 
     return collector.stats();
   }

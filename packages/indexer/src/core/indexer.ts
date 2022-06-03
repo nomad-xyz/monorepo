@@ -1,5 +1,6 @@
 import { Orchestrator } from './orchestrator';
 import { BridgeContext } from '@nomad-xyz/sdk-bridge';
+import fs from 'fs';
 import {
   EventType,
   NomadishEvent,
@@ -11,11 +12,11 @@ import { Home, Replica } from '@nomad-xyz/contracts-core';
 import { ethers } from 'ethers';
 import { FailureCounter, KVCache, replacer, retry, reviver } from './utils';
 import { BridgeRouter } from '@nomad-xyz/contracts-bridge';
+import pLimit from 'p-limit';
 import { RpcRequestMethod } from './metrics';
 import Logger from 'bunyan';
+import { createClient } from 'redis';
 import { RedisClient } from './types';
-import { getRedis } from './redis';
-import { getRateLimit, RPCRateLimiter } from './rateLimiting';
 
 type ShortTx = {
   gasPrice?: ethers.BigNumber;
@@ -95,7 +96,7 @@ const BATCH_SIZE = process.env.BATCH_SIZE
   : 2000;
 const RETRIES = 100;
 const TO_BLOCK_LAG = 1;
-const FROM_BLOCK_LAG = 40;
+const FROM_BLOCK_LAG = 2;
 
 export class Indexer {
   domain: number;
@@ -106,14 +107,12 @@ export class Indexer {
   blockTimestampCache: KVCache;
   txCache: KVCache;
   txReceiptCache: KVCache;
-  limit: RPCRateLimiter;
+  limit: pLimit.Limit;
   lastBlock: number;
   logger: Logger;
   lastIndexed: Date;
   failureCounter: FailureCounter;
   develop: boolean;
-  targetTo: number;
-  forceFrom: number; // One time value, once changed only the next .updateAll() will fetch blocks starting from this value
 
   eventCallback: undefined | ((event: NomadishEvent) => void);
 
@@ -126,8 +125,14 @@ export class Indexer {
     this.domain = domain;
     this.sdk = sdk;
     this.orchestrator = orchestrator;
-    this.develop = process.env.NODE_ENV === 'development';
-    this.persistance = new RedisPersistance(domain, redis);
+    this.develop = false;
+    if (this.develop) {
+      this.persistance = new RamPersistance(
+        `/tmp/persistance_${this.domain}.json`,
+      );
+    } else {
+      this.persistance = new RedisPersistance(domain, redis);
+    }
     this.blockCache = new KVCache(
       'b_' + String(this.domain),
       this.orchestrator.db,
@@ -144,11 +149,9 @@ export class Indexer {
       'txr_' + String(this.domain),
       this.orchestrator.db,
     );
-    const strategy = getRateLimit(sdk, this.domain);
-    this.limit = new RPCRateLimiter(strategy);
-
+    // 20 concurrent requests per indexer
+    this.limit = pLimit(this.domainToLimit());
     this.lastBlock = 0;
-    this.forceFrom = -1;
     this.logger = orchestrator.logger.child({
       span: 'indexer',
       network: this.network,
@@ -156,32 +159,9 @@ export class Indexer {
     });
     this.lastIndexed = new Date(0);
     this.failureCounter = new FailureCounter(60); // 1 hour
-    this.targetTo = 0;
-  }
-
-  get wantDummyStuff(): boolean {
-    return false;
-  }
-
-  setForceFrom(newFrom: number) {
-    if (newFrom > this.height) {
-      throw new Error(
-        `Shouldn't be able to set forceFrom lower than height: newFrom ${newFrom}, height ${this.height}`,
-      );
-    }
-
-    this.forceFrom = newFrom;
-  }
-
-  // not good
-  async lowerHeight(newHeight: number): Promise<void> {
-    this.lastBlock = newHeight;
-    await this.persistance.lowerHeight(newHeight);
-    this.forceFrom = newHeight;
   }
 
   domainToLimit(): number {
-    this.provider.getNetwork();
     return (
       {
         1650811245: 20,
@@ -213,19 +193,20 @@ export class Indexer {
 
     const [block, error] = await retry(
       async () => {
-        this.orchestrator.metrics.incRpcRequests(
-          RpcRequestMethod.GetBlockWithTxs,
-          this.network,
-        );
-        await this.limit.getBlockWithTransactions();
-        const start = new Date().valueOf();
-        const r = await this.provider.getBlockWithTransactions(blockNumber);
-        this.orchestrator.metrics.observeRpcLatency(
-          RpcRequestMethod.GetBlockWithTxs,
-          this.network,
-          new Date().valueOf() - start,
-        );
-        return r;
+        return await this.limit(async () => {
+          this.orchestrator.metrics.incRpcRequests(
+            RpcRequestMethod.GetBlockWithTxs,
+            this.network,
+          );
+          const start = new Date().valueOf();
+          const r = await this.provider.getBlockWithTransactions(blockNumber);
+          this.orchestrator.metrics.observeRpcLatency(
+            RpcRequestMethod.GetBlockWithTxs,
+            this.network,
+            new Date().valueOf() - start,
+          );
+          return r;
+        });
       },
       RETRIES,
       (error: any) => {
@@ -256,6 +237,7 @@ export class Indexer {
       String(blockNumber),
       `${time}.${senders2hashesStr}`,
     );
+    // await this.block2timeCache.set(String(blockNumber), String(block.transactions.map(tx => tx.from).join(',')));
     return [time, senders2hashes];
   }
 
@@ -267,19 +249,20 @@ export class Indexer {
 
     const [block, error] = await retry(
       async () => {
-        this.orchestrator.metrics.incRpcRequests(
-          RpcRequestMethod.GetBlock,
-          this.network,
-        );
-        await this.limit.getBlock();
-        const start = new Date().valueOf();
-        const r = await this.provider.getBlock(blockNumber);
-        this.orchestrator.metrics.observeRpcLatency(
-          RpcRequestMethod.GetBlock,
-          this.network,
-          new Date().valueOf() - start,
-        );
-        return r;
+        return await this.limit(async () => {
+          this.orchestrator.metrics.incRpcRequests(
+            RpcRequestMethod.GetBlock,
+            this.network,
+          );
+          const start = new Date().valueOf();
+          const r = await this.provider.getBlock(blockNumber);
+          this.orchestrator.metrics.observeRpcLatency(
+            RpcRequestMethod.GetBlock,
+            this.network,
+            new Date().valueOf() - start,
+          );
+          return r;
+        });
       },
       RETRIES,
       (error: any) => {
@@ -315,19 +298,20 @@ export class Indexer {
 
     const [tx, error] = await retry(
       async () => {
-        this.orchestrator.metrics.incRpcRequests(
-          RpcRequestMethod.GetTx,
-          this.network,
-        );
-        await this.limit.getTransaction();
-        const start = new Date().valueOf();
-        const r = await this.provider.getTransaction(hash);
-        this.orchestrator.metrics.observeRpcLatency(
-          RpcRequestMethod.GetTx,
-          this.network,
-          new Date().valueOf() - start,
-        );
-        return r;
+        return await this.limit(async () => {
+          this.orchestrator.metrics.incRpcRequests(
+            RpcRequestMethod.GetTx,
+            this.network,
+          );
+          const start = new Date().valueOf();
+          const r = await this.provider.getTransaction(hash);
+          this.orchestrator.metrics.observeRpcLatency(
+            RpcRequestMethod.GetTx,
+            this.network,
+            new Date().valueOf() - start,
+          );
+          return r;
+        });
       },
       RETRIES,
       (error: any) => {
@@ -388,19 +372,20 @@ export class Indexer {
 
     const [receipt, error] = await retry(
       async () => {
-        this.orchestrator.metrics.incRpcRequests(
-          RpcRequestMethod.GetTxReceipt,
-          this.network,
-        );
-        await this.limit.getTransactionReceipt();
-        const start = new Date().valueOf();
-        const r = await this.provider.getTransactionReceipt(hash);
-        this.orchestrator.metrics.observeRpcLatency(
-          RpcRequestMethod.GetTxReceipt,
-          this.network,
-          new Date().valueOf() - start,
-        );
-        return r;
+        return await this.limit(async () => {
+          this.orchestrator.metrics.incRpcRequests(
+            RpcRequestMethod.GetTxReceipt,
+            this.network,
+          );
+          const start = new Date().valueOf();
+          const r = await this.provider.getTransactionReceipt(hash);
+          this.orchestrator.metrics.observeRpcLatency(
+            RpcRequestMethod.GetTxReceipt,
+            this.network,
+            new Date().valueOf() - start,
+          );
+          return r;
+        });
       },
       RETRIES,
       (error: any) => {
@@ -452,10 +437,6 @@ export class Indexer {
     return this.persistance.from;
   }
 
-  get deployHeight(): number {
-    return this.sdk.mustGetBridge(this.domain).deployHeight;
-  }
-
   home(): Home {
     return this.sdk.getCore(this.domain)!.home;
   }
@@ -469,31 +450,17 @@ export class Indexer {
   }
 
   async updateAll(replicas: number[]) {
-    let tries = 0;
-    let passed = true;
-    let allEventsUnique: NomadishEvent[] = [];
-
-    this.logger.info(
-      `Starting to update all with persist: ${this.persistance.height}, lastBlock: ${this.lastBlock}`,
-    );
-    let from = Math.max(
+    const from = Math.max(
       this.lastBlock + 1,
       this.persistance.height,
-      this.deployHeight,
+      this.sdk.getBridge(this.domain)?.deployHeight || 0,
     );
-
-    if (this.forceFrom !== -1) {
-      from = this.forceFrom;
-      this.forceFrom = -1;
-    }
-
     const [to, error] = await retry(
       async () => {
         this.orchestrator.metrics.incRpcRequests(
           RpcRequestMethod.GetBlockNumber,
           this.network,
         );
-        await this.limit.getBlockNumber();
         const start = new Date().valueOf();
         const r = await this.provider.getBlockNumber();
         this.orchestrator.metrics.observeRpcLatency(
@@ -531,120 +498,101 @@ export class Indexer {
 
     this.logger.info(`Fetching events for from: ${from}, to: ${to}`);
 
+    const fetchEvents = async (
+      from: number,
+      to: number,
+    ): Promise<NomadishEvent[]> => {
+      const homeEvents = await this.fetchHome(from, to);
+      const replicasEvents = (
+        await Promise.all(replicas.map((r) => this.fetchReplica(r, from, to)))
+      ).flat();
+      const bridgeRouterEvents = await this.fetchBridgeRouter(from, to);
+
+      return [...homeEvents, ...replicasEvents, ...bridgeRouterEvents];
+    };
+
+    const allEvents: NomadishEvent[] = [];
+
+    const domain2batchSize = new Map([
+      [1650811245, 500],
+      [6648936, 5000],
+    ]);
+
+    const batchSize = domain2batchSize.get(this.domain) || BATCH_SIZE;
+    let batchFrom = from;
+    let batchTo = Math.min(to, from + batchSize);
     const startAll = new Date();
 
-    this.targetTo = to;
+    while (true) {
+      const done = Math.floor(((batchTo - from + 1) / (to - from + 1)) * 100);
+      this.logger.debug(
+        `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`,
+      );
 
-    do {
-      const fetchEvents = async (
-        from: number,
-        to: number,
-      ): Promise<NomadishEvent[]> => {
-        const homeEvents = await this.fetchHome(from, to);
-        const replicasEvents = (
-          await Promise.all(replicas.map((r) => this.fetchReplica(r, from, to)))
-        ).flat();
-        const bridgeRouterEvents = await this.fetchBridgeRouter(from, to);
+      const insuredBatchFrom = batchFrom - FROM_BLOCK_LAG;
 
-        return [...homeEvents, ...replicasEvents, ...bridgeRouterEvents];
-      };
-
-      const allEvents: NomadishEvent[] = [];
-
-      const domain2batchSize = new Map([
-        [1650811245, 500],
-        [6648936, 5000],
-      ]);
-
-      const batchSize = domain2batchSize.get(this.domain) || BATCH_SIZE;
-      let batchFrom = from;
-      let batchTo = Math.min(to, from + batchSize);
-
-      while (true) {
-        const done = Math.floor(((batchTo - from + 1) / (to - from + 1)) * 100);
-        this.logger.debug(
-          `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`,
-        );
-
-        const insuredBatchFrom = batchFrom - FROM_BLOCK_LAG;
-
-        const startBatch = new Date();
-        const events = await fetchEvents(insuredBatchFrom, batchTo);
-        const finishBatch = new Date();
-        if (!events) throw new Error(`KEk`);
-        events.sort((a, b) =>
-          a.ts === b.ts
-            ? eventTypeToOrder(a) - eventTypeToOrder(b)
-            : a.ts - b.ts,
-        );
-        await this.persistance.store(...events);
-        this.lastBlock = batchTo;
-
-        if (this.wantDummyStuff) {
-          try {
-            await this.dummyTestEventsIntegrity(batchTo);
-            this.logger.debug(
-              `Integrity test PASSED between ${insuredBatchFrom} and ${batchTo}`,
-            );
-          } catch (e) {
-            const pastFrom = batchFrom;
-            const pastTo = batchTo;
-            batchFrom = batchFrom - batchSize / 2;
-            batchTo = batchFrom + batchSize;
-            this.logger.warn(
-              `Integrity test not passed between ${pastFrom} and ${pastTo}, recollecting between ${batchFrom} and ${batchTo}: ${e}`,
-            );
-            continue;
-          }
+      const startBatch = new Date();
+      const events = await fetchEvents(insuredBatchFrom, batchTo);
+      const finishBatch = new Date();
+      if (!events) throw new Error(`KEk`);
+      events.sort((a, b) =>
+        a.ts === b.ts ? eventTypeToOrder(a) - eventTypeToOrder(b) : a.ts - b.ts,
+      );
+      await this.persistance.store(...events);
+      try {
+        if (this.develop) {
+          this.dummyTestEventsIntegrity(batchTo);
+          this.logger.debug(
+            `Integrity test PASSED between ${insuredBatchFrom} and ${batchTo}`,
+          );
         }
-        
-        const filteredEvents = events.filter((newEvent) =>
-          allEvents.every(
-            (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash(),
-          ),
+      } catch (e) {
+        const pastFrom = batchFrom;
+        const pastTo = batchTo;
+        batchFrom = batchFrom - batchSize / 2;
+        batchTo = batchFrom + batchSize;
+        this.logger.warn(
+          `Integrity test not passed between ${pastFrom} and ${pastTo}, recollecting between ${batchFrom} and ${batchTo}: ${e}`,
         );
-        allEvents.push(...filteredEvents);
-        const speed = blockSpeed(batchFrom, batchTo, startBatch, finishBatch);
-        this.logger.debug(
-          `Fetched batch for domain ${this.domain}. Blocks: ${
-            batchTo - batchFrom + 1
-          } (${speed.toFixed(1)}b/sec). Got events: ${filteredEvents.length}`,
-        );
-        if (batchTo >= to) break;
-        batchFrom = batchTo + 1;
-        batchTo = Math.min(to, batchFrom + batchSize);
+        continue;
       }
-
-      if (!allEvents) throw new Error('kek');
-
-      allEvents.sort((a, b) => {
-        if (a.ts === b.ts) {
-          return eventTypeToOrder(a) - eventTypeToOrder(b);
-        } else {
-          return a.ts - b.ts;
-        }
-      });
-
-      allEventsUnique = onlyUniqueEvents(allEvents);
-
-      if (this.wantDummyStuff) {
-        try {
-          tries += 1;
-          await this.dummyTestEventsIntegrity();
-          passed = true;
-        } catch (e) {
-          this.logger.warn(`Dummy test not passed:`, e);
-          from -= batchSize;
-        }
-      }
-    } while (tries < 10 && !passed);
+      const filteredEvents = events.filter((newEvent) =>
+        allEvents.every(
+          (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash(),
+        ),
+      );
+      allEvents.push(...filteredEvents);
+      const speed = blockSpeed(batchFrom, batchTo, startBatch, finishBatch);
+      this.logger.debug(
+        `Fetched batch for domain ${this.domain}. Blocks: ${
+          batchTo - batchFrom + 1
+        } (${speed}b/sec). Got events: ${filteredEvents.length}`,
+      );
+      if (batchTo >= to) break;
+      batchFrom = batchTo + 1;
+      batchTo = Math.min(to, batchFrom + batchSize);
+    }
 
     const finishedAll = new Date();
+
+    if (!allEvents) throw new Error('kek');
+
+    allEvents.sort((a, b) => {
+      if (a.ts === b.ts) {
+        return eventTypeToOrder(a) - eventTypeToOrder(b);
+      } else {
+        return a.ts - b.ts;
+      }
+    });
+
+    const allEventsUnique = onlyUniqueEvents(allEvents);
+
+    if (this.develop || true) this.dummyTestEventsIntegrity();
     const speed = blockSpeed(from, to, startAll, finishedAll);
     this.logger.info(
       `Fetched all for domain ${this.domain}. Blocks: ${
         to - from + 1
-      } (${speed.toFixed(1)}b/sec). Got events: ${allEventsUnique.length}`,
+      } (${speed}b/sec). Got events: ${allEventsUnique.length}`,
     );
     this.lastBlock = to;
 
@@ -731,6 +679,7 @@ export class Indexer {
       }
     }
     if (homeRootsTotal !== 0) {
+      // fs.writeFileSync(`/outputs/kek${this.domain}.json`, JSON.stringify(allEvents, replacer));
       throw new Error(
         `${this.domain}: Left roots for home supposed to be 0, but is ${homeRootsTotal} from total of ${homeRootsObserved}`,
       );
@@ -769,7 +718,6 @@ export class Indexer {
             RpcRequestMethod.GetLogs,
             this.network,
           );
-          await this.limit.getLogs();
           const start = new Date().valueOf();
           const r = await br.queryFilter(br.filters.Send(), from, to);
           this.orchestrator.metrics.observeRpcLatency(
@@ -838,7 +786,6 @@ export class Indexer {
             RpcRequestMethod.GetLogs,
             this.network,
           );
-          await this.limit.getLogs();
           const start = new Date().valueOf();
           const r = await br.queryFilter(br.filters.Receive(), from, to);
           this.orchestrator.metrics.observeRpcLatency(
@@ -913,7 +860,6 @@ export class Indexer {
             RpcRequestMethod.GetLogs,
             this.network,
           );
-          await this.limit.getLogs();
           const start = new Date().valueOf();
           const r = await home.queryFilter(home.filters.Dispatch(), from, to);
           this.orchestrator.metrics.observeRpcLatency(
@@ -984,7 +930,6 @@ export class Indexer {
             RpcRequestMethod.GetLogs,
             this.network,
           );
-          await this.limit.getLogs();
           const start = new Date().valueOf();
           const r = await home.queryFilter(home.filters.Update(), from, to);
           this.orchestrator.metrics.observeRpcLatency(
@@ -1059,7 +1004,6 @@ export class Indexer {
             RpcRequestMethod.GetLogs,
             this.network,
           );
-          await this.limit.getLogs();
           const start = new Date().valueOf();
           const r = await replica.queryFilter(
             replica.filters.Update(),
@@ -1131,7 +1075,6 @@ export class Indexer {
             RpcRequestMethod.GetLogs,
             this.network,
           );
-          await this.limit.getLogs();
           const start = new Date().valueOf();
           const r = await replica.queryFilter(
             replica.filters.Process(),
@@ -1214,8 +1157,6 @@ export abstract class Persistance {
   abstract sortSorage(): void;
   abstract allEvents(): Promise<NomadishEvent[]>;
   abstract persist(): void;
-  abstract updateFromTo(block: number): Promise<void>;
-  abstract lowerHeight(newHeight: number): Promise<void>;
 }
 
 export class RedisPersistance extends Persistance {
@@ -1224,57 +1165,21 @@ export class RedisPersistance extends Persistance {
 
   constructor(domain: number, client?: RedisClient) {
     super();
-    this.client = client || getRedis();
+    this.client =
+      client ||
+      createClient({
+        url: process.env.REDIS_URL || 'redis://redis:6379',
+      });
     this.domain = domain;
 
     this.client.on('error', (err) => console.log('Redis Client Error', err));
   }
 
-  async lowerHeight(newHeight: number): Promise<void> {
-    if (newHeight > this.height)
-      throw new Error(
-        `Attempt to lower height ${this.height} with ${newHeight} for domain ${this.domain}`,
-      );
-
-    const promises = [];
-
-    this.height = newHeight;
-    promises.push(
-      this.client.hSet(`height`, String(this.domain), String(this.height)),
-    );
-
-    if (this.from > newHeight) {
-      this.from = newHeight;
-      promises.push(
-        this.client.hSet(`from`, String(this.domain), String(this.from)),
-      );
-    }
-
-    await Promise.all(promises);
-  }
-
   async updateFromTo(block: number) {
-    let fromChanged = false;
-    let heightChanged = false;
-    if (block < this.from || this.from === -1) {
-      this.from = block;
-      fromChanged = true;
-    }
-    if (block > this.height || this.height === -1) {
-      this.height = block;
-      heightChanged = true;
-    }
-    const promises = [];
-    if (fromChanged)
-      promises.push(
-        this.client.hSet(`from`, String(this.domain), String(this.from)),
-      );
-    if (heightChanged)
-      promises.push(
-        this.client.hSet(`height`, String(this.domain), String(this.height)),
-      );
-
-    await Promise.all(promises);
+    if (block < this.from || this.from === -1) this.from = block;
+    if (block > this.height || this.height === -1) this.height = block;
+    await this.client.hSet(`from`, String(this.domain), String(this.from));
+    await this.client.hSet(`height`, String(this.domain), String(this.height));
   }
 
   async store(...events: NomadishEvent[]): Promise<void> {
@@ -1338,6 +1243,8 @@ export class RedisPersistance extends Persistance {
     await Promise.all(promises);
   }
   async init(): Promise<void> {
+    // await this.client.connect();
+
     const from = await this.client.hGet(`from`, String(this.domain));
     const height = await this.client.hGet(`height`, String(this.domain));
 
@@ -1346,6 +1253,7 @@ export class RedisPersistance extends Persistance {
   }
   sortSorage(): void {}
   async allEvents(): Promise<NomadishEvent[]> {
+    // console.log(`Getting all events for ${this.domain}`)
     const blocks = (await this.client.sMembers(`${this.domain}blocks`))
       .map((s) => parseInt(s))
       .sort();
@@ -1361,6 +1269,8 @@ export class RedisPersistance extends Persistance {
 
     const uniqueEvents = onlyUniqueEvents(events);
 
+    // console.log(`Sorting all events for ${this.domain}`)
+
     uniqueEvents.sort((a, b) => {
       if (a.ts === b.ts) {
         return eventTypeToOrder(a) - eventTypeToOrder(b);
@@ -1368,8 +1278,168 @@ export class RedisPersistance extends Persistance {
         return a.ts - b.ts;
       }
     });
+    // console.log(`Returning all events for ${this.domain}`)
 
     return uniqueEvents;
   }
   persist(): void {}
+}
+
+export class RamPersistance extends Persistance {
+  block2events: Map<number, NomadishEvent[]>;
+  blocks: number[];
+  storePath: string;
+
+  constructor(storePath: string) {
+    super();
+    this.block2events = new Map();
+    this.blocks = [];
+    this.storePath = storePath;
+  }
+
+  updateFromTo(block: number) {
+    if (block < this.from || this.from === -1) this.from = block;
+    if (block > this.height || this.height === -1) this.height = block;
+  }
+
+  async store(...events: NomadishEvent[]): Promise<void> {
+    for (const event of events) {
+      const block = this.block2events.get(event.block);
+      if (block) {
+        if (block.some((e) => e.uniqueHash() === event.uniqueHash())) {
+          continue;
+        }
+        block.push(event);
+      } else {
+        this.block2events.set(event.block, [event]);
+      }
+      this.updateFromTo(event.block);
+      if (this.blocks.indexOf(event.block) < 0) {
+        this.blocks.push(event.block);
+        this.blocks = this.blocks.sort();
+      }
+    }
+    this.persist();
+  }
+  async init(): Promise<void> {
+    try {
+      await this.load();
+    } catch (_) {}
+    return;
+  }
+  sortSorage() {
+    this.blocks = this.blocks.sort();
+  }
+
+  iter(): EventsRange {
+    return new EventsRange(this);
+  }
+
+  persistToFile() {
+    fs.writeFileSync(
+      this.storePath,
+      JSON.stringify(
+        {
+          block2events: this.block2events,
+          blocks: this.blocks,
+          initiated: this.initiated,
+          from: this.from,
+          height: this.height,
+          storePath: this.storePath,
+        },
+        replacer,
+      ),
+    );
+  }
+
+  persistToDB() {}
+
+  persist() {
+    this.persistToFile();
+    this.persistToDB();
+  }
+
+  async load() {
+    this.loadFromFile();
+  }
+
+  loadFromFile() {
+    const object = JSON.parse(
+      fs.readFileSync(this.storePath, 'utf8'),
+      reviver,
+    ) as {
+      block2events: Map<number, NomadishEvent[]>;
+      blocks: number[];
+      initiated: boolean;
+      from: number;
+      height: number;
+    };
+    this.block2events = object.block2events;
+    this.blocks = object.blocks;
+    this.initiated = object.initiated;
+    this.from = object.from;
+    this.height = object.height;
+  }
+
+  async allEvents(): Promise<NomadishEvent[]> {
+    return Array.from(this.iter());
+  }
+}
+
+export class EventsRange implements Iterable<NomadishEvent> {
+  private _p: RamPersistance;
+  private _cacheBlockIndex: number;
+  private _position: number;
+  private nextDone: boolean;
+
+  constructor(p: RamPersistance) {
+    this._p = p;
+    this._cacheBlockIndex = 0;
+    this._position = 0;
+    this.nextDone = false;
+  }
+  cachedBlockIndex(index: number): number | undefined {
+    return this._p.blocks.at(index);
+  }
+
+  next(value?: any): IteratorResult<NomadishEvent> {
+    if (this.nextDone) return { done: true, value: undefined };
+    const done = false;
+    const blockNumber = this.cachedBlockIndex(this._cacheBlockIndex);
+    if (!blockNumber) {
+      return { done: true, value: undefined };
+    }
+    const block = this._p.block2events.get(blockNumber);
+    if (!block) {
+      return { done: true, value: undefined };
+    }
+    const _value = block.at(this._position)!;
+
+    // calculating next positions
+    if (this._position + 1 < block.length) {
+      this._position += 1;
+    } else {
+      const nextIndex = this._cacheBlockIndex + 1;
+      const nextBlockNumber = this.cachedBlockIndex(nextIndex);
+      if (!nextBlockNumber) {
+        this.nextDone = true;
+      } else {
+        if (this._p.block2events.get(nextBlockNumber)) {
+          this._cacheBlockIndex = nextIndex;
+          this._position = 0;
+        } else {
+          this.nextDone = true;
+        }
+      }
+    }
+
+    return {
+      done,
+      value: _value,
+    };
+  }
+
+  [Symbol.iterator]() {
+    return this;
+  }
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity 0.7.6;
+pragma solidity >=0.6.11;
 
 import {MerkleTreeManager} from "@nomad-xyz/contracts-core/contracts/Merkle.sol";
 import {QueueManager} from "@nomad-xyz/contracts-core/contracts/Queue.sol";

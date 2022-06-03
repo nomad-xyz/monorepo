@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity 0.7.6;
+pragma solidity >=0.6.11;
 
 // ============ Internal Imports ============
 import {Version0} from "./Version0.sol";
@@ -51,13 +51,11 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
 
     /**
      * @notice Emitted when a new message is dispatched via Nomad
-     * @param messageHash Hash of message; the leaf inserted to the Merkle tree
-     *        for the message
      * @param leafIndex Index of message's leaf in merkle tree
      * @param destinationAndNonce Destination and destination-specific
-     *        nonce combined in single field ((destination << 32) & nonce)
-     * @param committedRoot the latest notarized root submitted in the last
-     *        signed Update
+     * nonce combined in single field ((destination << 32) & nonce)
+     * @param messageHash Hash of message; the leaf inserted to the Merkle tree for the message
+     * @param committedRoot the latest notarized root submitted in the last signed Update
      * @param message Raw bytes of message
      */
     event Dispatch(
@@ -78,6 +76,7 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
     event ImproperUpdate(bytes32 oldRoot, bytes32 newRoot, bytes signature);
 
     /**
+<<<<<<< HEAD
      * @notice Emitted when proof of a double update is submitted,
      * which sets the contract to FAILED state
      * @param oldRoot Old root shared between two conflicting updates
@@ -93,6 +92,8 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
     );
 
     /**
+=======
+>>>>>>> efc79e8 (sync with main)
      * @notice Emitted when the Updater is slashed
      * (should be paired with ImproperUpdater or DoubleUpdate event)
      * @param updater The address of the updater
@@ -129,6 +130,7 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
         _;
     }
 
+<<<<<<< HEAD
     /**
      * @notice Ensures that contract state != FAILED when the function is called
      */
@@ -137,18 +139,16 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
         _;
     }
 
+=======
+>>>>>>> efc79e8 (sync with main)
     // ============ External: Updater & UpdaterManager Configuration  ============
 
     /**
      * @notice Set a new Updater
-     * @dev To be set when rotating Updater after Fraud
      * @param _updater the new Updater
      */
     function setUpdater(address _updater) external onlyUpdaterManager {
         _setUpdater(_updater);
-        // set the Home state to Active
-        // now that Updater has been rotated
-        state = States.Active;
     }
 
     /**
@@ -165,7 +165,7 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
     // ============ External Functions  ============
 
     /**
-     * @notice Dispatch the message to the destination domain & recipient
+     * @notice Dispatch the message it to the destination domain & recipient
      * @dev Format the message, insert its hash into Merkle tree,
      * enqueue the new Merkle root, and emit `Dispatch` event with message information.
      * @param _destinationDomain Domain of destination chain
@@ -254,6 +254,7 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
         }
     }
 
+<<<<<<< HEAD
     /**
      * @notice Called by external agent. Checks that signatures on two sets of
      * roots are valid and that the new roots conflict with each other. If both
@@ -281,6 +282,8 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
         }
     }
 
+=======
+>>>>>>> efc79e8 (sync with main)
     // ============ Public Functions  ============
 
     /**
@@ -358,9 +361,9 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
      * @notice Slash the Updater and set contract state to FAILED
      * @dev Called when fraud is proven (Improper Update or Double Update)
      */
-    function _fail() internal {
+    function _fail() internal override {
         // set contract to FAILED
-        state = States.Failed;
+        _setFailed();
         // slash Updater
         updaterManager.slashUpdater(msg.sender);
         emit UpdaterSlashed(updater, msg.sender);

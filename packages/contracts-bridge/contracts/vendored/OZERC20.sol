@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+
+pragma solidity >=0.6.0 <0.8.0;
 
 // This is modified from "@openzeppelin/contracts/token/ERC20/IERC20.sol"
 // Modifications were made to make the tokenName, tokenSymbol, and
@@ -33,7 +34,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-abstract contract ERC20 is IERC20 {
+contract ERC20 is IERC20 {
     using SafeMath for uint256;
 
     mapping(address => uint256) private balances;

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity 0.7.6;
+pragma solidity >=0.6.11;
 
 // ============ External Imports ============
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
@@ -134,17 +134,19 @@ library BridgeMessage {
      * @notice Formats Transfer
      * @param _to The recipient address as bytes32
      * @param _amnt The transfer amount
-     * @param _detailsHash The hash of the token name, symbol, and decimals
+     * @param _enableFast True to format FastTransfer, False to format regular Transfer
      * @return
      */
     function formatTransfer(
         bytes32 _to,
         uint256 _amnt,
-        bytes32 _detailsHash
+        bytes32 _detailsHash,
+        bool _enableFast
     ) internal pure returns (bytes29) {
+        Types _type = _enableFast ? Types.FastTransfer : Types.Transfer;
         return
-            abi.encodePacked(Types.Transfer, _to, _amnt, _detailsHash).ref(0).castTo(
-                uint40(Types.Transfer)
+            abi.encodePacked(_type, _to, _amnt, _detailsHash).ref(0).castTo(
+                uint40(_type)
             );
     }
 

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+<<<<<<< HEAD
 ### 1.0.0-rc.18
 
 - feat: support infinite token approval
@@ -25,6 +26,8 @@
 - fix: hard code gas limit for sendNative
 - chore: bump configuration to v0.1.0-rc.18
 
+=======
+>>>>>>> efc79e8 (sync with main)
 ### 1.0.0-rc.12
 
 - fix: increase gas more

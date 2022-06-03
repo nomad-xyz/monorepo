@@ -236,7 +236,7 @@ export class BridgeContext extends NomadContext {
    *          transfer
    * @throws On missing signers, missing tokens, tx issues, etc.
    */
-  async prepareSend(
+  async send(
     from: string | number,
     to: string | number,
     token: TokenIdentifier,
@@ -244,7 +244,7 @@ export class BridgeContext extends NomadContext {
     recipient: Address,
     enableFast = false,
     overrides: ethers.Overrides = {},
-  ): Promise<ethers.PopulatedTransaction> {
+  ): Promise<TransferMessage> {
     const fromDomain = this.resolveDomain(from);
 
     await this.checkHome(fromDomain);
@@ -287,43 +287,8 @@ export class BridgeContext extends NomadContext {
       enableFast,
       overrides,
     );
-    tx.gasLimit = BigNumber.from(350000);
-
-    return tx;
-  }
-
-  /**
-   * Send tokens from one domain to another. Approves the bridge if necessary.
-   *
-   * @param from The domain to send from
-   * @param to The domain to send to
-   * @param token The canonical token to send (details from originating chain)
-   * @param amount The amount (in smallest unit) to send
-   * @param recipient The identifier to send to on the `to` domain
-   * @param enableFast TRUE to enable fast liquidity; FALSE to require no fast liquidity
-   * @param overrides Any tx overrides (e.g. gas price)
-   * @returns a {@link TransferMessage} object representing the in-flight
-   *          transfer
-   * @throws On missing signers, missing tokens, tx issues, etc.
-   */
-  async send(
-    from: string | number,
-    to: string | number,
-    token: TokenIdentifier,
-    amount: BigNumberish,
-    recipient: Address,
-    enableFast = false,
-    overrides: ethers.Overrides = {},
-  ): Promise<TransferMessage> {
-    const tx = await this.prepareSend(
-      from,
-      to,
-      token,
-      amount,
-      recipient,
-      enableFast,
-      overrides,
-    );
+    // kludge: double average gas usage
+    tx.gasLimit = BigNumber.from(500000);
     const dispatch = await this.mustGetSigner(from).sendTransaction(tx);
     const receipt = await dispatch.wait();
 
@@ -349,14 +314,14 @@ export class BridgeContext extends NomadContext {
    *          transfer
    * @throws On missing signers, tx issues, etc.
    */
-  async prepareSendNative(
+  async sendNative(
     from: string | number,
     to: string | number,
     amount: BigNumberish,
     recipient: Address,
     enableFast = false,
     overrides: ethers.PayableOverrides = {},
-  ): Promise<ethers.PopulatedTransaction> {
+  ): Promise<TransferMessage> {
     const fromDomain = this.resolveDomain(from);
 
     await this.checkHome(fromDomain);
@@ -382,41 +347,8 @@ export class BridgeContext extends NomadContext {
       enableFast,
       overrides,
     );
-    tx.gasLimit = BigNumber.from(350000);
-    return tx;
-  }
-
-  /**
-   * Send a chain's native asset from one chain to another using the
-   * `EthHelper` contract.
-   *
-   * @param from The domain to send from
-   * @param to The domain to send to
-   * @param amount The amount (in smallest unit) to send
-   * @param recipient The identifier to send to on the `to` domain
-   * @param enableFast TRUE to enable fast liquidity; FALSE to require no fast liquidity
-   * @param overrides Any tx overrides (e.g. gas price)
-   * @returns a {@link TransferMessage} object representing the in-flight
-   *          transfer
-   * @throws On missing signers, tx issues, etc.
-   */
-  async sendNative(
-    from: string | number,
-    to: string | number,
-    amount: BigNumberish,
-    recipient: Address,
-    enableFast = false,
-    overrides: ethers.PayableOverrides = {},
-  ): Promise<TransferMessage> {
-    const tx = await this.prepareSendNative(
-      from,
-      to,
-      amount,
-      recipient,
-      enableFast,
-      overrides,
-    );
-
+    // patch fix: increase gas limit by 50%
+    tx.gasLimit = tx.gasLimit?.mul(150).div(100);
     const dispatch = await this.mustGetSigner(from).sendTransaction(tx);
     const receipt = await dispatch.wait();
 

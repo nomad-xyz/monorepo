@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity 0.7.6;
+pragma solidity >=0.6.11;
 pragma experimental ABIEncoderV2;
 
 // ============ Internal Imports ============
@@ -157,6 +157,11 @@ contract GovernanceRouter is Version0, Initializable, IMessageRecipient {
 
     modifier onlyRecoveryManager() {
         require(msg.sender == recoveryManager, "! called by recovery manager");
+        _;
+    }
+
+    modifier onlyInRecovery() {
+        require(inRecovery(), "! in recovery");
         _;
     }
 
@@ -542,8 +547,6 @@ contract GovernanceRouter is Version0, Initializable, IMessageRecipient {
         address _newGovernor,
         bool _isLocalGovernor
     ) internal {
-        // require that the new governor is not the zero address
-        require(_newGovernor != address(0), "cannot renounce governor");
         // require that the governor domain has a valid router
         if (!_isLocalGovernor) {
             _mustHaveRouter(_newDomain);

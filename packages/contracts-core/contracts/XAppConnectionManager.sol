@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity 0.7.6;
+pragma solidity >=0.6.11;
 
 // ============ Internal Imports ============
 import {Home} from "./Home.sol";
@@ -55,6 +55,13 @@ contract XAppConnectionManager is Ownable {
         address watcher,
         bool access
     );
+
+    // ============ Modifiers ============
+
+    modifier onlyReplica() {
+        require(isReplica(msg.sender), "!replica");
+        _;
+    }
 
     // ============ Constructor ============
 
@@ -211,6 +218,7 @@ contract XAppConnectionManager is Ownable {
         _digest = ECDSA.toEthSignedMessageHash(_digest);
         return ECDSA.recover(_digest, _signature);
     }
+<<<<<<< HEAD
 
     /**
      * @dev should be impossible to renounce ownership;
@@ -220,4 +228,6 @@ contract XAppConnectionManager is Ownable {
     function renounceOwnership() public override onlyOwner {
         // do nothing
     }
+=======
+>>>>>>> efc79e8 (sync with main)
 }

@@ -23,9 +23,6 @@ import {
 
 import { queryAnnotatedEvents } from '..';
 import { keccak256 } from 'ethers/lib/utils';
-import { MessageProof } from '../NomadContext';
-import axios from 'axios';
-import { ethers } from 'ethers';
 
 export type ParsedMessage = {
   from: number;
@@ -448,15 +445,7 @@ export class NomadMessage<T extends NomadContext> {
    * status of the message.
    */
   async replicaStatus(): Promise<ReplicaMessageStatus> {
-    // backwards compatibility. Older replica versions returned a number,
-    // newer versions return a hash
-    const root = (await this.replica.messages(this.leaf)) as string | number;
-    if (root === ethers.constants.HashZero || root === 0)
-      return ReplicaMessageStatus.None;
-    if (root === `0x${'00'.repeat(31)}02` || root === 2)
-      return ReplicaMessageStatus.Processed;
-
-    return ReplicaMessageStatus.Proven;
+    return this.replica.messages(this.leaf);
   }
 
   /**
@@ -500,32 +489,6 @@ export class NomadMessage<T extends NomadContext> {
    */
   get origin(): number {
     return this.from;
-  }
-
-  /**
-   * The name of the domain from which the message was sent
-   */
-  get originName(): string {
-    return this.context.resolveDomainName(this.origin);
-  }
-
-  /**
-   * Get the name of this file in the s3 bucket
-   */
-  get s3Name(): string {
-    const index = this.leafIndex.toNumber();
-    return `${this.originName}_${index}`;
-  }
-
-  /**
-   * Get the URI for the proof in S3
-   */
-  get s3Uri(): string | undefined {
-    const s3 = this.context.conf.s3;
-    if (!s3) return;
-    const { bucket, region } = s3;
-    const root = `https://${bucket}.s3.${region}.amazonaws.com`;
-    return `${root}/${this.s3Name}`;
   }
 
   /**
@@ -603,21 +566,5 @@ export class NomadMessage<T extends NomadContext> {
    */
   get committedRoot(): string {
     return this.dispatch.event.args.committedRoot;
-  }
-
-  /**
-   * Get the proof associated with this message
-   *
-   * @returns a proof, or undefined if no proof available
-   * @throws if s3 is not configured for this env
-   */
-  async getProof(): Promise<MessageProof | undefined> {
-    const uri = this.s3Uri;
-    if (!uri) throw new Error('No s3 configuration');
-    const res = await axios.get(uri);
-    const { data, status, statusText } = res;
-    if (status !== 200) throw new Error(statusText);
-    if (data.proof && data.message) return data as MessageProof;
-    throw new Error('Server returned invalid proof');
   }
 }

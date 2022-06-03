@@ -5,8 +5,6 @@ import { Mean } from './types';
 import { DB } from './db';
 import Logger from 'bunyan';
 import pLimit from 'p-limit';
-import crypto from 'crypto';
-import { keccak256, toUtf8Bytes } from 'ethers/lib/utils';
 
 export function sleep(ms: number) {
   return new Promise((resolve) => {
@@ -104,63 +102,21 @@ export function logToFile(s: string) {
   fs.appendFileSync('/tmp/log.log', s + '\n');
 }
 
+import crypto from 'crypto';
+
 export function hash(...vals: string[]): string {
   const hash = crypto.createHash('md5');
   vals.forEach((v) => hash.update(v));
   return hash.digest('hex');
 }
 
-export enum BunyanLevel {
-  FATAL = 'fatal',
-  ERROR = 'error',
-  WARN = 'warn',
-  INFO = 'info',
-  DEBUG = 'debug',
-  TRACE = 'trace',
-}
-
-export function createLogger(
-  name: string,
-  environment: string,
-  level?: BunyanLevel,
-) {
+export function createLogger(name: string, environment: string) {
   return Logger.createLogger({
     name,
     serializers: Logger.stdSerializers,
-    level: level || 'debug',
+    level: 'debug',
     environment: environment,
   });
-}
-
-function formatEVM(s: string) {
-  s = s.toLowerCase();
-  if (s.length === 42 && s.substring(0, 2) === '0x') {
-    s = s.substring(2);
-  } else if (s.length !== 40) {
-    throw new Error(`Not EVM address`);
-  }
-
-  const digest = keccak256(toUtf8Bytes(s)).substring(2);
-
-  for (let i = 0; i < s.length; i++) {
-    const targetChar = digest[i];
-    let upper = true;
-    try {
-      let n: number = parseInt(targetChar);
-      if (n <= 7) {
-        upper = false;
-      }
-    } catch (e) {}
-    let newChar;
-    if (upper) {
-      newChar = s[i].toUpperCase();
-    } else {
-      newChar = s[i].toLowerCase();
-    }
-    s = s.substring(0, i) + newChar + s.substring(i + 1);
-  }
-
-  return '0x' + s;
 }
 
 export class Padded {
@@ -191,7 +147,7 @@ export class Padded {
   }
 
   toEVMAddress() {
-    return formatEVM('0x' + this.s.slice(26));
+    return '0x' + this.s.slice(26);
   }
 
   valueOf(): string {

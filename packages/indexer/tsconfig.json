@@ -1,14 +1,9 @@
 {
-  
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
     "composite": true,
-    "noUnusedLocals": false,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "target": "es2021",
-    "lib": ["es2021", "esnext.asynciterable"]
+    "noUnusedLocals": false
   },
   "exclude": [
     "./node_modules",
