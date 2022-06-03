@@ -218,7 +218,6 @@ contract XAppConnectionManager is Ownable {
         _digest = ECDSA.toEthSignedMessageHash(_digest);
         return ECDSA.recover(_digest, _signature);
     }
-<<<<<<< HEAD
 
     /**
      * @dev should be impossible to renounce ownership;
@@ -228,6 +227,4 @@ contract XAppConnectionManager is Ownable {
     function renounceOwnership() public override onlyOwner {
         // do nothing
     }
-=======
->>>>>>> efc79e8 (sync with main)
 }
