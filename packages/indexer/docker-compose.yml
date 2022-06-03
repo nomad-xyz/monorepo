@@ -9,7 +9,7 @@ services:
       - PROGRAM=core
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres?connect_timeout=300&schema=public
     ports:
-      - "9090:3000"
+      - "9090:9090"
       - "9091:1337"
     depends_on:
       - "postgres"
