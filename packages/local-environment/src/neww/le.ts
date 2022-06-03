@@ -115,7 +115,6 @@ class Env {
             deployContext.registerDomain(network.domain);
             deployContext.registerRpcProvider(name, network.rpcs[0]);
             const provider = deployContext.mustGetProvider(name);
-            console.log(JSON.stringify(provider));
             const wallet = new ethers.Wallet(this.deployerKey, provider);
             console.log(wallet);
             const signer = new NonceManager(wallet);
