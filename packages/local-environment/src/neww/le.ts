@@ -152,6 +152,7 @@ class Env {
         t.up(),
         j.up(),
     ])
+
     console.log(`Upped Tom and Jerry`);
 
     // Initialize governor for each domain
