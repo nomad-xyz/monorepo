@@ -34,7 +34,15 @@ def create_transaction(sender_key:str, recipient_address:int, amount:int, nonce:
     w3 = Web3(Web3.HTTPProvider(endpoint))
     recipient_address = Web3.toChecksumAddress(recipient_address)
     chain_id = w3.eth.chain_id
-    gas = 100000 * 100 if "arb-rinkeby" in endpoint else 100000 
+
+    # Quick and Dirty fix: Will move this as a config
+    if "arb-rinkeby" in endpoint:
+        gas = 100000 * 100
+    elif "devnet.neonlabs" in endpoint:
+        gas = 1579040
+    else:
+        gas = 100000
+
     # sign transaction 
     tx_params = dict(
         nonce=nonce,
@@ -45,7 +53,8 @@ def create_transaction(sender_key:str, recipient_address:int, amount:int, nonce:
         data=b'',
         chainId=chain_id,
     )
-    signed_txn = w3.eth.account.sign_transaction(tx_params,sender_key)
+
+    signed_txn = w3.eth.account.sign_transaction(tx_params, sender_key)
     return (tx_params, signed_txn)
 
 
@@ -99,7 +108,7 @@ def check_account(home_network: str, target_network: str, role: str, address: st
     if role != "bank" and wallet_wei < (threshold / 4): 
         logger.debug(f"Balance is low for {home_network} {role} ({address}) on {target_network} - {wallet_wei * 10**-18 } < {threshold * 10**-18 / 4}")
         should_top_up = True
-        top_up_amount = threshold - wallet_wei
+        top_up_amount = int(threshold - wallet_wei)
     # Warn when the bank is ~4 top-ups from being empty
     if role == "bank" and wallet_wei < threshold * 4:
         logger.warning(f"Bank balance is low for {home_network} ({address}) - {wallet_wei * 10**-18} < {threshold * 4 * 10**-18}")

@@ -113,7 +113,7 @@ def monitor(ctx, metrics_port, pause_duration):
                         statuses.append(status)
 
                     # only process agents that act on the replica
-                    if role in ["relayer", "processor", "watcher"]:
+                    if role in ["relayer", "processor"]:
                         # Get status on Home's replicas for role
                         for replica_name in home["replicas"]:
                             replica_config = config["networks"][replica_name] 
