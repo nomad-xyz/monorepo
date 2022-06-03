@@ -1,5 +1,5 @@
 import { NomadLocator, NomadConfig } from "@nomad-xyz/configuration";
-import { DeployContext } from "../../../new-deploy/src/DeployContext";
+import { DeployContext } from "../../../deploy/src/DeployContext";
 import { HardhatNetwork, Network } from "./network";
 import ethers from 'ethers';
 import { NonceManager } from "@ethersproject/experimental";
@@ -35,6 +35,9 @@ class Env {
         // } else {
         //     this.deployFresh()
         // }
+
+        console.log(`Deploying!`, JSON.stringify(this.nomadConfig(), null, 4));
+
         const governanceBatch = await this.deployContext.deployAndRelinquish();
         console.log(`Deployed! gov batch:`, governanceBatch);
     }
@@ -73,16 +76,22 @@ class Env {
             bridge: Object.fromEntries(this.networks.filter(n => n.isDeployed).map(n => [n.name, n.bridgeContracts!])),
             agent: Object.fromEntries(this.networks.filter(n => n.isDeployed).map(n => [n.name, n.agentConfig!])),
             bridgeGui: Object.fromEntries(this.networks.filter(n => n.isDeployed).map(n => [n.name, n.bridgeGui!])),
+            gas: Object.fromEntries(this.networks.map(n => [n.name, n.gasConfig!])),
         }
     }
 }
 
 (async () => {
     const t = new HardhatNetwork('tom', 1);
-    await t.up();
 
     const j = new HardhatNetwork('jerry', 2);
-    await j.up();
+    await Promise.all([
+        t.up(),
+        j.up(),
+    ])
+    console.log(`Upped tom and jerry`);
+
+
 
     const le = new Env({domain: t.domainNumber, id: '0x'+'00'.repeat(20)});
     le.addNetwork(t);
