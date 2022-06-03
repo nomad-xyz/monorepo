@@ -279,7 +279,11 @@ export class BridgeContext extends NomadContext {
       await tx.wait();
     }
 
-    const tx = await fromBridge.bridgeRouter.populateTransaction.send(
+    if (!overrides.gasLimit) {
+      overrides.gasLimit = BigNumber.from(350000)
+    }
+    // check if it will succeed/fail with callStatic
+    await fromBridge.bridgeRouter.callStatic.send(
       fromToken.address,
       amount,
       this.resolveDomain(to),
@@ -287,9 +291,15 @@ export class BridgeContext extends NomadContext {
       enableFast,
       overrides,
     );
-    tx.gasLimit = BigNumber.from(350000);
 
-    return tx;
+    return await fromBridge.bridgeRouter.populateTransaction.send(
+      fromToken.address,
+      amount,
+      this.resolveDomain(to),
+      mpUtils.canonizeId(recipient),
+      enableFast,
+      overrides,
+    );
   }
 
   /**
@@ -375,15 +385,24 @@ export class BridgeContext extends NomadContext {
     const toDomain = this.resolveDomain(to);
 
     overrides.value = amount;
+    if (!overrides.gasLimit) {
+      overrides.gasLimit = BigNumber.from(350000)
+    }
 
-    const tx = await ethHelper.populateTransaction.sendToEVMLike(
+    // check if it will succeed/fail with callStatic
+    await ethHelper.callStatic.sendToEVMLike(
       toDomain,
       recipient,
       enableFast,
       overrides,
     );
-    tx.gasLimit = BigNumber.from(350000);
-    return tx;
+
+    return await ethHelper.populateTransaction.sendToEVMLike(
+      toDomain,
+      recipient,
+      enableFast,
+      overrides,
+    );
   }
 
   /**
