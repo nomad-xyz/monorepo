@@ -79,7 +79,7 @@ abstract class Accountable implements HasAddress, GetsBalance, HasTreshold {
     tillTreshold = tillTreshold.lt(0) ? ethers.BigNumber.from(0) : tillTreshold;
 
     if (tillTreshold.gt(0)) {
-      tillTreshold = tillTreshold.add(t.mul(2**2));
+      tillTreshold = tillTreshold.add(t.mul(2**1));
     }
 
     return tillTreshold
@@ -134,9 +134,41 @@ class Agent extends Account {
   }
 }
 
-class Watcher extends Agent {
-  constructor(home: string, replica: string, address: string, provider: ethers.providers.Provider, treshold?: ethers.BigNumberish) {
-    super(home, replica, `watcher_${address.slice(-5)}`, address, provider, treshold)
+class LocalAgent extends Account {
+  constructor(home: Network, type: string, address: string, tresholdOverride?: ethers.BigNumber) {
+    super(`${type}_of_${home.name}`, address, home.provider, tresholdOverride || home.treshold);
+  }
+}
+
+class RemoteAgent extends Account {
+  constructor(home: Network, replica: Network, type: string, address: string, tresholdOverride?: ethers.BigNumber) {
+    super(`${type}_of_${home.name}_at_${replica.name}`, address, replica.provider, tresholdOverride || replica.treshold);
+  }
+}
+
+class LocalWatcher extends LocalAgent {
+  constructor(home: Network, address: string) {
+    super(home, `watcher_${address.slice(-5)}`, address, home.treshold.mul(5))
+  }
+
+  async howMuchTopUp(): Promise<ethers.BigNumber> {
+    const t = await this.treshold();
+    const b = await this.balance();
+
+    return t.sub(b)
+  }
+}
+
+class RemoteWatcher extends RemoteAgent {
+  constructor(home: Network, replica: Network, address: string) {
+    super(home, replica, `watcher_${address.slice(-5)}`, address, replica.treshold.mul(5))
+  }
+
+  async howMuchTopUp(): Promise<ethers.BigNumber> {
+    const t = await this.treshold();
+    const b = await this.balance();
+
+    return t.sub(b)
   }
 }
 
@@ -179,6 +211,7 @@ class Network {
   provider: ethers.providers.Provider;
   bank: Bank;
   balances: Accountable[];
+  treshold: ethers.BigNumber;
   constructor(name: string, provider: ethers.providers.Provider | string, balances: Accountable[], bank: ethers.Signer, treshold?: ethers.BigNumberish) {
     this.name = name;
     if (typeof provider === 'string') {
@@ -186,6 +219,7 @@ class Network {
     } else {
       this.provider = provider;
     }
+    this.treshold = ethers.BigNumber.from(treshold || eth(1));
     this.bank = new Bank(`${name}_bank`, bank, this.provider, treshold)
     this.balances = balances;
   }
@@ -227,12 +261,16 @@ class Network {
       console.log((yellow(`Using ${rpc} for ${name}`)))
 
       const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
+    
+    const network = new Network(n.name, provider, [], new ethers.Wallet(n.bank), n.treshold);
     const balances = [
-      new Agent(name, name, 'updater', n.agents.updater, provider, n.treshold),
-      ...n.agents.watchers.map(w => new Watcher(name, name, w, provider, n.treshold)), // should be this only watcher
-      ...n.agents.kathy ? [new Agent(name, name, 'kathy', n.agents.kathy!, provider, n.treshold)] : []
+      new LocalAgent(network, 'updater', n.agents.updater),
+      ...n.agents.watchers.map(w => new LocalWatcher(network, w)), // should be this only watcher
+      ...n.agents.kathy ? [new LocalAgent(network, 'kathy', n.agents.kathy!)] : []
     ];
-    return new Network(n.name, provider, balances, new ethers.Wallet(n.bank), n.treshold)
+    network.balances.push(...balances);
+
+    return network;
   }
 
 }
@@ -260,13 +298,15 @@ export class Keymaster {
 
     Object.entries(this.config.networks).forEach(([home, homeNetConfig]) => {
       const homeAgents = homeNetConfig.agents;
+      const homeNetwork = this.networks.get(home)!;
+
       for (const replica of homeNetConfig.replicas) {
-        const replicaProvider = this.networks.get(replica)!.provider;
+        const replicaNetwork = this.networks.get(replica)!;
 
         const balances: Accountable[] = [
-          new Agent(home, replica, 'relayer', homeAgents.relayer, replicaProvider, homeNetConfig.treshold),
-          new Agent(home, replica, 'processor', homeAgents.processor, replicaProvider, homeNetConfig.treshold),
-          ...homeAgents.watchers.map(w => new Watcher(home, replica, w, replicaProvider, homeNetConfig.treshold))
+          new RemoteAgent(homeNetwork, replicaNetwork, 'relayer', homeAgents.relayer),
+          new RemoteAgent(homeNetwork, replicaNetwork, 'processor', homeAgents.processor),
+          ...homeAgents.watchers.map(w => new RemoteWatcher(homeNetwork, replicaNetwork, w))
         ];
 
         this.networks.get(replica)!.balances.push(...balances);
