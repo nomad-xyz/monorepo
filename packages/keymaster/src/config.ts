@@ -8,7 +8,8 @@ export interface AgentAddresses {
     processor: string,
 }
 
-export interface Network {
+export interface INetwork {
+    name: string,
     endpoint: string,
     replicas: string[],
     bank: string,
@@ -17,5 +18,5 @@ export interface Network {
 }
 
 export interface KeymasterConfig {
-    networks: Record<string, Network>
+    networks: Record<string, INetwork>
 }
