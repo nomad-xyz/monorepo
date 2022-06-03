@@ -13,5 +13,6 @@ scripts/accumulator-cli
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+.DS_STORE
 
 xh.gpg
