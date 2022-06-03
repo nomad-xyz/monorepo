@@ -6,6 +6,8 @@ import * as ethers from 'ethers';
 import { NonceManager } from "@ethersproject/experimental";
 import fs from 'fs';
 dotenv.config();
+console.log(dotenv.config())
+
 class Env {
     networks: Network[];
     governor: NomadLocator;
@@ -98,8 +100,8 @@ class Env {
 
     get deployerKey(): string {
         const DEPLOYERKEY = ``+ process.env.DEPLOYER_PRIVATE_KEY + ``;
-        if (!this.deployerKey) {
-             throw new Error('Add deployer private key to .env');
+        if (!DEPLOYERKEY) {
+            throw new Error('Add DEPLOYER_PRIVATE_KEY to .env');
         }
         return DEPLOYERKEY;
     }
@@ -113,9 +115,6 @@ class Env {
             deployContext.registerDomain(network.domain);
             deployContext.registerRpcProvider(name, network.rpcs[0]);
             const provider = deployContext.mustGetProvider(name);
-            console.log(`Setting ` + this.deployerKey + ` as deployerKey`);
-            // Current issue: local provider RPC somehow doesn't get registered with mustGetProvider.
-            console.log(`provider:` + provider)
             const wallet = new ethers.Wallet(this.deployerKey, provider);
             console.log(wallet);
             const signer = new NonceManager(wallet);
