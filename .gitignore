@@ -12,3 +12,5 @@ scripts/accumulator-cli
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+xh.gpg
