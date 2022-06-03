@@ -1,8 +1,9 @@
 import { Annotated } from '.';
 import { NomadContext } from '..';
-import { Domain } from '@nomad-xyz/multi-provider';
 import { Result } from '@ethersproject/abi';
 import { TypedEvent, TypedEventFilter } from '@nomad-xyz/contracts-core';
+
+import * as config from '@nomad-xyz/configuration';
 
 // specifies an interface shared by the TS generated contracts
 export interface TSContract<T extends Result, U> {
@@ -40,8 +41,8 @@ export async function getEvents<T extends Result, U>(
   startBlock?: number,
   endBlock?: number,
 ): Promise<Array<TypedEvent<T & U>>> {
-  const domain = context.mustGetDomain(nameOrDomain) as Domain;
-  if (domain.paginate) {
+  const domain = context.mustGetDomain(nameOrDomain);
+  if (domain.specs.indexPageSize) {
     return getPaginatedEvents(
       context,
       domain,
@@ -56,20 +57,23 @@ export async function getEvents<T extends Result, U>(
 
 async function getPaginatedEvents<T extends Result, U>(
   context: NomadContext,
-  domain: Domain,
+  domain: config.Domain,
   contract: TSContract<T, U>,
   filter: TypedEventFilter<T, U>,
   startBlock?: number,
   endBlock?: number,
 ): Promise<Array<TypedEvent<T & U>>> {
-  if (!domain.paginate) {
+  if (!domain.specs.indexPageSize) {
     throw new Error('Domain need not be paginated');
   }
+
+  const core = context.mustGetCore(domain.name);
+
   // get the first block by params
   // or domain deployment block
   const firstBlock = startBlock
-    ? Math.max(startBlock, domain.paginate.from)
-    : domain.paginate.from;
+    ? Math.max(startBlock, core.deployHeight)
+    : core.deployHeight;
   // get the last block by params
   // or current block number
   let lastBlock;
@@ -84,9 +88,9 @@ async function getPaginatedEvents<T extends Result, U>(
   for (
     let from = firstBlock;
     from <= lastBlock;
-    from += domain.paginate.blocks
+    from += domain.specs.indexPageSize
   ) {
-    const nextFrom = from + domain.paginate.blocks;
+    const nextFrom = from + domain.specs.indexPageSize;
     const to = Math.min(nextFrom, lastBlock);
     const eventArrayPromise = contract.queryFilter(filter, from, to);
     eventArrayPromises.push(eventArrayPromise);

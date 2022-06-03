@@ -1,53 +1,18 @@
-import { NomadMessage } from "./consumerV2";
+import { NomadMessage } from './consumerV2';
 
-import { Prisma, PrismaClient } from "@prisma/client";
-import { DbRequestType, IndexerCollector } from "./metrics";
-import Logger from "bunyan";
-import pLimit from "p-limit";
-import { Padded } from "./utils";
-import { ethers } from "ethers";
-import { BridgeContext } from "@nomad-xyz/sdk-bridge";
-
-// function fromDb(m: messages): NomadMessage {
-//   return
-
-// }
-
-// function toDb(m: NomadMessage): Prisma.messagesCreateManyInput {
-//   return {
-//     hash: m.hash,
-//     origin: m.origin,
-//     destination: m.destination,
-//     nonce: m.nonce,
-//     nomad_sender: m.nomadSender,
-//     nomad_recipient: m.nomadRecipient,
-//     root: m.root,
-//     state: m.state,
-//     block: m.block,
-//     dispatched_at: m.timings.dispatchedAt,
-//     updated_at: m.timings.updatedAt,
-//     relayed_at: m.timings.relayedAt,
-//     received_at: m.timings.receivedAt,
-//     processed_at: m.timings.processedAt,
-//     sender: m.sender,
-//     bridge_msg_type: m.bridgeMsgType,
-//     recipient: m.bridgeMsgTo,
-//     bridge_msg_amount: m.bridgeMsgAmount?.toHexString() || undefined,
-//     bridge_msg_allow_fast: m.bridgeMsgAllowFast,
-//     bridge_msg_details_hash: m.bridgeMsgDetailsHash,
-//     bridge_msg_token_domain: m.bridgeMsgTokenDomain,
-//     bridge_msg_token_id: m.bridgeMsgTokenId,
-//     raw: m.raw,
-//     leaf_index: m.leafIndex.toHexString(),
-//     evm: m.evm,
-//   }
-// }
+import { Prisma, PrismaClient } from '@prisma/client';
+import { DbRequestType, IndexerCollector } from './metrics';
+import Logger from 'bunyan';
+import pLimit from 'p-limit';
+import { Padded } from './utils';
+import { ethers } from 'ethers';
+import { BridgeContext } from '@nomad-xyz/sdk-bridge';
 
 export interface MsgRequest {
-  size?: number;
-  page?: number;
-  destination?: number;
-  origin?: number;
+  size?: string;
+  page?: string;
+  destination?: string;
+  origin?: string;
   recipient?: string;
   sender?: string;
 }
@@ -63,7 +28,7 @@ export class DB {
     this.syncedOnce = false;
     this.client = new PrismaClient();
     this.metrics = metrics;
-    this.logger = logger.child({ span: "DB" });
+    this.logger = logger.child({ span: 'DB' });
     this.sdk = sdk;
   }
 
@@ -88,13 +53,13 @@ export class DB {
     });
 
     return messages.map((m) =>
-      NomadMessage.deserialize(m, this.logger, this.sdk)
+      NomadMessage.deserialize(m, this.logger, this.sdk),
     );
   }
 
   async getMessagesByOriginAndStateNumber(
     origin: number,
-    state: number
+    state: number,
   ): Promise<NomadMessage[]> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const messages = await this.client.messages.findMany({
@@ -105,13 +70,13 @@ export class DB {
     });
 
     return messages.map((m) =>
-      NomadMessage.deserialize(m, this.logger, this.sdk)
+      NomadMessage.deserialize(m, this.logger, this.sdk),
     );
   }
 
   async getMessagesByOriginAndRoot(
     origin: number,
-    root: string
+    root: string,
   ): Promise<NomadMessage[]> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const messages = await this.client.messages.findMany({
@@ -121,40 +86,53 @@ export class DB {
       },
     });
     return messages.map((m) =>
-      NomadMessage.deserialize(m, this.logger, this.sdk)
+      NomadMessage.deserialize(m, this.logger, this.sdk),
     );
   }
 
-  async getAllMessages(): Promise<NomadMessage[]> {
+  async getAllMessages(take=0, skip=0): Promise<NomadMessage[]> {
+    const args: {take?:number, skip?:number} = {};
+    if (take) {
+      args.take = take;
+    }
+    if (skip) {
+      args.skip = skip;
+    }
     this.metrics.incDbRequests(DbRequestType.Select);
-    const messages = await this.client.messages.findMany();
+    const messages = await this.client.messages.findMany({
+      orderBy: {
+        dispatchedAt: 'asc',
+      },
+      ...args
+    });
     return messages.map((m) =>
-      NomadMessage.deserialize(m, this.logger, this.sdk)
+      NomadMessage.deserialize(m, this.logger, this.sdk),
     );
   }
 
-  async getMessageByOriginAndNonce(
+  async getMsgByOriginNonceAndDestination(
     origin: number,
-    nonce: number
+    nonce: number,
+    destination: number,
   ): Promise<NomadMessage | null> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const message = await this.client.messages.findFirst({
       where: {
         origin,
         nonce,
+        destination: destination,
       },
     });
     return message
       ? NomadMessage.deserialize(message, this.logger, this.sdk)
       : null;
-    // return message ? NomadMessage.deserialize(message, this.logger) : null
   }
 
   async getMessageBySendValues(
     destination: number,
     recipient: Padded,
     amount: ethers.BigNumber,
-    dispatchBlock: number
+    dispatchBlock: number,
   ): Promise<NomadMessage | null> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const message = await this.client.messages.findFirst({
@@ -163,7 +141,6 @@ export class DB {
         recipient: recipient.valueOf(), // need to make sure it is right
         amount: amount.toHexString(),
         dispatchBlock,
-        // tokenId: tokenId.valueOf()
       },
     });
 
@@ -186,24 +163,42 @@ export class DB {
   }
 
   async getMessages(req: MsgRequest): Promise<NomadMessage[]> {
-    const take = req.size || 15;
-    const page = req.page || 1;
-    const skip = (page || -1) * take;
+    const take = req.size ? parseInt(req.size) : 15;
+    const page = req.page ? parseInt(req.page) : 0;
+
+    if (take < 0) throw new Error(`Cannot take less than 0`);
+    if (take > 50) throw new Error(`Cannot take more than 50`);
+    if (page < 0) throw new Error(`Page is less than a 0`);
+
+    const skip = page * take;
+
+    let where: {
+      sender?: string;
+      recipient?: string;
+      origin?: number;
+      destination?: number;
+    } = {
+      sender: req.sender,
+      recipient: req.recipient,
+    };
+
+    if (req.origin) {
+      where.origin = parseInt(req.origin);
+    }
+
+    if (req.destination) {
+      where.destination = parseInt(req.destination);
+    }
 
     this.metrics.incDbRequests(DbRequestType.Select);
     const messages = await this.client.messages.findMany({
-      where: {
-        sender: req.sender,
-        recipient: req.recipient,
-        origin: req.origin,
-        destination: req.destination,
-      },
+      where,
       take,
       skip,
     });
 
     return messages.map((m) =>
-      NomadMessage.deserialize(m, this.logger, this.sdk)
+      NomadMessage.deserialize(m, this.logger, this.sdk),
     );
   }
 
@@ -249,11 +244,8 @@ export class DB {
             },
             data: serialized,
           });
-          // m.logger.debug(
-          //   `Message updated in DB. updated: ${serialized.updatedAt}, relayed: ${serialized.relayedAt}, received: ${serialized.receivedAt}, processed: ${serialized.processedAt}`
-          // );
         });
-      })
+      }),
     );
 
     return;
@@ -285,7 +277,7 @@ export class DB {
 
   async getKeyPair(
     namespace: string,
-    key: string
+    key: string,
   ): Promise<string | undefined> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const row = await this.client.kv_storage.findUnique({
@@ -306,7 +298,7 @@ export class DB {
   async setKeyPair(
     namespace: string,
     key: string,
-    value: string
+    value: string,
   ): Promise<void> {
     const where: Prisma.kv_storageWhereUniqueInput = {
       namespace_key: {
@@ -329,17 +321,5 @@ export class DB {
       update,
       create,
     });
-
-    // const found = await this.getKeyPair(namespace, key);
-    // if (found) {
-    //   await this.client.kv_storage.update({
-    //     where,
-    //     data: update,
-    //   })
-    // } else {
-    //   await this.client.kv_storage.create({
-    //     data: create
-    //   })
-    // }
   }
 }
