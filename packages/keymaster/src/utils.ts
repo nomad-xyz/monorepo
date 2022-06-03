@@ -1,7 +1,9 @@
 import * as crypto from "crypto";
-import { Wallet } from "ethers";
+import { ethers, Wallet } from "ethers";
 const { publicKeyConvert, publicKeyCreate } = require("secp256k1");
 const createKeccakHash = require("keccak");
+import Decimal from 'decimal.js';
+
 
 export class Key {
   value: Buffer;
@@ -91,4 +93,9 @@ export function privateKeyToAddress(privateKey: Buffer | string): string {
   }
 
   return publicKeyToAddress(privateKeyToPublicKey(privateKey));
+}
+
+export function eth(n: number) {
+    const d = new Decimal(n).mul(10**18);
+    return ethers.BigNumber.from(d.toString()); // Math(n)).mul(ethers.BigNumber.from('1'+'0'.repeat(18))
 }

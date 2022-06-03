@@ -1,14 +1,17 @@
 import { ethers } from "ethers";
 import { KeymasterConfig } from "./config";
 import { Keymaster } from "./context";
+import { eth } from "./utils";
+
+
 
 const sconfig: KeymasterConfig = {
   networks: {
       "goerli": {
         replicas: ['rinkeby', 'evmostestnet', 'kovan'],
-        endpoint: 'https://goerli.infura.io/v3/xxx',
-        bank: 'xxx',
-        treshold: ethers.BigNumber.from('1000000000000000000'),
+        endpoint: 'https://goerli.infura.io/v3/xxxxxxxxxxxxxxxxx',
+        bank: 'yyyyyyyyyyyy',
+        treshold: eth(1),
         agents: {
           "kathy": "0xF8C4BdeB88fD5913eb06f95A796aaB70DA2b3F8b",
           "watchers": ["0xE21Df231781A6D1fC5B5cAd70c161A3A9E4cc46e"],
@@ -19,9 +22,9 @@ const sconfig: KeymasterConfig = {
       },
       "rinkeby": {
         replicas: ['goerli', 'evmostestnet', 'kovan'],
-        endpoint: 'https://rinkeby.infura.io/v3/xxx',
-        bank: 'xxx',
-        treshold: ethers.BigNumber.from('1000000000000000000'),
+        endpoint: 'https://rinkeby.infura.io/v3/xxxxxxxxxxxxxxxxx',
+        bank: 'yyyyyyyyyyyy',
+        treshold: eth(1),
         agents: {
           "kathy": "0x2BE6635a758562086591DDF89dc9af4557a1fbe5",
           "watchers": ["0xA39A0Fe69eE4D59aD62361A3D02e1272FE65eCe6"],
@@ -33,8 +36,8 @@ const sconfig: KeymasterConfig = {
       "evmostestnet": {
         replicas: ['goerli', 'rinkeby', 'kovan'],
         endpoint: 'https://eth.bd.evmos.dev:8545',
-        bank: 'xxx',
-        treshold: ethers.BigNumber.from('1000000000000000000'),
+        bank: 'yyyyyyyyyyyy',
+        treshold: eth(1),
         agents: {
           "kathy": "0x9efB6774756495D350416F394aCB44f98e306c8e",
           "watchers": ["0x7A144C22D59AfEE75a093933b02e83dc14F920e9"],
@@ -45,9 +48,9 @@ const sconfig: KeymasterConfig = {
       },
       "kovan": {
         replicas: ['goerli', 'rinkeby', 'evmostestnet'],
-        endpoint: 'https://kovan.infura.io/v3/xxx',
-        bank: 'xxx',
-        treshold: ethers.BigNumber.from('1000000000000000000'),
+        endpoint: 'https://kovan.infura.io/v3/xxxxxxxxxxxxxxxxx',
+        bank: 'yyyyyyyyyyyy',
+        treshold: eth(1),
         agents: {
           "kathy": "0xBB3B3fecA4dE35e36d71eF2e8B51Af96740Aea6c",
           "watchers": ["0xE5b60deA69eaF5a54903367Dd283B45869CFF55B"],
@@ -63,9 +66,9 @@ const dconfig: KeymasterConfig = {
     networks: {
         "goerli": {
           replicas: ['rinkeby', 'evmostestnet', 'kovan'],
-          endpoint: 'https://goerli.infura.io/v3/xxx',
-          bank: 'xxx',
-          treshold: ethers.BigNumber.from('2000000000000000000'),
+          endpoint: 'https://goerli.infura.io/v3/xxxxxxxxxxxxxxxxx',
+          bank: 'yyyyyyyyyyyy',
+          treshold: eth(1),
           agents: {
             "kathy": "0xF5e6CC7FA0bf3c96B3def2863eC0dC03ce5DC737",
             "watchers": ["0xe478d86Cda583ff7c1C9A50Fc476BdA61b7f34Ae"],
@@ -76,9 +79,9 @@ const dconfig: KeymasterConfig = {
         },
         "rinkeby": {
           replicas: ['goerli', 'evmostestnet', 'kovan'],
-          endpoint: 'https://rinkeby.infura.io/v3/xxx',
-          bank: 'xxx',
-          treshold: ethers.BigNumber.from('2000000000000000000'),
+          endpoint: 'https://rinkeby.infura.io/v3/xxxxxxxxxxxxxxxxx',
+          bank: 'yyyyyyyyyyyy',
+          treshold: eth(1),
           agents: {
             "kathy": "0xCB01D41eb608e9C6Af7d7021AabC659E29093247",
             "watchers": ["0x904ECE03De028de624BD221cC86aad73afD8a5BE"],
@@ -90,8 +93,8 @@ const dconfig: KeymasterConfig = {
         "evmostestnet": {
           replicas: ['goerli', 'rinkeby', 'kovan'],
           endpoint: 'https://eth.bd.evmos.dev:8545',
-          bank: 'xxx',
-          treshold: ethers.BigNumber.from('2000000000000000000'),
+          bank: 'yyyyyyyyyyyy',
+          treshold: eth(1),
           agents: {
             "kathy": "0xdE02dF46DDb0bBf32b61C0201D59f4a1C8370E1A",
             "watchers": ["0xf3278a64bF9D5D518f9A1B4810f92633d67fDDA4"],
@@ -102,9 +105,9 @@ const dconfig: KeymasterConfig = {
         },
         "kovan": {
           replicas: ['goerli', 'rinkeby', 'evmostestnet'],
-          endpoint: 'https://kovan.infura.io/v3/xxx',
-          bank: 'xxx',
-          treshold: ethers.BigNumber.from('2000000000000000000'),
+          endpoint: 'https://kovan.infura.io/v3/xxxxxxxxxxxxxxxxx',
+          bank: 'yyyyyyyyyyyy',
+          treshold: eth(1),
           agents: {
             "kathy": "0x0111bFfB0182cC81dE36535adcC904ED9dc59F11",
             "watchers": ["0x47C67e481530fb37E0F1FaeDdf4ce0d614a20ED3"],
@@ -116,17 +119,89 @@ const dconfig: KeymasterConfig = {
     }
 };
 
+const pconfig: KeymasterConfig = {
+  networks: {
+      "ethereum": {
+        replicas: ["moonbeam", "milkomedac1", "xdai", "evmos", "avalanche"],
+        endpoint: 'https://goerli.infura.io/v3/xxxxxxxxxxxxxxxxx',
+        bank: 'yyyyyyyyyyyy',
+        treshold: eth(0.2),
+        agents: {
+          "watchers": ["0x9Ed61aa3EfDf5afed02076299d4366d26ee373b7"],
+          "updater": "0x28A30e6736789dBF6FE9d4e86Df75a866F3d28b8",
+          "relayer": "0x9C6c806736c18d646c28ff47Bee0aF15284792a7",
+          "processor": "0x776a9097E01De7E7aA2ddd92989f27c8B5C3AE68"
+      }
+      },
+      "moonbeam": {
+        "replicas": ["ethereum", "milkomedac1", "xdai", "evmos", "avalanche"],
+        "endpoint": 'https://goerli.infura.io/v3/xxxxxxxxxxxxxxxxx',
+        "bank": 'yyyyyyyyyyyy',
+        "treshold": eth(0.2),
+        "agents": {
+            "watchers": ["0x1C22c47512EF3df39944d4A28267cf830d2f6206"],
+            "updater": "0x93cc02A518e591Bf22D1C245a5e1A2b85736bC93",
+            "relayer": "0x10121Cb2b3F64f0A6231178336ACa3e3b87D5cA5",
+            "processor": "0xaf26D799dD372ea983c40855A4085f6B765616B0"
+        }
+    },
+    "milkomedac1": {
+        "replicas": ["ethereum", "moonbeam", "xdai", "evmos", "avalanche"],
+        "endpoint": 'https://goerli.infura.io/v3/xxxxxxxxxxxxxxxxx',
+        "bank": 'yyyyyyyyyyyy',
+        "treshold": eth(0.2),
+        "agents": {
+            "watchers": ["0x925d692aa1F4109F910C502368c569e68CEb7F61"],
+            "updater": "0xCC4D47670498cb3fB2232435Ae6F9b2cbb6bc678",
+            "relayer": "0x0173544f21B4Fb7C5e2BC93968b1dDE13F0dfCD2",
+            "processor": "0xc557bD20E66602f2c024ac1E2DCAA82ae5c69A70"
+        }
+    },
+    "xdai": {
+        "replicas": ["ethereum", "moonbeam", "milkomedac1", "evmos", "avalanche"],
+        "endpoint": 'https://goerli.infura.io/v3/xxxxxxxxxxxxxxxxx',
+        "bank": 'yyyyyyyyyyyy',
+        "treshold": eth(0.2),
+        "agents": {
+            "watchers": ["0x1705725CbD1f03e78B47ad203C65db5768e49133"],
+            "updater": "0x67DF640558f4BA7D8DEee3852493b7cBd6ef08B0",
+            "relayer": "0xEACC6055b8B61DD574A8Bf5683acb8F8b141F9Dd",
+            "processor": "0xF8FAe646794D8Da31bab9d059f83d7502FD4875C"
+        }
+    },
+    "evmos": {
+        "replicas": ["ethereum", "moonbeam", "milkomedac1", "xdai", "avalanche"],
+        "endpoint": 'https://goerli.infura.io/v3/xxxxxxxxxxxxxxxxx',
+        "bank": 'yyyyyyyyyyyy',
+        "treshold": eth(0.2),
+        "agents": {
+            "watchers": ["0x07495A8406039c311281724a03264649f7a817E4"],
+            "updater": "0x1832cf33e44293B1cE2480aa36af3c545dB2db3C",
+            "relayer": "0x45E426D9B501f380dB0b1C323B57b0B7CF380cF9",
+            "processor": "0x706198AF9d8AFE8CEd7187eEf5573a516F60BC68"
+        }
+    },
+    "avalanche": {
+        "replicas": ["ethereum", "moonbeam", "milkomedac1", "xdai", "evmos"],
+        "endpoint": 'https://goerli.infura.io/v3/xxxxxxxxxxxxxxxxx',
+        "bank": 'yyyyyyyyyyyy',
+        "treshold": eth(0.2),
+        "agents": {
+            "watchers": ["0x3392D661954A1af73be1daA049f002e1725dDc52"],
+            "updater": "0xf5Be008E5B665157Ab0D433fa62A190974e5A928",
+            "relayer": "0xfF3703E510f4Ff4D8686f2f33f722D5C565D18f7",
+            "processor": "0xD93EEb8d4333FdAf4D58acFd02A9db7fc3EB5435"
+        }
+    }
+  }
+};
+
 
 (async () => {
-    // const ctx = await Keymaster.fromEnvName('development', dconfig);
-    const ctx = (new Keymaster(dconfig)).init();
+    const ctx = (new Keymaster(pconfig)).init();
 
-
-    const address = ctx.getProcessorAddress('kovan');
-    if (!address) throw new Error(`No address for Processor`);
-
-    await ctx.checkAllNetworks();
-    // await ctx.reportAllNetworks();
+    // await ctx.checkAllNetworks();
+    await ctx.reportLazyAllNetworks();
 
 })();
 

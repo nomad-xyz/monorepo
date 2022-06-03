@@ -4,6 +4,10 @@ import fs from 'fs';
 import { ethers, providers } from 'ethers';
 import axios from 'axios';
 import { AgentAddresses, KeymasterConfig } from './config';
+import { green, red, yellow } from './color';
+import dotenv from 'dotenv';
+import { eth } from './utils';
+dotenv.config();
 
 export async function getConfig(
   environment: string,
@@ -52,7 +56,7 @@ class Base {
   name: string;
   constructor(name: string, treshold?: ethers.BigNumberish) {
     this.name = name;
-    this._treshold = treshold?ethers.BigNumber.from(treshold) : ethers.BigNumber.from('1'+'0'.repeat(18));
+    this._treshold = treshold ? ethers.BigNumber.from(treshold) : ethers.BigNumber.from('1'+'0'.repeat(18));
   }
 
   async treshold(): Promise<ethers.BigNumber> {
@@ -68,6 +72,20 @@ abstract class Accountable extends Base implements HasAddress, GetsBalance, HasT
     // console.log(`${this.name}_shouldTopUp ${(await this.address())}`, (await this.balance()).toString())
     return (await this.balance()).lt(await this.treshold());
   }
+
+  async howMuchTopUp(): Promise<ethers.BigNumber> {
+    const t = await this.treshold();
+    const b = await this.balance();
+    let tillTreshold = t.sub(b);
+
+    tillTreshold = tillTreshold.lt(0) ? ethers.BigNumber.from(0) : tillTreshold;
+
+    if (tillTreshold.gt(0)) {
+      tillTreshold = tillTreshold.add(t.mul(2**2));
+    }
+
+    return tillTreshold
+  }
 }
 
 
@@ -77,6 +95,12 @@ class Account extends Accountable {
   _address: string;
   provider: ethers.providers.Provider;
   constructor(name: string, address: string, provider: ethers.providers.Provider, treshold?: ethers.BigNumberish) {
+    // if (typeof address !== 'string') {
+    //   if (!treshold) {
+    //     treshold = address.treshold;
+    //   }
+    //   address = address.address;
+    // }
     super(name, treshold);
     this._address = address;
     this.provider = provider;
@@ -111,6 +135,12 @@ class Agent extends Account {
 
 class Watcher extends Agent {
   constructor(home: string, replica: string, address: string, provider: ethers.providers.Provider, treshold?: ethers.BigNumberish) {
+    // let name;
+    // if (typeof address === 'string') {
+    //   name = `watcher_${address.slice(-5)}`;
+    // } else {
+    //   name = `watcher_${address.address.slice(-5)}`;
+    // }
     super(home, replica, `watcher_${address.slice(-5)}`, address, provider, treshold)
   }
 }
@@ -159,10 +189,10 @@ class Network {
 
   async checkAllBalances() {
     return Object.fromEntries(await Promise.all([
+      ['bank', await this.bank.shouldTopUp()],
       ...this.balances.map(async (balance) => {
         return [balance.name, await balance.shouldTopUp()]
-      }),
-      ['bank', await this.bank.shouldTopUp()]
+      })
     ]))
   }
 
@@ -173,6 +203,17 @@ class Network {
       }),
       ['bank', [await this.bank.shouldTopUp(), (await this.bank.balance()).div('1'+'0'.repeat(18)).toString()]]
     ]))
+  }
+
+  async reportSuggestion(): Promise<[string, boolean, ethers.BigNumber, ethers.BigNumber][]> {
+    const x = [...this.balances, this.bank];
+    return await Promise.all(x.map(async (k) => [k.name, await k.shouldTopUp(),await k.balance(), await k.howMuchTopUp()]))
+    // return Object.fromEntries(await Promise.all([
+    //   ...this.balances.map(async (balance) => {
+    //     return [balance.name, [await balance.shouldTopUp(), (await balance.balance()).div('1'+'0'.repeat(18)).toString()]]
+    //   }),
+    //   ['bank', [await this.bank.shouldTopUp(), (await this.bank.balance()).div('1'+'0'.repeat(18)).toString()]]
+    // ]))
   }
 
 }
@@ -203,30 +244,36 @@ export class Keymaster {
         throw new Error(
           `RPC url for network ${name} is empty. Please provide as '${rpcEnvKey}=http://...' ENV variable`,
         );
+        console.log((yellow(`Using ${rpc} for ${name}`)))
+      
   
         const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
 
+        // const updaterTreshold = this.;
+        // if (typeof network.agents.updater  === 'string') {
+        //   updaterS
+        // }
+
         this.networks.set(name, new Network(name, provider, [
-          new Agent(name, name, 'updater', network.agents.updater, provider),
-          ...network.agents.watchers.map(w => new Watcher(name, name, w, provider)), // should be this only watcher
-          ...network.agents.kathy ? [new Agent(name, name, 'kathy', network.agents.kathy!, provider)] : []
+          new Agent(name, name, 'updater', network.agents.updater, provider, network.treshold),
+          ...network.agents.watchers.map(w => new Watcher(name, name, w, provider, network.treshold)), // should be this only watcher
+          ...network.agents.kathy ? [new Agent(name, name, 'kathy', network.agents.kathy!, provider, network.treshold)] : []
         ], new ethers.Wallet(network.bank), network.treshold));
 
     })
 
     Object.keys(this.config.networks).forEach(home => {
       const homeNetConfig = this.config.networks[home];
-      const homeNet = this.networks.get(home)!;
+      // const homeNet = this.networks.get(home)!;
       const homeAgents = homeNetConfig.agents;
       for (const replica of homeNetConfig.replicas) {
         const replicaNet = this.networks.get(replica)!;
-      const replicasAgents = this.config.networks[replica].agents;
-
+      // const replicasAgents = this.config.networks[replica].agents;
 
         const balances: Accountable[] = [
-          new Agent(home, replica, 'relayer', homeAgents.relayer, replicaNet.provider),
-          new Agent(home, replica, 'processor', homeAgents.processor, replicaNet.provider),
-          ...homeAgents.watchers.map(w => new Watcher(home, replica, w, replicaNet.provider))
+          new Agent(home, replica, 'relayer', homeAgents.relayer, replicaNet.provider, homeNetConfig.treshold),
+          new Agent(home, replica, 'processor', homeAgents.processor, replicaNet.provider, homeNetConfig.treshold),
+          ...homeAgents.watchers.map(w => new Watcher(home, replica, w, replicaNet.provider, homeNetConfig.treshold))
         ];
 
         this.networks.get(replica)!.balances.push(...balances);
@@ -250,6 +297,28 @@ export class Keymaster {
       const kek: Record<string, [boolean, string]> = await x.report();
       const lol = Object.entries(kek)//.filter(([_, v])=> v[0])//.map(([k,v])=> [k);
       console.log(name, '\n', lol);
+    }
+  }
+
+  async reportLazyAllNetworks(): Promise<void> {
+    for (const [name, x] of this.networks.entries()) {
+      const kek: [string, boolean, ethers.BigNumber, ethers.BigNumber][] = await x.reportSuggestion();
+
+      const ke = ethers.utils.formatEther;
+      const lol = kek.map(k => {
+        if (k[1]) {
+          if (k[2].eq(0)) {
+            return red(`${k[0]} needs immediately ${ke(k[3])} currency. It is empty for gods sake!`)
+          } else {
+            return yellow(`${k[0]} is needs to be paid ${ke(k[3])}. Balance: ${ke(k[2])}`)
+          }
+        } else {
+          return green(`${k[0]} is ok, has: ${ke(k[2])}`)
+        }
+      })
+
+      console.log(`\n\nNetwork: ${name}\n`);
+      console.log(lol.join('\n'))
     }
   }
 
