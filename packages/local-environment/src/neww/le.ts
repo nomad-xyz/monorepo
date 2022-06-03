@@ -6,7 +6,6 @@ import * as ethers from 'ethers';
 import { NonceManager } from "@ethersproject/experimental";
 import fs from 'fs';
 dotenv.config();
-console.log(dotenv.config())
 
 class Env {
     networks: Network[];
@@ -99,9 +98,9 @@ class Env {
     }
 
     get deployerKey(): string {
-        const DEPLOYERKEY = ``+ process.env.DEPLOYER_PRIVATE_KEY + ``;
-        if (!DEPLOYERKEY) {
-            throw new Error('Add DEPLOYER_PRIVATE_KEY to .env');
+        const DEPLOYERKEY = "" + process.env.DEPLOYER_PRIVATE_KEY + "";
+        if (!this.deployerKey) {
+            throw new Error('Add deployer private key to .env');
         }
         return DEPLOYERKEY;
     }
