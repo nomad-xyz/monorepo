@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity >=0.6.11;
+pragma solidity 0.7.6;
 
 // ============ Internal Imports ============
 import {Version0} from "./Version0.sol";
 import {NomadBase} from "./NomadBase.sol";
 import {MerkleLib} from "./libs/Merkle.sol";
 import {Message} from "./libs/Message.sol";
+import {IMessageRecipient} from "./interfaces/IMessageRecipient.sol";
 // ============ External Imports ============
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 
@@ -23,24 +24,11 @@ contract Replica is Version0, NomadBase {
     using TypedMemView for bytes29;
     using Message for bytes29;
 
-    // ============ Enums ============
+    // ============ Constants ============
 
-    // Status of Message:
-    //   0 - None - message has not been proven or processed
-    //   1 - Proven - message inclusion proof has been validated
-    //   2 - Processed - message has been dispatched to recipient
-    enum MessageStatus {
-        None,
-        Proven,
-        Processed
-    }
-
-    // ============ Immutables ============
-
-    // Minimum gas for message processing
-    uint256 public immutable PROCESS_GAS;
-    // Reserved gas (to ensure tx completes in case message processing runs out)
-    uint256 public immutable RESERVE_GAS;
+    bytes32 public constant LEGACY_STATUS_NONE = bytes32(0);
+    bytes32 public constant LEGACY_STATUS_PROVEN = bytes32(uint256(1));
+    bytes32 public constant LEGACY_STATUS_PROCESSED = bytes32(uint256(2));
 
     // ============ Public Storage ============
 
@@ -53,7 +41,7 @@ contract Replica is Version0, NomadBase {
     // Mapping of roots to allowable confirmation times
     mapping(bytes32 => uint256) public confirmAt;
     // Mapping of message leaves to MessageStatus
-    mapping(bytes32 => MessageStatus) public messages;
+    mapping(bytes32 => bytes32) public messages;
 
     // ============ Upgrade Gap ============
 
@@ -64,8 +52,9 @@ contract Replica is Version0, NomadBase {
 
     /**
      * @notice Emitted when message is processed
-     * @param messageHash Hash of message that failed to process
-     * @param success TRUE if the call was executed successfully, FALSE if the call reverted
+     * @param messageHash The keccak256 hash of the message that was processed
+     * @param success TRUE if the call was executed successfully,
+     * FALSE if the call reverted or threw
      * @param returnData the return data from the external call
      */
     event Process(
@@ -98,6 +87,19 @@ contract Replica is Version0, NomadBase {
 
     // ============ Initializer ============
 
+    /**
+     * @notice Initialize the replica
+     * @dev Performs the following action:
+     *      - initializes inherited contracts
+     *      - initializes re-entrancy guard
+     *      - sets remote domain
+     *      - sets a trusted root, and pre-approves messages under it
+     *      - sets the optimistic timer
+     * @param _remoteDomain The domain of the Home contract this follows
+     * @param _updater The EVM id of the updater
+     * @param _committedRoot A trusted root from which to start the Replica
+     * @param _optimisticSeconds The time a new root must wait to be confirmed
+     */
     function initialize(
         uint32 _remoteDomain,
         address _updater,
@@ -109,9 +111,9 @@ contract Replica is Version0, NomadBase {
         entered = 1;
         remoteDomain = _remoteDomain;
         committedRoot = _committedRoot;
+        // pre-approve the committed root.
         confirmAt[_committedRoot] = 1;
-        optimisticSeconds = _optimisticSeconds;
-        emit SetOptimisticTimeout(_optimisticSeconds);
+        _setOptimisticTimeout(_optimisticSeconds);
     }
 
     // ============ External Functions ============
@@ -129,7 +131,7 @@ contract Replica is Version0, NomadBase {
         bytes32 _oldRoot,
         bytes32 _newRoot,
         bytes memory _signature
-    ) external notFailed {
+    ) external {
         // ensure that update is building off the last submitted root
         require(_oldRoot == committedRoot, "not current update");
         // validate updater signature
@@ -175,68 +177,30 @@ contract Replica is Version0, NomadBase {
      * @return _success TRUE iff dispatch transaction succeeded
      */
     function process(bytes memory _message) public returns (bool _success) {
-        bytes29 _m = _message.ref(0);
         // ensure message was meant for this domain
+        bytes29 _m = _message.ref(0);
         require(_m.destination() == localDomain, "!destination");
         // ensure message has been proven
         bytes32 _messageHash = _m.keccak();
-        require(messages[_messageHash] == MessageStatus.Proven, "!proven");
+        require(acceptableRoot(messages[_messageHash]), "!proven");
         // check re-entrancy guard
         require(entered == 1, "!reentrant");
         entered = 0;
         // update message status as processed
-        messages[_messageHash] = MessageStatus.Processed;
-        // A call running out of gas TYPICALLY errors the whole tx. We want to
-        // a) ensure the call has a sufficient amount of gas to make a
-        //    meaningful state change.
-        // b) ensure that if the subcall runs out of gas, that the tx as a whole
-        //    does not revert (i.e. we still mark the message processed)
-        // To do this, we require that we have enough gas to process
-        // and still return. We then delegate only the minimum processing gas.
-        require(gasleft() >= PROCESS_GAS + RESERVE_GAS, "!gas");
-        // get the message recipient
-        address _recipient = _m.recipientAddress();
-        // set up for assembly call
-        uint256 _toCopy;
-        uint256 _maxCopy = 256;
-        uint256 _gas = PROCESS_GAS;
-        // allocate memory for returndata
-        bytes memory _returnData = new bytes(_maxCopy);
-        bytes memory _calldata = abi.encodeWithSignature(
-            "handle(uint32,uint32,bytes32,bytes)",
+        messages[_messageHash] = LEGACY_STATUS_PROCESSED;
+        // call handle function
+        IMessageRecipient(_m.recipientAddress()).handle(
             _m.origin(),
             _m.nonce(),
             _m.sender(),
             _m.body().clone()
         );
-        // dispatch message to recipient
-        // by assembly calling "handle" function
-        // we call via assembly to avoid memcopying a very large returndata
-        // returned by a malicious contract
-        assembly {
-            _success := call(
-                _gas, // gas
-                _recipient, // recipient
-                0, // ether value
-                add(_calldata, 0x20), // inloc
-                mload(_calldata), // inlen
-                0, // outloc
-                0 // outlen
-            )
-            // limit our copy to 256 bytes
-            _toCopy := returndatasize()
-            if gt(_toCopy, _maxCopy) {
-                _toCopy := _maxCopy
-            }
-            // Store the length of the copied bytes
-            mstore(_returnData, _toCopy)
-            // copy the bytes from returndata[0:_toCopy]
-            returndatacopy(add(_returnData, 0x20), 0, _toCopy)
-        }
         // emit process results
-        emit Process(_messageHash, _success, _returnData);
+        emit Process(_messageHash, true, "");
         // reset re-entrancy guard
         entered = 1;
+        // return true
+        return true;
     }
 
     // ============ External Owner Functions ============
@@ -250,8 +214,7 @@ contract Replica is Version0, NomadBase {
         external
         onlyOwner
     {
-        optimisticSeconds = _optimisticSeconds;
-        emit SetOptimisticTimeout(_optimisticSeconds);
+        _setOptimisticTimeout(_optimisticSeconds);
     }
 
     /**
@@ -290,6 +253,11 @@ contract Replica is Version0, NomadBase {
      * @return TRUE iff root has been submitted & timeout has expired
      */
     function acceptableRoot(bytes32 _root) public view returns (bool) {
+        // this is backwards-compatibility for messages proven/processed
+        // under previous versions
+        if (_root == LEGACY_STATUS_PROVEN) return true;
+        if (_root == LEGACY_STATUS_PROCESSED) return false;
+
         uint256 _time = confirmAt[_root];
         if (_time == 0) {
             return false;
@@ -324,7 +292,7 @@ contract Replica is Version0, NomadBase {
         bytes32 _calculatedRoot = MerkleLib.branchRoot(_leaf, _proof, _index);
         // if the root is valid, change status to Proven
         if (acceptableRoot(_calculatedRoot)) {
-            messages[_leaf] = MessageStatus.Proven;
+            messages[_leaf] = _calculatedRoot;
             return true;
         }
         return false;
@@ -340,10 +308,10 @@ contract Replica is Version0, NomadBase {
     // ============ Internal Functions ============
 
     /**
-     * @notice Moves the contract into failed state
-     * @dev Called when a Double Update is submitted
+     * @notice Set optimistic timeout period for new roots
+     * @dev Called by owner (Governance) or at initialization
+     * @param _optimisticSeconds New optimistic timeout period
      */
-
     function _setOptimisticTimeout(uint256 _optimisticSeconds) internal {
         // This allows us to initialize the value to be very low in test envs,
         // but does not allow governance action to lower a production env below
