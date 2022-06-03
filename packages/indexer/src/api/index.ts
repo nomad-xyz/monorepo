@@ -44,6 +44,7 @@ import {
 } from '@generated/type-graphql';
 import { buildSchema } from 'type-graphql';
 import { Domain } from '@nomad-xyz/multi-provider';
+import { randomString } from '../core/utils';
 
 dotenv.config({});
 
@@ -69,12 +70,15 @@ export async function run(db: DB, logger: Logger) {
     next();
   };
 
+  // Kludge. I don't know how to prevent promBundle from exposing metricsPath
+  const metricsPath = '/' + randomString(20); // '/metrics'
+
   const metricsMiddleware = promBundle({
     httpDurationMetricName: prefix + '_api',
     buckets: [0.1, 0.3, 0.6, 1, 1.5, 2.5, 5],
     includeMethod: true,
     includePath: true,
-    metricsPath: '/metrics',
+    metricsPath,
     promRegistry: register,
   });
 
