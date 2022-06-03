@@ -76,6 +76,10 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
     event ImproperUpdate(bytes32 oldRoot, bytes32 newRoot, bytes signature);
 
     /**
+<<<<<<< HEAD
+=======
+
+>>>>>>> 53db42b4348e0ab29b7b5effd7a61b319b5e34c4
      * @notice Emitted when proof of a double update is submitted,
      * which sets the contract to FAILED state
      * @param oldRoot Old root shared between two conflicting updates
@@ -127,6 +131,10 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
         _;
     }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 53db42b4348e0ab29b7b5effd7a61b319b5e34c4
     /**
      * @notice Ensures that contract state != FAILED when the function is called
      */
