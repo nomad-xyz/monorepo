@@ -2,6 +2,14 @@
 
 ### Unreleased
 
+### 1.0.0-rc.19
+
+- fix: numeric fault overflow when supporting infinite token approval
+
+### 1.0.0-rc.18
+
+- feat: support infinite token approval
+
 ### 1.0.0-rc.17
 
 - chore: bump configuration to v0.1.0-rc.23

@@ -1,8 +1,10 @@
 node_modules/
+lib/
 yarn-error.log
 **/tsconfig.tsbuildinfo
 dist/
 cache/
+scripts/accumulator-cli
 
 .pnp.*
 .yarn/*

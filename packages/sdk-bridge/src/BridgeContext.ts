@@ -24,7 +24,11 @@ export class BridgeContext extends NomadContext {
     super(environment);
     this.bridges = new Map();
     for (const network of this.conf.networks) {
-      const bridge =  new BridgeContracts(this, network, this.conf.bridge[network]);
+      const bridge = new BridgeContracts(
+        this,
+        network,
+        this.conf.bridge[network],
+      );
       this.bridges.set(bridge.domain, bridge);
     }
   }
@@ -267,7 +271,11 @@ export class BridgeContext extends NomadContext {
     const approved = await fromToken.allowance(senderAddress, bridgeAddress);
     // Approve if necessary
     if (approved.lt(amount)) {
-      const tx = await fromToken.approve(bridgeAddress, amount, overrides);
+      const tx = await fromToken.approve(
+        bridgeAddress,
+        Number.MAX_SAFE_INTEGER - 10, // subtract some to prevent numeric fault overflow in ethers
+        overrides,
+      );
       await tx.wait();
     }
 
