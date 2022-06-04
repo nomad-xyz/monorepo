@@ -61,6 +61,7 @@ class Base {
 
 abstract class Accountable implements HasAddress, GetsBalance, HasTreshold {
   name: string;
+  _address?: string;
   constructor(name: string) {
     this.name = name;
   }
@@ -85,8 +86,6 @@ abstract class Accountable implements HasAddress, GetsBalance, HasTreshold {
     return tillTreshold
   }
 }
-
-
 
 
 class Account extends Accountable {
@@ -125,6 +124,12 @@ class Account extends Accountable {
   }
 
   
+}
+
+export class WalletAccount extends Account {
+  constructor(address: string, provider: ethers.providers.Provider, treshold?: ethers.BigNumberish) {
+    super(address.substring(0, 8), address, provider, treshold)
+  }
 }
 
 class Agent extends Account {
@@ -199,6 +204,18 @@ class Bank extends Accountable {
     return balance
   }
 
+  async pay(a: Accountable | string, value: ethers.BigNumber) {
+
+    let to;
+    if (typeof a === 'string') {
+      to = a
+    } else {
+      to = await a.address();
+    }
+    const sent = await this.signer.sendTransaction({to, value});
+    return await sent.wait(3);
+  }
+
   static random(provider: ethers.providers.Provider, treshold?: ethers.BigNumberish): Bank {
     return new Bank('bank', ethers.Wallet.createRandom(), provider, treshold)
   }
@@ -206,7 +223,7 @@ class Bank extends Accountable {
 
 
 
-class Network {
+export class Network {
   name: string;
   provider: ethers.providers.Provider;
   bank: Bank;
@@ -242,11 +259,14 @@ class Network {
     ]))
   }
 
-  async reportSuggestion(): Promise<[string, ethers.BigNumber, ethers.BigNumber][]> {
-    const promises: Promise<[string, ethers.BigNumber, ethers.BigNumber]>[] = [...this.balances, this.bank].map(async (k): Promise<[string, ethers.BigNumber, ethers.BigNumber]> => {
-      return [k.name, await k.balance(), await k.howMuchTopUp()]
+
+  async reportSuggestion(): Promise<[Accountable, ethers.BigNumber, ethers.BigNumber][]> {
+    const promises: Promise<[Accountable, ethers.BigNumber, ethers.BigNumber]>[] = [...this.balances, this.bank].map(async (a): Promise<[Accountable, ethers.BigNumber, ethers.BigNumber]> => {
+      return [a, await a.balance(), await a.howMuchTopUp()]
     });
-    return await Promise.all(promises)
+
+    const suggestions = await Promise.all(promises);
+    return suggestions
   }
 
   static fromINetwork(n: INetwork) {
@@ -335,24 +355,31 @@ export class Keymaster {
 
   async reportLazyAllNetworks(): Promise<void> {
     for (const [name, x] of this.networks.entries()) {
-      const kek: [string, ethers.BigNumber, ethers.BigNumber][] = await x.reportSuggestion();
+      const kek: [Accountable, ethers.BigNumber, ethers.BigNumber][] = await x.reportSuggestion();
+
+      let _toPay = ethers.BigNumber.from(0);
+
 
       const ke = ethers.utils.formatEther;
-      const lol = kek.map(k => {
-        const shouldTopUp = k[2].gt(0);
+      const lol = kek.map(([a, balance, toPay]) => {
+        _toPay = _toPay.add(toPay);
+        const shouldTopUp = toPay.gt(0);
         if (shouldTopUp) {
-          if (k[1].eq(0)) {
-            return red(`${k[0]} needs immediately ${ke(k[2])} currency. It is empty for gods sake!`)
+          if (balance.eq(0)) {
+            return red(`${a.name} needs immediately ${ke(toPay)} currency. It is empty for gods sake!`)
           } else {
-            return yellow(`${k[0]} is needs to be paid ${ke(k[2])}. Balance: ${ke(k[1])}`)
+            return yellow(`${a.name} needs to be paid ${ke(toPay)}. Balance: ${ke(balance)}`)
           }
         } else {
-          return green(`${k[0]} is ok, has: ${ke(k[1])}`)
+          return green(`${a.name} is ok, has: ${ke(balance)}`)
         }
       })
 
       console.log(`\n\nNetwork: ${name}\n`);
+
       console.log(lol.join('\n'))
+
+      console.log(`\n\tto pay: ${red(ethers.utils.formatEther(_toPay))}\n\n`)
     }
   }
 
