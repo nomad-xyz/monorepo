@@ -1,13 +1,13 @@
 // import { BridgeContext } from '@nomad-xyz/multi-provider';
 import { NomadConfig, getBuiltin } from '@nomad-xyz/configuration';
 import fs from 'fs';
-import { ethers, providers } from 'ethers';
+import { ethers } from 'ethers';
 import axios from 'axios';
-import { AgentAddresses, INetwork, KeymasterConfig } from './config';
+import { INetwork, KeymasterConfig } from './config';
 import { green, red, yellow } from './color';
 import dotenv from 'dotenv';
-import { eth } from './utils';
-import { JsonRpcProvider } from '@ethersproject/providers';
+import { createLogger, eth } from './utils';
+import Logger from 'bunyan';
 dotenv.config();
 
 export async function getConfig(
@@ -62,8 +62,18 @@ class Base {
 abstract class Accountable implements HasAddress, GetsBalance, HasTreshold {
   name: string;
   _address?: string;
-  constructor(name: string) {
+  logger: Logger;
+  constructor(name: string, logger: Logger) {
     this.name = name;
+    this.logger = logger;
+  }
+
+  with(logger?: Logger) {
+    if (logger) {
+      this.logger = logger;
+    }
+    
+    return this;
   }
   abstract address(): Promise<string>;
   abstract balance(): Promise<ethers.BigNumber>;
@@ -87,35 +97,47 @@ abstract class Accountable implements HasAddress, GetsBalance, HasTreshold {
   }
 }
 
+interface OptionalContextArgs {
+  logger?: Logger;
+}
+
+interface OptionalNetworkArgs extends OptionalContextArgs {
+  treshold?: ethers.BigNumberish;
+}
+
 
 class Account extends Accountable {
   _treshold: ethers.BigNumber;
   _address: string;
   provider: ethers.providers.Provider;
-  constructor(name: string, address: string, provider: ethers.providers.Provider, treshold?: ethers.BigNumberish) {
-    super(name);
-    this._treshold = ethers.BigNumber.from(treshold || eth(1.0));
+  constructor(name: string, address: string, provider: ethers.providers.Provider, options?: OptionalNetworkArgs) {
+    const logger = options?.logger || createLogger(name);
+    super(name, logger);
+    this._treshold = ethers.BigNumber.from(options?.treshold || eth(1.0));
     this._address = address;
     this.provider = provider;
   }
 
   address(): Promise<string> {
+    this.logger.info(`Getting stored address`)
     return Promise.resolve(this._address);
   }
 
   async balance(): Promise<ethers.BigNumber> {
+    this.logger.info(`Getting balance from provider`)
     const balance = await this.provider.getBalance(await this.address());
     // xxxxxxxx console.log(`${this.name} at ${await this.address()} is ${balance.toString()}`)
     return balance;
   }
 
   treshold(): Promise<ethers.BigNumber> {
+    this.logger.info(`Getting stored treshold`)
     return Promise.resolve(this._treshold);
   }
 
-  static async fromSigner(name: string, signer: ethers.Signer, provider?: ethers.providers.Provider) {
-    if (provider) {
-      signer.connect(provider);
+  static async fromSigner(name: string, signer: ethers.Signer, options?: OptionalNetworkArgs & {provider?: ethers.providers.Provider}) {
+    if (options?.provider) {
+      signer.connect(options?.provider);
     }
     if (!signer.provider) throw new Error(`KEK`);
     const address = await signer.getAddress();
@@ -127,36 +149,62 @@ class Account extends Accountable {
 }
 
 export class WalletAccount extends Account {
-  constructor(address: string, provider: ethers.providers.Provider, treshold?: ethers.BigNumberish) {
-    super(address.substring(0, 8), address, provider, treshold)
+  constructor(address: string, provider: ethers.providers.Provider, options?: OptionalNetworkArgs) {
+    super(address.substring(0, 8), address, provider, options)
   }
 }
 
 class Agent extends Account {
-  constructor(home: string, replica: string, type: string, address: string, provider: ethers.providers.Provider, treshold?: ethers.BigNumberish) {
+  constructor(home: string, replica: string, type: string, address: string, provider: ethers.providers.Provider, options?: OptionalNetworkArgs) {
     const slug = home === replica ? `${home}` : `${home}_at_${replica}`
-    super(`${type}_of_${slug}`, address, provider, treshold);
+    super(`${type}_of_${slug}`, address, provider, options);
   }
 }
 
 class LocalAgent extends Account {
-  constructor(home: Network, type: string, address: string, tresholdOverride?: ethers.BigNumber) {
-    super(`${type}_of_${home.name}`, address, home.provider, tresholdOverride || home.treshold);
+  constructor(home: Network, type: string, address: string, options?: OptionalNetworkArgs) {
+    options = {
+      ...options,
+      ...home.shareContextWithAgent(),
+    };
+    const name = `${type}_of_${home.name}`;
+    options.logger = options?.logger ? options.logger.child({type}) : createLogger(name);
+    super(name, address, home.provider, options);
   }
 }
 
 class RemoteAgent extends Account {
-  constructor(home: Network, replica: Network, type: string, address: string, tresholdOverride?: ethers.BigNumber) {
-    super(`${type}_of_${home.name}_at_${replica.name}`, address, replica.provider, tresholdOverride || replica.treshold);
+  constructor(home: Network, replica: Network, type: string, address: string, options?: OptionalNetworkArgs) {
+    options = {
+      ...options,
+      ...home.shareContextWithAgent(replica),
+    };
+    const name = `${type}_of_${home.name}`;
+    const childArgs = {
+      type,
+      replica: replica.name
+    }
+    options.logger = options?.logger ? options.logger.child(childArgs) : createLogger(name, childArgs);
+    super(name, address, replica.provider, options);
   }
 }
 
 class LocalWatcher extends LocalAgent {
-  constructor(home: Network, address: string) {
-    super(home, `watcher_${address.slice(-5)}`, address, home.treshold.mul(5))
+  constructor(home: Network, address: string, options?: OptionalNetworkArgs) {
+    options = {
+      ...options,
+      ...home.shareContextWithAgent(),
+    };
+    // const name = `watcher_${address.slice(-5)}`;
+    const childArgs = {type: 'watcher', account: address.slice(-5)};
+    options.logger = options?.logger ? options.logger.child(childArgs) : createLogger('watcher', childArgs);
+    if (options) options.treshold = home.treshold.mul(5);
+    super(home, 'watcher', address, options)
   }
 
   async howMuchTopUp(): Promise<ethers.BigNumber> {
+    this.logger.info(`Checking howMuchTopUp from localWatcher`)
+
     const t = await this.treshold();
     const b = await this.balance();
 
@@ -165,11 +213,21 @@ class LocalWatcher extends LocalAgent {
 }
 
 class RemoteWatcher extends RemoteAgent {
-  constructor(home: Network, replica: Network, address: string) {
-    super(home, replica, `watcher_${address.slice(-5)}`, address, replica.treshold.mul(5))
+  constructor(home: Network, replica: Network, address: string, options?: OptionalNetworkArgs) {
+    options = {
+      ...options,
+      ...home.shareContextWithAgent(replica),
+    };
+    // const name = `watcher_${address.slice(-5)}`;
+    const childArgs = {type: 'watcher', account: address.slice(-5)};
+
+    options.logger = options?.logger ? options.logger.child(childArgs) : createLogger('watcher', childArgs);
+    if (options) options.treshold = home.treshold.mul(5);
+    super(home, replica, 'watcher', address, options)
   }
 
   async howMuchTopUp(): Promise<ethers.BigNumber> {
+    this.logger.info(`Checking howMuchTopUp from RemoteWatcher`)
     const t = await this.treshold();
     const b = await this.balance();
 
@@ -181,24 +239,30 @@ class RemoteWatcher extends RemoteAgent {
 class Bank extends Accountable {
   signer: ethers.Signer;
   _treshold: ethers.BigNumber;
-  constructor(name: string, signer: ethers.Signer, provider?: ethers.providers.Provider, treshold?: ethers.BigNumberish) {
-    super(name);
-    if (provider) {
-      signer = signer.connect(provider);
+  constructor(name: string, signer: ethers.Signer, options?: OptionalNetworkArgs & {provider?: ethers.providers.Provider, network?: Network}) {
+    const logChild = {type: 'bank', home: options?.network?.name};
+    const logger = options?.logger ? options.logger.child(logChild) : createLogger(name, logChild);
+    super(name, logger);
+    if (options?.provider) {
+      signer = signer.connect(options.provider);
     }
     this.signer = signer;
-    this._treshold = ethers.BigNumber.from(treshold || eth(1.0));
+    this._treshold = ethers.BigNumber.from(options?.treshold || eth(1.0));
   }
 
   async address(): Promise<string> {
+    this.logger.info(`Getting stored address of a bank`)
     return await this.signer.getAddress();
   }
 
   treshold(): Promise<ethers.BigNumber> {
+    this.logger.info(`Getting stored treshold of a bank`)
+
     return Promise.resolve(this._treshold);
   }
 
   async balance(): Promise<ethers.BigNumber> {
+    this.logger.info(`Getting balance from signer of a bank`)
     const balance = await this.signer.getBalance();
     // console.log(balance.toString(), await this.address())
     return balance
@@ -206,20 +270,27 @@ class Bank extends Accountable {
 
   async pay(a: Accountable | string, value: ethers.BigNumber) {
 
+
     let to;
     if (typeof a === 'string') {
       to = a
     } else {
       to = await a.address();
     }
+    this.logger.info({to, amount: ethers.utils.formatEther(value)}, `Paying from signer of a bank`)
+
     const sent = await this.signer.sendTransaction({to, value});
-    return await sent.wait(3);
+    const receipt = await sent.wait(3);
+    this.logger.info({to, amount: ethers.utils.formatEther(value)}, `Payed from signer of a bank!`)
+
+    return receipt;
   }
 
   static random(provider: ethers.providers.Provider, treshold?: ethers.BigNumberish): Bank {
-    return new Bank('bank', ethers.Wallet.createRandom(), provider, treshold)
+    return new Bank('bank', ethers.Wallet.createRandom(), {treshold, provider})
   }
 }
+
 
 
 
@@ -229,16 +300,27 @@ export class Network {
   bank: Bank;
   balances: Accountable[];
   treshold: ethers.BigNumber;
-  constructor(name: string, provider: ethers.providers.Provider | string, balances: Accountable[], bank: ethers.Signer, treshold?: ethers.BigNumberish) {
+  logger: Logger;
+  constructor(name: string, provider: ethers.providers.Provider | string, balances: Accountable[], bank: ethers.Signer, options?: OptionalNetworkArgs) {
     this.name = name;
     if (typeof provider === 'string') {
       this.provider = new ethers.providers.StaticJsonRpcProvider(provider);
     } else {
       this.provider = provider;
     }
-    this.treshold = ethers.BigNumber.from(treshold || eth(1));
-    this.bank = new Bank(`${name}_bank`, bank, this.provider, treshold)
+    this.treshold = ethers.BigNumber.from(options?.treshold || eth(1));
+    this.logger = options?.logger || createLogger(name, {home: name});
+    this.bank = new Bank(`${name}_bank`, bank, {...options, provider: this.provider});
     this.balances = balances;
+  }
+
+
+  with(logger?: Logger) {
+    if (logger) {
+      this.logger = logger;
+    }
+    
+    return this;
   }
 
   async checkAllBalances() {
@@ -269,7 +351,18 @@ export class Network {
     return suggestions
   }
 
-  static fromINetwork(n: INetwork) {
+  shareContextWithAgent(replica?: Network): OptionalNetworkArgs {
+    const child: Object = {
+      home: this.name,
+      ...replica ? {replica: replica.name}:{}
+    };
+    
+    return {
+      logger: this.logger.child(child)
+    }
+  }
+
+  static fromINetwork(n: INetwork, options?: OptionalNetworkArgs) {
     const {name} = n;
     const envName = name.toUpperCase().replaceAll('-', '_');
     const rpcEnvKey = `${envName}_RPC`;
@@ -282,15 +375,23 @@ export class Network {
 
       const provider = new ethers.providers.StaticJsonRpcProvider(rpc);
     
-    const network = new Network(n.name, provider, [], new ethers.Wallet(n.bank), n.treshold);
+    const network = new Network(n.name, provider, [], new ethers.Wallet(n.bank), options);
     const balances = [
       new LocalAgent(network, 'updater', n.agents.updater),
-      ...n.agents.watchers.map(w => new LocalWatcher(network, w)), // should be this only watcher
+      ...n.agents.watchers.map(w => new LocalWatcher(network, w,)), // should be this only watcher
       ...n.agents.kathy ? [new LocalAgent(network, 'kathy', n.agents.kathy!)] : []
     ];
-    network.balances.push(...balances);
+    network.addBalances(...balances)
+    // network.balances.push();
 
     return network;
+  }
+
+  addBalances(...bs: Accountable[]) {
+    for (let b of bs) {
+      b.logger = b.logger.child({home: this.name});
+      this.balances.push(b)
+    }
   }
 
 }
@@ -299,10 +400,26 @@ export class Network {
 export class Keymaster {
   config: KeymasterConfig;
   networks: Map<string, Network>;
+  logger: Logger;
 
-  constructor(config: KeymasterConfig) {
+  constructor(config: KeymasterConfig, options?: OptionalContextArgs) {
     this.config = config;
     this.networks = new Map();
+    this.logger = options?.logger || createLogger(`keymaster`);
+  }
+
+  exportContextWithNetwork(networkName: string): OptionalContextArgs {
+    return {
+      logger: this.logger.child({home: networkName})
+    }
+  }
+
+  with(logger?: Logger) {
+    if (logger) {
+      this.logger = logger;
+    }
+    
+    return this;
   }
 
   static async fromEnvName(config: KeymasterConfig) {
@@ -313,7 +430,7 @@ export class Keymaster {
 
   init(): Keymaster {
     Object.values(this.config.networks).forEach((n) => {
-      this.networks.set(n.name, Network.fromINetwork(n));
+      this.networks.set(n.name, Network.fromINetwork(n, this.exportContextWithNetwork(n.name)));
     })
 
     Object.entries(this.config.networks).forEach(([home, homeNetConfig]) => {
@@ -322,6 +439,7 @@ export class Keymaster {
 
       for (const replica of homeNetConfig.replicas) {
         const replicaNetwork = this.networks.get(replica)!;
+
 
         const balances: Accountable[] = [
           new RemoteAgent(homeNetwork, replicaNetwork, 'relayer', homeAgents.relayer),

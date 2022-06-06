@@ -5,6 +5,39 @@ const createKeccakHash = require("keccak");
 import Decimal from 'decimal.js';
 
 
+
+import Logger from 'bunyan';
+export enum BunyanLevel {
+  FATAL = 'fatal',
+  ERROR = 'error',
+  WARN = 'warn',
+  INFO = 'info',
+  DEBUG = 'debug',
+  TRACE = 'trace',
+}
+
+interface LoggerOptions {
+  environment?: string,
+  level?: BunyanLevel,
+  [custom: string]: any;
+}
+
+export function createLogger(
+  name: string,
+  options?: LoggerOptions
+) {
+
+  // TODO: need to check this construction
+  return Logger.createLogger({
+    name,
+    serializers: Logger.stdSerializers,
+    level: options?.level || 'debug',
+    environment: options?.environment || getEnvironment(),
+    ...options
+  });
+}
+
+
 export class Key {
   value: Buffer;
 
@@ -98,4 +131,9 @@ export function privateKeyToAddress(privateKey: Buffer | string): string {
 export function eth(n: number) {
     const d = new Decimal(n).mul(10**18);
     return ethers.BigNumber.from(d.toString()); // Math(n)).mul(ethers.BigNumber.from('1'+'0'.repeat(18))
+}
+
+export type NomadEnvironment = 'development' | 'staging' | 'production';
+export function getEnvironment() {
+  return process.env.ENVIRONMENT! as NomadEnvironment;
 }

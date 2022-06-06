@@ -4,9 +4,13 @@ import { green, red, yellow } from "./color";
 import { pconfig } from "./configs";
 import { Keymaster, Network, WalletAccount } from "./context";
 import { AwsKmsSigner } from "./kms";
-import { eth } from "./utils";
+import { eth, getEnvironment, NomadEnvironment } from "./utils";
+import { BunyanLevel, createLogger } from './utils';
 
 
+const logLevel = (process.env.LOG_LEVEL || 'debug') as BunyanLevel;
+
+// const logger = createLogger('indexer', environment, logLevel);
 async function std() {
   const ctx = (new Keymaster(pconfig)).init();
 
@@ -22,15 +26,19 @@ docker run -d -e "BLOCK_TIME=1000" \
 */
 
 async function local() {
+  const environment = getEnvironment();
+  console.log(environment)
+  const logger = createLogger('indexer', {environment, logLevel});
+
   const p = new StaticJsonRpcProvider('http://localhost:8545');
-  const w = new WalletAccount('0xCAaCF83457dE300B0278E80641667dF147e9f440', p);
+  const w = new WalletAccount('0xCAaCF83457dE300B0278E80641667dF147e9f440', p, {logger: logger.child({account: '0xCAaCF83'})})
   // const bank = new AwsKmsSigner(, p);
   const bank: ethers.Signer = new ethers.Wallet(
     '1000000000000000000000000000000000000000000000000000000000000001'
   ).connect(p);
   const n = new Network('local', p, [
     w
-  ], bank, eth(1));
+  ], bank, {treshold: eth(1)}).with(logger.child({network: 'local'}));
 
   const r = await n.reportSuggestion();
 
@@ -62,15 +70,18 @@ async function local() {
 }
 
 async function remote() {
+  const environment = getEnvironment();
+  console.log(environment)
+  const logger = createLogger('indexer', {environment, logLevel});
+
   const p = new StaticJsonRpcProvider('http://localhost:8545');
-  const w = new WalletAccount('0xCAaCF83457dE300B0278E80641667dF147e9f440', p);
+  const w = new WalletAccount('0xCAaCF83457dE300B0278E80641667dF147e9f440', p, {logger: logger.child({account: '0xCAaCF83'})});
   // const bank = new AwsKmsSigner(, p);
   const bank: ethers.Signer = new ethers.Wallet(
     '1000000000000000000000000000000000000000000000000000000000000001'
   ).connect(p);
-  const n = new Network('local', p, [
-    w
-  ], bank, eth(1));
+  const n = new Network('local', p, [], bank, {treshold: eth(1), logger});
+  n.addBalances(w);
 
   const r = await n.reportSuggestion();
 
@@ -102,7 +113,8 @@ async function remote() {
 }
 
 (async () => {
-    await local();
+  await std();
+    // await remote();
 })();
 
 
