@@ -273,7 +273,7 @@ export class BridgeContext extends NomadContext {
     if (approved.lt(amount)) {
       const tx = await fromToken.approve(
         bridgeAddress,
-        Number.MAX_SAFE_INTEGER - 10, // subtract some to prevent numeric fault overflow in ethers
+        ethers.constants.MaxUint256,
         overrides,
       );
       await tx.wait();
