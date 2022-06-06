@@ -280,7 +280,7 @@ export class BridgeContext extends NomadContext {
     }
 
     if (!overrides.gasLimit) {
-      overrides.gasLimit = BigNumber.from(350000)
+      overrides.gasLimit = BigNumber.from(350000);
     }
     // check if it will succeed/fail with callStatic
     await fromBridge.bridgeRouter.callStatic.send(
@@ -386,7 +386,7 @@ export class BridgeContext extends NomadContext {
 
     overrides.value = amount;
     if (!overrides.gasLimit) {
-      overrides.gasLimit = BigNumber.from(350000)
+      overrides.gasLimit = BigNumber.from(350000);
     }
 
     // check if it will succeed/fail with callStatic
