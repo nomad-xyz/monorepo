@@ -9,6 +9,7 @@ import { TransferMessage } from './BridgeMessage';
 import * as config from '@nomad-xyz/configuration';
 
 type Address = string;
+const DEFAULT_GAS_LIMIT = BigNumber.from(350000);
 
 /**
  * The BridgeContext manages connections to Nomad Bridge contracts.
@@ -280,7 +281,7 @@ export class BridgeContext extends NomadContext {
     }
 
     if (!overrides.gasLimit) {
-      overrides.gasLimit = BigNumber.from(350000);
+      overrides.gasLimit = DEFAULT_GAS_LIMIT;
     }
     // check if it will succeed/fail with callStatic
     await fromBridge.bridgeRouter.callStatic.send(
@@ -386,7 +387,7 @@ export class BridgeContext extends NomadContext {
 
     overrides.value = amount;
     if (!overrides.gasLimit) {
-      overrides.gasLimit = BigNumber.from(350000);
+      overrides.gasLimit = DEFAULT_GAS_LIMIT;
     }
 
     // check if it will succeed/fail with callStatic
