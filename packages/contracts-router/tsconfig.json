@@ -11,7 +11,7 @@
     "./scripts",
     "./tmp.ts",
     "../../node_modules",
-    "hardhat.config.ts"
+    "./hardhat.config.ts"
   ],
   "include": [
     "index.ts",

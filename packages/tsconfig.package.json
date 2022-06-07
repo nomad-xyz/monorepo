@@ -1,9 +1,5 @@
 {
-  "exclude": [
-    "**/dist/**",
-    "**/node_modules/**",
-    "**/tests/**"
-  ],
+  "exclude": ["**/dist/**", "**/node_modules/**", "**/tests/**"],
   "compilerOptions": {
     "composite": true,
     "declaration": true,
@@ -21,6 +17,7 @@
     "preserveSymlinks": true,
     "preserveWatchOutput": true,
     "pretty": false,
+    "resolveJsonModule": true,
     "sourceMap": true,
     "target": "es6",
     "strict": true

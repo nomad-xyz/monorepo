@@ -2,8 +2,7 @@
   "extends": "../tsconfig.package.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "composite": true,
-    "resolveJsonModule": true
+    "composite": true
   },
   "exclude": [
     "./node_modules",
