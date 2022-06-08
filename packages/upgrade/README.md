@@ -40,15 +40,6 @@ TokenRegistry registry = new TokenRegistry();
 BridgeToken token = new BridgeToken();
 ```
 
-Initialize implementations
-```
-home.initialize();
-replica.initialize();
-grouter.initialize();
-brouter.initialize();
-token.initialize();
-```
-
 Print governance bytecode
 
 ```
@@ -56,3 +47,12 @@ bytes memory bytecode  = abi.encodeWithSignature("executeGovernanceActions()",ar
 console2.log(bytes bytecode)
 ```
 
+Function Signature
+
+```
+function executeGovernanceActions(
+    GovernanceMessage.Call[] calldata _localCalls,
+    uint32[] calldata _domains,
+    GovernanceMessage.Call[][] calldata _remoteCalls
+) external onlyGovernorOrRecoveryManager {
+```
