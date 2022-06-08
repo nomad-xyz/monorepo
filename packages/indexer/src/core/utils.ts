@@ -139,7 +139,7 @@ export function formatEVM(s: string) {
   }
 
   if (s.length !== 40 && s.length !== 64) {
-    throw new Error(`Neither EVM nor interchain address`);
+    throw new Error(`Neither EVM nor interchain address: ${s}`);
   }
 
   const digest = keccak256(toUtf8Bytes(s)).substring(2);

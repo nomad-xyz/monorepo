@@ -21,7 +21,8 @@ services:
     restart: always
     command: npm run start indexer
     ports:
-      - "8080:3000"
+      - "8080:9090"
+      - "8081:3000"
     expose:
       - 8080
     links:
