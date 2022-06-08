@@ -137,3 +137,38 @@ export type NomadEnvironment = 'development' | 'staging' | 'production';
 export function getEnvironment() {
   return process.env.ENVIRONMENT! as NomadEnvironment;
 }
+
+
+export interface OptionalNetworkArgs {
+  treshold?: ethers.BigNumberish;
+}
+
+export function sleep(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+export async function retry<T>(
+  callback: () => Promise<T>,
+  tries: number,
+  onError: ((e: any) => Promise<void> | void) | undefined,
+): Promise<[T | undefined, any]> {
+  const timeout = 2000;
+  let lastError: any = undefined;
+  for (let attempt = 0; attempt < tries; attempt++) {
+    try {
+      return [await callback(), undefined];
+    } catch (e) {
+      if (onError) await onError(e);
+      lastError = e;
+      await sleep(timeout * 2 ** attempt);
+    }
+  }
+  return [undefined, lastError];
+}
+
+import fs from 'fs';
+export function logToFile(s: string, l?: string) {
+  fs.appendFileSync(l||'/tmp/log.log', s + '\n');
+}

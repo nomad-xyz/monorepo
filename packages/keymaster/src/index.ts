@@ -2,20 +2,21 @@ import { StaticJsonRpcProvider } from "@ethersproject/providers";
 import { ethers } from "ethers";
 import { green, red, yellow } from "./color";
 import { pconfig } from "./configs";
-import { Keymaster, Network, WalletAccount } from "./context";
+import {  Network, WalletAccount } from "./account";
 import { AwsKmsSigner } from "./kms";
-import { eth, getEnvironment, NomadEnvironment } from "./utils";
-import { BunyanLevel, createLogger } from './utils';
+import { BunyanLevel } from './utils';
+import { Keymaster } from "./keymaster";
+import { MyJRPCProvider } from "./retry_provider/provider";
+import { Context } from "./context";
 
 
 const logLevel = (process.env.LOG_LEVEL || 'debug') as BunyanLevel;
 
-// const logger = createLogger('indexer', environment, logLevel);
 async function std() {
-  const ctx = (new Keymaster(pconfig)).init();
+  const km = (new Keymaster(pconfig)).init();
 
-    // await ctx.checkAllNetworks();
-    await ctx.reportLazyAllNetworks();
+    await km.reportLazyAllNetworks();
+    km.ctx.metrics.startServer(9092);
 }
 
 /*
@@ -26,19 +27,22 @@ docker run -d -e "BLOCK_TIME=1000" \
 */
 
 async function local() {
-  const environment = getEnvironment();
-  console.log(environment)
-  const logger = createLogger('indexer', {environment, logLevel});
+  // const environment = getEnvironment();
+  // console.log(environment)
+  // const logger = createLogger('indexer', {environment, logLevel});
+  // const m = new KeyMasterMetricsCollector(environment, logger);
 
-  const p = new StaticJsonRpcProvider('http://localhost:8545');
-  const w = new WalletAccount('0xCAaCF83457dE300B0278E80641667dF147e9f440', p, {logger: logger.child({account: '0xCAaCF83'})})
+  const ctx = new Context();
+
+  const p = new MyJRPCProvider('http://localhost:8545', 'local', ctx);
+  const w = new WalletAccount('0xCAaCF83457dE300B0278E80641667dF147e9f440', p, ctx)
   // const bank = new AwsKmsSigner(, p);
   const bank: ethers.Signer = new ethers.Wallet(
     '1000000000000000000000000000000000000000000000000000000000000001'
   ).connect(p);
   const n = new Network('local', p, [
     w
-  ], bank, {treshold: eth(1)}).with(logger.child({network: 'local'}));
+  ], bank, ctx);
 
   const r = await n.reportSuggestion();
 
@@ -70,17 +74,15 @@ async function local() {
 }
 
 async function remote() {
-  const environment = getEnvironment();
-  console.log(environment)
-  const logger = createLogger('indexer', {environment, logLevel});
+  const ctx = new Context();
 
   const p = new StaticJsonRpcProvider('http://localhost:8545');
-  const w = new WalletAccount('0xCAaCF83457dE300B0278E80641667dF147e9f440', p, {logger: logger.child({account: '0xCAaCF83'})});
+  const w = new WalletAccount('0xCAaCF83457dE300B0278E80641667dF147e9f440', p, ctx);
   // const bank = new AwsKmsSigner(, p);
   const bank: ethers.Signer = new ethers.Wallet(
     '1000000000000000000000000000000000000000000000000000000000000001'
   ).connect(p);
-  const n = new Network('local', p, [], bank, {treshold: eth(1), logger});
+  const n = new Network('local', p, [], bank, ctx);
   n.addBalances(w);
 
   const r = await n.reportSuggestion();
