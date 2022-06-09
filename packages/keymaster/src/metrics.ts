@@ -82,7 +82,7 @@ export class BaseMetricsCollector extends MetricsCollector {
     this.rpcErrors = new Counter({
       name: prefix + '_rpc_errors',
       help: 'Counter that tracks error codes from RPC endpoint',
-      labelNames: [...labelNames, 'method'],
+      labelNames: [...labelNames, 'method', 'code'],
     });
 
     this.gasUsed = new Counter({

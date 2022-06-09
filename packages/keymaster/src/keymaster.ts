@@ -1,6 +1,6 @@
 import Logger from "bunyan";
 import { KeymasterConfig } from "./config";
-import { Accountable, Network, RemoteAgent, RemoteWatcher } from "./account";
+import { Accountable, Bank, Network, RemoteAgent, RemoteWatcher } from "./account";
 // import { createLogger, OptionalContextArgs } from "./utils";
 import { ethers } from "ethers";
 import { green, red, yellow } from "./color";
@@ -95,6 +95,12 @@ export class Keymaster {
         console.log(`\n\tto pay: ${red(ethers.utils.formatEther(_toPay))}\n\n`)
       }
     }
+
+    async payLazyAllNetworks(dryrun=false): Promise<void> {
+        for (const [name, net] of this.networks.entries()) {
+          await net.checkAndPay(dryrun);
+        }
+      }
   
     get networkNames(): string[] {
       return Object.keys(this.networks);
@@ -106,8 +112,8 @@ export class Keymaster {
   
   
     // semi-useless
-    getBank(network: string): ethers.Signer {
-      return new ethers.Wallet(this.config.networks[network].bank, this.getProvider(network));
+    getBank(network: string): Bank {
+      return this.networks.get(network)?.bank!;
     }
   
     async getBalance(network: string, address: string): Promise<ethers.BigNumber> {
@@ -115,7 +121,7 @@ export class Keymaster {
     }
   
     async bankBalance(network: string): Promise<ethers.BigNumber> {
-      const address = await this.getBank(network).getAddress();
+      const address = await this.getBank(network).signer.getAddress();
   
       return await this.getBalance(network, address);
     }

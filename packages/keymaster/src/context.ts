@@ -1,6 +1,8 @@
 import Logger, {  } from "bunyan";
 import { KeyMasterMetricsCollector } from "./metrics";
 import { BunyanLevel, createLogger, getEnvironment } from "./utils";
+import dotenv from 'dotenv';
+dotenv.config();
 
 export class Context {
     logger: Logger;
@@ -8,10 +10,8 @@ export class Context {
 
     constructor(_logger?: Logger, _metrics?: KeyMasterMetricsCollector) {
         const environment = getEnvironment();
-        console.log(environment);
-        const logLevel = (process.env.LOG_LEVEL || 'debug') as BunyanLevel;
-        this.logger = _logger || createLogger('keymaster', {environment, logLevel});
-        console.log(!!_metrics)
+        const level = (process.env.LOG_LEVEL || 'debug') as BunyanLevel;
+        this.logger = _logger || createLogger('keymaster', {environment, level});
         this.metrics = _metrics || new KeyMasterMetricsCollector(environment, this.logger);
     }
 

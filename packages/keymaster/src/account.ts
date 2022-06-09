@@ -5,9 +5,10 @@ import axios from 'axios';
 import { INetwork } from './config';
 import { green, red, yellow } from './color';
 import dotenv from 'dotenv';
-import { eth, logToFile, OptionalNetworkArgs } from './utils';
+import { eth, logToFile, OptionalNetworkArgs, sleep } from './utils';
 import { MyJRPCProvider } from './retry_provider/provider';
 import { Context } from './context';
+import { AwsKmsSigner } from './kms';
 dotenv.config();
 
 export async function getConfig(
@@ -214,7 +215,6 @@ export class Bank extends Accountable {
     
     super(name, ctx.with({type: 'bank', home: home.name, replica: home.name}));
     if (options?.provider) {
-      logToFile(`CONNECTED!!!!`)
       signer = signer.connect(options.provider);
     }
     this.home = home;
@@ -235,8 +235,6 @@ export class Bank extends Accountable {
 
   async balance(): Promise<ethers.BigNumber> {
     this.ctx.logger.info(`Getting balance from signer of a bank`)
-    console.log(this.signer)
-    console.log(this.signer.provider)
     const balance = await this.signer.getBalance();
     // console.log(balance.toString(), await this.address())
     const home = this.home.name;
@@ -250,12 +248,30 @@ export class Bank extends Accountable {
     if (typeof a === 'string') {
       to = a
     } else {
-      to = await a.address();
+      to = a._address || await a.address();
     }
+
+    if (a === this) {
+      console.log(red(`Should not be sending to self`));
+    }
+
     this.ctx.logger.info({to, amount: ethers.utils.formatEther(value)}, `Paying from signer of a bank`)
 
     const sent = await this.signer.sendTransaction({to, value});
-    const receipt = await sent.wait(3);
+    
+    let receipt;
+
+    let t = 0;
+    while (t++ < 6) {
+      try {
+        await sleep(3000);
+        receipt = await sent.wait();
+        break
+      } catch (e) {
+        this.ctx.logger.debug({to, amount: ethers.utils.formatEther(value)}, `Failed to pay for try ${t}!`)
+      }
+    }
+    if (!receipt) throw new Error(`No receipt for tx: ${sent.hash}`);
     this.ctx.logger.info({to, amount: ethers.utils.formatEther(value)}, `Payed from signer of a bank!`)
 
     return receipt;
@@ -335,6 +351,39 @@ export class Network {
     return suggestions
   }
 
+  async checkAndPay(dryrun=false): Promise<void> {
+    console.log(`\n\nNetwork: ${this.name}\n`);
+    const ke = ethers.utils.formatEther;
+
+    const suggestions: [Accountable, ethers.BigNumber, ethers.BigNumber][] = await this.reportSuggestion();
+
+    let _toPay = ethers.BigNumber.from('0');
+    let _paid = ethers.BigNumber.from('0');
+
+    for (const [a, balance, toPay] of suggestions) {
+      const shouldTopUp = toPay.gt(0);
+      if (shouldTopUp) {
+        _toPay = _toPay.add(toPay);
+          
+        if (balance.eq(0)) {
+          console.log(red(`${a.name} needs immediately ${ke(toPay)} currency. It is empty for gods sake!`));
+        } else {
+          console.log(yellow(`${a.name} needs to be paid ${ke(toPay)}. Balance: ${ke(balance)}`));
+        }
+        const sameAddress = a == this.bank || (await a.address()) === (await this.bank.address());
+        if (!sameAddress && !dryrun) {
+          await this.bank.pay(a, toPay);
+          console.log(green(`Paid ${ke(toPay)} to ${a.name}!`));
+          _paid = _paid.add(toPay)
+        }
+        
+      } else {
+        console.log(green(`${a.name} is ok, has: ${ke(balance)}`));
+      }
+    }
+    console.log(`\n\tpaid: ${green(ke(_paid))} out of ${yellow(ke(_toPay))}\n\n`)
+  }
+
   // shareContextWithAgent(replica?: Network): OptionalNetworkArgs {
   //   const child: Object = {
   //     home: this.name,
@@ -359,7 +408,12 @@ export class Network {
 
       const provider = new MyJRPCProvider(rpc, name, ctx)// new ethers.providers.StaticJsonRpcProvider(rpc);
     
-    const network = new Network(n.name, provider, [], new ethers.Wallet(n.bank), ctx, options);
+    let network: Network;
+    if (typeof n.bank === 'string') {
+      network = new Network(n.name, provider, [], new ethers.Wallet(n.bank), ctx, options);
+    } else {
+      network = new Network(n.name, provider, [], new AwsKmsSigner(n.bank), ctx, options);
+    }
     const balances = [
       new LocalAgent(network, 'updater', n.agents.updater, ctx),
       ...n.agents.watchers.map(w => new LocalWatcher(network, w, ctx)), // should be this only watcher

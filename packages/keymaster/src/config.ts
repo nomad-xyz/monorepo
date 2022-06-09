@@ -1,4 +1,5 @@
 import { ethers } from "ethers"
+import { AwsKmsSignerCredentials } from "./kms"
 
 export interface AgentAddresses {
     kathy?: string,
@@ -12,7 +13,7 @@ export interface INetwork {
     name: string,
     endpoint: string,
     replicas: string[],
-    bank: string,
+    bank: string | AwsKmsSignerCredentials,
     treshold: ethers.BigNumber,
     agents: AgentAddresses,
 }

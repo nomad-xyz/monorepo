@@ -1,6 +1,6 @@
 import { ethers } from "ethers"
 import { Context } from "../context";
-import { retry } from "../utils";
+import { logToFile, retry } from "../utils";
 
 export class MyJRPCProvider extends ethers.providers.StaticJsonRpcProvider {
     networkName: string;
@@ -24,8 +24,9 @@ export class MyJRPCProvider extends ethers.providers.StaticJsonRpcProvider {
             this.ctx.metrics.observeLatency(this.networkName, method, time);
             return result;
         }, 5, (e) => {
-            this.ctx.logger.error(`logged error to file '/tmp/log.log'`);
-            this.ctx.metrics.incRpcErrors(this.networkName, method, e.code||1337);
+            logToFile(JSON.stringify(e))
+            this.ctx.logger.error(`Failed to perform request. Method: ${method}, params: ${params}, Reason: ${e.reason}`, e);
+            this.ctx.metrics.incRpcErrors(this.networkName, method, e.code||'NO_CODE');
         });
         
         if (result) {

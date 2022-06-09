@@ -26,7 +26,6 @@ export function createLogger(
   name: string,
   options?: LoggerOptions
 ) {
-
   // TODO: need to check this construction
   return Logger.createLogger({
     name,

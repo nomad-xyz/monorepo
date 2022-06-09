@@ -1,7 +1,7 @@
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
 import { ethers } from "ethers";
 import { green, red, yellow } from "./color";
-import { pconfig } from "./configs";
+import { dconfig, dconfigkms, pconfig } from "./configs";
 import {  Network, WalletAccount } from "./account";
 import { AwsKmsSigner } from "./kms";
 import { BunyanLevel } from './utils';
@@ -13,10 +13,40 @@ import { Context } from "./context";
 const logLevel = (process.env.LOG_LEVEL || 'debug') as BunyanLevel;
 
 async function std() {
-  const km = (new Keymaster(pconfig)).init();
+  const km = (new Keymaster(dconfig)).init();
 
-    await km.reportLazyAllNetworks();
+    await km.payLazyAllNetworks(false);
+    // await km.reportLazyAllNetworks();
     km.ctx.metrics.startServer(9092);
+}
+
+async function stdkms() {
+  const km = (new Keymaster(dconfigkms)).init();
+
+    // await km.reportLazyAllNetworks();
+    await km.payLazyAllNetworks();
+    km.ctx.metrics.startServer(9092);
+}
+
+async function singlekms() {
+  const ctx = new Context();
+
+  const p = new MyJRPCProvider('https://kovan.infura.io/v3/x', 'kovan', ctx);
+  const w = new WalletAccount('0x872f4F3c90e2241B7402044955653B836C68eEd0', p, ctx)
+  const bank = new AwsKmsSigner({
+    accessKeyId: '',
+    secretAccessKey: '',
+    region: '',
+    keyId: ''
+  }, p);
+
+  const b = await bank.getBalance();
+  const a = await bank.getAddress();
+  console.log(b, a)
+  const n = new Network('kovan', p, [
+    w
+  ], bank, ctx);
+  await n.checkAndPay();
 }
 
 /*
@@ -116,7 +146,8 @@ async function remote() {
 
 (async () => {
   await std();
-    // await remote();
+  // await stdkms();
+  // await singlekms();
 })();
 
 
