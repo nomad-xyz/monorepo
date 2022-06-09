@@ -103,7 +103,7 @@ export class DB {
       orderBy: {
         dispatchedAt: 'asc',
       },
-      ...args
+      ...args,
     });
     return messages.map((m) =>
       NomadMessage.deserialize(m, this.logger, this.sdk),
@@ -172,7 +172,7 @@ export class DB {
 
     const skip = page * take;
 
-    let where: {
+    const where: {
       sender?: string;
       recipient?: string;
       origin?: number;

@@ -140,7 +140,7 @@ export class Orchestrator {
   }
 
   async indexAllUnrelated(): Promise<void> {
-    let finished = false;
+    const finished = false;
     const errors: TbdPackage[] = [];
 
     const promises = this.allowedDomains.map(async (domain: number) => {

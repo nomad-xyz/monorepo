@@ -109,7 +109,7 @@ class TokenFetcher {
     this.logger.debug(`Updated token [${domain}, ${id}]`);
 
     // Determine remotes whether network is gov or not
-    let remotes = this.sdk.domainNumbers.filter(
+    const remotes = this.sdk.domainNumbers.filter(
       (remoteDomain) => remoteDomain !== domain,
     );
 

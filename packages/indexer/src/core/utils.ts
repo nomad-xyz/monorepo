@@ -148,7 +148,7 @@ export function formatEVM(address: string) {
     const targetChar = digest[i];
     let upper = true;
     try {
-      let n: number = parseInt(targetChar);
+      const n: number = parseInt(targetChar);
       if (n <= 7) {
         upper = false;
       }
