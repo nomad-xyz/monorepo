@@ -7,6 +7,8 @@ export function buildUri(environment: string){
         return 'https://bridge-indexer.staging.madlads.tools/graphql'
       case "production":
         return 'https://bridge-indexer.prod.madlads.tools/graphql'
+      case "local": 
+        return 'http://localhost:8080/graphql'
       default:
         return 'https://bridge-indexer.dev.madlads.tools/graphql'
     }
