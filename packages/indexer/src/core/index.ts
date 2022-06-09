@@ -14,7 +14,7 @@ export async function run(
   db: DB,
   logger: Logger,
   metrics: IndexerCollector,
-) {
+): Promise<void> {
   const redis = getRedis();
 
   await redis.connect();

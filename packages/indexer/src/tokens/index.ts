@@ -1,4 +1,3 @@
-import { utils } from '@nomad-xyz/multi-provider';
 import { BridgeContext } from '@nomad-xyz/sdk-bridge';
 import * as dotenv from 'dotenv';
 import { ethers } from 'ethers';
@@ -6,8 +5,8 @@ dotenv.config({});
 
 import { PrismaClient } from '@prisma/client';
 import { DB } from '../core/db';
-import Logger, { createLogger } from 'bunyan';
 import { Padded, sleep } from '../core/utils';
+import Logger from 'bunyan';
 
 const abi = [
   'function name() public view returns (string)',

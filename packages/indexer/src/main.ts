@@ -9,11 +9,11 @@ import { startTokenUpdater } from './tokens';
 export type NomadEnvironment = 'development' | 'staging' | 'production';
 export type Program = 'api' | 'core';
 
-const environment = process.env.ENVIRONMENT! as NomadEnvironment;
+const environment = process.env.ENVIRONMENT as NomadEnvironment;
 const configOverrideLocation = process.env.CONFIG_OVERRIDE_LOCATION;
-const program = process.env.PROGRAM! as Program;
+const program = process.env.PROGRAM as Program;
 const logLevel = (process.env.LOG_LEVEL || 'debug') as BunyanLevel;
-const metricsPort = parseInt(process.env.METRICS_PORT || "9090");
+const metricsPort = parseInt(process.env.METRICS_PORT || '9090');
 
 (async () => {
   const logger = createLogger('indexer', environment, logLevel);

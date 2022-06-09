@@ -100,7 +100,7 @@ export class Orchestrator {
     this.forbiddenDomains = []; // 2019844457
   }
 
-  async init() {
+  async init(): Promise<void> {
     await this.initIndexers();
     await this.initHealthCheckers();
     await this.initalFeedConsumer();
@@ -231,7 +231,6 @@ export class Orchestrator {
         );
       }
     });
-
   }
 
   async checkAllHealth() {

@@ -6,13 +6,13 @@ import { Orchestrator } from './orchestrator';
 import { ProcessorV2 } from './consumerV2';
 dotenv.config({});
 
-function fail(res: any, code: number, reason: string) {
-  return res.status(code).json({ error: reason });
+const PORT = process.env.DEBUG_PORT || '1337';
+interface RedisHeight {
+  domain: number;
+  block: number;
 }
 
-const PORT = process.env.DEBUG_PORT || '1337';
-
-export async function run(o: Orchestrator, logger: Logger) {
+export function run(o: Orchestrator, logger: Logger): void {
   const app = express();
   app.use(cors());
   app.use(express.json());
@@ -136,9 +136,4 @@ export async function run(o: Orchestrator, logger: Logger) {
   app.listen(PORT, () => {
     logger.info(`Server is running at https://localhost:${PORT}`);
   });
-}
-
-interface RedisHeight {
-  domain: number;
-  block: number;
 }

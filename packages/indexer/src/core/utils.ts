@@ -139,7 +139,9 @@ export function formatEVM(address: string) {
   }
 
   if (s.length !== 40 && s.length !== 64) {
-    throw new Error(`Neither EVM nor interchain address: initial ${address}, modified and failed: ${s}`);
+    throw new Error(
+      `Neither EVM nor interchain address: initial ${address}, modified and failed: ${s}`,
+    );
   }
 
   const digest = keccak256(toUtf8Bytes(s)).substring(2);
@@ -198,7 +200,7 @@ export class Padded {
     if (this.s.substring(0, 24) === '0x0000000000000000000000') {
       return this.toEVMAddress();
     }
-    return formatEVM(this.s)
+    return formatEVM(this.s);
   }
 
   toEVMAddress() {
@@ -279,13 +281,13 @@ export function onlyUnique<T>(value: T, index: number, self: T[]): boolean {
   return self.indexOf(value) === index;
 }
 
-
 export function randomString(length: number) {
-  let result           = '';
-  const characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  const characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const charactersLength = characters.length;
-  for ( var i = 0; i < length; i++ ) {
+  for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
- }
- return result;
+  }
+  return result;
 }
