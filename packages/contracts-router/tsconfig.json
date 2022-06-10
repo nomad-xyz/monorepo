@@ -11,7 +11,12 @@
     "./scripts",
     "./tmp.ts",
     "../../node_modules",
-    "hardhat.config.ts"
+    "./hardhat.config.ts"
   ],
-  "include": ["index.ts", "./src/*.ts", "./src/factories/*.ts"]
+  "include": [
+    "index.ts",
+    "./src/*.ts",
+    "./src/factories/*.ts",
+    "./package.json"
+  ]
 }
