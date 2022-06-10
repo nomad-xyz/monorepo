@@ -3,16 +3,25 @@
   "packageManager": "yarn@3.2.0",
   "devDependencies": {
     "@types/asn1": "^0.2.0",
+    "@types/bn.js": "^5.1.0",
+    "@types/bunyan": "^1.8.8",
+    "@types/express": "^4.17.13",
     "ts-node": "^10.8.0",
     "typescript": "^4.7.2"
   },
   "dependencies": {
+    "@ethersproject/providers": "^5.6.8",
+    "asn1.js": "^5.4.1",
     "asn1js": "^3.0.5",
     "aws-sdk": "^2.1148.0",
     "bunyan": "^1.8.15",
     "decimal.js": "^10.3.1",
     "dotenv": "^16.0.1",
-    "ethers": "^5.6.8"
+    "ethers": "^5.6.8",
+    "express": "^4.18.1",
+    "keccak": "^3.0.2",
+    "prom-client": "^14.0.1",
+    "secp256k1": "^4.0.3"
   },
   "scripts": {
     "start": "ts-node ./src/index.ts"

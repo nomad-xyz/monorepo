@@ -37,7 +37,7 @@ export class MetricsCollector {
     }
     const server = express();
 
-    server.get('/metrics', async (_, res: Response) => {
+    server.get('/metrics', async (_: unknown, res: Response) => {
       res.set('Content-Type', register.contentType);
       res.end(await register.metrics());
     });
