@@ -13,6 +13,6 @@ RUN yarn install
 # RUN yarn build
 
 ADD src /app/src/
-ADD configs /app/configs/
+# ADD configs /app/configs/
 
 CMD [ "yarn", "start" ]

@@ -1,5 +1,5 @@
 import debug from "debug";
-const name = 'PLCEHOLDER1337';
+const name = "PLCEHOLDER1337";
 export const LOGGER_NAMESPACE = name;
 
 const logger = debug(LOGGER_NAMESPACE);

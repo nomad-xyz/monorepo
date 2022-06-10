@@ -7,20 +7,25 @@ import { AwsKmsSignerCredentials } from "../index";
 /* this asn1.js library has some funky things going on */
 /* eslint-disable func-names */
 
-const EcdsaSigAsnParse: { decode: (asnStringBuffer: Buffer, format: "der") => { r: BN; s: BN } } = asn1.define(
-  "EcdsaSig",
-  function (this: any) {
-    // parsing this according to https://tools.ietf.org/html/rfc3279#section-2.2.3
-    this.seq().obj(this.key("r").int(), this.key("s").int());
-  }
-);
+const EcdsaSigAsnParse: {
+  decode: (asnStringBuffer: Buffer, format: "der") => { r: BN; s: BN };
+} = asn1.define("EcdsaSig", function (this: any) {
+  // parsing this according to https://tools.ietf.org/html/rfc3279#section-2.2.3
+  this.seq().obj(this.key("r").int(), this.key("s").int());
+});
 const EcdsaPubKey = asn1.define("EcdsaPubKey", function (this: any) {
   // parsing this according to https://tools.ietf.org/html/rfc5480#section-2
-  this.seq().obj(this.key("algo").seq().obj(this.key("a").objid(), this.key("b").objid()), this.key("pubKey").bitstr());
+  this.seq().obj(
+    this.key("algo").seq().obj(this.key("a").objid(), this.key("b").objid()),
+    this.key("pubKey").bitstr()
+  );
 });
 /* eslint-enable func-names */
 
-export async function sign(digest: Buffer, kmsCredentials: AwsKmsSignerCredentials) {
+export async function sign(
+  digest: Buffer,
+  kmsCredentials: AwsKmsSignerCredentials
+) {
   const kms = new KMS(kmsCredentials);
   const params: KMS.SignRequest = {
     // key id or 'Alias/<alias>'
@@ -64,7 +69,10 @@ export function findEthereumSig(signature: Buffer) {
   const decoded = EcdsaSigAsnParse.decode(signature, "der");
   const { r, s } = decoded;
 
-  const secp256k1N = new BN("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16); // max value on the curve
+  const secp256k1N = new BN(
+    "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141",
+    16
+  ); // max value on the curve
   const secp256k1halfN = secp256k1N.div(new BN(2)); // half of the curve
   // Because of EIP-2 not all elliptic curve signatures are accepted
   // the value of s needs to be SMALLER than half of the curve
@@ -73,7 +81,10 @@ export function findEthereumSig(signature: Buffer) {
   return { r, s: s.gt(secp256k1halfN) ? secp256k1N.sub(s) : s };
 }
 
-export async function requestKmsSignature(plaintext: Buffer, kmsCredentials: AwsKmsSignerCredentials) {
+export async function requestKmsSignature(
+  plaintext: Buffer,
+  kmsCredentials: AwsKmsSignerCredentials
+) {
   const signature = await sign(plaintext, kmsCredentials);
   if (signature.$response.error || signature.Signature === undefined) {
     throw new Error(`AWS KMS call failed with: ${signature.$response.error}`);
@@ -89,7 +100,12 @@ function recoverPubKeyFromSig(msg: Buffer, r: BN, s: BN, v: number) {
   });
 }
 
-export function determineCorrectV(msg: Buffer, r: BN, s: BN, expectedEthAddr: string) {
+export function determineCorrectV(
+  msg: Buffer,
+  r: BN,
+  s: BN,
+  expectedEthAddr: string
+) {
   // This is the wrapper function to find the right v value
   // There are two matching signatues on the elliptic curve
   // we need to find the one that matches to our public key

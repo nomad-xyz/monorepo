@@ -1,8 +1,8 @@
-import { Gauge, Histogram, Counter } from 'prom-client';
-import Logger from 'bunyan';
+import { Gauge, Histogram, Counter } from "prom-client";
+import Logger from "bunyan";
 
-import { register } from 'prom-client';
-import express, { Response } from 'express';
+import { register } from "prom-client";
+import express, { Response } from "express";
 export const prefix = `nomad_keymaster`;
 
 const buckets = [
@@ -37,8 +37,8 @@ export class MetricsCollector {
     }
     const server = express();
 
-    server.get('/metrics', async (_: unknown, res: Response) => {
-      res.set('Content-Type', register.contentType);
+    server.get("/metrics", async (_: unknown, res: Response) => {
+      res.set("Content-Type", register.contentType);
       res.end(await register.metrics());
     });
 
@@ -46,7 +46,7 @@ export class MetricsCollector {
       {
         endpoint: `http://0.0.0.0:${port}/metrics`,
       },
-      'Prometheus metrics exposed',
+      "Prometheus metrics exposed"
     );
 
     server.listen(port);
@@ -59,45 +59,43 @@ export class BaseMetricsCollector extends MetricsCollector {
   rpcErrors: Counter<string>;
   rpcLatency: Histogram<string>;
 
-
   constructor(environment: string, logger: Logger) {
     super(environment, logger);
 
-    const labelNames = ['environment', 'home'];
-
+    const labelNames = ["environment", "home"];
 
     this.rpcRequests = new Counter({
-      name: prefix + '_rpc_requests',
-      help: 'Count that indicates how many PRC requests are made',
-      labelNames: [...labelNames, 'method'],
+      name: prefix + "_rpc_requests",
+      help: "Count that indicates how many PRC requests are made",
+      labelNames: [...labelNames, "method"],
     });
 
     this.rpcLatency = new Histogram({
-      name: prefix + '_rpc_latency',
-      help: 'Histogram that tracks latency of how long does it take to make request in ms',
-      labelNames: [...labelNames, 'method'],
+      name: prefix + "_rpc_latency",
+      help: "Histogram that tracks latency of how long does it take to make request in ms",
+      labelNames: [...labelNames, "method"],
       buckets,
     });
 
     this.rpcErrors = new Counter({
-      name: prefix + '_rpc_errors',
-      help: 'Counter that tracks error codes from RPC endpoint',
-      labelNames: [...labelNames, 'method', 'code'],
+      name: prefix + "_rpc_errors",
+      help: "Counter that tracks error codes from RPC endpoint",
+      labelNames: [...labelNames, "method", "code"],
     });
 
     this.gasUsed = new Counter({
-      name: prefix + '_gas_used',
-      help: 'Histogram that tracks gas usage in wei of a transaction that initiated at dispatch, update, relay, receive or process stages.',
-      labelNames: [...labelNames, 'method'],
+      name: prefix + "_gas_used",
+      help: "Histogram that tracks gas usage in wei of a transaction that initiated at dispatch, update, relay, receive or process stages.",
+      labelNames: [...labelNames, "method"],
     });
   }
 
   observeLatency(home: string, method: string, ms: number) {
-    this.rpcLatency.labels(this.environment, home, method,).observe(ms);
+    this.rpcLatency.labels(this.environment, home, method).observe(ms);
   }
 
   incRpcRequests(home: string, method: string) {
-    this.rpcRequests.labels(this.environment, home, method,).inc();
+    this.rpcRequests.labels(this.environment, home, method).inc();
   }
 
   incRpcErrors(home: string, method: string, code: string) {
@@ -105,7 +103,7 @@ export class BaseMetricsCollector extends MetricsCollector {
   }
 
   incGasUsed(home: string, method: string, amount: number) {
-    this.gasUsed.labels(this.environment, home, method,).inc(amount);
+    this.gasUsed.labels(this.environment, home, method).inc(amount);
   }
 }
 
@@ -120,47 +118,70 @@ export class AccountMetricsCollector extends BaseMetricsCollector {
   constructor(environment: string, logger: Logger) {
     super(environment, logger);
 
-    const labelNames = ['environment', 'home', 'replica', 'network', 'type'];
+    const labelNames = ["environment", "home", "replica", "network", "type"];
 
     this.balance = new Gauge({
-      name: prefix + '_balance',
-      help: 'Count that indicates how many PRC requests are made',
+      name: prefix + "_balance",
+      help: "Count that indicates how many PRC requests are made",
       labelNames: [...labelNames],
     });
 
     this.transfers = new Counter({
-      name: prefix + '_transfers',
-      help: 'Histogram that tracks latency of how long does it take to make request in ms',
+      name: prefix + "_transfers",
+      help: "Histogram that tracks latency of how long does it take to make request in ms",
       labelNames: [...labelNames],
     });
 
     this.transferred = new Counter({
-      name: prefix + '_transferred',
-      help: 'Counter that tracks error codes from RPC endpoint',
+      name: prefix + "_transferred",
+      help: "Counter that tracks error codes from RPC endpoint",
       labelNames: [...labelNames],
     });
   }
 
-  setBalance(home: string, replica: string, network: string, type: string, balance: number, ) {
-    this.balance.labels(this.environment, home, replica, network, type).set(balance);
+  setBalance(
+    home: string,
+    replica: string,
+    network: string,
+    type: string,
+    balance: number
+  ) {
+    this.balance
+      .labels(this.environment, home, replica, network, type)
+      .set(balance);
   }
 
-  incTransfers(home: string, replica: string, network: string, type: string,) {
+  incTransfers(home: string, replica: string, network: string, type: string) {
     this.transfers.labels(this.environment, home, replica, network, type).inc();
   }
 
-  incTransferred(home: string, replica: string, network: string, type: string, amount: number) {
-    this.transferred.labels(this.environment, home, replica, network, type).inc(amount);
+  incTransferred(
+    home: string,
+    replica: string,
+    network: string,
+    type: string,
+    amount: number
+  ) {
+    this.transferred
+      .labels(this.environment, home, replica, network, type)
+      .inc(amount);
   }
 
-  incTransfer(home: string, replica: string, network: string, type: string, amount: number) {
+  incTransfer(
+    home: string,
+    replica: string,
+    network: string,
+    type: string,
+    amount: number
+  ) {
     this.transfers.labels(this.environment, home, replica, network, type).inc();
-    this.transferred.labels(this.environment, home, replica, network, type).inc(amount);
+    this.transferred
+      .labels(this.environment, home, replica, network, type)
+      .inc(amount);
   }
 }
 
 export class KeyMasterMetricsCollector extends AccountMetricsCollector {
-  
   constructor(environment: string, logger: Logger) {
     super(environment, logger);
   }

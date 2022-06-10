@@ -2,42 +2,38 @@ import * as crypto from "crypto";
 import { ethers, Wallet } from "ethers";
 const { publicKeyConvert, publicKeyCreate } = require("secp256k1");
 const createKeccakHash = require("keccak");
-import Decimal from 'decimal.js';
-import dotenv from 'dotenv';
-dotenv.config();
-import fs from 'fs';
-import Logger from 'bunyan';
+import Decimal from "decimal.js";
+import dotenv from "dotenv";
+import fs from "fs";
+import Logger from "bunyan";
 import { KeymasterConfig } from "./config";
+dotenv.config();
 
 export enum BunyanLevel {
-  FATAL = 'fatal',
-  ERROR = 'error',
-  WARN = 'warn',
-  INFO = 'info',
-  DEBUG = 'debug',
-  TRACE = 'trace',
+  FATAL = "fatal",
+  ERROR = "error",
+  WARN = "warn",
+  INFO = "info",
+  DEBUG = "debug",
+  TRACE = "trace",
 }
 
 interface LoggerOptions {
-  environment?: string,
-  level?: BunyanLevel,
+  environment?: string;
+  level?: BunyanLevel;
   [custom: string]: any;
 }
 
-export function createLogger(
-  name: string,
-  options?: LoggerOptions
-) {
+export function createLogger(name: string, options?: LoggerOptions) {
   // TODO: need to check this construction
   return Logger.createLogger({
     name,
     serializers: Logger.stdSerializers,
-    level: options?.level || 'debug',
+    level: options?.level || "debug",
     environment: options?.environment || getEnvironment(),
-    ...options
+    ...options,
   });
 }
-
 
 export class Key {
   value: Buffer;
@@ -130,15 +126,14 @@ export function privateKeyToAddress(privateKey: Buffer | string): string {
 }
 
 export function eth(n: number) {
-    const d = new Decimal(n).mul(10**18);
-    return ethers.BigNumber.from(d.toString()); // Math(n)).mul(ethers.BigNumber.from('1'+'0'.repeat(18))
+  const d = new Decimal(n).mul(10 ** 18);
+  return ethers.BigNumber.from(d.toString()); // Math(n)).mul(ethers.BigNumber.from('1'+'0'.repeat(18))
 }
 
-export type NomadEnvironment = 'development' | 'staging' | 'production';
+export type NomadEnvironment = "development" | "staging" | "production";
 export function getEnvironment() {
   return process.env.ENVIRONMENT! as NomadEnvironment;
 }
-
 
 export interface OptionalNetworkArgs {
   treshold?: ethers.BigNumberish;
@@ -153,7 +148,7 @@ export function sleep(ms: number) {
 export async function retry<T>(
   callback: () => Promise<T>,
   tries: number,
-  onError: ((e: any) => Promise<void> | void) | undefined,
+  onError: ((e: any) => Promise<void> | void) | undefined
 ): Promise<[T | undefined, any]> {
   const timeout = 2000;
   let lastError: any = undefined;
@@ -170,20 +165,19 @@ export async function retry<T>(
 }
 
 export function logToFile(s: string, l?: string) {
-  fs.appendFileSync(l||'/tmp/log.log', s + '\n');
+  fs.appendFileSync(l || "/tmp/log.log", s + "\n");
 }
 
-
 function reviver(key: any, value: any) {
-  if (typeof value === 'string' && key === 'treshold') {
+  if (typeof value === "string" && key === "treshold") {
     return ethers.BigNumber.from(value);
   }
-  if (typeof value === 'object' && value !== null) {
-    if (value.dataType === 'Map') {
+  if (typeof value === "object" && value !== null) {
+    if (value.dataType === "Map") {
       return new Map(value.value);
-    } else if (value.dataType === 'BigNumber') {
+    } else if (value.dataType === "BigNumber") {
       return ethers.BigNumber.from(value.value);
-    } else if (value.type === 'BigNumber') {
+    } else if (value.type === "BigNumber") {
       return ethers.BigNumber.from(value.hex);
     }
   }
@@ -191,6 +185,6 @@ function reviver(key: any, value: any) {
 }
 
 export function readConfig(l: string): KeymasterConfig {
-  const s = fs.readFileSync(l, 'utf8');
-  return JSON.parse(s, reviver)
+  const s = fs.readFileSync(l, "utf8");
+  return JSON.parse(s, reviver);
 }
