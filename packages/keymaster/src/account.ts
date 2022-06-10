@@ -8,6 +8,7 @@ import { AwsKmsSigner } from './kms';
 import dotenv from 'dotenv';
 dotenv.config();
 
+const prettyPrint = process.env.PRETTY_PRINT === 'true';
 
 export abstract class Accountable {
   name: string;
@@ -290,7 +291,8 @@ export class Network {
   }
 
   async checkAndPay(dryrun=false): Promise<void> {
-    console.log(`\n\nNetwork: ${this.name}\n`);
+    
+    if (prettyPrint) console.log(`\n\nNetwork: ${this.name}\n`);
     const ke = ethers.utils.formatEther;
 
     const suggestions: [Accountable, ethers.BigNumber, boolean, ethers.BigNumber][] = await this.reportSuggestion();
@@ -302,24 +304,27 @@ export class Network {
       // const shouldTopUp = toPay.gt(0);
       if (shouldTopUp) {
         _toPay = _toPay.add(toPay);
-          
-        if (balance.eq(0)) {
-          console.log(red(`${a.name} needs immediately ${ke(toPay)} currency. It is empty for gods sake!`));
-        } else {
-          console.log(yellow(`${a.name} needs to be paid ${ke(toPay)}. Balance: ${ke(balance)}`));
+        
+        if (prettyPrint) {
+          if (balance.eq(0)) {
+            console.log(red(`${a.name} needs immediately ${ke(toPay)} currency. It is empty for gods sake!`));
+          } else {
+            console.log(yellow(`${a.name} needs to be paid ${ke(toPay)}. Balance: ${ke(balance)}`));
+          }
         }
+        
         const sameAddress = a == this.bank || (await a.address()) === (await this.bank.address());
         if (!sameAddress && !dryrun) {
           await this.bank.pay(a, toPay);
-          console.log(green(`Paid ${ke(toPay)} to ${a.name}!`));
+          if (prettyPrint) console.log(green(`Paid ${ke(toPay)} to ${a.name}!`));
           _paid = _paid.add(toPay)
         }
         
       } else {
-        console.log(green(`${a.name} is ok, has: ${ke(balance)}`));
+        if (prettyPrint) console.log(green(`${a.name} is ok, has: ${ke(balance)}`));
       }
     }
-    console.log(`\n\tpaid: ${green(ke(_paid))} out of ${yellow(ke(_toPay))}\n\n`)
+    if (prettyPrint) console.log(`\n\tpaid: ${green(ke(_paid))} out of ${yellow(ke(_toPay))}\n\n`)
   }
 
   static fromINetwork(n: INetwork, ctx: Context, options?: OptionalNetworkArgs) {
@@ -331,7 +336,7 @@ export class Network {
       throw new Error(
         `RPC url for network ${name} is empty. Please provide as '${rpcEnvKey}=http://...' ENV variable`,
       );
-    console.log((yellow(`Using ${rpc} for ${name}`)))
+    if (prettyPrint) console.log((yellow(`Using ${rpc} for ${name}`)))
 
     const provider = new MyJRPCProvider(rpc, name, ctx);
     

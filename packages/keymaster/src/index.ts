@@ -9,7 +9,7 @@ import { Keymaster } from "./keymaster";
 import { MyJRPCProvider } from "./retry_provider/provider";
 import { Context } from "./context";
 
-
+const DRY_RUN = process.env.DRY_RUN === 'true';
 const logLevel = (process.env.LOG_LEVEL || 'debug') as BunyanLevel;
 
 async function std() {
@@ -55,10 +55,10 @@ async function singlekms() {
   const p = new MyJRPCProvider('https://kovan.infura.io/v3/x', 'kovan', ctx);
   const w = new WalletAccount('0x872f4F3c90e2241B7402044955653B836C68eEd0', p, ctx)
   const bank = new AwsKmsSigner({
-    accessKeyId: '',
-    secretAccessKey: '',
-    region: '',
-    keyId: ''
+    accessKeyId: 'x',
+    secretAccessKey: 'x',
+    region: 'x',
+    keyId: 'x'
   }, p);
 
   const b = await bank.getBalance();
@@ -198,7 +198,7 @@ async function remote() {
 }
 
 (async () => {
-  await run('./configs/develop.json', 9090, true);
+  await run('./configs/develop.json', 9090, DRY_RUN);
   // await stdkms();
   // await singlekms();
 })();
