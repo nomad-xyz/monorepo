@@ -10,11 +10,11 @@ export class MyJRPCProvider extends ethers.providers.StaticJsonRpcProvider {
         this.networkName = networkName;
         this.ctx = ctx;
 
-        this.ctx.logger.info(`Created MyJRPCProvider ${networkName}`);
+        this.ctx.logger.debug(`Created MyJRPCProvider ${networkName}`);
     }
 
     async perform(method: string, params: any): Promise<any> {
-        this.ctx.logger.info(`Performing method: ${method}`);
+        this.ctx.logger.debug(`Performing method: ${method}`);
 
         const [result, error] = await retry(async () => {
             this.ctx.metrics.incRpcRequests(this.networkName, method);
