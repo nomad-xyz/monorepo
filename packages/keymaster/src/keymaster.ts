@@ -31,7 +31,9 @@ export class Keymaster {
         const homeNetwork = this.networks.get(home)!;
   
         for (const replica of homeNetConfig.replicas) {
-          const replicaNetwork = this.networks.get(replica)!;
+          const replicaNetwork = this.networks.get(replica);
+
+          if (!replicaNetwork) throw new Error(`Replica ${replica} not found`)
   
   
           const balances: Accountable[] = [

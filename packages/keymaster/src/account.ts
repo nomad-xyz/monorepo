@@ -56,18 +56,18 @@ export class Account extends Accountable {
   }
 
   address(): Promise<string> {
-    this.ctx.logger.info(`Getting stored address`)
+    this.ctx.logger.debug(`Getting stored address`)
     return Promise.resolve(this._address);
   }
 
   async balance(): Promise<ethers.BigNumber> {
-    this.ctx.logger.info(`Getting balance from provider`)
+    this.ctx.logger.debug(`Getting balance from provider`)
     const balance = await this.provider.getBalance(await this.address());
     return balance;
   }
 
   treshold(): Promise<ethers.BigNumber> {
-    this.ctx.logger.info(`Getting stored treshold`)
+    this.ctx.logger.debug(`Getting stored treshold`)
     return Promise.resolve(this._treshold);
   }
 
@@ -177,17 +177,17 @@ export class Bank extends Accountable {
   }
 
   async address(): Promise<string> {
-    this.ctx.logger.info(`Getting stored address of a bank`)
+    this.ctx.logger.debug(`Getting stored address of a bank`)
     return await this.signer.getAddress();
   }
 
   treshold(): Promise<ethers.BigNumber> {
-    this.ctx.logger.info(`Getting stored treshold of a bank`)
+    this.ctx.logger.debug(`Getting stored treshold of a bank`)
     return Promise.resolve(this._treshold);
   }
 
   async balance(): Promise<ethers.BigNumber> {
-    this.ctx.logger.info(`Getting balance from signer of a bank`)
+    this.ctx.logger.debug(`Getting balance from signer of a bank`)
     const balance = await this.signer.getBalance();
     const home = this.home.name;
     this.ctx.metrics.setBalance(home, home, home, 'bank', balance.div('1'+'0'.repeat(18)).toNumber()) // TODO
@@ -223,7 +223,10 @@ export class Bank extends Accountable {
         this.ctx.logger.debug({to, amount: ethers.utils.formatEther(value)}, `Failed to pay for try ${t}!`)
       }
     }
-    if (!receipt) throw new Error(`No receipt for tx: ${sent.hash}`);
+    if (!receipt) {
+        this.ctx.logger.error({to, amount: ethers.utils.formatEther(value)}, `Failed to pay from bank`)
+        throw new Error(`No receipt for tx: ${sent.hash}`);
+    }
     this.ctx.logger.info({to, amount: ethers.utils.formatEther(value)}, `Payed from signer of a bank!`)
 
     return receipt;
