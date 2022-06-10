@@ -132,15 +132,14 @@ export function createLogger(
   });
 }
 
-export function formatEVM(s: string) {
-  s = s.toLowerCase();
+export function formatEVM(address: string) {
+  let s = address.toLowerCase();
   if (s.substring(0, 2) === '0x') {
     s = s.substring(2);
   }
 
   if (s.length !== 40 && s.length !== 64) {
-    const msg = `Neither EVM nor interchain address: ${s}`;
-    throw new Error(msg);
+    throw new Error(`Neither EVM nor interchain address: initial ${address}, modified and failed: ${s}`);
   }
 
   const digest = keccak256(toUtf8Bytes(s)).substring(2);
