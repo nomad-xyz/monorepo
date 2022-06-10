@@ -9,11 +9,9 @@ export class Context {
   metrics: KeyMasterMetricsCollector;
 
   constructor(_logger?: Logger, _metrics?: KeyMasterMetricsCollector) {
-    const environment = getEnvironment();
     const level = (process.env.LOG_LEVEL || "debug") as BunyanLevel;
-    this.logger = _logger || createLogger("keymaster", { environment, level });
-    this.metrics =
-      _metrics || new KeyMasterMetricsCollector(environment, this.logger);
+    this.logger = _logger || createLogger("keymaster", { level });
+    this.metrics = _metrics || new KeyMasterMetricsCollector(this.logger);
   }
 
   with(r: Record<string, string>) {

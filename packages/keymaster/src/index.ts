@@ -14,8 +14,9 @@ async function run(configPath: string, port: number, dryrun = false) {
 }
 
 const DRY_RUN = process.env.DRY_RUN === "true";
-const configPath = process.env.CONFIG_PATH || `/config/keymaster.json`;
+const METRICS_PORT = parseInt(process.env.METRICS_PORT || "9090") || 9090;
+const CONFIG_PATH = process.env.CONFIG_PATH || `./config/keymaster.json`;
 
 (async () => {
-  await run(configPath, 9090, DRY_RUN);
+  await run(CONFIG_PATH, METRICS_PORT, DRY_RUN);
 })();

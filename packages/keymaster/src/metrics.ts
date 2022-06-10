@@ -20,11 +20,9 @@ const buckets = [
 ];
 
 export class MetricsCollector {
-  readonly environment: string;
   private readonly logger: Logger;
 
-  constructor(environment: string, logger: Logger) {
-    this.environment = environment;
+  constructor(logger: Logger) {
     this.logger = logger;
   }
 
@@ -59,10 +57,10 @@ export class BaseMetricsCollector extends MetricsCollector {
   rpcErrors: Counter<string>;
   rpcLatency: Histogram<string>;
 
-  constructor(environment: string, logger: Logger) {
-    super(environment, logger);
+  constructor(logger: Logger) {
+    super(logger);
 
-    const labelNames = ["environment", "home"];
+    const labelNames = ["home"];
 
     this.rpcRequests = new Counter({
       name: prefix + "_rpc_requests",
@@ -91,19 +89,19 @@ export class BaseMetricsCollector extends MetricsCollector {
   }
 
   observeLatency(home: string, method: string, ms: number) {
-    this.rpcLatency.labels(this.environment, home, method).observe(ms);
+    this.rpcLatency.labels(home, method).observe(ms);
   }
 
   incRpcRequests(home: string, method: string) {
-    this.rpcRequests.labels(this.environment, home, method).inc();
+    this.rpcRequests.labels(home, method).inc();
   }
 
   incRpcErrors(home: string, method: string, code: string) {
-    this.rpcErrors.labels(this.environment, home, method, code).inc();
+    this.rpcErrors.labels(home, method, code).inc();
   }
 
   incGasUsed(home: string, method: string, amount: number) {
-    this.gasUsed.labels(this.environment, home, method).inc(amount);
+    this.gasUsed.labels(home, method).inc(amount);
   }
 }
 
@@ -115,10 +113,10 @@ export class AccountMetricsCollector extends BaseMetricsCollector {
   // transferred
   private transferred: Counter<string>;
 
-  constructor(environment: string, logger: Logger) {
-    super(environment, logger);
+  constructor(logger: Logger) {
+    super(logger);
 
-    const labelNames = ["environment", "home", "replica", "network", "type"];
+    const labelNames = ["home", "replica", "network", "type"];
 
     this.balance = new Gauge({
       name: prefix + "_balance",
@@ -146,13 +144,11 @@ export class AccountMetricsCollector extends BaseMetricsCollector {
     type: string,
     balance: number
   ) {
-    this.balance
-      .labels(this.environment, home, replica, network, type)
-      .set(balance);
+    this.balance.labels(home, replica, network, type).set(balance);
   }
 
   incTransfers(home: string, replica: string, network: string, type: string) {
-    this.transfers.labels(this.environment, home, replica, network, type).inc();
+    this.transfers.labels(home, replica, network, type).inc();
   }
 
   incTransferred(
@@ -162,9 +158,7 @@ export class AccountMetricsCollector extends BaseMetricsCollector {
     type: string,
     amount: number
   ) {
-    this.transferred
-      .labels(this.environment, home, replica, network, type)
-      .inc(amount);
+    this.transferred.labels(home, replica, network, type).inc(amount);
   }
 
   incTransfer(
@@ -174,15 +168,13 @@ export class AccountMetricsCollector extends BaseMetricsCollector {
     type: string,
     amount: number
   ) {
-    this.transfers.labels(this.environment, home, replica, network, type).inc();
-    this.transferred
-      .labels(this.environment, home, replica, network, type)
-      .inc(amount);
+    this.transfers.labels(home, replica, network, type).inc();
+    this.transferred.labels(home, replica, network, type).inc(amount);
   }
 }
 
 export class KeyMasterMetricsCollector extends AccountMetricsCollector {
-  constructor(environment: string, logger: Logger) {
-    super(environment, logger);
+  constructor(logger: Logger) {
+    super(logger);
   }
 }

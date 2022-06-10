@@ -19,7 +19,6 @@ export enum BunyanLevel {
 }
 
 interface LoggerOptions {
-  environment?: string;
   level?: BunyanLevel;
   [custom: string]: any;
 }
@@ -30,7 +29,6 @@ export function createLogger(name: string, options?: LoggerOptions) {
     name,
     serializers: Logger.stdSerializers,
     level: options?.level || "debug",
-    environment: options?.environment || getEnvironment(),
     ...options,
   });
 }
