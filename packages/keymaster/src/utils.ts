@@ -3,10 +3,12 @@ import { ethers, Wallet } from "ethers";
 const { publicKeyConvert, publicKeyCreate } = require("secp256k1");
 const createKeccakHash = require("keccak");
 import Decimal from 'decimal.js';
-
-
-
+import dotenv from 'dotenv';
+dotenv.config();
+import fs from 'fs';
 import Logger from 'bunyan';
+import { KeymasterConfig } from "./config";
+
 export enum BunyanLevel {
   FATAL = 'fatal',
   ERROR = 'error',
@@ -167,7 +169,28 @@ export async function retry<T>(
   return [undefined, lastError];
 }
 
-import fs from 'fs';
 export function logToFile(s: string, l?: string) {
   fs.appendFileSync(l||'/tmp/log.log', s + '\n');
+}
+
+
+function reviver(key: any, value: any) {
+  if (typeof value === 'string' && key === 'treshold') {
+    return ethers.BigNumber.from(value);
+  }
+  if (typeof value === 'object' && value !== null) {
+    if (value.dataType === 'Map') {
+      return new Map(value.value);
+    } else if (value.dataType === 'BigNumber') {
+      return ethers.BigNumber.from(value.value);
+    } else if (value.type === 'BigNumber') {
+      return ethers.BigNumber.from(value.hex);
+    }
+  }
+  return value;
+}
+
+export function readConfig(l: string): KeymasterConfig {
+  const s = fs.readFileSync(l, 'utf8');
+  return JSON.parse(s, reviver)
 }

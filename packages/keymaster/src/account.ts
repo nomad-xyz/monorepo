@@ -1,45 +1,13 @@
-import { NomadConfig, getBuiltin } from '@nomad-xyz/configuration';
-import fs from 'fs';
 import { ethers } from 'ethers';
-import axios from 'axios';
 import { INetwork } from './config';
 import { green, red, yellow } from './color';
-import dotenv from 'dotenv';
-import { eth, logToFile, OptionalNetworkArgs, sleep } from './utils';
+import { eth, OptionalNetworkArgs, sleep } from './utils';
 import { MyJRPCProvider } from './retry_provider/provider';
 import { Context } from './context';
 import { AwsKmsSigner } from './kms';
+import dotenv from 'dotenv';
 dotenv.config();
 
-export async function getConfig(
-  environment: string,
-): Promise<NomadConfig> {
-  let config: NomadConfig;
-  if (['production', 'staging', 'development'].includes(environment)) {
-        config = getBuiltin(environment);
-    } else if (environment.includes('https')) {
-      const response = await axios.get(environment, { responseType: 'json' });
-      config = response.data as NomadConfig;
-    } else if (fs.existsSync(environment)) {
-      let configOverride: NomadConfig | undefined = undefined;
-
-      try {
-        configOverride = JSON.parse(fs.readFileSync(environment, 'utf8'));
-      } catch (e) {
-        throw new Error(`Couldn't read NomadConfig's location: ${environment}`);
-      }
-
-      if (!configOverride) throw new Error(`FIX THIS LINE No config!`);
-
-      config = configOverride;
-    } else {
-      throw new Error(
-        `Didn't understand what environment means: ${environment}`,
-      );
-    }
-  
-  return config;
-}
 
 export abstract class Accountable {
   name: string;
@@ -57,18 +25,20 @@ export abstract class Accountable {
     return (await this.balance()).lt(await this.treshold());
   }
 
-  async howMuchTopUp(): Promise<ethers.BigNumber> {
+  async upperTreshold(): Promise<ethers.BigNumber> {
     const t = await this.treshold();
+    return t.mul(2);
+  }
+
+  async howMuchTopUp(): Promise<ethers.BigNumber> {
+    const ke = ethers.utils.formatEther;
+
     const b = await this.balance();
-    let tillTreshold = t.sub(b);
+    const upper = await this.upperTreshold();
+    const t = await this.treshold();
+    // console.log(red(`${this.name} -> ${ke(b)}, ${ke(upper)} , ${ke(t)} === ${(await this.balance()).lt(await this.treshold())}`))
 
-    tillTreshold = tillTreshold.lt(0) ? ethers.BigNumber.from(0) : tillTreshold;
-
-    if (tillTreshold.gt(0)) {
-      tillTreshold = tillTreshold.add(t.mul(2**1));
-    }
-
-    return tillTreshold
+    return upper.sub(b);
   }
 }
 
@@ -92,7 +62,6 @@ export class Account extends Accountable {
   async balance(): Promise<ethers.BigNumber> {
     this.ctx.logger.info(`Getting balance from provider`)
     const balance = await this.provider.getBalance(await this.address());
-    // xxxxxxxx console.log(`${this.name} at ${await this.address()} is ${balance.toString()}`)
     return balance;
   }
 
@@ -108,7 +77,7 @@ export class Account extends Accountable {
     if (!signer.provider) throw new Error(`KEK`);
     const address = await signer.getAddress();
 
-    return new Account(name, address, signer.provider, ctx)
+    return new Account(name, address, signer.provider, ctx, options)
   }
 
   
@@ -120,31 +89,31 @@ export class WalletAccount extends Account {
   }
 }
 
-// export class Agent extends Account {
-//   constructor(home: string, replica: string, type: string, address: string, provider: ethers.providers.Provider, options?: OptionalNetworkArgs) {
-//     const slug = home === replica ? `${home}` : `${home}_at_${replica}`
-//     super(`${type}_of_${slug}`, address, provider, options);
-//   }
-// }
-
-export class LocalAgent extends Account {
+export class Agent extends Account {
   home: Network;
+  replica: Network;
   type: string;
   remote: boolean;
-  constructor(home: Network, type: string, address: string, ctx: Context, options?: OptionalNetworkArgs) {
-    const name = `${type}_of_${home.name}`;
-    // options.logger = options?.logger ? options.logger.child(childArgs) : createLogger(name, childArgs);
-    super(name, address, home.provider, ctx.with({type, address, home: home.name, replica: home.name}), options);
+  constructor(home: Network, replica: Network, type: string, address: string, ctx: Context, options?: OptionalNetworkArgs) {
+    // console.log(options)
+    const slug = home === replica ? `${home.name}` : `${home.name}_at_${replica.name}`
+    super(`${type}_of_${slug}`, address, home.provider, ctx, options);
     this.home = home;
+    this.replica = replica;
     this.type = type;
-    this.remote = false;
+    this.remote = home !== replica;
   }
 
   async balance(): Promise<ethers.BigNumber> {
     const balance = await super.balance();
-    const home = this.home.name;
-    this.ctx.metrics.setBalance(home, home, home, this.type, balance.div('1'+'0'.repeat(18)).toNumber()) // TODO
+    this.ctx.metrics.setBalance(this.home.name, this.replica.name, this.remote ? this.replica.name : this.home.name , this.type, balance.div('1'+'0'.repeat(18)).toNumber()) // TODO
     return balance
+  }
+}
+
+export class LocalAgent extends Agent {
+  constructor(home: Network, type: string, address: string, ctx: Context, options?: OptionalNetworkArgs) {
+    super(home, home, type, address, ctx.with({type, address, home: home.name, replica: home.name}), {treshold: home.treshold, ...options});
   }
 }
 
@@ -155,52 +124,39 @@ export class RemoteAgent extends Account {
   remote: boolean;
   constructor(home: Network, replica: Network, type: string, address: string, ctx: Context, options?: OptionalNetworkArgs) {
     const name = `${type}_of_${home.name}_at_${replica.name}`;
-    super(name, address, replica.provider, ctx.with({type, address, home: home.name, replica: replica.name}), options);
+    super(name, address, replica.provider, ctx.with({type, address, home: home.name, replica: replica.name}), {...options, treshold: replica.treshold});
     this.type = type;
     this.home = home;
     this.replica = replica;
     this.remote = true;
   }
-
-  async balance(): Promise<ethers.BigNumber> {
-    const balance = await super.balance();
-    const home = this.home.name;
-    const replica = this.replica.name;
-    this.ctx.metrics.setBalance(home, replica, replica, this.type, balance.div('1'+'0'.repeat(18)).toNumber()) // TODO
-    return balance
-  }
 }
+
+
 
 export class LocalWatcher extends LocalAgent {
   constructor(home: Network, address: string, ctx: Context, options?: OptionalNetworkArgs) {
-    if (options) options.treshold = home.treshold.mul(5);
-    super(home, 'watcher', address, ctx.with({type: 'watcher', address, home: home.name, replica: home.name}), options);
-    this.type = 'watcher';
-  }
-
-  async howMuchTopUp(): Promise<ethers.BigNumber> {
-    this.ctx.logger.info(`Checking howMuchTopUp from localWatcher`)
-
-    const t = await this.treshold();
-    const b = await this.balance();
-
-    return t.sub(b)
+    if (options) {
+      options.treshold = home.treshold.mul(2);
+    } else {
+      options = {
+        treshold: home.treshold.mul(2)
+      }
+    }
+    super(home, 'watcher', address, ctx, options);
   }
 }
 
 export class RemoteWatcher extends RemoteAgent {
   constructor(home: Network, replica: Network, address: string, ctx: Context, options?: OptionalNetworkArgs) {
-    if (options) options.treshold = home.treshold.mul(5);
-    super(home, replica, 'watcher', address, ctx.with({type: 'watcher', address, home: home.name, replica: replica.name}), options)
-    this.type = 'watcher';
-  }
-
-  async howMuchTopUp(): Promise<ethers.BigNumber> {
-    this.ctx.logger.info(`Checking howMuchTopUp from RemoteWatcher`)
-    const t = await this.treshold();
-    const b = await this.balance();
-
-    return t.sub(b)
+    if (options) {
+      options.treshold = replica.treshold.mul(2);
+    } else {
+      options = {
+        treshold: replica.treshold.mul(2)
+      }
+    }
+    super(home, replica, 'watcher', address, ctx, options)
   }
 }
 
@@ -210,9 +166,6 @@ export class Bank extends Accountable {
   home: Network;
   _treshold: ethers.BigNumber;
   constructor(name: string, signer: ethers.Signer, ctx: Context, home: Network, options?: OptionalNetworkArgs & {provider?: ethers.providers.Provider}) {
-    // const logChild = {type: 'bank', home: options?.network?.name};
-    // const logger = options?.logger ? options.logger.child(logChild) : createLogger(name, logChild);
-    
     super(name, ctx.with({type: 'bank', home: home.name, replica: home.name}));
     if (options?.provider) {
       signer = signer.connect(options.provider);
@@ -229,14 +182,12 @@ export class Bank extends Accountable {
 
   treshold(): Promise<ethers.BigNumber> {
     this.ctx.logger.info(`Getting stored treshold of a bank`)
-
     return Promise.resolve(this._treshold);
   }
 
   async balance(): Promise<ethers.BigNumber> {
     this.ctx.logger.info(`Getting balance from signer of a bank`)
     const balance = await this.signer.getBalance();
-    // console.log(balance.toString(), await this.address())
     const home = this.home.name;
     this.ctx.metrics.setBalance(home, home, home, 'bank', balance.div('1'+'0'.repeat(18)).toNumber()) // TODO
     
@@ -252,7 +203,7 @@ export class Bank extends Accountable {
     }
 
     if (a === this) {
-      console.log(red(`Should not be sending to self`));
+      this.ctx.logger.warn(`Should not be sending money to itself`);
     }
 
     this.ctx.logger.info({to, amount: ethers.utils.formatEther(value)}, `Paying from signer of a bank`)
@@ -262,9 +213,9 @@ export class Bank extends Accountable {
     let receipt;
 
     let t = 0;
-    while (t++ < 6) {
+    while (t++ < 10) {
       try {
-        await sleep(3000);
+        await sleep(5000);
         receipt = await sent.wait();
         break
       } catch (e) {
@@ -278,12 +229,6 @@ export class Bank extends Accountable {
   }
 
   async payAgent(a: LocalAgent | RemoteAgent, value: ethers.BigNumber) {
-    // let to;
-    // if (typeof a === 'string') {
-    //   to = a
-    // } else {
-    //   to = await a.address();
-    // }
     const result = await this.pay(a, value);
 
     if (a.remote) {
@@ -294,10 +239,6 @@ export class Bank extends Accountable {
 
     return result
   }
-
-  // static random(provider: ethers.providers.Provider, ctx: Context, treshold?: ethers.BigNumber): Bank {
-  //   return new Bank('bank', ethers.Wallet.createRandom(),  ctx, {treshold, provider})
-  // }
 }
 
 
@@ -312,14 +253,11 @@ export class Network {
   ctx: Context;
   constructor(name: string, provider: ethers.providers.Provider | string, balances: Accountable[], bank: ethers.Signer, ctx: Context, options?: OptionalNetworkArgs) {
     this.name = name;
-    if (typeof provider === 'string') {
-      this.provider = new MyJRPCProvider(provider, name, ctx);
-    } else {
-      this.provider = provider;
-    }
+    this.provider = typeof provider === 'string'? new MyJRPCProvider(provider, name, ctx): provider;
+    
     this.treshold = ethers.BigNumber.from(options?.treshold || eth(1));
     this.ctx = ctx.with({home: name});
-    this.bank = new Bank(`${name}_bank`, bank, ctx, this, {...options, provider: this.provider});
+    this.bank = new Bank(`${name}_bank`, bank, ctx, this, {provider: this.provider, ...options});
     this.balances = balances;
   }
 
@@ -342,9 +280,9 @@ export class Network {
   }
 
 
-  async reportSuggestion(): Promise<[Accountable, ethers.BigNumber, ethers.BigNumber][]> {
-    const promises: Promise<[Accountable, ethers.BigNumber, ethers.BigNumber]>[] = [...this.balances, this.bank].map(async (a): Promise<[Accountable, ethers.BigNumber, ethers.BigNumber]> => {
-      return [a, await a.balance(), await a.howMuchTopUp()]
+  async reportSuggestion(): Promise<[Accountable, ethers.BigNumber, boolean, ethers.BigNumber][]> {
+    const promises: Promise<[Accountable, ethers.BigNumber, boolean, ethers.BigNumber]>[] = [...this.balances, this.bank].map(async (a): Promise<[Accountable, ethers.BigNumber, boolean, ethers.BigNumber]> => {
+      return [a, await a.balance(), await a.shouldTopUp(), await a.howMuchTopUp()]
     });
 
     const suggestions = await Promise.all(promises);
@@ -355,13 +293,13 @@ export class Network {
     console.log(`\n\nNetwork: ${this.name}\n`);
     const ke = ethers.utils.formatEther;
 
-    const suggestions: [Accountable, ethers.BigNumber, ethers.BigNumber][] = await this.reportSuggestion();
+    const suggestions: [Accountable, ethers.BigNumber, boolean, ethers.BigNumber][] = await this.reportSuggestion();
 
     let _toPay = ethers.BigNumber.from('0');
     let _paid = ethers.BigNumber.from('0');
 
-    for (const [a, balance, toPay] of suggestions) {
-      const shouldTopUp = toPay.gt(0);
+    for (const [a, balance, shouldTopUp, toPay] of suggestions) {
+      // const shouldTopUp = toPay.gt(0);
       if (shouldTopUp) {
         _toPay = _toPay.add(toPay);
           
@@ -384,17 +322,6 @@ export class Network {
     console.log(`\n\tpaid: ${green(ke(_paid))} out of ${yellow(ke(_toPay))}\n\n`)
   }
 
-  // shareContextWithAgent(replica?: Network): OptionalNetworkArgs {
-  //   const child: Object = {
-  //     home: this.name,
-  //     ...replica ? {replica: replica.name}:{}
-  //   };
-    
-  //   return {
-  //     logger: this.logger.child(child)
-  //   }
-  // }
-
   static fromINetwork(n: INetwork, ctx: Context, options?: OptionalNetworkArgs) {
     const {name} = n;
     const envName = name.toUpperCase().replaceAll('-', '_');
@@ -404,16 +331,14 @@ export class Network {
       throw new Error(
         `RPC url for network ${name} is empty. Please provide as '${rpcEnvKey}=http://...' ENV variable`,
       );
-      console.log((yellow(`Using ${rpc} for ${name}`)))
+    console.log((yellow(`Using ${rpc} for ${name}`)))
 
-      const provider = new MyJRPCProvider(rpc, name, ctx)// new ethers.providers.StaticJsonRpcProvider(rpc);
+    const provider = new MyJRPCProvider(rpc, name, ctx);
     
-    let network: Network;
-    if (typeof n.bank === 'string') {
-      network = new Network(n.name, provider, [], new ethers.Wallet(n.bank), ctx, options);
-    } else {
-      network = new Network(n.name, provider, [], new AwsKmsSigner(n.bank), ctx, options);
-    }
+    const bank = typeof n.bank === 'string' ? new ethers.Wallet(n.bank) : new AwsKmsSigner(n.bank);
+
+    const network: Network = new Network(n.name, provider, [], bank, ctx, {treshold: n.treshold, ...options});
+    
     const balances = [
       new LocalAgent(network, 'updater', n.agents.updater, ctx),
       ...n.agents.watchers.map(w => new LocalWatcher(network, w, ctx)), // should be this only watcher
@@ -422,34 +347,14 @@ export class Network {
     network.addBalances(...balances);
 
 
-    // network.balances.push();
 
     return network;
   }
 
   addBalances(...bs: Accountable[]) {
     for (let b of bs) {
-      // b.logger = b.logger.child({home: this.name});
       this.balances.push(b)
     }
   }
 
 }
-
-
-
-
-// class Report {
-//   name: string;
-//   topUp: TopUpTask[]
-// }
-
-// interface TopUpTask {
-//   name: string,
-//   address: string,
-//   amount: ethers.BigNumber,
-// }
-
-// class NetworkReport {
-
-// }

@@ -1,10 +1,10 @@
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
 import { ethers } from "ethers";
 import { green, red, yellow } from "./color";
-import { dconfig, dconfigkms, pconfig } from "./configs";
+import { dconfig, dconfigkms, pconfig, sconfig } from "./configs";
 import {  Network, WalletAccount } from "./account";
 import { AwsKmsSigner } from "./kms";
-import { BunyanLevel } from './utils';
+import { BunyanLevel, readConfig, sleep } from './utils';
 import { Keymaster } from "./keymaster";
 import { MyJRPCProvider } from "./retry_provider/provider";
 import { Context } from "./context";
@@ -28,6 +28,27 @@ async function stdkms() {
     km.ctx.metrics.startServer(9092);
 }
 
+async function stagestd() {
+  const config = readConfig('./configs/develop.json');
+  const km = (new Keymaster(config)).init();
+
+    await km.payLazyAllNetworks(true);
+    // await km.reportLazyAllNetworks();
+    km.ctx.metrics.startServer(9092);
+}
+
+async function run(configPath: string, port: number, dryrun=false) {
+  const config = readConfig(configPath);
+  const km = (new Keymaster(config)).init();
+  km.ctx.metrics.startServer(port);
+
+  while (true) {
+    await km.payLazyAllNetworks(dryrun);
+
+    await sleep(60 * 1000);
+  }
+}
+
 async function singlekms() {
   const ctx = new Context();
 
@@ -43,10 +64,42 @@ async function singlekms() {
   const b = await bank.getBalance();
   const a = await bank.getAddress();
   console.log(b, a)
+  // const bank: ethers.Signer = new ethers.Wallet(
+  //   '1000000000000000000000000000000000000000000000000000000000000001'
+  // ).connect(p);
   const n = new Network('kovan', p, [
     w
   ], bank, ctx);
+
+  // const r = await n();
+  // const km = new Keymaster()
   await n.checkAndPay();
+
+  // let _toPay = ethers.BigNumber.from(0);
+
+  // const ke = ethers.utils.formatEther;
+  // const payments: Promise<ethers.providers.TransactionReceipt>[] = [];
+  // const lol = r.map(([a, balance, toPay]) => {
+  //   if (a._address) payments.push(n.bank.pay(a._address!, toPay));
+  //   _toPay = _toPay.add(toPay);
+  //   const shouldTopUp = toPay.gt(0);
+  //   if (shouldTopUp) {
+  //     if (balance.eq(0)) {
+  //       return red(`${a.name} needs immediately ${ke(toPay)} currency. It is empty for gods sake!`)
+  //     } else {
+  //       return yellow(`${a.name} needs to be paid ${ke(toPay)}. Balance: ${ke(balance)}`)
+  //     }
+  //   } else {
+  //     return green(`${a.name} is ok, has: ${ke(balance)}`)
+  //   }
+  // });
+  // console.log(lol.join('\n'))
+  // console.log(red(ke(_toPay.toString())));
+
+  // await Promise.all(payments);
+
+  // console.log(`${green(ke(await bank.getBalance()))}\n`)
+  // console.log(`${yellow(ke(await w.balance()))}\n`)
 }
 
 /*
@@ -80,10 +133,10 @@ async function local() {
 
   const ke = ethers.utils.formatEther;
   const payments: Promise<ethers.providers.TransactionReceipt>[] = [];
-  const lol = r.map(([a, balance, toPay]) => {
+  const lol = r.map(([a, balance, shouldTopUp, toPay]) => {
     if (a._address) payments.push(n.bank.pay(a._address!, toPay));
     _toPay = _toPay.add(toPay);
-    const shouldTopUp = toPay.gt(0);
+    // const shouldTopUp = toPay.gt(0);
     if (shouldTopUp) {
       if (balance.eq(0)) {
         return red(`${a.name} needs immediately ${ke(toPay)} currency. It is empty for gods sake!`)
@@ -121,10 +174,10 @@ async function remote() {
 
   const ke = ethers.utils.formatEther;
   const payments: Promise<ethers.providers.TransactionReceipt>[] = [];
-  const lol = r.map(([a, balance, toPay]) => {
+  const lol = r.map(([a, balance, shouldTopUp, toPay]) => {
     if (a._address) payments.push(n.bank.pay(a._address!, toPay));
     _toPay = _toPay.add(toPay);
-    const shouldTopUp = toPay.gt(0);
+    // const shouldTopUp = toPay.gt(0);
     if (shouldTopUp) {
       if (balance.eq(0)) {
         return red(`${a.name} needs immediately ${ke(toPay)} currency. It is empty for gods sake!`)
@@ -145,7 +198,7 @@ async function remote() {
 }
 
 (async () => {
-  await std();
+  await run('./configs/develop.json', 9090, true);
   // await stdkms();
   // await singlekms();
 })();

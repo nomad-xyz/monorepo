@@ -1,7 +1,5 @@
-import Logger from "bunyan";
 import { KeymasterConfig } from "./config";
 import { Accountable, Bank, Network, RemoteAgent, RemoteWatcher } from "./account";
-// import { createLogger, OptionalContextArgs } from "./utils";
 import { ethers } from "ethers";
 import { green, red, yellow } from "./color";
 import { Context } from "./context";
@@ -61,22 +59,22 @@ export class Keymaster {
     async reportAllNetworks(): Promise<void> {
       for (const [name, x] of this.networks.entries()) {
         const kek: Record<string, [boolean, string]> = await x.report();
-        const lol = Object.entries(kek)//.filter(([_, v])=> v[0])//.map(([k,v])=> [k);
+        const lol = Object.entries(kek)
         console.log(name, '\n', lol);
       }
     }
   
     async reportLazyAllNetworks(): Promise<void> {
       for (const [name, x] of this.networks.entries()) {
-        const kek: [Accountable, ethers.BigNumber, ethers.BigNumber][] = await x.reportSuggestion();
+        const kek: [Accountable, ethers.BigNumber, boolean, ethers.BigNumber][] = await x.reportSuggestion();
   
         let _toPay = ethers.BigNumber.from(0);
   
   
         const ke = ethers.utils.formatEther;
-        const lol = kek.map(([a, balance, toPay]) => {
+        const lol = kek.map(([a, balance, shouldTopUp, toPay]) => {
           _toPay = _toPay.add(toPay);
-          const shouldTopUp = toPay.gt(0);
+        //   const shouldTopUp = toPay.gt(0);
           if (shouldTopUp) {
             if (balance.eq(0)) {
               return red(`${a.name} needs immediately ${ke(toPay)} currency. It is empty for gods sake!`)
