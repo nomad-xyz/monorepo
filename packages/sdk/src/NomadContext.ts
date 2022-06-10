@@ -332,7 +332,12 @@ export class NomadContext extends MultiProvider<config.Domain> {
       const config = await NomadContext.fetchConfig(env);
       return new this(config);
     } catch (e: unknown) {
-      if (allowFallback) return new this(env);
+      if (allowFallback) {
+        console.warn(
+          `Unable to retrieve config ${env}. Falling back to built-in config.\n${e}`,
+        );
+        return new this(env);
+      }
       throw e;
     }
   }
