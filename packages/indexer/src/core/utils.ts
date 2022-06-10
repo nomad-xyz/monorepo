@@ -8,7 +8,7 @@ import pLimit from 'p-limit';
 import crypto from 'crypto';
 import { keccak256, toUtf8Bytes } from 'ethers/lib/utils';
 
-export function sleep(ms: number) {
+export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
@@ -87,11 +87,7 @@ export class KVCache {
     this.limit = pLimit(1);
   }
 
-  async init() {
-    // await this.tryLoad();
-  }
-
-  async set(k: string, v: string) {
+  async set(k: string, v: string): Promise<void> {
     await this.limit(() => this.db.setKeyPair(this.name, k, v));
   }
 
@@ -100,7 +96,7 @@ export class KVCache {
   }
 }
 
-export function logToFile(s: string) {
+export function logToFile(s: string): void {
   fs.appendFileSync('/tmp/log.log', s + '\n');
 }
 
@@ -123,7 +119,7 @@ export function createLogger(
   name: string,
   environment: string,
   level?: BunyanLevel,
-) {
+): Logger {
   return Logger.createLogger({
     name,
     serializers: Logger.stdSerializers,
@@ -196,14 +192,14 @@ export class Padded {
     return s;
   }
 
-  pretty() {
+  pretty(): string {
     if (this.s.substring(0, 24) === '0x0000000000000000000000') {
       return this.toEVMAddress();
     }
     return formatEVM(this.s);
   }
 
-  toEVMAddress() {
+  toEVMAddress(): string {
     return formatEVM('0x' + this.s.slice(26));
   }
 
@@ -211,7 +207,7 @@ export class Padded {
     return this.s;
   }
 
-  eq(another: Padded | string) {
+  eq(another: Padded | string): boolean {
     const theOther = Padded.fromWhatever(another);
     return this.valueOf() === theOther.valueOf();
   }
@@ -224,7 +220,7 @@ export class FailureCounter {
     this.container = [];
     this.period = periodMins;
   }
-  add() {
+  add(): void {
     this.container.push(new Date());
   }
   num(): number {

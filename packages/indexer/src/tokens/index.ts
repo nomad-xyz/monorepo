@@ -198,7 +198,7 @@ class TokenFetcher {
         });
 
         this.logger.debug(
-          `Updated Replica at doamin ${remoteDomain} for [${domain}, ${id}]`,
+          `Updated Replica at domain ${remoteDomain} for [${domain}, ${id}]`,
         );
       }),
     );
