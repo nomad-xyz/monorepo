@@ -47,11 +47,9 @@ import { randomString } from '../core/utils';
 
 dotenv.config({});
 
-function fail(res: any, code: number, reason: string) {
+function fail(res: Response, code: number, reason: string) {
   return res.status(code).json({ error: reason });
 }
-
-const PORT = process.env.PORT;
 
 const useAllResolvers = process.env.API_USE_ALL_RESOLVERS === 'TRUE';
 
@@ -171,6 +169,7 @@ export async function run(db: DB, logger: Logger): Promise<void> {
       include: { token: true },
     });
 
+    // TODO: filter on the db with the query above
     const sadReplicas = replicas.filter((r) => {
       const t = r.token;
       return (
@@ -238,6 +237,6 @@ export async function run(db: DB, logger: Logger): Promise<void> {
   server.applyMiddleware({ app });
 
   await new Promise<void>((resolve) =>
-    httpServer.listen({ port: PORT }, resolve),
+    httpServer.listen({ port: process.env.PORT }, resolve),
   );
 }
