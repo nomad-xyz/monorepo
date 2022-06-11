@@ -14,13 +14,13 @@ block_timestamp = 1622400000  # Timestamp for tests (non-zero)
 
 [core]
 src = 'packages/contracts-core/contracts'
-test = 'packages/contracts-core/contracts/foundry-tests'
+test = 'packages/contracts-core/contracts/test'
 out = 'packages/contracts-core/foundry_artifacts'
 ffi = true
 
 [core-ci]
 src = 'packages/contracts-core/contracts'
-test = 'packages/contracts-core/contracts/foundry-tests'
+test = 'packages/contracts-core/contracts/test'
 out = 'packages/contracts-core/foundry_artifacts'
 fuzz-runs = 10_000
 
@@ -32,4 +32,9 @@ out = 'packages/contracts-router/foundry_artifacts'
 src = 'packages/contracts-bridge/contracts'
 out = 'packages/contracts-bridge/foundry_artifacts'
 
+
+[upgrade]
+src = 'packages/upgrade/solscripts'
+test = 'packages/upgrade/solscripts/test'
+out = 'packages/upgrade/out'
 
