@@ -64,7 +64,6 @@ contract Upgrade is Test{
    bytes upgradeBridgeToken;
 
    address beaconController;
-   address governanceRouter;
 
    bytes executeCallBatchCall;
 
@@ -134,7 +133,9 @@ contract Upgrade is Test{
     //////////////////////////////////////////////////////////////*/
 
     function generateGovernanceCalls() public {
-        title("Governance Messages calldata");
+        title("BeaconController upgrade encoded calls");
+        console2.log("Function signature: upgrade(address, address)")
+        console2.log("Arguments: <contract_beacon>, <new_implementation_address>")
 
         upgradeHome = abi.encodeWithSignature("upgrade(address, address)", homeBeacon, address(newHome));
         console2.log("Home");
@@ -172,9 +173,14 @@ contract Upgrade is Test{
         batch[5] = genGovCall(beaconController, upgradeBridgeToken);
         executeCallBatchCall = abi.encodeWithSignature("executeCallBatch(GovernanceMessage.Call[])", batch);
         title("ExecuteCallBatch call");
-        console2.log("function signature  and calldata:");
+        console2.log("function signature: executeCallBatch(GovernanceMessage.Call[] calldata _calls)");
+        console2.log("GovernanceMessage.Call signature:  struct Call { bytes32 to; bytes data;}");
+        console2.log("Call attributes: <beacon_controller_address,
+                     <beacon_controller_upgraded_encoded_call_for_implementation>")
+        console2.log("function call with encoded args:");
         console2.logBytes(executeCallBatch);
     }
+
 
     function genGovCall(address _to,bytes memory _data) public returns(GovernanceMessage.Call memory) {
           return GovernanceMessage.Call({
@@ -199,5 +205,19 @@ contract Upgrade is Test{
         console2.log(title1, title2);
         console2.log("===========================");
         console2.log("");
+    }
+
+}
+
+
+contract UpgradeActions {
+
+    function executeCallBatchCall(string domain) public {
+        bytes callData = vm.envBytes("NOMAD_CALL_BATCH");
+        address govRouter = vm.envAddress("NOMAD_GOV_ROUTER");
+        vm.startBroadcast();
+        (success, return) = govRouter.call(callData);
+        vm.endBroadcast();
+        require(success, "ExecuteCallBatch failed");
     }
 }
