@@ -68,6 +68,10 @@ contract Upgrade is Test{
 
    bytes executeCallBatchCall;
 
+    /*//////////////////////////////////////////////////////////////
+                                 UPGRADE
+    //////////////////////////////////////////////////////////////*/
+
 
     function upgrade(uint32 _domain, string memory _domainName) public {
         domain = _domain;
@@ -83,6 +87,10 @@ contract Upgrade is Test{
         generateGovernanceCalls();
         generateExecuteCallBatchCall();
     }
+
+    /*//////////////////////////////////////////////////////////////
+                        IMPLEMENTATION DEPLOYMENT
+    //////////////////////////////////////////////////////////////*/
 
     function deployImplementations() public {
         title("Deploying new implementations...");
@@ -100,6 +108,11 @@ contract Upgrade is Test{
         console2.log("Bridge Token deployed", address(newBridgeToken));
     }
 
+
+    /*//////////////////////////////////////////////////////////////
+                             ENV VAR GETTERS
+    //////////////////////////////////////////////////////////////*/
+
     function env_getBeaconAddresses() public{
         homeBeacon = vm.envAddress("NOMAD_HOME_BEACON");
         replicaBeacon = vm.envAddress("NOMAD_REPLICA_BEACON");
@@ -115,6 +128,10 @@ contract Upgrade is Test{
         beaconController = vm.envAddress("NOMAD_BEACON_CONTROLLER");
     }
 
+
+    /*//////////////////////////////////////////////////////////////
+                       GOVERNANCE CALL GENERATORS
+    //////////////////////////////////////////////////////////////*/
 
     function generateGovernanceCalls() public {
         title("Governance Messages calldata");
@@ -166,7 +183,9 @@ contract Upgrade is Test{
         });
     }
 
-
+    /*//////////////////////////////////////////////////////////////
+                                UTILITIES
+    //////////////////////////////////////////////////////////////*/
 
     function title(string memory title1) public{
         console2.log("===========================");
