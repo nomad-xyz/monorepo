@@ -166,7 +166,7 @@ export function formatEVM(address: string) {
 }
 
 export class Padded {
-  private s: string;
+  private s: string; // should start with 0x
 
   constructor(s: string) {
     if (s.length !== 66)
@@ -179,6 +179,8 @@ export class Padded {
   static fromEVM(s: string): Padded {
     if (s.length !== 42)
       throw new Error(`Input string length must be 42, got: ${s.length}`);
+    if (s.slice(0, 2) !== '0x')
+      throw new Error(`Input string length must start with '0x', got: ${s}`);
 
     return new Padded('0x' + '00'.repeat(12) + s.slice(2));
   }
@@ -193,10 +195,10 @@ export class Padded {
   }
 
   pretty() {
-    if (this.s.substring(2, 24) === '0000000000000000000000') {
+    if (this.s.substring(0, 24) === '0x0000000000000000000000') {
       return this.toEVMAddress();
     }
-    return formatEVM('0x' + this.s)
+    return formatEVM(this.s)
   }
 
   toEVMAddress() {
