@@ -13,9 +13,17 @@ export class upgradeCLI extends Command {
     // can pass either --force or -f
     resume: Flags.boolean({char: 'r'}),
     test: Flags.boolean({char: 't'}),
+    config: Flags.string({
+      char: 'c',
+      required: true
+    }),
+    domain: Flags.string({
+      char: 'd',
+      required: true
+    })
   }
   static args = [
-    {name: 'config'},
+    {name: 'command'},
   ]
 
   static config = {
@@ -28,26 +36,56 @@ export class upgradeCLI extends Command {
     const {flags} = await this.parse(upgradeCLI);
     const {args} = await this.parse(upgradeCLI);
 
-    const config: config.NomadConfig = this.getConfigFromPath(args.config);
+    const config: config.NomadConfig = this.getConfigFromPath(flags.config);
     const networks = config.networks;
-    let rpcs = config.rpcs;
-
 
     this.announce("Welcome to Nomgrade")
 
     // If test, then replace rpc endpoints with local ones
     if (flags.test) {
       this.announce("Upgrade script will run in test mode");
-      console.log("It expects to find local EVM-compatible RPC endpoints, listening on port: 8545, 8546, 8547..., for the total number of networks that it's deploying to");
+      console.log("It expects to find local EVM-compatible RPC endpoints, that listen on an incrementing port number, starting at 8545");
       console.log("Use multi-anvil to quickly spin up multiple anvil instances with incrementing port number");
+      this.announce("RPC endpoints")
       for (let index in networks) {
         let port: number = 8545 + parseInt(index);
-        rpcs[networks[index]][0] = `http://127.0.0.1:${port}`;
+        config.rpcs[networks[index]][0] = `http://127.0.0.1:${port}`;
       }
-      console.log(rpcs);
+      console.log(config.rpcs);
     }
 
+    if (args.command == 'upgrade') {
+      this.upgrade(config, flags.resume);
+    } else if (args.command == 'batch') {
+      this.executeCallBatch(config, flags.domain);
+    }
+  }
+  async executeCallBatch(config: config.NomadConfig, domainName: string) {
+    const rpc = config.rpcs[domainName][0];
+    const path = `./upgrade-artifacts/${domainName}/artifacts.json`
+    const privateKey = process.env.PRIVATE_KEY || '';
+    try {
+      // try loading as a local filepath
+      const artifacts = JSON.parse(fs.readFileSync(path).toString());
+      if (artifacts.batch.length == 0) {
+        throw new Error(`batchCallData artifact is empty for domain ${domainName}. Run the upgrade script or manually create an artifacts.json file with the required fields`);
+      }
+      process.env['NOMAD_CALL_BATCH'] = artifacts.batch;
+      process.env['NOMAD_GOV_ROUTER'] = config.core[domainName].governanceRouter.proxy;
+
+    } catch (e) {
+      throw e;
+    }
+    const command = this.forgeScriptCommand(domainName, "executeCallBatchCall(string)", `${domainName}`, 'UpgradeActions', rpc, privateKey, false);
+    this.executeCommand(domainName, command, 'executeCallBatch-output')
+  }
+  async upgrade(config: config.NomadConfig, resume: boolean) {
+
+    const networks = config.networks;
+    const rpcs = config.rpcs;
+
     for (const network of networks) {
+
       const networkConfig = config.protocol.networks[network];
       const timelock = networkConfig.configuration.governance.recoveryTimelock;
 
@@ -95,33 +133,51 @@ export class upgradeCLI extends Command {
       }
       // forge script command with all the arguments, ready to be executed
       const command: string = this.forgeScriptCommand(domainName, 'upgrade(uint32, string)',
-        `${domain} ${domainName}`, rpc, privateKey, flags.resume);
+        `${domain} ${domainName}`, 'Upgrade', rpc, privateKey, resume);
 
       // Create directory for upgrade artifacts
       fs.mkdir(`./upgrade-artifacts/${domainName}`, {recursive: true}, (err) => {
         if (err) throw err;
       });
 
-      // Execute forge script
-      exec(command, (error, stdout, stderr) => {
-        console.log(stdout);
-        fs.writeFile(`./upgrade-artifacts/${domainName}/output.txt`, stdout, function (err) {
+      this.executeCommand(domainName, command, 'upgrade-output')
+
+    }
+
+  }
+
+  executeCommand(domainName: string, command: string, outputFile: string) {
+
+    // Execute forge script
+    exec(command, (error, stdout, stderr) => {
+      console.log(stdout);
+
+      // Write raw output to file
+      fs.writeFile(`./upgrade-artifacts/${domainName}/${outputFile}.txt`, stdout, function (err) {
+        if (err) {
+          return console.log(`Failed to write upgrade artifact with Error: ${err}`);
+        }
+      });
+
+      // Extract artifacts from raw output and store them in a JSON file
+      // Only if it's during an upgrade process
+      if (outputFile == 'upgrade-output') {
+        const artifacts = this.extractArtifacts(stdout);
+        fs.writeFile(`./upgrade-artifacts/${domainName}/artifacts.json`, JSON.stringify(artifacts), function (err) {
           if (err) {
             return console.log(`Failed to write upgrade artifact with Error: ${err}`);
           }
         });
-        if (stderr) {
-          console.log(`stderr: ${stderr}`);
-        }
-        if (error) {
-          console.log(`error: ${error.message}`);
-          throw new Error(`Forge script failed to run for ${domainName}`);
-        }
-      });
-    }
+      }
+      if (error) {
+        console.log(`error: ${error.message}`);
+        throw new Error(`Forge script failed to run for ${domainName}`);
+      }
+    });
 
   }
-  forgeScriptCommand(domainName: string, commandSignature: string, args: string, rpcUrl: string, privateKey: string, resume: boolean): string {
+
+  forgeScriptCommand(domainName: string, commandSignature: string, args: string, targetContract: string, rpcUrl: string, privateKey: string, resume: boolean): string {
     let resumeOrBroadcast;
     if (resume) {
       resumeOrBroadcast = '--resume';
@@ -134,7 +190,7 @@ export class upgradeCLI extends Command {
       `cd ./upgrade-artifacts/${domainName}`,
       '&&',
       'forge script',
-      '--tc Upgrade',
+      `--tc ${targetContract}`,
       `--rpc-url ${rpcUrl}`,
       `${resumeOrBroadcast}`,
       `--private-key ${privateKey}`,
@@ -148,6 +204,7 @@ export class upgradeCLI extends Command {
     return pieces.join(' ');
   }
 
+
   getConfigFromPath(path: string) {
     try {
       // try loading as a local filepath
@@ -155,6 +212,23 @@ export class upgradeCLI extends Command {
     } catch (e) {
       throw e;
     }
+  }
+
+  extractArtifacts(output: string): artifacts {
+    const lines = output.split('\n');
+    let artifact: artifacts = {
+      batch: ""
+    }
+    lines.forEach((value, index) => {
+      console.log("new line: " + value);
+      if (value.includes("executeCallBatch-artifact")) {
+        // The next line will be the calldata encoded as a hex string
+        // Due to how it's being output, whitespace characters can be generated. We
+        // make sure to remove them, as they are invalid.
+        artifact.batch = lines[index + 1].replace(/\s/g, '');
+      }
+    });
+    return artifact;
   }
 
   announce(what: string) {
@@ -166,5 +240,11 @@ export class upgradeCLI extends Command {
   }
 }
 
+
+interface artifacts {
+
+  batch: string
+
+}
 
 upgradeCLI.run();

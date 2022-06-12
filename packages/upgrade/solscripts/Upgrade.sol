@@ -134,31 +134,31 @@ contract Upgrade is Test{
 
     function generateGovernanceCalls() public {
         title("BeaconController upgrade encoded calls");
-        console2.log("Function signature: upgrade(address, address)")
-        console2.log("Arguments: <contract_beacon>, <new_implementation_address>")
+        console2.log("Function signature: upgrade(address, address)");
+        console2.log("Arguments: <contract_beacon>, <new_implementation_address>");
 
         upgradeHome = abi.encodeWithSignature("upgrade(address, address)", homeBeacon, address(newHome));
-        console2.log("Home");
+        console2.log("Upgrade Home");
         console2.logBytes(upgradeHome);
 
         upgradeReplica = abi.encodeWithSignature("upgrade(address, address)", replicaBeacon, address(newReplica));
-        console2.log("Replica");
+        console2.log("Upgrade Replica");
         console2.logBytes(upgradeReplica);
 
         upgradeGovRouter = abi.encodeWithSignature("upgrade(address, address)", governanceRouterBeacon, address(newGovernanceRouter));
-        console2.log("Governance Router");
+        console2.log("Upgrade Governance Router");
         console2.logBytes(upgradeGovRouter);
 
         upgradeBridgeRouter = abi.encodeWithSignature("upgrade(address, address)", bridgeRouterBeacon, address(newBridgeRouter));
-        console2.log("Bridge Router");
+        console2.log("Upgrade Bridge Router");
         console2.logBytes(upgradeBridgeRouter);
 
         upgradeTokenRegistry = abi.encodeWithSignature("upgrade(address, address)", tokenRegistryBeacon, address(newTokenRegistry));
-        console2.log("Token Registry");
+        console2.log("Upgrade Token Registry");
         console2.logBytes(upgradeTokenRegistry);
 
         upgradeBridgeToken = abi.encodeWithSignature("upgrade(address, address)", bridgeTokenBeacon, address(newBridgeToken));
-        console2.log("Bridge Token");
+        console2.log("Upgrade Bridge Token");
         console2.logBytes(upgradeBridgeToken);
     }
 
@@ -175,10 +175,9 @@ contract Upgrade is Test{
         title("ExecuteCallBatch call");
         console2.log("function signature: executeCallBatch(GovernanceMessage.Call[] calldata _calls)");
         console2.log("GovernanceMessage.Call signature:  struct Call { bytes32 to; bytes data;}");
-        console2.log("Call attributes: <beacon_controller_address,
-                     <beacon_controller_upgraded_encoded_call_for_implementation>")
-        console2.log("function call with encoded args:");
-        console2.logBytes(executeCallBatch);
+        console2.log("Call attributes: <beacon_controller_address, <beacon_controller_upgraded_encoded_call_for_implementation>");
+        console2.log("executeCallBatch-artifact");
+        console2.logBytes(executeCallBatchCall);
     }
 
 
@@ -200,24 +199,23 @@ contract Upgrade is Test{
     }
 
     function title(string memory title1, string memory title2) public{
-        console2.log("");
+        console2.log(" ");
         console2.log("===========================");
         console2.log(title1, title2);
         console2.log("===========================");
-        console2.log("");
+        console2.log(" ");
     }
 
 }
 
 
-contract UpgradeActions {
-
-    function executeCallBatchCall(string domain) public {
-        bytes callData = vm.envBytes("NOMAD_CALL_BATCH");
+contract UpgradeActions is Test {
+    function executeCallBatchCall(string memory domain) public {
+        bytes memory callData = vm.envBytes("NOMAD_CALL_BATCH");
         address govRouter = vm.envAddress("NOMAD_GOV_ROUTER");
         vm.startBroadcast();
-        (success, return) = govRouter.call(callData);
-        vm.endBroadcast();
+        (bool success, bytes memory returnData) = govRouter.call(callData);
+        vm.stopBroadcast();
         require(success, "ExecuteCallBatch failed");
     }
 }
