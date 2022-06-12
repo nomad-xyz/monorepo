@@ -372,6 +372,14 @@ export class Network {
     this.balances = balances;
   }
 
+  async init() {
+    const tresholds = await Promise.all(this.balances.map(async (a) => {
+      return await a.treshold()
+    }))
+    const treshold = tresholds.reduce((acc, v) => acc.add(v), ethers.BigNumber.from('0'));
+    this.bank._treshold = treshold;
+  }
+
   async checkAllBalances() {
     return Object.fromEntries(
       await Promise.all([
@@ -411,7 +419,7 @@ export class Network {
   > {
     const promises: Promise<
       [Accountable, ethers.BigNumber, boolean, ethers.BigNumber]
-    >[] = [...this.balances, this.bank].map(
+    >[] = this.balances.map(
       async (
         a
       ): Promise<
@@ -432,6 +440,16 @@ export class Network {
 
   async checkAndPay(dryrun = false): Promise<void> {
     if (prettyPrint) console.log(`\n\nNetwork: ${this.name}\n`);
+
+    const [bankBalance, bankTreshold] = await Promise.all([this.bank.balance(), this.bank.treshold(), ]);
+
+    if (bankBalance.lt(bankTreshold)) {
+      this.ctx.logger.warn({balance: formatEther(bankBalance), treshold: formatEther(bankTreshold)}, `Bank balance is less than treshold, please top up`)
+      if (prettyPrint) console.log(red(`Bank balance is less than treshold, please top up ${formatEther(bankTreshold.sub(bankBalance))} currency. Has ${formatEther(bankBalance)} out of ${formatEther(bankTreshold)}`))
+    } else {
+      this.ctx.logger.debug({balance: formatEther(bankBalance), treshold: formatEther(bankTreshold)}, `Bank has enough moneyz`)
+      if (prettyPrint) console.log(green(`Bank has enough moneyz. Has ${formatEther(bankBalance)} out of ${formatEther(bankTreshold)}`))
+    }
 
     const suggestions: [
       Accountable,

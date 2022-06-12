@@ -3,7 +3,7 @@ import { Keymaster } from "./keymaster";
 
 async function run(configPath: string, port: number, dryrun = false) {
   const config = readConfig(configPath);
-  const km = new Keymaster(config).init();
+  const km = await new Keymaster(config).init();
   km.ctx.metrics.startServer(port);
 
   while (true) {

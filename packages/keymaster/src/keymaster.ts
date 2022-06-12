@@ -19,7 +19,7 @@ export class Keymaster {
     return context;
   }
 
-  init(): Keymaster {
+  async init(): Promise<Keymaster> {
     Object.values(this.config.networks).forEach((n) => {
       this.networks.set(n.name, Network.fromINetwork(n, this.ctx));
     });
@@ -56,6 +56,10 @@ export class Keymaster {
         this.networks.get(replica)!.balances.push(...balances);
       }
     });
+
+    await Promise.all(Array.from(this.networks.values()).map(async (n) => {
+        await n.init()
+    }))
 
     return this;
   }
