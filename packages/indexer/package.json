@@ -53,10 +53,13 @@
     "typescript": "^4.4.3"
   },
   "devDependencies": {
+    "@apollo/client": "^3.6.6",
     "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@typescript-eslint/parser": "^5.20.0",
+    "element-cli": "^2.0.4",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
-    "prettier": "^2.4.1"
+    "prettier": "^2.4.1",
+    "react": "^18.1.0"
   }
 }
