@@ -36,5 +36,5 @@ out = 'packages/contracts-bridge/foundry_artifacts'
 [upgrade]
 src = 'packages/upgrade/solscripts'
 test = 'packages/upgrade/solscripts/test'
-out = 'packages/upgrade/out'
+out = 'packages/upgrade/solscripts/out'
 
