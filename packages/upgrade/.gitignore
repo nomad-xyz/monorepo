@@ -1,3 +1,4 @@
 upgrade-artifacts/
+config/
 .env
-
+out/

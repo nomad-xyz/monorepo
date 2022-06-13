@@ -1,209 +1,411 @@
-import * as config from '@nomad-xyz/configuration';
-import * as ethers from 'ethers';
-import {NonceManager} from '@ethersproject/experimental';
-import fs from 'fs';
-import * as dotenv from 'dotenv';
-import {exec} from 'child_process';
-import {Command, Flags} from '@oclif/core'
+#!/usr/bin/env ts-node
 
+import * as config from "@nomad-xyz/configuration";
+import * as ethers from "ethers";
+import { NonceManager } from "@ethersproject/experimental";
+import * as fs from "fs";
+import * as dotenv from "dotenv";
+import { exec } from "child_process";
+import { Command, Flags } from "@oclif/core";
 
 export class upgradeCLI extends Command {
-
   static flags = {
     // can pass either --force or -f
-    resume: Flags.boolean({char: 'r'}),
-    test: Flags.boolean({char: 't'}),
+    resume: Flags.boolean({ char: "r" }),
+    test: Flags.boolean({ char: "t" }),
     config: Flags.string({
-      char: 'c',
-      required: true
+      char: "c",
+      required: true,
     }),
-    domain: Flags.string({
-      char: 'd',
-      required: true
-    })
-  }
-  static args = [
-    {name: 'command'},
-  ]
+    domains: Flags.string({
+      char: "d",
+      multiple: true,
+      exclusive: ["all"],
+    }),
+    all: Flags.boolean({ char: "a" }),
+    help: Flags.help(),
+    version: Flags.version(),
+  };
+  static args = [{ name: "command" }];
 
   static config = {
-    name: 'Nomad Upgrade',
-    version: '0.0.1',
-  }
+    name: "Nomad Upgrade",
+    version: "0.0.1",
+  };
+
+  nomadConfig: config.NomadConfig;
+  newNomadConfig: config.NomadConfig;
 
   async run() {
     dotenv.config();
-    const {flags} = await this.parse(upgradeCLI);
-    const {args} = await this.parse(upgradeCLI);
+    const { flags } = await this.parse(upgradeCLI);
+    const { args } = await this.parse(upgradeCLI);
 
-    const config: config.NomadConfig = this.getConfigFromPath(flags.config);
-    const networks = config.networks;
+    this.nomadConfig = this.getConfigFromPath(flags.config);
+    this.newNomadConfig = this.getConfigFromPath(flags.config);
+    const networks = this.nomadConfig.networks;
 
-    this.announce("Welcome to Nomgrade")
+    this.announce("Welcome to Nomgrade");
 
     // If test, then replace rpc endpoints with local ones
     if (flags.test) {
       this.announce("Upgrade script will run in test mode");
-      console.log("It expects to find local EVM-compatible RPC endpoints, that listen on an incrementing port number, starting at 8545");
-      console.log("Use multi-anvil to quickly spin up multiple anvil instances with incrementing port number");
-      this.announce("RPC endpoints")
+      console.log(
+        "It expects to find local EVM-compatible RPC endpoints, that listen on an incrementing port number, starting at 8545"
+      );
+      console.log(
+        "Use multi-anvil to quickly spin up multiple anvil instances with incrementing port number"
+      );
+      this.announce("RPC endpoints");
       for (let index in networks) {
         let port: number = 8545 + parseInt(index);
-        config.rpcs[networks[index]][0] = `http://127.0.0.1:${port}`;
+        this.nomadConfig.rpcs[networks[index]][0] = `http://127.0.0.1:${port}`;
       }
-      console.log(config.rpcs);
     }
-
-    if (args.command == 'upgrade') {
-      this.upgrade(config, flags.resume);
-    } else if (args.command == 'batch') {
-      this.executeCallBatch(config, flags.domain);
+    console.log("The following RPC endpoints will be used");
+    console.log(this.nomadConfig.rpcs);
+    let domains;
+    if (flags.all) {
+      domains = this.nomadConfig.networks;
+    } else {
+      domains = flags.domains;
+    }
+    for (const domainName of domains) {
+      if (args.command == "upgrade") {
+        this.upgrade(domainName, flags.resume);
+      } else if (args.command == "executeCallBatch") {
+        this.executeCallBatch(domainName);
+      } else if (args.command == "forkTest") {
+        this.upgradeForkTest(domainName);
+      }
+    }
+    if (args.command == "printGovActions") {
+      if (domains.length != 1) {
+        throw new Error(
+          `You can execute govActions only the Governor Chain, thus you need to pass exactly a single domain. You passed: ${domains}}`
+        );
+      }
+      const govChain = domains[0];
+      this.printGovActions(govChain);
     }
   }
-  async executeCallBatch(config: config.NomadConfig, domainName: string) {
+  async executeCallBatch(domainName: any) {
+    const config = this.nomadConfig;
     const rpc = config.rpcs[domainName][0];
-    const path = `./upgrade-artifacts/${domainName}/artifacts.json`
-    const privateKey = process.env.PRIVATE_KEY || '';
+    const path = `./upgrade-artifacts/${domainName}/artifacts.json`;
+    const privateKey =
+      process.env.PRIVATE_KEY ||
+      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
     try {
       // try loading as a local filepath
       const artifacts = JSON.parse(fs.readFileSync(path).toString());
-      if (artifacts.batch.length == 0) {
-        throw new Error(`batchCallData artifact is empty for domain ${domainName}. Run the upgrade script or manually create an artifacts.json file with the required fields`);
+      if (artifacts.executeCallBatch.length == 0) {
+        throw new Error(
+          `batchCallData artifact is empty for domain ${domainName}. Run the upgrade script or manually create an artifacts.json file with the required fields`
+        );
       }
-      process.env['NOMAD_CALL_BATCH'] = artifacts.batch;
-      process.env['NOMAD_GOV_ROUTER'] = config.core[domainName].governanceRouter.proxy;
-
+      process.env["NOMAD_CALL_BATCH"] = artifacts.batch;
+      process.env["NOMAD_GOV_ROUTER"] =
+        config.core[domainName].governanceRouter.proxy;
     } catch (e) {
       throw e;
     }
-    const command = this.forgeScriptCommand(domainName, "executeCallBatchCall(string)", `${domainName}`, 'UpgradeActions', rpc, privateKey, false);
-    this.executeCommand(domainName, command, 'executeCallBatch-output')
+    const command = this.forgeScriptCommand(
+      domainName,
+      "executeCallBatchCall(string)",
+      `${domainName}`,
+      "../../solscripts/Upgrade.sol",
+      "UpgradeActions",
+      rpc,
+      privateKey,
+      false,
+      true
+    );
+    this.executeCommand(domainName, command, "executeCallBatch-output");
   }
-  async upgrade(config: config.NomadConfig, resume: boolean) {
 
+  async printGovActions(domainName: any) {
+    // Hardcoded, should change
+    const govChain = domainName;
+    const config = this.nomadConfig;
+    const rpc = config.rpcs[govChain][0];
+    const privateKey =
+      process.env.PRIVATE_KEY ||
+      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+    let remoteBatches: string[] = [];
+    let remoteDomains: number[] = [];
+    let localBatch: string = "";
+    for (const domainName of config.networks) {
+      try {
+        const path = `./upgrade-artifacts/${domainName}/artifacts.json`;
+        const artifacts = JSON.parse(fs.readFileSync(path).toString());
+        if (artifacts.callBatch.length == 0) {
+          throw new Error(
+            `batchCallData artifact is empty for domain ${domainName}. Run the upgrade script or manually create an artifacts.json file with the required fields`
+          );
+        }
+        if (domainName != govChain) {
+          remoteBatches.push(artifacts.callBatch);
+          remoteDomains.push(config.protocol.networks[domainName].domain);
+        } else {
+          localBatch = artifacts.callBatch;
+        }
+      } catch (e) {
+        throw e;
+      }
+    }
+    process.env["NOMAD_REMOTE_CALL_BATCHES"] = JSON.stringify(remoteBatches)
+      .replace(/]|[[]/g, "")
+      .replace(/['"]+/g, "")
+      .replace(/['"]+/g, "");
+    process.env["NOMAD_LOCAL_CALL_BATCH"] = localBatch;
+    process.env["NOMAD_REMOTE_DOMAINS"] = JSON.stringify(remoteDomains)
+      .replace(/]|[[]/g, "")
+      .replace(/['"]+/g, "")
+      .replace(/['"]+/g, "");
+    process.env["NOMAD_GOV_ROUTER"] =
+      config.core[govChain].governanceRouter.proxy;
+    const command = this.forgeScriptCommand(
+      govChain,
+      "printGovernanceActions()",
+      "",
+      "../../solscripts/Upgrade.sol",
+      "UpgradeActions",
+      "",
+      "",
+      false,
+      false
+    );
+    this.executeCommand(govChain, command, "executeGovActions-output");
+  }
+  async upgrade(domainName: string, resume: boolean) {
+    const config = this.nomadConfig;
     const networks = config.networks;
     const rpcs = config.rpcs;
 
-    for (const network of networks) {
+    const networkConfig = config.protocol.networks[domainName];
 
-      const networkConfig = config.protocol.networks[network];
-      const timelock = networkConfig.configuration.governance.recoveryTimelock;
+    // Arguments for upgrade script's function signature
+    const domain: number = networkConfig.domain;
 
-      // Beacons for Core contracts
-      const homeBeacon = config.core[network].home.beacon;
-      const governanceRouterBeacon = config.core[network].governanceRouter.beacon;
+    this.setUpgradeEnv(domainName);
 
-      // Beacons for Bridge contracts
-      const bridgeRouterBeacon = config.bridge[network].bridgeRouter.beacon;
-      const tokenRegistryBeacon = config.bridge[network].tokenRegistry.beacon;
-      const bridgeToken = config.bridge[network].bridgeToken.beacon;
-      // Get first replica beacon, doesn't matter which
-      // All replicas in every domain, share the same beacon, as they share the same implementation
-      // but have different proxies, because they have different storage. They are different instances
-      // of the same "object/thing"
-      const replica = config.core[network].replicas[Object.keys(config.core[network].replicas)[0]].beacon;
-
-      // UpgradeBeaconController and Governance Router
-      const governanceRouterProxy = config.core[network].governanceRouter.proxy;
-      const upgradeBeaconController = config.core[network].upgradeBeaconController;
-
-      // Set env variables to be picked up by forge script
-      // Set beacon addresses
-      process.env['NOMAD_HOME_BEACON'] = homeBeacon;
-      process.env['NOMAD_GOVERNANCE_ROUTER_BEACON'] = governanceRouterBeacon;
-      process.env['NOMAD_BRIDGE_ROUTER_BEACON'] = bridgeRouterBeacon;
-      process.env['NOMAD_TOKEN_REGISTRY_BEACON'] = tokenRegistryBeacon;
-      process.env['NOMAD_BRIDGE_ROUTER_BEACON'] = bridgeToken;
-      process.env['NOMAD_REPLICA_BEACON'] = replica;
-
-      // set env variable for timelock
-      process.env['NOMAD_RECOVERY_TIMELOCK'] = timelock.toString();
-      process.env['NOMAD_BEACON_CONTROLLER'] = upgradeBeaconController;
-      process.env['NOMAD_GOVERNANCE_ROUTER'] = governanceRouterProxy;
-
-      // Arguments for upgrade script's function signature
-      const domainName: string = networkConfig.name;
-      const domain: number = networkConfig.domain;
-
-      // flag arguments for forge script
-      const rpc = rpcs[network][0];
-      const privateKey = process.env.PRIVATE_KEY || '';
-      if (privateKey.length == 0) {
-        throw new Error("Mising private key in .env. Please set the PRIVAT_KEY variable and run again")
-      }
-      // forge script command with all the arguments, ready to be executed
-      const command: string = this.forgeScriptCommand(domainName, 'upgrade(uint32, string)',
-        `${domain} ${domainName}`, 'Upgrade', rpc, privateKey, resume);
-
-      // Create directory for upgrade artifacts
-      fs.mkdir(`./upgrade-artifacts/${domainName}`, {recursive: true}, (err) => {
-        if (err) throw err;
-      });
-
-      this.executeCommand(domainName, command, 'upgrade-output')
-
+    // flag arguments for forge script
+    const rpc = rpcs[domainName][0];
+    const privateKey =
+      process.env.PRIVATE_KEY ||
+      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+    if (privateKey.length == 0) {
+      throw new Error(
+        "Mising private key in .env. Please set the PRIVAT_KEY variable and run again"
+      );
     }
 
+    // Create directory for upgrade artifacts
+    fs.mkdir(
+      `./upgrade-artifacts/${domainName}`,
+      { recursive: true },
+      (err) => {
+        if (err) throw err;
+      }
+    );
+    // forge script command with all the arguments, ready to be executed
+    const command: string = this.forgeScriptCommand(
+      domainName,
+      "upgrade(uint32, string)",
+      `${domain} ${domainName}`,
+      "../../solscripts/Upgrade.sol",
+      "Upgrade",
+      rpc,
+      privateKey,
+      resume,
+      true
+    );
+
+    this.executeCommand(domainName, command, "upgrade-output");
+  }
+
+  setUpgradeEnv(domainName: string) {
+    const config = this.nomadConfig;
+    const networks = config.networks;
+    const rpcs = config.rpcs;
+    const timelock =
+      config.protocol.networks[domainName].configuration.governance
+        .recoveryTimelock;
+
+    // Beacons for Core contracts
+    const homeBeacon = config.core[domainName].home.beacon;
+    const governanceRouterBeacon =
+      config.core[domainName].governanceRouter.beacon;
+
+    // Beacons for Bridge contracts
+    const bridgeRouterBeacon = config.bridge[domainName].bridgeRouter.beacon;
+    const tokenRegistryBeacon = config.bridge[domainName].tokenRegistry.beacon;
+    const bridgeTokenBeacon = config.bridge[domainName].bridgeToken.beacon;
+    // Get first replica beacon.
+    // All replicas in every domain, share the same beacon, as they share the same implementation
+    // but have different proxies, because they have different storage.
+    const replicaBeacon =
+      config.core[domainName].replicas[
+        Object.keys(config.core[domainName].replicas)[0]
+      ].beacon;
+
+    // UpgradeBeaconController and Governance Router
+    const upgradeBeaconController =
+      config.core[domainName].upgradeBeaconController;
+
+    // Set env variables to be picked up by forge script
+    // Set beacon addresses
+    process.env["NOMAD_HOME_BEACON"] = homeBeacon;
+    process.env["NOMAD_GOVERNANCE_ROUTER_BEACON"] = governanceRouterBeacon;
+    process.env["NOMAD_BRIDGE_ROUTER_BEACON"] = bridgeRouterBeacon;
+    process.env["NOMAD_TOKEN_REGISTRY_BEACON"] = tokenRegistryBeacon;
+    process.env["NOMAD_BRIDGE_ROUTER_BEACON"] = bridgeTokenBeacon;
+    process.env["NOMAD_REPLICA_BEACON"] = replicaBeacon;
+
+    // set env variable for timelock
+    process.env["NOMAD_RECOVERY_TIMELOCK"] = timelock.toString();
+    process.env["NOMAD_BEACON_CONTROLLER"] = upgradeBeaconController;
+  }
+
+  upgradeForkTest(domainName: string) {
+    console.log("Starting Fork test");
+    // Get first replica beacon.
+    // All replicas in every domain, share the same beacon, as they share the same implementation
+    // but have different proxies, because they have different storage.
+    const config = this.nomadConfig;
+    const rpc = process.env.RPC_URL || config.rpcs[domainName][0];
+    const replicaProxy =
+      config.core[domainName].replicas[
+        Object.keys(config.core[domainName].replicas)[0]
+      ].proxy;
+
+    const governanceRouterProxy =
+      config.core[domainName].governanceRouter.proxy;
+
+    // Set env variables required by Fork test and Upgrade
+    process.env["NOMAD_REPLICA_PROXY"] = replicaProxy;
+    process.env["NOMAD_GOV_ROUTER_PROXY"] = governanceRouterProxy;
+    process.env["NOMAD_DOMAIN_NAME"] = domainName;
+    process.env["NOMAD_DOMAIN"] =
+      config.protocol.networks[domainName].domain.toString();
+    this.setUpgradeEnv(domainName);
+
+    const command: string = `FOUNDRY_PROFILE=upgrade forge test --ffi --silent --fork-url ${rpc} -vvvv`;
+    this.executeCommand(domainName, command, "forktest-output");
   }
 
   executeCommand(domainName: string, command: string, outputFile: string) {
-
     // Execute forge script
     exec(command, (error, stdout, stderr) => {
+      // Print output of forge script
       console.log(stdout);
-
-      // Write raw output to file
-      fs.writeFile(`./upgrade-artifacts/${domainName}/${outputFile}.txt`, stdout, function (err) {
-        if (err) {
-          return console.log(`Failed to write upgrade artifact with Error: ${err}`);
-        }
-      });
-
-      // Extract artifacts from raw output and store them in a JSON file
-      // Only if it's during an upgrade process
-      if (outputFile == 'upgrade-output') {
-        const artifacts = this.extractArtifacts(stdout);
-        fs.writeFile(`./upgrade-artifacts/${domainName}/artifacts.json`, JSON.stringify(artifacts), function (err) {
-          if (err) {
-            return console.log(`Failed to write upgrade artifact with Error: ${err}`);
-          }
-        });
+      // Save output to a file, for posterity
+      if (stderr) {
+        console.log(stderr);
       }
-      if (error) {
-        console.log(`error: ${error.message}`);
-        throw new Error(`Forge script failed to run for ${domainName}`);
+      fs.writeFile(
+        `./upgrade-artifacts/${domainName}/${outputFile}.txt`,
+        stdout,
+        function (err) {
+          if (err) {
+            return console.log(
+              `Failed to write upgrade artifact with Error: ${err}`
+            );
+          }
+        }
+      );
+      // If forge script upgrades the protocol, extract the new implementation addresses
+      // from the output and createa an updated protocol config file
+      if (command.includes("--sig upgrade")) {
+        const config = this.extractImplementations(domainName, stdout);
+        // This should change to be generated at the same directory
+        // as the config
+        fs.writeFile(
+          "./new-config.json",
+          JSON.stringify(config),
+          function (err) {
+            if (err) {
+              return console.log(
+                `Failed to write upgrade artifact with Error: ${err}`
+              );
+            }
+          }
+        );
+      }
+      if (
+        command.includes("--sig upgrade") ||
+        command.includes("-- printGovActions")
+      ) {
+        // Extract specific artifacts from raw output and store them in a JSON file
+        const path = `./upgrade-artifacts/${domainName}/artifacts.json`;
+        let newArtifacts = this.extractArtifacts(stdout, domainName);
+        try {
+          const existing: artifacts = JSON.parse(
+            fs.readFileSync(path).toString()
+          );
+          console.log("Found existing artifacts, appending..");
+          Object.keys(existing).forEach((key) => {
+            // From the newArtifacts, keep only the non-empty
+            // fields
+            if (newArtifacts[key as keyof artifacts] != "") {
+              existing[key as keyof artifacts] =
+                newArtifacts[key as keyof artifacts];
+            }
+          });
+          newArtifacts = existing;
+        } catch (error) {
+          console.log("No artifacts.json file found. Creating new..");
+        }
+        fs.writeFileSync(path, JSON.stringify(newArtifacts));
+        console.log(`Artifacts were written to ${path}`);
       }
     });
-
   }
 
-  forgeScriptCommand(domainName: string, commandSignature: string, args: string, targetContract: string, rpcUrl: string, privateKey: string, resume: boolean): string {
+  forgeScriptCommand(
+    domainName: string,
+    commandSignature: string,
+    args: string,
+    pathToFile: string,
+    targetContract: string,
+    rpcUrl: string,
+    privateKey: string,
+    resume: boolean,
+    broadcast: boolean
+  ): string {
     let resumeOrBroadcast;
     if (resume) {
-      resumeOrBroadcast = '--resume';
+      resumeOrBroadcast = "--resume";
+    } else if (broadcast) {
+      resumeOrBroadcast = "--broadcast";
     } else {
-      resumeOrBroadcast = '--broadcast';
+      resumeOrBroadcast = "";
+    }
+    if (rpcUrl != "") {
+      rpcUrl = `--rpc-url ${rpcUrl}`;
+    }
+    if (privateKey != "") {
+      privateKey = `--private-key ${privateKey}`;
     }
     const pieces = [
-      'forge clean',
-      '&&',
+      "forge clean",
+      "&&",
       `cd ./upgrade-artifacts/${domainName}`,
-      '&&',
-      'forge script',
+      "&&",
+      "FOUNDRY_PROFILE=upgrade forge script",
       `--tc ${targetContract}`,
-      `--rpc-url ${rpcUrl}`,
+      `${rpcUrl}`,
       `${resumeOrBroadcast}`,
-      `--private-key ${privateKey}`,
+      `${privateKey}`,
       `--sig '${commandSignature}'`,
-      '--force',
-      '--slow',
-      '--silent',
-      '../../solscripts/Upgrade.sol',
-      `${args}`
+      "--slow",
+      "--silent",
+      `${pathToFile}`,
+      `${args}`,
     ];
-    return pieces.join(' ');
+    return pieces.join(" ");
   }
-
 
   getConfigFromPath(path: string) {
     try {
@@ -214,37 +416,86 @@ export class upgradeCLI extends Command {
     }
   }
 
-  extractArtifacts(output: string): artifacts {
-    const lines = output.split('\n');
+  extractArtifacts(output: string, domainName: string): artifacts {
+    const lines = output.split("\n");
     let artifact: artifacts = {
-      batch: ""
-    }
+      executeCallBatchCall: "",
+      callBatch: "",
+      executeGovernanceActions: "",
+    };
     lines.forEach((value, index) => {
-      console.log("new line: " + value);
+      // Artifact used by executeCallbatch()
+      // Execute the batched calls that have been sent to a Governance Router
       if (value.includes("executeCallBatch-artifact")) {
-        // The next line will be the calldata encoded as a hex string
-        // Due to how it's being output, whitespace characters can be generated. We
-        // make sure to remove them, as they are invalid.
-        artifact.batch = lines[index + 1].replace(/\s/g, '');
+        artifact.executeCallBatchCall = lines[index + 1].replace(/\s/g, "");
+        // Artifact used by executeGovernanceActions()
+        // It's abi.encoded calldata to be sent from the Governor Chain
+        // to the remote chains via a governance message
+      } else if (value.includes("callBatch-artifact")) {
+        artifact.callBatch = lines[index + 1].replace(/\s/g, "");
+        // Artifact used by executeGovernanceActions()
+        // It's a function call encoded with signature and arguments
+        // ready to be sent via Nomad Governance to the Governor's chain Governance Router
+      } else if (value.includes("executeGovernanceActions-artifact")) {
+        artifact.executeGovernanceActions = lines[index + 1].replace(/\s/g, "");
       }
     });
     return artifact;
   }
 
-  announce(what: string) {
+  extractImplementations(
+    domainName: string,
+    output: string
+  ): config.NomadConfig {
+    const lines = output.split("\n");
+    const config = this.newNomadConfig;
+    const core = config.core;
+    const bridge = config.bridge;
+    lines.forEach((value, index) => {
+      if (value.includes("implementation address")) {
+        let contract: string = value
+          .replace(/\s/g, "")
+          .split("implementation")[0];
+        let address: string = lines[index + 1].replace(/\s/g, "");
+        if (contract != "replica") {
+          // The contract will either belong to 'core' or 'bridge' objects
+          // of the config file
+          try {
+            core[domainName][contract].implementation = address;
+          } catch (e) {
+            bridge[domainName][contract].implementation = address;
+          }
+        } else {
+          for (const network of config.networks) {
+            // The domain does not have deployed replicas of itself
+            // They live only on different domains
+            if (network == domainName) {
+              continue;
+            }
+            core[domainName].replicas[network].implementation = address;
+          }
+        }
+      }
+    });
+    // Move back the changes
+    config.core = core;
+    config.bridge = bridge;
+    return config;
+  }
+
+  announce(what: string): void {
     console.log();
-    console.log('===================================');
+    console.log("===================================");
     console.log(what);
-    console.log('===================================');
+    console.log("===================================");
     console.log();
   }
 }
 
-
 interface artifacts {
-
-  batch: string
-
+  executeCallBatchCall: string;
+  callBatch: string;
+  executeGovernanceActions: string;
 }
 
 upgradeCLI.run();
