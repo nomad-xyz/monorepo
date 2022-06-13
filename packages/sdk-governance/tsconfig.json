@@ -10,10 +10,10 @@
     "./dist",
   ],
   "include": ["./src/*.ts"],
-  "references": [
-    { "path": "../contracts-core" },
-    { "path": "../contracts-bridge" },
-    { "path": "../multi-provider" },
-    { "path": "../sdk" }
-  ]
+  // "references": [
+  //   { "path": "../contracts-core" },
+  //   { "path": "../contracts-bridge" },
+  //   { "path": "../multi-provider" },
+  //   { "path": "../sdk" }
+  // ]
 }

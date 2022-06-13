@@ -2025,6 +2025,28 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nomad-xyz/sdk-governance@workspace:packages/sdk-governance":
+  version: 0.0.0-use.local
+  resolution: "@nomad-xyz/sdk-governance@workspace:packages/sdk-governance"
+  dependencies:
+    "@types/chai": ^4.2.21
+    "@types/mocha": ^9.1.0
+    "@types/node": ^16.9.1
+    "@typescript-eslint/eslint-plugin": ^5.20.0
+    "@typescript-eslint/parser": ^5.20.0
+    dotenv: ^10.0.0
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.3.0
+    ethers: ^5.4.6
+    mocha: ^9.2.1
+    nyc: ^15.1.0
+    prettier: ^2.4.1
+    ts-mocha: ^9.0.2
+    ts-node: ^10.1.0
+    typescript: ^4.4.3
+  languageName: unknown
+  linkType: soft
+
 "@nomad-xyz/sdk@npm:^2.0.0-rc.17, @nomad-xyz/sdk@npm:^2.0.0-rc.21":
   version: 2.0.0-rc.21
   resolution: "@nomad-xyz/sdk@npm:2.0.0-rc.21"
@@ -9365,7 +9387,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 
