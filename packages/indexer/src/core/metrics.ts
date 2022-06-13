@@ -83,6 +83,8 @@ export class IndexerCollector extends MetricsCollector {
   private rpcLatency: Histogram<string>;
   private rpcErrors: Counter<string>;
 
+  private blocksToTipGauge: Gauge<string>;
+
   constructor(environment: string, logger: Logger) {
     super(environment, logger);
 
@@ -140,8 +142,16 @@ export class IndexerCollector extends MetricsCollector {
     // Home Health
 
     this.homeFailedGauge = new Gauge({
-      name: 'nomad_monitor_home_failed',
+      name: prefix + '_home_failed',
       help: 'Gauge that indicates if home of a network is in failed state.',
+      labelNames: ['network', 'environment'],
+    });
+
+    // Blocks to tip
+
+    this.blocksToTipGauge = new Gauge({
+      name: prefix + '_blocks_to_tip',
+      help: 'Gauge that indicates how many blocks to the tip is left to index.',
       labelNames: ['network', 'environment'],
     });
   }
@@ -172,6 +182,10 @@ export class IndexerCollector extends MetricsCollector {
 
   observeGasUsage(stage: string, home: string, replica: string, gas: number) {
     this.gasUsage.labels(stage, home, replica, this.environment).observe(gas);
+  }
+
+  observeBlocksToTip(network: string, count: number) {
+    this.blocksToTipGauge.labels(network, this.environment).set(count);
   }
 
   incDbRequests(type: DbRequestType, req?: number) {
