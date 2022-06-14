@@ -111,14 +111,9 @@ class Env {
         // add deploy signer and overrides for each network
         for (const network of this.networks) {
             const name = network.name;
-            console.log("Deploying test network: " + name);
-            deployContext.registerDomain(network.domain);
-            deployContext.registerRpcProvider(name, network.rpcs[0]);
             const provider = deployContext.mustGetProvider(name);
             const wallet = new ethers.Wallet(this.deployerKey, provider);
-            console.log(wallet);
             const signer = new NonceManager(wallet);
-            console.log(signer);
             deployContext.registerSigner(name, signer);
             deployContext.overrides.set(name, network.deployOverrides);
         }
@@ -157,11 +152,14 @@ class Env {
     console.log(`Upped Tom and Jerry`);
     // Initialize governor for each domain
 
-    const le = new Env({domain: t.domainNumber, id: '0x'+'12'.repeat(20)});
+    const le = new Env({domain: t.domainNumber, id: '0x'+'00'.repeat(20)});
     le.addNetwork(t);
     le.addNetwork(j);
 
     console.log(`Added Tom and Jerry`);
+
+    // Notes, check governance router deployment on Jerry and see if that's actually even passing
+    // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
     await le.deploy();
 
