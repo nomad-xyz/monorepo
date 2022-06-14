@@ -193,12 +193,12 @@ contract UpgradeTest is LegacyFixture {
     string memory domainName = vm.envString("NOMAD_DOMAIN_NAME");
 
     upgrade(domain, domainName);
-    mockGovRouterCall();
+    mockGovCalls();
   }
 
   event BeaconUpgraded(address, address);
 
-  function mockGovRouterCall() public {
+  function mockGovCalls() public {
     console2.log("Mocking Gov calls to the Beacon Controller");
     beaconControllerContract = UpgradeBeaconController(beaconController);
     vm.startPrank(
@@ -235,5 +235,20 @@ contract UpgradeTest is LegacyFixture {
   function test_upgradedProveAlreadyProcessed() public {
     vm.expectRevert("already processed");
     replica.prove(legacyProcessLeaf, legacyProcessProof, legacyProcessIndex);
+  }
+
+  function test_legacyMessageStatusAfterUpgrade() public {
+    bytes32 hash = keccak256(legacyProcessMessage);
+    // Status is proccessed
+    bytes32 status = "2";
+    assertEq(replica.messages(hash), status);
+  }
+
+  function test_upgradedMessageStatus() public {
+    assertTrue(replica.process(legacyProveMessage));
+    bytes32 hash = keccak256(legacyProveMessage);
+    // Status is proccessed
+    bytes32 status = "2";
+    assertEq(replica.messages(hash), status);
   }
 }
