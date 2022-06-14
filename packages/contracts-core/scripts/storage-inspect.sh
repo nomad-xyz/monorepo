@@ -2,7 +2,6 @@
 
 set -e
 
-
 if ! command -v forge &> /dev/null
 then
     echo "forge could not be found. Please install forge by running:"
