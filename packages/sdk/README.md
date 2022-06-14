@@ -4,21 +4,33 @@ This package includes the `NomadContext`, a management system for Nomad core
 contracts, which inherits from the [`MultiProvider`](https://www.npmjs.com/package/@nomad-xyz/multi-provider). `NomadContext` allows
 developers to easily interact with the Nomad system on any number of networks.
 
- - [Documentation](https://docs.nomad.xyz/sdk/)
+-------------------------
+
+### Documentation
+ - [Multi Provider](https://docs.nomad.xyz/multi-provider/)
+ - [Nomad SDK](https://docs.nomad.xyz/sdk/)
+ - Example: [SDK Quick Start](https://github.com/nomad-xyz/examples/tree/main/packages/sdk-quickstart)
+
+-------------------------
 
 ### Intended Usage
 
-Instantiate [NomadContext](https://docs.nomad.xyz/sdk/classes/nomadcontext)
+Instantiate a [NomadContext](https://docs.nomad.xyz/sdk/classes/nomadcontext):
 
 ```ts
-import { NomadContext } from '@nomad-xyz/sdk'
+// sdk includes a wasm module, so must await the import
+const { NomadContext } = await import('@nomad-xyz/sdk')
 
 type Env = 'production' | 'staging' | 'development'
 // staging is the recommended testnet environment
 const environment: Env = 'staging'
 // instantiate a preconfigured NomadContext
 const nomadContext = await NomadContext.fetch(environment)
+```
 
+Commonly used methods:
+
+```ts
 // register custom rpc provider
 nomadContext.registerRpcProvider('ethereum', 'https://...')
 // register signer
@@ -40,6 +52,7 @@ nomadContext.blacklist() // returns set of down networks, if any
 ```
 
 Fetch a [NomadMessage](https://docs.nomad.xyz/sdk/classes/nomadmessage)
+
 ```ts
 import { NomadMessage } from '@nomad-xyz/sdk'
 const message = await NomadMessage.baseSingleFromTransactionHash(nomadContext, 'ethereum', '0x1234...')
@@ -57,7 +70,9 @@ const confirmAt = await message.confirmAt()
 const receipt = await message.process()
 ```
 
-## Building
+-------------------------
+
+### Building
 
 ```
 yarn build
