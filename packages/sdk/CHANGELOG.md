@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- fix: `NomadContext.fetch` warns on failure
+- fix: request browser not to cache fetched config files
 - fix: update replica message status getter for new replica mapping
 
 ### 2.0.0-rc.17

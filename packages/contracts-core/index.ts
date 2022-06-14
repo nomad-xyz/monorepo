@@ -29,3 +29,5 @@ export const UPGRADE_BEACON_SPECIFIER = `${root}/upgrade/UpgradeBeacon.sol:Upgra
 export const UBP_SPECIFIER = `${root}/upgrade/UpgradeBeaconProxy.sol:UpgradeBeaconProxy`;
 export const UBC_SPECIFIER = `${root}/upgrade/UpgradeBeaconController.sol:UpgradeBeaconController`;
 export const XCM_SPECIFIER = `${root}/XAppConnectionManager.sol:XAppConnectionManager`;
+
+export { version } from "./package.json";

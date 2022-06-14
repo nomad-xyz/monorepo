@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import express from 'express';
+import express, { Response } from 'express';
 import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
 
@@ -19,6 +19,8 @@ import { prefix } from '../core/metrics';
 import * as dotenv from 'dotenv';
 import Logger from 'bunyan';
 import promBundle from 'express-prom-bundle';
+
+import { register } from 'prom-client';
 
 import {
   resolvers,
@@ -42,6 +44,7 @@ import {
 } from '@generated/type-graphql';
 import { buildSchema } from 'type-graphql';
 import { Domain } from '@nomad-xyz/multi-provider';
+import { randomString } from '../core/utils';
 
 dotenv.config({});
 
@@ -67,14 +70,36 @@ export async function run(db: DB, logger: Logger) {
     next();
   };
 
+  // Kludge. I don't know how to prevent promBundle from exposing metricsPath
+  const metricsPath = '/' + randomString(20); // '/metrics'
+
   const metricsMiddleware = promBundle({
     httpDurationMetricName: prefix + '_api',
     buckets: [0.1, 0.3, 0.6, 1, 1.5, 2.5, 5],
     includeMethod: true,
     includePath: true,
-    metricsPath: '/metrics',
+    metricsPath,
+    promRegistry: register,
   });
-  metricsMiddleware;
+
+  new Promise((res, rej) => {
+    const metricsPort = parseInt(process.env.METRICS_PORT || "9090");
+    const server = express();
+
+    server.get('/metrics', async (_, res: Response) => {
+      res.set('Content-Type', register.contentType);
+      res.end(await register.metrics());
+    });
+
+    logger.info(
+      {
+        endpoint: `http://0.0.0.0:${metricsPort}/metrics`,
+      },
+      'Prometheus metrics exposed',
+    );
+
+    server.listen(metricsPort);
+  })
 
   app.use(metricsMiddleware);
 

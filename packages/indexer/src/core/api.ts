@@ -60,7 +60,6 @@ export async function run(o: Orchestrator, logger: Logger) {
       [
         number,
         {
-          lastIndexed: number;
           numMessages: number;
           numRpcFailures: number;
           blocksToTarget: number;
@@ -71,7 +70,6 @@ export async function run(o: Orchestrator, logger: Logger) {
         [
           number,
           {
-            lastIndexed: number;
             numMessages: number;
             numRpcFailures: number;
             blocksToTarget: number;
@@ -81,7 +79,6 @@ export async function run(o: Orchestrator, logger: Logger) {
         return [
           domain,
           {
-            lastIndexed: indexer.lastIndexed.valueOf(),
             numMessages: await o.db.getMessageCount(domain),
             numRpcFailures: indexer.failureCounter.num(),
             blocksToTarget: indexer.targetTo - indexer.lastBlock,

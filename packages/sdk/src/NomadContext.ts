@@ -253,6 +253,12 @@ export class NomadContext extends MultiProvider<config.Domain> {
     // get replica contract
     const replica = this.mustGetReplicaFor(originNetwork, destNetwork);
 
+    await replica.callStatic.proveAndProcess(
+      data.message,
+      data.proof.path,
+      data.proof.index,
+    );
+
     return replica.proveAndProcess(
       data.message,
       data.proof.path,
@@ -290,7 +296,16 @@ export class NomadContext extends MultiProvider<config.Domain> {
    */
   static async fetchConfig(environment: string): Promise<config.NomadConfig> {
     const uri = `https://nomad-xyz.github.io/config/${environment}.json`;
-    const confStr: string = await (await axios.get(uri)).data;
+    const confStr: string = await (
+      await axios.get(uri, {
+        // query URL without using browser cache
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      })
+    ).data;
     return config.configFromString(confStr);
   }
 
@@ -317,7 +332,12 @@ export class NomadContext extends MultiProvider<config.Domain> {
       const config = await NomadContext.fetchConfig(env);
       return new this(config);
     } catch (e: unknown) {
-      if (allowFallback) return new this(env);
+      if (allowFallback) {
+        console.warn(
+          `Unable to retrieve config ${env}. Falling back to built-in config.\n${e}`,
+        );
+        return new this(env);
+      }
       throw e;
     }
   }

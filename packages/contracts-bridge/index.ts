@@ -17,3 +17,5 @@ export const BRIDGE_ROUTER_SPECIFIER = `${root}/BridgeRouter.sol:BridgeRouter`;
 export const BRIDGE_TOKEN_SPECIFIER = `${root}/BridgeToken.sol:BridgeToken`;
 export const ETH_HELPER_SPECIFIER = `${root}/ETHHelper.sol:ETHHelper`;
 export const TOKEN_REGISTRY_SPECIFIER = `${root}/TokenRegistry.sol:TokenRegistry`;
+
+export { version } from "./package.json";

@@ -9,6 +9,7 @@ import { TransferMessage } from './BridgeMessage';
 import * as config from '@nomad-xyz/configuration';
 
 type Address = string;
+const DEFAULT_GAS_LIMIT = BigNumber.from(350000);
 
 /**
  * The BridgeContext manages connections to Nomad Bridge contracts.
@@ -273,13 +274,17 @@ export class BridgeContext extends NomadContext {
     if (approved.lt(amount)) {
       const tx = await fromToken.approve(
         bridgeAddress,
-        Number.MAX_SAFE_INTEGER,
+        ethers.constants.MaxUint256,
         overrides,
       );
       await tx.wait();
     }
 
-    const tx = await fromBridge.bridgeRouter.populateTransaction.send(
+    if (!overrides.gasLimit) {
+      overrides.gasLimit = DEFAULT_GAS_LIMIT;
+    }
+    // check if it will succeed/fail with callStatic
+    await fromBridge.bridgeRouter.callStatic.send(
       fromToken.address,
       amount,
       this.resolveDomain(to),
@@ -287,9 +292,15 @@ export class BridgeContext extends NomadContext {
       enableFast,
       overrides,
     );
-    tx.gasLimit = BigNumber.from(350000);
 
-    return tx;
+    return fromBridge.bridgeRouter.populateTransaction.send(
+      fromToken.address,
+      amount,
+      this.resolveDomain(to),
+      mpUtils.canonizeId(recipient),
+      enableFast,
+      overrides,
+    );
   }
 
   /**
@@ -375,15 +386,24 @@ export class BridgeContext extends NomadContext {
     const toDomain = this.resolveDomain(to);
 
     overrides.value = amount;
+    if (!overrides.gasLimit) {
+      overrides.gasLimit = DEFAULT_GAS_LIMIT;
+    }
 
-    const tx = await ethHelper.populateTransaction.sendToEVMLike(
+    // check if it will succeed/fail with callStatic
+    await ethHelper.callStatic.sendToEVMLike(
       toDomain,
       recipient,
       enableFast,
       overrides,
     );
-    tx.gasLimit = BigNumber.from(350000);
-    return tx;
+
+    return ethHelper.populateTransaction.sendToEVMLike(
+      toDomain,
+      recipient,
+      enableFast,
+      overrides,
+    );
   }
 
   /**
