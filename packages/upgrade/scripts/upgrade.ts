@@ -7,15 +7,14 @@ import * as fs from "fs";
 import * as dotenv from "dotenv";
 import { exec } from "child_process";
 import { Command, Flags } from "@oclif/core";
-
 export class upgradeCLI extends Command {
   static flags = {
     // can pass either --force or -f
     resume: Flags.boolean({ char: "r" }),
     test: Flags.boolean({ char: "t" }),
     config: Flags.string({
+      required: false,
       char: "c",
-      required: true,
     }),
     domains: Flags.string({
       char: "d",
@@ -54,7 +53,7 @@ export class upgradeCLI extends Command {
         "It expects to find local EVM-compatible RPC endpoints, that listen on an incrementing port number, starting at 8545"
       );
       console.log(
-        "Use multi-anvil to quickly spin up multiple anvil instances with incrementing port number"
+        "Use multi-anvil.sh to quickly spin up multiple anvil instances with incrementing port number"
       );
       this.announce("RPC endpoints");
       for (let index in networks) {
@@ -77,16 +76,20 @@ export class upgradeCLI extends Command {
         this.executeCallBatch(domainName);
       } else if (args.command == "forkTest") {
         this.upgradeForkTest(domainName);
-      }
-    }
-    if (args.command == "printGovActions") {
-      if (domains.length != 1) {
-        throw new Error(
-          `You can execute govActions only the Governor Chain, thus you need to pass exactly a single domain. You passed: ${domains}}`
+      } else if (args.command == "printGovActions") {
+        if (domains.length != 1) {
+          throw new Error(
+            `You can execute govActions only the Governor Chain, thus you need to pass exactly a single domain. You passed: ${domains}}`
+          );
+        }
+        const govChain = domains[0];
+        this.printGovActions(govChain);
+      } else {
+        console.log(`command ${args.command} is not recognised`);
+        console.log(
+          "use on of: upgrade, executeCallbatch, forkTest, printGovActions"
         );
       }
-      const govChain = domains[0];
-      this.printGovActions(govChain);
     }
   }
   async executeCallBatch(domainName: any) {
@@ -129,9 +132,6 @@ export class upgradeCLI extends Command {
     const govChain = domainName;
     const config = this.nomadConfig;
     const rpc = config.rpcs[govChain][0];
-    const privateKey =
-      process.env.PRIVATE_KEY ||
-      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
     let remoteBatches: string[] = [];
     let remoteDomains: number[] = [];
     let localBatch: string = "";
@@ -154,15 +154,17 @@ export class upgradeCLI extends Command {
         throw e;
       }
     }
+    // Forge can read arrays, but they need to consist of the values, seperated by the delimeter
+    // without any quotes, spaces or brackets.
     process.env["NOMAD_REMOTE_CALL_BATCHES"] = JSON.stringify(remoteBatches)
       .replace(/]|[[]/g, "")
       .replace(/['"]+/g, "")
       .replace(/['"]+/g, "");
-    process.env["NOMAD_LOCAL_CALL_BATCH"] = localBatch;
     process.env["NOMAD_REMOTE_DOMAINS"] = JSON.stringify(remoteDomains)
       .replace(/]|[[]/g, "")
       .replace(/['"]+/g, "")
       .replace(/['"]+/g, "");
+    process.env["NOMAD_LOCAL_CALL_BATCH"] = localBatch;
     process.env["NOMAD_GOV_ROUTER"] =
       config.core[govChain].governanceRouter.proxy;
     const command = this.forgeScriptCommand(
@@ -192,12 +194,10 @@ export class upgradeCLI extends Command {
 
     // flag arguments for forge script
     const rpc = rpcs[domainName][0];
-    const privateKey =
-      process.env.PRIVATE_KEY ||
-      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+    const privateKey = process.env.PRIVATE_KEY;
     if (privateKey.length == 0) {
       throw new Error(
-        "Mising private key in .env. Please set the PRIVAT_KEY variable and run again"
+        "Mising private key in .env. Please set the PRIVATE_KEY variable and run again"
       );
     }
 
@@ -225,7 +225,7 @@ export class upgradeCLI extends Command {
     this.executeCommand(domainName, command, "upgrade-output");
   }
 
-  setUpgradeEnv(domainName: string) {
+  setUpgradeEnv(domainName: string): void {
     const config = this.nomadConfig;
     const networks = config.networks;
     const rpcs = config.rpcs;
@@ -262,14 +262,16 @@ export class upgradeCLI extends Command {
     process.env["NOMAD_TOKEN_REGISTRY_BEACON"] = tokenRegistryBeacon;
     process.env["NOMAD_BRIDGE_ROUTER_BEACON"] = bridgeTokenBeacon;
     process.env["NOMAD_REPLICA_BEACON"] = replicaBeacon;
-
     // set env variable for timelock
     process.env["NOMAD_RECOVERY_TIMELOCK"] = timelock.toString();
     process.env["NOMAD_BEACON_CONTROLLER"] = upgradeBeaconController;
   }
 
-  upgradeForkTest(domainName: string) {
-    console.log("Starting Fork test");
+  upgradeForkTest(domainName: string): void {
+    console.log("Starting Fork test...");
+    console.log(
+      "Results and output will be printed after the fork test is complete"
+    );
     // Get first replica beacon.
     // All replicas in every domain, share the same beacon, as they share the same implementation
     // but have different proxies, because they have different storage.
@@ -333,6 +335,8 @@ export class upgradeCLI extends Command {
           }
         );
       }
+      // If upgrade or printGovActions, then extract Artifacts
+      // They are different artifacts that live in the same JSON file
       if (
         command.includes("--sig upgrade") ||
         command.includes("-- printGovActions")
@@ -416,6 +420,9 @@ export class upgradeCLI extends Command {
     }
   }
 
+  // Serially go over the output and extract the lines of interest
+  //  The solidity script uses special strings to signify that the next line will
+  //  consist the artifact of interest
   extractArtifacts(output: string, domainName: string): artifacts {
     const lines = output.split("\n");
     let artifact: artifacts = {
@@ -443,6 +450,7 @@ export class upgradeCLI extends Command {
     return artifact;
   }
 
+  // Extract the newly deployed implementation addresses from the upgrade output
   extractImplementations(
     domainName: string,
     output: string
