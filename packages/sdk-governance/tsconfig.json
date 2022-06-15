@@ -9,7 +9,7 @@
     "./node_modules",
     "./dist",
   ],
-  "include": ["./src/*.ts"],
+  "include": ["./src/*.ts", "./src/abis/NomadModule.json"],
   // "references": [
   //   { "path": "../contracts-core" },
   //   { "path": "../contracts-bridge" },
