@@ -44,8 +44,13 @@ import {
 } from '@generated/type-graphql';
 import { buildSchema } from 'type-graphql';
 import { randomString } from '../core/utils';
+import * as Sentry from '@sentry/node';
+import * as Tracing from '@sentry/tracing';
 
 dotenv.config({});
+
+// TODO: consolidate into a config file that we can import from
+const isProduction = (process.env.ENVIRONMENT = 'production');
 
 function fail(res: Response, code: number, reason: string) {
   return res.status(code).json({ error: reason });
@@ -55,6 +60,30 @@ const useAllResolvers = process.env.API_USE_ALL_RESOLVERS === 'TRUE';
 
 export async function run(db: DB, logger: Logger): Promise<void> {
   const app = express();
+
+  if (isProduction) {
+    Sentry.init({
+      dsn: 'https://27adc9df48434fc7a99dddae76901884@o1081954.ingest.sentry.io/6508171',
+      integrations: [
+        // enable HTTP calls tracing
+        new Sentry.Integrations.Http({ tracing: true }),
+        // enable Express.js middleware tracing
+        new Tracing.Integrations.Express({ app }),
+      ],
+
+      // Set tracesSampleRate to 1.0 to capture 100%
+      // of transactions for performance monitoring.
+      // We recommend adjusting this value in production
+      tracesSampleRate: 1.0,
+    });
+
+    // RequestHandler creates a separate execution context using domains, so that every
+    // transaction/span/breadcrumb is attached to its own Hub instance
+    app.use(Sentry.Handlers.requestHandler());
+    // TracingHandler creates a trace for every incoming request
+    app.use(Sentry.Handlers.tracingHandler());
+  }
+
   app.use(cors());
   app.disable('x-powered-by');
 
@@ -66,39 +95,6 @@ export async function run(db: DB, logger: Logger): Promise<void> {
     logger.info(`request to ${req.url}`);
     next();
   };
-
-  // Kludge. I don't know how to prevent promBundle from exposing metricsPath
-  const metricsPath = '/' + randomString(20); // '/metrics'
-
-  const metricsMiddleware = promBundle({
-    httpDurationMetricName: prefix + '_api',
-    buckets: [0.1, 0.3, 0.6, 1, 1.5, 2.5, 5],
-    includeMethod: true,
-    includePath: true,
-    metricsPath,
-    promRegistry: register,
-  });
-
-  new Promise((res, rej) => {
-    const metricsPort = parseInt(process.env.METRICS_PORT || '9090');
-    const server = express();
-
-    server.get('/metrics', async (_, res: Response) => {
-      res.set('Content-Type', register.contentType);
-      res.end(await register.metrics());
-    });
-
-    logger.info(
-      {
-        endpoint: `http://0.0.0.0:${metricsPort}/metrics`,
-      },
-      'Prometheus metrics exposed',
-    );
-
-    server.listen(metricsPort);
-  });
-
-  app.use(metricsMiddleware);
 
   app.get('/healthcheck', log, (req, res) => {
     res.send('OK!');
@@ -231,6 +227,44 @@ export async function run(db: DB, logger: Logger): Promise<void> {
       }
     },
   );
+
+  if (isProduction) {
+    // The error handler must be before any other error middleware and after all controllers
+    app.use(Sentry.Handlers.errorHandler());
+  }
+
+  // Kludge. I don't know how to prevent promBundle from exposing metricsPath
+  const metricsPath = '/' + randomString(20); // '/metrics'
+
+  const metricsMiddleware = promBundle({
+    httpDurationMetricName: prefix + '_api',
+    buckets: [0.1, 0.3, 0.6, 1, 1.5, 2.5, 5],
+    includeMethod: true,
+    includePath: true,
+    metricsPath,
+    promRegistry: register,
+  });
+
+  new Promise(() => {
+    const metricsPort = parseInt(process.env.METRICS_PORT || '9090');
+    const server = express();
+
+    server.get('/metrics', async (_, res: Response) => {
+      res.set('Content-Type', register.contentType);
+      res.end(await register.metrics());
+    });
+
+    logger.info(
+      {
+        endpoint: `http://0.0.0.0:${metricsPort}/metrics`,
+      },
+      'Prometheus metrics exposed',
+    );
+
+    server.listen(metricsPort);
+  });
+
+  app.use(metricsMiddleware);
 
   await server.start();
 
