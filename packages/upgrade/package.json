@@ -1,19 +1,66 @@
 {
-  "name": "@nomad-xyz/upgrade",
+  "name": "nomgrade",
+  "version": "0.0.1",
+  "description": "Nomad Protocol Upgrade",
   "author": "Illusory Systems Inc.",
-  "version": "0.0.0-rc.0",
-  "packageManager": "yarn@3.2.0",
-  "description": "Nomad upgrade tools",
-  "keywords": [
-    "nomad",
-    "contracts",
-    "deploy"
+  "bin": "./bin/run",
+  "homepage": "https://github.com/nomad-xyz/monorepo",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "repository": "nomad-xyz/monorepo",
+  "files": [
+    "/bin",
+    "/dist",
+    "/npm-shrinkwrap.json",
+    "/oclif.manifest.json"
   ],
-  "license": "MIT OR Apache-2.0",
   "dependencies": {
-    "oclif": "^3.0.1"
+    "@oclif/core": "^1.9.2",
+    "@oclif/plugin-help": "^5",
+    "@oclif/plugin-plugins": "^2.0.1"
+  },
+  "devDependencies": {
+    "@oclif/test": "^2",
+    "@types/chai": "^4",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.9.4",
+    "chai": "^4",
+    "eslint": "^7.32.0",
+    "eslint-config-oclif": "^4",
+    "eslint-config-oclif-typescript": "^1.0.2",
+    "globby": "^11",
+    "mocha": "^9",
+    "oclif": "^3",
+    "shx": "^0.3.3",
+    "ts-node": "^10.2.1",
+    "tslib": "^2.3.1",
+    "typescript": "^4.4.3"
+  },
+  "oclif": {
+    "bin": "nomgrade",
+    "dirname": "nomgrade",
+    "commands": "./dist/commands",
+    "plugins": [
+      "@oclif/plugin-help",
+      "@oclif/plugin-plugins"
+    ],
+    "topicSeparator": " "
   },
   "scripts": {
-    "gen-proof": "../../scripts/accumulator-cli"
-  }
+    "build": "shx rm -rf dist && tsc -b",
+    "lint": "eslint . --ext .ts --config .eslintrc",
+    "postpack": "shx rm -f oclif.manifest.json",
+    "posttest": "yarn lint",
+    "prepack": "yarn build && oclif manifest && oclif readme",
+    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "version": "oclif readme && git add README.md"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "bugs": "https://github.com/nomad-xyz/monorepo/issues",
+  "keywords": [
+    "oclif"
+  ],
+  "types": "dist/index.d.ts"
 }
