@@ -120,7 +120,7 @@ contract Upgrade is Test {
     governanceRouterBeacon = vm.envAddress("NOMAD_GOVERNANCE_ROUTER_BEACON");
     bridgeRouterBeacon = vm.envAddress("NOMAD_BRIDGE_ROUTER_BEACON");
     tokenRegistryBeacon = vm.envAddress("NOMAD_TOKEN_REGISTRY_BEACON");
-    bridgeTokenBeacon = vm.envAddress("NOMAD_BRIDGE_ROUTER_BEACON");
+    bridgeTokenBeacon = vm.envAddress("NOMAD_BRIDGE_TOKEN_BEACON");
     recoveryTimelock = vm.envUint("NOMAD_RECOVERY_TIMELOCK");
   }
 

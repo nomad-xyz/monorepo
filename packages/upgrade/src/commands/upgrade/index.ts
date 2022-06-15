@@ -191,7 +191,7 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
     process.env.NOMAD_GOVERNANCE_ROUTER_BEACON = governanceRouterBeacon;
     process.env.NOMAD_BRIDGE_ROUTER_BEACON = bridgeRouterBeacon;
     process.env.NOMAD_TOKEN_REGISTRY_BEACON = tokenRegistryBeacon;
-    process.env.NOMAD_BRIDGE_ROUTER_BEACON = bridgeTokenBeacon;
+    process.env.NOMAD_BRIDGE_TOKEN_BEACON = bridgeTokenBeacon;
     process.env.NOMAD_REPLICA_BEACON = replicaBeacon;
     // set env variable for timelock
     process.env.NOMAD_RECOVERY_TIMELOCK = timelock.toString();
