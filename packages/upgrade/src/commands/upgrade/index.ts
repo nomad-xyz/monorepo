@@ -42,12 +42,16 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
   workingConfig: config.NomadConfig;
 
   parsedFlags: any;
+
+  activeRpcs: any;
   async run(): Promise<void> {
     this.workingConfig = this.nomadConfig;
     const networks = this.workingConfig.networks;
     const { flags } = await this.parse(Upgrade);
     this.parsedFlags = flags;
     this.announce("Welcome to Nomgrade");
+
+    this.activeRpcs = {};
     // If test, then replace rpc endpoints with local ones
     if (flags.test) {
       this.announce("Upgrade script will run in test mode");
@@ -58,16 +62,17 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
         "Use multi-anvil.sh to quickly spin up multiple anvil instances with incrementing port number"
       );
       this.announce("RPC endpoints");
+
       for (const index in networks) {
         const port: number = 8545 + Number.parseInt(index);
-        this.workingConfig.rpcs[
-          networks[index]
-        ][0] = `http://127.0.0.1:${port}`;
+        this.activeRpcs[networks[index]] = [`http://127.0.0.1:${port}`];
       }
+    } else {
+      this.activeRpcs = this.workingConfig.rpcs;
     }
 
     console.log("The following RPC endpoints will be used");
-    console.log(this.nomadConfig.rpcs);
+    console.log(this.activeRpcs);
 
     if (!this.domains && !this.all) {
       throw new Error(
@@ -95,7 +100,6 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
   async upgradeDomain(domainName: string, resume: boolean): Promise<void> {
     const config = this.workingConfig;
     const networks = config.networks;
-    const rpcs = config.rpcs;
 
     const networkConfig = config.protocol.networks[domainName];
 
@@ -105,7 +109,8 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
     Upgrade.setUpgradeEnv(domainName, config);
 
     // flag arguments for forge script
-    const rpc = rpcs[domainName][0];
+    //
+    const rpc = this.activeRpcs[domainName][0];
 
     // forge script command with all the arguments, ready to be executed
     const forge = new Forge(config, domainName, this.workingDir);
@@ -146,7 +151,7 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
       );
       artifacts.storeOutput("upgrade");
       artifacts.extractArtifacts();
-      artifacts.extractImplementations();
+      artifacts.updateImplementations();
       artifacts.updateConfig();
       artifacts.updateArtifacts();
     } catch (error) {
@@ -159,7 +164,6 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
     config: config.NomadConfig
   ): void {
     const networks = config.networks;
-    const rpcs = config.rpcs;
     const timelock =
       config.protocol.networks[domainName].configuration.governance
         .recoveryTimelock;

@@ -6,8 +6,6 @@ export default class Artifacts {
 
   config: config.NomadConfig;
 
-  newConfig: config.NomadConfig;
-
   rawForgeOutput: string;
 
   artifactsDir: string;
@@ -41,13 +39,9 @@ export default class Artifacts {
   }
 
   public updateConfig() {
-    if (this.newConfig == this.config) {
-      console.warn("The config hasn't been updated, no need to update");
-      return;
-    }
     fs.writeFile(
       `${this.artifactsDir}/new-config.json`,
-      JSON.stringify(this.newConfig),
+      JSON.stringify(this.config),
       function (err) {
         if (err) {
           return console.log(
@@ -115,50 +109,40 @@ export default class Artifacts {
     this.artifact = artifact;
     return artifact;
   }
-  public extractImplementations() {
-    const lines = this.rawForgeOutput.split("\n");
-    this.newConfig = this.config;
-    const config = this.newConfig;
-    const core = config.core;
-    const bridge = config.bridge;
+
+  public updateImplementations() {
+    const path = `${this.artifactsDir}/${this.domainName}/broadcast/Upgrade.sol/31337/upgrade-latest.json`;
+    const forgeArtifacts = JSON.parse(fs.readFileSync(path).toString());
+    const transactions = forgeArtifacts.transactions;
     const domainName = this.domainName;
-    for (const [index, value] of lines.entries()) {
-      if (value.includes("implementation address")) {
-        const contractName: string = value
-          .replace(/\s/g, "")
-          .split("implementation")[0];
-        const address: string = lines[index + 1].replace(/\s/g, "");
-        if (contractName != "replica") {
-          // The contract will either belong to 'core' or 'bridge' objects
-          // of the config file
-          try {
-            const contract: config.Proxy = core[domainName][
-              contractName as keyof config.EvmCoreContracts
-            ] as config.Proxy;
-            contract.implementation = address;
-          } catch {
-            const contract: config.Proxy = bridge[domainName][
-              contractName as keyof config.EvmBridgeContracts
-            ] as config.Proxy;
-            contract.implementation = address;
+    const core = this.config.core;
+    const bridge = this.config.bridge;
+    for (const tx of transactions) {
+      // Contract names in Forge artifacts are in the form of: GovernanceRouter
+      // Contract names in the Nomad config are in the form of: governanceRouter
+      // Thus, we force the first letter to be lower case
+      const contractName: string =
+        tx.contractName.charAt(0).toLowerCase() + tx.contractName.slice(1);
+      const address: string = tx.contractAddress;
+      if (contractName != "replica") {
+        // The contract will either belong to 'core' or 'bridge' objects
+        // of the config file
+        try {
+          core[domainName][contractName].implementation = address;
+        } catch {
+          bridge[domainName][contractName].implementation = address;
+        }
+      } else {
+        for (const network of this.config.networks) {
+          // The domain does not have deployed replicas of itself
+          // They live only on different domains
+          if (network == domainName) {
+            continue;
           }
-        } else {
-          for (const network of config.networks) {
-            // The domain does not have deployed replicas of itself
-            // They live only on different domains
-            if (network == domainName) {
-              continue;
-            }
-            core[domainName].replicas[network].implementation = address;
-          }
+          core[domainName].replicas[network].implementation = address;
         }
       }
     }
-
-    // Move back the changes
-    config.core = core;
-    config.bridge = bridge;
-    this.newConfig = config;
   }
 }
 
