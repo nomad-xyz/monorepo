@@ -99,7 +99,7 @@ const message = await BridgeMessage.singleFromTransactionHash(
   '0x1234'
 )
 
-// get the status of a message (NOT RECOMMENDED FOR EXTENSIVE USAGE)
+// get the status of a message (NOT RECOMMENDED FOR USAGE IN PRODUCTION)
 // 1 = dispatched
 // 2 = included
 // 3 = relayed

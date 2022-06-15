@@ -56,7 +56,7 @@ Fetch a [NomadMessage](https://docs.nomad.xyz/sdk/classes/nomadmessage)
 ```ts
 import { NomadMessage } from '@nomad-xyz/sdk'
 const message = await NomadMessage.baseSingleFromTransactionHash(nomadContext, 'ethereum', '0x1234...')
-// get the status of a message (NOT RECOMMENDED FOR EXTENSIVE USAGE)
+// get the status of a message (NOT RECOMMENDED FOR USAGE IN PRODUCTION)
 // 1 = dispatched
 // 2 = included
 // 3 = relayed
