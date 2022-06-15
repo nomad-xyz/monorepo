@@ -21,6 +21,7 @@ export default class Forge {
     this.nomadConfig = config;
     this.domainName = domainName;
     this.workingDir = workingDir;
+    this.etherscanVerify = "";
   }
 
   public async executeCommand(outputFile: string) {
@@ -32,7 +33,11 @@ export default class Forge {
         if (err) throw err;
       }
     );
+    // We add || true so that it never errors, even if the out directory has
+    // been already removed
+    await asyncExec("rm -rf solscripts/out || true");
     // Execute forge script
+    await asyncExec("FOUNDRY_PROFILE=upgrade forge clean");
     const { stdout, stderr } = await asyncExec(this.command);
     return { stdout, stderr };
   }
@@ -69,13 +74,11 @@ export default class Forge {
       privateKey = `--private-key ${privateKey}`;
     }
 
-    if (this.etherscanVerify != "") {
+    if (this.etherscanVerify) {
       this.etherscanVerify = `--verify --etherscan-api-key ${this.etherscanVerify}`;
     }
 
     const pieces = [
-      "forge clean",
-      "&&",
       `cd ${this.workingDir}/${domainName}`,
       "&&",
       "FOUNDRY_PROFILE=upgrade forge script",
@@ -86,6 +89,7 @@ export default class Forge {
       `--sig '${commandSignature}'`,
       "--slow",
       "--silent",
+      "--force",
       `${this.etherscanVerify}`,
       `${pathToFile}`,
       `${args}`,
