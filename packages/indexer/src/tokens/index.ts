@@ -1,4 +1,3 @@
-import { utils } from '@nomad-xyz/multi-provider';
 import { BridgeContext } from '@nomad-xyz/sdk-bridge';
 import * as dotenv from 'dotenv';
 import { ethers } from 'ethers';
@@ -6,8 +5,8 @@ dotenv.config({});
 
 import { PrismaClient } from '@prisma/client';
 import { DB } from '../core/db';
-import Logger, { createLogger } from 'bunyan';
 import { Padded, sleep } from '../core/utils';
+import Logger from 'bunyan';
 
 const abi = [
   'function name() public view returns (string)',
@@ -109,7 +108,7 @@ class TokenFetcher {
     this.logger.debug(`Updated token [${domain}, ${id}]`);
 
     // Determine remotes whether network is gov or not
-    let remotes = this.sdk.domainNumbers.filter(
+    const remotes = this.sdk.domainNumbers.filter(
       (remoteDomain) => remoteDomain !== domain,
     );
 
@@ -199,7 +198,7 @@ class TokenFetcher {
         });
 
         this.logger.debug(
-          `Updated Replica at doamin ${remoteDomain} for [${domain}, ${id}]`,
+          `Updated Replica at domain ${remoteDomain} for [${domain}, ${id}]`,
         );
       }),
     );

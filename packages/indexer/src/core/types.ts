@@ -1,3 +1,5 @@
+import { createClient } from 'redis';
+export type RedisClient = ReturnType<typeof createClient>;
 export class Mean {
   count: number;
   total: number;
@@ -5,7 +7,7 @@ export class Mean {
     this.count = 0;
     this.total = 0;
   }
-  add(value: number) {
+  add(value: number): void {
     this.count += 1;
     this.total += value;
   }
@@ -13,6 +15,14 @@ export class Mean {
     return this.total / this.count;
   }
 }
+
+type CountStages = {
+  dispatched: number;
+  updated: number;
+  relayed: number;
+  received: number;
+  processed: number;
+};
 
 export class BasicCountStages {
   dispatched: number;
@@ -28,7 +38,7 @@ export class BasicCountStages {
     this.processed = 0;
   }
 
-  toObject() {
+  toObject(): CountStages {
     return {
       dispatched: this.dispatched,
       updated: this.updated,
@@ -38,6 +48,14 @@ export class BasicCountStages {
     };
   }
 }
+
+type Timing = {
+  meanUpdate: number;
+  meanRelay: number;
+  meanReceive: number;
+  meanProcess: number;
+  meanE2E: number;
+};
 
 export class BasicTiming {
   meanUpdate: Mean;
@@ -53,7 +71,7 @@ export class BasicTiming {
     this.meanE2E = new Mean();
   }
 
-  toObject() {
+  toObject(): Timing {
     return {
       meanUpdate: this.meanUpdate.mean(),
       meanRelay: this.meanRelay.mean(),
@@ -64,6 +82,15 @@ export class BasicTiming {
   }
 }
 
+type Stat<T, DS> = {
+  total: T;
+  domainStatistics: DS;
+};
+
+type DomainStatistics<T> = (number | T)[][];
+
+type TimingStatistic = Stat<Timing, DomainStatistics<Timing>>;
+
 export class RootTimingStatistic {
   total: BasicTiming;
   domainStatistics: Map<number, BasicTiming>;
@@ -72,7 +99,7 @@ export class RootTimingStatistic {
     this.domainStatistics = new Map(domains.map((d) => [d, new BasicTiming()]));
   }
 
-  toObject() {
+  toObject(): TimingStatistic {
     return {
       total: this.total.toObject(),
       domainStatistics: Array.from(this.domainStatistics.entries()).map(
@@ -82,6 +109,7 @@ export class RootTimingStatistic {
   }
 }
 
+type CountStagesStatistic = Stat<CountStages, DomainStatistics<CountStages>>;
 export class RootCountStagesStatistic {
   total: BasicCountStages;
   domainStatistics: Map<number, BasicCountStages>;
@@ -92,7 +120,7 @@ export class RootCountStagesStatistic {
     );
   }
 
-  toObject() {
+  toObject(): CountStagesStatistic {
     return {
       total: this.total.toObject(),
       domainStatistics: Array.from(this.domainStatistics.entries()).map(
@@ -102,6 +130,16 @@ export class RootCountStagesStatistic {
   }
 }
 
+type Stats = {
+  counts: CountStagesStatistic;
+  timings: TimingStatistic;
+};
+
+type DomainStats = {
+  counts: CountStages;
+  timings: Timing;
+};
+
 export class Statistics {
   counts: RootCountStagesStatistic;
   timings: RootTimingStatistic;
@@ -110,14 +148,16 @@ export class Statistics {
     this.timings = new RootTimingStatistic(domains);
   }
 
-  toObject() {
+  toObject(): Stats {
     return {
       counts: this.counts.toObject(),
       timings: this.timings.toObject(),
     };
   }
 
-  forDomain(domain: number) {
+  forDomain(domain: number): DomainStats {
+    // TODO: type the below Maps at runtime for
+    // each domain to get rid of the non-null assertion
     const counts = this.counts.domainStatistics.get(domain)!.toObject();
     const timings = this.timings.domainStatistics.get(domain)!.toObject();
     return {
@@ -126,6 +166,3 @@ export class Statistics {
     };
   }
 }
-
-import { createClient } from 'redis';
-export type RedisClient = ReturnType<typeof createClient>;

@@ -43,20 +43,17 @@ import {
   ReplicaOrderByRelationAggregateInput,
 } from '@generated/type-graphql';
 import { buildSchema } from 'type-graphql';
-import { Domain } from '@nomad-xyz/multi-provider';
 import { randomString } from '../core/utils';
 
 dotenv.config({});
 
-function fail(res: any, code: number, reason: string) {
+function fail(res: Response, code: number, reason: string) {
   return res.status(code).json({ error: reason });
 }
 
-const PORT = process.env.PORT;
-
 const useAllResolvers = process.env.API_USE_ALL_RESOLVERS === 'TRUE';
 
-export async function run(db: DB, logger: Logger) {
+export async function run(db: DB, logger: Logger): Promise<void> {
   const app = express();
   app.use(cors());
   app.disable('x-powered-by');
@@ -83,7 +80,7 @@ export async function run(db: DB, logger: Logger) {
   });
 
   new Promise((res, rej) => {
-    const metricsPort = parseInt(process.env.METRICS_PORT || "9090");
+    const metricsPort = parseInt(process.env.METRICS_PORT || '9090');
     const server = express();
 
     server.get('/metrics', async (_, res: Response) => {
@@ -99,7 +96,7 @@ export async function run(db: DB, logger: Logger) {
     );
 
     server.listen(metricsPort);
-  })
+  });
 
   app.use(metricsMiddleware);
 
@@ -168,40 +165,46 @@ export async function run(db: DB, logger: Logger) {
   });
 
   app.get('/wrongReplicas', log, async (req, res) => {
-    const replicas = await db.client.replica.findMany({include: {token: true}});
+    const replicas = await db.client.replica.findMany({
+      include: { token: true },
+    });
 
-    const sadReplicas = replicas.filter(r => {
+    // TODO: filter on the db with the query above
+    const sadReplicas = replicas.filter((r) => {
       const t = r.token;
-      return t.name !== r.name || t.decimals !== r.decimals || t.symbol !== r.symbol
-      });
+      return (
+        t.name !== r.name || t.decimals !== r.decimals || t.symbol !== r.symbol
+      );
+    });
 
-      return res.json(sadReplicas)
-    }
-  )
+    return res.json(sadReplicas);
+  });
 
   app.get('/domain/:domain', log, async (req, res) => {
-    const {domain: domainStr} =  req.params;
+    const { domain: domainStr } = req.params;
 
     const domainNumber = parseInt(domainStr);
 
-    const domain: number|string = isNaN(domainNumber) ? domainStr : domainNumber;
+    const domain: number | string = isNaN(domainNumber)
+      ? domainStr
+      : domainNumber;
 
     const sdk = db.sdk; // Should not get sdk like that, but it is ok for now
     try {
       const nomadDomain = sdk.getDomain(domain);
       if (nomadDomain) {
-        const {name, domain} = nomadDomain;
-        res.json({data: {name, domain}});
-        return ;
+        const { name, domain } = nomadDomain;
+        res.json({ data: { name, domain } });
+        return;
       } else {
-        logger.warn(`No domain found for '${domain}'`); // debug 
+        logger.warn(`No domain found for '${domain}'`); // debug
       }
-    } catch(e) {
+    } catch (e) {
       logger.warn(`Failed getting domain for request '${domain}', error: ${e}`); // debug
     }
     fail(res, 404, 'Domain not found');
-    
-    return ;
+
+    return;
   });
 
   app.get('/hash/:hash', log, async (req, res) => {
@@ -234,6 +237,6 @@ export async function run(db: DB, logger: Logger) {
   server.applyMiddleware({ app });
 
   await new Promise<void>((resolve) =>
-    httpServer.listen({ port: PORT }, resolve),
+    httpServer.listen({ port: process.env.PORT }, resolve),
   );
 }

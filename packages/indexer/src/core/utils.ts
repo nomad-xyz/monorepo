@@ -8,7 +8,7 @@ import pLimit from 'p-limit';
 import crypto from 'crypto';
 import { keccak256, toUtf8Bytes } from 'ethers/lib/utils';
 
-export function sleep(ms: number) {
+export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
@@ -87,11 +87,7 @@ export class KVCache {
     this.limit = pLimit(1);
   }
 
-  async init() {
-    // await this.tryLoad();
-  }
-
-  async set(k: string, v: string) {
+  async set(k: string, v: string): Promise<void> {
     await this.limit(() => this.db.setKeyPair(this.name, k, v));
   }
 
@@ -100,7 +96,7 @@ export class KVCache {
   }
 }
 
-export function logToFile(s: string) {
+export function logToFile(s: string): void {
   fs.appendFileSync('/tmp/log.log', s + '\n');
 }
 
@@ -123,7 +119,7 @@ export function createLogger(
   name: string,
   environment: string,
   level?: BunyanLevel,
-) {
+): Logger {
   return Logger.createLogger({
     name,
     serializers: Logger.stdSerializers,
@@ -139,7 +135,9 @@ export function formatEVM(address: string) {
   }
 
   if (s.length !== 40 && s.length !== 64) {
-    throw new Error(`Neither EVM nor interchain address: initial ${address}, modified and failed: ${s}`);
+    throw new Error(
+      `Neither EVM nor interchain address: initial ${address}, modified and failed: ${s}`,
+    );
   }
 
   const digest = keccak256(toUtf8Bytes(s)).substring(2);
@@ -148,7 +146,7 @@ export function formatEVM(address: string) {
     const targetChar = digest[i];
     let upper = true;
     try {
-      let n: number = parseInt(targetChar);
+      const n: number = parseInt(targetChar);
       if (n <= 7) {
         upper = false;
       }
@@ -194,14 +192,14 @@ export class Padded {
     return s;
   }
 
-  pretty() {
+  pretty(): string {
     if (this.s.substring(0, 24) === '0x0000000000000000000000') {
       return this.toEVMAddress();
     }
-    return formatEVM(this.s)
+    return formatEVM(this.s);
   }
 
-  toEVMAddress() {
+  toEVMAddress(): string {
     return formatEVM('0x' + this.s.slice(26));
   }
 
@@ -209,7 +207,7 @@ export class Padded {
     return this.s;
   }
 
-  eq(another: Padded | string) {
+  eq(another: Padded | string): boolean {
     const theOther = Padded.fromWhatever(another);
     return this.valueOf() === theOther.valueOf();
   }
@@ -222,7 +220,7 @@ export class FailureCounter {
     this.container = [];
     this.period = periodMins;
   }
-  add() {
+  add(): void {
     this.container.push(new Date());
   }
   num(): number {
@@ -279,13 +277,13 @@ export function onlyUnique<T>(value: T, index: number, self: T[]): boolean {
   return self.indexOf(value) === index;
 }
 
-
 export function randomString(length: number) {
-  let result           = '';
-  const characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  const characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const charactersLength = characters.length;
-  for ( var i = 0; i < length; i++ ) {
+  for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
- }
- return result;
+  }
+  return result;
 }

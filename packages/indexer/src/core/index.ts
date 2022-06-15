@@ -5,7 +5,6 @@ import * as dotenv from 'dotenv';
 import { IndexerCollector } from './metrics';
 import { DB } from './db';
 import Logger from 'bunyan';
-import { run as runApi } from './api';
 import { getRedis } from './redis';
 dotenv.config({});
 
@@ -14,7 +13,7 @@ export async function run(
   db: DB,
   logger: Logger,
   metrics: IndexerCollector,
-) {
+): Promise<void> {
   const redis = getRedis();
 
   await redis.connect();
@@ -23,8 +22,6 @@ export async function run(
 
   const o = new Orchestrator(sdk, c, metrics, logger, db, redis);
   o.subscribeStatisticEvents();
-
-  if (process.env.DEBUG_PORT) runApi(o, logger.child({ span: 'debugApi' }));
 
   await o.init();
   await o.startConsuming();

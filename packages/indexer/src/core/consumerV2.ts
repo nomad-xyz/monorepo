@@ -596,7 +596,7 @@ export class ProcessorV2 extends Consumer {
 
   async consume(events: NomadishEvent[]): Promise<void> {
     // events = shuffle(events);
-    this.logger.warn(`Consuming ${events.length} events.`) // debug
+    this.logger.warn(`Consuming ${events.length} events.`); // debug
     let consumed = 0;
 
     for (const event of events) {
@@ -614,7 +614,7 @@ export class ProcessorV2 extends Consumer {
         await this.bridgeRouterReceive(event);
       }
       const percentage = ((++consumed) * 100 / events.length).toFixed(2);
-      this.logger.debug(`Consumed ${percentage}% (${consumed}/${events.length}) events.`) // debug
+      this.logger.debug(`Consumed ${percentage}% (${consumed}/${events.length}) events.`); // debug
     }
   }
 
@@ -925,7 +925,7 @@ export class ProcessorV2 extends Consumer {
       messages.forEach((m) => {
         collector.contributeToCount(m);
       });
-    } while (messages.length === batchSize)
+    } while (messages.length === batchSize);
 
     return collector.stats();
   }
