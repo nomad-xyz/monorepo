@@ -1,19 +1,18 @@
 import * as core from './core';
 import * as api from './api';
 import { DB } from './core/db';
-import { BunyanLevel, createLogger } from './core/utils';
+import { createLogger } from './core/utils';
 import { IndexerCollector } from './core/metrics';
 import { getSdk } from './core/sdk';
 import { startTokenUpdater } from './tokens';
-
-export type NomadEnvironment = 'development' | 'staging' | 'production';
-export type Program = 'api' | 'core';
-
-const environment = process.env.ENVIRONMENT as NomadEnvironment;
-const configOverrideLocation = process.env.CONFIG_OVERRIDE_LOCATION;
-const program = process.env.PROGRAM as Program;
-const logLevel = (process.env.LOG_LEVEL || 'debug') as BunyanLevel;
-const metricsPort = parseInt(process.env.METRICS_PORT || '9090');
+import {
+  program,
+  environment,
+  configOverrideLocation,
+  metricsPort,
+  logLevel,
+  Program,
+} from './config';
 
 (async () => {
   const logger = createLogger('indexer', environment, logLevel);
@@ -24,11 +23,11 @@ const metricsPort = parseInt(process.env.METRICS_PORT || '9090');
   const db = new DB(m, logger, sdk);
   await db.connect();
 
-  if (program === 'api') {
+  if (program === Program.API) {
     await startTokenUpdater(sdk, db, logger);
     await api.run(db, logger);
     logger.info(`Finished api run`);
-  } else if (program === 'core') {
+  } else if (program === Program.CORE) {
     m.startServer(metricsPort);
     await core.run(sdk, db, logger, m);
   } else {

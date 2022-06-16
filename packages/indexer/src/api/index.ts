@@ -16,7 +16,6 @@ import http from 'http';
 import { DB, MsgRequest } from '../core/db';
 import { prefix } from '../core/metrics';
 
-import * as dotenv from 'dotenv';
 import Logger from 'bunyan';
 import promBundle from 'express-prom-bundle';
 
@@ -46,17 +45,17 @@ import { buildSchema } from 'type-graphql';
 import { randomString } from '../core/utils';
 import * as Sentry from '@sentry/node';
 import * as Tracing from '@sentry/tracing';
-
-dotenv.config({});
-
-// TODO: consolidate into a config file that we can import from
-const isProduction = (process.env.ENVIRONMENT = 'production');
+import {
+  isProduction,
+  useAllResolvers,
+  gitCommit,
+  metricsPort,
+  port,
+} from '../config';
 
 function fail(res: Response, code: number, reason: string) {
   return res.status(code).json({ error: reason });
 }
-
-const useAllResolvers = process.env.API_USE_ALL_RESOLVERS === 'TRUE';
 
 export async function run(db: DB, logger: Logger): Promise<void> {
   const app = express();
@@ -101,7 +100,7 @@ export async function run(db: DB, logger: Logger): Promise<void> {
   });
 
   app.get('/version', log, (_, res) => {
-    res.send(process.env.GIT_COMMIT);
+    res.send(gitCommit);
   });
 
   const resolversToBuild: NonEmptyArray<Function> | NonEmptyArray<string> =
@@ -246,7 +245,6 @@ export async function run(db: DB, logger: Logger): Promise<void> {
   });
 
   new Promise(() => {
-    const metricsPort = parseInt(process.env.METRICS_PORT || '9090');
     const server = express();
 
     server.get('/metrics', async (_, res: Response) => {
@@ -270,7 +268,5 @@ export async function run(db: DB, logger: Logger): Promise<void> {
 
   server.applyMiddleware({ app });
 
-  await new Promise<void>((resolve) =>
-    httpServer.listen({ port: process.env.PORT }, resolve),
-  );
+  await new Promise<void>((resolve) => httpServer.listen({ port }, resolve));
 }

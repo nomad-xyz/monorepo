@@ -1,7 +1,5 @@
 import { BridgeContext } from '@nomad-xyz/sdk-bridge';
-import * as dotenv from 'dotenv';
 import { ethers } from 'ethers';
-dotenv.config({});
 
 import { PrismaClient } from '@prisma/client';
 import { DB } from '../core/db';
