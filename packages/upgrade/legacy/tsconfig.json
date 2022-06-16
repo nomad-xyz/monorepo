@@ -1,6 +1,0 @@
-{
-  "compilerOptions": {
-    "strictPropertyInitialization": false,
-    "target": "ES2017"
-  }
-}
