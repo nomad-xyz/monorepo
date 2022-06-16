@@ -84,19 +84,13 @@ export default class Artifacts {
   extractArtifacts(): Artifact {
     const lines = this.rawForgeOutput.split("\n");
     const artifact: Artifact = {
-      executeCallBatchCall: "",
       callBatch: "",
       executeGovernanceActions: "",
     };
     for (const [index, value] of lines.entries()) {
       // Artifact used by executeCallbatch()
       // Execute the batched calls that have been sent to a Governance Router
-      if (value.includes("executeCallBatch-artifact")) {
-        artifact.executeCallBatchCall = lines[index + 1].replace(/\s/g, "");
-        // Artifact used by executeGovernanceActions()
-        // It's abi.encoded calldata to be sent from the Governor Chain
-        // to the remote chains via a governance message
-      } else if (value.includes("callBatch-artifact")) {
+      if (value.includes("callBatch-artifact")) {
         artifact.callBatch = lines[index + 1].replace(/\s/g, "");
         // Artifact used by executeGovernanceActions()
         // It's a function call encoded with signature and arguments
@@ -147,7 +141,6 @@ export default class Artifacts {
 }
 
 interface Artifact {
-  executeCallBatchCall: string;
   callBatch: string;
   executeGovernanceActions: string;
 }

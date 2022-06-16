@@ -81,7 +81,7 @@ contract Upgrade is Test {
     env_getUpgradeAddresses();
     // Print useful information to user
     generateGovernanceCalls();
-    generateExecuteCallBatchCall();
+    generateBatches();
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -186,7 +186,7 @@ contract Upgrade is Test {
     console2.logBytes(upgradeBridgeToken);
   }
 
-  function generateExecuteCallBatchCall() public {
+  function generateBatches() public {
     GovernanceMessage.Call[] memory batch = new GovernanceMessage.Call[](6);
     batch[0] = genGovCall(beaconController, upgradeHome);
     batch[1] = genGovCall(beaconController, upgradeReplica);
@@ -194,24 +194,14 @@ contract Upgrade is Test {
     batch[3] = genGovCall(beaconController, upgradeBridgeRouter);
     batch[4] = genGovCall(beaconController, upgradeTokenRegistry);
     batch[5] = genGovCall(beaconController, upgradeBridgeToken);
-    executeCallBatchCall = abi.encodeWithSignature(
-      "executeCallBatch(GovernanceMessage.Call[])",
-      batch
-    );
     bytes memory callBatch = abi.encode(batch);
-    title("ExecuteCallBatch call");
-    console2.log(
-      "function signature: executeCallBatch(GovernanceMessage.Call[] calldata _calls)"
-    );
+    title("batchCalls calldata");
     console2.log(
       "GovernanceMessage.Call signature:  struct Call { bytes32 to; bytes data;}"
     );
     console2.log(
       "Call attributes: <beacon_controller_address, <beacon_controller_upgraded_encoded_call_for_implementation>"
     );
-    console2.log("executeCallBatch-artifact");
-    console2.logBytes(executeCallBatchCall);
-
     console2.log("callBatch-artifact");
     console2.logBytes(callBatch);
   }
