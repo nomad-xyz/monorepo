@@ -4,7 +4,8 @@ import Command from "../../Base";
 import Artifacts from "../../Artifacts";
 import Forge from "../../Forge";
 import { Flags, CliUx } from "@oclif/core";
-
+import { utils } from "ethers";
+import { CallBatchContents, Call, RemoteContents } from "@nomad-xyz/sdk-govern";
 export default class Upgrade extends Command {
   static aliases = ["upgrade"];
   static flags = {
@@ -44,6 +45,8 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
   parsedFlags: any;
 
   activeRpcs: any;
+
+  domains: string[];
   async run(): Promise<void> {
     this.workingConfig = this.nomadConfig;
     const networks = this.workingConfig.networks;
@@ -81,6 +84,8 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
     }
 
     const domains = this.all ? this.nomadConfig.networks : this.domains;
+    this.domains = domains;
+
     this.log(`The following domains will be upgraded: ${domains}`);
     this.warn(
       "The forge output is being buffered and will be printed as the upgrade pipeline finish on each network"
@@ -92,6 +97,7 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
     }
 
     await Promise.all(upgrades);
+    Artifacts.storeCallBatches(this.workingDir, this.generateCallBatches());
     CliUx.ux.action.stop(
       "Implementations have been deployed and artifacts have stored"
     );
@@ -151,7 +157,7 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
       artifacts.storeOutput("upgrade");
       artifacts.extractArtifacts();
       artifacts.updateImplementations();
-      artifacts.updateConfig();
+      artifacts.storeNewConfig();
       artifacts.updateArtifacts();
     } catch (error) {
       this.error(`Forge execution encountered an error:${error}`);
@@ -199,5 +205,77 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
     // set env variable for timelock
     process.env.NOMAD_RECOVERY_TIMELOCK = timelock.toString();
     process.env.NOMAD_BEACON_CONTROLLER = upgradeBeaconController;
+  }
+
+  private generateCallBatches(): CallBatchContents {
+    const config = this.nomadConfig;
+    // Initialize an empty callBatch
+    const callBatch: CallBatchContents = {
+      remote: {},
+      local: [],
+      built: {
+        data: "",
+        to: "",
+      },
+    };
+    for (const domainName of this.domains) {
+      console.log(domainName);
+      const govRouterAddress = config.core[domainName].governanceRouter.proxy;
+      const tempBatch: Call[] = [];
+      const to = config.core[domainName].upgradeBeaconController;
+      // Upgrade Core
+      for (const contractName of ["home", "governanceRouter"]) {
+        const iface = new utils.Interface([
+          "function upgrade(address, address)",
+        ]);
+        const data = iface.encodeFunctionData("upgrade", [
+          config.core[domainName][contractName].beacon,
+          config.core[domainName][contractName].implementation,
+        ]);
+        tempBatch.push({ to: to, data: data } as Call);
+      }
+
+      // Upgrade Replicas
+      for (const network of config.networks) {
+        if (network == domainName) {
+          continue;
+        }
+        const iface = new utils.Interface([
+          "function upgrade(address, address)",
+        ]);
+        const data = iface.encodeFunctionData("upgrade", [
+          config.core[domainName].replicas[network].beacon,
+          config.core[domainName].replicas[network].implementation,
+        ]);
+        tempBatch.push({ to: to, data: data } as Call);
+      }
+
+      // Upgrade Bridge
+      //
+      for (const contractName of [
+        "bridgeRouter",
+        "tokenRegistry",
+        "bridgeToken",
+      ]) {
+        const iface = new utils.Interface([
+          "function upgrade(address, address)",
+        ]);
+        const data = iface.encodeFunctionData("upgrade", [
+          config.bridge[domainName][contractName].beacon,
+          config.bridge[domainName][contractName].implementation,
+        ]);
+        tempBatch.push({ to: to, data: data } as Call);
+      }
+      // Append to Batch
+      if (
+        config.protocol.networks[domainName].domain ==
+        config.protocol.governor.domain
+      ) {
+        callBatch.local = tempBatch;
+      } else {
+        callBatch.remote[domainName as keyof RemoteContents] = tempBatch;
+      }
+    }
+    return callBatch;
   }
 }

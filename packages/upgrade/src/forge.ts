@@ -43,6 +43,9 @@ export default class Forge {
       return { stdout, stderr };
     } catch (error) {
       console.log(`Forge execution encountered an Error`);
+      console.log(
+        "If the error is the following, please ignore and run the command again:  No such file or directory (os error 2)"
+      );
       console.log(error);
     }
   }

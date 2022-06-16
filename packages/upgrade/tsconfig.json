@@ -7,7 +7,8 @@
     "rootDir": "src",
     "strict": false,
     "target": "es2019",
-    "strictPropertyInitialization": false
+    "strictPropertyInitialization": false,
+    "resolveJsonModule": true
   },
   "include": ["src/**/*"]
 }

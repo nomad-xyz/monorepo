@@ -89,7 +89,7 @@ export default class PrintGovActions extends Command {
     );
     artifacts.storeOutput("upgrade");
     artifacts.extractArtifacts();
-    CliUx.ux.action.start("GovChainActions printed!");
     await artifacts.updateArtifacts();
+    CliUx.ux.action.stop("GovChainActions printed!");
   }
 }

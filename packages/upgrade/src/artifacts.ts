@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as config from "@nomad-xyz/configuration";
-
+import { CallBatchContents } from "@nomad-xyz/sdk-govern";
 export default class Artifacts {
   domainName: string;
 
@@ -38,7 +38,7 @@ export default class Artifacts {
     );
   }
 
-  public updateConfig() {
+  public storeNewConfig() {
     fs.writeFile(
       `${this.artifactsDir}/new-config.json`,
       JSON.stringify(this.config),
@@ -99,7 +99,6 @@ export default class Artifacts {
         artifact.executeGovernanceActions = lines[index + 1].replace(/\s/g, "");
       }
     }
-
     this.artifact = artifact;
     return artifact;
   }
@@ -121,10 +120,12 @@ export default class Artifacts {
       if (contractName != "replica") {
         // The contract will either belong to 'core' or 'bridge' objects
         // of the config file
+        // Fix a bug where the artifact of foundry has an extra `0x` in front
+        // of the address
         try {
-          core[domainName][contractName].implementation = address;
+          core[domainName][contractName].implementation = address.slice(2);
         } catch {
-          bridge[domainName][contractName].implementation = address;
+          bridge[domainName][contractName].implementation = address.slice(2);
         }
       } else {
         for (const network of this.config.networks) {
@@ -133,10 +134,16 @@ export default class Artifacts {
           if (network == domainName) {
             continue;
           }
-          core[domainName].replicas[network].implementation = address;
+          core[domainName].replicas[network].implementation = address.slice(2);
         }
       }
     }
+  }
+  public static storeCallBatches(dir: string, batch: CallBatchContents) {
+    fs.writeFileSync(
+      `${dir}/governanceTransactions.json`,
+      JSON.stringify(batch)
+    );
   }
 }
 
