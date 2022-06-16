@@ -237,17 +237,8 @@ contract Upgrade is Test {
 }
 
 contract UpgradeActions is Test {
-  function executeCallBatchCall(string memory domain) public {
-    bytes memory callData = vm.envBytes("NOMAD_CALL_BATCH");
-    address govRouter = vm.envAddress("NOMAD_GOV_ROUTER");
-    vm.startBroadcast();
-    (bool success, bytes memory returnData) = govRouter.call(callData);
-    vm.stopBroadcast();
-    require(success, "ExecuteCallBatch failed");
-  }
-
   function printGovernanceActions() public {
-    address govRouter = vm.envAddress("NOMAD_GOV_ROUTER");
+    address govRouter = vm.envAddress("NOMAD_GOV_ROUTER_PROXY");
     bytes[] memory remoteCallData = vm.envBytes(
       "NOMAD_REMOTE_CALL_BATCHES",
       ","
