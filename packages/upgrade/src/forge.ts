@@ -36,6 +36,7 @@ export default class Forge {
     // We add || true so that it never errors, even if the out directory has
     // been already removed
     await asyncExec("rm -rf solscripts/out || true");
+    await asyncExec("FOUNDRY_PROFILE=upgrade forge clean");
     // Execute forge script
     try {
       const { error, stdout, stderr } = await asyncExec(this.command);
