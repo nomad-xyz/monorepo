@@ -141,7 +141,6 @@ export default class Artifacts {
 }
 
 interface Artifact {
-  executeCallBatchCall: string;
   callBatch: string;
   executeGovernanceActions: string;
 }
