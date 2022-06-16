@@ -135,12 +135,11 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
     }
     try {
       const { stdout, stderr } = await forge.executeCommand("upgrade-output");
-      if (stdout) {
-        this.log(`${stdout}`);
-      }
-
       if (stderr) {
         this.warn(`${stderr}`);
+      }
+      if (stdout) {
+        this.log(`${stdout}`);
       }
 
       const artifacts = new Artifacts(

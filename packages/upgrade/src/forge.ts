@@ -37,12 +37,13 @@ export default class Forge {
     // been already removed
     await asyncExec("rm -rf solscripts/out || true");
     // Execute forge script
-    await asyncExec("FOUNDRY_PROFILE=upgrade forge clean");
-    const { error, stdout, stderr } = await asyncExec(this.command);
-    if (error) {
+    try {
+      const { error, stdout, stderr } = await asyncExec(this.command);
+      return { stdout, stderr };
+    } catch (error) {
+      console.log(`Forge execution encountered an Error`);
       console.log(error);
     }
-    return { stdout, stderr };
   }
 
   public setEtherscanKey(key: string) {
