@@ -38,7 +38,10 @@ export default class Forge {
     await asyncExec("rm -rf solscripts/out || true");
     // Execute forge script
     await asyncExec("FOUNDRY_PROFILE=upgrade forge clean");
-    const { stdout, stderr } = await asyncExec(this.command);
+    const { error, stdout, stderr } = await asyncExec(this.command);
+    if (error) {
+      console.log(error);
+    }
     return { stdout, stderr };
   }
 

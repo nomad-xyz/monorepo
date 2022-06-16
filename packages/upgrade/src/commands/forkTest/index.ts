@@ -42,36 +42,32 @@ export default class ForkTest extends Command {
 
     // Set env variables required by Fork test and Upgrade
     process.env.NOMAD_REPLICA_PROXY = replicaProxy;
-    process.env.NOMAD_GOV_ROUTER = governanceRouterProxy;
+    process.env.NOMAD_GOV_ROUTER_PROXY = governanceRouterProxy;
     process.env.NOMAD_DOMAIN_NAME = domainName;
     process.env.NOMAD_DOMAIN =
       config.protocol.networks[domainName].domain.toString();
     Upgrade.setUpgradeEnv(domainName, config);
 
     const forge = new Forge(config, domainName, this.workingDir);
-    forge.command = `FOUNDRY_PROFILE=upgrade forge test --ffi --silent --fork-url ${rpc} -vvvv`;
-    try {
-      const { stdout, stderr } = await forge.executeCommand("forkTest");
-      if (stdout) {
-        this.log(`${stdout}`);
-      }
-
-      if (stderr) {
-        this.warn(`${stderr}`);
-      }
-
-      const artifacts = new Artifacts(
-        `${stdout}`,
-        domainName,
-        config,
-        this.workingDir
-      );
-      artifacts.storeOutput("upgrade");
-      artifacts.extractArtifacts();
-      CliUx.ux.action.stop("Fork Test completed");
-      await artifacts.updateArtifacts();
-    } catch (error) {
-      this.error(`Forge execution encountered an error:${error}`);
+    forge.command = `FOUNDRY_PROFILE=upgrade forge test --ffi --fork-url ${rpc} -vvvv`;
+    const { stdout, stderr } = await forge.executeCommand("forkTest");
+    if (stdout) {
+      this.log(`${stdout}`);
     }
+
+    if (stderr) {
+      this.warn(`${stderr}`);
+    }
+
+    const artifacts = new Artifacts(
+      `${stdout}`,
+      domainName,
+      config,
+      this.workingDir
+    );
+    artifacts.storeOutput("upgrade");
+    artifacts.extractArtifacts();
+    CliUx.ux.action.stop("Fork Test completed");
+    await artifacts.updateArtifacts();
   }
 }
