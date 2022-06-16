@@ -49,6 +49,11 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
     dotenv.config();
     // do some initialization
     const { flags } = (await this.parse(this.constructor as any)) as any;
+    if (!flags.domains && !flags.all) {
+      throw new Error(
+        "No domains have been chosen. Either chose some domains with '-d <domain> <domain2>' or all with '-a'"
+      );
+    }
     this.nomadConfig = this.getConfigFromPath(flags.config);
     this.domains = flags.domains;
     this.workingDir = flags.workingDir;
