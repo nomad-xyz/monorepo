@@ -35,20 +35,25 @@ export default class ForkTest extends Command {
 
     // load the config
     const core = this.nomadConfig.core[domainName];
+    const bridge = this.nomadConfig.bridge[domainName];
 
     // load the contracts we will test from config
     const domain = this.nomadConfig.protocol.networks[domainName].domain.toString();
     const replicaName = Object.keys(this.nomadConfig.core[domainName].replicas)[0];
-    const replicaProxy = core.replicas[replicaName].proxy;
-    const governanceRouterProxy = core.governanceRouter.proxy;
-    const upgradeBeaconController = core.upgradeBeaconController;
 
     // Set env variables required by Fork test and Upgrade
     process.env.NOMAD_DOMAIN_NAME = domainName;
     process.env.NOMAD_DOMAIN = domain;
-    process.env.NOMAD_REPLICA_PROXY = replicaProxy;
-    process.env.NOMAD_GOV_ROUTER_PROXY = governanceRouterProxy;
-    process.env.NOMAD_BEACON_CONTROLLER = upgradeBeaconController;
+    process.env.NOMAD_REPLICA_PROXY = core.replicas[replicaName].proxy;
+    process.env.NOMAD_GOV_ROUTER_PROXY = core.governanceRouter.proxy;
+    process.env.NOMAD_BEACON_CONTROLLER = core.upgradeBeaconController;
+    // Upgrade Beacons
+    process.env.NOMAD_HOME_BEACON = core.home.beacon;
+    process.env.NOMAD_REPLICA_BEACON = core.replicas[replicaName].beacon;
+    process.env.NOMAD_GOVERNANCE_ROUTER_BEACON = core.governanceRouter.beacon;
+    process.env.NOMAD_BRIDGE_ROUTER_BEACON = bridge.bridgeRouter.beacon;
+    process.env.NOMAD_TOKEN_REGISTRY_BEACON = bridge.tokenRegistry.beacon;
+    process.env.NOMAD_BRIDGE_TOKEN_BEACON = bridge.bridgeToken.beacon;
 
     // run the forge command
     const forge = new Forge(this.nomadConfig, domainName, this.workingDir);

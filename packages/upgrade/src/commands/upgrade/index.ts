@@ -91,7 +91,7 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
     const forge = new Forge(this.nomadConfig, domainName, this.workingDir);
     forge.scriptCommand(
       domainName,
-      "upgrade(uint32, string)",
+      "deploy(uint32, string)",
       `${domain} ${domainName}`,
       "../../solscripts/Upgrade.sol",
       "Upgrade",

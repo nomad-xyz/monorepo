@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 source $(dirname "$0")/terminal-helpers.sh
 
 count=$1
