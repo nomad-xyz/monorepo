@@ -97,7 +97,6 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
     }
 
     await Promise.all(upgrades);
-    Artifacts.storeCallBatches(this.workingDir, this.generateCallBatches());
     CliUx.ux.action.stop(
       "Implementations have been deployed and artifacts have stored"
     );
@@ -111,8 +110,6 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
 
     // Arguments for upgrade script's function signature
     const domain: number = networkConfig.domain;
-
-    Upgrade.setUpgradeEnv(domainName, config);
 
     // flag arguments for forge script
     //
@@ -160,120 +157,5 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
     } catch (error) {
       this.error(`Forge execution encountered an error:${error}`);
     }
-  }
-
-  public static setUpgradeEnv(
-    domainName: string,
-    config: config.NomadConfig
-  ): void {
-    const networks = config.networks;
-    const timelock =
-      config.protocol.networks[domainName].configuration.governance
-        .recoveryTimelock;
-
-    // Beacons for Core contracts
-    const homeBeacon = config.core[domainName].home.beacon;
-    const governanceRouterBeacon =
-      config.core[domainName].governanceRouter.beacon;
-
-    // Beacons for Bridge contracts
-    const bridgeRouterBeacon = config.bridge[domainName].bridgeRouter.beacon;
-    const tokenRegistryBeacon = config.bridge[domainName].tokenRegistry.beacon;
-    const bridgeTokenBeacon = config.bridge[domainName].bridgeToken.beacon;
-    // Get first replica beacon.
-    // All replicas in every domain, share the same beacon, as they share the same implementation
-    // but have different proxies, because they have different storage.
-    const replicaBeacon =
-      config.core[domainName].replicas[
-        Object.keys(config.core[domainName].replicas)[0]
-      ].beacon;
-
-    // UpgradeBeaconController and Governance Router
-    const upgradeBeaconController =
-      config.core[domainName].upgradeBeaconController;
-
-    // Set env variables to be picked up by forge script
-    // Set beacon addresses
-    process.env.NOMAD_HOME_BEACON = homeBeacon;
-    process.env.NOMAD_GOVERNANCE_ROUTER_BEACON = governanceRouterBeacon;
-    process.env.NOMAD_BRIDGE_ROUTER_BEACON = bridgeRouterBeacon;
-    process.env.NOMAD_TOKEN_REGISTRY_BEACON = tokenRegistryBeacon;
-    process.env.NOMAD_BRIDGE_TOKEN_BEACON = bridgeTokenBeacon;
-    process.env.NOMAD_REPLICA_BEACON = replicaBeacon;
-    // set env variable for timelock
-    process.env.NOMAD_RECOVERY_TIMELOCK = timelock.toString();
-    process.env.NOMAD_BEACON_CONTROLLER = upgradeBeaconController;
-  }
-
-  private generateCallBatches(): CallBatchContents {
-    const config = this.nomadConfig;
-    // Initialize an empty callBatch
-    const callBatch: CallBatchContents = {
-      remote: {},
-      local: [],
-      built: {
-        data: "",
-        to: "",
-      },
-    };
-    for (const domainName of this.domains) {
-      console.log(domainName);
-      const govRouterAddress = config.core[domainName].governanceRouter.proxy;
-      const tempBatch: Call[] = [];
-      const to = config.core[domainName].upgradeBeaconController;
-      // Upgrade Core
-      for (const contractName of ["home", "governanceRouter"]) {
-        const iface = new utils.Interface([
-          "function upgrade(address, address)",
-        ]);
-        const data = iface.encodeFunctionData("upgrade", [
-          config.core[domainName][contractName].beacon,
-          config.core[domainName][contractName].implementation,
-        ]);
-        tempBatch.push({ to: to, data: data } as Call);
-      }
-
-      // Upgrade Replicas
-      for (const network of config.networks) {
-        if (network == domainName) {
-          continue;
-        }
-        const iface = new utils.Interface([
-          "function upgrade(address, address)",
-        ]);
-        const data = iface.encodeFunctionData("upgrade", [
-          config.core[domainName].replicas[network].beacon,
-          config.core[domainName].replicas[network].implementation,
-        ]);
-        tempBatch.push({ to: to, data: data } as Call);
-      }
-
-      // Upgrade Bridge
-      //
-      for (const contractName of [
-        "bridgeRouter",
-        "tokenRegistry",
-        "bridgeToken",
-      ]) {
-        const iface = new utils.Interface([
-          "function upgrade(address, address)",
-        ]);
-        const data = iface.encodeFunctionData("upgrade", [
-          config.bridge[domainName][contractName].beacon,
-          config.bridge[domainName][contractName].implementation,
-        ]);
-        tempBatch.push({ to: to, data: data } as Call);
-      }
-      // Append to Batch
-      if (
-        config.protocol.networks[domainName].domain ==
-        config.protocol.governor.domain
-      ) {
-        callBatch.local = tempBatch;
-      } else {
-        callBatch.remote[domainName as keyof RemoteContents] = tempBatch;
-      }
-    }
-    return callBatch;
   }
 }

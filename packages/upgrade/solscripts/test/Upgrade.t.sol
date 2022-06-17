@@ -38,6 +38,8 @@ contract LegacyFixture is Upgrade {
   address bridgeTokenProxy;
   address tokenRegistryProxy;
 
+  address beaconController;
+
   GoodXappSimple goodXappSimple;
   MerkleTest merkleTest;
 
@@ -129,10 +131,7 @@ contract LegacyFixture is Upgrade {
   function env_getProxyAddresses() public {
     replicaProxy = vm.envAddress("NOMAD_REPLICA_PROXY");
     governanceRouterProxy = vm.envAddress("NOMAD_GOV_ROUTER_PROXY");
-    // homeProxy = vm.envAddress("NOMAD_HOME_PROXY");
-    // bridgeRouterProxy = vm.envAddress("NOMAD_BRIDGE_ROUTER_PROXY");
-    // bridgeTokenProxy = vm.envAddress("NOMAD_BRIDGE_TOKEN_PROXY");
-    // tokenRegistryProxy = vm.envAddress("NOMAD_TOKEN_REGISTRY_PROXY");
+    beaconController = vm.envAddress("NOMAD_BEACON_CONTROLLER");
   }
 
   // At commit: 4679f48f0f7392849e75a17487c4bfd6b9d08f33, this is the storage layout of Replica:
@@ -206,15 +205,9 @@ contract UpgradeTest is LegacyFixture {
       beaconControllerContract.owner()
     );
     // upgrade Home
-    beaconControllerContract.upgrade(
-      homeBeacon,
-      address(newHome)
-    );
+    beaconControllerContract.upgrade(homeBeacon, address(newHome));
     // upgrade Replica
-    beaconControllerContract.upgrade(
-      replicaBeacon,
-      address(newReplica)
-    );
+    beaconControllerContract.upgrade(replicaBeacon, address(newReplica));
     // upgrade GovernanceRouter
     beaconControllerContract.upgrade(
       governanceRouterBeacon,
