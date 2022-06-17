@@ -171,7 +171,7 @@ contract LegacyFixture is Upgrade {
   // | __GAP             | uint256[45]                 | 155  | 0      | 1440  |
   // +-------------------+-----------------------------+------+--------+-------+
 
-  /// @notice Set the commited Root to  a deploye Replica, by manipulating storage
+  /// @notice Set the commited Root to a deployed Replica, by manipulating storage
   function setReplicaCommittedRoot(bytes32 root) public {
     bytes32 committedRootSlot = bytes32(uint256(102));
     bytes32 confirmAtStartSlot = keccak256(
@@ -205,24 +205,32 @@ contract UpgradeTest is LegacyFixture {
       beaconControllerContract.owner(),
       beaconControllerContract.owner()
     );
-    // Verify that the calldata from the previous step have been generated correctly
-    (bool success, bytes memory _) = beaconController.call(upgradeHome);
-    assertTrue(success);
-    // Continue with contract calls (vs low-level call) because of improved ergonomics
-    // i.e Forge can decode logs/traces
-    beaconControllerContract.upgrade(replicaBeacon, address(newReplica));
+    // upgrade Home
+    beaconControllerContract.upgrade(
+      homeBeacon,
+      address(newHome)
+    );
+    // upgrade Replica
+    beaconControllerContract.upgrade(
+      replicaBeacon,
+      address(newReplica)
+    );
+    // upgrade GovernanceRouter
     beaconControllerContract.upgrade(
       governanceRouterBeacon,
       address(newGovernanceRouter)
     );
+    // upgrade BridgeRouter
     beaconControllerContract.upgrade(
       bridgeRouterBeacon,
       address(newBridgeRouter)
     );
+    // upgrade BridgeToken
     beaconControllerContract.upgrade(
       bridgeTokenBeacon,
       address(newBridgeToken)
     );
+    // upgrade TokenRegistry
     beaconControllerContract.upgrade(
       tokenRegistryBeacon,
       address(newTokenRegistry)
@@ -239,7 +247,7 @@ contract UpgradeTest is LegacyFixture {
 
   function test_legacyMessageStatusAfterUpgrade() public {
     bytes32 hash = keccak256(legacyProcessMessage);
-    // Status is proccessed
+    // Status is processed
     bytes32 status = "2";
     assertEq(replica.messages(hash), status);
   }
@@ -247,7 +255,7 @@ contract UpgradeTest is LegacyFixture {
   function test_upgradedMessageStatus() public {
     assertTrue(replica.process(legacyProveMessage));
     bytes32 hash = keccak256(legacyProveMessage);
-    // Status is proccessed
+    // Status is processed
     bytes32 status = "2";
     assertEq(replica.messages(hash), status);
   }

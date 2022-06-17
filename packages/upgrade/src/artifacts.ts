@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as config from "@nomad-xyz/configuration";
-import { CallBatchContents } from "@nomad-xyz/sdk-govern";
+import {CallBatch} from "@nomad-xyz/sdk-govern";
+
 export default class Artifacts {
   domainName: string;
 
@@ -87,10 +88,10 @@ export default class Artifacts {
       }
     }
   }
-  public static storeCallBatches(dir: string, batch: CallBatchContents) {
+  public static storeCallBatches(dir: string, batch: CallBatch) {
     fs.writeFileSync(
       `${dir}/governanceTransactions.json`,
-      JSON.stringify(batch)
+        JSON.stringify(batch, null, 2)
     );
   }
 }
