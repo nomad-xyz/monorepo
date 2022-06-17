@@ -3,12 +3,9 @@ import * as config from "@nomad-xyz/configuration";
 import { CallBatch } from "@nomad-xyz/sdk-govern";
 
 export default class Artifacts {
-  domainName: string;
-
   config: config.NomadConfig;
-
+  domainName: string;
   rawForgeOutput: string;
-
   artifactsDir: string;
 
   constructor(
@@ -88,6 +85,7 @@ export default class Artifacts {
       }
     }
   }
+
   public static storeCallBatches(dir: string, batch: CallBatch) {
     fs.writeFileSync(
       `${dir}/governanceTransactions.json`,

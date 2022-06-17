@@ -1,18 +1,15 @@
 import * as fs from "node:fs";
 import * as config from "@nomad-xyz/configuration";
-import { exec } from "node:child_process";
 const util = require("util");
 const asyncExec = util.promisify(require("child_process").exec);
 
 export default class Forge {
   nomadConfig: config.NomadConfig;
   domainName: string;
-
   command: string;
-
   workingDir: string;
-
   etherscanVerify: string;
+
   constructor(
     config: config.NomadConfig,
     domainName: string,
@@ -24,7 +21,7 @@ export default class Forge {
     this.etherscanVerify = "";
   }
 
-  public async executeCommand(outputFile: string) {
+  public async executeCommand() {
     // Create directory for upgrade artifacts
     fs.mkdir(
       `${this.workingDir}/${this.domainName}`,
@@ -104,6 +101,4 @@ export default class Forge {
     ];
     this.command = pieces.join(" ");
   }
-
-  // Extract the newly deployed implementation addresses from the upgrade output
 }

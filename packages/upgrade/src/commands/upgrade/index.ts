@@ -1,13 +1,19 @@
 import * as config from "@nomad-xyz/configuration";
-import * as fs from "node:fs";
 import Command from "../../Base";
 import Artifacts from "../../Artifacts";
 import Forge from "../../Forge";
 import { Flags, CliUx } from "@oclif/core";
 import { utils } from "ethers";
 import { CallBatchContents, Call, RemoteContents } from "@nomad-xyz/sdk-govern";
+
 export default class Upgrade extends Command {
+  static description = "Upgrade the Nomad Protocol on any number of domains";
   static aliases = ["upgrade"];
+  static usage = "upgrade -c <path_to_config> -k <private_key> --FLAGS";
+  static examples = [
+    "$ upgrade -c <path_to_config> -k <private_key> -a -r",
+    "$ upgrade -c <path_to_config> -k <private_key> -d ethereum evmos",
+  ];
   static flags = {
     ...Command.flags,
     resume: Flags.boolean({ char: "r" }),
@@ -32,21 +38,11 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
     }),
   };
 
-  static usage = "upgrade -c <path_to_config> -k <private_key> --FLAGS";
-  static examples = [
-    "$ upgrade -c <path_to_config> -k <private_key> -a -r",
-    "$ upgrade -c <path_to_config> -k <private_key> -d ethereum evmos",
-  ];
-
-  static description = "Upgrade the Nomad Protocol on any number of domains";
-
   workingConfig: config.NomadConfig;
-
   parsedFlags: any;
-
   activeRpcs: any;
-
   domains: string[];
+
   async run(): Promise<void> {
     this.workingConfig = this.nomadConfig;
     const networks = this.workingConfig.networks;

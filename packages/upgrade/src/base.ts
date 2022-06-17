@@ -38,11 +38,9 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
   };
 
   nomadConfig: config.NomadConfig;
-
   domains: string[];
   all: boolean;
   newNomadConfig: config.NomadConfig;
-
   workingDir: string;
 
   async init() {
