@@ -17,6 +17,8 @@ import { GovernanceMessage } from "../../contracts-core/contracts/governance/Gov
 import { Test } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
 import { TypeCasts } from "../../contracts-core/contracts/libs/TypeCasts.sol";
+import { XAppConnectionManager } from "../../contracts-core/contracts/XAppConnectionManager.sol";
+import { IUpdaterManager } from "../../contracts-core/contracts/interfaces/IUpdaterManager.sol";
 
 contract Upgrade is Test {
   /*//////////////////////////////////////////////////////////////
@@ -26,7 +28,7 @@ contract Upgrade is Test {
   // configuration
   uint32 domain;
   uint256 recoveryTimelock;
-
+  address xAppConnectionManager;
   /*//////////////////////////////////////////////////////////////
                             DEPLOYED CONTRACTS
   //////////////////////////////////////////////////////////////*/
@@ -47,8 +49,18 @@ contract Upgrade is Test {
     title("Upgrading Contracts on domain ", _domainName);
     vm.startBroadcast();
     deployImplementations();
-    initializeImplementations();
+    // initializeImplementations();
     vm.stopBroadcast();
+  }
+
+  function loadUpgradeEnv() public {
+    recoveryTimelock = vm.envUint("NOMAD_RECOVERY_TIMELOCK");
+    xAppConnectionManager = vm.envAddress("NOMAD_XAPP_CONNECTION_MANAGER");
+    require(recoveryTimelock != 0, "recoveryTimelock can't be 0");
+    require(
+      xAppConnectionManager != address(0),
+      "xAppConnectionManager can't be address(0)"
+    );
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -95,7 +107,7 @@ contract Upgrade is Test {
     // despite the fact that in Nomad's architecture,
     // un-initialized implementations can't harm the protocol
     // (unless, in the future, we introduce delegatecall in any implementations)
-    home.initialize(address(replica));
+    home.initialize(IUpdaterManager(xAppConnectionManager));
     replica.initialize(0, address(0), bytes32(0), 0);
     governanceRouter.initialize(xAppConnectionManager, address(0));
     tokenRegistry.initialize(address(bridgeToken), xAppConnectionManager);

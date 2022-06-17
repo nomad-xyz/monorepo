@@ -9,7 +9,6 @@ pragma abicoder v2;
 // Contracts to be upgraded
 import { Home } from "../../../contracts-core/contracts/Home.sol";
 import { Replica } from "../../../contracts-core/contracts/Replica.sol";
-import { XAppConnectionManager } from "../../../contracts-core/contracts/XAppConnectionManager.sol";
 import { GovernanceRouter } from "../../../contracts-core/contracts/governance/GovernanceRouter.sol";
 import { BridgeRouter } from "../../../contracts-bridge/contracts/BridgeRouter.sol";
 import { BridgeToken } from "../../../contracts-bridge/contracts/BridgeToken.sol";
@@ -28,7 +27,7 @@ import { GoodXappSimple } from "../../../contracts-core/contracts/test/utils/Goo
 
 contract LegacyFixture is Upgrade {
   // Proxy Addresses
-  address replicaProxy;
+  address replicaProxyAddress;
   address governanceRouterProxy;
   // TODO: test other contracts
 
@@ -43,14 +42,13 @@ contract LegacyFixture is Upgrade {
 
   // Other Addresses
   address beaconController;
-  address xAppConnectionManager;
 
   // TEST VALUES
   // constants
   uint32 remoteDomain = 1500;
 
   // test contracts
-  Replica replica;
+  Replica replicaProxy;
   UpgradeBeaconController beaconControllerContract;
   GoodXappSimple goodXappSimple;
   MerkleTest merkleTest;
@@ -71,9 +69,9 @@ contract LegacyFixture is Upgrade {
 
   function setUp() public virtual {
     // load .env variables
-    env_getAddresses();
+    loadEnv();
     // setup test contracts
-    replica = Replica(replicaProxy);
+    replicaProxy = Replica(replicaProxyAddress);
     goodXappSimple = new GoodXappSimple();
     merkleTest = new MerkleTest();
     // perform first prove & process against legacy code
@@ -91,7 +89,7 @@ contract LegacyFixture is Upgrade {
       remoteDomain,
       sender,
       nonce,
-      replica.localDomain(),
+      replicaProxy.localDomain(),
       receiver,
       messageBody
     );
@@ -109,7 +107,7 @@ contract LegacyFixture is Upgrade {
     legacyProveMessage = message;
     // prove the message
     setReplicaCommittedRoot(root);
-    assertTrue(replica.prove(leaf, proof, index));
+    assertTrue(replicaProxy.prove(leaf, proof, index));
   }
 
   function legacyFirstProcess() public {
@@ -122,7 +120,7 @@ contract LegacyFixture is Upgrade {
       remoteDomain,
       sender,
       nonce,
-      replica.localDomain(),
+      replicaProxy.localDomain(),
       receiver,
       messageBody
     );
@@ -140,11 +138,11 @@ contract LegacyFixture is Upgrade {
     legacyProcessMessage = message;
     // prove and process the message
     setReplicaCommittedRoot(root);
-    replica.proveAndProcess(message, proof, index);
+    replicaProxy.proveAndProcess(message, proof, index);
   }
 
   function loadEnv() public {
-    replicaProxy = vm.envAddress("NOMAD_REPLICA_PROXY");
+    replicaProxyAddress = vm.envAddress("NOMAD_REPLICA_PROXY");
     governanceRouterProxy = vm.envAddress("NOMAD_GOV_ROUTER_PROXY");
     beaconController = vm.envAddress("NOMAD_BEACON_CONTROLLER");
     homeBeacon = vm.envAddress("NOMAD_HOME_BEACON");
@@ -155,16 +153,25 @@ contract LegacyFixture is Upgrade {
     bridgeTokenBeacon = vm.envAddress("NOMAD_BRIDGE_TOKEN_BEACON");
     xAppConnectionManager = vm.envAddress("NOMAD_XAPP_CONNECTION_MANAGER");
     // require that addresses are non-zero
-    require(replicaProxy != address(0), "must set replica proxy");
+    require(replicaProxyAddress != address(0), "must set replica proxy");
     require(governanceRouterProxy != address(0), "must set governance proxy");
     require(beaconController != address(0), "must set beacon controller");
     require(homeBeacon != address(0), "must set home beacon");
     require(replicaBeacon != address(0), "must set replica beacon");
-    require(governanceRouterBeacon != address(0), "must set governance router beacon");
+    require(
+      governanceRouterBeacon != address(0),
+      "must set governance router beacon"
+    );
     require(bridgeRouterBeacon != address(0), "must set bridge router beacon");
-    require(tokenRegistryBeacon != address(0), "must set token registry beacon");
+    require(
+      tokenRegistryBeacon != address(0),
+      "must set token registry beacon"
+    );
     require(bridgeTokenBeacon != address(0), "must set bridge token beacon");
-    require(xAppConnectionManager != address(0), "must set xAppConnectionManager");
+    require(
+      xAppConnectionManager != address(0),
+      "must set xAppConnectionManager"
+    );
   }
 
   // At commit: 4679f48f0f7392849e75a17487c4bfd6b9d08f33, this is the storage layout of Replica:
@@ -209,12 +216,12 @@ contract LegacyFixture is Upgrade {
     bytes32 confirmAtStartSlot = keccak256(
       abi.encodePacked(root, bytes32(uint256(153)))
     );
-    vm.store(address(replica), committedRootSlot, root);
+    vm.store(address(replicaProxy), committedRootSlot, root);
     // How mappings are placed in storage
     // https://docs.soliditylang.org/en/v0.8.13/internals/layout_in_storage.html
-    vm.store(address(replica), confirmAtStartSlot, bytes32(uint256(1)));
-    assertEq(replica.committedRoot(), root);
-    assertEq(replica.confirmAt(root), 1);
+    vm.store(address(replicaProxy), confirmAtStartSlot, bytes32(uint256(1)));
+    assertEq(replicaProxy.committedRoot(), root);
+    assertEq(replicaProxy.confirmAt(root), 1);
   }
 }
 
@@ -222,7 +229,7 @@ contract UpgradeTest is LegacyFixture {
   function setUp() public override {
     super.setUp();
     uint32 domain = uint32(vm.envUint("NOMAD_DOMAIN"));
-    assertEq(uint256(domain), uint256(replica.localDomain()));
+    assertEq(uint256(domain), uint256(replicaProxy.localDomain()));
     string memory domainName = vm.envString("NOMAD_DOMAIN_NAME");
     // deploy implementations
     deploy(domain, domainName);
@@ -231,37 +238,27 @@ contract UpgradeTest is LegacyFixture {
   }
 
   function upgrade() public {
-    console2.log("Mocking Gov calls to the Beacon Controller to upgrade the implementations");
+    console2.log(
+      "Mocking Gov calls to the Beacon Controller to upgrade the implementations"
+    );
     beaconControllerContract = UpgradeBeaconController(beaconController);
     vm.startPrank(
       beaconControllerContract.owner(),
       beaconControllerContract.owner()
     );
     // Home
-    beaconControllerContract.upgrade(
-        homeBeacon,
-        address(home)
-    );
+    beaconControllerContract.upgrade(homeBeacon, address(home));
     // Replica
-    beaconControllerContract.upgrade(
-      replicaBeacon,
-      address(replica)
-    );
+    beaconControllerContract.upgrade(replicaBeacon, address(replica));
     // GovernanceRouter
     beaconControllerContract.upgrade(
       governanceRouterBeacon,
       address(governanceRouter)
     );
     // BridgeRouter
-    beaconControllerContract.upgrade(
-      bridgeRouterBeacon,
-      address(bridgeRouter)
-    );
+    beaconControllerContract.upgrade(bridgeRouterBeacon, address(bridgeRouter));
     // BridgeToken
-    beaconControllerContract.upgrade(
-      bridgeTokenBeacon,
-      address(bridgeToken)
-    );
+    beaconControllerContract.upgrade(bridgeTokenBeacon, address(bridgeToken));
     // TokenRegistry
     beaconControllerContract.upgrade(
       tokenRegistryBeacon,
@@ -276,17 +273,25 @@ contract UpgradeTest is LegacyFixture {
 
   function test_upgradedProveAlreadyProcessed() public {
     vm.expectRevert("already processed");
-    replica.prove(legacyProcessLeaf, legacyProcessProof, legacyProcessIndex);
+    replicaProxy.prove(
+      legacyProcessLeaf,
+      legacyProcessProof,
+      legacyProcessIndex
+    );
   }
 
   function test_upgradedProcessAlreadyProcessed() public {
-    vm.expectRevert("already processed");
-    replica.process(legacyProcessMessage);
+    vm.expectRevert("!proven");
+    replicaProxy.process(legacyProcessMessage);
   }
 
-  function test_upgradedProveAndProxessProcessAlreadyProcessed() public {
+  function test_upgradedProveAndProcessAlreadyProcessed() public {
     vm.expectRevert("already processed");
-    replica.proveAndProcess(legacyProcessMessage, legacyProcessProof, legacyProcessIndex);
+    replicaProxy.proveAndProcess(
+      legacyProcessMessage,
+      legacyProcessProof,
+      legacyProcessIndex
+    );
   }
 
   // MESSAGE STATUS
@@ -294,19 +299,19 @@ contract UpgradeTest is LegacyFixture {
   function test_legacyMessageStatusAfterUpgrade() public {
     bytes32 hash = keccak256(legacyProcessMessage);
     // Status is processed
-    bytes32 status = "2";
-    assertEq(replica.messages(hash), status);
+    bytes32 status = bytes32(uint256(2));
+    assertEq(status, replicaProxy.messages(hash));
   }
 
   function test_upgradedMessageStatus() public {
     // before process: status is 1
     bytes32 hash = keccak256(legacyProveMessage);
-    bytes32 status = "1";
-    assertEq(replica.messages(hash), status);
+    bytes32 status = bytes32(uint256(1));
+    assertEq(status, replicaProxy.messages(hash));
     // process succeeds
-    assertTrue(replica.process(legacyProveMessage));
+    assertTrue(replicaProxy.process(legacyProveMessage));
     // after process: status is 2
-    bytes32 status = "2";
-    assertEq(replica.messages(hash), status);
+    status = bytes32(uint256(2));
+    assertEq(status, replicaProxy.messages(hash));
   }
 }
