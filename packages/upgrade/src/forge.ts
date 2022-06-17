@@ -35,7 +35,8 @@ export default class Forge {
     await asyncExec("rm -rf solscripts/out || true");
     await asyncExec("FOUNDRY_PROFILE=upgrade forge clean");
     // Execute forge script
-    return asyncExec(this.command);
+    const { stdout, stderr } = asyncExec(this.command);
+    return { stdout, stderr };
   }
 
   public setEtherscanKey(key: string) {

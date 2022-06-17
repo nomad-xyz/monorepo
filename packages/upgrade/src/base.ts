@@ -31,11 +31,6 @@ export default abstract class Nomgrade extends Command {
     dotenv.config();
     // do some initialization
     const { flags } = (await this.parse(this.constructor as any)) as any;
-    if (!flags.domains && !flags.all) {
-      throw new Error(
-        "No domains have been chosen. Either chose some domains with '-d <domain> <domain2>' or all with '-a'"
-      );
-    }
     this.nomadConfig = this.getConfigFromPath(flags.config);
     this.workingDir = flags.workingDir;
   }

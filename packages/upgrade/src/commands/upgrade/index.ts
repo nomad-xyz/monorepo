@@ -47,7 +47,6 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
     }),
   };
 
-  workingConfig: config.NomadConfig;
   flags: any;
   rpcs: any;
   domains: string[];
@@ -67,11 +66,15 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
 
     CliUx.ux.action.start("Upgrading the Nomad Protocol");
     this.warn(
-        "The forge output is being buffered and will be printed as the upgrade pipeline finish on each network"
+      "The forge output is being buffered and will be printed as the upgrade pipeline finish on each network"
     );
 
     // run the upgrade scripts in parallel
-    await Promise.all(this.domains.map(domain => this.upgradeDomain(domain, this.flags.resume)));
+    await Promise.all(
+      this.domains.map((domain) =>
+        this.upgradeDomain(domain, this.flags.resume)
+      )
+    );
 
     // print governance actions
     await PrintGovActions.print(this.nomadConfig, this.workingDir);
@@ -84,7 +87,8 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
 
   async upgradeDomain(domainName: string, resume: boolean): Promise<void> {
     // get arguments for the forge script
-    const domain: number = this.nomadConfig.protocol.networks[domainName].domain;
+    const domain: number =
+      this.nomadConfig.protocol.networks[domainName].domain;
     const rpc = this.rpcs[domainName][0];
 
     // instantiate the forge script command
@@ -132,10 +136,12 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
   private setDomains() {
     if (!this.flags.domains && !this.flags.all) {
       throw new Error(
-          "No domains were passed via the appropriate flags. You need to select to which domains the Nomad protocol will be upgraded. Type --help for more"
+        "No domains were passed via the appropriate flags. You need to select to which domains the Nomad protocol will be upgraded. Type --help for more"
       );
     }
-    this.domains = this.flags.all ? this.nomadConfig.networks : this.flags.domains;
+    this.domains = this.flags.all
+      ? this.nomadConfig.networks
+      : this.flags.domains;
     this.log(`The following domains will be upgraded: ${this.domains}`);
   }
 
@@ -154,10 +160,10 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
 
   private getTestRPCs(domains: Array<string>) {
     console.log(
-        "It expects to find local EVM-compatible RPC endpoints, that listen on an incrementing port number, starting at 8545"
+      "It expects to find local EVM-compatible RPC endpoints, that listen on an incrementing port number, starting at 8545"
     );
     console.log(
-        "Use multi-anvil.sh to quickly spin up multiple anvil instances with incrementing port number"
+      "Use multi-anvil.sh to quickly spin up multiple anvil instances with incrementing port number"
     );
     const rpcs = {};
     for (const index in domains) {
@@ -169,9 +175,18 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
 
   private getRPCs(domains: Array<string>) {
     const rpcs = {};
-    domains.map(domain => {
+    domains.map((domain) => {
       rpcs[domain] = this.nomadConfig.rpcs[domain];
     });
     return rpcs;
+  }
+
+  private loadEnv(domainName: string) {
+    const recoveryTimelock =
+      this.nomadConfig.protocol.networks[domainName].configuration.governance
+        .recoveryTimelock;
+    process.env.NOMAD_XAPP_CONNECTION_MANAGER =
+      this.nomadConfig.core[domainName].xAppConnectionManager;
+    process.env.NOMAD_RECOVERY_TIMELOCK = recoveryTimelock.toString();
   }
 }
