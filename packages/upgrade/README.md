@@ -51,7 +51,7 @@ TOPICS
 COMMANDS
   Upgrade           Upgrade the Nomad Protocol on any number of domains
   executeCallBatch  Ececute Governance messages that have arrived to a domain via 'executeCallBatch()'
-  forkTest
+  forkTest          Fork test Upgrading the Nomad Protocol on any number of domains
   help              Display help for nomgrade.
   plugins           List installed plugins.
   printGovActions
@@ -120,7 +120,7 @@ EXAMPLES
 
 ```
 
-### Print Governance Actions calldata for Governor Chain (Ethereum)
+### Print Governance Calls
 
 ```bash
 bin/run printGovActions --help
@@ -138,12 +138,6 @@ FLAGS
   --version                 Show CLI version.
 
 ```
-
-### Execute callBatch TBD
-
-**For all domains**
-
-**For some domains**
 
 ## License
 

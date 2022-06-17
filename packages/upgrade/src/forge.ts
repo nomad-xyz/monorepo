@@ -35,16 +35,7 @@ export default class Forge {
     await asyncExec("rm -rf solscripts/out || true");
     await asyncExec("FOUNDRY_PROFILE=upgrade forge clean");
     // Execute forge script
-    try {
-      const { error, stdout, stderr } = await asyncExec(this.command);
-      return { stdout, stderr };
-    } catch (error) {
-      console.log(`Forge execution encountered an Error`);
-      console.log(
-        "If the error is the following, please ignore and run the command again:  No such file or directory (os error 2)"
-      );
-      console.log(error);
-    }
+    return asyncExec(this.command);
   }
 
   public setEtherscanKey(key: string) {

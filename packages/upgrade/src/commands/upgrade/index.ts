@@ -1,18 +1,20 @@
+import { Flags, CliUx } from "@oclif/core";
 import * as config from "@nomad-xyz/configuration";
 import Command from "../../Base";
 import Artifacts from "../../Artifacts";
 import Forge from "../../Forge";
-import { Flags, CliUx } from "@oclif/core";
-import { utils } from "ethers";
-import { CallBatchContents, Call, RemoteContents } from "@nomad-xyz/sdk-govern";
+import PrintGovActions from "../printGovActions";
 
 export default class Upgrade extends Command {
   static description = "Upgrade the Nomad Protocol on any number of domains";
+  static usage = "upgrade -c <path_to_config> -a --FLAGS";
   static aliases = ["upgrade"];
-  static usage = "upgrade -c <path_to_config> -k <private_key> --FLAGS";
   static examples = [
-    "$ upgrade -c <path_to_config> -k <private_key> -a -r",
-    "$ upgrade -c <path_to_config> -k <private_key> -d ethereum evmos",
+    "$ upgrade -c <path_to_config> -a",
+    "$ upgrade -c <path_to_config> -d ethereum evmos",
+    "$ upgrade -c <path_to_config> -k <private_key> -a",
+    "$ upgrade -c <path_to_config> -a -r",
+    "$ upgrade -c <path_to_config> -a -t",
   ];
   static flags = {
     ...Command.flags,
@@ -30,89 +32,63 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
       required: true,
       env: "PRIVATE_KEY",
     }),
-    etherscanKey: Flags.string({
-      char: "e",
-      description:
-        "Etherscan API key for verifying contracts that are being deployed",
-      env: "ETHERSCAN_API_KEY",
+    domains: Flags.string({
+      char: "d",
+      multiple: true,
+      exclusive: ["all"],
+      description: `
+Run the command on specific domain(s). To pass multiple domains, simply pass them like this: -d ethereum evmos avalanche.
+Due to a parsing bug, this flag must be passed at the end of the command. e.g 'nomgrade upgrade -d ethereum'`,
+    }),
+    all: Flags.boolean({
+      char: "a",
+      description: "Run on all the domains that exist in the config file",
+      exclusive: ["domains"],
     }),
   };
 
   workingConfig: config.NomadConfig;
-  parsedFlags: any;
-  activeRpcs: any;
+  flags: any;
+  rpcs: any;
   domains: string[];
 
   async run(): Promise<void> {
-    this.workingConfig = this.nomadConfig;
-    const networks = this.workingConfig.networks;
-    const { flags } = await this.parse(Upgrade);
-    this.parsedFlags = flags;
     this.announce("Welcome to Nomgrade");
 
-    this.activeRpcs = {};
-    // If test, then replace rpc endpoints with local ones
-    if (flags.test) {
-      this.announce("Upgrade script will run in test mode");
-      console.log(
-        "It expects to find local EVM-compatible RPC endpoints, that listen on an incrementing port number, starting at 8545"
-      );
-      console.log(
-        "Use multi-anvil.sh to quickly spin up multiple anvil instances with incrementing port number"
-      );
-      this.announce("RPC endpoints");
+    // parse flags from CLI command
+    const { flags } = await this.parse(Upgrade);
+    this.flags = flags;
 
-      for (const index in networks) {
-        const port: number = 8545 + Number.parseInt(index);
-        this.activeRpcs[networks[index]] = [`http://127.0.0.1:${port}`];
-      }
-    } else {
-      this.activeRpcs = this.workingConfig.rpcs;
-    }
+    // Instantiate the Domains that will be upgraded
+    this.setDomains();
 
-    console.log("The following RPC endpoints will be used");
-    console.log(this.activeRpcs);
+    // Instantiate the RPC endpoints for each Upgrade domain
+    this.setRPCs();
 
-    if (!this.domains && !this.all) {
-      throw new Error(
-        "No domains were passed via the appropriate flags. You need to select to which domains the Nomad protocol will be upgraded. Type --help for more"
-      );
-    }
-
-    const domains = this.all ? this.nomadConfig.networks : this.domains;
-    this.domains = domains;
-
-    this.log(`The following domains will be upgraded: ${domains}`);
-    this.warn(
-      "The forge output is being buffered and will be printed as the upgrade pipeline finish on each network"
-    );
     CliUx.ux.action.start("Upgrading the Nomad Protocol");
-    const upgrades = [];
-    for (const domainName of domains) {
-      upgrades.push(this.upgradeDomain(domainName, flags.resume));
-    }
+    this.warn(
+        "The forge output is being buffered and will be printed as the upgrade pipeline finish on each network"
+    );
 
-    await Promise.all(upgrades);
+    // run the upgrade scripts in parallel
+    await Promise.all(this.domains.map(domain => this.upgradeDomain(domain, this.flags.resume)));
+
+    // print governance actions
+    await PrintGovActions.print(this.nomadConfig, this.workingDir);
+
+    // finish
     CliUx.ux.action.stop(
       "Implementations have been deployed and artifacts have stored"
     );
   }
 
   async upgradeDomain(domainName: string, resume: boolean): Promise<void> {
-    const config = this.workingConfig;
-    const networks = config.networks;
+    // get arguments for the forge script
+    const domain: number = this.nomadConfig.protocol.networks[domainName].domain;
+    const rpc = this.rpcs[domainName][0];
 
-    const networkConfig = config.protocol.networks[domainName];
-
-    // Arguments for upgrade script's function signature
-    const domain: number = networkConfig.domain;
-
-    // flag arguments for forge script
-    //
-    const rpc = this.activeRpcs[domainName][0];
-
-    // forge script command with all the arguments, ready to be executed
-    const forge = new Forge(config, domainName, this.workingDir);
+    // instantiate the forge script command
+    const forge = new Forge(this.nomadConfig, domainName, this.workingDir);
     forge.scriptCommand(
       domainName,
       "upgrade(uint32, string)",
@@ -120,20 +96,14 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
       "../../solscripts/Upgrade.sol",
       "Upgrade",
       rpc,
-      this.parsedFlags.privateKey,
+      this.flags.privateKey,
       resume,
       true
     );
-    if (this.parsedFlags.etherscanKey) {
-      if (this.parsedFlags.test) {
-        throw new Error(
-          "You can't verify contracts when running Nomgrade upgrade --test"
-        );
-      }
-      forge.setEtherscanKey(this.parsedFlags.etherscanKey);
-    }
+
     try {
-      const { stdout, stderr } = await forge.executeCommand("upgrade-output");
+      // run the forge script
+      const { stdout, stderr } = await forge.executeCommand();
       if (stderr) {
         this.warn(`${stderr}`);
       }
@@ -141,17 +111,67 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
         this.log(`${stdout}`);
       }
 
+      // construct an artifacts object with raw forge output
       const artifacts = new Artifacts(
         `${stdout}`,
         domainName,
-        config,
+        this.nomadConfig,
         this.workingDir
       );
+      // store the raw forge output
       artifacts.storeOutput("upgrade");
+      // update the config in-place within the artifacts
       artifacts.updateImplementations();
+      // output the updated config from the artifacts object
       artifacts.storeNewConfig();
     } catch (error) {
       this.error(`Forge execution encountered an error:${error}`);
     }
+  }
+
+  private setDomains() {
+    if (!this.flags.domains && !this.flags.all) {
+      throw new Error(
+          "No domains were passed via the appropriate flags. You need to select to which domains the Nomad protocol will be upgraded. Type --help for more"
+      );
+    }
+    this.domains = this.flags.all ? this.nomadConfig.networks : this.flags.domains;
+    this.log(`The following domains will be upgraded: ${this.domains}`);
+  }
+
+  private setRPCs() {
+    if (this.flags.test) {
+      this.announce("Upgrade script will run in test mode");
+      this.rpcs = this.getTestRPCs(this.domains);
+    } else {
+      this.rpcs = this.getRPCs(this.domains);
+    }
+
+    this.announce("RPC endpoints");
+    console.log("The following RPC endpoints will be used");
+    console.log(this.rpcs);
+  }
+
+  private getTestRPCs(domains: Array<string>) {
+    console.log(
+        "It expects to find local EVM-compatible RPC endpoints, that listen on an incrementing port number, starting at 8545"
+    );
+    console.log(
+        "Use multi-anvil.sh to quickly spin up multiple anvil instances with incrementing port number"
+    );
+    const rpcs = {};
+    for (const index in domains) {
+      const port: number = 8545 + Number.parseInt(index);
+      rpcs[domains[index]] = [`http://127.0.0.1:${port}`];
+    }
+    return rpcs;
+  }
+
+  private getRPCs(domains: Array<string>) {
+    const rpcs = {};
+    domains.map(domain => {
+      rpcs[domain] = this.nomadConfig.rpcs[domain];
+    });
+    return rpcs;
   }
 }
