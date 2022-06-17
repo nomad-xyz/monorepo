@@ -1,5 +1,4 @@
 import * as core from './core';
-import * as api from './api';
 import { DB } from './core/db';
 import { createLogger } from './core/utils';
 import { IndexerCollector } from './core/metrics';
@@ -25,7 +24,6 @@ import {
 
   if (program === Program.API) {
     await startTokenUpdater(sdk, db, logger);
-    await api.run(db, logger);
     logger.info(`Finished api run`);
   } else if (program === Program.CORE) {
     m.startServer(metricsPort);
@@ -33,10 +31,7 @@ import {
   } else {
     logger.warn(`Starting all on the same process...`);
     await startTokenUpdater(sdk, db, logger);
-    await Promise.all([
-      api.run(db, logger),
-      core.run(sdk, db, logger, m),
-    ]).catch((e) =>
+    await Promise.all([core.run(sdk, db, logger, m)]).catch((e) =>
       logger.error(`Error happened during run of api or core:`, e),
     );
   }

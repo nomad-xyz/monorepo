@@ -6,15 +6,16 @@
   "license": "Apache 2.0",
   "author": "Illusory Systems Inc.",
   "scripts": {
-    "any": "NODE_OPTIONS=--max-old-space-size=4096 ts-node main",
-    "api": "PROGRAMM=api ts-node main",
+    "any": "NODE_OPTIONS=--max-old-space-size=4096 ts-node main && ts-node api",
+    "api": "ts-node ./api/index.ts",
     "build": "prisma generate",
     "build_docker": "docker-compose build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD)",
-    "core": "PROGRAMM=core ts-node main",
+    "core": "PROGRAM=core ts-node main",
     "lint": "eslint --fix ./src",
     "migrate": "prisma db push",
     "release-docker": "docker buildx build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) --platform linux/amd64,linux/arm64 --push -t gcr.io/nomad-xyz/nomad-indexer:sha-$(git rev-parse --short HEAD) .",
-    "start": "npm run migrate && npm run any"
+    "start": "npm run migrate && npm run any",
+    "start:api": "npm run migrate && npm run api"
   },
   "dependencies": {
     "@graphql-tools/schema": "^8.3.5",
