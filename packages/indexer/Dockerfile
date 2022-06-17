@@ -10,7 +10,7 @@ COPY package.json ./package.json
 RUN yarn
 
 ADD prisma /app/prisma
-RUN yarn prisma:build
+RUN yarn prisma:generate
 
 ADD src /app/
 
