@@ -27,7 +27,6 @@ contract Upgrade is Test {
     //////////////////////////////////////////////////////////////*/
 
   uint32 domain;
-  string domainName;
   uint256 recoveryTimelock;
 
   // Beacon Addresses
@@ -51,37 +50,15 @@ contract Upgrade is Test {
   BridgeToken newBridgeToken;
 
   /*//////////////////////////////////////////////////////////////
-                            GOVERNANCE CALLS
-    //////////////////////////////////////////////////////////////*/
-
-  bytes upgradeHome;
-  bytes upgradeReplica;
-  bytes upgradeGovRouter;
-  bytes upgradeBridgeRouter;
-  bytes upgradeTokenRegistry;
-  bytes upgradeBridgeToken;
-
-  address beaconController;
-
-  bytes executeCallBatchCall;
-
-  /*//////////////////////////////////////////////////////////////
                                  UPGRADE
     //////////////////////////////////////////////////////////////*/
 
   function upgrade(uint32 _domain, string memory _domainName) public {
     domain = _domain;
-    domainName = _domainName;
-    title("Upgrading Contracts on domain ", domainName);
+    title("Upgrading Contracts on domain ", _domainName);
     vm.startBroadcast();
     deployImplementations();
     vm.stopBroadcast();
-    // Get contract addresses
-    env_getBeaconAddresses();
-    env_getUpgradeAddresses();
-    // Print useful information to user
-    generateGovernanceCalls();
-    generateBatches();
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -111,115 +88,8 @@ contract Upgrade is Test {
   }
 
   /*//////////////////////////////////////////////////////////////
-                             ENV VAR GETTERS
-    //////////////////////////////////////////////////////////////*/
-
-  function env_getBeaconAddresses() public {
-    homeBeacon = vm.envAddress("NOMAD_HOME_BEACON");
-    replicaBeacon = vm.envAddress("NOMAD_REPLICA_BEACON");
-    governanceRouterBeacon = vm.envAddress("NOMAD_GOVERNANCE_ROUTER_BEACON");
-    bridgeRouterBeacon = vm.envAddress("NOMAD_BRIDGE_ROUTER_BEACON");
-    tokenRegistryBeacon = vm.envAddress("NOMAD_TOKEN_REGISTRY_BEACON");
-    bridgeTokenBeacon = vm.envAddress("NOMAD_BRIDGE_TOKEN_BEACON");
-    recoveryTimelock = vm.envUint("NOMAD_RECOVERY_TIMELOCK");
-  }
-
-  function env_getUpgradeAddresses() public {
-    beaconController = vm.envAddress("NOMAD_BEACON_CONTROLLER");
-  }
-
-  /*//////////////////////////////////////////////////////////////
-                       GOVERNANCE CALL GENERATORS
-    //////////////////////////////////////////////////////////////*/
-
-  function generateGovernanceCalls() public {
-    title("BeaconController upgrade encoded calls");
-    console2.log("Function signature: upgrade(address, address)");
-    console2.log("Arguments: <contract_beacon>, <new_implementation_address>");
-
-    upgradeHome = abi.encodeWithSignature(
-      "upgrade(address, address)",
-      homeBeacon,
-      address(newHome)
-    );
-    console2.log("Upgrade Home");
-    console2.logBytes(upgradeHome);
-
-    upgradeReplica = abi.encodeWithSignature(
-      "upgrade(address, address)",
-      replicaBeacon,
-      address(newReplica)
-    );
-    console2.log("Upgrade Replica");
-    console2.logBytes(upgradeReplica);
-
-    upgradeGovRouter = abi.encodeWithSignature(
-      "upgrade(address, address)",
-      governanceRouterBeacon,
-      address(newGovernanceRouter)
-    );
-    console2.log("Upgrade Governance Router");
-    console2.logBytes(upgradeGovRouter);
-
-    upgradeBridgeRouter = abi.encodeWithSignature(
-      "upgrade(address, address)",
-      bridgeRouterBeacon,
-      address(newBridgeRouter)
-    );
-    console2.log("Upgrade Bridge Router");
-    console2.logBytes(upgradeBridgeRouter);
-
-    upgradeTokenRegistry = abi.encodeWithSignature(
-      "upgrade(address, address)",
-      tokenRegistryBeacon,
-      address(newTokenRegistry)
-    );
-    console2.log("Upgrade Token Registry");
-    console2.logBytes(upgradeTokenRegistry);
-
-    upgradeBridgeToken = abi.encodeWithSignature(
-      "upgrade(address, address)",
-      bridgeTokenBeacon,
-      address(newBridgeToken)
-    );
-    console2.log("Upgrade Bridge Token");
-    console2.logBytes(upgradeBridgeToken);
-  }
-
-  function generateBatches() public {
-    GovernanceMessage.Call[] memory batch = new GovernanceMessage.Call[](6);
-    batch[0] = genGovCall(beaconController, upgradeHome);
-    batch[1] = genGovCall(beaconController, upgradeReplica);
-    batch[2] = genGovCall(beaconController, upgradeGovRouter);
-    batch[3] = genGovCall(beaconController, upgradeBridgeRouter);
-    batch[4] = genGovCall(beaconController, upgradeTokenRegistry);
-    batch[5] = genGovCall(beaconController, upgradeBridgeToken);
-    bytes memory callBatch = abi.encode(batch);
-    title("batchCalls calldata");
-    console2.log(
-      "GovernanceMessage.Call signature:  struct Call { bytes32 to; bytes data;}"
-    );
-    console2.log(
-      "Call attributes: <beacon_controller_address, <beacon_controller_upgraded_encoded_call_for_implementation>"
-    );
-    console2.log("callBatch-artifact");
-    console2.logBytes(callBatch);
-  }
-
-  function genGovCall(address _to, bytes memory _data)
-    public
-    returns (GovernanceMessage.Call memory)
-  {
-    return
-      GovernanceMessage.Call({
-        to: TypeCasts.addressToBytes32(_to),
-        data: _data
-      });
-  }
-
-  /*//////////////////////////////////////////////////////////////
                                 UTILITIES
-    //////////////////////////////////////////////////////////////*/
+  //////////////////////////////////////////////////////////////*/
 
   function title(string memory title1) public {
     console2.log("===========================");
