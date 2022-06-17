@@ -2,6 +2,7 @@ import { Flags, CliUx } from "@oclif/core";
 import Forge from "../../Forge";
 import Command from "../../Base";
 import Artifacts from "../../Artifacts";
+import {CoreContracts, BridgeContracts} from "@nomad-xyz/configuration";
 
 export default class ForkTest extends Command {
   static description = "Fork test Upgrading the Nomad Protocol on any number of domains";
@@ -34,12 +35,12 @@ export default class ForkTest extends Command {
     );
 
     // load the config
-    const core = this.nomadConfig.core[domainName];
-    const bridge = this.nomadConfig.bridge[domainName];
+    const core: CoreContracts = this.nomadConfig.core[domainName];
+    const bridge: BridgeContracts = this.nomadConfig.bridge[domainName];
 
     // load the contracts we will test from config
-    const domain = this.nomadConfig.protocol.networks[domainName].domain.toString();
-    const replicaName = Object.keys(this.nomadConfig.core[domainName].replicas)[0];
+    const domain: string = this.nomadConfig.protocol.networks[domainName].domain.toString();
+    const replicaName: string = Object.keys(this.nomadConfig.core[domainName].replicas)[0];
 
     // Set env variables required by Fork test and Upgrade
     process.env.NOMAD_DOMAIN_NAME = domainName;
