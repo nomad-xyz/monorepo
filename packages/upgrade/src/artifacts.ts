@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as config from "@nomad-xyz/configuration";
-import {CallBatch} from "@nomad-xyz/sdk-govern";
+import { CallBatch } from "@nomad-xyz/sdk-govern";
 
 export default class Artifacts {
   domainName: string;
@@ -72,9 +72,9 @@ export default class Artifacts {
         // The contract will either belong to 'core' or 'bridge' objects
         // of the config file
         try {
-          core[domainName][contractName].implementation = address.slice(2);
+          core[domainName][contractName].implementation = address;
         } catch {
-          bridge[domainName][contractName].implementation = address.slice(2);
+          bridge[domainName][contractName].implementation = address;
         }
       } else {
         for (const network of this.config.networks) {
@@ -91,7 +91,7 @@ export default class Artifacts {
   public static storeCallBatches(dir: string, batch: CallBatch) {
     fs.writeFileSync(
       `${dir}/governanceTransactions.json`,
-        JSON.stringify(batch, null, 2)
+      JSON.stringify(batch, null, 2)
     );
   }
 }
