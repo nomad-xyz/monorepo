@@ -65,9 +65,7 @@ export default class ForkTest extends Command {
       config,
       this.workingDir
     );
-    artifacts.storeOutput("upgrade");
-    artifacts.extractArtifacts();
+    artifacts.storeOutput("upgrade-forkTest");
     CliUx.ux.action.stop("Fork Test completed");
-    await artifacts.updateArtifacts();
   }
 }

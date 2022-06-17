@@ -10,8 +10,6 @@ export default class Artifacts {
 
   artifactsDir: string;
 
-  artifact: Artifact;
-
   constructor(
     rawForgeOutput: string,
     domainName: string,
@@ -55,54 +53,6 @@ export default class Artifacts {
     );
   }
 
-  updateArtifacts() {
-    // If upgrade or printGovActions, then extract Artifacts
-    // They are different artifacts that live in the same JSON file
-    // Extract specific artifacts from raw output and store them in a JSON file
-    const path = `${this.artifactsDir}/${this.domainName}/artifacts.json`;
-    let newArtifacts = this.extractArtifacts();
-    try {
-      const existing: Artifact = JSON.parse(fs.readFileSync(path).toString());
-      console.log("Found existing artifacts, appending..");
-      for (const key of Object.keys(existing)) {
-        // From the newArtifacts, keep only the non-empty
-        // fields
-        if (newArtifacts[key as keyof Artifact] != "") {
-          existing[key as keyof Artifact] = newArtifacts[key as keyof Artifact];
-        }
-      }
-
-      newArtifacts = existing;
-    } catch {
-      console.log("No artifacts.json file found. Creating new..");
-    }
-
-    fs.writeFileSync(path, JSON.stringify(newArtifacts));
-    console.log(`Artifacts were written to ${path}`);
-  }
-
-  extractArtifacts(): Artifact {
-    const lines = this.rawForgeOutput.split("\n");
-    const artifact: Artifact = {
-      callBatch: "",
-      executeGovernanceActions: "",
-    };
-    for (const [index, value] of lines.entries()) {
-      // Artifact used by executeCallbatch()
-      // Execute the batched calls that have been sent to a Governance Router
-      if (value.includes("callBatch-artifact")) {
-        artifact.callBatch = lines[index + 1].replace(/\s/g, "");
-        // Artifact used by executeGovernanceActions()
-        // It's a function call encoded with signature and arguments
-        // ready to be sent via Nomad Governance to the Governor's chain Governance Router
-      } else if (value.includes("executeGovernanceActions-artifact")) {
-        artifact.executeGovernanceActions = lines[index + 1].replace(/\s/g, "");
-      }
-    }
-    this.artifact = artifact;
-    return artifact;
-  }
-
   public updateImplementations() {
     const path = `${this.artifactsDir}/${this.domainName}/broadcast/Upgrade.sol/31337/upgrade-latest.json`;
     const forgeArtifacts = JSON.parse(fs.readFileSync(path).toString());
@@ -120,8 +70,6 @@ export default class Artifacts {
       if (contractName != "replica") {
         // The contract will either belong to 'core' or 'bridge' objects
         // of the config file
-        // Fix a bug where the artifact of foundry has an extra `0x` in front
-        // of the address
         try {
           core[domainName][contractName].implementation = address.slice(2);
         } catch {
@@ -145,9 +93,4 @@ export default class Artifacts {
       JSON.stringify(batch)
     );
   }
-}
-
-interface Artifact {
-  callBatch: string;
-  executeGovernanceActions: string;
 }

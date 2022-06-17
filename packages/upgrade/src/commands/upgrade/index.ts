@@ -155,10 +155,8 @@ Run the upgrade against local RPC nodes. It expects RPC endpoints with a port nu
         this.workingDir
       );
       artifacts.storeOutput("upgrade");
-      artifacts.extractArtifacts();
       artifacts.updateImplementations();
       artifacts.storeNewConfig();
-      artifacts.updateArtifacts();
     } catch (error) {
       this.error(`Forge execution encountered an error:${error}`);
     }
