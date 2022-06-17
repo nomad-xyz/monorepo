@@ -41,9 +41,9 @@ contract LegacyFixture is Upgrade {
   address tokenRegistryBeacon;
   address bridgeTokenBeacon;
 
-  // Beacon Controller
+  // Other Addresses
   address beaconController;
-
+  address xAppConnectionManager;
 
   // TEST VALUES
   // constants
@@ -153,6 +153,7 @@ contract LegacyFixture is Upgrade {
     bridgeRouterBeacon = vm.envAddress("NOMAD_BRIDGE_ROUTER_BEACON");
     tokenRegistryBeacon = vm.envAddress("NOMAD_TOKEN_REGISTRY_BEACON");
     bridgeTokenBeacon = vm.envAddress("NOMAD_BRIDGE_TOKEN_BEACON");
+    xAppConnectionManager = vm.envAddress("NOMAD_XAPP_CONNECTION_MANAGER");
     // require that addresses are non-zero
     require(replicaProxy != address(0), "must set replica proxy");
     require(governanceRouterProxy != address(0), "must set governance proxy");
@@ -163,6 +164,7 @@ contract LegacyFixture is Upgrade {
     require(bridgeRouterBeacon != address(0), "must set bridge router beacon");
     require(tokenRegistryBeacon != address(0), "must set token registry beacon");
     require(bridgeTokenBeacon != address(0), "must set bridge token beacon");
+    require(xAppConnectionManager != address(0), "must set xAppConnectionManager");
   }
 
   // At commit: 4679f48f0f7392849e75a17487c4bfd6b9d08f33, this is the storage layout of Replica:

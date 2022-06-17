@@ -47,6 +47,7 @@ export default class ForkTest extends Command {
     process.env.NOMAD_REPLICA_PROXY = core.replicas[replicaName].proxy;
     process.env.NOMAD_GOV_ROUTER_PROXY = core.governanceRouter.proxy;
     process.env.NOMAD_BEACON_CONTROLLER = core.upgradeBeaconController;
+    process.env.NOMAD_XAPP_CONNECTION_MANAGER = core.xAppConnectionManager;
     // Upgrade Beacons
     process.env.NOMAD_HOME_BEACON = core.home.beacon;
     process.env.NOMAD_REPLICA_BEACON = core.replicas[replicaName].beacon;

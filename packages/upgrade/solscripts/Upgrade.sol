@@ -26,8 +26,6 @@ contract Upgrade is Test {
   // configuration
   uint32 domain;
   uint256 recoveryTimelock;
-  // TODO: set to valid xAppConnectionManger
-  address xAppConnectionManager;
 
   /*//////////////////////////////////////////////////////////////
                             DEPLOYED CONTRACTS
