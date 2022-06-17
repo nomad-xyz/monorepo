@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- chore: refactor api service
+- chore: standardize script commands
 - feat: add config file
 - feat: track indexer api errors in sentry
 - feat: exposing api metrics on different port
