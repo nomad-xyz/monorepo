@@ -1,25 +1,25 @@
 version: "3.7"
 services:
-  # indexer:
-  #   build: .
-  #   restart: always
-  #   command: npm run start indexer
-  #   env_file: .env
-  #   environment:
-  #     - PROGRAM=core
-  #     - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres?connect_timeout=300&schema=public
-  #   ports:
-  #     - "9090:9090"
-  #     - "9091:1337"
-  #   depends_on:
-  #     - "postgres"
-  #   links:
-  #     - postgres
+  indexer:
+    build: .
+    restart: always
+    command: yarn start:core
+    env_file: .env
+    environment:
+      - PROGRAM=core
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres?connect_timeout=300&schema=public
+    ports:
+      - "9090:9090"
+      - "9091:1337"
+    depends_on:
+      - "postgres"
+    links:
+      - postgres
 
   api:
     build: .
     restart: always
-    command: npm run start:api
+    command: yarn start:api
     ports:
       - "8080:9090"
       - "8081:3000"

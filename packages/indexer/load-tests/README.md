@@ -1,15 +1,15 @@
-## Indexer Load-Tests 
+## Indexer Load-Tests
 
-Summary: 
-- MVP built with flood.io element -- typescript library 
-  
+Summary:
 
-Installation: 
-- `yarn install` in the package folder 
-- Install the element CLI: `npm install -g element-cli` 
+- MVP built with flood.io element -- typescript library
 
+Installation:
 
-Usage: 
+- `yarn` in the package folder to install dependencies
+- Install the element CLI: `npm install -g element-cli`
+
+Usage:
 
 ```bash
 element run transaction-history.ts --mu

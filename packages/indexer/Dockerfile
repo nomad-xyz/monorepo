@@ -7,11 +7,11 @@ ENV GIT_COMMIT=$GIT_COMMIT
 WORKDIR /app
 
 COPY package.json ./package.json
-RUN yarn install
+RUN yarn
 
 ADD prisma /app/prisma
-RUN yarn build
+RUN yarn prisma:build
 
 ADD src /app/
 
-CMD [ "yarn", "start" ]
+CMD [ "yarn", "start:all" ]
