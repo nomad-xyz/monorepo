@@ -129,7 +129,11 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
       // output the updated config from the artifacts object
       artifacts.storeNewConfig();
     } catch (error) {
-      this.error(`Forge execution encountered an error:${error}`);
+      this.error("Forge execution encountered an error");
+      this.error(
+        "If the error is the following: 'monorepo/cache: No such file or directory (os error 2)', simply run the command again"
+      );
+      this.error(`${error}`);
     }
   }
 
