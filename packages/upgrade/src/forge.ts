@@ -35,7 +35,7 @@ export default class Forge {
     await asyncExec("rm -rf solscripts/out || true");
     await asyncExec("FOUNDRY_PROFILE=upgrade forge clean");
     // Execute forge script
-    const { stdout, stderr } = asyncExec(this.command);
+    const { stdout, stderr } = await asyncExec(this.command);
     return { stdout, stderr };
   }
 
