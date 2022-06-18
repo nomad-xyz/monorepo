@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as config from "@nomad-xyz/configuration";
-import { CallBatch } from "@nomad-xyz/sdk-govern";
+import { CallBatch, CallBatchContents } from "@nomad-xyz/sdk-govern";
 
 export default class Artifacts {
   config: config.NomadConfig;
@@ -35,19 +35,12 @@ export default class Artifacts {
   }
 
   public storeNewConfig() {
-    fs.writeFile(
+    fs.writeFileSync(
       `${this.artifactsDir}/new-config.json`,
-      JSON.stringify(this.config),
-      function (err) {
-        if (err) {
-          return console.log(
-            `Failed to write upgrade artifact with Error: ${err}`
-          );
-        }
-      }
+      JSON.stringify(this.config)
     );
     console.log(
-      `Updated configuration file has been stored at ${this.artifactsDir}/new-config.json}`
+      `Updated configuration file has been stored at ${this.artifactsDir}/new-config.json`
     );
   }
 
@@ -80,13 +73,13 @@ export default class Artifacts {
             continue;
           }
           this.config.core[domainName].replicas[network].implementation =
-            address.slice(2);
+            address;
         }
       }
     }
   }
 
-  public static storeCallBatches(dir: string, batch: CallBatch) {
+  public static storeCallBatches(dir: string, batch: CallBatchContents) {
     fs.writeFileSync(
       `${dir}/governanceTransactions.json`,
       JSON.stringify(batch, null, 2)

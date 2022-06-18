@@ -1,18 +1,23 @@
 import { CliUx } from "@oclif/core";
-import {NomadContext} from "@nomad-xyz/sdk";
-import {Call, CallBatch} from "@nomad-xyz/sdk-govern";
-import * as contracts from '@nomad-xyz/contracts-core';
+import { NomadContext } from "@nomad-xyz/sdk";
+import { Call, CallBatch } from "@nomad-xyz/sdk-govern";
+import * as contracts from "@nomad-xyz/contracts-core";
 import * as configuration from "@nomad-xyz/configuration";
 import Command from "../../Base";
 import Artifacts from "../../Artifacts";
 
 export default class PrintGovActions extends Command {
-  static description = "Fork test Upgrading the Nomad Protocol on any number of domains";
+  static description =
+    "Fork test Upgrading the Nomad Protocol on any number of domains";
   static usage = "printGovActions -c <path_to_config>";
 
   async run() {
     CliUx.ux.action.start(`Printing Governance Actions`);
-    await PrintGovActions.print(this.nomadConfig, this.workingDir);
+    try {
+      await PrintGovActions.print(this.nomadConfig, this.workingDir);
+    } catch (error) {
+      this.error(error);
+    }
     CliUx.ux.action.stop("Governance Actions printed!");
   }
 
@@ -29,30 +34,31 @@ export default class PrintGovActions extends Command {
       const bridge = config.bridge[domainName];
 
       // instantiate upgrade beacon controller contract
-      const upgradeBeaconController = contracts.UpgradeBeaconController__factory.connect(
+      const upgradeBeaconController =
+        contracts.UpgradeBeaconController__factory.connect(
           core.upgradeBeaconController,
-          context.getConnection(domainName),
-      );
+          context.getConnection(domainName)
+        );
 
       // load an array of contracts to upgrade
       const upgradableContracts: configuration.Proxy[] = [
         core.home,
-        core.replicas[0],
+        core.replicas[Object.keys(core.replicas)[0]],
         core.governanceRouter,
         bridge.tokenRegistry,
         bridge.bridgeRouter,
-        bridge.bridgeToken
+        bridge.bridgeToken,
       ];
 
       // for each of the contracts to upgrade on this domain,
       for (const proxySetup of upgradableContracts) {
         // get the beacon and new implementation
-        const {beacon, implementation} = proxySetup;
+        const { beacon, implementation } = proxySetup;
         // TODO: make idempotent; check the current beacon implementation on-chain; queue upgrade tx iff it's different
         // construct the upgrade call
         const call = await upgradeBeaconController.populateTransaction.upgrade(
-            beacon,
-            implementation,
+          beacon,
+          implementation
         );
         // push the upgrade call to the batch
         batch.push(protocolConfig.domain, call as Call);
@@ -61,8 +67,22 @@ export default class PrintGovActions extends Command {
 
     // build & write governance batch
     await batch.build();
-
+    const jsonBatch = batch.toJSON();
+    console.log();
+    console.log("Callbatches for execution and Governance Actions");
+    console.log("================================================");
+    console.log();
+    console.log("Local Batches");
+    console.log();
+    console.log(jsonBatch.local);
+    console.log();
+    console.log("Remote Batches");
+    console.log();
+    console.log(jsonBatch.remote);
+    console.log();
+    console.log("Execute Governance Actions built calldata");
+    console.log(jsonBatch.built);
     // store the call batches
-    Artifacts.storeCallBatches(workingDir, batch);
+    Artifacts.storeCallBatches(workingDir, jsonBatch);
   }
 }

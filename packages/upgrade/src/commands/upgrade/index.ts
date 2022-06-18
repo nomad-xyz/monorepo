@@ -105,36 +105,39 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
       true
     );
 
+    let output = {
+      stdout: "",
+      stderr: "",
+    };
     try {
       // run the forge script
-      const { stdout, stderr } = await forge.executeCommand();
-      if (stderr) {
-        this.warn(`${stderr}`);
+      output = await forge.executeCommand();
+      if (output.stderr) {
+        this.warn(`${output.stderr}`);
       }
-      if (stdout) {
-        this.log(`${stdout}`);
+      if (output.stdout) {
+        this.log(`${output.stdout}`);
       }
-
-      // construct an artifacts object with raw forge output
-      const artifacts = new Artifacts(
-        `${stdout}`,
-        domainName,
-        this.nomadConfig,
-        this.workingDir
-      );
-      // store the raw forge output
-      artifacts.storeOutput("upgrade");
-      // update the config in-place within the artifacts
-      artifacts.updateImplementations();
-      // output the updated config from the artifacts object
-      artifacts.storeNewConfig();
     } catch (error) {
-      this.error("Forge execution encountered an error");
-      this.error(
+      this.warn("Forge execution encountered an error");
+      this.warn(
         "If the error is the following: 'monorepo/cache: No such file or directory (os error 2)', simply run the command again"
       );
       this.error(`${error}`);
     }
+    // construct an artifacts object with raw forge output
+    const artifacts = new Artifacts(
+      `${output.stdout}`,
+      domainName,
+      this.nomadConfig,
+      this.workingDir
+    );
+    // store the raw forge output
+    artifacts.storeOutput("upgrade");
+    // update the config in-place within the artifacts
+    artifacts.updateImplementations();
+    // output the updated config from the artifacts object
+    artifacts.storeNewConfig();
   }
 
   private setDomains() {
