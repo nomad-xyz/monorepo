@@ -53,7 +53,7 @@ export default class Artifacts {
 
   public updateImplementations() {
     // get transactions output in forge script artifacts
-    const path = `${this.artifactsDir}/${this.domainName}/broadcast/Upgrade.sol/31337/upgrade-latest.json`;
+    const path = `${this.artifactsDir}/${this.domainName}/broadcast/Upgrade.sol/31337/deploy-latest.json`;
     const forgeArtifacts = JSON.parse(fs.readFileSync(path).toString());
     const transactions = forgeArtifacts.transactions;
     const domainName = this.domainName;
@@ -61,7 +61,8 @@ export default class Artifacts {
       // Contract names in Forge artifacts are in the form of: GovernanceRouter
       // Contract names in the Nomad config are in the form of: governanceRouter
       // Thus, we force the first letter to be lower case
-      const contractName: string = tx.contractName.charAt(0).toLowerCase() + tx.contractName.slice(1);
+      const contractName: string =
+        tx.contractName.charAt(0).toLowerCase() + tx.contractName.slice(1);
       const address: string = tx.contractAddress;
       if (contractName != "replica") {
         // The contract will either belong to 'core' or 'bridge' objects
@@ -78,7 +79,8 @@ export default class Artifacts {
           if (network == domainName) {
             continue;
           }
-          this.config.core[domainName].replicas[network].implementation = address.slice(2);
+          this.config.core[domainName].replicas[network].implementation =
+            address.slice(2);
         }
       }
     }
