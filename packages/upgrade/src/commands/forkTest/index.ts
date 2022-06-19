@@ -16,7 +16,7 @@ export default class ForkTest extends Command {
       description:
         "RPC URL endpoint to be used for the fork test. Must be RPC for --domain",
       default: "http://127.0.0.1:8545",
-      env: "RPC_URL",
+      env: "FORK_RPC_URL",
     }),
     domainName: Flags.string({
       char: "d",
