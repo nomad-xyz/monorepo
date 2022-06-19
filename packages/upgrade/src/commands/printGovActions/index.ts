@@ -3,8 +3,8 @@ import { NomadContext } from "@nomad-xyz/sdk";
 import { Call, CallBatch } from "@nomad-xyz/sdk-govern";
 import * as contracts from "@nomad-xyz/contracts-core";
 import * as configuration from "@nomad-xyz/configuration";
-import Command from "../../Base";
-import Artifacts from "../../Artifacts";
+import Command from "../../base";
+import Artifacts from "../../artifacts";
 
 export default class PrintGovActions extends Command {
   static description =
@@ -16,7 +16,7 @@ export default class PrintGovActions extends Command {
     try {
       await PrintGovActions.print(this.nomadConfig, this.workingDir);
     } catch (error) {
-      this.error(error);
+      this.error(`${error}`);
     }
     CliUx.ux.action.stop("Governance Actions printed!");
   }
@@ -37,7 +37,7 @@ export default class PrintGovActions extends Command {
       const upgradeBeaconController =
         contracts.UpgradeBeaconController__factory.connect(
           core.upgradeBeaconController,
-          context.getConnection(domainName)
+          context.getConnection(domainName)!
         );
 
       // load an array of contracts to upgrade

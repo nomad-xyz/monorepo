@@ -24,8 +24,8 @@ export default abstract class Nomgrade extends Command {
     }),
   };
 
-  nomadConfig: config.NomadConfig;
-  workingDir: string;
+  nomadConfig!: config.NomadConfig;
+  workingDir!: string;
 
   async init() {
     dotenv.config();

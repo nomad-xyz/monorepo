@@ -1,8 +1,7 @@
 import { Flags, CliUx } from "@oclif/core";
-import * as config from "@nomad-xyz/configuration";
-import Command from "../../Base";
-import Artifacts from "../../Artifacts";
-import Forge from "../../Forge";
+import Command from "../../base";
+import Artifacts from "../../artifacts";
+import Forge from "../../forge";
 import PrintGovActions from "../printGovActions";
 
 export default class Upgrade extends Command {
@@ -49,7 +48,7 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
 
   flags: any;
   rpcs: any;
-  domains: string[];
+  domains!: string[];
 
   async run(): Promise<void> {
     this.announce("Welcome to Nomgrade");
@@ -90,6 +89,9 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
     const domain: number =
       this.nomadConfig.protocol.networks[domainName].domain;
     const rpc = this.rpcs[domainName][0];
+
+    // set env variables that will be used by forge
+    this.loadEnv(domainName);
 
     // instantiate the forge script command
     const forge = new Forge(this.nomadConfig, domainName, this.workingDir);
@@ -172,7 +174,7 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
     console.log(
       "Use multi-anvil.sh to quickly spin up multiple anvil instances with incrementing port number"
     );
-    const rpcs = {};
+    const rpcs: any = {};
     for (const index in domains) {
       const port: number = 8545 + Number.parseInt(index);
       rpcs[domains[index]] = [`http://127.0.0.1:${port}`];
@@ -181,7 +183,7 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
   }
 
   private getRPCs(domains: Array<string>) {
-    const rpcs = {};
+    const rpcs: any = {};
     domains.map((domain) => {
       rpcs[domain] = this.nomadConfig.rpcs[domain];
     });

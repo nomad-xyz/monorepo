@@ -1,7 +1,7 @@
 import { Flags, CliUx } from "@oclif/core";
-import Forge from "../../Forge";
-import Command from "../../Base";
-import Artifacts from "../../Artifacts";
+import Forge from "../../forge";
+import Command from "../../base";
+import Artifacts from "../../artifacts";
 import { CoreContracts, BridgeContracts } from "@nomad-xyz/configuration";
 
 export default class ForkTest extends Command {

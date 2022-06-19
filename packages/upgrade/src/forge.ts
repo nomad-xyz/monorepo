@@ -19,6 +19,7 @@ export default class Forge {
     this.domainName = domainName;
     this.workingDir = workingDir;
     this.etherscanVerify = "";
+    this.command = "";
   }
 
   public async executeCommand() {

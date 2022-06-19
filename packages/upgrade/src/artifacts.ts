@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as config from "@nomad-xyz/configuration";
-import { CallBatch, CallBatchContents } from "@nomad-xyz/sdk-govern";
+import { CallBatchContents } from "@nomad-xyz/sdk-govern";
 
 export default class Artifacts {
   config: config.NomadConfig;
@@ -61,9 +61,17 @@ export default class Artifacts {
         // The contract will either belong to 'core' or 'bridge' objects
         // of the config file
         try {
-          this.config.core[domainName][contractName].implementation = address;
+          const proxy: config.Proxy = this.config.core[domainName][
+            contractName as keyof config.EvmCoreContracts
+          ] as config.Proxy;
+          proxy.implementation = address;
+          this.config.core[domainName][
+            contractName as keyof config.EvmCoreContracts
+          ] = proxy;
         } catch {
-          this.config.bridge[domainName][contractName].implementation = address;
+          // this.config.bridge[domainName][
+          //   contractName as keyof config.EvmBridgeContracts
+          // ].implementation = address;
         }
       } else {
         for (const network of this.config.networks) {
