@@ -20,7 +20,7 @@ export default class Artifacts {
     this.artifactsDir = artifactsDir;
   }
 
-  public storeOutput(commandName: string) {
+  public storeOutput(commandName: string): void {
     console.log(this.rawForgeOutput);
     fs.writeFile(
       `${this.artifactsDir}/${this.domainName}/${commandName}-output.txt`,
@@ -34,7 +34,7 @@ export default class Artifacts {
     );
   }
 
-  public storeNewConfig() {
+  public storeNewConfig(): void {
     fs.writeFileSync(
       `${this.artifactsDir}/new-config.json`,
       JSON.stringify(this.config)
@@ -44,7 +44,7 @@ export default class Artifacts {
     );
   }
 
-  public updateImplementations() {
+  public updateImplementations(): void {
     // get transactions output in forge script artifacts
     const path = `${this.artifactsDir}/${this.domainName}/broadcast/Upgrade.sol/31337/deploy-latest.json`;
     const forgeArtifacts = JSON.parse(fs.readFileSync(path).toString());
@@ -87,7 +87,7 @@ export default class Artifacts {
     }
   }
 
-  public static storeCallBatches(dir: string, batch: CallBatchContents) {
+  public static storeCallBatches(dir: string, batch: CallBatchContents): void {
     fs.writeFileSync(
       `${dir}/governanceTransactions.json`,
       JSON.stringify(batch, null, 2)

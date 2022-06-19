@@ -3,6 +3,7 @@ import { Command, Flags } from "@oclif/core";
 import * as dotenv from "dotenv";
 import * as fs from "node:fs";
 import * as config from "@nomad-xyz/configuration";
+
 export default abstract class Nomgrade extends Command {
   static flags = {
     loglevel: Flags.string({ options: ["error", "warn", "info", "debug"] }),
@@ -35,19 +36,15 @@ export default abstract class Nomgrade extends Command {
     this.workingDir = flags.workingDir;
   }
 
-  async catch(err: any) {
+  async catch(err: Error) {
     // add any custom logic to handle errors from the command
     // or simply return the parent class error handling
     return super.catch(err);
   }
 
   getConfigFromPath(path: string) {
-    try {
-      // try loading as a local filepath
-      return JSON.parse(fs.readFileSync(path).toString());
-    } catch (error) {
-      throw error;
-    }
+    // try loading as a local filepath
+    return JSON.parse(fs.readFileSync(path).toString());
   }
 
   announce(what: string): void {

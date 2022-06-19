@@ -1,7 +1,8 @@
 import * as fs from "node:fs";
 import * as config from "@nomad-xyz/configuration";
-const util = require("util");
-const asyncExec = util.promisify(require("child_process").exec);
+import * as util from "util";
+import * as cp from "child_process";
+const asyncExec = util.promisify(cp.exec);
 
 export default class Forge {
   nomadConfig: config.NomadConfig;
