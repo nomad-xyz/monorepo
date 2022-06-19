@@ -74,7 +74,11 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
     );
 
     // print governance actions
-    await PrintGovActions.print(this.nomadConfig, this.workingDir);
+    await PrintGovActions.print(
+      this.domains,
+      this.nomadConfig,
+      this.workingDir
+    );
 
     // finish
     CliUx.ux.action.stop(
@@ -91,6 +95,11 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
     const domain: number =
       this.nomadConfig.protocol.networks[domainName].domain;
     const rpc = this.rpcs[domainName][0];
+
+    // If there is a test, anvil's chainId = 31337, else use the chain's proper ID
+    const chainId: number = this.flags.test
+      ? 31337
+      : this.nomadConfig.protocol.networks[domainName].specs.chainId;
 
     // set env variables that will be used by forge
     this.loadEnv(domainName);
@@ -127,7 +136,7 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
     } catch (error) {
       this.warn("Forge execution encountered an error");
       this.warn(
-        "If the error is the following: 'monorepo/cache: No such file or directory (os error 2)', simply run the command again"
+        "If the error is the following: 'monorepo/cache: No such file or directory (os error 2)', run the command again"
       );
       this.error(`${error}`);
     }
@@ -136,7 +145,8 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
       `${output.stdout}`,
       domainName,
       this.nomadConfig,
-      this.workingDir
+      this.workingDir,
+      chainId
     );
     // store the raw forge output
     artifacts.storeOutput("upgrade");

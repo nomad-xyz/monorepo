@@ -80,12 +80,16 @@ export default class ForkTest extends Command {
       this.warn(`${stderr}`);
     }
 
+    // If there is a test, anvil's chainId = 31337, else use the chain's proper ID
+    const chainId: number =
+      this.nomadConfig.protocol.networks[domainName].specs.chainId;
     // print the artifacts from forge command
     const artifacts = new Artifacts(
       `${stdout}`,
       domainName,
       this.nomadConfig,
-      this.workingDir
+      this.workingDir,
+      chainId
     );
     artifacts.storeOutput("upgrade-forkTest");
 

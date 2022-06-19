@@ -8,16 +8,21 @@ export default class Artifacts {
   rawForgeOutput: string;
   artifactsDir: string;
 
+  chainId: number;
+
   constructor(
     rawForgeOutput: string,
     domainName: string,
     config: config.NomadConfig,
-    artifactsDir: string
+    artifactsDir: string,
+    chainId: number
   ) {
     this.rawForgeOutput = rawForgeOutput;
     this.domainName = domainName;
     this.config = config;
     this.artifactsDir = artifactsDir;
+    this.chainId = chainId;
+    config.protocol.networks[domainName].specs.chainId;
   }
 
   public storeOutput(commandName: string): void {
@@ -46,7 +51,7 @@ export default class Artifacts {
 
   public updateImplementations(): void {
     // get transactions output in forge script artifacts
-    const path = `${this.artifactsDir}/${this.domainName}/broadcast/Upgrade.sol/31337/deploy-latest.json`;
+    const path = `${this.artifactsDir}/${this.domainName}/broadcast/Upgrade.sol/${this.chainId}/deploy-latest.json`;
     const forgeArtifacts = JSON.parse(fs.readFileSync(path).toString());
     const transactions = forgeArtifacts.transactions;
     const domainName = this.domainName;
@@ -54,7 +59,8 @@ export default class Artifacts {
       // Contract names in Forge artifacts are in the form of: GovernanceRouter
       // Contract names in the Nomad config are in the form of: governanceRouter
       // Thus, we force the first letter to be lower case
-      const contractName: string = tx.contractName.charAt(0).toLowerCase() + tx.contractName.slice(1);
+      const contractName: string =
+        tx.contractName.charAt(0).toLowerCase() + tx.contractName.slice(1);
       const address: string = tx.contractAddress;
       if (contractName == "home") {
         this.config.core[domainName].home.implementation = address;
@@ -68,8 +74,9 @@ export default class Artifacts {
         this.config.bridge[domainName].bridgeToken.implementation = address;
       } else if (contractName == "replica") {
         const remotes = Object.keys(this.config.core[domainName].replicas);
-        remotes.map(remote => {
-          this.config.core[domainName].replicas[remote].implementation = address;
+        remotes.map((remote) => {
+          this.config.core[domainName].replicas[remote].implementation =
+            address;
         });
       }
     }
