@@ -54,35 +54,23 @@ export default class Artifacts {
       // Contract names in Forge artifacts are in the form of: GovernanceRouter
       // Contract names in the Nomad config are in the form of: governanceRouter
       // Thus, we force the first letter to be lower case
-      const contractName: string =
-        tx.contractName.charAt(0).toLowerCase() + tx.contractName.slice(1);
+      const contractName: string = tx.contractName.charAt(0).toLowerCase() + tx.contractName.slice(1);
       const address: string = tx.contractAddress;
-      if (contractName != "replica") {
-        // The contract will either belong to 'core' or 'bridge' objects
-        // of the config file
-        try {
-          const proxy: config.Proxy = this.config.core[domainName][
-            contractName as keyof config.EvmCoreContracts
-          ] as config.Proxy;
-          proxy.implementation = address;
-          this.config.core[domainName][
-            contractName as keyof config.EvmCoreContracts
-          ] = proxy;
-        } catch {
-          // this.config.bridge[domainName][
-          //   contractName as keyof config.EvmBridgeContracts
-          // ].implementation = address;
-        }
-      } else {
-        for (const network of this.config.networks) {
-          // The domain does not have deployed replicas of itself
-          // They live only on different domains
-          if (network == domainName) {
-            continue;
-          }
-          this.config.core[domainName].replicas[network].implementation =
-            address;
-        }
+      if (contractName == "home") {
+        this.config.core[domainName].home.implementation = address;
+      } else if (contractName == "governanceRouter") {
+        this.config.core[domainName].governanceRouter.implementation = address;
+      } else if (contractName == "bridgeRouter") {
+        this.config.bridge[domainName].bridgeRouter.implementation = address;
+      } else if (contractName == "tokenRegistry") {
+        this.config.bridge[domainName].tokenRegistry.implementation = address;
+      } else if (contractName == "bridgeToken") {
+        this.config.bridge[domainName].bridgeToken.implementation = address;
+      } else if (contractName == "replica") {
+        const remotes = Object.keys(this.config.core[domainName].replicas);
+        remotes.map(remote => {
+          this.config.core[domainName].replicas[remote].implementation = address;
+        });
       }
     }
   }
