@@ -68,10 +68,12 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
       "The forge output is being buffered and will be printed as the upgrade pipeline finish on each network"
     );
 
+    const etherscanApiKeys = this.getEtherscanApiKeys();
+
     // run the upgrade scripts in parallel
     await Promise.all(
       this.domains.map((domain) =>
-        this.upgradeDomain(domain, this.flags.resume)
+        this.upgradeDomain(domain, this.flags.resume, etherscanApiKeys[domain])
       )
     );
 
@@ -84,7 +86,11 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
     );
   }
 
-  async upgradeDomain(domainName: string, resume: boolean): Promise<void> {
+  async upgradeDomain(
+    domainName: string,
+    resume: boolean,
+    apiKey: string
+  ): Promise<void> {
     // get arguments for the forge script
     const domain: number =
       this.nomadConfig.protocol.networks[domainName].domain;
@@ -95,6 +101,8 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
 
     // instantiate the forge script command
     const forge = new Forge(this.nomadConfig, domainName, this.workingDir);
+    forge.setEtherscanKey(apiKey);
+
     forge.scriptCommand(
       domainName,
       "deploy(uint32, string)",
@@ -188,6 +196,14 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
       rpcs[domain] = this.nomadConfig.rpcs[domain];
     });
     return rpcs;
+  }
+
+  private getEtherscanApiKeys() {
+    const etherscanKeys = {};
+    this.domains.map((domain) => {
+      const key = "NOMAD_ETHERSCAN_KEY_" + domain.toUpperCase();
+      etherscanKeys[domain] = process.env[key];
+    });
   }
 
   private loadEnv(domainName: string) {
