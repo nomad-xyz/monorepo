@@ -8,7 +8,7 @@ import Artifacts from "../../artifacts";
 
 export default class PrintGovActions extends Command {
   static description =
-    "Fork test Upgrading the Nomad Protocol on any number of domains";
+    "Print governance actions to upgrade the Nomad protocol according to latest config";
   static usage = "printGovActions -c <path_to_config>";
 
   async run() {

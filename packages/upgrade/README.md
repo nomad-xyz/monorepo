@@ -80,8 +80,6 @@ bin/run printGovActions -d ethereum
 - All the files are placed under their respective domain (e.g `data/ethereum`)
 - Raw output is stored for every command that is executed
 - Artifacts are placed in `artifacts.json`
-  - `callBatch`: Like `executeCallBatchCall`, but without the function signature
-  - `executeGovernanceActions`: Calldata to `executeGovernanceActions()` on the Governor Chain. This must be executed by the Nomad Governance and will send the Governance Messages to all domains, that then will need to be executed via `executeCallBatch()`. Abi encoded function signature and arguments
 
 ### Upgrade Protocol
 
@@ -90,53 +88,77 @@ bin/run upgrade --help
 Upgrade the Nomad Protocol on any number of domains
 
 USAGE
-  $ nomgrade upgrade -c <path_to_config> -k <private_key> --FLAGS
+  $ upgrade upgrade -c <path_to_config> -a --FLAGS
 
 FLAGS
-  -a, --all                   Run on all the domains that exist in the config file
-  -c, --config=<value>        (required) Path to the config file that will be usedof the Nomad Protocol
-  -d, --domains=<value>...    Run the command on specific domain(s). To pass multiple domains, simply pass them like this: -d ethereum evmos avalanche.
-                              Due to a parsing bug, this flag must be passed at the end of the command. e.g 'nomgrade upgrade -d ethereum'
-  -e, --etherscanKey=<value>  Etherscan API key for verifying contracts that are being deployed
+  -a, --all                 Run on all the domains that exist in the config file
+  -c, --config=<value>      (required) Path to the config file that will be used of the Nomad Protocol
+  -d, --domains=<value>...  Run the command on specific domain(s). To pass multiple domains, simply pass them like this: -d ethereum evmos avalanche.
+                            Due to a parsing bug, this flag must be passed at the end of the command. e.g 'nomgrade upgrade -d ethereum'
   -r, --resume
-  -t, --test                  Run the upgrade against local RPC nodes. It expects RPC endpoints with a port number that start ats '8545' and increments (e.g 8546, 8647, etc.)
-  -w, --workingDir=<value>    [default: data] Directory for outputs and artifacts
-  --help                      Show help for the command. Use --help, not -h
-  --loglevel=<option>         <options: error|warn|info|debug>
-  --version                   Show CLI version.
+  -t, --test                Run the upgrade against local RPC nodes. It expects RPC endpoints with a port number that start ats '8545' and increments (e.g 8546, 8647, etc.)
+  -w, --workingDir=<value>  [default: data] Directory for outputs and artifacts
+  --help                    Show help for the command. Use --help, not -h
+  --loglevel=<option>       <options: error|warn|info|debug>
+  --version                 Show CLI version.
 
 DESCRIPTION
   Upgrade the Nomad Protocol on any number of domains
 
 ALIASES
-  $ nomgrade upgrade
+  $ upgrade upgrade
 
 EXAMPLES
-  $ upgrade -c <path_to_config> -a -r
+  $ upgrade -c <path_to_config> -a
 
   $ upgrade -c <path_to_config> -d ethereum evmos
 
+  $ upgrade -c <path_to_config> -a -r
 
+  $ upgrade -c <path_to_config> -a -t
+```
+
+### Fork Test Upgrade
+
+```bash
+bin/run forkTest --help
+Fork test Upgrading the Nomad Protocol on any number of domains
+
+USAGE
+  $ upgrade forkTest -c <path_to_config> -f <fork_test_rpc> -d <domain>
+
+FLAGS
+  -c, --config=<value>      (required) Path to the config file that will be used of the Nomad Protocol
+  -d, --domainName=<value>  (required) Specify the domain to run the fork test. Must match RPC at --forkUrl
+  -f, --forkUrl=<value>     (required) [default: http://127.0.0.1:8545] RPC URL endpoint to be used for the fork test. Must be RPC for --domain
+  -w, --workingDir=<value>  [default: data] Directory for outputs and artifacts
+  --help                    Show help for the command. Use --help, not -h
+  --loglevel=<option>       <options: error|warn|info|debug>
+  --version                 Show CLI version.
+
+DESCRIPTION
+  Fork test Upgrading the Nomad Protocol on any number of domains
 ```
 
 ### Print Governance Calls
 
 ```bash
 bin/run printGovActions --help
+Print governance actions to upgrade the Nomad protocol according to latest config
+
 USAGE
-  $ nomgrade printGovActions -c <path_to_config> -d ethereum
+  $ upgrade printGovActions -c <path_to_new_config>
 
 FLAGS
-  -a, --all                 Run on all the domains that exist in the config file
-  -c, --config=<value>      (required) Path to the config file that will be usedof the Nomad Protocol
-  -d, --domains=<value>...  Run the command on specific domain(s). To pass multiple domains, simply pass them like this: -d ethereum evmos avalanche.
-                            Due to a parsing bug, this flag must be passed at the end of the command. e.g 'nomgrade upgrade -d ethereum'
+  -c, --config=<value>      (required) Path to the config file that will be used of the Nomad Protocol
   -w, --workingDir=<value>  [default: data] Directory for outputs and artifacts
   --help                    Show help for the command. Use --help, not -h
   --loglevel=<option>       <options: error|warn|info|debug>
   --version                 Show CLI version.
 
-```
+DESCRIPTION
+  Print governance actions to upgrade the Nomad protocol according to latest config
+  ```
 
 ## License
 

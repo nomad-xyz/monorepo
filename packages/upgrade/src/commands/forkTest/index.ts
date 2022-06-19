@@ -21,7 +21,7 @@ export default class ForkTest extends Command {
     domainName: Flags.string({
       char: "d",
       required: true,
-      description: `Specify the domain to run the fork test. Must match RPC at --forkUrl'`,
+      description: `Specify the domain to run the fork test. Must match RPC at --forkUrl`,
     }),
   };
 

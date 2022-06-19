@@ -11,7 +11,7 @@ export default abstract class Nomgrade extends Command {
       required: true,
       char: "c",
       description:
-        "Path to the config file that will be usedof the Nomad Protocol",
+        "Path to the config file that will be used of the Nomad Protocol",
     }),
     help: Flags.help({
       description: "Show help for the command. Use --help, not -h",
