@@ -6,14 +6,14 @@
     "packages/contracts-core",
     "packages/contracts-router",
     "packages/deploy",
+    "packages/upgrade",
     "packages/indexer",
     "packages/local-environment",
     "packages/monitor",
     "packages/multi-provider",
     "packages/sdk",
     "packages/sdk-bridge",
-    "packages/sdk-govern",
-    "packages/upgrade"
+    "packages/sdk-govern"
   ],
   "scripts": {
     "compile": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment --exclude @nomad-xyz/monitor run compile",
@@ -37,7 +37,7 @@
     "sdk": "yarn workspace @nomad-xyz/sdk",
     "sdk-bridge": "yarn workspace @nomad-xyz/sdk-bridge",
     "sdk-govern": "yarn workspace @nomad-xyz/sdk-govern",
-    "upgrade": "yarn workspace @nomad-xyz/nomgrade"
+    "upgrade": "yarn workspace @nomad-xyz/upgrade"
   },
   "packageManager": "yarn@3.2.0"
 }

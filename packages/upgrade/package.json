@@ -1,6 +1,6 @@
 {
-  "name": "@nomad-xyz/nomgrade",
-  "version": "0.0.1",
+  "name": "@nomad-xyz/upgrade",
+  "version": "0.0.1-rc.0",
   "description": "Nomad Protocol Upgrade",
   "author": "Illusory Systems Inc.",
   "bin": "./bin/run",
@@ -15,14 +15,18 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
+    "@nomad-xyz/configuration": "^0.1.0-rc.23",
+    "@nomad-xyz/contracts-bridge": "workspace:^",
+    "@nomad-xyz/contracts-core": "workspace:^",
+    "@nomad-xyz/contracts-router": "workspace:^",
+    "@nomad-xyz/multi-provider": "workspace:^",
+    "@nomad-xyz/sdk": "workspace:^",
+    "@nomad-xyz/sdk-govern": "workspace:^",
     "@oclif/core": "^1.9.2",
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-plugins": "^2.0.1"
   },
   "devDependencies": {
-    "@nomad-xyz/contracts-bridge": "workspace:^",
-    "@nomad-xyz/contracts-core": "workspace:^",
-    "@nomad-xyz/contracts-router": "workspace:^",
     "@oclif/test": "^2",
     "@types/chai": "^4",
     "@types/mocha": "^9.0.0",
@@ -40,8 +44,8 @@
     "typescript": "^4.4.3"
   },
   "oclif": {
-    "bin": "nomgrade",
-    "dirname": "nomgrade",
+    "bin": "upgrade",
+    "dirname": "upgrade",
     "commands": "./dist/commands",
     "plugins": [
       "@oclif/plugin-help",
