@@ -11,7 +11,6 @@ export default class Upgrade extends Command {
   static examples = [
     "$ upgrade -c <path_to_config> -a",
     "$ upgrade -c <path_to_config> -d ethereum evmos",
-    "$ upgrade -c <path_to_config> -k <private_key> -a",
     "$ upgrade -c <path_to_config> -a -r",
     "$ upgrade -c <path_to_config> -a -t",
   ];
@@ -23,13 +22,6 @@ export default class Upgrade extends Command {
       description: `
 Run the upgrade against local RPC nodes. It expects RPC endpoints with a port number that start ats '8545' and increments (e.g 8546, 8647, etc.)
 `,
-    }),
-    privateKey: Flags.string({
-      char: "k",
-      description:
-        "Private key to be used for issuing the upgrade transactions",
-      required: true,
-      env: "PRIVATE_KEY",
     }),
     domains: Flags.string({
       char: "d",
@@ -48,6 +40,7 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
 
   flags: any;
   rpcs: any;
+  privateKey: string;
   domains!: string[];
 
   async run(): Promise<void> {
@@ -62,6 +55,9 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
 
     // Instantiate the RPC endpoints for each Upgrade domain
     this.setRPCs();
+
+    // Get private key from .env file
+    this.setPrivateKey();
 
     CliUx.ux.action.start("Upgrading the Nomad Protocol");
     this.warn(
@@ -110,7 +106,7 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
       "../../solscripts/Upgrade.sol",
       "Upgrade",
       rpc,
-      this.flags.privateKey,
+      this.privateKey,
       resume,
       true
     );
@@ -206,6 +202,14 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
       etherscanKeys[domain] = process.env[key];
     });
     return etherscanKeys;
+  }
+
+  private setPrivateKey() {
+    const privateKey = process.env.DEPLOYER_KEY;
+    if (!privateKey || privateKey == "") {
+      throw new Error("Set Deployer key in .env file DEPLOYER_KEY");
+    }
+    this.privateKey = privateKey;
   }
 
   private loadEnv(domainName: string) {

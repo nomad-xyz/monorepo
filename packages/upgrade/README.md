@@ -98,7 +98,6 @@ FLAGS
   -d, --domains=<value>...    Run the command on specific domain(s). To pass multiple domains, simply pass them like this: -d ethereum evmos avalanche.
                               Due to a parsing bug, this flag must be passed at the end of the command. e.g 'nomgrade upgrade -d ethereum'
   -e, --etherscanKey=<value>  Etherscan API key for verifying contracts that are being deployed
-  -k, --privateKey=<value>    (required) Private key to be used for issuing the upgrade transactions
   -r, --resume
   -t, --test                  Run the upgrade against local RPC nodes. It expects RPC endpoints with a port number that start ats '8545' and increments (e.g 8546, 8647, etc.)
   -w, --workingDir=<value>    [default: data] Directory for outputs and artifacts
@@ -113,9 +112,9 @@ ALIASES
   $ nomgrade upgrade
 
 EXAMPLES
-  $ upgrade -c <path_to_config> -k <private_key> -a -r
+  $ upgrade -c <path_to_config> -a -r
 
-  $ upgrade -c <path_to_config> -k <private_key> -d ethereum evmos
+  $ upgrade -c <path_to_config> -d ethereum evmos
 
 
 ```
