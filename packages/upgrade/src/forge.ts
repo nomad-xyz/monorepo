@@ -64,7 +64,6 @@ export default class Forge {
     } else {
       resumeOrBroadcast = "";
     }
-
     if (rpcUrl != "") {
       rpcUrl = `--rpc-url ${rpcUrl}`;
     }
@@ -73,7 +72,10 @@ export default class Forge {
       privateKey = `--private-key ${privateKey}`;
     }
 
-    if (this.etherscanVerify) {
+    if (this.etherscanVerify == undefined || rpcUrl.includes("127.0.0.1")) {
+      this.etherscanVerify = "";
+    }
+    if (this.etherscanVerify != "") {
       this.etherscanVerify = `--verify --etherscan-api-key ${this.etherscanVerify}`;
     }
 
