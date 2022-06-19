@@ -6,17 +6,17 @@
 
 ## Introduction
 
-The typescript wrapper will be refactored with Oclif to improve ergonomics, and add instructions to the user.
-
 The upgrade pipeline is roughly divided into two parts:
 
 - ChainOps: Responsible for interacting with the chain, deploying contracts and generating the appropriate artifacts. It's `Upgrade.sol` and it's written in Solidity. It's meant to be executed via `forge script`
 - I/O operations: Responsible for reading the protocol's global config and supplying the ChainOps part of the pipeline with the required data (e.g contract addresses). It's also responsible for receiving the output from the ChainOps part and storing part of it as artifacts. It's written in Typescript and is, in essence, a CLI wrapper around `forge script`
 
-So, when inspecting the upgrade pipeline, the seperation of concerns is clear:
+So, when inspecting the upgrade pipeline, the separation of concerns is clear:
 
-- The entire upgrade process and any on-chain actions are execute via `forge script` and the logic is written in Solidity
+- The entire upgrade process and any on-chain actions are executed via `forge script` and the logic is written in Solidity
 - The typescript wrapper is only responsible for supplying the correct data to the `forge script` and storing artifacts for posterity
+
+The typescript wrapper will later be refactored with Oclif to improve ergonomics, and add instructions to the user.
 
 ### Next Steps
 
@@ -40,23 +40,20 @@ $ bin/run
 Nomad Protocol Upgrade
 
 VERSION
-  nomgrade/0.0.1 darwin-arm64 node-v18.2.0
+  @nomad-xyz/upgrade/0.0.1-rc.0 darwin-x64 node-v16.13.1
 
 USAGE
-  $ nomgrade [COMMAND]
+  $ upgrade [COMMAND]
 
 TOPICS
   plugins  List installed plugins.
 
 COMMANDS
-  Upgrade           Upgrade the Nomad Protocol on any number of domains
-  executeCallBatch  Ececute Governance messages that have arrived to a domain via 'executeCallBatch()'
-  forkTest          Fork test Upgrading the Nomad Protocol on any number of domains
-  help              Display help for nomgrade.
-  plugins           List installed plugins.
-  printGovActions
-  upgrade           Upgrade the Nomad Protocol on any number of domains
-
+  forkTest         Fork test Upgrading the Nomad Protocol on any number of domains
+  help             Display help for upgrade.
+  plugins          List installed plugins.
+  printGovActions  Print governance actions to upgrade the Nomad protocol according to latest config
+  upgrade          Upgrade the Nomad Protocol on any number of domains
 ```
 
 **Note:**
@@ -64,13 +61,13 @@ COMMANDS
 Due to `oclif` bad flag parsing, when using the flag `-d`, all space-seperated strings after the flag will be parsed as flag arguments.
 
 ```bash
-bin/run upgrade -d ethereum upgrade ==> domains = ['ethereum', 'upgrade']
+bin/run upgrade -d ethereum -c config.json ==> domains = ['ethereum', '-c', 'config.json']
 ```
 
 For that reason, we need to use the `-d` flag at the end of the command:
 
 ```bash
-bin/run printGovActions -d ethereum
+bin/run upgrade -c config.json -d ethereum
 ```
 
 ### Output & Artifacts
