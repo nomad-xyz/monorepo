@@ -1,5 +1,5 @@
 {
-  "name": "nomgrade",
+  "name": "@nomad-xyz/nomgrade",
   "version": "0.0.1",
   "description": "Nomad Protocol Upgrade",
   "author": "Illusory Systems Inc.",
