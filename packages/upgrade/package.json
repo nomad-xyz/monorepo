@@ -20,6 +20,9 @@
     "@oclif/plugin-plugins": "^2.0.1"
   },
   "devDependencies": {
+    "@nomad-xyz/contracts-bridge": "workspace:^",
+    "@nomad-xyz/contracts-core": "workspace:^",
+    "@nomad-xyz/contracts-router": "workspace:^",
     "@oclif/test": "^2",
     "@types/chai": "^4",
     "@types/mocha": "^9.0.0",

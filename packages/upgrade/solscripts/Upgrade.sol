@@ -5,20 +5,19 @@ pragma abicoder v2;
 /*//////////////////////////////////////////////////////////////
                                  IMPORTS
 //////////////////////////////////////////////////////////////*/
-// Contracts to be upgraded
-import { Home } from "../../contracts-core/contracts/Home.sol";
-import { Replica } from "../../contracts-core/contracts/Replica.sol";
-import { GovernanceRouter } from "../../contracts-core/contracts/governance/GovernanceRouter.sol";
-import { BridgeRouter } from "../../contracts-bridge/contracts/BridgeRouter.sol";
-import { BridgeToken } from "../../contracts-bridge/contracts/BridgeToken.sol";
-import { TokenRegistry } from "../../contracts-bridge/contracts/TokenRegistry.sol";
+// Core contracts
+import { Home } from "@nomad-xyz/contracts-core/contracts/Home.sol";
+import { Replica } from "@nomad-xyz/contracts-core/contracts/Replica.sol";
+import { GovernanceRouter } from "@nomad-xyz/contracts-core/contracts/governance/GovernanceRouter.sol";
+// Bridge contracts
+import { BridgeRouter } from "@nomad-xyz/contracts-bridge/contracts/BridgeRouter.sol";
+import { BridgeToken } from "@nomad-xyz/contracts-bridge/contracts/BridgeToken.sol";
+import { TokenRegistry } from "@nomad-xyz/contracts-bridge/contracts/TokenRegistry.sol";
+// Interfaces
+import { IUpdaterManager } from "@nomad-xyz/contracts-core/contracts/interfaces/IUpdaterManager.sol";
 // Utilities
-import { GovernanceMessage } from "../../contracts-core/contracts/governance/GovernanceMessage.sol";
 import { Test } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
-import { TypeCasts } from "../../contracts-core/contracts/libs/TypeCasts.sol";
-import { XAppConnectionManager } from "../../contracts-core/contracts/XAppConnectionManager.sol";
-import { IUpdaterManager } from "../../contracts-core/contracts/interfaces/IUpdaterManager.sol";
 
 contract Upgrade is Test {
   /*//////////////////////////////////////////////////////////////

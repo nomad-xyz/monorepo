@@ -5,25 +5,17 @@ pragma abicoder v2;
 /*//////////////////////////////////////////////////////////////
                                  IMPORTS
 //////////////////////////////////////////////////////////////*/
-
-// Contracts to be upgraded
-import { Home } from "../../../contracts-core/contracts/Home.sol";
-import { Replica } from "../../../contracts-core/contracts/Replica.sol";
-import { GovernanceRouter } from "../../../contracts-core/contracts/governance/GovernanceRouter.sol";
-import { BridgeRouter } from "../../../contracts-bridge/contracts/BridgeRouter.sol";
-import { BridgeToken } from "../../../contracts-bridge/contracts/BridgeToken.sol";
-import { TokenRegistry } from "../../../contracts-bridge/contracts/TokenRegistry.sol";
-import { UpgradeBeaconController } from "../../../contracts-core/contracts/upgrade/UpgradeBeaconController.sol";
+// Core contracts
+import { Replica } from "@nomad-xyz/contracts-core/contracts/Replica.sol";
+import { UpgradeBeaconController } from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeaconController.sol";
+import { Message } from "@nomad-xyz/contracts-core/contracts/libs/Message.sol";
 // Solscript to Deploy Implementations
 import { Upgrade } from "../Upgrade.sol";
 // Utilities
-import { GovernanceMessage } from "../../../contracts-core/contracts/governance/GovernanceMessage.sol";
+import { MerkleTest } from "@nomad-xyz/contracts-core/contracts/test/utils/MerkleTest.sol";
+import { GoodXappSimple } from "@nomad-xyz/contracts-core/contracts/test/utils/GoodXapps.sol";
 import { Test } from "forge-std/Test.sol";
 import { console2 } from "forge-std/console2.sol";
-import { TypeCasts } from "../../../contracts-core/contracts/libs/TypeCasts.sol";
-import { MerkleTest } from "../../../contracts-core/contracts/test/utils/MerkleTest.sol";
-import { Message } from "../../../contracts-core/contracts/libs/Message.sol";
-import { GoodXappSimple } from "../../../contracts-core/contracts/test/utils/GoodXapps.sol";
 
 contract LegacyFixture is Upgrade {
   // Proxy Addresses
