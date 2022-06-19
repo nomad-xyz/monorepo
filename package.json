@@ -6,14 +6,14 @@
     "packages/contracts-core",
     "packages/contracts-router",
     "packages/deploy",
-    "packages/upgrade",
+    "packages/indexer",
+    "packages/local-environment",
     "packages/monitor",
     "packages/multi-provider",
-    "packages/local-environment",
     "packages/sdk",
     "packages/sdk-bridge",
     "packages/sdk-govern",
-    "packages/indexer"
+    "packages/upgrade"
   ],
   "scripts": {
     "compile": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment --exclude @nomad-xyz/monitor run compile",
