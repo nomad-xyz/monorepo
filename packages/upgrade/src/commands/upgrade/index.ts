@@ -199,11 +199,13 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
   }
 
   private getEtherscanApiKeys() {
-    const etherscanKeys = {};
+    const etherscanKeys: any = {};
     this.domains.map((domain) => {
-      const key = "NOMAD_ETHERSCAN_KEY_" + domain.toUpperCase();
+      const key: string = "NOMAD_ETHERSCAN_KEY_" + domain.toUpperCase();
+      console.log(key);
       etherscanKeys[domain] = process.env[key];
     });
+    return etherscanKeys;
   }
 
   private loadEnv(domainName: string) {
