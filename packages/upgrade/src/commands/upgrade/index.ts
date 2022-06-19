@@ -205,9 +205,9 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
   }
 
   private setPrivateKey() {
-    const privateKey = process.env.DEPLOYER_KEY;
+    const privateKey = process.env.DEPLOYER_PRIVATE_KEY;
     if (!privateKey || privateKey == "") {
-      throw new Error("Set Deployer key in .env file DEPLOYER_KEY");
+      throw new Error("Set Deployer key in .env file DEPLOYER_PRIVATE_KEY");
     }
     this.privateKey = privateKey;
   }
