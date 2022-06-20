@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/contracts-bridge",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0-rc.3",
   "description": "A bridge using nomad",
   "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/contracts-bridge#readme",
   "bugs": {
