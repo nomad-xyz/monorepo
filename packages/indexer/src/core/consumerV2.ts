@@ -769,7 +769,7 @@ export class ProcessorV2 extends Consumer {
         }),
       );
     } else {
-      logger.warn(
+      logger.debug(
         { origin: e.replicaOrigin, root: oldRoot },
         `Haven't found a message for Update event`,
       );
@@ -793,7 +793,7 @@ export class ProcessorV2 extends Consumer {
         }),
       );
     } else {
-      logger.warn(
+      logger.debug(
         { origin: e.replicaOrigin, root: oldRoot },
         `Haven't found a message for ReplicaUpdate event`,
       );
@@ -810,7 +810,7 @@ export class ProcessorV2 extends Consumer {
       await this.updateMessage(m);
     } else {
       await this.pool.storeEvent(e);
-      logger.warn(
+      logger.debug(
         { messageHash },
         `Haven't found a message for Processed event`,
       );
@@ -839,7 +839,7 @@ export class ProcessorV2 extends Consumer {
       await this.updateMessage(m);
     } else {
       await this.pool.storeEvent(e);
-      logger.warn(
+      logger.debug(
         { destination, recipient, amount },
         `Haven't found a message for Send event`,
       );
@@ -860,7 +860,7 @@ export class ProcessorV2 extends Consumer {
     } else {
       await this.pool.storeEvent(e);
       const [origin, nonce] = e.originAndNonce();
-      logger.warn(
+      logger.debug(
         { origin, nonce },
         `Haven't found a message for BridgeReceived event`,
       );
