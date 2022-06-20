@@ -134,7 +134,7 @@ export function getEnvironment() {
 }
 
 export interface OptionalNetworkArgs {
-  treshold?: ethers.BigNumberish;
+  threshold?: ethers.BigNumberish;
 }
 
 export function sleep(ms: number) {
@@ -167,7 +167,7 @@ export function logToFile(s: string, l?: string) {
 }
 
 function reviver(key: any, value: any) {
-  if (typeof value === "string" && key === "treshold") {
+  if (typeof value === "string" && key === "threshold") {
     return ethers.BigNumber.from(value);
   }
   if (typeof value === "object" && value !== null) {

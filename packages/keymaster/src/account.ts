@@ -22,13 +22,13 @@ export abstract class Accountable {
 
   abstract address(): Promise<string>;
   abstract balance(): Promise<ethers.BigNumber>;
-  abstract treshold(): Promise<ethers.BigNumber>;
+  abstract threshold(): Promise<ethers.BigNumber>;
   async shouldTopUp(): Promise<boolean> {
-    return (await this.balance()).lt(await this.treshold());
+    return (await this.balance()).lt(await this.threshold());
   }
 
   async upperTreshold(): Promise<ethers.BigNumber> {
-    const t = await this.treshold();
+    const t = await this.threshold();
     return t.mul(2);
   }
 
@@ -53,7 +53,7 @@ export class Account extends Accountable {
     options?: OptionalNetworkArgs
   ) {
     super(name, ctx);
-    this._treshold = ethers.BigNumber.from(options?.treshold || eth(1.0));
+    this._treshold = ethers.BigNumber.from(options?.threshold || eth(1.0));
     this._address = address;
     this.provider = provider;
   }
@@ -69,8 +69,8 @@ export class Account extends Accountable {
     return balance;
   }
 
-  treshold(): Promise<ethers.BigNumber> {
-    this.ctx.logger.debug(`Getting stored treshold`);
+  threshold(): Promise<ethers.BigNumber> {
+    this.ctx.logger.debug(`Getting stored threshold`);
     return Promise.resolve(this._treshold);
   }
 
@@ -150,7 +150,7 @@ export class LocalAgent extends Agent {
       type,
       address,
       ctx.with({ type, address, home: home.name, replica: home.name }),
-      { treshold: home.treshold, ...options }
+      { threshold: home.threshold, ...options }
     );
   }
 }
@@ -174,7 +174,7 @@ export class RemoteAgent extends Account {
       address,
       replica.provider,
       ctx.with({ type, address, home: home.name, replica: replica.name }),
-      { ...options, treshold: replica.treshold }
+      { ...options, threshold: replica.threshold }
     );
     this.type = type;
     this.home = home;
@@ -191,10 +191,10 @@ export class LocalWatcher extends LocalAgent {
     options?: OptionalNetworkArgs
   ) {
     if (options) {
-      options.treshold = home.treshold.mul(2);
+      options.threshold = home.threshold.mul(2);
     } else {
       options = {
-        treshold: home.treshold.mul(2),
+        threshold: home.threshold.mul(2),
       };
     }
     super(home, "watcher", address, ctx, options);
@@ -210,10 +210,10 @@ export class RemoteWatcher extends RemoteAgent {
     options?: OptionalNetworkArgs
   ) {
     if (options) {
-      options.treshold = replica.treshold.mul(2);
+      options.threshold = replica.threshold.mul(2);
     } else {
       options = {
-        treshold: replica.treshold.mul(2),
+        threshold: replica.threshold.mul(2),
       };
     }
     super(home, replica, "watcher", address, ctx, options);
@@ -240,7 +240,7 @@ export class Bank extends Accountable {
     }
     this.home = home;
     this.signer = signer;
-    this._treshold = ethers.BigNumber.from(options?.treshold || eth(1.0));
+    this._treshold = ethers.BigNumber.from(options?.threshold || eth(1.0));
   }
 
   async address(): Promise<string> {
@@ -248,8 +248,8 @@ export class Bank extends Accountable {
     return await this.signer.getAddress();
   }
 
-  treshold(): Promise<ethers.BigNumber> {
-    this.ctx.logger.debug(`Getting stored treshold of a bank`);
+  threshold(): Promise<ethers.BigNumber> {
+    this.ctx.logger.debug(`Getting stored threshold of a bank`);
     return Promise.resolve(this._treshold);
   }
 
@@ -347,7 +347,7 @@ export class Network {
   provider: ethers.providers.Provider;
   bank: Bank;
   balances: Accountable[];
-  treshold: ethers.BigNumber;
+  threshold: ethers.BigNumber;
   ctx: Context;
   constructor(
     name: string,
@@ -363,7 +363,7 @@ export class Network {
         ? new MyJRPCProvider(provider, name, ctx)
         : provider;
 
-    this.treshold = ethers.BigNumber.from(options?.treshold || eth(1));
+    this.threshold = ethers.BigNumber.from(options?.threshold || eth(1));
     this.ctx = ctx.with({ home: name });
     this.bank = new Bank(`${name}_bank`, bank, ctx, this, {
       provider: this.provider,
@@ -374,10 +374,10 @@ export class Network {
 
   async init() {
     const tresholds = await Promise.all(this.balances.map(async (a) => {
-      return await a.treshold()
+      return await a.threshold()
     }))
-    const treshold = tresholds.reduce((acc, v) => acc.add(v), ethers.BigNumber.from('0'));
-    this.bank._treshold = treshold;
+    const threshold = tresholds.reduce((acc, v) => acc.add(v), ethers.BigNumber.from('0'));
+    this.bank._treshold = threshold;
   }
 
   async checkAllBalances() {
@@ -453,17 +453,17 @@ export class Network {
     if (prettyPrint) console.log(`\n\nNetwork: ${this.name}\n`);
 
     try {
-      const [bankBalance, bankTreshold] = await Promise.all([this.bank.balance(), this.bank.treshold(), ]);
+      const [bankBalance, bankTreshold] = await Promise.all([this.bank.balance(), this.bank.threshold(), ]);
 
       if (bankBalance.lt(bankTreshold)) {
-        this.ctx.logger.warn({balance: formatEther(bankBalance), treshold: formatEther(bankTreshold)}, `Bank balance is less than treshold, please top up`)
-        if (prettyPrint) console.log(red(`Bank balance is less than treshold, please top up ${formatEther(bankTreshold.sub(bankBalance))} currency. Has ${formatEther(bankBalance)} out of ${formatEther(bankTreshold)}`))
+        this.ctx.logger.warn({balance: formatEther(bankBalance), threshold: formatEther(bankTreshold)}, `Bank balance is less than threshold, please top up`)
+        if (prettyPrint) console.log(red(`Bank balance is less than threshold, please top up ${formatEther(bankTreshold.sub(bankBalance))} currency. Has ${formatEther(bankBalance)} out of ${formatEther(bankTreshold)}`))
       } else {
-        this.ctx.logger.debug({balance: formatEther(bankBalance), treshold: formatEther(bankTreshold)}, `Bank has enough moneyz`)
+        this.ctx.logger.debug({balance: formatEther(bankBalance), threshold: formatEther(bankTreshold)}, `Bank has enough moneyz`)
         if (prettyPrint) console.log(green(`Bank has enough moneyz. Has ${formatEther(bankBalance)} out of ${formatEther(bankTreshold)}`))
       }
     } catch(e) {
-      this.ctx.logger.error(`Failed getting balance or treshold for the bank`)
+      this.ctx.logger.error(`Failed getting balance or threshold for the bank`)
     }
 
     let suggestions:[
@@ -559,7 +559,7 @@ export class Network {
         : new AwsKmsSigner(n.bank);
 
     const network: Network = new Network(n.name, provider, [], bank, ctx, {
-      treshold: n.treshold,
+      threshold: n.threshold,
       ...options,
     });
 

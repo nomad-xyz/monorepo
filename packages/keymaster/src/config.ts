@@ -14,7 +14,7 @@ export interface INetwork {
   endpoint: string;
   replicas: string[];
   bank: string | AwsKmsSignerCredentials;
-  treshold: ethers.BigNumber;
+  threshold: ethers.BigNumber;
   agents: AgentAddresses;
 }
 
