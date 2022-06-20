@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/contracts-core",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0-rc.3",
   "description": "Nomad contracts",
   "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/contracts-core#readme",
   "bugs": {
