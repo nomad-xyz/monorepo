@@ -25,6 +25,8 @@ export default class ForkTest extends Command {
     }),
   };
 
+  runId!: number;
+
   async run() {
     // get the CLI flags
     const { flags } = await this.parse(ForkTest);
@@ -49,6 +51,9 @@ export default class ForkTest extends Command {
     const recoveryTimelock =
       this.nomadConfig.protocol.networks[domainName].configuration.governance
         .recoveryTimelock;
+
+    // Set runId
+    this.runId = Date.now();
 
     // Set env variables required by Fork test and Upgrade
     process.env.NOMAD_DOMAIN_NAME = domainName;
@@ -80,16 +85,18 @@ export default class ForkTest extends Command {
       this.warn(`${stderr}`);
     }
 
-    // If there is a test, anvil's chainId = 31337, else use the chain's proper ID
-    const chainId: number =
-      this.nomadConfig.protocol.networks[domainName].specs.chainId;
+    // If there is a test, anvil's chainId = 31337
+    // Fork tests are always local, thus we hardcode the chainId
+    const chainId: number = 31337;
+
     // print the artifacts from forge command
     const artifacts = new Artifacts(
       `${stdout}`,
       domainName,
       this.nomadConfig,
       this.workingDir,
-      chainId
+      chainId,
+      this.runId
     );
     artifacts.storeOutput("upgrade-forkTest");
 

@@ -62,6 +62,7 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
   ) {
     // instantiate empty CallBatch from config
     const context = new NomadContext(config);
+    console.log(context.governor);
     const batch = CallBatch.fromContext(context);
 
     // for each domain, construct governance actions & push them to batch
@@ -121,7 +122,7 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
     console.log("Execute Governance Actions built calldata");
     console.log(jsonBatch.built);
     // store the call batches
-    Artifacts.storeCallBatches(workingDir, jsonBatch);
+    Artifacts.storeCallBatches(config.environment, workingDir, jsonBatch);
   }
   private setDomains() {
     if (!this.flags.domains && !this.flags.all) {

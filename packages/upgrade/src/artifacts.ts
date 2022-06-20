@@ -10,25 +10,28 @@ export default class Artifacts {
 
   chainId: number;
 
+  runId: number;
+
   constructor(
     rawForgeOutput: string,
     domainName: string,
     config: config.NomadConfig,
     artifactsDir: string,
-    chainId: number
+    chainId: number,
+    runId: number
   ) {
     this.rawForgeOutput = rawForgeOutput;
     this.domainName = domainName;
     this.config = config;
     this.artifactsDir = artifactsDir;
     this.chainId = chainId;
-    config.protocol.networks[domainName].specs.chainId;
+    this.runId = runId;
   }
 
   public storeOutput(commandName: string): void {
     console.log(this.rawForgeOutput);
     fs.writeFile(
-      `${this.artifactsDir}/${this.domainName}/${commandName}-output.txt`,
+      `${this.artifactsDir}/${this.domainName}/${commandName}-${this.runId}.txt`,
       this.rawForgeOutput,
       function (err) {
         if (err) {
@@ -40,12 +43,13 @@ export default class Artifacts {
   }
 
   public storeNewConfig(): void {
+    const filename: string = `${this.config.environment}-${this.runId}`;
     fs.writeFileSync(
-      `${this.artifactsDir}/${this.config.environment}-new.json`,
+      `${this.artifactsDir}/${filename}.json`,
       JSON.stringify(this.config)
     );
     console.log(
-      `Updated configuration file has been stored at ${this.artifactsDir}/${this.config.environment}-new.json`
+      `Updated configuration file has been stored at ${this.artifactsDir}/${filename}.json`
     );
   }
 
@@ -82,10 +86,15 @@ export default class Artifacts {
     }
   }
 
-  public static storeCallBatches(dir: string, batch: CallBatchContents): void {
+  public static storeCallBatches(
+    env: string,
+    dir: string,
+    batch: CallBatchContents
+  ): void {
     fs.writeFileSync(
-      `${dir}/governanceTransactions.json`,
+      `${dir}/govTx-${env}.json`,
       JSON.stringify(batch, null, 2)
     );
+    console.log(`Governance Transactions stored at ${dir}/govTx-${env}.json`);
   }
 }

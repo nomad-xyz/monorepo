@@ -43,6 +43,8 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
   privateKey: string;
   domains!: string[];
 
+  runId!: number;
+
   async run(): Promise<void> {
     this.announce("Welcome to Nomgrade");
 
@@ -58,6 +60,9 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
 
     // Get private key from .env file
     this.setPrivateKey();
+
+    // Generate unique identifier for this run
+    this.runId = Date.now();
 
     CliUx.ux.action.start("Upgrading the Nomad Protocol");
     this.warn(
@@ -146,7 +151,8 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
       domainName,
       this.nomadConfig,
       this.workingDir,
-      chainId
+      chainId,
+      this.runId
     );
     // store the raw forge output
     artifacts.storeOutput("upgrade");
