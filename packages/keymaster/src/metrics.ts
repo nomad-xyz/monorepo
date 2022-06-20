@@ -56,6 +56,7 @@ export class BaseMetricsCollector extends MetricsCollector {
   rpcRequests: Counter<string>;
   rpcErrors: Counter<string>;
   rpcLatency: Histogram<string>;
+  malfunctions: Counter<string>;
 
   constructor(logger: Logger) {
     super(logger);
@@ -86,6 +87,12 @@ export class BaseMetricsCollector extends MetricsCollector {
       help: "Histogram that tracks gas usage in wei of a transaction that initiated at dispatch, update, relay, receive or process stages.",
       labelNames: [...labelNames, "method"],
     });
+
+    this.malfunctions = new Counter({
+      name: prefix + "_malfunctions",
+      help: "Counter that tracks unrecoverable malfunctions in a network.",
+      labelNames: [...labelNames, "name"],
+    });
   }
 
   observeLatency(home: string, method: string, ms: number) {
@@ -102,6 +109,10 @@ export class BaseMetricsCollector extends MetricsCollector {
 
   incGasUsed(home: string, method: string, amount: number) {
     this.gasUsed.labels(home, method).inc(amount);
+  }
+
+  incMalfunctions(home: string, name: string) {
+    this.gasUsed.labels(home, name).inc();
   }
 }
 

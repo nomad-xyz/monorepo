@@ -33,7 +33,7 @@ export class MyJRPCProvider extends ethers.providers.StaticJsonRpcProvider {
       5,
       (e) => {
         this.ctx.logger.error(
-          { method, params, reason: e.reason },
+          { method, params, reason: e.reason, network: this.networkName },
           `Failed to perform request`
         );
         this.ctx.metrics.incRpcErrors(

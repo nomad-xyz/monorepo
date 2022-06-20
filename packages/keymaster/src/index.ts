@@ -1,7 +1,12 @@
 import { readConfig, sleep } from "./utils";
 import { Keymaster } from "./keymaster";
 
-async function run(configPath: string, port: number, dryrun = false) {
+const DRY_RUN = process.env.DRY_RUN === "true";
+const METRICS_PORT = parseInt(process.env.METRICS_PORT || "9090") || 9090;
+const CONFIG_PATH = process.env.CONFIG_PATH || `./config/keymaster.json`;
+const PERIOD = parseInt(process.env.PERIOD || "60") || 60;
+
+async function run(configPath: string, port: number, period: number, dryrun = false) {
   const config = readConfig(configPath);
   const km = await new Keymaster(config).init();
   km.ctx.metrics.startServer(port);
@@ -9,14 +14,12 @@ async function run(configPath: string, port: number, dryrun = false) {
   while (true) {
     await km.checkAndPayAllNetworks(dryrun);
 
-    await sleep(60 * 1000);
+    await sleep(period * 1000);
   }
 }
 
-const DRY_RUN = process.env.DRY_RUN === "true";
-const METRICS_PORT = parseInt(process.env.METRICS_PORT || "9090") || 9090;
-const CONFIG_PATH = process.env.CONFIG_PATH || `./config/keymaster.json`;
+
 
 (async () => {
-  await run(CONFIG_PATH, METRICS_PORT, DRY_RUN);
+  await run(CONFIG_PATH, METRICS_PORT, PERIOD, DRY_RUN);
 })();
