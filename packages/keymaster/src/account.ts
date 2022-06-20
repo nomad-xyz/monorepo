@@ -174,7 +174,7 @@ export class RemoteAgent extends Account {
       address,
       replica.provider,
       ctx.with({ type, address, home: home.name, replica: replica.name }),
-      { ...options, threshold: replica.threshold }
+      { ...options, threshold: options?.threshold || replica.threshold }
     );
     this.type = type;
     this.home = home;
