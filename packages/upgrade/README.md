@@ -1,4 +1,4 @@
-# Nomad Upgrade (VERY EXPERIMENTAL)
+# Nomad Upgrade
 
 > There is nothing permanent except change.
 >
@@ -10,13 +10,6 @@ The upgrade pipeline is roughly divided into two parts:
 
 - ChainOps: Responsible for interacting with the chain, deploying contracts and generating the appropriate artifacts. It's `Upgrade.sol` and it's written in Solidity. It's meant to be executed via `forge script`
 - I/O operations: Responsible for reading the protocol's global config and supplying the ChainOps part of the pipeline with the required data (e.g contract addresses). It's also responsible for receiving the output from the ChainOps part and storing part of it as artifacts. It's written in Typescript and is, in essence, a CLI wrapper around `forge script`
-
-So, when inspecting the upgrade pipeline, the separation of concerns is clear:
-
-- The entire upgrade process and any on-chain actions are executed via `forge script` and the logic is written in Solidity
-- The typescript wrapper is only responsible for supplying the correct data to the `forge script` and storing artifacts for posterity
-
-The typescript wrapper will later be refactored with Oclif to improve ergonomics, and add instructions to the user.
 
 ### Next Steps
 
@@ -155,8 +148,12 @@ FLAGS
 
 DESCRIPTION
   Print governance actions to upgrade the Nomad protocol according to latest config
-  ```
+```
 
-## License
+## Build
 
-MIT
+```
+yarn prepack
+```
+
+**Tip:**If the build finishes but either the new changes are built or there are no commands at all, delete `tsconfig.tsbuildinfo` and try again.
