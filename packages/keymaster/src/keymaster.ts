@@ -57,9 +57,11 @@ export class Keymaster {
       }
     });
 
-    await Promise.all(Array.from(this.networks.values()).map(async (n) => {
-        await n.init()
-    }))
+    await Promise.all(
+      Array.from(this.networks.values()).map(async (n) => {
+        await n.init();
+      })
+    );
 
     return this;
   }
@@ -68,9 +70,11 @@ export class Keymaster {
     for (const net of this.networks.values()) {
       try {
         await net.checkAndPay(dryrun);
-      } catch(e) {
-        net.ctx.logger.error(`Failed check and pay loop for the whole network.`)
-        net.ctx.metrics.incMalfunctions(net.name, 'checkAndPay')
+      } catch (e) {
+        net.ctx.logger.error(
+          `Failed check and pay loop for the whole network.`
+        );
+        net.ctx.metrics.incMalfunctions(net.name, "checkAndPay");
       }
     }
   }

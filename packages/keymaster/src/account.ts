@@ -373,10 +373,15 @@ export class Network {
   }
 
   async init() {
-    const tresholds = await Promise.all(this.balances.map(async (a) => {
-      return await a.threshold()
-    }))
-    const threshold = tresholds.reduce((acc, v) => acc.add(v), ethers.BigNumber.from('0'));
+    const tresholds = await Promise.all(
+      this.balances.map(async (a) => {
+        return await a.threshold();
+      })
+    );
+    const threshold = tresholds.reduce(
+      (acc, v) => acc.add(v),
+      ethers.BigNumber.from("0")
+    );
     this.bank._treshold = threshold;
   }
 
@@ -417,7 +422,6 @@ export class Network {
   async reportSuggestions(): Promise<
     [Accountable, ethers.BigNumber, boolean, ethers.BigNumber][]
   > {
-
     const promises: Promise<
       [Accountable, ethers.BigNumber, boolean, ethers.BigNumber] | null
     >[] = this.balances.map(
@@ -433,40 +437,76 @@ export class Network {
             await a.shouldTopUp(),
             await a.howMuchTopUp(),
           ];
-        } catch(e) {
-          this.ctx.metrics.incMalfunctions(this.name, 'suggestion');
-          this.ctx.logger.error({address: await a.address()}, 'Failed getting suggestion for an account')
-          return null
+        } catch (e) {
+          this.ctx.metrics.incMalfunctions(this.name, "suggestion");
+          this.ctx.logger.error(
+            { address: await a.address() },
+            "Failed getting suggestion for an account"
+          );
+          return null;
         }
       }
     );
 
     const suggestions = await Promise.all(promises);
 
-    function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
+    function notEmpty<TValue>(
+      value: TValue | null | undefined
+    ): value is TValue {
       return value !== null && value !== undefined;
     }
-    return suggestions.filter(notEmpty)
+    return suggestions.filter(notEmpty);
   }
 
   async checkAndPay(dryrun = false): Promise<void> {
     if (prettyPrint) console.log(`\n\nNetwork: ${this.name}\n`);
 
     try {
-      const [bankBalance, bankTreshold] = await Promise.all([this.bank.balance(), this.bank.threshold(), ]);
+      const [bankBalance, bankTreshold] = await Promise.all([
+        this.bank.balance(),
+        this.bank.threshold(),
+      ]);
 
       if (bankBalance.lt(bankTreshold)) {
-        this.ctx.logger.warn({balance: formatEther(bankBalance), threshold: formatEther(bankTreshold)}, `Bank balance is less than threshold, please top up`)
-        if (prettyPrint) console.log(red(`Bank balance is less than threshold, please top up ${formatEther(bankTreshold.sub(bankBalance))} currency. Has ${formatEther(bankBalance)} out of ${formatEther(bankTreshold)}`))
+        this.ctx.logger.warn(
+          {
+            balance: formatEther(bankBalance),
+            threshold: formatEther(bankTreshold),
+          },
+          `Bank balance is less than threshold, please top up`
+        );
+        if (prettyPrint)
+          console.log(
+            red(
+              `Bank balance is less than threshold, please top up ${formatEther(
+                bankTreshold.sub(bankBalance)
+              )} currency. Has ${formatEther(bankBalance)} out of ${formatEther(
+                bankTreshold
+              )}`
+            )
+          );
       } else {
-        this.ctx.logger.debug({balance: formatEther(bankBalance), threshold: formatEther(bankTreshold)}, `Bank has enough moneyz`)
-        if (prettyPrint) console.log(green(`Bank has enough moneyz. Has ${formatEther(bankBalance)} out of ${formatEther(bankTreshold)}`))
+        this.ctx.logger.debug(
+          {
+            balance: formatEther(bankBalance),
+            threshold: formatEther(bankTreshold),
+          },
+          `Bank has enough moneyz`
+        );
+        if (prettyPrint)
+          console.log(
+            green(
+              `Bank has enough moneyz. Has ${formatEther(
+                bankBalance
+              )} out of ${formatEther(bankTreshold)}`
+            )
+          );
       }
-    } catch(e) {
-      this.ctx.logger.error(`Failed getting balance or threshold for the bank`)
+    } catch (e) {
+      this.ctx.logger.error(`Failed getting balance or threshold for the bank`);
     }
 
-    let suggestions:[
+    let suggestions: [
       Accountable,
       ethers.BigNumber,
       boolean,
@@ -475,65 +515,74 @@ export class Network {
 
     try {
       suggestions = await this.reportSuggestions();
-    } catch(e) {
+    } catch (e) {
       this.ctx.logger.error(`Failed getting payment suggestions`);
-      this.ctx.metrics.incMalfunctions(this.name, 'suggestions');
-      throw e
+      this.ctx.metrics.incMalfunctions(this.name, "suggestions");
+      throw e;
     }
-  
-      let _toPay = ethers.BigNumber.from("0");
-      let _paid = ethers.BigNumber.from("0");
-  
-      for (const [a, balance, shouldTopUp, toPay] of suggestions) {
-        if (shouldTopUp) {
-          _toPay = _toPay.add(toPay);
-  
-          if (prettyPrint) {
-            if (balance.eq(0)) {
-              console.log(
-                red(
-                  `${a.name} needs immediately ${formatEther(
-                    toPay
-                  )} currency. It is empty for gods sake!`
-                )
-              );
-            } else {
-              console.log(
-                yellow(
-                  `${a.name} needs to be paid ${formatEther(
-                    toPay
-                  )}. Balance: ${formatEther(balance)}`
-                )
-              );
-            }
+
+    let _toPay = ethers.BigNumber.from("0");
+    let _paid = ethers.BigNumber.from("0");
+
+    for (const [a, balance, shouldTopUp, toPay] of suggestions) {
+      if (shouldTopUp) {
+        _toPay = _toPay.add(toPay);
+
+        if (prettyPrint) {
+          if (balance.eq(0)) {
+            console.log(
+              red(
+                `${a.name} needs immediately ${formatEther(
+                  toPay
+                )} currency. It is empty for gods sake!`
+              )
+            );
+          } else {
+            console.log(
+              yellow(
+                `${a.name} needs to be paid ${formatEther(
+                  toPay
+                )}. Balance: ${formatEther(balance)}`
+              )
+            );
           }
-  
-          const sameAddress =
-            a == this.bank || (await a.address()) === (await this.bank.address());
-          if (!sameAddress && !dryrun) {
-            try {
-              await this.bank.pay(a, toPay);
-              if (prettyPrint)
-                console.log(green(`Paid ${formatEther(toPay)} to ${a.name}!`));
-              _paid = _paid.add(toPay);
-            } catch(e) {
-              this.ctx.metrics.incMalfunctions(this.name, 'payment')
-              this.ctx.logger.error({address: await a.address()}, 'Payment failure');
-              if (prettyPrint)
-                console.log(green(`Haven't paid ${formatEther(toPay)} to ${a.name}, because of a malfunction!`));
-            }
-          }
-        } else {
-          if (prettyPrint)
-            console.log(green(`${a.name} is ok, has: ${formatEther(balance)}`));
         }
+
+        const sameAddress =
+          a == this.bank || (await a.address()) === (await this.bank.address());
+        if (!sameAddress && !dryrun) {
+          try {
+            await this.bank.pay(a, toPay);
+            if (prettyPrint)
+              console.log(green(`Paid ${formatEther(toPay)} to ${a.name}!`));
+            _paid = _paid.add(toPay);
+          } catch (e) {
+            this.ctx.metrics.incMalfunctions(this.name, "payment");
+            this.ctx.logger.error(
+              { address: await a.address() },
+              "Payment failure"
+            );
+            if (prettyPrint)
+              console.log(
+                green(
+                  `Haven't paid ${formatEther(toPay)} to ${
+                    a.name
+                  }, because of a malfunction!`
+                )
+              );
+          }
+        }
+      } else {
+        if (prettyPrint)
+          console.log(green(`${a.name} is ok, has: ${formatEther(balance)}`));
       }
-      if (prettyPrint)
-        console.log(
-          `\n\tpaid: ${green(formatEther(_paid))} out of ${yellow(
-            formatEther(_toPay)
-          )}\n\n`
-        );
+    }
+    if (prettyPrint)
+      console.log(
+        `\n\tpaid: ${green(formatEther(_paid))} out of ${yellow(
+          formatEther(_toPay)
+        )}\n\n`
+      );
   }
 
   static fromINetwork(
