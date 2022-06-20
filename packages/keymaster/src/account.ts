@@ -462,7 +462,8 @@ export class Network {
     if (prettyPrint) console.log(`\n\nNetwork: ${this.name}\n`);
 
     try {
-      const [bankBalance, bankTreshold] = await Promise.all([
+      const [bankAddress, bankBalance, bankTreshold] = await Promise.all([
+        this.bank.address(),
         this.bank.balance(),
         this.bank.threshold(),
       ]);
@@ -470,6 +471,7 @@ export class Network {
       if (bankBalance.lt(bankTreshold)) {
         this.ctx.logger.warn(
           {
+            address: bankAddress,
             balance: formatEther(bankBalance),
             threshold: formatEther(bankTreshold),
           },
