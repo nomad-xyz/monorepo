@@ -1,4 +1,4 @@
-import { CliUx } from "@oclif/core";
+import { CliUx, Flags } from "@oclif/core";
 import { NomadContext } from "@nomad-xyz/sdk";
 import { Call, CallBatch } from "@nomad-xyz/sdk-govern";
 import * as contracts from "@nomad-xyz/contracts-core";
@@ -7,27 +7,65 @@ import Command from "../../base";
 import Artifacts from "../../artifacts";
 
 export default class PrintGovActions extends Command {
+  static flags = {
+    ...Command.flags,
+    domains: Flags.string({
+      char: "d",
+      multiple: true,
+      exclusive: ["all"],
+      description: `
+Run the command on specific domain(s). To pass multiple domains, simply pass them like this: -d ethereum evmos avalanche.
+Due to a parsing bug, this flag must be passed at the end of the command. e.g 'nomgrade upgrade -d ethereum'`,
+    }),
+    all: Flags.boolean({
+      char: "a",
+      description: "Run on all the domains that exist in the config file",
+      exclusive: ["domains"],
+    }),
+  };
   static description =
     "Print governance actions to upgrade the Nomad protocol according to latest config";
   static usage = "printGovActions -c <path_to_config>";
 
-  async run() {
+  flags: any;
+  domains: any;
+  async run(): Promise<void> {
     CliUx.ux.action.start(`Printing Governance Actions`);
+
+    // parse flags from CLI command
+    const { flags } = await this.parse(PrintGovActions);
+    this.flags = flags;
+
+    // Set domains
+    this.setDomains();
+
+    console.log(
+      `Government Actions will be generated for the following domains: ${this.domains}`
+    );
+
     try {
-      await PrintGovActions.print(this.nomadConfig, this.workingDir);
+      await PrintGovActions.print(
+        this.domains,
+        this.nomadConfig,
+        this.workingDir
+      );
     } catch (error) {
       this.error(`${error}`);
     }
     CliUx.ux.action.stop("Governance Actions printed!");
   }
 
-  static async print(config: configuration.NomadConfig, workingDir: string) {
+  static async print(
+    domains: string[],
+    config: configuration.NomadConfig,
+    workingDir: string
+  ) {
     // instantiate empty CallBatch from config
     const context = new NomadContext(config);
     const batch = CallBatch.fromContext(context);
 
     // for each domain, construct governance actions & push them to batch
-    for (const domainName of config.networks) {
+    for (const domainName of domains) {
       // get config information for the domain
       const protocolConfig = config.protocol.networks[domainName];
       const core = config.core[domainName];
@@ -84,5 +122,15 @@ export default class PrintGovActions extends Command {
     console.log(jsonBatch.built);
     // store the call batches
     Artifacts.storeCallBatches(workingDir, jsonBatch);
+  }
+  private setDomains() {
+    if (!this.flags.domains && !this.flags.all) {
+      throw new Error(
+        "No domains were passed via the appropriate flags. You need to select to which domains the Nomad protocol will be upgraded. Type --help for more"
+      );
+    }
+    this.domains = this.flags.all
+      ? this.nomadConfig.networks
+      : this.flags.domains;
   }
 }
