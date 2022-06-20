@@ -68,23 +68,10 @@ export class Keymaster {
     return this;
   }
 
-  async checkAndPayAllNetworks(dryrun = false): Promise<void> {
-    for (const net of this.networks.values()) {
-      try {
-        await net.checkAndPay(dryrun);
-      } catch (e) {
-        net.ctx.logger.error(
-          `Failed check and pay loop for the whole network.`
-        );
-        net.ctx.metrics.incMalfunctions(net.name, "checkAndPay");
-      }
-    }
-  }
-
   async checkAndPayEnabledNetworks(networks: string[], dryrun = false): Promise<void> {
     for (const net of this.networks.values()) {
       try {
-        if (networks.includes(net.name)) {
+        if (networks.length === 0 || networks.includes(net.name)) {
             await net.checkAndPay(dryrun);
         }
       } catch (e) {

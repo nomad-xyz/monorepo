@@ -18,11 +18,7 @@ async function run(
   km.ctx.metrics.startServer(port);
 
   while (true) {
-    if (NETWORK_ENABLED.length > 0) {
-      km.checkAndPayEnabledNetworks(NETWORK_ENABLED, dryrun)
-    } else {
-      await km.checkAndPayAllNetworks(dryrun);
-    }
+    await km.checkAndPayEnabledNetworks(NETWORK_ENABLED, dryrun);
 
     await sleep(period * 1000);
   }
