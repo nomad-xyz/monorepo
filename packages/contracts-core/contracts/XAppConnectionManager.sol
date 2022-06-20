@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity >=0.6.11;
+pragma solidity 0.7.6;
 
 // ============ Internal Imports ============
 import {Home} from "./Home.sol";
@@ -55,13 +55,6 @@ contract XAppConnectionManager is Ownable {
         address watcher,
         bool access
     );
-
-    // ============ Modifiers ============
-
-    modifier onlyReplica() {
-        require(isReplica(msg.sender), "!replica");
-        _;
-    }
 
     // ============ Constructor ============
 
@@ -217,5 +210,14 @@ contract XAppConnectionManager is Ownable {
         );
         _digest = ECDSA.toEthSignedMessageHash(_digest);
         return ECDSA.recover(_digest, _signature);
+    }
+
+    /**
+     * @dev should be impossible to renounce ownership;
+     * we override OpenZeppelin Ownable implementation
+     * of renounceOwnership to make it a no-op
+     */
+    function renounceOwnership() public override onlyOwner {
+        // do nothing
     }
 }

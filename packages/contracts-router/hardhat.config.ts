@@ -18,6 +18,9 @@ module.exports = {
         enabled: true,
         runs: 999999,
       },
+      metadata: {
+        bytecodeHash: "none",
+      },
     },
   },
 

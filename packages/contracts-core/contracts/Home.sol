@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity >=0.6.11;
+pragma solidity 0.7.6;
 
 // ============ Internal Imports ============
 import {Version0} from "./Version0.sol";
@@ -51,11 +51,13 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
 
     /**
      * @notice Emitted when a new message is dispatched via Nomad
+     * @param messageHash Hash of message; the leaf inserted to the Merkle tree
+     *        for the message
      * @param leafIndex Index of message's leaf in merkle tree
      * @param destinationAndNonce Destination and destination-specific
-     * nonce combined in single field ((destination << 32) & nonce)
-     * @param messageHash Hash of message; the leaf inserted to the Merkle tree for the message
-     * @param committedRoot the latest notarized root submitted in the last signed Update
+     *        nonce combined in single field ((destination << 32) & nonce)
+     * @param committedRoot the latest notarized root submitted in the last
+     *        signed Update
      * @param message Raw bytes of message
      */
     event Dispatch(
@@ -74,6 +76,21 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
      * @param signature Signature on `oldRoot` and `newRoot
      */
     event ImproperUpdate(bytes32 oldRoot, bytes32 newRoot, bytes signature);
+
+    /**
+     * @notice Emitted when proof of a double update is submitted,
+     * which sets the contract to FAILED state
+     * @param oldRoot Old root shared between two conflicting updates
+     * @param newRoot Array containing two conflicting new roots
+     * @param signature Signature on `oldRoot` and `newRoot`[0]
+     * @param signature2 Signature on `oldRoot` and `newRoot`[1]
+     */
+    event DoubleUpdate(
+        bytes32 oldRoot,
+        bytes32[2] newRoot,
+        bytes signature,
+        bytes signature2
+    );
 
     /**
      * @notice Emitted when the Updater is slashed
@@ -112,14 +129,26 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
         _;
     }
 
+    /**
+     * @notice Ensures that contract state != FAILED when the function is called
+     */
+    modifier notFailed() {
+        require(state != States.Failed, "failed state");
+        _;
+    }
+
     // ============ External: Updater & UpdaterManager Configuration  ============
 
     /**
      * @notice Set a new Updater
+     * @dev To be set when rotating Updater after Fraud
      * @param _updater the new Updater
      */
     function setUpdater(address _updater) external onlyUpdaterManager {
         _setUpdater(_updater);
+        // set the Home state to Active
+        // now that Updater has been rotated
+        state = States.Active;
     }
 
     /**
@@ -136,7 +165,7 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
     // ============ External Functions  ============
 
     /**
-     * @notice Dispatch the message it to the destination domain & recipient
+     * @notice Dispatch the message to the destination domain & recipient
      * @dev Format the message, insert its hash into Merkle tree,
      * enqueue the new Merkle root, and emit `Dispatch` event with message information.
      * @param _destinationDomain Domain of destination chain
@@ -225,6 +254,33 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
         }
     }
 
+    /**
+     * @notice Called by external agent. Checks that signatures on two sets of
+     * roots are valid and that the new roots conflict with each other. If both
+     * cases hold true, the contract is failed and a `DoubleUpdate` event is
+     * emitted.
+     * @dev When `fail()` is called on Home, updater is slashed.
+     * @param _oldRoot Old root shared between two conflicting updates
+     * @param _newRoot Array containing two conflicting new roots
+     * @param _signature Signature on `_oldRoot` and `_newRoot`[0]
+     * @param _signature2 Signature on `_oldRoot` and `_newRoot`[1]
+     */
+    function doubleUpdate(
+        bytes32 _oldRoot,
+        bytes32[2] calldata _newRoot,
+        bytes calldata _signature,
+        bytes calldata _signature2
+    ) external notFailed {
+        if (
+            NomadBase._isUpdaterSignature(_oldRoot, _newRoot[0], _signature) &&
+            NomadBase._isUpdaterSignature(_oldRoot, _newRoot[1], _signature2) &&
+            _newRoot[0] != _newRoot[1]
+        ) {
+            _fail();
+            emit DoubleUpdate(_oldRoot, _newRoot, _signature, _signature2);
+        }
+    }
+
     // ============ Public Functions  ============
 
     /**
@@ -302,9 +358,9 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
      * @notice Slash the Updater and set contract state to FAILED
      * @dev Called when fraud is proven (Improper Update or Double Update)
      */
-    function _fail() internal override {
+    function _fail() internal {
         // set contract to FAILED
-        _setFailed();
+        state = States.Failed;
         // slash Updater
         updaterManager.slashUpdater(msg.sender);
         emit UpdaterSlashed(updater, msg.sender);

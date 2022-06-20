@@ -2,8 +2,8 @@ import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 import "hardhat-packager";
 
-import { task } from "hardhat/config";
-import { verifyCoreDeploy } from "@nomad-xyz/deploy/src/verification/verifyDeploy";
+import {subtask} from "hardhat/config";
+import {TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS} from "hardhat/builtin-tasks/task-names";
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -11,14 +11,13 @@ dotenv.config();
 const etherscanKey = process.env.ETHERSCAN_API_KEY;
 const infuraKey = process.env.INFURA_API_KEY;
 
-task("verify-deploy", "Verifies the source code of the latest contract deploy")
-  .addParam("environment", "dev, staging or prod")
-  .setAction(async (args: any, hre: any) => {
-    if (!etherscanKey) {
-      throw new Error("set ETHERSCAN_API_KEY");
-    }
-    await verifyCoreDeploy(hre, etherscanKey, args.environment);
-  });
+subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
+  async (_, __, runSuper) => {
+    const paths: string[] = await runSuper();
+
+    return paths.filter((p) => !p.endsWith(".t.sol") && !p.includes("test"));
+  }
+);
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -30,6 +29,9 @@ module.exports = {
       optimizer: {
         enabled: true,
         runs: 999999,
+      },
+      metadata: {
+        bytecodeHash: "none",
       },
     },
   },
@@ -74,7 +76,6 @@ module.exports = {
     ],
     includeFactories: true,
   },
-
   etherscan: {
     apiKey: etherscanKey,
   },

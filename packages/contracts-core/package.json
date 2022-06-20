@@ -16,7 +16,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "bootstrap": "yarn clean && yarn build",
-    "build": "yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions",
+    "build:deps": "../../scripts/install-deps.sh",
+    "build": "yarn build:deps && yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=core forge build",
     "clean": "hardhat clean && rm -rf dist && rm -rf src",
     "compile": "hardhat compile",
     "copy-definitions": "cp src/*.d.ts dist/src",
@@ -24,7 +25,13 @@
     "lint:fix": "solhint --fix contracts/*.sol",
     "prettier": "prettier --write './contracts'",
     "prepublish": "yarn bootstrap && yarn build",
-    "test": "hardhat test"
+    "test": "yarn snapshot && FOUNDRY_PROFILE=core forge test",
+    "test:ci": "yarn snapshot && FOUNDRY_PROFILE=core-ci forge test",
+    "test:static-analyze": "rm -rf node_modules && yarn link:node_modules && slither .",
+    "link:node_modules": "ln -s ../../node_modules",
+    "snapshot": "forge clean && FOUNDRY_PROFILE=core forge snapshot",
+    "snapshot:check": "forge clean && FOUNDRY_PROFILE=core forge snapshot --check",
+    "gen-proof": "../../scripts/accumulator-cli"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.2",
@@ -32,7 +39,6 @@
     "@summa-tx/memview-sol": "^2.0.0"
   },
   "devDependencies": {
-    "@nomad-xyz/deploy": "workspace:^",
     "@nomiclabs/hardhat-ethers": "^2.0.4",
     "@nomiclabs/hardhat-etherscan": "^2.1.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
