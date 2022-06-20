@@ -41,7 +41,7 @@ export default class Artifacts {
 
   public storeNewConfig(): void {
     fs.writeFileSync(
-      `${this.artifactsDir}/new-config.json`,
+      `${this.artifactsDir}/${this.config.environment}-new.json`,
       JSON.stringify(this.config)
     );
     console.log(
