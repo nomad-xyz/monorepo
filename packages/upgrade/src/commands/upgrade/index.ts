@@ -40,8 +40,8 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
 
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   flags: any;
-  rpcs: { [key: string]: string[] };
-  privateKey: string;
+  rpcs!: { [key: string]: string[] };
+  privateKey!: string;
   domains!: string[];
 
   runId!: number;

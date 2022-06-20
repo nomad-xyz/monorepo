@@ -29,7 +29,7 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
 
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   flags: any;
-  domains: string[];
+  domains!: string[];
   async run(): Promise<void> {
     CliUx.ux.action.start(`Printing Governance Actions`);
 
