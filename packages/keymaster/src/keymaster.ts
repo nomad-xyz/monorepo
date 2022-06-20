@@ -81,10 +81,10 @@ export class Keymaster {
     }
   }
 
-  async checkAndPaySingleNetwork(network: string, dryrun = false): Promise<void> {
+  async checkAndPayEnabledNetworks(networks: string[], dryrun = false): Promise<void> {
     for (const net of this.networks.values()) {
       try {
-        if (net.name === network) {
+        if (networks.includes(net.name)) {
             await net.checkAndPay(dryrun);
         }
       } catch (e) {
