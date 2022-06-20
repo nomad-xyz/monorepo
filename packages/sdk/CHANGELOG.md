@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### 2.0.0-rc.21
+
+- upgrade: contracts
+
 ### 2.0.0-rc.20
 
 - docs: update readme with examples/links
