@@ -45,7 +45,7 @@ export default class Artifacts {
       JSON.stringify(this.config)
     );
     console.log(
-      `Updated configuration file has been stored at ${this.artifactsDir}/new-config.json`
+      `Updated configuration file has been stored at ${this.artifactsDir}/${this.config.environment}-new.json`
     );
   }
 
