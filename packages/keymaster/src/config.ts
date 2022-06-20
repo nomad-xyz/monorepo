@@ -19,5 +19,5 @@ export interface INetwork {
 }
 
 export interface KeymasterConfig {
-  networks: Record<string, INetwork>;
+  networks: INetwork[];
 }

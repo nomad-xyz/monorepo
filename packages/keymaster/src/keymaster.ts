@@ -1,6 +1,8 @@
 import { KeymasterConfig } from "./config";
 import { Accountable, Network, RemoteAgent, RemoteWatcher } from "./account";
 import { Context } from "./context";
+import { formatEther } from "ethers/lib/utils";
+import { red } from "./color";
 
 export class Keymaster {
   config: KeymasterConfig;
@@ -20,13 +22,13 @@ export class Keymaster {
   }
 
   async init(): Promise<Keymaster> {
-    Object.values(this.config.networks).forEach((n) => {
+    this.config.networks.forEach((n) => {
       this.networks.set(n.name, Network.fromINetwork(n, this.ctx));
     });
 
-    Object.entries(this.config.networks).forEach(([home, homeNetConfig]) => {
+    this.config.networks.forEach((homeNetConfig) => {
       const homeAgents = homeNetConfig.agents;
-      const homeNetwork = this.networks.get(home)!;
+      const homeNetwork = this.networks.get(homeNetConfig.name)!;
 
       for (const replica of homeNetConfig.replicas) {
         const replicaNetwork = this.networks.get(replica);
@@ -70,6 +72,21 @@ export class Keymaster {
     for (const net of this.networks.values()) {
       try {
         await net.checkAndPay(dryrun);
+      } catch (e) {
+        net.ctx.logger.error(
+          `Failed check and pay loop for the whole network.`
+        );
+        net.ctx.metrics.incMalfunctions(net.name, "checkAndPay");
+      }
+    }
+  }
+
+  async checkAndPaySingleNetwork(network: string, dryrun = false): Promise<void> {
+    for (const net of this.networks.values()) {
+      try {
+        if (net.name === network) {
+            await net.checkAndPay(dryrun);
+        }
       } catch (e) {
         net.ctx.logger.error(
           `Failed check and pay loop for the whole network.`
