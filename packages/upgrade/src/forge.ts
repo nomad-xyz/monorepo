@@ -23,7 +23,10 @@ export default class Forge {
     this.command = "";
   }
 
-  public async executeCommand() {
+  public async executeCommand(): Promise<{
+    stdout: string;
+    stderr: string;
+  }> {
     // Create directory for upgrade artifacts
     fs.mkdir(
       `${this.workingDir}/${this.domainName}`,
@@ -41,7 +44,7 @@ export default class Forge {
     return { stdout, stderr };
   }
 
-  public setEtherscanKey(key: string) {
+  public setEtherscanKey(key: string): void {
     this.etherscanVerify = key;
   }
 
@@ -55,7 +58,7 @@ export default class Forge {
     privateKey: string,
     resume: boolean,
     broadcast: boolean
-  ) {
+  ): void {
     let resumeOrBroadcast;
     if (resume) {
       resumeOrBroadcast = "--resume";

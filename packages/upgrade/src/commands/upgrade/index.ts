@@ -38,8 +38,9 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
     }),
   };
 
+  // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   flags: any;
-  rpcs: any;
+  rpcs: { [key: string]: string[] };
   privateKey: string;
   domains!: string[];
 
@@ -194,7 +195,7 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
     console.log(
       "Use multi-anvil.sh to quickly spin up multiple anvil instances with incrementing port number"
     );
-    const rpcs: any = {};
+    const rpcs: { [key: string]: string[] } = {};
     for (const index in domains) {
       const port: number = 8545 + Number.parseInt(index);
       rpcs[domains[index]] = [`http://127.0.0.1:${port}`];
@@ -203,7 +204,7 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
   }
 
   private getRPCs(domains: Array<string>) {
-    const rpcs: any = {};
+    const rpcs: { [key: string]: string[] } = {};
     domains.map((domain) => {
       rpcs[domain] = this.nomadConfig.rpcs[domain];
     });
@@ -211,10 +212,12 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
   }
 
   private getEtherscanApiKeys() {
-    const etherscanKeys: any = {};
+    const etherscanKeys: { [key: string]: string } = {};
     this.domains.map((domain) => {
       const key: string = "ETHERSCAN_KEY_" + domain.toUpperCase();
-      etherscanKeys[domain] = process.env[key];
+      if (process.env[key] != undefined) {
+        etherscanKeys[domain] = process.env[key] as string;
+      }
     });
     return etherscanKeys;
   }

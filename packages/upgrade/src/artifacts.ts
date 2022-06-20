@@ -43,7 +43,7 @@ export default class Artifacts {
   }
 
   public storeNewConfig(): void {
-    const filename: string = `${this.config.environment}-${this.runId}`;
+    const filename = `${this.config.environment}-${this.runId}`;
     fs.writeFileSync(
       `${this.artifactsDir}/${filename}.json`,
       JSON.stringify(this.config)

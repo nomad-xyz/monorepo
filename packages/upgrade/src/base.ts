@@ -26,23 +26,25 @@ export default abstract class Nomgrade extends Command {
   };
 
   nomadConfig: config.NomadConfig = config.blankConfig();
-  workingDir: string = "";
+  workingDir = "";
 
-  async init() {
+  async init(): Promise<void> {
     dotenv.config();
     // do some initialization
+    // Hack to parse flags in an abstract class
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
     const { flags } = (await this.parse(this.constructor as any)) as any;
     this.nomadConfig = this.getConfigFromPath(flags.config);
     this.workingDir = flags.workingDir;
   }
 
-  async catch(err: Error) {
+  async catch(err: Error): Promise<Error> {
     // add any custom logic to handle errors from the command
     // or simply return the parent class error handling
     return super.catch(err);
   }
 
-  getConfigFromPath(path: string) {
+  getConfigFromPath(path: string): config.NomadConfig {
     // try loading as a local filepath
     return JSON.parse(fs.readFileSync(path).toString());
   }

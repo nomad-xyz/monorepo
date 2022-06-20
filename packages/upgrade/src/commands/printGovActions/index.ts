@@ -1,11 +1,13 @@
 import { CliUx, Flags } from "@oclif/core";
 import { NomadContext } from "@nomad-xyz/sdk";
+import { providers, Signer } from "ethers";
 import { Call, CallBatch } from "@nomad-xyz/sdk-govern";
 import * as contracts from "@nomad-xyz/contracts-core";
 import * as configuration from "@nomad-xyz/configuration";
 import Command from "../../base";
 import Artifacts from "../../artifacts";
 
+type Provider = providers.Provider;
 export default class PrintGovActions extends Command {
   static flags = {
     ...Command.flags,
@@ -27,8 +29,9 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
     "Print governance actions to upgrade the Nomad protocol according to latest config";
   static usage = "printGovActions -c <path_to_config>";
 
+  // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   flags: any;
-  domains: any;
+  domains: string[];
   async run(): Promise<void> {
     CliUx.ux.action.start(`Printing Governance Actions`);
 
@@ -59,7 +62,7 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
     domains: string[],
     config: configuration.NomadConfig,
     workingDir: string
-  ) {
+  ): Promise<void> {
     // instantiate empty CallBatch from config
     const context = new NomadContext(config);
     console.log(context.governor);
@@ -73,10 +76,14 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
       const bridge = config.bridge[domainName];
 
       // instantiate upgrade beacon controller contract
+      //
+      const connection: Provider | Signer = context.getConnection(
+        domainName
+      ) as Provider | Signer;
       const upgradeBeaconController =
         contracts.UpgradeBeaconController__factory.connect(
           core.upgradeBeaconController,
-          context.getConnection(domainName)!
+          connection
         );
 
       // load an array of contracts to upgrade

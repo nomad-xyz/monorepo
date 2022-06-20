@@ -27,7 +27,7 @@ export default class ForkTest extends Command {
 
   runId!: number;
 
-  async run() {
+  async run(): Promise<void> {
     // get the CLI flags
     const { flags } = await this.parse(ForkTest);
     const { forkUrl, domainName } = flags;
@@ -87,7 +87,7 @@ export default class ForkTest extends Command {
 
     // If there is a test, anvil's chainId = 31337
     // Fork tests are always local, thus we hardcode the chainId
-    const chainId: number = 31337;
+    const chainId = 31337;
 
     // print the artifacts from forge command
     const artifacts = new Artifacts(
