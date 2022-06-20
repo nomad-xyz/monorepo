@@ -6,15 +6,18 @@
   "license": "Apache 2.0",
   "author": "Illusory Systems Inc.",
   "scripts": {
-    "any": "NODE_OPTIONS=--max-old-space-size=4096 ts-node main",
-    "api": "PROGRAMM=api ts-node main",
-    "build": "prisma generate",
-    "build_docker": "docker-compose build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD)",
-    "core": "PROGRAMM=core ts-node main",
+    "docker:build": "docker-compose build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD)",
+    "docker:release": "docker buildx build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) --platform linux/amd64,linux/arm64 --push -t gcr.io/nomad-xyz/nomad-indexer:sha-$(git rev-parse --short HEAD) .",
     "lint": "eslint --fix ./src",
-    "migrate": "prisma db push",
-    "release-docker": "docker buildx build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) --platform linux/amd64,linux/arm64 --push -t gcr.io/nomad-xyz/nomad-indexer:sha-$(git rev-parse --short HEAD) .",
-    "start": "npm run migrate && npm run any"
+    "test": "echo TODO",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma db push",
+    "run:all": "NODE_OPTIONS=--max-old-space-size=4096 yarn run:core && yarn run:api",
+    "run:api": "ts-node ./api/index.ts",
+    "run:core": "PROGRAM=core ts-node main",
+    "start:all": "yarn migrate && yarn run:all",
+    "start:core": "yarn migrate && yarn run:core",
+    "start:api": "yarn migrate && yarn run:api"
   },
   "dependencies": {
     "@graphql-tools/schema": "^8.3.5",
