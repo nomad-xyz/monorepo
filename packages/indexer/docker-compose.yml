@@ -3,7 +3,7 @@ services:
   indexer:
     build: .
     restart: always
-    command: npm run start indexer
+    command: yarn start:core
     env_file: .env
     environment:
       - PROGRAM=core
@@ -19,7 +19,7 @@ services:
   api:
     build: .
     restart: always
-    command: npm run start indexer
+    command: yarn start:api
     ports:
       - "8080:9090"
       - "8081:3000"

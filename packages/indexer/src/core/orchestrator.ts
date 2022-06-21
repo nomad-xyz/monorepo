@@ -9,6 +9,7 @@ import { Indexer } from './indexer';
 import { IndexerCollector } from './metrics';
 import { RedisClient } from './types';
 import { sleep } from './utils';
+import { nodeEnv } from '../config';
 
 interface TbdPackage {
   ts: Date;
@@ -105,7 +106,7 @@ export class Orchestrator {
     await this.initHealthCheckers();
     await this.initalFeedConsumer();
     try {
-      if (process.env.NODE_ENV === 'spooky things') {
+      if (nodeEnv === 'spooky things') {
         await this.checkAllIntegrity();
       }
     } catch (e) {

@@ -32,13 +32,13 @@ export class DB {
     this.sdk = sdk;
   }
 
-  async connect() {}
+  async connect(): Promise<void> {}
 
-  async disconnect() {
+  async disconnect(): Promise<void> {
     await this.client.$disconnect();
   }
 
-  get startupSync() {
+  get startupSync(): boolean {
     const value = this.syncedOnce;
     this.syncedOnce = true;
     return !value;
@@ -90,8 +90,8 @@ export class DB {
     );
   }
 
-  async getAllMessages(take=0, skip=0): Promise<NomadMessage[]> {
-    const args: {take?:number, skip?:number} = {};
+  async getAllMessages(take = 0, skip = 0): Promise<NomadMessage[]> {
+    const args: { take?: number; skip?: number } = {};
     if (take) {
       args.take = take;
     }
@@ -211,7 +211,7 @@ export class DB {
     });
   }
 
-  async insertMessage(messages: NomadMessage[]) {
+  async insertMessage(messages: NomadMessage[]): Promise<undefined> {
     if (!messages.length) return;
 
     this.metrics.incDbRequests(DbRequestType.Insert, messages.length);
@@ -226,7 +226,7 @@ export class DB {
     return;
   }
 
-  async updateMessage(messages: NomadMessage[]) {
+  async updateMessage(messages: NomadMessage[]): Promise<undefined> {
     if (!messages.length) return;
 
     const limit = pLimit(10);
