@@ -15,13 +15,13 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@nomad-xyz/configuration": "^0.1.0-rc.23",
-    "@nomad-xyz/contracts-bridge": "workspace:^",
-    "@nomad-xyz/contracts-core": "workspace:^",
-    "@nomad-xyz/contracts-router": "workspace:^",
-    "@nomad-xyz/multi-provider": "workspace:^",
-    "@nomad-xyz/sdk": "workspace:^",
-    "@nomad-xyz/sdk-govern": "workspace:^",
+    "@nomad-xyz/configuration": "0.1.0-rc.25",
+    "@nomad-xyz/contracts-bridge": "^1.0.0-rc.3",
+    "@nomad-xyz/contracts-core": "^1.0.0-rc.3",
+    "@nomad-xyz/contracts-router": "^1.0.0-rc.3",
+    "@nomad-xyz/multi-provider": "^1.0.0-rc.5",
+    "@nomad-xyz/sdk": "^2.0.0-rc.20",
+    "@nomad-xyz/sdk-govern": "1.0.0-rc.17",
     "@oclif/core": "^1.9.2",
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-plugins": "^2.0.1"
