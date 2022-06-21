@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- update `executeGovernorDomain` script to throw informative errors when it cannot submit the transaction
+
 ### 1.0.0-rc.17
 
 - chore: bump configuration to v0.1.0-rc.23
