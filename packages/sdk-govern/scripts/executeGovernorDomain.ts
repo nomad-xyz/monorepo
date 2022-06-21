@@ -46,7 +46,7 @@ async function run() {
     // if the signer provided is not the governor,
     // inform the caller
     if (!equalIds(governor, signer.address)) {
-        throw new Error(`Signer is not the Governor key. Update SIGNER_KEY in .env\nExpected Governor: ${governor}\nActual Provided: ${signer.address}`);
+        throw new Error(`Signer is not the Governor key. Update SIGNER_KEY in .env \nExpected Governor: ${governor} \nActual Provided: ${signer.address}`);
     }
 
     // if the governor is an EOA
