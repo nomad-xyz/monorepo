@@ -237,5 +237,7 @@ Due to a parsing bug, this flag must be passed at the end of the command. e.g 'n
     process.env.NOMAD_XAPP_CONNECTION_MANAGER =
       this.nomadConfig.core[domainName].xAppConnectionManager;
     process.env.NOMAD_RECOVERY_TIMELOCK = recoveryTimelock.toString();
+    process.env.NOMAD_UPDATER_MANAGER =
+      this.nomadConfig.core[domainName].updaterManager;
   }
 }

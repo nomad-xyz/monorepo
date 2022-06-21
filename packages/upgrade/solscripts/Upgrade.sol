@@ -28,6 +28,7 @@ contract Upgrade is Test {
   uint32 domain;
   uint256 recoveryTimelock;
   address xAppConnectionManager;
+  address updaterManager;
   /*//////////////////////////////////////////////////////////////
                             DEPLOYED CONTRACTS
   //////////////////////////////////////////////////////////////*/
@@ -46,20 +47,24 @@ contract Upgrade is Test {
   function deploy(uint32 _domain, string memory _domainName) public {
     domain = _domain;
     title("Upgrading Contracts on domain ", _domainName);
+    loadUpgradeEnv();
+    require(domain != 0, "domain can't be zero");
+    require(recoveryTimelock != 0, "recovery timelock can't be zero");
+    require(
+      xAppConnectionManager != address(0),
+      "xAppConnectionManager can't be address(0)"
+    );
+    require(updaterManager != address(0), "updaterManager can't be 0");
     vm.startBroadcast();
     deployImplementations();
-    // initializeImplementations();
+    initializeImplementations();
     vm.stopBroadcast();
   }
 
   function loadUpgradeEnv() public {
     recoveryTimelock = vm.envUint("NOMAD_RECOVERY_TIMELOCK");
     xAppConnectionManager = vm.envAddress("NOMAD_XAPP_CONNECTION_MANAGER");
-    require(recoveryTimelock != 0, "recoveryTimelock can't be 0");
-    require(
-      xAppConnectionManager != address(0),
-      "xAppConnectionManager can't be address(0)"
-    );
+    updaterManager = vm.envAddress("NOMAD_UPDATER_MANAGER");
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -106,12 +111,12 @@ contract Upgrade is Test {
     // despite the fact that in Nomad's architecture,
     // un-initialized implementations can't harm the protocol
     // (unless, in the future, we introduce delegatecall in any implementations)
-    home.initialize(IUpdaterManager(xAppConnectionManager));
-    replica.initialize(0, address(0), bytes32(0), 0);
-    governanceRouter.initialize(xAppConnectionManager, address(0));
-    tokenRegistry.initialize(address(bridgeToken), xAppConnectionManager);
-    bridgeRouter.initialize(address(tokenRegistry), xAppConnectionManager);
-    bridgeToken.initialize();
+    home.initialize(IUpdaterManager(updaterManager));
+    // replica.initialize(0, address(0), bytes32(0), 0);
+    // governanceRouter.initialize(xAppConnectionManager, address(0));
+    // tokenRegistry.initialize(address(bridgeToken), xAppConnectionManager);
+    // bridgeRouter.initialize(address(tokenRegistry), xAppConnectionManager);
+    // bridgeToken.initialize();
   }
 
   /*//////////////////////////////////////////////////////////////

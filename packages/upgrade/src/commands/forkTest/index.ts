@@ -73,32 +73,38 @@ export default class ForkTest extends Command {
       this.nomadConfig.core[domainName].xAppConnectionManager;
     process.env.NOMAD_RECOVERY_TIMELOCK = recoveryTimelock.toString();
 
+    process.env.NOMAD_UPDATER_MANAGER = core.updaterManager;
+
     // run the forge command
     const forge = new Forge(this.nomadConfig, domainName, this.workingDir);
     forge.command = `FOUNDRY_PROFILE=upgrade forge test --ffi --fork-url ${forkUrl} -vvvv`;
-    const { stdout, stderr } = await forge.executeCommand();
-    if (stdout) {
-      this.log(`${stdout}`);
+    try {
+      const { stdout, stderr } = await forge.executeCommand();
+      if (stdout) {
+        this.log(`${stdout}`);
+      }
+      if (stderr) {
+        this.warn(`${stderr}`);
+      }
+
+      // If there is a test, anvil's chainId = 31337
+      // Fork tests are always local, thus we hardcode the chainId
+      const chainId = 31337;
+
+      // print the artifacts from forge command
+      const artifacts = new Artifacts(
+        `${stdout}`,
+        domainName,
+        this.nomadConfig,
+        this.workingDir,
+        chainId,
+        this.runId
+      );
+      artifacts.storeOutput("upgrade-forkTest");
+    } catch (err) {
+      this.warn(`${err}`);
+      throw err;
     }
-    if (stderr) {
-      this.warn(`${stderr}`);
-    }
-
-    // If there is a test, anvil's chainId = 31337
-    // Fork tests are always local, thus we hardcode the chainId
-    const chainId = 31337;
-
-    // print the artifacts from forge command
-    const artifacts = new Artifacts(
-      `${stdout}`,
-      domainName,
-      this.nomadConfig,
-      this.workingDir,
-      chainId,
-      this.runId
-    );
-    artifacts.storeOutput("upgrade-forkTest");
-
     // finish
     CliUx.ux.action.stop("Fork Test completed");
   }
