@@ -16,6 +16,7 @@ import Logger from 'bunyan';
 import { RedisClient } from './types';
 import { getRedis } from './redis';
 import { getRateLimit, RPCRateLimiter } from './rateLimiting';
+import { batchSize, isDevelopment } from '../config';
 
 type ShortTx = {
   gasPrice?: ethers.BigNumber;
@@ -90,9 +91,7 @@ function txReceiptDecode(encoded: string): ShortTxReceipt {
   return JSON.parse(encoded, reviver);
 }
 
-const BATCH_SIZE = process.env.BATCH_SIZE
-  ? parseInt(process.env.BATCH_SIZE)
-  : 2000;
+const BATCH_SIZE = batchSize;
 const RETRIES = 100;
 const TO_BLOCK_LAG = 1;
 const FROM_BLOCK_LAG = 40;
@@ -125,7 +124,7 @@ export class Indexer {
     this.domain = domain;
     this.sdk = sdk;
     this.orchestrator = orchestrator;
-    this.develop = process.env.NODE_ENV === 'development';
+    this.develop = isDevelopment;
     this.persistance = new RedisPersistance(domain, redis);
     this.blockCache = new KVCache(
       'b_' + String(this.domain),
