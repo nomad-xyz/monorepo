@@ -112,7 +112,7 @@ export class BaseMetricsCollector extends MetricsCollector {
   }
 
   incMalfunctions(home: string, name: string) {
-    this.gasUsed.labels(home, name).inc();
+    this.malfunctions.labels(home, name).inc();
   }
 }
 
