@@ -112,11 +112,11 @@ contract Upgrade is Test {
     // un-initialized implementations can't harm the protocol
     // (unless, in the future, we introduce delegatecall in any implementations)
     home.initialize(IUpdaterManager(updaterManager));
-    // replica.initialize(0, address(0), bytes32(0), 0);
-    // governanceRouter.initialize(xAppConnectionManager, address(0));
-    // tokenRegistry.initialize(address(bridgeToken), xAppConnectionManager);
-    // bridgeRouter.initialize(address(tokenRegistry), xAppConnectionManager);
-    // bridgeToken.initialize();
+    replica.initialize(0, address(0), bytes32(0), 0);
+    governanceRouter.initialize(xAppConnectionManager, address(0));
+    tokenRegistry.initialize(address(bridgeToken), xAppConnectionManager);
+    bridgeRouter.initialize(address(tokenRegistry), xAppConnectionManager);
+    bridgeToken.initialize();
   }
 
   /*//////////////////////////////////////////////////////////////
