@@ -2574,19 +2574,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk@npm:^2.0.0-rc.20":
-  version: 2.0.0-rc.21
-  resolution: "@nomad-xyz/sdk@npm:2.0.0-rc.21"
-  dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.23
-    "@nomad-xyz/contracts-core": ^1.0.0-rc.3
-    "@nomad-xyz/multi-provider": ^1.0.0-rc.5
-    axios: ^0.27.2
-    ethers: ^5.0.0
-  checksum: 1f51bbe8e0bb7f68a8fe00fd3269277db7b13051b390cbc040b04aed4278fec40b72fdedad189062b6bdf1c49c0bf38fe7fee1d8fa33daeb2e9ff261578567af
-  languageName: node
-  linkType: hard
-
 "@nomad-xyz/upgrade@workspace:packages/upgrade":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/upgrade@workspace:packages/upgrade"
@@ -2596,7 +2583,7 @@ __metadata:
     "@nomad-xyz/contracts-core": ^1.0.0-rc.3
     "@nomad-xyz/contracts-router": ^1.0.0-rc.3
     "@nomad-xyz/multi-provider": ^1.0.0-rc.5
-    "@nomad-xyz/sdk": ^2.0.0-rc.20
+    "@nomad-xyz/sdk": "workspace:^"
     "@nomad-xyz/sdk-govern": 1.0.0-rc.17
     "@oclif/core": ^1.9.2
     "@oclif/plugin-help": ^5
