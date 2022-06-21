@@ -76,7 +76,6 @@ export default class ForkTest extends Command {
     // run the forge command
     const forge = new Forge(this.nomadConfig, domainName, this.workingDir);
     forge.command = `FOUNDRY_PROFILE=upgrade forge test --ffi --fork-url ${forkUrl} -vvvv`;
-    console.log(process.env);
     const { stdout, stderr } = await forge.executeCommand();
     if (stdout) {
       this.log(`${stdout}`);
