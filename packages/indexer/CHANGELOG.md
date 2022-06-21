@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix: update yarn migrate script references
 - chore: refactor api service
 - chore: standardize script commands
 - feat: add config file
