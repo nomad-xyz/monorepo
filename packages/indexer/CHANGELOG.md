@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- chore: bump sdk, sdk-bridge, multi-provider, contracts-bridge package versions
 - fix: update yarn migrate script references
 - chore: refactor api service
 - chore: standardize script commands
