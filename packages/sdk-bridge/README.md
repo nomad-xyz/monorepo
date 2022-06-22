@@ -15,6 +15,27 @@ networks.
 
 -------------------------
 
+### Setup (front-end only)
+
+Configure webpack with `wasm`, `syncWebAssembly` and `topLevelAwait`:
+
+```js
+module: {
+  rules: [
+    {
+      test: /\.wasm$/,
+      type: 'webassembly/sync',
+    },
+  ],
+},
+experiments: {
+  syncWebAssembly: true,
+  topLevelAwait: true,
+},
+```
+
+-------------------------
+
 ### Intended Usage
 
 Instantiate a [BridgeContext](https://docs.nomad.xyz/sdk-bridge/classes/bridgecontext):

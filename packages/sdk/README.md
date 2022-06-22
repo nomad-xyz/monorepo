@@ -13,6 +13,27 @@ developers to easily interact with the Nomad system on any number of networks.
 
 -------------------------
 
+### Setup (front-end only)
+
+Configure webpack with `wasm`, `syncWebAssembly` and `topLevelAwait`:
+
+```js
+module: {
+  rules: [
+    {
+      test: /\.wasm$/,
+      type: 'webassembly/sync',
+    },
+  ],
+},
+experiments: {
+  syncWebAssembly: true,
+  topLevelAwait: true,
+},
+```
+
+-------------------------
+
 ### Intended Usage
 
 Instantiate a [NomadContext](https://docs.nomad.xyz/sdk/classes/nomadcontext):
