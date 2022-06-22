@@ -169,6 +169,8 @@ class Env {
     const le = new Env({domain: t.domainNumber, id: '0x'+'00'.repeat(20)});
     le.addNetwork(t);
     le.addNetwork(j);
+    
+    le.wethDeploy();
 
     console.log(`Added Tom and Jerry`);
 
