@@ -28,6 +28,7 @@ export const batchSize = parseInt(process.env.BATCH_SIZE || '2000');
 export const redisUrl = process.env.REDIS_URL || 'redis://redis:6379';
 
 // API CONFIG
+// TODO: determine if we still need metricsPort
 export const metricsPort = parseInt(process.env.METRICS_PORT || '9090');
 export const useAllResolvers = process.env.API_USE_ALL_RESOLVERS === 'TRUE';
 export const gitCommit = process.env.GIT_COMMIT;

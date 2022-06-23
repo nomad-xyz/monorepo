@@ -1,17 +1,15 @@
-import express, { Response, Router } from 'express';
+import { Router } from 'express';
 import * as Sentry from '@sentry/node';
 import * as Tracing from '@sentry/tracing';
 import { IndexerCollector } from '../core/metrics';
 import { createLogger } from '../core/utils';
 import { getSdk } from '../core/sdk';
 import { DB } from '../core/db';
-import { register } from 'prom-client';
 import {
   useAllResolvers,
   configOverrideLocation,
   environment,
   logLevel,
-  metricsPort,
 } from '../config';
 import { NonEmptyArray } from 'type-graphql';
 import {
@@ -36,9 +34,6 @@ import {
 } from '@generated/type-graphql';
 import { buildSchema } from 'type-graphql';
 import { GraphQLSchema } from 'graphql';
-import { randomString } from '../core/utils';
-import { prefix } from '../core/metrics';
-import promBundle from 'express-prom-bundle';
 
 const logger = createLogger('indexer api - db', environment, logLevel);
 const indexerMetrics = new IndexerCollector(environment, logger);
@@ -86,42 +81,6 @@ export const getGraphqlSchema = async (): Promise<GraphQLSchema> => {
     resolvers: resolversToBuild,
     validate: false,
   });
-};
-
-export const startMetricsServer = () => {
-  const metricsServer = express();
-
-  metricsServer.get('/metrics', async (_, res: Response) => {
-    res.set('Content-Type', register.contentType);
-    res.end(await register.metrics());
-  });
-
-  const logger = createLogger('indexer api - metrics', environment, logLevel);
-
-  logger.info(
-    {
-      endpoint: `http://0.0.0.0:${metricsPort}/metrics`,
-    },
-    'Prometheus metrics exposed',
-  );
-
-  metricsServer.listen(metricsPort);
-};
-
-export const getMetricsMiddleware = (): promBundle.Middleware => {
-  // Kludge. I don't know how to prevent promBundle from exposing metricsPath
-  const metricsPath = '/' + randomString(20); // '/metrics'
-
-  const metricsMiddleware = promBundle({
-    httpDurationMetricName: prefix + '_api',
-    buckets: [0.1, 0.3, 0.6, 1, 1.5, 2.5, 5],
-    includeMethod: true,
-    includePath: true,
-    metricsPath,
-    promRegistry: register,
-  });
-
-  return metricsMiddleware;
 };
 
 export const initSentry = (app: Router): void => {
