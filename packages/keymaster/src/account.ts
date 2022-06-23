@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import { INetwork } from "./config";
 import { green, red, yellow } from "./color";
-import { eth, OptionalNetworkArgs, sleep } from "./utils";
+import { eth, inEth, OptionalNetworkArgs, sleep } from "./utils";
 import { MyJRPCProvider } from "./retry_provider/provider";
 import { Context } from "./context";
 import { AwsKmsSigner } from "./kms";
@@ -53,6 +53,7 @@ export class Account extends Accountable {
     options?: OptionalNetworkArgs
   ) {
     super(name, ctx);
+    console.log(red(`Account name ${name}, threshold: ${options?.threshold}`));
     this._treshold = ethers.BigNumber.from(options?.threshold || eth(1.0));
     this._address = address;
     this.provider = provider;
@@ -130,7 +131,7 @@ export class Agent extends Account {
       this.replica.name,
       this.remote ? this.replica.name : this.home.name,
       this.type,
-      balance.div("1" + "0".repeat(18)).toNumber()
+      inEth(balance)
     ); // TODO
     return balance;
   }
@@ -262,7 +263,7 @@ export class Bank extends Accountable {
       home,
       home,
       "bank",
-      balance.div("1" + "0".repeat(18)).toNumber()
+      inEth(balance)
     ); // TODO
 
     return balance;
@@ -326,7 +327,7 @@ export class Bank extends Accountable {
         a.home.name,
         this.home.name,
         "bank",
-        value.div("1" + "0".repeat(18)).toNumber()
+        inEth(value)
       );
     } else {
       this.ctx.metrics.incTransfer(
@@ -334,7 +335,7 @@ export class Bank extends Accountable {
         (a as RemoteAgent).replica.name,
         this.home.name,
         "bank",
-        value.div("1" + "0".repeat(18)).toNumber()
+        inEth(value)
       );
     }
 
@@ -404,7 +405,7 @@ export class Network {
             balance.name,
             [
               await balance.shouldTopUp(),
-              (await balance.balance()).div("1" + "0".repeat(18)).toString(),
+              inEth(await balance.balance()),
             ],
           ];
         }),
@@ -412,7 +413,7 @@ export class Network {
           "bank",
           [
             await this.bank.shouldTopUp(),
-            (await this.bank.balance()).div("1" + "0".repeat(18)).toString(),
+            inEth(await this.bank.balance()),
           ],
         ],
       ])
