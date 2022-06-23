@@ -4,6 +4,7 @@
 
 - chore: bump sdk, sdk-bridge, multi-provider, contracts-bridge package versions
 - fix: update yarn migrate script references
+- fix: re-add metrics server
 - chore: refactor api service
 - chore: standardize script commands
 - feat: add config file

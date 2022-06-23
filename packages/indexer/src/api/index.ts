@@ -12,6 +12,7 @@ import {
   getGraphqlSchema,
   getMetricsMiddleware,
   initSentry,
+  startMetricsServer,
 } from './utils';
 import * as Sentry from '@sentry/node';
 import { isProduction, port } from '../config';
@@ -56,6 +57,8 @@ app.use('/', router);
     // The error handler must be before any other error middleware and after all controllers
     app.use(Sentry.Handlers.errorHandler());
   }
+
+  startMetricsServer();
 
   app.use(getMetricsMiddleware());
 
