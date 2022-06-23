@@ -15,6 +15,13 @@ ETHERSCAN_KEY=
 
 Then, boot up docker.
 
+Run the following
+
+```sh
+cd hardhat
+docker build .
+```
+
 Lastly, cd into the neww folder and do:
 
 ```sh
