@@ -187,3 +187,10 @@ export function readConfig(l: string): KeymasterConfig {
   s = s.replaceAll("treshold", "threshold"); // there was a typo, so we want to make use the config doesn't have it
   return JSON.parse(s, reviver);
 }
+
+
+export const oneEth = ethers.BigNumber.from("1" + "0".repeat(18));
+
+export function inEth(n: ethers.BigNumber): number {
+  return Number(n.toBigInt() * 100n / oneEth.toBigInt()) / 100
+}
