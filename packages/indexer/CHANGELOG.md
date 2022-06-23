@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix: use 'bounded' cache setting on apollo server
 - chore: bump sdk, sdk-bridge, multi-provider, contracts-bridge package versions
 - fix: update yarn migrate script references
 - fix: re-add metrics server
