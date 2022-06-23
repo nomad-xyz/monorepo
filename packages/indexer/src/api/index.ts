@@ -62,6 +62,7 @@ app.use('/', router);
     context: {
       prisma: (await getDB()).client,
     },
+    cache: 'bounded',
   });
 
   if (isProduction) {
