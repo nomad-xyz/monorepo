@@ -150,7 +150,7 @@ export class Env {
 
     console.log(`Upped Tom and Jerry`);
 
-    const le = new Env({domain: t.domainNumber, id: '0x'+'00'.repeat(20)});
+    const le = new Env({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
     le.addNetwork(t);
     le.addNetwork(j);
 
