@@ -91,7 +91,7 @@ export class BaseMetricsCollector extends MetricsCollector {
     this.malfunctions = new Counter({
       name: prefix + "_malfunctions",
       help: "Counter that tracks unrecoverable malfunctions in a network.",
-      labelNames: [...labelNames, "name"],
+      labelNames: [...labelNames, "scope"],
     });
   }
 
@@ -111,8 +111,8 @@ export class BaseMetricsCollector extends MetricsCollector {
     this.gasUsed.labels(home, method).inc(amount);
   }
 
-  incMalfunctions(home: string, name: string) {
-    this.malfunctions.labels(home, name).inc();
+  incMalfunctions(home: string, scope: string) {
+    this.malfunctions.labels(home, scope).inc();
   }
 }
 
@@ -127,7 +127,7 @@ export class AccountMetricsCollector extends BaseMetricsCollector {
   constructor(logger: Logger) {
     super(logger);
 
-    const labelNames = ["home", "replica", "network", "type"];
+    const labelNames = ["home", "replica", "network", "role"];
 
     this.balance = new Gauge({
       name: prefix + "_balance",
@@ -152,35 +152,35 @@ export class AccountMetricsCollector extends BaseMetricsCollector {
     home: string,
     replica: string,
     network: string,
-    type: string,
+    role: string,
     balance: number
   ) {
-    this.balance.labels(home, replica, network, type).set(balance);
+    this.balance.labels(home, replica, network, role).set(balance);
   }
 
-  incTransfers(home: string, replica: string, network: string, type: string) {
-    this.transfers.labels(home, replica, network, type).inc();
+  incTransfers(home: string, replica: string, network: string, role: string) {
+    this.transfers.labels(home, replica, network, role).inc();
   }
 
   incTransferred(
     home: string,
     replica: string,
     network: string,
-    type: string,
+    role: string,
     amount: number
   ) {
-    this.transferred.labels(home, replica, network, type).inc(amount);
+    this.transferred.labels(home, replica, network, role).inc(amount);
   }
 
   incTransfer(
     home: string,
     replica: string,
     network: string,
-    type: string,
+    role: string,
     amount: number
   ) {
-    this.transfers.labels(home, replica, network, type).inc();
-    this.transferred.labels(home, replica, network, type).inc(amount);
+    this.transfers.labels(home, replica, network, role).inc();
+    this.transferred.labels(home, replica, network, role).inc(amount);
   }
 }
 
