@@ -22,8 +22,10 @@ cd hardhat
 docker build .
 ```
 
-Lastly, cd into the neww folder and do:
+cd into the neww folder and do:
 
 ```sh
 yarn run ts-node le.ts
 ```
+
+This should give you an erroring output regarding weth deployment. copy and paste the weth address into network.ts

@@ -546,7 +546,7 @@ contract GovernanceRouter is Version0, Initializable, IMessageRecipient {
         // require that the new governor is not the zero address
         require(_newGovernor != address(0), "cannot renounce governor");
         // require that the governor domain has a valid router
-        // returns false on jerry because governor is
+        // returns false on jerry because governor is 0x0.
         if (!_isLocalGovernor) {
             _mustHaveRouter(_newDomain);
         }

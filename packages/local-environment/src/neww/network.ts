@@ -40,8 +40,8 @@ export abstract class Network {
     abstract down(): Promise<void>;
     abstract isConnected(): Promise<boolean>;
 
-    constructor(name: string, domainNumber: number, chainId: number) {
-        this.connectedNetworks = [];
+    constructor(name: string, domainNumber: number, chainId: number, connectedNetworks: []) {
+        this.connectedNetworks = connectedNetworks;
         this.name = name;
         this.domainNumber = domainNumber;
         this.chainId = chainId;
@@ -210,8 +210,8 @@ export class HardhatNetwork extends Network {
     recoveryManager: string;
     weth: string;
 
-    constructor(name: string, domain: number) {
-        super(name, domain, domain);
+    constructor(name: string, domain: number, connectedNetworks: []) {
+        super(name, domain, domain, connectedNetworks);
         this.handler = new DockerizedNetworkActor(this.name+'kek');
         this.blockTime = 5;
         this.firstStart = false;
@@ -228,6 +228,10 @@ export class HardhatNetwork extends Network {
 
     get rpcs(): string[] {
         return [`http://localhost:${this.handler.port}`];
+    }
+
+    connectNetwork(n: Network) {
+      if (!this.connectedNetworks.includes(n)) this.connectedNetworks.push(n);
     }
 
     get specs(): NetworkSpecs {
@@ -263,14 +267,7 @@ export class HardhatNetwork extends Network {
             deployGas: 850000
           }
     }
-/*
-    private async wethAddy(): Promise<string>{
-        const jsonRpcProvider = new ethers.providers.JsonRpcProvider()
-        const owner = await jsonRpcProvider.getSigner()
-        const transactionCount = await owner.getTransactionCount()
-        return getContractAddress({from: owner._address, nonce: transactionCount})
-    }
-*/
+
     async deployWETHTom(): Promise<string>{
         const jsonRpcProvider = new ethers.providers.JsonRpcProvider("http://localhost:1337")
         const owner = await jsonRpcProvider.getSigner()
