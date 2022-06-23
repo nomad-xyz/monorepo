@@ -1,8 +1,9 @@
 import { createClient } from 'redis';
 import { RedisClient } from './types';
+import { redisUrl } from '../config';
 
 export function getRedis(): RedisClient {
   return createClient({
-    url: process.env.REDIS_URL || 'redis://redis:6379',
+    url: redisUrl,
   });
 }
