@@ -27,8 +27,22 @@ contract XAppConnectionManager is Ownable {
     mapping(uint32 => address) public domainToReplica;
     // watcher address => replica remote domain => has/doesn't have permission
     mapping(address => mapping(uint32 => bool)) private watcherPermissions;
+    // remote Home domain => TRUE if the channel has been blocked
+    mapping(uint32 => bool) public blocked;
 
     // ============ Events ============
+
+    /**
+     * @notice Emitted when a Watcher submits a signature to block a channel because of Fraud
+     * @param domain the remote domain of the Home contract for which Fraud has occurred
+     */
+    event ChannelBlocked(uint32 indexed domain, address indexed watcher);
+
+    /**
+     * @notice Emitted when governance un-blocks a channel once Fraud Recovery completes
+     * @param domain the remote domain of the Home contract for which Fraud has been recovered from
+     */
+    event ChannelUnblocked(uint32 indexed domain);
 
     /**
      * @notice Emitted when a new Replica is enrolled / added
@@ -64,21 +78,25 @@ contract XAppConnectionManager is Ownable {
     // ============ External Functions ============
 
     /**
-     * @notice Un-Enroll a replica contract
-     * in the case that fraud was detected on the Home
+     * @notice Block a channel in the case that fraud
+     * was detected from the Home's Updater
      * @dev in the future, if fraud occurs on the Home contract,
-     * the Watcher will submit their signature directly to the Home
+     * the Watcher will submit this signature directly to the Home
      * and it can be relayed to all remote chains to un-enroll the Replicas
      * @param _domain the remote domain of the Home contract for the Replica
      * @param _updater the address of the Updater for the Home contract (also stored on Replica)
      * @param _signature signature of watcher on (domain, replica address, updater address)
      */
-    function unenrollReplica(
+    function blockChannel(
         uint32 _domain,
         bytes32 _updater,
         bytes memory _signature
     ) external {
-        // ensure that the replica is currently set
+        // require that the channel has not already been blocked
+        // Note: if Watchers race to submit a signature,
+        // this will cause all but the first to have reverted txs
+        require(!blocked[_domain], "already blocked");
+        // ensure that there is a Replica for this domain
         address _replica = domainToReplica[_domain];
         require(_replica != address(0), "!replica exists");
         // ensure that the signature is on the proper updater
@@ -95,8 +113,24 @@ contract XAppConnectionManager is Ownable {
             _signature
         );
         require(watcherPermissions[_watcher][_domain], "!valid watcher");
-        // remove the replica from mappings
-        _unenrollReplica(_replica);
+        // block the channel
+        blocked[_domain] = true;
+        emit ChannelBlocked(_domain, _watcher);
+    }
+
+    /**
+     * @notice Owner Unblock a channel when Fraud Recovery has completed
+     * @param _domain the remote domain of the Home contract for the Replica
+     */
+    function unblockChannel(uint32 _domain) external onlyOwner {
+        // require that the channel is currently blocked
+        require(blocked[_domain], "!blocked");
+        // ensure that there is a Replica for this domain
+        address _replica = domainToReplica[_domain];
+        require(_replica != address(0), "!replica exists");
+        // unblock the channel
+        blocked[_domain] = false;
+        emit ChannelUnblocked(_domain);
     }
 
     /**
@@ -112,7 +146,7 @@ contract XAppConnectionManager is Ownable {
      * @param _replica the address of the Replica
      * @param _domain the remote domain of the Home contract for the Replica
      */
-    function ownerEnrollReplica(address _replica, uint32 _domain)
+    function enrollReplica(address _replica, uint32 _domain)
         external
         onlyOwner
     {
@@ -128,7 +162,7 @@ contract XAppConnectionManager is Ownable {
      * @notice Allow Owner to un-enroll Replica contract
      * @param _replica the address of the Replica
      */
-    function ownerUnenrollReplica(address _replica) external onlyOwner {
+    function unenrollReplica(address _replica) external onlyOwner {
         _unenrollReplica(_replica);
     }
 
@@ -172,12 +206,13 @@ contract XAppConnectionManager is Ownable {
     // ============ Public Functions ============
 
     /**
-     * @notice Check whether _replica is enrolled
+     * @notice Check whether _replica is enrolled and not blocked
      * @param _replica the replica to check for enrollment
      * @return TRUE iff _replica is enrolled
      */
     function isReplica(address _replica) public view returns (bool) {
-        return replicaToDomain[_replica] != 0;
+        uint32 _domain = replicaToDomain[_replica];
+        return _domain != 0 && !blocked[_domain];
     }
 
     // ============ Internal Functions ============
