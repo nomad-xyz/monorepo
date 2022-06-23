@@ -149,7 +149,6 @@ export class Env {
     ])
 
     console.log(`Upped Tom and Jerry`);
-    // Initialize governor for each domain
 
     const le = new Env({domain: t.domainNumber, id: '0x'+'00'.repeat(20)});
     le.addNetwork(t);
@@ -159,6 +158,11 @@ export class Env {
 
     // Notes, check governance router deployment on Jerry and see if that's actually even passing
     // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
+
+    console.log(await Promise.all([
+        t.deployWETHTom(),
+        j.deployWETHJerry()
+    ]))
 
     await le.deploy();
 
