@@ -215,7 +215,9 @@ export class Orchestrator {
   }
 
   async collectStatistics() {
+    this.logger.info(`Started collecting statistics`);
     const stats = await this.consumer.stats();
+    this.logger.info(`Statistics acquired`);
 
     this.allowedDomains.forEach((domain: number) => {
       const network = this.domain2name(domain);
@@ -232,6 +234,7 @@ export class Orchestrator {
         );
       }
     });
+    this.logger.info(`Fed statistics to metrics`);
   }
 
   async checkAllHealth() {
@@ -250,6 +253,7 @@ export class Orchestrator {
   }
 
   async initalFeedConsumer() {
+    this.logger.info(`Started initial feed consumer`);
     const events = (
       await Promise.all(
         Array.from(this.indexers.values()).map((indexer) =>
@@ -258,6 +262,8 @@ export class Orchestrator {
       )
     ).flat();
 
+    this.logger.info(`Initial feed contains: ${events.length} events`);
+
     events.sort((a, b) => {
       if (a.ts === b.ts) {
         return eventTypeToOrder(a) - eventTypeToOrder(b);
@@ -265,7 +271,9 @@ export class Orchestrator {
         return a.ts - b.ts;
       }
     });
+    this.logger.info(`Started actual consumption`);
     await this.consumer.consume(events);
+    this.logger.info(`Finished consumption of ${events.length}`);
   }
 
   async initIndexers() {

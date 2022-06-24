@@ -14,4 +14,4 @@ RUN yarn prisma:generate
 
 ADD src /app/
 
-CMD [ "yarn", "start:all" ]
+CMD [ "yarn", "start" ]
