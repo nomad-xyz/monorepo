@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+### 1.0.0-rc.21
+
+- upgrade: Nomad core contracts
 - update `executeGovernorDomain` script to throw informative errors when it cannot submit the transaction
 
 ### 1.0.0-rc.17
