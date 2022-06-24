@@ -9,7 +9,7 @@ import {
   program,
   environment,
   configOverrideLocation,
-  metricsPort,
+  // metricsPort,
   logLevel,
   Program,
 } from './config';
@@ -30,7 +30,7 @@ import {
     await apiRun(db, logger);
     logger.info(`Finished api run`);
   } else if (program === Program.CORE) {
-    m.startServer(metricsPort);
+    m.startServer(3000); // should be `metricsPort`, but thats a huge kludge now till next week :D
     await core.run(sdk, db, logger, m);
   } else {
     logger.error(`Cannot run both at the same time`);
