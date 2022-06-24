@@ -16,9 +16,9 @@
     "run:api": "ts-node ./api/index.ts",
     "run:core": "PROGRAM=core ts-node main",
     "start": "yarn start:all",
-    "start:all": "yarn migrate && yarn run:all",
-    "start:core": "yarn migrate && yarn run:core",
-    "start:api": "yarn migrate && yarn run:api"
+    "start:all": "yarn prisma:migrate && yarn run:all",
+    "start:core": "yarn prisma:migrate && yarn run:core",
+    "start:api": "yarn prisma:migrate && yarn run:api"
   },
   "dependencies": {
     "@graphql-tools/schema": "^8.3.5",
