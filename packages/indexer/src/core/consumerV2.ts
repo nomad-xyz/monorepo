@@ -613,8 +613,10 @@ export class ProcessorV2 extends Consumer {
       } else if (event.eventType === EventType.BridgeRouterReceive) {
         await this.bridgeRouterReceive(event);
       }
-      const percentage = ((++consumed) * 100 / events.length).toFixed(2);
-      this.logger.debug(`Consumed ${percentage}% (${consumed}/${events.length}) events.`); // debug
+      const percentage = ((++consumed * 100) / events.length).toFixed(2);
+      this.logger.debug(
+        `Consumed ${percentage}% (${consumed}/${events.length}) events.`,
+      ); // debug
     }
   }
 
