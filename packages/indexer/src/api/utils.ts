@@ -1,17 +1,9 @@
-import express, { Response, Router } from 'express';
+import { Router } from 'express';
 import * as Sentry from '@sentry/node';
 import * as Tracing from '@sentry/tracing';
-import { IndexerCollector } from '../core/metrics';
-import { createLogger } from '../core/utils';
-import { getSdk } from '../core/sdk';
-import { DB } from '../core/db';
 import { register } from 'prom-client';
 import {
   useAllResolvers,
-  configOverrideLocation,
-  environment,
-  logLevel,
-  metricsPort,
 } from '../config';
 import { NonEmptyArray } from 'type-graphql';
 import {
@@ -39,19 +31,8 @@ import { GraphQLSchema } from 'graphql';
 import { randomString } from '../core/utils';
 import { prefix } from '../core/metrics';
 import promBundle from 'express-prom-bundle';
+import Logger from 'bunyan';
 
-const logger = createLogger('indexer api - db', environment, logLevel);
-const indexerMetrics = new IndexerCollector(environment, logger);
-
-// TODO: consider making this into a singleton instead of a factory
-export const getDB = async (): Promise<DB> => {
-  const sdk = await getSdk(configOverrideLocation || environment);
-
-  const db = new DB(indexerMetrics, logger, sdk);
-  await db.connect();
-
-  return await db;
-};
 
 export const getGraphqlSchema = async (): Promise<GraphQLSchema> => {
   const resolversToBuild: NonEmptyArray<Function> | NonEmptyArray<string> =
@@ -86,26 +67,6 @@ export const getGraphqlSchema = async (): Promise<GraphQLSchema> => {
     resolvers: resolversToBuild,
     validate: false,
   });
-};
-
-export const startMetricsServer = () => {
-  const metricsServer = express();
-
-  metricsServer.get('/metrics', async (_, res: Response) => {
-    res.set('Content-Type', register.contentType);
-    res.end(await register.metrics());
-  });
-
-  const logger = createLogger('indexer api - metrics', environment, logLevel);
-
-  logger.info(
-    {
-      endpoint: `http://0.0.0.0:${metricsPort}/metrics`,
-    },
-    'Prometheus metrics exposed',
-  );
-
-  metricsServer.listen(metricsPort);
 };
 
 export const getMetricsMiddleware = (): promBundle.Middleware => {
