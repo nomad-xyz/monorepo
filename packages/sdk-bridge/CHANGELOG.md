@@ -2,9 +2,10 @@
 
 ### Unreleased
 
-### 1.0.0-rc.21
+### 1.1.0-rc.0
 
 - upgrade: contracts
+- fix: config fetch header override
 
 ### 1.0.0-rc.20
 
