@@ -1,32 +1,30 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { createLogger } from '../core/utils';
-import { gitCommit, environment, logLevel } from '../config';
-import { MsgRequest } from '../core/db';
-import { getDB } from './utils';
+import { gitCommit } from '../config';
+import { DB, MsgRequest } from '../core/db';
+import Logger from 'bunyan';
 
-const router = express.Router();
+export async function getRouter(db: DB, logger: Logger) {
+  const router = express.Router();
 
-const logger = createLogger('indexer api - routes', environment, logLevel);
+  // const logger = createLogger('indexer api - routes', environment, logLevel);
 
-const log = (req: Request, res: Response, next: NextFunction) => {
-  logger.info(`request to ${req.url}`);
-  next();
-};
+  const log = (req: Request, res: Response, next: NextFunction) => {
+    logger.info(`request to ${req.url}`);
+    next();
+  };
 
-function fail(res: Response, code: number, reason: string) {
-  return res.status(code).json({ error: reason });
-}
+  function fail(res: Response, code: number, reason: string) {
+    return res.status(code).json({ error: reason });
+  }
 
-router.get('/healthcheck', log, (_, res) => {
-  res.send('OK!');
-});
+  router.get('/healthcheck', log, (_, res) => {
+    res.send('OK!');
+  });
 
-router.get('/version', log, (_, res) => {
-  res.send(gitCommit);
-});
+  router.get('/version', log, (_, res) => {
+    res.send(gitCommit);
+  });
 
-(async () => {
-  const db = await getDB();
   router.get('/tx/:tx', log, async (req, res) => {
     const messages = await db.getMessageByEvm(req.params.tx);
     return res.json(messages.map((m) => m.serialize()));
@@ -95,6 +93,6 @@ router.get('/version', log, (_, res) => {
       fail(res, 403, 'something went wrong');
     }
   });
-})();
 
-export default router;
+  return router;
+}

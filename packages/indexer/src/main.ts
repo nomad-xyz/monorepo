@@ -1,5 +1,6 @@
 import * as core from './core';
 import { DB } from './core/db';
+import { run as apiRun } from './api';
 import { createLogger } from './core/utils';
 import { IndexerCollector } from './core/metrics';
 import { getSdk } from './core/sdk';
@@ -14,7 +15,9 @@ import {
 } from './config';
 
 (async () => {
-  const logger = createLogger('indexer', environment, logLevel);
+  const loggerName = program === Program.API ? 'indexer_api' : 'indexer';
+
+  const logger = createLogger(loggerName, environment, logLevel);
   const m = new IndexerCollector(environment, logger);
 
   const sdk = await getSdk(configOverrideLocation || environment);
@@ -24,15 +27,13 @@ import {
 
   if (program === Program.API) {
     await startTokenUpdater(sdk, db, logger);
+    await apiRun(db, logger);
     logger.info(`Finished api run`);
   } else if (program === Program.CORE) {
     m.startServer(metricsPort);
     await core.run(sdk, db, logger, m);
   } else {
-    logger.warn(`Starting all on the same process...`);
-    await startTokenUpdater(sdk, db, logger);
-    await Promise.all([core.run(sdk, db, logger, m)]).catch((e) =>
-      logger.error(`Error happened during run of api or core:`, e),
-    );
+    logger.error(`Cannot run both at the same time`);
+    process.exit(1);
   }
 })();
