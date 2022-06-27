@@ -24,7 +24,6 @@ echo "Creating storage layout diagrams.."
 echo "=======================" > $dir/../.storage-layout
 echo "👁👁 STORAGE LAYOUT snapshot 👁👁" >> $dir/../.storage-layout
 echo "=======================" >> $dir/../.storage-layout
-echo -e "\nCurrent git commit $(git rev-parse HEAD) \n\n" >> $dir/../.storage-layout
 
 for contract in ${contracts[@]}
 do
