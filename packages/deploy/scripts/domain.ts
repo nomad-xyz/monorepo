@@ -7,6 +7,6 @@ import { utils } from '@nomad-xyz/multi-provider';
     process.exit(1);
   }
 
-  const hexBytes = utils.getDomainFromString(network);
-  console.log(`${network} interpreted as hex number: ${hexBytes}`);
+  const decimalNumber: number = utils.getDomainFromString(network);
+  console.log(`${network} interpreted as a decimal number: ${decimalNumber}`);
 })();
