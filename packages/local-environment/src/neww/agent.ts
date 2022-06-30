@@ -10,13 +10,14 @@ export class Agents {
   relayer: Agent;
   processor: Agent;
   watchers: Agent[];
-  kathy?: Agent; 
+  kathy: Agent; 
 
   constructor() {
       this.updater = new LocalAgent(AgentType.Updater);
       this.relayer = new LocalAgent(AgentType.Relayer);
       this.processor = new LocalAgent(AgentType.Processor);
       this.watchers = [new LocalAgent(AgentType.Watcher)];
+      this.kathy = new LocalAgent(AgentType.Kathy);
   }
 }
 

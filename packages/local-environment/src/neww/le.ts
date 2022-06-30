@@ -4,12 +4,14 @@ import { DeployContext } from "../../../deploy/src/DeployContext";
 import { HardhatNetwork, Network } from "./network";
 import * as ethers from 'ethers';
 import { NonceManager } from "@ethersproject/experimental";
+import { Agents } from "./agent";
 import fs from 'fs';
 dotenv.config();
 console.log(dotenv.config())
 
 export class Env {
     networks: Network[];
+    agent: Agents[]
     governor: NomadLocator;
 
     constructor(governor: NomadLocator) {
@@ -20,6 +22,10 @@ export class Env {
     // Adds a network to the array of networks if it's not already there.
     addNetwork(n: Network) {
         if (!this.networks.includes(n)) this.networks.push(n);
+    }
+
+    addAgent(a: Agents) {
+        if (!this.agent.includes(a)) this.agent.push(a);
     }
     
     // Gets governing network
@@ -54,19 +60,19 @@ export class Env {
 
     async deploy(): Promise<void> {
         if (this.deployedOnce()) {
-             
-        } else {
-             this.deployFresh()
-             return
-        }
 
         console.log(`Deploying!`, JSON.stringify(this.nomadConfig(), null, 4));
 
         const outputDir = './output';
         const governanceBatch = await this.deployContext.deployAndRelinquish();
         console.log(`Deployed! gov batch:`, governanceBatch);
-        this.outputConfigAndVerification(outputDir, this.deployContext);
+        console.log(`Printing verification ` + JSON.stringify(this.deployContext, null, 2));
+        await this.outputConfigAndVerification(outputDir, this.deployContext);
         await this.outputCallBatch(outputDir, this.deployContext);
+        } else {
+                this.deployFresh()
+                return
+        }
     }
 
     outputConfigAndVerification(outputDir: string, deployContext: DeployContext) {
@@ -85,7 +91,7 @@ export class Env {
               JSON.stringify(verification, null, 2),
           );
         }
-      }
+    }
 
     async outputCallBatch(outputDir: string, deployContext: DeployContext) {
         const governanceBatch = deployContext.callBatch;
@@ -104,8 +110,9 @@ export class Env {
         console.log(`CHECKS PASS!`);
     }
 
+    //@TODO Feature: switches after contracts exist
     deployedOnce(): boolean {
-        return false;
+        return true;
     }
 
     get deployerKey1(): string {
@@ -168,10 +175,40 @@ export class Env {
 
     console.log(`Upped Tom and Jerry`);
 
+    const agents = new Agents();
+
+    const updater = agents.updater;
+    const relayer = agents.relayer;
+    const processor = agents.processor;
+    const watchers = agents.watchers;
+    const kathy = agents.kathy;
+
+    await Promise.all([
+        
+        updater.connect(),
+        updater.start(),
+        relayer.connect(),
+        relayer.start(),
+        processor.connect(),
+        processor.start(),
+        watchers[0].connect(),
+        watchers[0].start(),
+        watchers[1].connect(),
+        watchers[1].start(),
+        kathy.connect(),
+        kathy.start()
+    ])
+
     const le = new Env({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
     le.addNetwork(t);
     le.addNetwork(j);
     console.log(`Added Tom and Jerry`);
+
+    le.addAgent(updater);
+    le.addAgent(relayer);
+    le.addAgent(processor);
+    le.addAgent(watchers[0]);
+    le.addAgent(kathy);
 
     t.connectNetwork(j);
     j.connectNetwork(t);
