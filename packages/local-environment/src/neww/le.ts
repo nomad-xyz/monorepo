@@ -184,7 +184,6 @@ export class Env {
     const kathy = agents.kathy;
 
     await Promise.all([
-        
         updater.connect(),
         updater.start(),
         relayer.connect(),
@@ -204,11 +203,8 @@ export class Env {
     le.addNetwork(j);
     console.log(`Added Tom and Jerry`);
 
-    le.addAgent(updater);
-    le.addAgent(relayer);
-    le.addAgent(processor);
-    le.addAgent(watchers[0]);
-    le.addAgent(kathy);
+    le.addAgent(agents);
+    console.log(`Added agents`);
 
     t.connectNetwork(j);
     j.connectNetwork(t);
