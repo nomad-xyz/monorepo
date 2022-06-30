@@ -1,8 +1,6 @@
 import { KeymasterConfig } from "./config";
 import { Accountable, Network, RemoteAgent, RemoteWatcher } from "./account";
 import { Context } from "./context";
-import { formatEther } from "ethers/lib/utils";
-import { red } from "./color";
 
 export class Keymaster {
   config: KeymasterConfig;
@@ -68,11 +66,14 @@ export class Keymaster {
     return this;
   }
 
-  async checkAndPayEnabledNetworks(networks: string[], dryrun = false): Promise<void> {
+  async checkAndPayEnabledNetworks(
+    networks: string[],
+    dryrun = false
+  ): Promise<void> {
     for (const net of this.networks.values()) {
       try {
         if (networks.length === 0 || networks.includes(net.name)) {
-            await net.checkAndPay(dryrun);
+          await net.checkAndPay(dryrun);
         }
       } catch (e) {
         net.ctx.logger.error(

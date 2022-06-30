@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { INetwork } from "./config";
+import { AddressWithThreshold, INetwork, justAddress } from "./config";
 import { green, red, yellow } from "./color";
 import { eth, inEth, OptionalNetworkArgs, sleep } from "./utils";
 import { MyJRPCProvider } from "./retry_provider/provider";
@@ -47,15 +47,25 @@ export class Account extends Accountable {
   provider: ethers.providers.Provider;
   constructor(
     name: string,
-    address: string,
+    address: AddressWithThreshold,
     provider: ethers.providers.Provider,
     ctx: Context,
     options?: OptionalNetworkArgs
   ) {
     super(name, ctx);
-    console.log(red(`Account name ${name}, threshold: ${options?.threshold}`));
-    this._treshold = ethers.BigNumber.from(options?.threshold || eth(1.0));
-    this._address = address;
+
+    let realAddress;
+    let threshold: ethers.BigNumberish;
+    if (typeof address === "string") {
+      realAddress = address;
+      threshold = options?.threshold || eth(1.337);
+    } else {
+      realAddress = address.address;
+      threshold = address.threshold;
+    }
+
+    this._treshold = ethers.BigNumber.from(threshold);
+    this._address = realAddress;
     this.provider = provider;
   }
 
@@ -111,7 +121,7 @@ export class Agent extends Account {
     home: Network,
     replica: Network,
     type: string,
-    address: string,
+    address: AddressWithThreshold,
     ctx: Context,
     options?: OptionalNetworkArgs
   ) {
@@ -141,7 +151,7 @@ export class LocalAgent extends Agent {
   constructor(
     home: Network,
     type: string,
-    address: string,
+    address: AddressWithThreshold,
     ctx: Context,
     options?: OptionalNetworkArgs
   ) {
@@ -150,7 +160,12 @@ export class LocalAgent extends Agent {
       home,
       type,
       address,
-      ctx.with({ type, address, home: home.name, replica: home.name }),
+      ctx.with({
+        type,
+        address: justAddress(address),
+        home: home.name,
+        replica: home.name,
+      }),
       { threshold: home.threshold, ...options }
     );
   }
@@ -165,16 +180,22 @@ export class RemoteAgent extends Account {
     home: Network,
     replica: Network,
     type: string,
-    address: string,
+    address: AddressWithThreshold,
     ctx: Context,
     options?: OptionalNetworkArgs
   ) {
     const name = `${type}_of_${home.name}_at_${replica.name}`;
+
     super(
       name,
       address,
       replica.provider,
-      ctx.with({ type, address, home: home.name, replica: replica.name }),
+      ctx.with({
+        type,
+        address: justAddress(address),
+        home: home.name,
+        replica: replica.name,
+      }),
       { threshold: replica.threshold, ...options }
     );
     this.type = type;
@@ -187,18 +208,18 @@ export class RemoteAgent extends Account {
 export class LocalWatcher extends LocalAgent {
   constructor(
     home: Network,
-    address: string,
+    address: AddressWithThreshold,
     ctx: Context,
     options?: OptionalNetworkArgs
   ) {
-    if (options) {
-      options.threshold = home.threshold.mul(2);
-    } else {
-      options = {
-        threshold: home.threshold.mul(2),
-      };
-    }
-    super(home, "watcher", address, ctx, options);
+    super(home, "watcher", address, ctx, {
+      ...options,
+      threshold: home.watcherThreshold || home.threshold,
+    });
+  }
+
+  async upperTreshold(): Promise<ethers.BigNumber> {
+    return this.home.watcherThreshold || (await this.threshold()).mul(2);
   }
 }
 
@@ -206,18 +227,25 @@ export class RemoteWatcher extends RemoteAgent {
   constructor(
     home: Network,
     replica: Network,
-    address: string,
+    address: AddressWithThreshold,
     ctx: Context,
     options?: OptionalNetworkArgs
   ) {
+    let threshold = replica.watcherThreshold || replica.threshold;
+
     if (options) {
-      options.threshold = replica.threshold.mul(2);
+      options.threshold = threshold;
     } else {
       options = {
-        threshold: replica.threshold.mul(2),
+        threshold: threshold,
       };
     }
+
     super(home, replica, "watcher", address, ctx, options);
+  }
+
+  async upperTreshold(): Promise<ethers.BigNumber> {
+    return this.replica.watcherThreshold || (await this.threshold()).mul(2);
   }
 }
 
@@ -258,13 +286,7 @@ export class Bank extends Accountable {
     this.ctx.logger.debug(`Getting balance from signer of a bank`);
     const balance = await this.signer.getBalance();
     const home = this.home.name;
-    this.ctx.metrics.setBalance(
-      home,
-      home,
-      home,
-      "bank",
-      inEth(balance)
-    ); // TODO
+    this.ctx.metrics.setBalance(home, home, home, "bank", inEth(balance)); // TODO
 
     return balance;
   }
@@ -349,6 +371,7 @@ export class Network {
   bank: Bank;
   balances: Accountable[];
   threshold: ethers.BigNumber;
+  watcherThreshold: ethers.BigNumber;
   ctx: Context;
   constructor(
     name: string,
@@ -365,6 +388,9 @@ export class Network {
         : provider;
 
     this.threshold = ethers.BigNumber.from(options?.threshold || eth(1));
+    this.watcherThreshold = ethers.BigNumber.from(
+      options?.watcherThreshold || this.threshold
+    );
     this.ctx = ctx.with({ home: name });
     this.bank = new Bank(`${name}_bank`, bank, ctx, this, {
       provider: this.provider,
@@ -403,18 +429,12 @@ export class Network {
         ...this.balances.map(async (balance) => {
           return [
             balance.name,
-            [
-              await balance.shouldTopUp(),
-              inEth(await balance.balance()),
-            ],
+            [await balance.shouldTopUp(), inEth(await balance.balance())],
           ];
         }),
         [
           "bank",
-          [
-            await this.bank.shouldTopUp(),
-            inEth(await this.bank.balance()),
-          ],
+          [await this.bank.shouldTopUp(), inEth(await this.bank.balance())],
         ],
       ])
     );
@@ -582,9 +602,9 @@ export class Network {
     }
     if (prettyPrint)
       console.log(
-        `\n\tpaid: ${green(formatEther(_paid))} out of ${yellow(
-          formatEther(_toPay)
-        )}\n\n`
+        `\n\t[${yellow(this.name)}] paid: ${green(
+          formatEther(_paid)
+        )} out of ${yellow(formatEther(_toPay))}\n\n`
       );
   }
 
@@ -612,6 +632,7 @@ export class Network {
 
     const network: Network = new Network(n.name, provider, [], bank, ctx, {
       threshold: n.threshold,
+      watcherThreshold: n.watcherThreshold,
       ...options,
     });
 

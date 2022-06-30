@@ -5,7 +5,7 @@ const DRY_RUN = process.env.DRY_RUN === "true";
 const METRICS_PORT = parseInt(process.env.METRICS_PORT || "9090") || 9090;
 const CONFIG_PATH = process.env.CONFIG_PATH || `./config/keymaster.json`;
 const PERIOD = parseInt(process.env.PERIOD || "60") || 60;
-const NETWORK_ENABLED = process.env.NETWORK_ENABLED?.split(',') || [];
+const NETWORK_ENABLED = process.env.NETWORK_ENABLED?.split(",") || [];
 
 async function run(
   configPath: string,
@@ -19,7 +19,6 @@ async function run(
 
   while (true) {
     await km.checkAndPayEnabledNetworks(NETWORK_ENABLED, dryrun);
-
     await sleep(period * 1000);
   }
 }
