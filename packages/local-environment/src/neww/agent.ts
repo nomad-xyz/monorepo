@@ -1,8 +1,6 @@
 import Docker from "dockerode";
 
 import { DockerizedActor } from "./actor";
-// import { Network } from "./network";
-// import { Nomad } from "./nomad";
 import { EventEmitter } from "events";
 
 export class Agents {

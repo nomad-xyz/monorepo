@@ -4,14 +4,12 @@ import { DeployContext } from "../../../deploy/src/DeployContext";
 import { HardhatNetwork, Network } from "./network";
 import * as ethers from 'ethers';
 import { NonceManager } from "@ethersproject/experimental";
-import { Agents } from "./agent";
 import fs from 'fs';
 dotenv.config();
 console.log(dotenv.config())
 
 export class Env {
     networks: Network[];
-    agent: Agents[]
     governor: NomadLocator;
 
     constructor(governor: NomadLocator) {
@@ -22,10 +20,6 @@ export class Env {
     // Adds a network to the array of networks if it's not already there.
     addNetwork(n: Network) {
         if (!this.networks.includes(n)) this.networks.push(n);
-    }
-
-    addAgent(a: Agents) {
-        if (!this.agent.includes(a)) this.agent.push(a);
     }
     
     // Gets governing network
@@ -175,36 +169,10 @@ export class Env {
 
     console.log(`Upped Tom and Jerry`);
 
-    const agents = new Agents();
-
-    const updater = agents.updater;
-    const relayer = agents.relayer;
-    const processor = agents.processor;
-    const watchers = agents.watchers;
-    const kathy = agents.kathy;
-
-    await Promise.all([
-        updater.connect(),
-        updater.start(),
-        relayer.connect(),
-        relayer.start(),
-        processor.connect(),
-        processor.start(),
-        watchers[0].connect(),
-        watchers[0].start(),
-        watchers[1].connect(),
-        watchers[1].start(),
-        kathy.connect(),
-        kathy.start()
-    ])
-
     const le = new Env({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
     le.addNetwork(t);
     le.addNetwork(j);
     console.log(`Added Tom and Jerry`);
-
-    le.addAgent(agents);
-    console.log(`Added agents`);
 
     t.connectNetwork(j);
     j.connectNetwork(t);
