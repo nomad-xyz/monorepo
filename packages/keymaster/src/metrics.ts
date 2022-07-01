@@ -137,7 +137,7 @@ export class AccountMetricsCollector extends BaseMetricsCollector {
     });
 
     this.transfers = new Histogram({
-      name: prefix + "_transfers_count",
+      name: prefix + "_transfers",
       help: "Histogram that tracks latency of how long does it take to make request in ms",
       labelNames: [...labelNames],
       buckets,
