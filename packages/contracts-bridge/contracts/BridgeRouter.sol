@@ -239,16 +239,16 @@ contract BridgeRouter is Version0, Router {
         bytes32 _detailsHash;
         // remove tokens from circulation on this chain
         if (tokenRegistry.isLocalOrigin(_token)) {
-        // if the token originates on this chain,
-        // hold the tokens in escrow in the Router
-        IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-        // query token contract for details and calculate detailsHash
-        _detailsHash = BridgeMessage.getDetailsHash(_t.name(), _t.symbol(), _t.decimals());
+            // if the token originates on this chain,
+            // hold the tokens in escrow in the Router
+            IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+            // query token contract for details and calculate detailsHash
+            _detailsHash = BridgeMessage.getDetailsHash(_t.name(), _t.symbol(), _t.decimals());
         } else {
-        // if the token originates on a remote chain,
-        // burn the representation tokens on this chain
-        _t.burn(msg.sender, _amount);
-        _detailsHash = _t.detailsHash();
+            // if the token originates on a remote chain,
+            // burn the representation tokens on this chain
+            _t.burn(msg.sender, _amount);
+            _detailsHash = _t.detailsHash();
         }
         // format Transfer Tokens action
         bytes29 _action = BridgeMessage.formatTransfer(_recipient, _amount, _detailsHash, _externalId);
