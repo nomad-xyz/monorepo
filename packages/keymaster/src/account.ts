@@ -498,7 +498,6 @@ export class Network {
     // BANK
 
     try {
-      console.log(red(`PRE-KEEEK 2 ${this.name}`));
       const [bankAddress, bankBalance, bankTreshold] = await Promise.all([
         this.bank.address(),
         this.bank.balance(),
