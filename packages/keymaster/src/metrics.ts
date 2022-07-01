@@ -63,7 +63,7 @@ export class BaseMetricsCollector extends MetricsCollector {
   constructor(logger: Logger) {
     super(logger);
 
-    const labelNames = ["newtork"];
+    const labelNames = ["network"];
 
     this.rpcRequests = new Counter({
       name: prefix + "_rpc_requests",
@@ -98,24 +98,24 @@ export class BaseMetricsCollector extends MetricsCollector {
     });
   }
 
-  observeLatency(newtork: string, method: string, ms: number) {
-    this.rpcLatency.labels(newtork, method).observe(ms);
+  observeLatency(network: string, method: string, ms: number) {
+    this.rpcLatency.labels(network, method).observe(ms);
   }
 
-  incRpcRequests(newtork: string, method: string) {
-    this.rpcRequests.labels(newtork, method).inc();
+  incRpcRequests(network: string, method: string) {
+    this.rpcRequests.labels(network, method).inc();
   }
 
-  incRpcErrors(newtork: string, method: string, code: string) {
-    this.rpcErrors.labels(newtork, method, code).inc();
+  incRpcErrors(network: string, method: string, code: string) {
+    this.rpcErrors.labels(network, method, code).inc();
   }
 
-  observeGasUsed(newtork: string, method: string, amount: ethers.BigNumber) {
-    this.gasUsed.labels(newtork, method).observe(toEth(amount));
+  observeGasUsed(network: string, method: string, amount: ethers.BigNumber) {
+    this.gasUsed.labels(network, method).observe(toEth(amount));
   }
 
-  incMalfunctions(newtork: string, scope: string) {
-    this.malfunctions.labels(newtork, scope).inc();
+  incMalfunctions(network: string, scope: string) {
+    this.malfunctions.labels(network, scope).inc();
   }
 }
 
