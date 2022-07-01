@@ -43,7 +43,7 @@ contract BridgeRouter is Version0, Router {
     // ============ Upgrade Gap ============
 
     // gap for upgrade safety
-    uint256[49] private __GAP;
+    uint256[48] private __GAP;
 
     // ======== Events =========
 
