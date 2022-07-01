@@ -150,9 +150,11 @@ export class AccountMetricsCollector extends BaseMetricsCollector {
     network: string,
     role: string,
     balance: ethers.BigNumber,
-    address: string,
+    address: string
   ) {
-    this.balance.labels(home, replica, network, role, address).set(toEth(balance));
+    this.balance
+      .labels(home, replica, network, role, address)
+      .set(toEth(balance));
   }
 
   observeTransfer(
@@ -161,9 +163,11 @@ export class AccountMetricsCollector extends BaseMetricsCollector {
     network: string,
     role: string,
     amount: ethers.BigNumber,
-    address: string,
+    address: string
   ) {
-    this.transfers.labels(home, replica, network, role, address).observe(toEth(amount));
+    this.transfers
+      .labels(home, replica, network, role, address)
+      .observe(toEth(amount));
   }
 }
 

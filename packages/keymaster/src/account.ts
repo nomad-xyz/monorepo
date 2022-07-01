@@ -24,7 +24,6 @@ export abstract class Accountable {
   abstract balance(): Promise<ethers.BigNumber>;
   abstract threshold(): Promise<ethers.BigNumber>;
   async shouldTopUp(): Promise<boolean> {
-    // console.log(red(`PRE-KEEEK 3.1 ${this.name}`))
     return (await this.balance()).lt(await this.threshold());
   }
 
@@ -34,7 +33,6 @@ export abstract class Accountable {
   }
 
   async howMuchTopUp(): Promise<ethers.BigNumber> {
-    // console.log(red(`PRE-KEEEK 3.2 ${this.name}`))
     const b = await this.balance();
     const upper = await this.upperTreshold();
 
@@ -78,9 +76,10 @@ export class Account extends Accountable {
 
   async balance(): Promise<ethers.BigNumber> {
     const n = await this.provider.getNetwork();
-    // console.log(red(`KEEEK 1 ${this.name} ${n.chainId}+${n.name}`))
 
-    this.ctx.logger.debug(`Getting balance from provider ${await this.address()}`);
+    this.ctx.logger.debug(
+      `Getting balance from provider ${await this.address()}`
+    );
     const balance = await this.provider.getBalance(await this.address());
     return balance;
   }
@@ -133,7 +132,13 @@ export class Agent extends Account {
     const remote = home !== replica;
     const slug =
       home === replica ? `${home.name}` : `${home.name}_at_${replica.name}`;
-    super(`${type}_of_${slug}`, address, remote ? replica.provider : home.provider, ctx, options);
+    super(
+      `${type}_of_${slug}`,
+      address,
+      remote ? replica.provider : home.provider,
+      ctx,
+      options
+    );
     this.home = home;
     this.replica = replica;
     this.type = type;
@@ -141,44 +146,25 @@ export class Agent extends Account {
   }
 
   async balance(): Promise<ethers.BigNumber> {
-    // console.log(red(`KEEEK 2 ${this.name}`))
     const balance = await super.balance();
-    try {
-      this.ctx.metrics.setBalance(
-        this.home.name,
-        this.replica.name,
-        this.remote ? this.replica.name : this.home.name,
-        this.type,
-        balance,
-        await this.address()
-      ); // TODO
-    } catch(e) {
-      // console.log(red(`LOOOL`), e)
-      throw e
-    }
-    // console.log(red(`Asked for balance`))
+    this.ctx.metrics.setBalance(
+      this.home.name,
+      this.replica.name,
+      this.remote ? this.replica.name : this.home.name,
+      this.type,
+      balance,
+      await this.address()
+    );
     return balance;
   }
 
-//   async shouldTopUp(): Promise<boolean> {
-//     console.log(red(`PRE-KEEEK 3.1 ${this.name}`))
-//     return (await this.balance()).lt(await this.threshold());
-//   }
-// async howMuchTopUp(): Promise<ethers.BigNumber> {
-//     console.log(red(`PRE-KEEEK 3.2 ${this.name}`))
-//     const b = await this.balance();
-//     const upper = await this.upperTreshold();
-
-//     return upper.sub(b);
-//   }
-
   async suggestion(): Promise<[ethers.BigNumber, boolean, ethers.BigNumber]> {
     const balance = await this.balance();
-    const shouldTopUp = (balance).lt(await this.threshold());
+    const shouldTopUp = balance.lt(await this.threshold());
     const upper = await this.upperTreshold();
     const howMuchTopUp = upper.sub(balance);
 
-    return [balance, shouldTopUp, howMuchTopUp]
+    return [balance, shouldTopUp, howMuchTopUp];
   }
 }
 
@@ -222,7 +208,8 @@ export class RemoteAgent extends Agent {
     const name = `${type}_of_${home.name}_at_${replica.name}`;
 
     super(
-      home, replica,
+      home,
+      replica,
       type,
       address,
       // replica.provider,
@@ -320,11 +307,17 @@ export class Bank extends Accountable {
 
   async balance(): Promise<ethers.BigNumber> {
     this.ctx.logger.debug(`Getting balance from signer of a bank`);
-    // console.log(red(`KEEEK 3 ${this.name}`))
 
     const balance = await this.signer.getBalance();
     const home = this.home.name;
-    this.ctx.metrics.setBalance(home, home, home, "bank", balance, await this.address()); // TODO await this.address()
+    this.ctx.metrics.setBalance(
+      home,
+      home,
+      home,
+      "bank",
+      balance,
+      await this.address()
+    ); // TODO await this.address()
 
     return balance;
   }
@@ -463,23 +456,6 @@ export class Network {
     );
   }
 
-  // async report() {
-  //   return Object.fromEntries(
-  //     await Promise.all([
-  //       ...this.balances.map(async (balance) => {
-  //         return [
-  //           balance.name,
-  //           [await balance.shouldTopUp(), toEth(await balance.balance())],
-  //         ];
-  //       }),
-  //       [
-  //         "bank",
-  //         [await this.bank.shouldTopUp(), toEth(await this.bank.balance())],
-  //       ],
-  //     ])
-  //   );
-  // }
-
   async reportSuggestions(): Promise<
     [Accountable, ethers.BigNumber, boolean, ethers.BigNumber][]
   > {
@@ -493,15 +469,9 @@ export class Network {
       > => {
         const aa = a as any as Agent;
         try {
-          // console.log(red(`PRE-KEEEK 1 ${this.name} ${aa.name}`))
           const [balance, shouldTopUp, howMuchTopUp] = await aa.suggestion();
-          // console.log(red(`POST-KEEEK 1 ${this.name} ${a.name} ${shouldTopUp} ${balance.toBigInt()}`))
-          return [
-            a,
-            balance, shouldTopUp, howMuchTopUp
-          ];
+          return [a, balance, shouldTopUp, howMuchTopUp];
         } catch (e) {
-          // console.log(red(`WTF ${this.name} ${aa.name}, ${e}`))
           this.ctx.metrics.incMalfunctions(this.name, "suggestion");
           this.ctx.logger.error(
             { address: await a.address(), error: e },
@@ -528,7 +498,7 @@ export class Network {
     // BANK
 
     try {
-      console.log(red(`PRE-KEEEK 2 ${this.name}`))
+      console.log(red(`PRE-KEEEK 2 ${this.name}`));
       const [bankAddress, bankBalance, bankTreshold] = await Promise.all([
         this.bank.address(),
         this.bank.balance(),
@@ -574,7 +544,6 @@ export class Network {
     } catch (e) {
       this.ctx.logger.error(`Failed getting balance or threshold for the bank`);
     }
-
 
     // AGENTS
 
