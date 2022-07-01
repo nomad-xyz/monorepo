@@ -132,13 +132,13 @@ export class AccountMetricsCollector extends BaseMetricsCollector {
 
     this.balance = new Gauge({
       name: prefix + "_balance",
-      help: "Count that indicates how many PRC requests are made",
+      help: "Gauge that indicates current balance of a wallet",
       labelNames: [...labelNames],
     });
 
     this.transfers = new Histogram({
       name: prefix + "_transfers",
-      help: "Histogram that tracks latency of how long does it take to make request in ms",
+      help: "Histogram that tracks transfers from bank to agents",
       labelNames: [...labelNames],
       buckets,
     });
