@@ -38,7 +38,8 @@ library BridgeMessage {
 
     uint256 private constant TOKEN_ID_LEN = 36; // 4 bytes domain + 32 bytes id
     uint256 private constant IDENTIFIER_LEN = 1;
-    uint256 private constant TRANSFER_LEN = 129; // 1 byte identifier + 32 bytes recipient + 32 bytes amount + 32 bytes detailsHash + 32 bytes externalId
+    uint256 private constant TRANSFER_LEN = 97; // 1 byte identifier + 32 bytes recipient + 32 bytes amount + 32 bytes detailsHash
+    uint256 private constant CONNEXT_TRANSFER_LEN = 97; // 1 byte identifier + 32 bytes externalId + 32 bytes amount + 32 bytes detailsHash
 
     // ============ Modifiers ============
 
@@ -60,7 +61,7 @@ library BridgeMessage {
      * @return TRUE if action is valid
      */
     function isValidAction(bytes29 _action) internal pure returns (bool) {
-        return isTransfer(_action) || isFastTransfer(_action);
+        return isTransfer(_action) || isFastTransfer(_action) || isConnextTransfer(_action);
     }
 
     /**
@@ -68,6 +69,8 @@ library BridgeMessage {
      * @param _view The bytes string
      * @return TRUE if message is valid
      */
+     // NOTE: this still works with CONNEXT_TRANSFER only because the `bytes32 recipient` is replaced with the `bytes32 externalId`
+     // should it be more explicit by adding an `||` condition on the _len?
     function isValidMessageLength(bytes29 _view) internal pure returns (bool) {
         uint256 _len = _view.len();
         return _len == TOKEN_ID_LEN + TRANSFER_LEN;
@@ -146,17 +149,29 @@ library BridgeMessage {
      * @param _to The recipient address as bytes32
      * @param _amnt The transfer amount
      * @param _detailsHash The hash of the token name, symbol, and decimals
-     * @param _externalId The external identifier of the transfer
      * @return
      */
     function formatTransfer(
         bytes32 _to,
         uint256 _amnt,
-        bytes32 _detailsHash,
-        bytes32 _externalId
+        bytes32 _detailsHash
     ) internal pure returns (bytes29) {
-        Types transferType = _externalId == bytes32(0) ? Types.Transfer : Types.ConnextTransfer;
-        return abi.encodePacked(transferType, _to, _amnt, _detailsHash, _externalId).ref(0).castTo(uint40(transferType));
+        return abi.encodePacked(Types.Transfer, _to, _amnt, _detailsHash).ref(0).castTo(uint40(Types.Transfer));
+    }
+
+    /**
+     * @notice Formats Connext Transfer
+     * @param _externalId The external identifier of the transfer
+     * @param _amnt The transfer amount
+     * @param _detailsHash The hash of the token name, symbol, and decimals
+     * @return
+     */
+    function formatConnextTransfer(
+        bytes32 _externalId,
+        uint256 _amnt,
+        bytes32 _detailsHash
+    ) internal pure returns (bytes29) {
+        return abi.encodePacked(Types.ConnextTransfer, _externalId, _amnt, _detailsHash).ref(0).castTo(uint40(Types.ConnextTransfer));
     }
 
     /**
@@ -306,6 +321,8 @@ library BridgeMessage {
      * @param _transferAction The message
      * @return The recipient address as bytes32
      */
+     // NOTE: If used on a Types.ConnextTransfer then this will return the external id. Should there
+     // be strict type assertion here as well? (this should be valid for Transfer or FastTransfer types)
     function recipient(bytes29 _transferAction)
         internal
         pure
@@ -354,13 +371,14 @@ library BridgeMessage {
     }
 
     /**
-     * @notice Retrieves the externalId from a Transfer
+     * @notice Retrieves the externalId from a Connext Transfer
+     * @dev MUST be used on the ConnextTransfer type, otherwise will revert
      * @param _transferAction The message
      * @return The external id
      */
-    function externalId(bytes29 _transferAction) internal pure returns (bytes32) {
+    function externalId(bytes29 _transferAction) internal pure typeAssert(_transferAction, Types.ConnextTransfer) returns (bytes32) {
         // before = 1 byte identifier
-        return _transferAction.index(97, 32);
+        return _transferAction.index(1, 32);
     }
 
     /**

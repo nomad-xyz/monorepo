@@ -251,7 +251,7 @@ contract BridgeRouter is Version0, Router {
             _detailsHash = _t.detailsHash();
         }
         // format Transfer Tokens action
-        bytes29 _action = BridgeMessage.formatTransfer(_recipient, _amount, _detailsHash, _externalId);
+        bytes29 _action = _externalId == bytes32(0) ? BridgeMessage.formatTransfer(_recipient, _amount, _detailsHash) : BridgeMessage.formatConnextTransfer(_externalId, _amount, _detailsHash);
         // get the tokenID
         (uint32 _domain, bytes32 _id) = tokenRegistry.getTokenId(_token);
         bytes29 _tokenId = BridgeMessage.formatTokenId(_domain, _id);
