@@ -63,7 +63,7 @@ export class BaseMetricsCollector extends MetricsCollector {
   constructor(logger: Logger) {
     super(logger);
 
-    const labelNames = ["home"];
+    const labelNames = ["newtork"];
 
     this.rpcRequests = new Counter({
       name: prefix + "_rpc_requests",
@@ -98,24 +98,24 @@ export class BaseMetricsCollector extends MetricsCollector {
     });
   }
 
-  observeLatency(home: string, method: string, ms: number) {
-    this.rpcLatency.labels(home, method).observe(ms);
+  observeLatency(newtork: string, method: string, ms: number) {
+    this.rpcLatency.labels(newtork, method).observe(ms);
   }
 
-  incRpcRequests(home: string, method: string) {
-    this.rpcRequests.labels(home, method).inc();
+  incRpcRequests(newtork: string, method: string) {
+    this.rpcRequests.labels(newtork, method).inc();
   }
 
-  incRpcErrors(home: string, method: string, code: string) {
-    this.rpcErrors.labels(home, method, code).inc();
+  incRpcErrors(newtork: string, method: string, code: string) {
+    this.rpcErrors.labels(newtork, method, code).inc();
   }
 
-  observeGasUsed(home: string, method: string, amount: ethers.BigNumber) {
-    this.gasUsed.labels(home, method).observe(toEth(amount));
+  observeGasUsed(newtork: string, method: string, amount: ethers.BigNumber) {
+    this.gasUsed.labels(newtork, method).observe(toEth(amount));
   }
 
-  incMalfunctions(home: string, scope: string) {
-    this.malfunctions.labels(home, scope).inc();
+  incMalfunctions(newtork: string, scope: string) {
+    this.malfunctions.labels(newtork, scope).inc();
   }
 }
 
