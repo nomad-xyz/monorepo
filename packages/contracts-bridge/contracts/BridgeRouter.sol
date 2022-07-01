@@ -88,11 +88,10 @@ contract BridgeRouter is Version0, Router {
 
     // ======== Initializer ========
 
-    function initialize(address _tokenRegistry, address _xAppConnectionManager, address _connext)
+    function initialize(address _tokenRegistry, address _xAppConnectionManager)
         public
         initializer
     {
-        connext = IConnext(_connext);
         tokenRegistry = ITokenRegistry(_tokenRegistry);
         __XAppConnectionClient_initialize(_xAppConnectionManager);
     }
@@ -208,8 +207,22 @@ contract BridgeRouter is Version0, Router {
         IBridgeToken(_currentRepr).mint(msg.sender, _bal);
     }
 
+    // ======== External: Connext =========
+
+    /**
+     * @notice Allows the admin to set the Connext reference
+     * @param _connext Address of the connext contract
+     */
+    function setConnext(address _connext) external onlyOwner {
+        connext = IConnext(_connext);
+    }
+
     // ============ Internal: Send ============
 
+    /**
+     * @notice Internal function to send tokens.
+     * @dev Burns tokens if needed, and constructs the message to dispatch
+     */
     function _send(
         address _token,
         uint256 _amount,
