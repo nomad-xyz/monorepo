@@ -33,7 +33,7 @@ export class MyJRPCProvider extends ethers.providers.StaticJsonRpcProvider {
       5,
       (e) => {
         this.ctx.logger.error(
-          { method, params, reason: e.reason, network: this.networkName },
+          { method, params, reason: e.reason, code: e.code || "NO_CODE", network: this.networkName },
           `Failed to perform request`
         );
         this.ctx.metrics.incRpcErrors(
@@ -59,10 +59,10 @@ export class MyJRPCProvider extends ethers.providers.StaticJsonRpcProvider {
 
     const receipt = await result.wait(wait);
 
-    this.ctx.metrics.incGasUsed(
+    this.ctx.metrics.observeGasUsed(
       this.networkName,
       "sendTransaction",
-      receipt.gasUsed.toNumber()
+      receipt.gasUsed
     );
 
     return receipt;

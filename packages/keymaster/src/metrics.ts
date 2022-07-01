@@ -3,6 +3,8 @@ import Logger from "bunyan";
 
 import { register } from "prom-client";
 import express, { Response } from "express";
+import { ethers } from "ethers";
+import { toEth } from "./utils";
 export const prefix = `nomad_keymaster`;
 
 const buckets = [
@@ -52,7 +54,7 @@ export class MetricsCollector {
 }
 
 export class BaseMetricsCollector extends MetricsCollector {
-  gasUsed: Counter<string>;
+  gasUsed: Histogram<string>;
   rpcRequests: Counter<string>;
   rpcErrors: Counter<string>;
   rpcLatency: Histogram<string>;
@@ -82,10 +84,11 @@ export class BaseMetricsCollector extends MetricsCollector {
       labelNames: [...labelNames, "method", "code"],
     });
 
-    this.gasUsed = new Counter({
+    this.gasUsed = new Histogram({
       name: prefix + "_gas_used",
       help: "Histogram that tracks gas usage in wei of a transaction that initiated at dispatch, update, relay, receive or process stages.",
       labelNames: [...labelNames, "method"],
+      buckets,
     });
 
     this.malfunctions = new Counter({
@@ -107,8 +110,8 @@ export class BaseMetricsCollector extends MetricsCollector {
     this.rpcErrors.labels(home, method, code).inc();
   }
 
-  incGasUsed(home: string, method: string, amount: number) {
-    this.gasUsed.labels(home, method).inc(amount);
+  observeGasUsed(home: string, method: string, amount: ethers.BigNumber) {
+    this.gasUsed.labels(home, method).observe(toEth(amount));
   }
 
   incMalfunctions(home: string, scope: string) {
@@ -120,14 +123,12 @@ export class AccountMetricsCollector extends BaseMetricsCollector {
   // balance
   private balance: Gauge<string>;
   // transfers
-  private transfers: Counter<string>;
-  // transferred
-  private transferred: Counter<string>;
+  private transfers: Histogram<string>;
 
   constructor(logger: Logger) {
     super(logger);
 
-    const labelNames = ["home", "replica", "network", "role"];
+    const labelNames = ["home", "replica", "network", "role", "address"];
 
     this.balance = new Gauge({
       name: prefix + "_balance",
@@ -135,16 +136,11 @@ export class AccountMetricsCollector extends BaseMetricsCollector {
       labelNames: [...labelNames],
     });
 
-    this.transfers = new Counter({
-      name: prefix + "_transfers",
+    this.transfers = new Histogram({
+      name: prefix + "_transfers_count",
       help: "Histogram that tracks latency of how long does it take to make request in ms",
       labelNames: [...labelNames],
-    });
-
-    this.transferred = new Counter({
-      name: prefix + "_transferred",
-      help: "Counter that tracks error codes from RPC endpoint",
-      labelNames: [...labelNames],
+      buckets,
     });
   }
 
@@ -153,34 +149,21 @@ export class AccountMetricsCollector extends BaseMetricsCollector {
     replica: string,
     network: string,
     role: string,
-    balance: number
+    balance: ethers.BigNumber,
+    address: string,
   ) {
-    this.balance.labels(home, replica, network, role).set(balance);
+    this.balance.labels(home, replica, network, role, address).set(toEth(balance));
   }
 
-  incTransfers(home: string, replica: string, network: string, role: string) {
-    this.transfers.labels(home, replica, network, role).inc();
-  }
-
-  incTransferred(
+  observeTransfer(
     home: string,
     replica: string,
     network: string,
     role: string,
-    amount: number
+    amount: ethers.BigNumber,
+    address: string,
   ) {
-    this.transferred.labels(home, replica, network, role).inc(amount);
-  }
-
-  incTransfer(
-    home: string,
-    replica: string,
-    network: string,
-    role: string,
-    amount: number
-  ) {
-    this.transfers.labels(home, replica, network, role).inc();
-    this.transferred.labels(home, replica, network, role).inc(amount);
+    this.transfers.labels(home, replica, network, role, address).observe(toEth(amount));
   }
 }
 

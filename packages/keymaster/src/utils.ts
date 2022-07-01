@@ -191,6 +191,6 @@ export function readConfig(l: string): KeymasterConfig {
 
 export const oneEth = ethers.BigNumber.from("1" + "0".repeat(18));
 
-export function inEth(n: ethers.BigNumber): number {
+export function toEth(n: ethers.BigNumber): number {
   return Number((n.toBigInt() * 100n) / oneEth.toBigInt()) / 100;
 }
