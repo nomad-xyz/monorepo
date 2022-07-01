@@ -186,6 +186,7 @@ export class LocalAgent extends Agent {
         address: justAddress(address),
         home: home.name,
         replica: home.name,
+        network: home.name,
       }),
       { threshold: home.threshold, ...options }
     );
@@ -218,6 +219,7 @@ export class RemoteAgent extends Agent {
         address: justAddress(address),
         home: home.name,
         replica: replica.name,
+        network: replica.name,
       }),
       { threshold: replica.threshold, ...options }
     );
@@ -285,7 +287,7 @@ export class Bank extends Accountable {
   ) {
     super(
       name,
-      ctx.with({ type: "bank", home: home.name, replica: home.name })
+      ctx.with({ type: "bank", home: home.name, replica: home.name, network: home.name })
     );
     if (options?.provider) {
       signer = signer.connect(options.provider);
@@ -424,7 +426,7 @@ export class Network {
     this.watcherThreshold = ethers.BigNumber.from(
       options?.watcherThreshold || this.threshold
     );
-    this.ctx = ctx.with({ home: name });
+    this.ctx = ctx.with({ home: name, network: name });
     this.bank = new Bank(`${name}_bank`, bank, ctx, this, {
       provider: this.provider,
       ...options,
@@ -528,6 +530,7 @@ export class Network {
           {
             balance: formatEther(bankBalance),
             threshold: formatEther(bankTreshold),
+            address: bankAddress
           },
           `Bank has enough moneyz`
         );
@@ -536,12 +539,12 @@ export class Network {
             green(
               `Bank has enough moneyz. Has ${formatEther(
                 bankBalance
-              )} out of ${formatEther(bankTreshold)}`
+              )} out of ${formatEther(bankTreshold)}. Bank address: ${bankAddress}`
             )
           );
       }
     } catch (e) {
-      this.ctx.logger.error(`Failed getting balance or threshold for the bank`);
+      this.ctx.logger.error({address: await this.bank.address()}, `Failed getting balance or threshold for the bank`);
     }
 
     // AGENTS
@@ -599,7 +602,7 @@ export class Network {
           } catch (e) {
             this.ctx.metrics.incMalfunctions(this.name, "payment");
             this.ctx.logger.error(
-              { address: await a.address() },
+              { address: await a.address(), error: `${e}` },
               "Payment failure"
             );
             if (prettyPrint)
