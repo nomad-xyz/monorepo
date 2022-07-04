@@ -1,0 +1,14 @@
+*-debug.log
+*-error.log
+/.nyc_output
+/dist
+/lib
+/package-lock.json
+/tmp
+node_modules
+oclif.manifest.json
+out/
+config/
+.env
+data/
+.yarn/

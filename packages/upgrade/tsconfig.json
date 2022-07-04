@@ -1,0 +1,20 @@
+{
+  "extends": "../tsconfig.package.json",
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "rootDir": "./src/"
+  },
+  "exclude": [
+    "./node_modules/",
+    "./dist/",
+    "./config/",
+    "./scripts/",
+    "./tmp.ts"
+  ],
+  "include": [
+    "./src/*.ts",
+    "./src/commands/forkTest/*.ts",
+    "./src/commands/upgrade/*.ts",
+    "./src/commands/printGovActions/*.ts"
+  ]
+}

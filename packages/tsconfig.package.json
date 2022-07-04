@@ -36,6 +36,9 @@
       "path": "./deploy"
     },
     {
+      "path": "./upgrade"
+    },
+    {
       "path": "./local-environment"
     },
     {
