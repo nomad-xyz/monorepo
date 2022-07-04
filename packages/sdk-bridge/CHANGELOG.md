@@ -2,6 +2,15 @@
 
 ### Unreleased
 
+### 1.1.0-rc.0
+
+- upgrade: contracts
+- fix: config fetch header override
+
+### 1.0.0-rc.20
+
+- docs: update readme with examples/links
+
 ### 1.0.0-rc.19
 
 - fix: numeric fault overflow when supporting infinite token approval

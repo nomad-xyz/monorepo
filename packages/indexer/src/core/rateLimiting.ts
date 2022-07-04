@@ -82,27 +82,27 @@ export class RPCRateLimiter {
     this.limiter = new RateLimiter({ tokensPerInterval, interval });
   }
 
-  async getBlockWithTransactions() {
+  async getBlockWithTransactions(): Promise<void> {
     await this.limiter.removeTokens(this.strategy.cupsPerGetBlock || 1);
   }
 
-  async getBlock() {
+  async getBlock(): Promise<void> {
     await this.limiter.removeTokens(this.strategy.cupsPerGetBlock);
   }
 
-  async getTransaction() {
+  async getTransaction(): Promise<void> {
     await this.limiter.removeTokens(this.strategy.cupsPerGetTransaction);
   }
 
-  async getTransactionReceipt() {
+  async getTransactionReceipt(): Promise<void> {
     await this.limiter.removeTokens(this.strategy.cupsPerGetTransactionReceipt);
   }
 
-  async getBlockNumber() {
+  async getBlockNumber(): Promise<void> {
     await this.limiter.removeTokens(this.strategy.cupsPerGetBlockNumber);
   }
 
-  async getLogs() {
+  async getLogs(): Promise<void> {
     await this.limiter.removeTokens(this.strategy.cupsPerGetLogs);
   }
 }

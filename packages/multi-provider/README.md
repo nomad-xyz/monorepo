@@ -6,6 +6,14 @@ developers connect to multiple networks simultaneously. It is part
 of the [Nomad](https://github.com/nomad-xyz/nomad-monorepo) project, but may
 be useful to other multi-chain systems.
 
+-------------------------
+
+### Documentation
+
+ - [Multi-Provider](https://docs.nomad.xyz/multi-provider/classes/multiprovider)
+
+-------------------------
+
 ### Intended Usage
 
 ```ts
@@ -19,6 +27,8 @@ myApp.registerRpcProvider('polygon', 'https://...');
 myApp.registerSigner('ethereum', someSigner);
 myApp.registerSigner('polygon', someSigner);
 ```
+
+-------------------------
 
 ## Building
 

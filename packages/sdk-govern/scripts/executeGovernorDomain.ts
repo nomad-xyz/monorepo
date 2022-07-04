@@ -35,18 +35,29 @@ async function run() {
     const governorCore = await context.governorCore();
     const governor = await governorCore.governanceRouter.governor();
 
-    // if provided signer is the governor, execute the batch directly
-    // otherwise, send the built transaction to the governor gnosis safe
-    if (equalIds(governor, signer.address)) {
-        console.log("Sending governance tx...");
-        const txResponse = await batch.execute();
-        const receipt = await txResponse.wait();
-        console.log("Governance tx mined!!");
-        console.log("   Transaction Hash: ", receipt.transactionHash);
-        console.log("   Block Explorer: ", blockExplorer);
-    } else {
-        // TODO: send to gnosis safe directly
+    // if governor is a contract (not a signer),
+    // inform the caller
+    // TODO: submit transaction directly via gnosis safe API instead of throwing
+    const governorCode = await provider.getCode(governor);
+    if (governorCode != "0x") {
+        throw new Error(`Governor in ${CONFIG.environment} is a contract - likely a Gnosis multisig \nSubmit governance transactions on https://gnosis-safe.io/ \nAddress: ${governor} \nChain: ${context.resolveDomainName(domain)}`);
     }
+
+    // if the signer provided is not the governor,
+    // inform the caller
+    if (!equalIds(governor, signer.address)) {
+        throw new Error(`Signer is not the Governor key. Update SIGNER_KEY in .env \nExpected Governor: ${governor} \nActual Provided: ${signer.address}`);
+    }
+
+    // if the governor is an EOA
+    // that matches the provided signer
+    // execute the transactions
+    console.log("Sending governance tx...");
+    const txResponse = await batch.execute();
+    const receipt = await txResponse.wait();
+    console.log("Governance tx mined!!");
+    console.log("   Transaction Hash: ", receipt.transactionHash);
+    console.log("   Block Explorer: ", blockExplorer);
 
     console.log("DONE!");
 }

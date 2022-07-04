@@ -596,7 +596,7 @@ export class ProcessorV2 extends Consumer {
 
   async consume(events: NomadishEvent[]): Promise<void> {
     // events = shuffle(events);
-    this.logger.warn(`Consuming ${events.length} events.`) // debug
+    this.logger.warn(`Consuming ${events.length} events.`); // debug
     let consumed = 0;
 
     for (const event of events) {
@@ -613,8 +613,10 @@ export class ProcessorV2 extends Consumer {
       } else if (event.eventType === EventType.BridgeRouterReceive) {
         await this.bridgeRouterReceive(event);
       }
-      const percentage = ((++consumed) * 100 / events.length).toFixed(2);
-      this.logger.debug(`Consumed ${percentage}% (${consumed}/${events.length}) events.`) // debug
+      const percentage = ((++consumed * 100) / events.length).toFixed(2);
+      this.logger.debug(
+        `Consumed ${percentage}% (${consumed}/${events.length}) events.`,
+      ); // debug
     }
   }
 
@@ -769,7 +771,7 @@ export class ProcessorV2 extends Consumer {
         }),
       );
     } else {
-      logger.warn(
+      logger.debug(
         { origin: e.replicaOrigin, root: oldRoot },
         `Haven't found a message for Update event`,
       );
@@ -793,7 +795,7 @@ export class ProcessorV2 extends Consumer {
         }),
       );
     } else {
-      logger.warn(
+      logger.debug(
         { origin: e.replicaOrigin, root: oldRoot },
         `Haven't found a message for ReplicaUpdate event`,
       );
@@ -810,7 +812,7 @@ export class ProcessorV2 extends Consumer {
       await this.updateMessage(m);
     } else {
       await this.pool.storeEvent(e);
-      logger.warn(
+      logger.debug(
         { messageHash },
         `Haven't found a message for Processed event`,
       );
@@ -839,7 +841,7 @@ export class ProcessorV2 extends Consumer {
       await this.updateMessage(m);
     } else {
       await this.pool.storeEvent(e);
-      logger.warn(
+      logger.debug(
         { destination, recipient, amount },
         `Haven't found a message for Send event`,
       );
@@ -860,7 +862,7 @@ export class ProcessorV2 extends Consumer {
     } else {
       await this.pool.storeEvent(e);
       const [origin, nonce] = e.originAndNonce();
-      logger.warn(
+      logger.debug(
         { origin, nonce },
         `Haven't found a message for BridgeReceived event`,
       );
@@ -925,7 +927,7 @@ export class ProcessorV2 extends Consumer {
       messages.forEach((m) => {
         collector.contributeToCount(m);
       });
-    } while (messages.length === batchSize)
+    } while (messages.length === batchSize);
 
     return collector.stats();
   }

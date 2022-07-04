@@ -16,6 +16,7 @@ import Logger from 'bunyan';
 import { RedisClient } from './types';
 import { getRedis } from './redis';
 import { getRateLimit, RPCRateLimiter } from './rateLimiting';
+import { batchSize, isDevelopment } from '../config';
 
 type ShortTx = {
   gasPrice?: ethers.BigNumber;
@@ -90,9 +91,7 @@ function txReceiptDecode(encoded: string): ShortTxReceipt {
   return JSON.parse(encoded, reviver);
 }
 
-const BATCH_SIZE = process.env.BATCH_SIZE
-  ? parseInt(process.env.BATCH_SIZE)
-  : 2000;
+const BATCH_SIZE = batchSize;
 const RETRIES = 100;
 const TO_BLOCK_LAG = 1;
 const FROM_BLOCK_LAG = 40;
@@ -125,7 +124,7 @@ export class Indexer {
     this.domain = domain;
     this.sdk = sdk;
     this.orchestrator = orchestrator;
-    this.develop = process.env.NODE_ENV === 'development';
+    this.develop = isDevelopment;
     this.persistance = new RedisPersistance(domain, redis);
     this.blockCache = new KVCache(
       'b_' + String(this.domain),
@@ -169,13 +168,6 @@ export class Indexer {
     }
 
     this.forceFrom = newFrom;
-  }
-
-  // not good
-  async lowerHeight(newHeight: number): Promise<void> {
-    this.lastBlock = newHeight;
-    await this.persistance.lowerHeight(newHeight);
-    this.forceFrom = newHeight;
   }
 
   domainToLimit(): number {
@@ -437,8 +429,8 @@ export class Indexer {
     return { timestamp, gasUsed, from };
   }
 
-  async init() {
-    await this.blockCache.init();
+  async init(): Promise<void> {
+    // await this.blockCache.init();
     await this.persistance.init();
   }
 
@@ -531,7 +523,7 @@ export class Indexer {
 
     const startAll = new Date();
 
-    this.targetTo = to;
+    this.targetTo = to + TO_BLOCK_LAG;
 
     do {
       const fetchEvents = async (
@@ -555,19 +547,18 @@ export class Indexer {
       ]);
 
       const batchSize = domain2batchSize.get(this.domain) || BATCH_SIZE;
-      let batchFrom = from;
-      let batchTo = Math.min(to, from + batchSize);
+      let batchFrom = from - FROM_BLOCK_LAG;
 
       while (true) {
+        let batchTo = Math.min(to, batchFrom + batchSize - 1);
+
         const done = Math.floor(((batchTo - from + 1) / (to - from + 1)) * 100);
-        this.logger.debug(
+        this.logger.info(
           `Fetching batch of events for from: ${batchFrom}, to: ${batchTo}, [${done}%]`,
         );
 
-        const insuredBatchFrom = batchFrom - FROM_BLOCK_LAG;
-
         const startBatch = new Date();
-        const events = await fetchEvents(insuredBatchFrom, batchTo);
+        const events = await fetchEvents(batchFrom, batchTo);
         const finishBatch = new Date();
         if (!events) throw new Error(`KEk`);
         events.sort((a, b) =>
@@ -578,26 +569,29 @@ export class Indexer {
         await this.persistance.store(...events);
         this.lastBlock = batchTo;
 
-        this.orchestrator.metrics.observeBlocksToTip(this.network, this.targetTo - this.lastBlock);
+        this.orchestrator.metrics.observeBlocksToTip(
+          this.network,
+          this.targetTo - this.lastBlock,
+        );
 
         if (this.wantDummyStuff) {
           try {
             await this.dummyTestEventsIntegrity(batchTo);
             this.logger.debug(
-              `Integrity test PASSED between ${insuredBatchFrom} and ${batchTo}`,
+              `Integrity test PASSED between ${batchFrom} and ${batchTo}`,
             );
           } catch (e) {
             const pastFrom = batchFrom;
             const pastTo = batchTo;
             batchFrom = batchFrom - batchSize / 2;
-            batchTo = batchFrom + batchSize;
+            const fakeBatchTo = Math.min(to, batchFrom + batchSize - 1);
             this.logger.warn(
-              `Integrity test not passed between ${pastFrom} and ${pastTo}, recollecting between ${batchFrom} and ${batchTo}: ${e}`,
+              `Integrity test not passed between ${pastFrom} and ${pastTo}, recollecting between ${batchFrom} and ${fakeBatchTo}: ${e}`,
             );
             continue;
           }
         }
-        
+
         const filteredEvents = events.filter((newEvent) =>
           allEvents.every(
             (oldEvent) => newEvent.uniqueHash() !== oldEvent.uniqueHash(),
@@ -610,9 +604,10 @@ export class Indexer {
             batchTo - batchFrom + 1
           } (${speed.toFixed(1)}b/sec). Got events: ${filteredEvents.length}`,
         );
-        if (batchTo >= to) break;
+        if (batchTo >= to) break; // it will actually be just equal like ===, but just in case logically it is >=
+
+        // we might also sub blockFromLag, but usually the lag needed in consumption from scratch
         batchFrom = batchTo + 1;
-        batchTo = Math.min(to, batchFrom + batchSize);
       }
 
       if (!allEvents) throw new Error('kek');
@@ -647,7 +642,10 @@ export class Indexer {
       } (${speed.toFixed(1)}b/sec). Got events: ${allEventsUnique.length}`,
     );
 
-    this.orchestrator.metrics.observeBlocksToTip(this.network, this.targetTo - this.lastBlock);
+    this.orchestrator.metrics.observeBlocksToTip(
+      this.network,
+      this.targetTo - this.lastBlock,
+    );
     this.lastBlock = to;
 
     return allEventsUnique;

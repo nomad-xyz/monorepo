@@ -9,6 +9,7 @@ import { Indexer } from './indexer';
 import { IndexerCollector } from './metrics';
 import { RedisClient } from './types';
 import { sleep } from './utils';
+import { nodeEnv } from '../config';
 
 interface TbdPackage {
   ts: Date;
@@ -100,12 +101,12 @@ export class Orchestrator {
     this.forbiddenDomains = []; // 2019844457
   }
 
-  async init() {
+  async init(): Promise<void> {
     await this.initIndexers();
     await this.initHealthCheckers();
     await this.initalFeedConsumer();
     try {
-      if (process.env.NODE_ENV === 'spooky things') {
+      if (nodeEnv === 'spooky things') {
         await this.checkAllIntegrity();
       }
     } catch (e) {
@@ -140,7 +141,7 @@ export class Orchestrator {
   }
 
   async indexAllUnrelated(): Promise<void> {
-    let finished = false;
+    const finished = false;
     const errors: TbdPackage[] = [];
 
     const promises = this.allowedDomains.map(async (domain: number) => {
@@ -214,7 +215,9 @@ export class Orchestrator {
   }
 
   async collectStatistics() {
+    this.logger.info(`Started collecting statistics`);
     const stats = await this.consumer.stats();
+    this.logger.info(`Statistics acquired`);
 
     this.allowedDomains.forEach((domain: number) => {
       const network = this.domain2name(domain);
@@ -231,7 +234,7 @@ export class Orchestrator {
         );
       }
     });
-
+    this.logger.info(`Fed statistics to metrics`);
   }
 
   async checkAllHealth() {
@@ -250,6 +253,7 @@ export class Orchestrator {
   }
 
   async initalFeedConsumer() {
+    this.logger.info(`Started initial feed consumer`);
     const events = (
       await Promise.all(
         Array.from(this.indexers.values()).map((indexer) =>
@@ -258,6 +262,8 @@ export class Orchestrator {
       )
     ).flat();
 
+    this.logger.info(`Initial feed contains: ${events.length} events`);
+
     events.sort((a, b) => {
       if (a.ts === b.ts) {
         return eventTypeToOrder(a) - eventTypeToOrder(b);
@@ -265,7 +271,9 @@ export class Orchestrator {
         return a.ts - b.ts;
       }
     });
+    this.logger.info(`Started actual consumption`);
     await this.consumer.consume(events);
+    this.logger.info(`Finished consumption of ${events.length}`);
   }
 
   async initIndexers() {

@@ -2,6 +2,14 @@
 
 ### Unreleased
 
+### 2.1.0-rc.0
+
+- upgrade: contracts
+- fix: config fetch header override
+
+### 2.0.0-rc.20
+
+- docs: update readme with examples/links
 - fix: `NomadContext.fetch` warns on failure
 - fix: request browser not to cache fetched config files
 - fix: update replica message status getter for new replica mapping

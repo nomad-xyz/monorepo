@@ -10,7 +10,7 @@ export class StatisticsCollector {
     this.s = new Statistics(domains);
   }
 
-  addDispatched(domain: number) {
+  addDispatched(domain: number): void {
     this.s.counts.total.dispatched += 1;
     if (this.s.counts.domainStatistics.has(domain))
       this.s.counts.domainStatistics.get(domain)!.dispatched += 1;
