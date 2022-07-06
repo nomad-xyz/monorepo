@@ -200,10 +200,6 @@ export class LocalAgent extends Agent {
 }
 
 export class RemoteAgent extends Agent {
-  // home: Network;
-  // replica: Network;
-  // role: string;
-  // remote: boolean;
   constructor(
     home: Network,
     replica: Network,
@@ -229,10 +225,6 @@ export class RemoteAgent extends Agent {
       }),
       { threshold: replica.threshold, ...options }
     );
-    // this.role = role;
-    // this.home = home;
-    // this.replica = replica;
-    // this.remote = true;
   }
 }
 
