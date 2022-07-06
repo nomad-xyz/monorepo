@@ -1016,10 +1016,6 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         );
       });
     }
-
-    if (checklist.hasErrors()) {
-      throw checklist;
-    }
     return checklist;
   }
 

@@ -30,6 +30,27 @@ export class CheckList {
     this.error = [];
   }
 
+  static combine(lists: CheckList[]): CheckList {
+    const combinedList = new CheckList();
+    lists.map((list) => {
+      combinedList.ok.push(...list.ok);
+      combinedList.error.push(...list.error);
+    });
+    return combinedList;
+  }
+
+  output(): void {
+    // TODO: improve output readability
+    console.log('Checklist: ', JSON.stringify(this, null, 2));
+    if (this.hasErrors()) {
+      throw new Error(
+          `${this.ok.length} Checks Passed, ${this.error.length} Checks Failed.`,
+      );
+    } else {
+      console.log('Checks Passed!');
+    }
+  }
+
   check(f: () => void, message: string): void {
     try {
       f();

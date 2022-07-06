@@ -726,10 +726,6 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
         );
       }
     }
-
-    if (checklist.hasErrors()) {
-      throw checklist;
-    }
     return checklist;
   }
 
