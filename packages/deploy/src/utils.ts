@@ -44,13 +44,13 @@ export class CheckList {
 
   output(): void {
     // TODO: improve output readability
-    console.log('Checklist: ', JSON.stringify(this, null, 2));
+    console.log('Failed: ', JSON.stringify(this.error, null, 2));
     if (this.hasErrors()) {
       throw new Error(
           `${this.ok.length} Checks Passed, ${this.error.length} Checks Failed.`,
       );
     } else {
-      console.log('Checks Passed!');
+      console.log(`${this.ok.length} Checks Passed!`);
     }
   }
 
@@ -157,13 +157,16 @@ export class CheckList {
   }
 
   pass(msg: string): void {
+    console.log(`✅ ${this.prefix + msg}`)
     this.ok.push(this.prefix + msg);
   }
 
   fail(e: string | unknown): void {
     if (typeof e == 'string') {
+      console.log(`❌ ${this.prefix + e}`);
       this.error.push(new Error(this.prefix + e));
     } else {
+      console.log(`❌ ${JSON.stringify(e, null, 2)}`);
       this.error.push(e);
     }
   }
