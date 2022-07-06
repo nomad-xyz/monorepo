@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- chore: update package scripts to start / stop services from monorepo root
 - chore: refactor api service
 - chore: standardize script commands
 - feat: add config file
