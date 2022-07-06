@@ -1660,6 +1660,7 @@ __metadata:
     ethers: ^5.4.4
     hardhat: ^2.6.0
     hardhat-gas-reporter: ^1.0.4
+    hardhat-packager: ~1.2.1
     prettier: ^2.2.1
     prettier-plugin-solidity: ^1.0.0-beta.5
     solhint: ^3.3.2
@@ -1712,6 +1713,7 @@ __metadata:
     ethers: ^5.4.4
     hardhat: ^2.8.3
     hardhat-gas-reporter: ^1.0.4
+    hardhat-packager: ~1.2.1
     prettier: ^2.2.1
     prettier-plugin-solidity: ^1.0.0-beta.5
     solhint: ^3.3.2
@@ -1754,6 +1756,7 @@ __metadata:
     ethers: ^5.4.4
     hardhat: ^2.6.0
     hardhat-gas-reporter: ^1.0.4
+    hardhat-packager: ~1.2.1
     prettier: ^2.2.1
     prettier-plugin-solidity: ^1.0.0-beta.5
     solhint: ^3.3.2
@@ -3246,7 +3249,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typechain/hardhat@npm:^2.0.1":
+"@typechain/hardhat@npm:^2.0.1, @typechain/hardhat@npm:^2.3.0":
   version: 2.3.1
   resolution: "@typechain/hardhat@npm:2.3.1"
   dependencies:
@@ -11542,7 +11545,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fs-extra@npm:^10.0.1":
+"fs-extra@npm:^10.0.0, fs-extra@npm:^10.0.1":
   version: 10.1.0
   resolution: "fs-extra@npm:10.1.0"
   dependencies:
@@ -12766,7 +12769,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hardhat@npm:^2.6.0, hardhat@npm:^2.6.8, hardhat@npm:^2.8.3, hardhat@npm:^2.9.2":
+"hardhat-packager@npm:~1.2.1":
+  version: 1.2.1
+  resolution: "hardhat-packager@npm:1.2.1"
+  dependencies:
+    "@typechain/hardhat": ^2.3.0
+    fs-extra: ^10.0.0
+    hardhat: ^2.6.4
+    tempy: 1.0.1
+  peerDependencies:
+    "@typechain/hardhat": ^2.3.0
+    hardhat: ^2.5.0
+    lodash: ^4.17.15
+    typechain: ^5.1.2
+  checksum: 06ba173af1e9208cb83fc6e3b2eba07989809dcd94928d1cd5815b997a8ba850367e13deb2308b298ab3ba6bae6422dc7879d8cd8882265ca67b297c29fed587
+  languageName: node
+  linkType: hard
+
+"hardhat@npm:^2.6.0, hardhat@npm:^2.6.4, hardhat@npm:^2.6.8, hardhat@npm:^2.8.3, hardhat@npm:^2.9.2":
   version: 2.9.9
   resolution: "hardhat@npm:2.9.9"
   dependencies:
