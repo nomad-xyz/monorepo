@@ -13,7 +13,7 @@ bytecode_hash = "none"        # For deterministic code
 block_timestamp = 1622400000  # Timestamp for tests (non-zero)
 
 # silence warning about ignored constructor visibility in OZ dependency
-ignored_error_codes = [2462]
+ignored_error_codes = [2462, 5878]
 
 
 [core]
