@@ -416,7 +416,12 @@ export class Bank extends Accountable {
     }
 
     this.ctx.logger.info(
-      { to, amount: ethers.utils.formatEther(value), role, bank: await this.signer.getAddress() },
+      {
+        to,
+        amount: ethers.utils.formatEther(value),
+        role,
+        bank: await this.signer.getAddress(),
+      },
       `Payed from signer of a bank!`
     );
 
