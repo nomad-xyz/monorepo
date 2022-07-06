@@ -963,27 +963,6 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         `GovernanceRouter for ${domain} is enrolled`,
       );
     }
-    // domains
-    const connections: number[] = domainConfig.connections
-      .map((d) => this.context.mustGetDomain(d).domain)
-      .sort();
-    const domainsOnChain: number[] = await Promise.all(
-      connections.map((_, i: number) => this.governanceRouter.domains(i)),
-    );
-    domainsOnChain.sort();
-    checklist.equals(
-      true,
-      connections.every((v, i) => v === domainsOnChain[i]),
-      'All connections in gov router',
-    );
-
-    let threw = false;
-    try {
-      await this.governanceRouter.domains(connections.length);
-    } catch (_) {
-      threw = true;
-    }
-    checklist.equals(true, threw, 'Right amount of connections in gov router');
 
     //  ========= UpgradeBeaconController =========
     // owner
