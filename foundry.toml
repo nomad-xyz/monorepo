@@ -12,6 +12,10 @@ verbosity = 3                 # The verbosity of tests
 bytecode_hash = "none"        # For deterministic code
 block_timestamp = 1622400000  # Timestamp for tests (non-zero)
 
+# silence warning about ignored constructor visibility in OZ dependency
+ignored_error_codes = [2462]
+
+
 [core]
 src = 'packages/contracts-core/contracts'
 test = 'packages/contracts-core/contracts/foundry-tests'

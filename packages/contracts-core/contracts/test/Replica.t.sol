@@ -229,7 +229,7 @@ contract ReplicaTest is ReplicaHandlers {
         );
         (
             bytes32 root,
-            bytes32 leaf,
+            ,
             uint256 index,
             bytes32[32] memory proof
         ) = merkleTest.getProof(message);
@@ -530,9 +530,9 @@ contract ReplicaTest is ReplicaHandlers {
         );
         (
             bytes32 newRoot,
-            bytes32 leaf,
-            uint256 index,
-            bytes32[32] memory proof
+            ,
+            ,
+
         ) = merkleTest.getProof(message);
         bytes32 oldRoot = committedRoot;
         bytes memory sig = signRemoteUpdate(updaterPK, oldRoot, newRoot);
