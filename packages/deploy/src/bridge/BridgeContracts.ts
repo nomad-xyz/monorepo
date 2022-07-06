@@ -548,7 +548,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
   }
 
   async checkDeploy(remoteDomains: string[]): Promise<CheckList> {
-    const checklist = new CheckList();
+    const checklist = new CheckList(`${this.domain.toUpperCase()}: `);
 
     checklist.assertBeaconProxy(
       this.data.bridgeToken,

@@ -709,7 +709,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     remoteDomains: string[],
     governorDomain: number,
   ): Promise<CheckList> {
-    const checklist = new CheckList();
+    const checklist = new CheckList(`${this.domain.toUpperCase()}: `);
 
     checklist.exists(this.data.home, `Home for domain ${this.domain}`);
     checklist.exists(

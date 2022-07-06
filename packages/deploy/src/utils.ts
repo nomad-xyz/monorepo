@@ -23,9 +23,12 @@ export function assertBeaconProxy(
 }
 
 export class CheckList {
+  prefix: string; // prefix for all messages in this checklist
   ok: string[]; // successful items
-  error: [string, unknown][]; // failed items with associated error from chai assertion or plain error
-  constructor() {
+  error: unknown[]; // failed items with associated error from chai assertion or plain error
+
+  constructor(prefix: string | void) {
+    this.prefix = prefix ? prefix : '';
     this.ok = [];
     this.error = [];
   }
@@ -54,24 +57,25 @@ export class CheckList {
   check(f: () => void, message: string): void {
     try {
       f();
-      this.ok.push(message);
+      this.pass(message);
     } catch (e: unknown) {
-      this.error.push([message, e]);
+      this.fail(e);
     }
   }
 
-  exists<T>(value: T, message: string): void {
-    this.check(() => expect(value, message).to.exist, message);
+  exists<T>(value: T | undefined, message: string): void {
+    this.check(() => expect(value, this.prefix + message).to.exist, message);
   }
 
   equals<T>(left: T, right: T | undefined, message: string): void {
     if (right === undefined) {
-      this.error.push([message, new Error(message + ' is undefined')]);
+      this.fail(message + ' is undefined');
     } else {
       try {
-        expect(left, message).to.be.equal(right);
+        expect(left, this.prefix + message).to.be.equal(right);
+        this.pass(message);
       } catch (e) {
-        this.error.push([message + `(left: ${left}, right: ${right})`, e]);
+        this.fail(e);
       }
     }
   }
@@ -83,15 +87,16 @@ export class CheckList {
     message: string,
   ): void {
     if (right === undefined) {
-      this.error.push([message, new Error(message + ' is undefined')]);
+      this.fail(message + ' is undefined');
     } else {
       try {
-        expect(left, message).to.be.equal(right);
+        expect(left, this.prefix + message).to.be.equal(right);
+        this.pass(message);
       } catch (e) {
         if (utils.equalIds(left, right)) {
-          this.ok.push(message);
+          this.pass(message);
         } else {
-          this.error.push([message + `(left: ${left}, right: ${right})`, e]);
+          this.fail(e);
         }
       }
     }
@@ -104,18 +109,17 @@ export class CheckList {
     message: string,
   ): void {
     if (right === undefined) {
-      this.ok.push(message);
+      this.pass(message);
     } else {
       try {
-        expect(left, message).to.be.not.equal(right);
-
+        expect(left, this.prefix + message).to.be.not.equal(right);
         if (utils.equalIds(left, right)) {
-          this.error.push([message, new Error(message)]);
+          this.fail(message + `: expected ${left} to NOT equal ${right}`);
         } else {
-          this.ok.push(message);
+          this.pass(message);
         }
       } catch (e) {
-        this.error.push([message, e]);
+        this.fail(e);
       }
     }
   }
@@ -126,34 +130,41 @@ export class CheckList {
   ): void {
     if (beaconProxy) {
       this.check(
-        () => expect(beaconProxy.beacon, message).to.not.be.undefined,
+        () =>
+          expect(beaconProxy.beacon, this.prefix + message).to.not.be.undefined,
         message + ' beacon',
       );
       this.check(
-        () => expect(beaconProxy.proxy, message).to.not.be.undefined,
+        () =>
+          expect(beaconProxy.proxy, this.prefix + message).to.not.be.undefined,
         message + ' proxy',
       );
       this.check(
-        () => expect(beaconProxy.implementation, message).to.not.be.undefined,
+        () =>
+          expect(beaconProxy.implementation, this.prefix + message).to.not.be
+            .undefined,
         message + ' implementation',
       );
     } else {
-      this.error.push([
-        message + ' beacon',
-        new Error(message + ' beacon is undefined'),
-      ]);
-      this.error.push([
-        message + ' proxy',
-        new Error(message + ' proxy is undefined'),
-      ]);
-      this.error.push([
-        message + ' implementation',
-        new Error(message + ' implementation is undefined'),
-      ]);
+      this.fail(message + ' beacon is undefined');
+      this.fail(message + ' proxy is undefined');
+      this.fail(message + ' implementation is undefined');
     }
   }
 
   hasErrors(): boolean {
     return this.error.length > 0;
+  }
+
+  pass(msg: string): void {
+    this.ok.push(this.prefix + msg);
+  }
+
+  fail(e: string | unknown): void {
+    if (typeof e == 'string') {
+      this.error.push(new Error(this.prefix + e));
+    } else {
+      this.error.push(e);
+    }
   }
 }
