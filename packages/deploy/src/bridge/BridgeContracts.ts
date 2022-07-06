@@ -550,22 +550,18 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
   async checkDeploy(remoteDomains: string[]): Promise<CheckList> {
     const checklist = new CheckList();
 
-    checklist.exists(
+    checklist.assertBeaconProxy(
       this.data.bridgeToken,
-      `bridgeToken for domain ${this.domain}`,
+      `BridgeToken is deployed for domain ${this.domain}`,
     );
-    checklist.exists(
+    checklist.assertBeaconProxy(
       this.data.bridgeRouter,
-      `bridgeRouter for domain ${this.domain}`,
+      `BridgeRouter id deployed for domain ${this.domain}`,
     );
-    checklist.exists(
+    checklist.assertBeaconProxy(
       this.data.tokenRegistry,
-      `tokenRegistry for domain ${this.domain}`,
+      `TokenRegistry is deployed for domain ${this.domain}`,
     );
-
-    checklist.assertBeaconProxy(this.data.bridgeToken, 'bridgeToken proxy');
-    checklist.assertBeaconProxy(this.data.bridgeRouter, 'bridgeRouter proxy');
-    checklist.assertBeaconProxy(this.data.tokenRegistry, 'TokenRegistry');
 
     /*
     # BridgeRouter
@@ -589,7 +585,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     checklist.equalIds(
       core.governanceRouter.address,
       bridgeRouterOwner,
-      'GovernanceRouter',
+      'BridgeRouter is owned by Governance',
     );
     // tokenRegistry
 
@@ -598,7 +594,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       checklist.equalIds(
         this.data.tokenRegistry.proxy,
         tokenRegistry,
-        'TokenRegistry',
+        'BridgeRouter has correct TokenRegistry configured',
       );
     }
 
@@ -607,7 +603,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     checklist.equalIds(
       xApp,
       core.xAppConnectionManager.address,
-      'xAppConnectionManager',
+      'BridgeRouter has correct xAppConnectionManager configured',
     );
     // remotes
     for (const domain of remoteDomains) {
@@ -618,7 +614,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       checklist.equalIds(
         this.context.mustGetBridge(domain).bridgeRouterContract.address,
         remoteRouter,
-        'BridgeRouter',
+        `BridgeRouter is enrolled for ${domain}`,
       );
     }
 
@@ -629,7 +625,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     checklist.equalIds(
       tokenRegistryOwner,
       this.bridgeRouterContract.address,
-      'TokenRegistry',
+      'TokenRegistry is owned by Governance',
     );
 
     // xAppConnectionManager
@@ -638,7 +634,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     checklist.equalIds(
       xAppAddress,
       core.xAppConnectionManager.address,
-      'xApp Address',
+      'TokenRegistry has correct xAppConnectionManager configured',
     );
     // tokenBeacon
     if (this.data.bridgeToken) {
@@ -646,7 +642,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       checklist.equalIds(
         tokenBeacon,
         this.data.bridgeToken.beacon,
-        'BridgeToken',
+        'TokenRegistry has correct TokenBeacon configured',
       );
     }
 
@@ -659,7 +655,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       checklist.equals(
         undefined,
         this.data.ethHelper,
-        "ethHelper shouldn't exist",
+        "ethHelper doesn't exist (as expected)",
       );
     }
 
@@ -667,47 +663,52 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
 
     if (this.data.customs) {
       for (const custom of this.data.customs) {
-        const addresses = custom.addresses;
-        checklist.assertBeaconProxy(addresses, 'Custom Token');
+        const { name, symbol, addresses } = custom;
+        checklist.assertBeaconProxy(
+          addresses,
+          `Custom Token is deployed for ${name} (${symbol})`,
+        );
 
         if (this.data.bridgeToken) {
           checklist.equalIds(
             addresses.implementation,
             this.data.bridgeToken.implementation,
-            'BirdgeToken implementation',
+            'Custom Token uses normal BridgeToken implementation',
           );
           checklist.notEqualIds(
             addresses.beacon,
             this.data.bridgeToken.beacon,
-            'BirdgeToken beacon',
+            'Custom Token uses *custom* BridgeToken beacon',
           );
         }
-
-        checklist.notEqualIds(
-          custom.controller,
-          core.upgradeBeaconController.address,
-          'upgradeBeaconController',
-        );
 
         const tokenContract = await contracts.BridgeToken__factory.connect(
           utils.evmId(addresses.proxy),
           this.connection,
         );
 
-        const name = await tokenContract.name();
-        const symbol = await tokenContract.symbol();
+        const chainName = await tokenContract.name();
+        const chainSymbol = await tokenContract.symbol();
         const decimals = await tokenContract.decimals();
         const owner = await tokenContract.owner();
 
         checklist.equalIds(
           owner,
           this.bridgeRouterContract.address,
-          'bridgeRouterContract',
+          'Custom Token is owned by BridgeRouter',
         );
 
-        checklist.equals(name, custom.name, 'Custom token name');
-        checklist.equals(symbol, custom.symbol, 'Custom token symbol');
-        checklist.equals(decimals, custom.decimals, 'Custom token decimals');
+        checklist.equals(chainName, name, `Custom Token Name is ${name}`);
+        checklist.equals(
+          chainSymbol,
+          symbol,
+          `Custom Token Symbol is ${symbol}`,
+        );
+        checklist.equals(
+          decimals,
+          decimals,
+          `Custom Token Decimals is ${decimals}`,
+        );
 
         const tokenId =
           await this.tokenRegistryContract.representationToCanonical(
@@ -716,10 +717,13 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
         checklist.equals(
           tokenId.domain,
           custom.token.domain,
-          'Custom token domain',
+          'Custom Token domain is configured on TokenRegistry',
         );
-
-        checklist.equalIds(tokenId.id, custom.token.id, 'Custom token address');
+        checklist.equalIds(
+          tokenId.id,
+          custom.token.id,
+          'Custom Token address is configured on TokenRegistry',
+        );
       }
     }
 

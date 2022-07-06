@@ -721,8 +721,6 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       `GovernanceRouter for domain ${this.domain}`,
     );
 
-    const replicas = this.data.replicas;
-    checklist.exists(replicas, `Replicas for domain ${this.domain}`);
     checklist.exists(
       this.data.upgradeBeaconController,
       `upgradeBeaconController for domain ${this.domain}`,
@@ -771,43 +769,51 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
 
     //  ========= Home =========
     // Home upgrade setup contracts are defined
-    checklist.assertBeaconProxy(this.data.home, 'Home');
+    checklist.assertBeaconProxy(this.data.home, 'Home beacon proxy is defined');
 
     // updaterManager is set on Home
     const updaterManager = await this.home.updaterManager();
     checklist.equalIds(
       updaterManager,
       this.data.updaterManager,
-      'UpdaterManager',
+      'UpdaterManager is configured on Home',
     );
 
     // state
     const state = await this.home.state();
-    checklist.equals(1, state, `Home state`);
+    checklist.equals(1, state, `Home state is Active`);
 
     // updater
     const homeUpdater = await this.home.updater();
     checklist.equalIds(
       homeUpdater,
       domainConfig.configuration.updater,
-      'Home updater',
+      'Home updater is correctly configured',
     );
 
     // localDomain
     const homeLocalDomain = await this.home.localDomain();
-    checklist.equals(this.domainNumber, homeLocalDomain, `Home local domain`);
+    checklist.equals(
+      this.domainNumber,
+      homeLocalDomain,
+      `Home local domain is correctly configured`,
+    );
 
     // owner
     const homeOwner = await this.home.owner();
     expect(utils.equalIds(homeOwner, this.governanceRouter.address)).to.be.true;
-    checklist.equalIds(homeOwner, this.governanceRouter.address, 'Home owner');
+    checklist.equalIds(
+      homeOwner,
+      this.governanceRouter.address,
+      'Home owner is governance router',
+    );
     //  ========= UpdaterManager =========
     // updater
     const updaterAtUpdaterManager = await this.updaterManager.updater();
     checklist.equalIds(
       updaterAtUpdaterManager,
       domainConfig.configuration.updater,
-      "Updater manager's updater",
+      'UpdaterManager updater is correctly configured',
     );
 
     // owner
@@ -815,56 +821,68 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     checklist.equalIds(
       updaterManagersOwner,
       this.governanceRouter.address,
-      "Updater manager's owner",
+      'UpdaterManager owner is governance router',
     );
 
     //  ========= xAppConnectionManager =========
     // home
     const xappHome = await this.xAppConnectionManager.home();
-    checklist.equalIds(xappHome, this.data.home?.proxy, "xApp's home");
+    checklist.equalIds(
+      xappHome,
+      this.data.home?.proxy,
+      'xAppConnectionManager Home is equal to Home',
+    );
     // owner
     const xappsOwner = await this.xAppConnectionManager.owner();
     checklist.equalIds(
       xappsOwner,
       this.governanceRouter.address,
-      "xApp's owner",
+      'xAppConnectionManager owner is governance',
     );
     //   .true;
 
-    for (const remoteDomain of remoteDomains) {
-      const remoteDomainNumber =
-        this.context.mustGetDomain(remoteDomain).domain;
-      checklist.exists(replicas, 'Replicas exist');
-      if (replicas) {
+    const replicas = this.data.replicas;
+    checklist.exists(replicas, 'Replica mapping exists');
+    if (replicas) {
+      for (const remoteDomain of remoteDomains) {
         checklist.assertBeaconProxy(
           replicas[remoteDomain],
-          `${remoteDomain}'s replica`,
+          `Replica for ${remoteDomain} is deployed`,
         );
 
+        const remoteDomainNumber =
+          this.context.mustGetDomain(remoteDomain).domain;
         const assumedDomain = await this.xAppConnectionManager.replicaToDomain(
           replicas[remoteDomain].proxy,
         );
-        checklist.equals(remoteDomainNumber, assumedDomain, 'Remote domain');
+        checklist.equals(
+          remoteDomainNumber,
+          assumedDomain,
+          `Replica for ${remoteDomain} is configured in xAppConnectionManager replicaToDomain`,
+        );
         // domainToReplica
         const assumedReplicaAddress =
           await this.xAppConnectionManager.domainToReplica(remoteDomainNumber);
         checklist.equalIds(
           assumedReplicaAddress,
           replicas[remoteDomain].proxy,
-          'Replica address',
+          `Replica for ${remoteDomain} is configured in xAppConnectionManager domainToReplica`,
         );
-      }
 
-      // watcherPermission
-
-      const remoteConfig = this.context.mustGetDomainConfig(remoteDomain);
-      for (const watcher of remoteConfig.configuration.watchers) {
-        const watcherPermission =
-          await this.xAppConnectionManager.watcherPermission(
-            watcher,
-            remoteDomainNumber,
+        // watcherPermission
+        const remoteConfig = this.context.mustGetDomainConfig(remoteDomain);
+        for (const watcher of remoteConfig.configuration.watchers) {
+          const watcherPermission =
+            await this.xAppConnectionManager.watcherPermission(
+              watcher,
+              remoteDomainNumber,
+            );
+          checklist.equals(
+            true,
+            watcherPermission,
+            `Watcher permission for ${remoteDomain} is set`,
           );
-        checklist.equals(true, watcherPermission, 'Watcher permission');
+        }
       }
     }
 
@@ -872,11 +890,15 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     // GovernanceRouter upgrade setup contracts are defined
     checklist.assertBeaconProxy(
       this.data.governanceRouter,
-      'Governance router',
+      'Governance router is deployed',
     );
     // localDomain
     const govLocalDomain = await this.governanceRouter.localDomain();
-    checklist.equals(this.domainNumber, govLocalDomain, 'Gov domain');
+    checklist.equals(
+      this.domainNumber,
+      govLocalDomain,
+      'GovernanceRouter localDomain is properly configured',
+    );
     // recoveryTimelock
     const recoveryTimelock = await this.governanceRouter.recoveryTimelock();
     checklist.equals(
@@ -884,50 +906,52 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         domainConfig.configuration.governance.recoveryTimelock,
       ).toHexString(),
       recoveryTimelock.toHexString(),
-      'Recovery time lock',
+      'GovernanceRouter Recovery time lock is properly configured',
     );
     // recoveryActiveAt
     const recoveryActiveAt = await this.governanceRouter.recoveryActiveAt();
-    checklist.equals(true, recoveryActiveAt.eq(0), 'Recovery activeAt');
+    checklist.equals(
+      true,
+      recoveryActiveAt.eq(0),
+      'GovernanceRouter Recovery is not initiated',
+    );
     // recoveryManager
     const recoveryManager = await this.governanceRouter.recoveryManager();
     checklist.equalIds(
       domainConfig.configuration.governance.recoveryManager,
       recoveryManager,
-      'Recovery Manager',
+      'GovernanceRouter Recovery Manager is properly configured',
     );
     // governor
-    const govId = await this.governanceRouter.governor();
-    checklist.exists(this.context.protocol, 'Protocol config');
+    checklist.exists(this.context.protocol, 'Protocol config exists');
     if (this.context.protocol) {
+      const govId = await this.governanceRouter.governor();
       const expectedGovId = isGovernor
         ? this.context.protocol.governor.id
         : ethers.constants.AddressZero;
-
-      checklist.equalIds(expectedGovId, govId, 'Gov address');
+      checklist.equalIds(expectedGovId, govId, 'Governor address is set');
 
       const govDomain = await this.governanceRouter.governorDomain();
       const expectedGovDomain = this.context.protocol.governor.domain;
-      checklist.equals(expectedGovDomain, govDomain, 'Gov domain');
+      checklist.equals(expectedGovDomain, govDomain, 'Governor domain is set');
     }
-
-    // xAppConnectionManager
-    const xAppConnectionManager =
-      await this.governanceRouter.xAppConnectionManager();
 
     checklist.exists(
       this.data.xAppConnectionManager,
-      'xAppConnection manager exists',
+      'xAppConnection is deployed',
     );
-
-    if (this.data.xAppConnectionManager)
+    if (this.data.xAppConnectionManager) {
+      // xAppConnectionManager
+      const xAppConnectionManager =
+        await this.governanceRouter.xAppConnectionManager();
       checklist.equalIds(
         this.data.xAppConnectionManager,
         xAppConnectionManager,
-        'xAppConnection manager',
+        'GovernanceRouter xAppConnectionManager is configured',
       );
+    }
 
-    // routers
+    // GovernanceRouters enrolled
     for (const domain of remoteDomains) {
       const remoteDomainNumber = this.context.mustGetDomain(domain).domain;
       const remoteRouter = await this.governanceRouter.routers(
@@ -936,7 +960,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       checklist.equalIds(
         this.context.mustGetCore(domain).governanceRouter.address,
         remoteRouter,
-        'Remote router',
+        `GovernanceRouter for ${domain} is enrolled`,
       );
     }
     // domains
@@ -967,7 +991,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     checklist.equalIds(
       beaconOwner,
       this.governanceRouter.address,
-      'Governance router address',
+      'UpgradeBeacon Controller is owned by governance router',
     );
 
     if (remoteDomains.length > 0 && replicas) {
@@ -983,9 +1007,13 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         checklist.equalIds(
           implementation,
           replicaImpl,
-          "Replica's implementation",
+          'Replicas all have the same implementation',
         );
-        checklist.equalIds(beacon, replicaBeacon, "Replica's beacon");
+        checklist.equalIds(
+          beacon,
+          replicaBeacon,
+          'Replicas all have the same beacon',
+        );
       });
     }
 
