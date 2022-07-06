@@ -119,12 +119,13 @@ export class WalletAccount extends Account {
 export class Agent extends Account {
   home: Network;
   replica: Network;
-  type: string;
+  role: string;
   remote: boolean;
+  agent: true;
   constructor(
     home: Network,
     replica: Network,
-    type: string,
+    role: string,
     address: AddressWithThreshold,
     ctx: Context,
     options?: OptionalNetworkArgs
@@ -133,7 +134,7 @@ export class Agent extends Account {
     const slug =
       home === replica ? `${home.name}` : `${home.name}_at_${replica.name}`;
     super(
-      `${type}_of_${slug}`,
+      `${role}_of_${slug}`,
       address,
       remote ? replica.provider : home.provider,
       ctx,
@@ -141,8 +142,9 @@ export class Agent extends Account {
     );
     this.home = home;
     this.replica = replica;
-    this.type = type;
+    this.role = role;
     this.remote = remote;
+    this.agent = true;
   }
 
   async balance(): Promise<ethers.BigNumber> {
@@ -151,7 +153,7 @@ export class Agent extends Account {
       this.home.name,
       this.replica.name,
       this.remote ? this.replica.name : this.home.name,
-      this.type,
+      this.role,
       balance,
       await this.address()
     );
@@ -166,12 +168,16 @@ export class Agent extends Account {
 
     return [balance, shouldTopUp, howMuchTopUp];
   }
+
+  static isAgent(something: Agent | string | Accountable): something is Agent {
+    return (<Agent>something).remote !== undefined;
+  }
 }
 
 export class LocalAgent extends Agent {
   constructor(
     home: Network,
-    type: string,
+    role: string,
     address: AddressWithThreshold,
     ctx: Context,
     options?: OptionalNetworkArgs
@@ -179,10 +185,10 @@ export class LocalAgent extends Agent {
     super(
       home,
       home,
-      type,
+      role,
       address,
       ctx.with({
-        type,
+        role,
         address: justAddress(address),
         home: home.name,
         replica: home.name,
@@ -196,26 +202,26 @@ export class LocalAgent extends Agent {
 export class RemoteAgent extends Agent {
   // home: Network;
   // replica: Network;
-  // type: string;
+  // role: string;
   // remote: boolean;
   constructor(
     home: Network,
     replica: Network,
-    type: string,
+    role: string,
     address: AddressWithThreshold,
     ctx: Context,
     options?: OptionalNetworkArgs
   ) {
-    const name = `${type}_of_${home.name}_at_${replica.name}`;
+    const name = `${role}_of_${home.name}_at_${replica.name}`;
 
     super(
       home,
       replica,
-      type,
+      role,
       address,
       // replica.provider,
       ctx.with({
-        type,
+        role,
         address: justAddress(address),
         home: home.name,
         replica: replica.name,
@@ -223,7 +229,7 @@ export class RemoteAgent extends Agent {
       }),
       { threshold: replica.threshold, ...options }
     );
-    // this.type = type;
+    // this.role = role;
     // this.home = home;
     // this.replica = replica;
     // this.remote = true;
@@ -287,7 +293,12 @@ export class Bank extends Accountable {
   ) {
     super(
       name,
-      ctx.with({ type: "bank", home: home.name, replica: home.name, network: home.name })
+      ctx.with({
+        role: "bank",
+        home: home.name,
+        replica: home.name,
+        network: home.name,
+      })
     );
     if (options?.provider) {
       signer = signer.connect(options.provider);
@@ -324,7 +335,10 @@ export class Bank extends Accountable {
     return balance;
   }
 
-  async pay(a: Accountable | string, value: ethers.BigNumber) {
+  async pay(
+    a: Accountable | string | LocalAgent | RemoteAgent,
+    value: ethers.BigNumber
+  ) {
     let to;
     if (typeof a === "string") {
       to = a;
@@ -365,38 +379,48 @@ export class Bank extends Accountable {
       );
       throw new Error(`No receipt for tx: ${sent.hash}`);
     }
+
+    let role;
+
+    if (Agent.isAgent(a)) {
+      role = a.role;
+      if (a.remote) {
+        this.ctx.metrics.observeTransfer(
+          a.home.name,
+          a.home.name,
+          this.home.name,
+          a.role,
+          value,
+          await a.address()
+        );
+      } else {
+        this.ctx.metrics.observeTransfer(
+          a.home.name,
+          (a as RemoteAgent).replica.name,
+          this.home.name,
+          a.role,
+          value,
+          await a.address()
+        );
+      }
+    } else {
+      role = "balance";
+      this.ctx.metrics.observeTransfer(
+        "balance",
+        "balance",
+        this.home.name,
+        role,
+        value,
+        typeof a === "string" ? a : await a.address()
+      );
+    }
+
     this.ctx.logger.info(
-      { to, amount: ethers.utils.formatEther(value) },
+      { to, amount: ethers.utils.formatEther(value), role },
       `Payed from signer of a bank!`
     );
 
     return receipt;
-  }
-
-  async payAgent(a: LocalAgent | RemoteAgent, value: ethers.BigNumber) {
-    const result = await this.pay(a, value);
-
-    if (a.remote) {
-      this.ctx.metrics.observeTransfer(
-        a.home.name,
-        a.home.name,
-        this.home.name,
-        "bank",
-        value,
-        await a.address()
-      );
-    } else {
-      this.ctx.metrics.observeTransfer(
-        a.home.name,
-        (a as RemoteAgent).replica.name,
-        this.home.name,
-        "bank",
-        value,
-        await a.address()
-      );
-    }
-
-    return result;
   }
 }
 
@@ -530,7 +554,7 @@ export class Network {
           {
             balance: formatEther(bankBalance),
             threshold: formatEther(bankTreshold),
-            address: bankAddress
+            address: bankAddress,
           },
           `Bank has enough moneyz`
         );
@@ -539,12 +563,17 @@ export class Network {
             green(
               `Bank has enough moneyz. Has ${formatEther(
                 bankBalance
-              )} out of ${formatEther(bankTreshold)}. Bank address: ${bankAddress}`
+              )} out of ${formatEther(
+                bankTreshold
+              )}. Bank address: ${bankAddress}`
             )
           );
       }
     } catch (e) {
-      this.ctx.logger.error({address: await this.bank.address()}, `Failed getting balance or threshold for the bank`);
+      this.ctx.logger.error(
+        { address: await this.bank.address() },
+        `Failed getting balance or threshold for the bank`
+      );
     }
 
     // AGENTS
