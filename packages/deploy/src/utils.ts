@@ -2,7 +2,7 @@ import ethers, { BytesLike } from 'ethers';
 import { expect } from 'chai';
 import * as config from '@nomad-xyz/configuration';
 import { utils } from '@nomad-xyz/multi-provider';
-
+import chalk from 'chalk';
 export type SignerOrProvider = ethers.providers.Provider | ethers.Signer;
 
 export function log(str: string): void {
@@ -23,34 +23,69 @@ export function assertBeaconProxy(
 }
 
 export class CheckList {
+  prefix: string; // prefix for all messages in this checklist
   ok: string[]; // successful items
-  error: [string, unknown][]; // failed items with associated error from chai assertion or plain error
-  constructor() {
+  error: unknown[]; // failed items with associated error from chai assertion or plain error
+  //
+  currentCheck: string;
+
+  constructor(prefix: string | void) {
+    this.prefix = prefix ? prefix : '';
     this.ok = [];
     this.error = [];
+    this.currentCheck = '';
+  }
+
+  static combine(lists: CheckList[]): CheckList {
+    const combinedList = new CheckList();
+    lists.map((list) => {
+      combinedList.ok.push(...list.ok);
+      combinedList.error.push(...list.error);
+    });
+    return combinedList;
+  }
+
+  output(): void {
+    // TODO: improve output readability
+    if (this.hasErrors()) {
+      console.error(
+        `\nTest result: ${chalk.red('FAIL')} | ${this.ok.length} Passed, ${
+          this.error.length
+        } Failed.`,
+      );
+      console.log(`\n ${chalk.bold('Errors')}\n`);
+      this.error.map(console.log);
+    } else {
+      console.log(
+        `\nTest result: ${chalk.green('OK')} | ${
+          this.ok.length
+        } Checks Passed!`,
+      );
+    }
   }
 
   check(f: () => void, message: string): void {
     try {
       f();
-      this.ok.push(message);
+      this.pass(message);
     } catch (e: unknown) {
-      this.error.push([message, e]);
+      this.fail(e);
     }
   }
 
-  exists<T>(value: T, message: string): void {
-    this.check(() => expect(value, message).to.exist, message);
+  exists<T>(value: T | undefined, message: string): void {
+    this.check(() => expect(value, this.prefix + message).to.exist, message);
   }
 
   equals<T>(left: T, right: T | undefined, message: string): void {
     if (right === undefined) {
-      this.error.push([message, new Error(message + ' is undefined')]);
+      this.fail(message + ' is undefined');
     } else {
       try {
-        expect(left, message).to.be.equal(right);
+        expect(left, this.prefix + message).to.be.equal(right);
+        this.pass(message);
       } catch (e) {
-        this.error.push([message + `(left: ${left}, right: ${right})`, e]);
+        this.fail(e);
       }
     }
   }
@@ -62,15 +97,16 @@ export class CheckList {
     message: string,
   ): void {
     if (right === undefined) {
-      this.error.push([message, new Error(message + ' is undefined')]);
+      this.fail(message + ' is undefined');
     } else {
       try {
-        expect(left, message).to.be.equal(right);
+        expect(left.toString().toLowerCase(), this.prefix + message).to.be.equal(right.toString().toLowerCase());
+        this.pass(message);
       } catch (e) {
         if (utils.equalIds(left, right)) {
-          this.ok.push(message);
+          this.pass(message);
         } else {
-          this.error.push([message + `(left: ${left}, right: ${right})`, e]);
+          this.fail(e);
         }
       }
     }
@@ -83,18 +119,17 @@ export class CheckList {
     message: string,
   ): void {
     if (right === undefined) {
-      this.ok.push(message);
+      this.pass(message);
     } else {
       try {
-        expect(left, message).to.be.not.equal(right);
-
+        expect(left.toString().toLowerCase(), this.prefix + message).to.be.not.equal(right.toString().toLowerCase());
         if (utils.equalIds(left, right)) {
-          this.error.push([message, new Error(message)]);
+          this.fail(message + `: expected ${left} to NOT equal ${right}`);
         } else {
-          this.ok.push(message);
+          this.pass(message);
         }
       } catch (e) {
-        this.error.push([message, e]);
+        this.fail(e);
       }
     }
   }
@@ -105,34 +140,74 @@ export class CheckList {
   ): void {
     if (beaconProxy) {
       this.check(
-        () => expect(beaconProxy.beacon, message).to.not.be.undefined,
+        () =>
+          expect(beaconProxy.beacon, this.prefix + message).to.not.be.undefined,
         message + ' beacon',
       );
       this.check(
-        () => expect(beaconProxy.proxy, message).to.not.be.undefined,
+        () =>
+          expect(beaconProxy.proxy, this.prefix + message).to.not.be.undefined,
         message + ' proxy',
       );
       this.check(
-        () => expect(beaconProxy.implementation, message).to.not.be.undefined,
+        () =>
+          expect(beaconProxy.implementation, this.prefix + message).to.not.be
+            .undefined,
         message + ' implementation',
       );
     } else {
-      this.error.push([
-        message + ' beacon',
-        new Error(message + ' beacon is undefined'),
-      ]);
-      this.error.push([
-        message + ' proxy',
-        new Error(message + ' proxy is undefined'),
-      ]);
-      this.error.push([
-        message + ' implementation',
-        new Error(message + ' implementation is undefined'),
-      ]);
+      this.fail(message + ' beacon is undefined');
+      this.fail(message + ' proxy is undefined');
+      this.fail(message + ' implementation is undefined');
     }
   }
 
   hasErrors(): boolean {
     return this.error.length > 0;
+  }
+
+  pass(msg: string): void {
+    const data = {
+      output: chalk.green('[PASS]'),
+      network: this.prefix,
+      check: msg,
+    };
+    const out = `  ${data.output} | ${data.network}${' '.repeat(
+      15 - data.network.length,
+    )} | ${data.check}${' '.repeat(100 - data.check.length)}|`;
+    console.log(out);
+    this.ok.push(out);
+  }
+
+  fail(e: string | unknown): void {
+    if (typeof e == 'string') {
+      const data = {
+        output: chalk.red('[FAIL]'),
+        network: this.prefix,
+      };
+      const out = `  ${data.output} | ${data.network}${' '.repeat(
+        15 - data.network.length,
+      )} | ${this.currentCheck}${' '.repeat(100 - this.currentCheck.length)}|`;
+      console.log(out);
+      this.error.push({
+        check: this.currentCheck,
+        error: e,
+        network: this.prefix,
+      });
+    } else {
+      const data = {
+        output: chalk.red('[FAIL]'),
+        network: this.prefix,
+      };
+      const out = `  ${data.output} | ${data.network}${' '.repeat(
+        15 - data.network.length,
+      )} | ${this.currentCheck}${' '.repeat(100 - this.currentCheck.length)}|`;
+      console.log(out);
+      this.error.push({
+        network: this.prefix,
+        check: this.currentCheck,
+        error: e,
+      });
+    }
   }
 }
