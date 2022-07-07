@@ -24,6 +24,7 @@
     "secp256k1": "^4.0.3"
   },
   "scripts": {
-    "start": "ts-node ./src/index.ts"
+    "start": "ts-node ./src/index.ts",
+    "test": "npx ts-mocha ./**/*.test.ts"
   }
 }

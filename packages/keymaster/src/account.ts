@@ -27,14 +27,14 @@ export abstract class Accountable {
     return (await this.balance()).lt(await this.threshold());
   }
 
-  async upperTreshold(): Promise<ethers.BigNumber> {
+  async upperThreshold(): Promise<ethers.BigNumber> {
     const t = await this.threshold();
     return t.mul(2);
   }
 
   async howMuchTopUp(): Promise<ethers.BigNumber> {
     const b = await this.balance();
-    const upper = await this.upperTreshold();
+    const upper = await this.upperThreshold();
 
     return upper.sub(b);
   }
@@ -42,7 +42,7 @@ export abstract class Accountable {
 
 // Normal address with provider
 export class Account extends Accountable {
-  _treshold: ethers.BigNumber;
+  _threshold: ethers.BigNumber;
   _address: string;
   provider: ethers.providers.Provider;
   constructor(
@@ -64,7 +64,7 @@ export class Account extends Accountable {
       threshold = address.threshold;
     }
 
-    this._treshold = ethers.BigNumber.from(threshold);
+    this._threshold = ethers.BigNumber.from(threshold);
     this._address = realAddress;
     this.provider = provider;
   }
@@ -86,7 +86,7 @@ export class Account extends Accountable {
 
   threshold(): Promise<ethers.BigNumber> {
     this.ctx.logger.debug(`Getting stored threshold`);
-    return Promise.resolve(this._treshold);
+    return Promise.resolve(this._threshold);
   }
 
   static async fromSigner(
@@ -163,7 +163,7 @@ export class Agent extends Account {
   async suggestion(): Promise<[ethers.BigNumber, boolean, ethers.BigNumber]> {
     const balance = await this.balance();
     const shouldTopUp = balance.lt(await this.threshold());
-    const upper = await this.upperTreshold();
+    const upper = await this.upperThreshold();
     const howMuchTopUp = upper.sub(balance);
 
     return [balance, shouldTopUp, howMuchTopUp];
@@ -241,7 +241,7 @@ export class LocalWatcher extends LocalAgent {
     });
   }
 
-  async upperTreshold(): Promise<ethers.BigNumber> {
+  async upperThreshold(): Promise<ethers.BigNumber> {
     return this.home.watcherThreshold || (await this.threshold()).mul(2);
   }
 }
@@ -267,7 +267,7 @@ export class RemoteWatcher extends RemoteAgent {
     super(home, replica, "watcher", address, ctx, options);
   }
 
-  async upperTreshold(): Promise<ethers.BigNumber> {
+  async upperThreshold(): Promise<ethers.BigNumber> {
     return this.replica.watcherThreshold || (await this.threshold()).mul(2);
   }
 }
@@ -275,7 +275,7 @@ export class RemoteWatcher extends RemoteAgent {
 export class Bank extends Accountable {
   signer: ethers.Signer;
   home: Network;
-  _treshold: ethers.BigNumber;
+  _threshold: ethers.BigNumber;
   constructor(
     name: string,
     signer: ethers.Signer,
@@ -297,7 +297,7 @@ export class Bank extends Accountable {
     }
     this.home = home;
     this.signer = signer;
-    this._treshold = ethers.BigNumber.from(options?.threshold || eth(1.0));
+    this._threshold = ethers.BigNumber.from(options?.threshold || eth(1.0));
   }
 
   async address(): Promise<string> {
@@ -307,7 +307,7 @@ export class Bank extends Accountable {
 
   threshold(): Promise<ethers.BigNumber> {
     this.ctx.logger.debug(`Getting stored threshold of a bank`);
-    return Promise.resolve(this._treshold);
+    return Promise.resolve(this._threshold);
   }
 
   async balance(): Promise<ethers.BigNumber> {
@@ -456,16 +456,16 @@ export class Network {
   }
 
   async init() {
-    const tresholds = await Promise.all(
+    const thresholds = await Promise.all(
       this.balances.map(async (a) => {
         return await a.threshold();
       })
     );
-    const threshold = tresholds.reduce(
+    const threshold = thresholds.reduce(
       (acc, v) => acc.add(v),
       ethers.BigNumber.from("0")
     );
-    this.bank._treshold = threshold;
+    this.bank._threshold = threshold;
   }
 
   async checkAllBalances() {
@@ -521,18 +521,18 @@ export class Network {
     // BANK
 
     try {
-      const [bankAddress, bankBalance, bankTreshold] = await Promise.all([
+      const [bankAddress, bankBalance, bankThreshold] = await Promise.all([
         this.bank.address(),
         this.bank.balance(),
         this.bank.threshold(),
       ]);
 
-      if (bankBalance.lt(bankTreshold)) {
+      if (bankBalance.lt(bankThreshold)) {
         this.ctx.logger.warn(
           {
             address: bankAddress,
             balance: formatEther(bankBalance),
-            threshold: formatEther(bankTreshold),
+            threshold: formatEther(bankThreshold),
           },
           `Bank balance is less than threshold, please top up`
         );
@@ -540,9 +540,9 @@ export class Network {
           console.log(
             red(
               `Bank balance is less than threshold, please top up ${formatEther(
-                bankTreshold.sub(bankBalance)
+                bankThreshold.sub(bankBalance)
               )} currency. Has ${formatEther(bankBalance)} out of ${formatEther(
-                bankTreshold
+                bankThreshold
               )}`
             )
           );
@@ -550,7 +550,7 @@ export class Network {
         this.ctx.logger.debug(
           {
             balance: formatEther(bankBalance),
-            threshold: formatEther(bankTreshold),
+            threshold: formatEther(bankThreshold),
             address: bankAddress,
           },
           `Bank has enough moneyz`
@@ -561,7 +561,7 @@ export class Network {
               `Bank has enough moneyz. Has ${formatEther(
                 bankBalance
               )} out of ${formatEther(
-                bankTreshold
+                bankThreshold
               )}. Bank address: ${bankAddress}`
             )
           );
@@ -660,7 +660,7 @@ export class Network {
     options?: OptionalNetworkArgs
   ) {
     const { name } = n;
-    const envName = name.toUpperCase().replaceAll("-", "_");
+    const envName = name.toUpperCase().replace(/\-/, "_");
     const rpcEnvKey = `${envName}_RPC`;
     const rpc = process.env[rpcEnvKey] || n.endpoint;
     if (!rpc)
