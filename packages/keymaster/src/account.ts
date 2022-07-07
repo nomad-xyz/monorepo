@@ -1,5 +1,11 @@
 import { ethers } from "ethers";
-import { AddressWithThreshold, INetwork, justAddress } from "./config";
+import {
+  AddressWithThreshold,
+  AgentRole,
+  allowAgent,
+  INetwork,
+  justAddress,
+} from "./config";
 import { green, red, yellow } from "./color";
 import { eth, OptionalNetworkArgs, sleep } from "./utils";
 import { MyJRPCProvider } from "./retry_provider/provider";
@@ -682,13 +688,26 @@ export class Network {
       ...options,
     });
 
-    const balances = [
-      new LocalAgent(network, "updater", n.agents.updater, ctx),
-      ...n.agents.watchers.map((w) => new LocalWatcher(network, w, ctx)), // should be this only watcher
-      ...(n.agents.kathy
-        ? [new LocalAgent(network, "kathy", n.agents.kathy!, ctx)]
-        : []),
-    ];
+    const balances = [];
+
+    if (allowAgent(n, "local", AgentRole.Updater)) {
+      balances.push(
+        new LocalAgent(network, AgentRole.Updater, n.agents.updater, ctx)
+      );
+    }
+
+    if (allowAgent(n, "local", AgentRole.Watcher)) {
+      balances.push(
+        ...n.agents.watchers.map((w) => new LocalWatcher(network, w, ctx))
+      );
+    }
+
+    if (n.agents.kathy && allowAgent(n, "local", AgentRole.Kathy)) {
+      balances.push(
+        new LocalAgent(network, AgentRole.Kathy, n.agents.kathy!, ctx)
+      );
+    }
+
     network.addBalances(...balances);
 
     return network;
