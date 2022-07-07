@@ -3,7 +3,7 @@
         "goerli": {
             "name": "goerli",
             "replicas": ["rinkeby", "evmostestnet", "kovan"],
-            "endpoint": "https://goerli.infura.io/v3/5f65182f06a14f5182a2e9af8d8fff33",
+            "endpoint": "https://goerli.infura.io/v3/xxx",
             "bank": "0x1111111111111111111111111111111111111111111111111111111111111111",
             "threshold": "500000000000000000",
             "agents": {
@@ -17,7 +17,7 @@
         "rinkeby": {
             "name": "rinkeby",
             "replicas": ["goerli", "evmostestnet", "kovan"],
-            "endpoint": "https://rinkeby.infura.io/v3/5f65182f06a14f5182a2e9af8d8fff33",
+            "endpoint": "https://rinkeby.infura.io/v3/xxx",
             "bank": "0x1111111111111111111111111111111111111111111111111111111111111111",
             "threshold": "500000000000000000",
             "agents": {
@@ -45,7 +45,7 @@
         "kovan": {
             "name": "kovan",
             "replicas": ["goerli", "rinkeby", "evmostestnet"],
-            "endpoint": "https://kovan.infura.io/v3/5f65182f06a14f5182a2e9af8d8fff33",
+            "endpoint": "https://kovan.infura.io/v3/xxx",
             "bank": "0x1111111111111111111111111111111111111111111111111111111111111111",
             "threshold": "500000000000000000",
             "agents": {
