@@ -1,0 +1,60 @@
+{
+    "networks": {
+        "goerli": {
+            "name": "goerli",
+            "replicas": ["rinkeby", "evmostestnet", "kovan"],
+            "endpoint": "https://goerli.infura.io/v3/xxx",
+            "bank": "0x1111111111111111111111111111111111111111111111111111111111111111",
+            "threshold": "500000000000000000",
+            "agents": {
+                "kathy": "0xF5e6CC7FA0bf3c96B3def2863eC0dC03ce5DC737",
+                "watchers": ["0xe478d86Cda583ff7c1C9A50Fc476BdA61b7f34Ae"],
+                "updater": "0xef7F857D2a76e619cdbE812e03d0e2236dC0a1cF",
+                "relayer": "0x88dF323EbfA1fD671FBf14e4A897e076ed6C12CD",
+                "processor": "0x88130d3121EAF7f3285FDd7bbd3a1eF53F2D6e16"
+            }
+        },
+        "rinkeby": {
+            "name": "rinkeby",
+            "replicas": ["goerli", "evmostestnet", "kovan"],
+            "endpoint": "https://rinkeby.infura.io/v3/xxx",
+            "bank": "0x1111111111111111111111111111111111111111111111111111111111111111",
+            "threshold": "500000000000000000",
+            "agents": {
+                "kathy": "0xCB01D41eb608e9C6Af7d7021AabC659E29093247",
+                "watchers": ["0x904ECE03De028de624BD221cC86aad73afD8a5BE"],
+                "updater": "0xe86a73D409f6a8A10Ab1995A8633E1A1CbB9D27c",
+                "relayer": "0xD1855a9D4b4BdED86a857398d8ee7077269844A2",
+                "processor": "0xE65d339d794546e77902b9E7b36aA224dCE8b294"
+            }
+        },
+        "evmostestnet": {
+            "name": "evmostestnet",
+            "replicas": ["goerli", "rinkeby", "kovan"],
+            "endpoint": "https://eth.bd.evmos.dev:8545",
+            "bank": "0x1111111111111111111111111111111111111111111111111111111111111111",
+            "threshold": "500000000000000000",
+            "agents": {
+                "kathy": "0xdE02dF46DDb0bBf32b61C0201D59f4a1C8370E1A",
+                "watchers": ["0xf3278a64bF9D5D518f9A1B4810f92633d67fDDA4"],
+                "updater": "0xB758E1C5A22F99cC29d4e07e3616fBD6C9fAfCce",
+                "relayer": "0xDDB92c91c3dC97021468E779666c15df73F94377",
+                "processor": "0x9a5DBF36aac85bE412b741313E122a748125a9B8"
+            }
+        },
+        "kovan": {
+            "name": "kovan",
+            "replicas": ["goerli", "rinkeby", "evmostestnet"],
+            "endpoint": "https://kovan.infura.io/v3/xxx",
+            "bank": "0x1111111111111111111111111111111111111111111111111111111111111111",
+            "threshold": "500000000000000000",
+            "agents": {
+                "kathy": "0x0111bFfB0182cC81dE36535adcC904ED9dc59F11",
+                "watchers": ["0x47C67e481530fb37E0F1FaeDdf4ce0d614a20ED3"],
+                "updater": "0x525b92c9634dEF302596cF1128B73bD54977f749",
+                "relayer": "0x5F0d70a8c3057d00eDED1FAbcC0843b44CFb84A6",
+                "processor": "0xec6646520BBF594BD5C08DDac74f430e145faDa7"
+            }
+        }
+    }
+}
