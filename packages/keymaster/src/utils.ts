@@ -184,8 +184,7 @@ function reviver(key: any, value: any) {
 }
 
 export function readConfig(l: string): KeymasterConfig {
-  let s = fs.readFileSync(l, "utf8");
-  s = s.replace(/treshold/g, "threshold"); // there was a typo, so we want to make use the config doesn't have it
+  const s = fs.readFileSync(l, "utf8");
   return JSON.parse(s, reviver);
 }
 
