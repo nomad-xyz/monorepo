@@ -3,14 +3,14 @@
 # https://github.com/docker/login-action#google-container-registry-gcr
 # https://github.com/docker/build-push-action
 name: Push Indexer Image to GCR GitHub Action
-on: 
+on:
   push:
     paths:
-      - 'packages/indexer/**'
+      - "packages/indexer/**"
     branches:
-      - '**'
+      - "**"
     tags:
-      - '**'
+      - "**"
 
 jobs:
   build-docker:
@@ -49,3 +49,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
