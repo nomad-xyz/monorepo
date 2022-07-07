@@ -1,7 +1,7 @@
 import { NomadContext } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
-import { utils, ethers } from 'ethers'
-import { Address, Domain, GovernanceConfig, Proposal } from './types'
+import { ethers } from 'ethers';
+import { Address, Domain, GovernanceConfig, Proposal, CallData } from './types';
 import NomadModule from './abis/NomadModule.json';
 const { abi: NomadModuleABI } = NomadModule;
 
@@ -25,7 +25,7 @@ export class GovernanceContext extends NomadContext {
     this.govModules = new Map();
     if (govConfig) {
       this.governorModule = govConfig.governor;
-      for (var domain in govConfig.modules) {
+      for (const domain in govConfig.modules) {
         const domainName = this.resolveDomainName(domain);
         this.govModules.set(domainName, govConfig.modules[domain]);
       }
@@ -80,31 +80,35 @@ export class GovernanceContext extends NomadContext {
     return new ethers.Contract(addr, NomadModuleABI);
   }
 
-  async encodeProposalData(proposal: Proposal): Promise<string> {
+  async encodeProposalData(proposal: Proposal): Promise<CallData> {
     // TODO: pass in props
     const origin = 'ethereum';
-    const destination = 'moonbeam';
-    const to: Address = '0x0000000000000000000000000000000000000000';
-    const message = '0x1234';
-    const value = 1;
-    const module = this.getGovModule(destination);
-    const operation = 0;
-    const { home } = this.getCore(origin)!;
-    const dispatchTx = await home.populateTransaction.dispatch(proposal.module.domain, proposal.module.address, message);
-    const encodedDispatch = utils.serializeTransaction(dispatchTx);
-    const execTx = await module.populateTransaction.exec(
+    const domain = this.resolveDomain(proposal.module.domain);
+
+    // destructure call data
+    const { to, value, data, operation } = proposal.calls;
+    // get governor module at destination
+    const module = this.getGovModule(domain);
+    // encode exec function data
+    const message = module.interface.encodeFunctionData('exec', [
       to,
       value,
-      encodedDispatch,
+      data,
       operation,
-    );
-    const encodedExec = utils.serializeTransaction(execTx);
+    ]);
 
-    return encodedExec
+    // get home contract and construct dispatch transaction
+    const { home } = this.mustGetCore(origin);
+    const dispatchTx = await home.populateTransaction.dispatch(domain, proposal.module.address, message);
+    return {
+      to: home, // Nomad Home contract 
+      data: dispatchTx, // dispatch
+      message, // abi.encoded function data for Gnosis module
+    };
   }
 
-  decodeProposalData() {
-    return
+  decodeProposalData(tx: string): undefined {
+    return;
   }
 }
 

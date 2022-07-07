@@ -36,7 +36,7 @@
     "sdk-bridge": "yarn workspace @nomad-xyz/sdk-bridge",
     "sdk-govern": "yarn workspace @nomad-xyz/sdk-govern",
     "sdk-zodiac-nomad-module": "yarn workspage @nomad-xyz/sdk-zodiac-nomad-module",
-    "test": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy  --exclude @nomad-xyz/local-environment run test",
+    "test": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy --exclude @nomad-xyz/local-environment run test",
     "gen-proof": "scripts/accumulator-cli",
     "snapshot": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run snapshot",
     "snapshot:check": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run snapshot:check"
