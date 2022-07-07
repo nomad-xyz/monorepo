@@ -660,7 +660,7 @@ export class Network {
     options?: OptionalNetworkArgs
   ) {
     const { name } = n;
-    const envName = name.toUpperCase().replace(/\-/, "_");
+    const envName = name.toUpperCase().replace(/\-/g, "_");
     const rpcEnvKey = `${envName}_RPC`;
     const rpc = process.env[rpcEnvKey] || n.endpoint;
     if (!rpc)
