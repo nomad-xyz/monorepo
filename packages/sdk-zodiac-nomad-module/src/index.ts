@@ -1,11 +1,12 @@
 import { NomadContext } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
 import { utils, ethers } from 'ethers'
+import { Address, Domain, GovernanceConfig, Proposal } from './types'
 import NomadModule from './abis/NomadModule.json';
 const { abi: NomadModuleABI } = NomadModule;
 
-type Address = string;
-type Domain = string | number;
+// type Address = string;
+// type Domain = string | number;
 
 /**
  * The GovernanceContext manages connections to Nomad Governance contracts.
@@ -15,21 +16,24 @@ type Domain = string | number;
  */
 export class GovernanceContext extends NomadContext {
   // private bridges: Map<string, BridgeContracts>;
-  private governorModule: Address;
+  private governorModule: Address | undefined;
   private govModules: Map<string, Address>;
 
-  constructor(environment: string | config.NomadConfig = 'development') {
+  constructor(environment: string | config.NomadConfig = 'development', govConfig?: GovernanceConfig ) {
     super(environment);
 
     this.govModules = new Map();
-    // TODO: pass into constructor
-    this.governorModule = '0x0000'
-    this.govModules.set('ethereum', '0x0000');
-    this.govModules.set('moonbeam', '0x0000');
+    if (govConfig) {
+      this.governorModule = govConfig.governor;
+      for (var domain in govConfig.modules) {
+        const domainName = this.resolveDomainName(domain);
+        this.govModules.set(domainName, govConfig.modules[domain]);
+      }
+    }
   }
 
-  static fromNomadContext(nomadContext: NomadContext): GovernanceContext {
-    const context = new GovernanceContext(nomadContext.conf);
+  static fromNomadContext(nomadContext: NomadContext, govConfig?: GovernanceConfig): GovernanceContext {
+    const context = new GovernanceContext(nomadContext.conf, govConfig);
 
     for (const domain of context.domainNumbers) {
       const provider = context.getProvider(domain);
@@ -40,6 +44,10 @@ export class GovernanceContext extends NomadContext {
     }
 
     return context;
+  }
+
+  get governorMod(): Address | undefined {
+    return this.governorModule;
   }
 
   /**
@@ -72,21 +80,26 @@ export class GovernanceContext extends NomadContext {
     return new ethers.Contract(addr, NomadModuleABI);
   }
 
-  async encodeProposalData(): Promise<string> {
+  async encodeProposalData(proposal: Proposal): Promise<string> {
     // TODO: pass in props
-    const destination = 'ethereum';
-    const to: Address = '0x0000000000000000000000000000000000000000'
-    const value = 1
-    const data = '0x1234'
+    const origin = 'ethereum';
+    const destination = 'moonbeam';
+    const to: Address = '0x0000000000000000000000000000000000000000';
+    const message = '0x1234';
+    const value = 1;
     const module = this.getGovModule(destination);
+    const operation = 0;
+    const { home } = this.getCore(origin)!;
+    const dispatchTx = await home.populateTransaction.dispatch(proposal.module.domain, proposal.module.address, message);
+    const encodedDispatch = utils.serializeTransaction(dispatchTx);
     const execTx = await module.populateTransaction.exec(
       to,
       value,
-      data
+      encodedDispatch,
+      operation,
     );
     const encodedExec = utils.serializeTransaction(execTx);
 
-    // TODO: encode dispatch
     return encodedExec
   }
 

@@ -2025,9 +2025,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk-governance@workspace:packages/sdk-governance":
+"@nomad-xyz/sdk-zodiac-nomad-module@workspace:packages/sdk-zodiac-nomad-module":
   version: 0.0.0-use.local
-  resolution: "@nomad-xyz/sdk-governance@workspace:packages/sdk-governance"
+  resolution: "@nomad-xyz/sdk-zodiac-nomad-module@workspace:packages/sdk-zodiac-nomad-module"
   dependencies:
     "@types/chai": ^4.2.21
     "@types/mocha": ^9.1.0

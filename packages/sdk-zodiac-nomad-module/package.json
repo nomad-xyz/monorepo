@@ -1,5 +1,5 @@
 {
-  "name": "@nomad-xyz/sdk-governance",
+  "name": "@nomad-xyz/sdk-zodiac-nomad-module",
   "version": "0.0.0-rc.1",
   "description": "Governance SDK",
   "keywords": [
@@ -7,7 +7,7 @@
     "sdk",
     "governance"
   ],
-  "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/sdk-governance#readme",
+  "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/sdk-zodiac-nomad-module#readme",
   "bugs": {
     "url": "https://github.com/nomad-xyz/monorepo/issues"
   },

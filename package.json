@@ -14,7 +14,7 @@
     "packages/sdk-govern",
     "packages/indexer",
     "packages/keymaster",
-    "packages/sdk-governance",
+    "packages/sdk-zodiac-nomad-module",
     "packages/indexer"
   ],
   "scripts": {
@@ -35,7 +35,7 @@
     "sdk": "yarn workspace @nomad-xyz/sdk",
     "sdk-bridge": "yarn workspace @nomad-xyz/sdk-bridge",
     "sdk-govern": "yarn workspace @nomad-xyz/sdk-govern",
-    "sdk-governance": "yarn workspage @nomad-xyz/sdk-governance",
+    "sdk-zodiac-nomad-module": "yarn workspage @nomad-xyz/sdk-zodiac-nomad-module",
     "test": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy  --exclude @nomad-xyz/local-environment run test",
     "gen-proof": "scripts/accumulator-cli",
     "snapshot": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run snapshot",
