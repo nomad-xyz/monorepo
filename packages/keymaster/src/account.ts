@@ -58,7 +58,7 @@ export class Account extends Accountable {
     let threshold: ethers.BigNumberish;
     if (typeof address === "string") {
       realAddress = address;
-      threshold = options?.threshold || eth(1.337);
+      threshold = options?.threshold || eth(1);
     } else {
       realAddress = address.address;
       threshold = address.threshold;
