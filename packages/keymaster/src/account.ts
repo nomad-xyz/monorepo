@@ -471,7 +471,11 @@ export class Network {
       (acc, v) => acc.add(v),
       ethers.BigNumber.from("0")
     );
-    this.bank._threshold = threshold;
+    
+    // Temporary hardcode value, so that we don't get much noise when currently we don't want to put 26 eth into the bank
+    // TODO: fix strategy
+    // this.bank._threshold = threshold;
+    this.bank._threshold = eth(4);
   }
 
   async checkAllBalances() {
