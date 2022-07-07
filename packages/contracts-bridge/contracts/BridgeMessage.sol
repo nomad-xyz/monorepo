@@ -20,7 +20,8 @@ library BridgeMessage {
         TokenId, // 1
         Message, // 2
         Transfer, // 3
-        DeprecatedFastTransfer // 4
+        DeprecatedFastTransfer, // 4
+        ConnextTransfer // 5
     }
 
     // ============ Structs ============
@@ -37,7 +38,7 @@ library BridgeMessage {
 
     uint256 private constant TOKEN_ID_LEN = 36; // 4 bytes domain + 32 bytes id
     uint256 private constant IDENTIFIER_LEN = 1;
-    uint256 private constant TRANSFER_LEN = 97; // 1 byte identifier + 32 bytes recipient + 32 bytes amount + 32 bytes detailsHash
+    uint256 private constant TRANSFER_LEN = 97; // 1 byte identifier + 32 bytes recipient or externalId + 32 bytes amount + 32 bytes detailsHash
 
     // ============ Modifiers ============
 
@@ -59,7 +60,7 @@ library BridgeMessage {
      * @return TRUE if action is valid
      */
     function isValidAction(bytes29 _action) internal pure returns (bool) {
-        return isTransfer(_action);
+        return isTransfer(_action) || isConnextTransfer(_action);
     }
 
     /**
@@ -122,6 +123,15 @@ library BridgeMessage {
     }
 
     /**
+     * @notice Checks that the message is of type ConnextTransfer
+     * @param _action The message
+     * @return True if the message is of type ConnextTransfer
+     */
+    function isConnextTransfer(bytes29 _action) internal pure returns (bool) {
+        return isType(_action, Types.ConnextTransfer);
+    }
+
+    /**
      * @notice Formats Transfer
      * @param _to The recipient address as bytes32
      * @param _amnt The transfer amount
@@ -138,6 +148,30 @@ library BridgeMessage {
                 .encodePacked(Types.Transfer, _to, _amnt, _detailsHash)
                 .ref(0)
                 .castTo(uint40(Types.Transfer));
+    }
+
+    /**
+     * @notice Formats Connext Transfer
+     * @param _externalId The external identifier of the transfer
+     * @param _amnt The transfer amount
+     * @param _detailsHash The hash of the token name, symbol, and decimals
+     * @return
+     */
+    function formatConnextTransfer(
+        bytes32 _externalId,
+        uint256 _amnt,
+        bytes32 _detailsHash
+    ) internal pure returns (bytes29) {
+        return
+            abi
+                .encodePacked(
+                    Types.ConnextTransfer,
+                    _externalId,
+                    _amnt,
+                    _detailsHash
+                )
+                .ref(0)
+                .castTo(uint40(Types.ConnextTransfer));
     }
 
     /**
@@ -268,6 +302,7 @@ library BridgeMessage {
     function recipient(bytes29 _transferAction)
         internal
         pure
+        typeAssert(_transferAction, Types.Transfer)
         returns (bytes32)
     {
         // before = 1 byte identifier
@@ -282,6 +317,7 @@ library BridgeMessage {
     function evmRecipient(bytes29 _transferAction)
         internal
         pure
+        typeAssert(_transferAction, Types.Transfer)
         returns (address)
     {
         // before = 1 byte identifier + 12 bytes empty to trim for address = 13 bytes
@@ -310,6 +346,22 @@ library BridgeMessage {
     {
         // before = 1 byte identifier + 32 bytes ID + 32 bytes amount = 65 bytes
         return _transferAction.index(65, 32);
+    }
+
+    /**
+     * @notice Retrieves the externalId from a Connext Transfer
+     * @dev MUST be used on the ConnextTransfer type, otherwise will revert
+     * @param _transferAction The message
+     * @return The external id
+     */
+    function externalId(bytes29 _transferAction)
+        internal
+        pure
+        typeAssert(_transferAction, Types.ConnextTransfer)
+        returns (bytes32)
+    {
+        // before = 1 byte identifier
+        return _transferAction.index(1, 32);
     }
 
     /**

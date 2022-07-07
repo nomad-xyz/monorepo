@@ -5,6 +5,7 @@ pragma solidity 0.7.6;
 import {BridgeMessage} from "./BridgeMessage.sol";
 import {IBridgeToken} from "./interfaces/IBridgeToken.sol";
 import {ITokenRegistry} from "./interfaces/ITokenRegistry.sol";
+import {IConnext} from "./interfaces/IConnext.sol";
 // ============ External Imports ============
 import {XAppConnectionClient} from "@nomad-xyz/contracts-router/contracts/XAppConnectionClient.sol";
 import {Router} from "@nomad-xyz/contracts-router/contracts/Router.sol";
@@ -36,11 +37,13 @@ contract BridgeRouter is Version0, Router {
     ITokenRegistry public tokenRegistry;
     // token transfer prefill ID => LP that pre-filled message to provide fast liquidity
     mapping(bytes32 => address) public liquidityProvider;
+    // reference to connext contract on this domain
+    IConnext public connext;
 
     // ============ Upgrade Gap ============
 
     // gap for upgrade safety
-    uint256[49] private __GAP;
+    uint256[48] private __GAP;
 
     // ======== Events =========
 
@@ -93,6 +96,16 @@ contract BridgeRouter is Version0, Router {
         __XAppConnectionClient_initialize(_xAppConnectionManager);
     }
 
+    // ======== External: Setup Functions =========
+
+    /**
+     * @notice Allows the admin to set the Connext reference
+     * @param _connext Address of the connext contract
+     */
+    function setConnext(address _connext) external onlyOwner {
+        connext = IConnext(_connext);
+    }
+
     // ======== External: Handle =========
 
     /**
@@ -115,6 +128,8 @@ contract BridgeRouter is Version0, Router {
         // handle message based on the intended action
         if (_action.isTransfer()) {
             _handleTransfer(_origin, _nonce, _tokenId, _action);
+        } else if (_action.isConnextTransfer()) {
+            _handleConnextTransfer(_origin, _nonce, _tokenId, _action);
         } else {
             require(false, "!valid action");
         }
@@ -153,6 +168,41 @@ contract BridgeRouter is Version0, Router {
         _sendTransferMessage(_destination, _tokenId, _action);
         // emit Send event to record token sender
         emit Send(_token, msg.sender, _destination, _recipient, _amount, false);
+    }
+
+    /**
+     * @notice Send tokens to connext on a remote chain
+     * @param _token The token address
+     * @param _amount The token amount
+     * @param _destination The destination domain
+     * @param _externalId A hash of transfer metadata for Connext flow
+     */
+    function xsend(
+        address _token,
+        uint256 _amount,
+        uint32 _destination,
+        bytes32 _externalId
+    ) external {
+        // validate inputs
+        require(_externalId != bytes32(0), "!id");
+        // ensure the caller is Connext;
+        // tokens will be sent to Connext on the other side,
+        // so function must be called by Connext
+        require(msg.sender == address(connext), "!connext");
+        // debit tokens from the Connext
+        (bytes29 _tokenId, bytes32 _detailsHash) = _debitTokens(
+            _token,
+            _amount
+        );
+        // format Connext transfer message
+        bytes29 _action = BridgeMessage.formatConnextTransfer(
+            _externalId,
+            _amount,
+            _detailsHash
+        );
+        // send message to destination chain bridge router
+        _sendTransferMessage(_destination, _tokenId, _action);
+        // TODO: emit special event?
     }
 
     // ======== External: Custom Tokens =========
@@ -285,6 +335,43 @@ contract BridgeRouter is Version0, Router {
         _creditTokens(_origin, _nonce, _tokenId, _action, _recipient);
         // dust the recipient with gas tokens
         _dust(_recipient);
+    }
+
+    /**
+     * @notice Handles an incoming Connext Transfer message.
+     *
+     * Tokens are sent to the Connext Router,
+     * then Connext.reconcile callback is called
+     *
+     * @param _origin The domain of the chain from which the transfer originated
+     * @param _nonce The unique identifier for the message from origin to destination
+     * @param _tokenId The token ID
+     * @param _action The action
+     */
+    function _handleConnextTransfer(
+        uint32 _origin,
+        uint32 _nonce,
+        bytes29 _tokenId,
+        bytes29 _action
+    ) internal {
+        // tokens will be sent to connext router
+        address _recipient = address(connext);
+        // send tokens
+        address _token = _creditTokens(
+            _origin,
+            _nonce,
+            _tokenId,
+            _action,
+            _recipient
+        );
+        // call Connext reconcile callback
+        connext.reconcile(
+            _action.externalId(),
+            _action.amnt(),
+            _tokenId.id(),
+            _tokenId.domain(),
+            _token
+        );
     }
 
     /**
