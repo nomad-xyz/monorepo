@@ -4,10 +4,7 @@
             "name": "goerli",
             "replicas": ["rinkeby", "evmostestnet", "kovan"],
             "endpoint": "https://goerli.infura.io/v3/5f65182f06a14f5182a2e9af8d8fff33",
-            "bank": {
-                "region": "us-west-2",
-                "keyId": "455a9119-5349-4288-a73c-08ae8d9569c4"
-              },
+            "bank": "0x1111111111111111111111111111111111111111111111111111111111111111",
             "threshold": "500000000000000000",
             "agents": {
                 "kathy": "0xF5e6CC7FA0bf3c96B3def2863eC0dC03ce5DC737",
@@ -21,7 +18,7 @@
             "name": "rinkeby",
             "replicas": ["goerli", "evmostestnet", "kovan"],
             "endpoint": "https://rinkeby.infura.io/v3/5f65182f06a14f5182a2e9af8d8fff33",
-            "bank": "0xb09c0011111111111111111111111111111111111111111111111111cece1000",
+            "bank": "0x1111111111111111111111111111111111111111111111111111111111111111",
             "threshold": "500000000000000000",
             "agents": {
                 "kathy": "0xCB01D41eb608e9C6Af7d7021AabC659E29093247",
@@ -35,7 +32,7 @@
             "name": "evmostestnet",
             "replicas": ["goerli", "rinkeby", "kovan"],
             "endpoint": "https://eth.bd.evmos.dev:8545",
-            "bank": "0xb09c0011111111111111111111111111111111111111111111111111cece1000",
+            "bank": "0x1111111111111111111111111111111111111111111111111111111111111111",
             "threshold": "500000000000000000",
             "agents": {
                 "kathy": "0xdE02dF46DDb0bBf32b61C0201D59f4a1C8370E1A",
@@ -49,10 +46,7 @@
             "name": "kovan",
             "replicas": ["goerli", "rinkeby", "evmostestnet"],
             "endpoint": "https://kovan.infura.io/v3/5f65182f06a14f5182a2e9af8d8fff33",
-            "bank": {
-                "region": "us-west-2",
-                "keyId": "455a9119-5349-4288-a73c-08ae8d9569c4"
-              },
+            "bank": "0x1111111111111111111111111111111111111111111111111111111111111111",
             "threshold": "500000000000000000",
             "agents": {
                 "kathy": "0x0111bFfB0182cC81dE36535adcC904ED9dc59F11",
