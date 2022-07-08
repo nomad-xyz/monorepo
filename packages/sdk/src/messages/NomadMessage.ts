@@ -494,7 +494,7 @@ export class NomadMessage<T extends NomadContext> {
    */
   async delivered(): Promise<boolean> {
     const { status } = await this.replicaStatus();
-    return status === 'processed';
+    return status === ReplicaStatusNames.Processed;
   }
 
   /**
