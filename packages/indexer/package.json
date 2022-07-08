@@ -8,8 +8,8 @@
   "scripts": {
     "docker:build": "docker-compose build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD)",
     "docker:down": "docker-compose down",
-    "docker:release": "docker buildx build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) --platform linux/amd64,linux/arm64 --push -t gcr.io/nomad-xyz/nomad-indexer:sha-$(git rev-parse --short HEAD) .",
-    "docker:stop": "docker-comopose stop",
+    "docker:release": "docker buildx build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) --platform=linux/amd64,linux/arm64 --push -t=gcr.io/nomad-xyz/nomad-indexer:sha-$(git rev-parse --short HEAD) .",
+    "docker:stop": "docker-compose stop",
     "docker:up": "docker-compose up",
     "lint": "eslint --fix ./src",
     "prisma:generate": "prisma generate",

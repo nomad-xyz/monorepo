@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix: pass github.sha as build arg to github actions docker/build-push-action step
 - chore: update package scripts to start / stop services from monorepo root
 - chore: refactor api service
 - chore: standardize script commands

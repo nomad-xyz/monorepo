@@ -18,8 +18,6 @@ contract MerkleTest is Test {
             bytes32[32] memory
         )
     {
-        // Hash the message
-        bytes32 hash = keccak256(message);
         string[] memory input = new string[](7);
         input[0] = "yarn";
         input[1] = "gen-proof";
