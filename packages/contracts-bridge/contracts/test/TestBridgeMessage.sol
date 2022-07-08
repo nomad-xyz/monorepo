@@ -80,15 +80,6 @@ contract TestBridgeMessage {
         return BridgeMessage.isTransfer(action);
     }
 
-    function testIsFastTransfer(bytes memory _action)
-        external
-        pure
-        returns (bool)
-    {
-        bytes29 action = _action.ref(uint40(BridgeMessage.Types.FastTransfer));
-        return BridgeMessage.isFastTransfer(action);
-    }
-
     function testFormatTransfer(
         bytes32 _to,
         uint256 _amnt,

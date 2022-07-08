@@ -1,6 +1,7 @@
 # Changelog
 
 ### Unreleased
+- remove ability to handle fast liquidity messages
 
 ### 1.1.0-rc.0
 
