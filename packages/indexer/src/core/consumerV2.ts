@@ -58,7 +58,10 @@ export type MinimumSerializedNomadMessage = {
   receivedAt: number;
   processedAt: number;
   sender: string | null;
-  tx: string | null;
+  dispatchTx: string | null;
+  updateTx: string | null;
+  relayTx: string | null;
+  processTx: string | null;
   state: MsgState;
   gasAtDispatch: string;
   gasAtUpdate: string;
@@ -128,7 +131,11 @@ export class NomadMessage {
 
   state: MsgState;
   dispatchBlock: number;
-  tx?: string;
+
+  dispatchTx?: string;
+  updateTx?: string;
+  relayTx?: string;
+  processTx?: string;
 
   timings: Timings;
   gasUsed: GasUsed;
@@ -181,7 +188,7 @@ export class NomadMessage {
     this.gasUsed = gasUsed || new GasUsed();
     this.logger = logger.child({ messageHash });
     this.checkbox = new Checkbox();
-    this.tx = tx;
+    this.dispatchTx = tx;
   }
 
   messageTypeStr(): string {
@@ -277,6 +284,8 @@ export class NomadMessage {
     this.timings.updated(event.ts);
     this.gasUsed.update = event.gasUsed;
     this.checkbox.updated = true;
+    this.updateTx = event.tx;
+
     if (this.state < MsgState.Updated) {
       this.logger.debug(
         `Updated message from state ${this.state} to ${MsgState.Updated} (Updated)`,
@@ -295,6 +304,8 @@ export class NomadMessage {
     this.timings.relayed(event.ts);
     this.gasUsed.relay = event.gasUsed;
     this.checkbox.relayed = true;
+    this.relayTx = event.tx;
+
     if (this.state < MsgState.Relayed) {
       this.logger.debug(
         `Updated message from state ${this.state} to ${MsgState.Relayed} (Relayed)`,
@@ -331,6 +342,7 @@ export class NomadMessage {
     this.timings.processed(event.ts);
     this.gasUsed.process = event.gasUsed;
     this.checkbox.processed = true;
+    this.processTx = event.tx;
 
     if (this.state < MsgState.Processed) {
       this.logger.debug(
@@ -365,7 +377,7 @@ export class NomadMessage {
       logger.child({ messageSource: 'deserialize' }),
       sdk,
       undefined,
-      s.tx || undefined,
+      s.dispatchTx || undefined,
     );
     m.timings.updated(s.updatedAt * 1000);
     m.timings.relayed(s.relayedAt * 1000);
@@ -385,7 +397,10 @@ export class NomadMessage {
     m.checkbox.processed = s.processed;
 
     m.sender = s.sender || undefined;
-    m.tx = s.tx || undefined;
+    m.dispatchTx = s.dispatchTx || undefined;
+    m.updateTx = s.updateTx || undefined;
+    m.relayTx = s.relayTx || undefined;
+    m.processTx = s.processTx || undefined;
     m.state = s.state;
     return m;
   }
@@ -401,7 +416,10 @@ export class NomadMessage {
       sender: this.sender || null,
       state: this.state,
       ...this.timings.serialize(),
-      tx: this.tx || null,
+      dispatchTx: this.dispatchTx || null,
+      updateTx: this.updateTx || null,
+      relayTx: this.relayTx || null,
+      processTx: this.processTx || null,
       body: this.body,
       dispatchBlock: this.dispatchBlock,
       internalSender: this.internalSender.pretty(),
@@ -667,7 +685,7 @@ export class ProcessorV2 extends Consumer {
   msgSend(event: NomadishEvent, message: NomadMessage) {
     const eventData = event.eventData as Send;
     message.sender = eventData.from;
-    message.tx = event.tx;
+    message.dispatchTx = event.tx;
     message.checkbox.sent = true;
   }
 

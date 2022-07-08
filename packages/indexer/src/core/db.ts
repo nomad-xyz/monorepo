@@ -44,11 +44,11 @@ export class DB {
     return !value;
   }
 
-  async getMessageByEvm(tx: string): Promise<NomadMessage[]> {
+  async getMessageByEvm(dispatchTx: string): Promise<NomadMessage[]> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const messages = await this.client.messages.findMany({
       where: {
-        tx,
+        dispatchTx,
       },
     });
 
