@@ -3,6 +3,9 @@ ENV NODE_ENV=production
 
 ARG CIT_GOMMIT="default"
 ENV CIT_GOMMIT=$GITHUB_SHA
+RUN echo $GIT_COMMIT
+RUN echo $CIT_COMMIT
+RUN echo $GITHUB_SHA
 
 WORKDIR /app
 
