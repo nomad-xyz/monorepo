@@ -33,6 +33,7 @@ export class MyJRPCProvider extends ethers.providers.StaticJsonRpcProvider {
         this.ctx.metrics.observeLatency(this.networkName, method, time);
         return result;
       } catch (e: any) {
+        lastError = e;
         this.ctx.logger.error(
           {
             method,
@@ -49,10 +50,9 @@ export class MyJRPCProvider extends ethers.providers.StaticJsonRpcProvider {
           e.code || "NO_CODE"
         );
 
-        if (e.code === "INSUFFICIENT_FUNDS") {
+        if (e.code === "INSUFFICIENT_FUNDS" || e.code === "INVALID_ARGUMENT") {
           throw e;
         } else {
-          lastError = e;
           await sleep(timeout * 2 ** attempt);
         }
       }
