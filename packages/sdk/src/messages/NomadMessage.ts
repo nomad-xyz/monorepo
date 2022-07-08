@@ -48,16 +48,22 @@ export enum MessageStatus {
   Processed = 3,
 }
 
+export enum ReplicaStatusNames {
+  None = 'none',
+  Proven = 'proven',
+  Processed = 'processed',
+}
+
 type ReplicaMessageStatusNone = {
-  status: 'none';
+  status: ReplicaStatusNames.None;
 };
 
 type ReplicaMessageStatusProcess = {
-  status: 'processed';
+  status: ReplicaStatusNames.Processed;
 };
 
 type ReplicaMessageStatusProven = {
-  status: 'proven';
+  status: ReplicaStatusNames.Proven;
   root: string;
 };
 
@@ -467,17 +473,18 @@ export class NomadMessage<T extends NomadContext> {
 
     // case one: root is 0
     if (root === ethers.constants.HashZero || root === 0)
-      return { status: 'none' };
+      return { status: ReplicaStatusNames.None };
 
     // case two: root is 2
     const legacyProcessed = `0x${'00'.repeat(31)}02`;
-    if (root === legacyProcessed || root === 2) return { status: 'processed' };
+    if (root === legacyProcessed || root === 2)
+      return { status: ReplicaStatusNames.Processed };
 
     // case 3: root is proven. Could be either the root, or the legacy proven
     // status
     const legacyProven = `0x${'00'.repeat(31)}01`;
     if (typeof root === 'number') root = legacyProven;
-    return { status: 'proven', root: root as string };
+    return { status: ReplicaStatusNames.Proven, root: root as string };
   }
 
   /**
