@@ -14,6 +14,7 @@ discussion.
 Nomad strives to create an inclusive and welcoming development environment.
 Generally, we follow the
 [Rust Code of Conduct](https://www.rust-lang.org/policies/code-of-conduct).
+
 This is the _minimum_ expected behavior of our employees and outside
 contributors. Violations of this code of conduct should be reported to the team
 directly via [j@nomad.xyz](mailto:j@nomad.xyz).
