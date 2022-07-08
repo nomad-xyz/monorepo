@@ -1,8 +1,8 @@
 FROM node:16
 ENV NODE_ENV=production
 
-ARG GIT_COMMIT
-ENV GIT_COMMIT=$GIT_COMMIT
+ARG GIT_COMMIT="default value - should not see this"
+ENV GIT_COMMIT=$GITHUB_SHA
 
 WORKDIR /app
 
