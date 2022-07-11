@@ -176,14 +176,7 @@ contract BridgeRouter is Version0, Router {
             BridgeMessage.formatMessage(_tokenId, _action)
         );
         // emit Send event to record token sender
-        emit Send(
-            _token,
-            msg.sender,
-            _destination,
-            _recipient,
-            _amount,
-            false
-        );
+        emit Send(_token, msg.sender, _destination, _recipient, _amount, false);
     }
 
     // ======== External: Custom Tokens =========
@@ -325,7 +318,7 @@ contract BridgeRouter is Version0, Router {
     }
 
     /**
-    * @dev should be impossible to renounce ownership;
+     * @dev should be impossible to renounce ownership;
      * we override OpenZeppelin OwnableUpgradeable's
      * implementation of renounceOwnership to make it a no-op
      */

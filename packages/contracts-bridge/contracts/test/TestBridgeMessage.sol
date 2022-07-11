@@ -85,10 +85,7 @@ contract TestBridgeMessage {
         uint256 _amnt,
         bytes32 _detailsHash
     ) external view returns (bytes memory) {
-        return
-            BridgeMessage
-                .formatTransfer(_to, _amnt, _detailsHash)
-                .clone();
+        return BridgeMessage.formatTransfer(_to, _amnt, _detailsHash).clone();
     }
 
     function testFormatTokenId(uint32 _domain, bytes32 _id)
