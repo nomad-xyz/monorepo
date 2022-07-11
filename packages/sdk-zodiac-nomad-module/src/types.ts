@@ -5,7 +5,7 @@ export type Domain = string | number;
 
 export type GovernanceConfig = {
   governor: Address
-  modules: any
+  modules: Record<number, string>
 }
 
 export type Call = {
@@ -37,7 +37,7 @@ export const governanceConfig: GovernanceConfig = {
     3001: '0x00',
     4001: '0x00',
     5001: '0x00',
-    6661: '0x00',
+    // 6661: '0x00',
   },
 };
 

@@ -1,12 +1,9 @@
-import { NomadContext } from '@nomad-xyz/sdk';
+import { NomadContext, NomadMessage } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
 import { ethers } from 'ethers';
 import { Address, Domain, GovernanceConfig, Proposal, CallData } from './types';
 import NomadModule from './abis/NomadModule.json';
 const { abi: NomadModuleABI } = NomadModule;
-
-// type Address = string;
-// type Domain = string | number;
 
 /**
  * The GovernanceContext manages connections to Nomad Governance contracts.
@@ -44,6 +41,17 @@ export class GovernanceContext extends NomadContext {
     }
 
     return context;
+  }
+
+  enrollGovConfig(govConfig: GovernanceConfig) {
+    this.govModules = new Map();
+    if (govConfig) {
+      this.governorModule = govConfig.governor;
+      for (const domain in govConfig.modules) {
+        const domainName = this.resolveDomainName(Number.parseInt(domain));
+        this.govModules.set(domainName, govConfig.modules[domain]);
+      }
+    }
   }
 
   get governorMod(): Address | undefined {
@@ -103,11 +111,14 @@ export class GovernanceContext extends NomadContext {
     return {
       to: home, // Nomad Home contract 
       data: dispatchTx, // dispatch
-      message, // abi.encoded function data for Gnosis module
+      message, // encoded function data for Gnosis module
     };
   }
 
-  decodeProposalData(tx: string): undefined {
+  async decodeProposalData(domain: Domain, tx: string): Promise<undefined> {
+    const message = await NomadMessage.baseSingleFromTransactionHash(this, domain, tx);
+    const { dispatch } = message;
+    console.log(dispatch);
     return;
   }
 }
