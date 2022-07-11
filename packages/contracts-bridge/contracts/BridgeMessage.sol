@@ -134,9 +134,10 @@ library BridgeMessage {
         bytes32 _detailsHash
     ) internal pure returns (bytes29) {
         return
-            abi.encodePacked(Types.Transfer, _to, _amnt, _detailsHash).ref(0).castTo(
-                uint40(Types.Transfer)
-            );
+            abi
+                .encodePacked(Types.Transfer, _to, _amnt, _detailsHash)
+                .ref(0)
+                .castTo(uint40(Types.Transfer));
     }
 
     /**

@@ -454,9 +454,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         this.context.getDeployer(local),
       );
 
-      const constructorArguments = [
-        localConfig.domain,
-      ];
+      const constructorArguments = [localConfig.domain];
       const replica = await factory.deploy(
         constructorArguments[0],
         this.overrides,
