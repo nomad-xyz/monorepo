@@ -114,9 +114,7 @@ contract BridgeRouter is Version0, Router {
         bytes29 _action = _msg.action();
         // handle message based on the intended action
         if (_action.isTransfer()) {
-            _handleTransfer(_origin, _nonce, _tokenId, _action, false);
-        } else if (_action.isFastTransfer()) {
-            _handleTransfer(_origin, _nonce, _tokenId, _action, true);
+            _handleTransfer(_origin, _nonce, _tokenId, _action);
         } else {
             require(false, "!valid action");
         }
@@ -178,14 +176,7 @@ contract BridgeRouter is Version0, Router {
             BridgeMessage.formatMessage(_tokenId, _action)
         );
         // emit Send event to record token sender
-        emit Send(
-            _token,
-            msg.sender,
-            _destination,
-            _recipient,
-            _amount,
-            false
-        );
+        emit Send(_token, msg.sender, _destination, _recipient, _amount, false);
     }
 
     // ======== External: Custom Tokens =========
@@ -239,14 +230,12 @@ contract BridgeRouter is Version0, Router {
      * @param _nonce The unique identifier for the message from origin to destination
      * @param _tokenId The token ID
      * @param _action The action
-     * @param _fastEnabled True if fast liquidity was enabled, False otherwise
      */
     function _handleTransfer(
         uint32 _origin,
         uint32 _nonce,
         bytes29 _tokenId,
-        bytes29 _action,
-        bool _fastEnabled
+        bytes29 _action
     ) internal {
         // get the token contract for the given tokenId on this chain;
         // (if the token is of remote origin and there is
@@ -258,21 +247,6 @@ contract BridgeRouter is Version0, Router {
         );
         // load the original recipient of the tokens
         address _recipient = _action.evmRecipient();
-        if (_fastEnabled) {
-            // If an LP has prefilled this token transfer,
-            // send the tokens to the LP instead of the recipient
-            bytes32 _id = BridgeMessage.getPreFillId(
-                _origin,
-                _nonce,
-                _tokenId,
-                _action
-            );
-            address _lp = liquidityProvider[_id];
-            if (_lp != address(0)) {
-                _recipient = _lp;
-                delete liquidityProvider[_id];
-            }
-        }
         // load amount once
         uint256 _amount = _action.amnt();
         // send the tokens into circulation on this chain
@@ -344,7 +318,7 @@ contract BridgeRouter is Version0, Router {
     }
 
     /**
-    * @dev should be impossible to renounce ownership;
+     * @dev should be impossible to renounce ownership;
      * we override OpenZeppelin OwnableUpgradeable's
      * implementation of renounceOwnership to make it a no-op
      */

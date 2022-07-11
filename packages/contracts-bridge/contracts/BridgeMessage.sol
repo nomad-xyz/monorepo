@@ -20,7 +20,7 @@ library BridgeMessage {
         TokenId, // 1
         Message, // 2
         Transfer, // 3
-        FastTransfer // 4
+        DeprecatedFastTransfer // 4
     }
 
     // ============ Structs ============
@@ -59,7 +59,7 @@ library BridgeMessage {
      * @return TRUE if action is valid
      */
     function isValidAction(bytes29 _action) internal pure returns (bool) {
-        return isTransfer(_action) || isFastTransfer(_action);
+        return isTransfer(_action);
     }
 
     /**
@@ -122,15 +122,6 @@ library BridgeMessage {
     }
 
     /**
-     * @notice Checks that the message is of type FastTransfer
-     * @param _action The message
-     * @return True if the message is of type FastTransfer
-     */
-    function isFastTransfer(bytes29 _action) internal pure returns (bool) {
-        return isType(_action, Types.FastTransfer);
-    }
-
-    /**
      * @notice Formats Transfer
      * @param _to The recipient address as bytes32
      * @param _amnt The transfer amount
@@ -143,9 +134,10 @@ library BridgeMessage {
         bytes32 _detailsHash
     ) internal pure returns (bytes29) {
         return
-            abi.encodePacked(Types.Transfer, _to, _amnt, _detailsHash).ref(0).castTo(
-                uint40(Types.Transfer)
-            );
+            abi
+                .encodePacked(Types.Transfer, _to, _amnt, _detailsHash)
+                .ref(0)
+                .castTo(uint40(Types.Transfer));
     }
 
     /**
@@ -204,28 +196,6 @@ library BridgeMessage {
                     _decimals
                 )
             );
-    }
-
-    /**
-     * @notice get the preFillId used to identify
-     * fast liquidity provision for incoming token send messages
-     * @dev used to identify a token/transfer pair in the prefill LP mapping.
-     * @param _origin The domain of the chain from which the transfer originated
-     * @param _nonce The unique identifier for the message from origin to destination
-     * @param _tokenId The token ID
-     * @param _action The action
-     */
-    function getPreFillId(
-        uint32 _origin,
-        uint32 _nonce,
-        bytes29 _tokenId,
-        bytes29 _action
-    ) internal view returns (bytes32) {
-        bytes29[] memory _views = new bytes29[](3);
-        _views[0] = abi.encodePacked(_origin, _nonce).ref(0);
-        _views[1] = _tokenId;
-        _views[2] = _action;
-        return TypedMemView.joinKeccak(_views);
     }
 
     /**

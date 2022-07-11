@@ -278,7 +278,12 @@ contract TokenRegistry is Initializable, XAppConnectionClient, ITokenRegistry {
      * @notice Determine if token is of local origin
      * @return TRUE if token is locally originating
      */
-    function isLocalOrigin(address _token) external view override returns (bool) {
+    function isLocalOrigin(address _token)
+        external
+        view
+        override
+        returns (bool)
+    {
         // If the contract WAS deployed by the TokenRegistry,
         // it will be stored in this mapping.
         // If so, it IS NOT of local origin
@@ -406,7 +411,7 @@ contract TokenRegistry is Initializable, XAppConnectionClient, ITokenRegistry {
     }
 
     /**
-    * @dev should be impossible to renounce ownership;
+     * @dev should be impossible to renounce ownership;
      * we override OpenZeppelin OwnableUpgradeable's
      * implementation of renounceOwnership to make it a no-op
      */

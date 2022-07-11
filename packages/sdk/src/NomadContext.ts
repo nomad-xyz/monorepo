@@ -296,7 +296,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
   static async fetchConfig(environment: string): Promise<config.NomadConfig> {
     const uri = `https://nomad-xyz.github.io/config/${environment}.json`;
     const config: config.NomadConfig = await (
-      await fetch(uri, {cache: "no-cache"})
+      await fetch(uri, { cache: 'no-cache' })
     ).json();
     return config;
   }

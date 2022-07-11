@@ -80,24 +80,12 @@ contract TestBridgeMessage {
         return BridgeMessage.isTransfer(action);
     }
 
-    function testIsFastTransfer(bytes memory _action)
-        external
-        pure
-        returns (bool)
-    {
-        bytes29 action = _action.ref(uint40(BridgeMessage.Types.FastTransfer));
-        return BridgeMessage.isFastTransfer(action);
-    }
-
     function testFormatTransfer(
         bytes32 _to,
         uint256 _amnt,
         bytes32 _detailsHash
     ) external view returns (bytes memory) {
-        return
-            BridgeMessage
-                .formatTransfer(_to, _amnt, _detailsHash)
-                .clone();
+        return BridgeMessage.formatTransfer(_to, _amnt, _detailsHash).clone();
     }
 
     function testFormatTokenId(uint32 _domain, bytes32 _id)
