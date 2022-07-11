@@ -37,6 +37,7 @@ out = 'packages/contracts-router/foundry_artifacts'
 
 [bridge]
 src = 'packages/contracts-bridge/contracts'
+test = 'packages/contracts-bridge/contracts/test'
 out = 'packages/contracts-bridge/foundry_artifacts'
 
 
