@@ -132,11 +132,11 @@ export class LocalAgent extends DockerizedActor implements Agent {
   async createContainer(): Promise<Docker.Container> {
     const name = this.containerName();
 
-    const agentConfigPath = './configPath';//this.nomad.defultDeployLocation();
+    const agentConfigPath = '' + __dirname + '/config';//this.nomad.defultDeployLocation();
 
     // const additionalEnvs = this.getAdditionalEnvs();
 
-    // docker run --name $1_$2_agent --env RUN_ENV=latest --restart=always --network="host" --env BASE_CONFIG=$1_config.json -v $(pwd)/../../rust/config:/app/config -d gcr.io/nomad-xyz/nomad-agent ./$2
+    // docker run --name $1_$2_agent --env RUN_ENV=main --restart=always --network="host" --env BASE_CONFIG=$1_config.json -v $(pwd)/../../rust/config:/app/config -d gcr.io/nomad-xyz/nomad-agent ./$2
     return this.docker.createContainer({
       Image: "gcr.io/nomad-xyz/nomad-agent",
       name,

@@ -6,7 +6,6 @@ import * as ethers from 'ethers';
 import { NonceManager } from "@ethersproject/experimental";
 import fs from 'fs';
 dotenv.config();
-console.log(dotenv.config())
 
 export class Env {
     networks: Network[];
@@ -57,12 +56,13 @@ export class Env {
 
         console.log(`Deploying!`, JSON.stringify(this.nomadConfig(), null, 4));
 
+        const deployContext = this.setDeployContext();
+
         const outputDir = './output';
-        const governanceBatch = await this.deployContext.deployAndRelinquish();
+        const governanceBatch = await deployContext.deployAndRelinquish();
         console.log(`Deployed! gov batch:`, governanceBatch);
-        console.log(`Printing verification ` + JSON.stringify(this.deployContext, null, 2));
-        await this.outputConfigAndVerification(outputDir, this.deployContext);
-        await this.outputCallBatch(outputDir, this.deployContext);
+        await this.outputConfigAndVerification(outputDir, deployContext);
+        await this.outputCallBatch(outputDir, deployContext);
         } else {
                 this.deployFresh()
                 return
@@ -125,7 +125,8 @@ export class Env {
         return DEPLOYERKEY2;
     }
 
-    get deployContext(): DeployContext {
+    setDeployContext(): DeployContext {
+        //@TODO remove re-initialization.
         const deployContext = new DeployContext(this.nomadConfig());
         // add deploy signer and overrides for each network
         for (const network of this.networks) {
@@ -137,6 +138,10 @@ export class Env {
             deployContext.overrides.set(name, network.deployOverrides);
         }
         return deployContext;
+    }
+
+    get deployContext(): DeployContext{
+        return this.deployContext;
     }
 
     nomadConfig(): NomadConfig {
@@ -170,6 +175,7 @@ export class Env {
     console.log(`Upped Tom and Jerry`);
 
     const le = new Env({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
+
     le.addNetwork(t);
     le.addNetwork(j);
     console.log(`Added Tom and Jerry`);
@@ -177,6 +183,9 @@ export class Env {
     t.connectNetwork(j);
     j.connectNetwork(t);
     console.log(`Connected Tom and Jerry`);
+
+    await t.upAgents();
+    console.log(`Agents up`);
 
     // Notes, check governance router deployment on Jerry and see if that's actually even passing
     // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
