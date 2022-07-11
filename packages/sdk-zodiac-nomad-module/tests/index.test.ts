@@ -1,7 +1,19 @@
 import { describe, it } from "mocha";
 import { expect } from "chai";
 import { GovernanceContext } from '../src/index';
-import { governanceConfig, Proposal } from '../src/types';
+import { GovernanceConfig, Proposal } from '../src/types';
+
+// example governanceConfig
+export const governanceConfig: GovernanceConfig = {
+  governor: '0x00',
+  modules: {
+    1001: '0x00',
+    3001: '0x00',
+    4001: '0x00',
+    5001: '0x00',
+    // 6661: '0x00',
+  },
+};
 
 export const initContext = async (): Promise<GovernanceContext> => {
   const context = await GovernanceContext.fetch<GovernanceContext>('development', true);

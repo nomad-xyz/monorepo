@@ -4,7 +4,7 @@ export type Address = string;
 export type Domain = string | number;
 
 export type GovernanceConfig = {
-  governor: Address
+  governor: Address // TODO: should be locator with domain/address
   modules: Record<number, string>
 }
 
@@ -15,7 +15,7 @@ export type Call = {
   operation: 0 | 1
 }
 
-export type Proposal = { 
+export type Proposal = {
   module: {
     domain: Domain
     address: Address
@@ -28,17 +28,3 @@ export type CallData = {
   data: ethers.PopulatedTransaction // dispatch
   message: ethers.BytesLike // abi.encoded function data for Gnosis module
 }
-
-// example governanceConfig
-export const governanceConfig: GovernanceConfig = {
-  governor: '0x00',
-  modules: {
-    1001: '0x00',
-    3001: '0x00',
-    4001: '0x00',
-    5001: '0x00',
-    // 6661: '0x00',
-  },
-};
-
-// 1001, 3001, 4001, 5001, 6661
