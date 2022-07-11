@@ -21,7 +21,8 @@ library BridgeMessage {
         Message, // 2
         Transfer, // 3
         DeprecatedFastTransfer, // 4
-        ConnextTransfer // 5
+        TransferToHook, // 5
+        ExtraData // 6
     }
 
     // ============ Structs ============
@@ -60,7 +61,7 @@ library BridgeMessage {
      * @return TRUE if action is valid
      */
     function isValidAction(bytes29 _action) internal pure returns (bool) {
-        return isTransfer(_action) || isConnextTransfer(_action);
+        return isTransfer(_action) || isTransferToHook(_action);
     }
 
     /**
@@ -123,12 +124,12 @@ library BridgeMessage {
     }
 
     /**
-     * @notice Checks that the message is of type ConnextTransfer
+     * @notice Checks that the message is of type TransferToHook
      * @param _action The message
-     * @return True if the message is of type ConnextTransfer
+     * @return True if the message is of type TransferToHook
      */
-    function isConnextTransfer(bytes29 _action) internal pure returns (bool) {
-        return isType(_action, Types.ConnextTransfer);
+    function isTransferToHook(bytes29 _action) internal pure returns (bool) {
+        return isType(_action, Types.TransferToHook);
     }
 
     /**
@@ -146,32 +147,33 @@ library BridgeMessage {
         return
             abi
                 .encodePacked(Types.Transfer, _to, _amnt, _detailsHash)
-                .ref(0)
-                .castTo(uint40(Types.Transfer));
+                .ref(uint40(Types.Transfer));
     }
 
     /**
      * @notice Formats Connext Transfer
-     * @param _externalId The external identifier of the transfer
+     * @param _hook The hook that will handle this token transfer
      * @param _amnt The transfer amount
      * @param _detailsHash The hash of the token name, symbol, and decimals
+     * @param _extraData User-provided data for the receiving hook
      * @return
      */
-    function formatConnextTransfer(
-        bytes32 _externalId,
+    function formatTransferToHook(
+        bytes32 _hook,
         uint256 _amnt,
-        bytes32 _detailsHash
+        bytes32 _detailsHash,
+        bytes memory _extraData
     ) internal pure returns (bytes29) {
         return
             abi
                 .encodePacked(
-                    Types.ConnextTransfer,
-                    _externalId,
+                    Types.TransferToHook,
+                    _hook,
                     _amnt,
-                    _detailsHash
+                    _detailsHash,
+                    _extraData
                 )
-                .ref(0)
-                .castTo(uint40(Types.ConnextTransfer));
+                .ref(uint40(Types.TransferToHook));
     }
 
     /**
@@ -199,7 +201,7 @@ library BridgeMessage {
         returns (bytes29)
     {
         return
-            abi.encodePacked(_domain, _id).ref(0).castTo(uint40(Types.TokenId));
+            abi.encodePacked(_domain, _id).ref(uint40(Types.TokenId));
     }
 
     /**
@@ -349,22 +351,6 @@ library BridgeMessage {
     }
 
     /**
-     * @notice Retrieves the externalId from a Connext Transfer
-     * @dev MUST be used on the ConnextTransfer type, otherwise will revert
-     * @param _transferAction The message
-     * @return The external id
-     */
-    function externalId(bytes29 _transferAction)
-        internal
-        pure
-        typeAssert(_transferAction, Types.ConnextTransfer)
-        returns (bytes32)
-    {
-        // before = 1 byte identifier
-        return _transferAction.index(1, 32);
-    }
-
-    /**
      * @notice Retrieves the token ID from a Message
      * @param _message The message
      * @return The ID
@@ -376,6 +362,50 @@ library BridgeMessage {
         returns (bytes29)
     {
         return _message.slice(0, TOKEN_ID_LEN, uint40(Types.TokenId));
+    }
+
+    /**
+     * @notice Retrieves the hook contract EVM address from a TransferWithHook
+     * @param _transferAction The message
+     * @return The hook contract address as bytes32
+     */
+    function evmHook(bytes29 _transferAction)
+        internal
+        pure
+        typeAssert(_transferAction, Types.TransferToHook)
+        returns (address)
+    {
+        return _transferAction.indexAddress(13);
+    }
+
+    /**
+     * @notice Retrieves the hook contract from a TransferWithHook
+     * @param _transferAction The message
+     * @return The hook contract address as an address
+     */
+    function hook(bytes29 _transferAction)
+        internal
+        pure
+        typeAssert(_transferAction, Types.TransferToHook)
+        returns (bytes32)
+    {
+        // before = 1 byte identifier
+        return _transferAction.index(1, 32);
+    }
+
+    function extraData(bytes29 _transferAction)
+        internal
+        pure
+        typeAssert(_transferAction, Types.TransferToHook)
+        returns (bytes29)
+    {
+        // anything past the end is the extradata
+        return
+            _transferAction.slice(
+                TRANSFER_LEN,
+                _transferAction.length - TRANSFER_LEN,
+                uint40(Types.ExtraData)
+            );
     }
 
     /**

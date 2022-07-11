@@ -5,7 +5,7 @@ pragma solidity 0.7.6;
 import {BridgeMessage} from "./BridgeMessage.sol";
 import {IBridgeToken} from "./interfaces/IBridgeToken.sol";
 import {ITokenRegistry} from "./interfaces/ITokenRegistry.sol";
-import {IConnext} from "./interfaces/IConnext.sol";
+import {IBridgeHook} from "./interfaces/IBridgeHook.sol";
 // ============ External Imports ============
 import {XAppConnectionClient} from "@nomad-xyz/contracts-router/contracts/XAppConnectionClient.sol";
 import {Router} from "@nomad-xyz/contracts-router/contracts/Router.sol";
@@ -37,8 +37,6 @@ contract BridgeRouter is Version0, Router {
     ITokenRegistry public tokenRegistry;
     // token transfer prefill ID => LP that pre-filled message to provide fast liquidity
     mapping(bytes32 => address) public liquidityProvider;
-    // reference to connext contract on this domain
-    IConnext public connext;
 
     // ============ Upgrade Gap ============
 
@@ -96,16 +94,6 @@ contract BridgeRouter is Version0, Router {
         __XAppConnectionClient_initialize(_xAppConnectionManager);
     }
 
-    // ======== External: Setup Functions =========
-
-    /**
-     * @notice Allows the admin to set the Connext reference
-     * @param _connext Address of the connext contract
-     */
-    function setConnext(address _connext) external onlyOwner {
-        connext = IConnext(_connext);
-    }
-
     // ======== External: Handle =========
 
     /**
@@ -128,8 +116,8 @@ contract BridgeRouter is Version0, Router {
         // handle message based on the intended action
         if (_action.isTransfer()) {
             _handleTransfer(_origin, _nonce, _tokenId, _action);
-        } else if (_action.isConnextTransfer()) {
-            _handleConnextTransfer(_origin, _nonce, _tokenId, _action);
+        } else if (_action.isTransferToHook()) {
+            _handleTransferToHook(_origin, _nonce, _tokenId, _action);
         } else {
             require(false, "!valid action");
         }
@@ -171,38 +159,80 @@ contract BridgeRouter is Version0, Router {
     }
 
     /**
-     * @notice Send tokens to connext on a remote chain
+     * @notice Send tokens to a hook on the remote chain
      * @param _token The token address
      * @param _amount The token amount
      * @param _destination The destination domain
-     * @param _externalId A hash of transfer metadata for Connext flow
+     * @param _hook The hook contract on the remote chain
+     * @param _extraData Extra data that will be passed to the hook for
+     *        execution
      */
-    function xsend(
+    function _xsend(
         address _token,
         uint256 _amount,
         uint32 _destination,
-        bytes32 _externalId
-    ) external {
-        // validate inputs
-        require(_externalId != bytes32(0), "!id");
-        // ensure the caller is Connext;
-        // tokens will be sent to Connext on the other side,
-        // so function must be called by Connext
-        require(msg.sender == address(connext), "!connext");
+        bytes32 _hook,
+        bytes calldata _extraData
+    ) internal {
         // debit tokens from the Connext
         (bytes29 _tokenId, bytes32 _detailsHash) = _debitTokens(
             _token,
             _amount
         );
         // format Connext transfer message
-        bytes29 _action = BridgeMessage.formatConnextTransfer(
-            _externalId,
+        bytes29 _action = BridgeMessage.formatTransferToHook(
+            _hook,
             _amount,
-            _detailsHash
+            _detailsHash,
+            _extraData
         );
         // send message to destination chain bridge router
         _sendTransferMessage(_destination, _tokenId, _action);
         // TODO: emit special event?
+    }
+
+    /**
+     * @notice Send tokens to a hook on the remote chain
+     * @param _token The token address
+     * @param _amount The token amount
+     * @param _destination The destination domain
+     * @param _hook The hook contract on the remote chain
+     * @param _extraData Extra data that will be passed to the hook for
+     *        execution
+     */
+    function xsend(
+        address _token,
+        uint256 _amount,
+        uint32 _destination,
+        bytes32 _hook,
+        bytes calldata _extraData
+    ) external {
+        _xsend(_token, _amount, _destination, _hook, _extraData);
+    }
+
+    /**
+     * @notice Send tokens to a hook on the remote chain
+     * @param _token The token address
+     * @param _amount The token amount
+     * @param _destination The destination domain
+     * @param _hook The hook contract on the remote chain
+     * @param _extraData Extra data that will be passed to the hook for
+     *        execution
+     */
+    function xsend(
+        address _token,
+        uint256 _amount,
+        uint32 _destination,
+        address _hook,
+        bytes calldata _extraData
+    ) external {
+        _xsend(
+            _token,
+            _amount,
+            _destination,
+            bytes32(uint256(uint160(_hook))),
+            _extraData
+        );
     }
 
     // ======== External: Custom Tokens =========
@@ -338,39 +368,41 @@ contract BridgeRouter is Version0, Router {
     }
 
     /**
-     * @notice Handles an incoming Connext Transfer message.
+     * @notice Handles an incoming TransferToHook message.
      *
-     * Tokens are sent to the Connext Router,
-     * then Connext.reconcile callback is called
+     * Tokens are sent to the Hook contract
+     * then IBridgeHook.onReceive callback is called
      *
      * @param _origin The domain of the chain from which the transfer originated
      * @param _nonce The unique identifier for the message from origin to destination
      * @param _tokenId The token ID
      * @param _action The action
      */
-    function _handleConnextTransfer(
+    function _handleTransferToHook(
         uint32 _origin,
         uint32 _nonce,
         bytes29 _tokenId,
         bytes29 _action
     ) internal {
-        // tokens will be sent to connext router
-        address _recipient = address(connext);
+        // tokens will be sent to user-specified hook
+        address _hook = _action.evmHook();
+
         // send tokens
         address _token = _creditTokens(
             _origin,
             _nonce,
             _tokenId,
             _action,
-            _recipient
+            _hook
         );
-        // call Connext reconcile callback
-        connext.reconcile(
-            _action.externalId(),
-            _action.amnt(),
-            _tokenId.id(),
+        // call Hook.onReceive callback
+        IBridgeHook(_hook).onReceive(
+            _origin,
             _tokenId.domain(),
-            _token
+            _tokenId.id(),
+            _token,
+            _action.amnt(),
+            _action.extraData().clone()
         );
     }
 
