@@ -136,45 +136,21 @@ contract BridgeRouter is Version0, Router {
         bytes32 _recipient,
         bool /*_enableFast - deprecated field, left argument for backwards compatibility */
     ) external {
-        require(_amount > 0, "!amnt");
+        // validate inputs
         require(_recipient != bytes32(0), "!recip");
-        // get remote BridgeRouter address; revert if not found
-        bytes32 _remote = _mustHaveRemote(_destination);
-        // Setup vars used in both if branches
-        IBridgeToken _t = IBridgeToken(_token);
-        bytes32 _detailsHash;
-        // remove tokens from circulation on this chain
-        if (tokenRegistry.isLocalOrigin(_token)) {
-            // if the token originates on this chain,
-            // hold the tokens in escrow in the Router
-            IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-            // query token contract for details and calculate detailsHash
-            _detailsHash = BridgeMessage.getDetailsHash(
-                _t.name(),
-                _t.symbol(),
-                _t.decimals()
-            );
-        } else {
-            // if the token originates on a remote chain,
-            // burn the representation tokens on this chain
-            _t.burn(msg.sender, _amount);
-            _detailsHash = _t.detailsHash();
-        }
-        // format Transfer Tokens action
+        // debit tokens from the sender
+        (bytes29 _tokenId, bytes32 _detailsHash) = _debitTokens(
+            _token,
+            _amount
+        );
+        // format Transfer message
         bytes29 _action = BridgeMessage.formatTransfer(
             _recipient,
             _amount,
             _detailsHash
         );
-        // get the tokenID
-        (uint32 _domain, bytes32 _id) = tokenRegistry.getTokenId(_token);
-        bytes29 _tokenId = BridgeMessage.formatTokenId(_domain, _id);
-        // send message to remote chain via Nomad
-        Home(xAppConnectionManager.home()).dispatch(
-            _destination,
-            _remote,
-            BridgeMessage.formatMessage(_tokenId, _action)
-        );
+        // send message to destination chain bridge router
+        _sendTransferMessage(_destination, _tokenId, _action);
         // emit Send event to record token sender
         emit Send(_token, msg.sender, _destination, _recipient, _amount, false);
     }
@@ -218,6 +194,72 @@ contract BridgeRouter is Version0, Router {
         IBridgeToken(_currentRepr).mint(msg.sender, _bal);
     }
 
+    // ============ Internal: Send ============
+
+    /**
+     * @notice Debit tokens from the function caller
+     * as part of sending tokens across chains
+     * @dev Locks canonical tokens in escrow in BridgeRouter
+     * OR Burns representation tokens
+     * @param _token The token to pull from the sender
+     * @param _amount The amount to pull from the sender
+     * @return _tokenId the bytes canonical token identifier
+     * @return _detailsHash the hash of the canonical token details (name, symbol, decimal)
+     */
+    function _debitTokens(address _token, uint256 _amount)
+        internal
+        returns (bytes29 _tokenId, bytes32 _detailsHash)
+    {
+        // ensure that amount is non-zero
+        require(_amount > 0, "!amnt");
+        // Setup vars used in both if branches
+        IBridgeToken _t = IBridgeToken(_token);
+        // remove tokens from circulation on this chain
+        if (tokenRegistry.isLocalOrigin(_token)) {
+            // if the token originates on this chain,
+            // hold the tokens in escrow in the Router
+            IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+            // query token contract for details and calculate detailsHash
+            _detailsHash = BridgeMessage.getDetailsHash(
+                _t.name(),
+                _t.symbol(),
+                _t.decimals()
+            );
+        } else {
+            // if the token originates on a remote chain,
+            // burn the representation tokens on this chain
+            _t.burn(msg.sender, _amount);
+            _detailsHash = _t.detailsHash();
+        }
+        // get the tokenID
+        (uint32 _domain, bytes32 _id) = tokenRegistry.getTokenId(_token);
+        _tokenId = BridgeMessage.formatTokenId(_domain, _id);
+    }
+
+    /**
+     * @notice Dispatch a message via Nomad to a destination domain
+     * addressed to the remote BridgeRouter on that chain
+     * @dev Message will trigger `handle` method on the remote BridgeRouter
+     * when it is received on the destination chain
+     * @param _destination The domain of the destination chain
+     * @param _tokenId The canonical token identifier for the transfer message
+     * @param _action The contents of the transfer message
+     */
+    function _sendTransferMessage(
+        uint32 _destination,
+        bytes29 _tokenId,
+        bytes29 _action
+    ) internal {
+        // get remote BridgeRouter address; revert if not found
+        bytes32 _remote = _mustHaveRemote(_destination);
+        // send message to remote chain via Nomad
+        Home(xAppConnectionManager.home()).dispatch(
+            _destination,
+            _remote,
+            BridgeMessage.formatMessage(_tokenId, _action)
+        );
+    }
+
     // ============ Internal: Handle ============
 
     /**
@@ -237,16 +279,40 @@ contract BridgeRouter is Version0, Router {
         bytes29 _tokenId,
         bytes29 _action
     ) internal {
+        // tokens will be sent to the specified recipient
+        address _recipient = _action.evmRecipient();
+        // send tokens
+        _creditTokens(_origin, _nonce, _tokenId, _action, _recipient);
+        // dust the recipient with gas tokens
+        _dust(_recipient);
+    }
+
+    /**
+     * @notice Credit tokens to a specified recipient.
+     * @dev Unlocks canonical tokens from escrow in BridgeRouter
+     * OR Mints representation tokens
+     * @param _origin The domain of the chain from which the transfer originated
+     * @param _nonce The unique identifier for the message from origin to destination
+     * @param _tokenId The canonical token identifier to credit
+     * @param _action The contents of the transfer message
+     * @param _recipient The recipient that will receive tokens
+     * @return _token The address of the local token contract
+     */
+    function _creditTokens(
+        uint32 _origin,
+        uint32 _nonce,
+        bytes29 _tokenId,
+        bytes29 _action,
+        address _recipient
+    ) internal returns (address _token) {
         // get the token contract for the given tokenId on this chain;
         // (if the token is of remote origin and there is
         // no existing representation token contract, the TokenRegistry will
         // deploy a new one)
-        address _token = tokenRegistry.ensureLocalToken(
+        _token = tokenRegistry.ensureLocalToken(
             _tokenId.domain(),
             _tokenId.id()
         );
-        // load the original recipient of the tokens
-        address _recipient = _action.evmRecipient();
         // load amount once
         uint256 _amount = _action.amnt();
         // send the tokens into circulation on this chain
@@ -263,8 +329,6 @@ contract BridgeRouter is Version0, Router {
             // Tell the token what its detailsHash is
             IBridgeToken(_token).setDetailsHash(_action.detailsHash());
         }
-        // dust the recipient if appropriate
-        _dust(_recipient);
         // emit Receive event
         emit Receive(
             _originAndNonce(_origin, _nonce),
