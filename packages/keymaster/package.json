@@ -17,7 +17,7 @@
     "bunyan": "^1.8.15",
     "decimal.js": "^10.3.1",
     "dotenv": "^16.0.1",
-    "ethers": "^5.6.8",
+    "ethers": "^5.6.9",
     "express": "^4.18.1",
     "keccak": "^3.0.2",
     "prom-client": "^14.0.1",
