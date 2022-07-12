@@ -145,9 +145,9 @@ library BridgeMessage {
         bytes32 _detailsHash
     ) internal pure returns (bytes29) {
         return
-            abi
-                .encodePacked(Types.Transfer, _to, _amnt, _detailsHash)
-                .ref(uint40(Types.Transfer));
+            abi.encodePacked(Types.Transfer, _to, _amnt, _detailsHash).ref(
+                uint40(Types.Transfer)
+            );
     }
 
     /**
@@ -200,8 +200,7 @@ library BridgeMessage {
         pure
         returns (bytes29)
     {
-        return
-            abi.encodePacked(_domain, _id).ref(uint40(Types.TokenId));
+        return abi.encodePacked(_domain, _id).ref(uint40(Types.TokenId));
     }
 
     /**
