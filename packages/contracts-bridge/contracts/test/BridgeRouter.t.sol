@@ -2,6 +2,7 @@
 pragma solidity 0.7.6;
 
 import {BridgeTest} from "./utils/BridgeTest.sol";
+import "forge-std/console2.sol";
 
 contract BridgeRouterTest is BridgeTest {
     address tokenSender;
@@ -20,7 +21,7 @@ contract BridgeRouterTest is BridgeTest {
         receiverDomain = remoteDomain;
     }
 
-    function test_dustAmmount() public {
+    function test_dustAmmountIs006() public {
         assertEq(bridgeRouter.DUST_AMOUNT(), 0.06 ether);
     }
 
@@ -64,7 +65,7 @@ contract BridgeRouterTest is BridgeTest {
         uint256 amount = 100;
         vm.startPrank(tokenSender);
         // Expect that the ERC20 will emit an event with the approval
-        localToken.approve(address(bridgeRouter), 100);
+        localToken.approve(address(bridgeRouter), amount);
         // Expect the Bridge Router to emit the correct event
         vm.expectEmit(true, true, true, true, address(bridgeRouter));
         emit Send(
@@ -85,6 +86,31 @@ contract BridgeRouterTest is BridgeTest {
         vm.stopPrank();
     }
 
+    function test_sendRemoteSuccess() public {
+        uint256 amount = 100;
+        vm.startPrank(tokenSender);
+        // Expect that the ERC20 will emit an event with the approval
+        remoteToken.approve(address(bridgeRouter), amount);
+        // Expect the Bridge Router to emit the correct event
+        vm.expectEmit(true, true, true, true, address(bridgeRouter));
+        emit Send(
+            address(remoteToken),
+            tokenSender,
+            receiverDomain,
+            tokenReceiver,
+            amount,
+            fastLiquidityEnabled
+        );
+        bridgeRouter.send(
+            address(remoteToken),
+            amount,
+            receiverDomain,
+            tokenReceiver,
+            fastLiquidityEnabled
+        );
+        vm.stopPrank();
+    }
+
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(
         address indexed owner,
@@ -92,14 +118,14 @@ contract BridgeRouterTest is BridgeTest {
         uint256 value
     );
 
-    function test_debitTokensLocalTokensSuccess() public {
+    function test_debitTokensLocalSuccess() public {
         uint256 amount = 100;
         uint256 startingBalance = localToken.balanceOf(address(bridgeRouter));
         vm.expectEmit(true, true, false, true, address(localToken));
         emit Approval(tokenSender, address(bridgeRouter), amount);
-        vm.startPrank(tokenSender);
         // Expect that the ERC20 will emit an event with the approval
-        localToken.approve(address(bridgeRouter), 100);
+        vm.startPrank(tokenSender);
+        localToken.approve(address(bridgeRouter), amount);
         vm.expectEmit(true, true, false, true, address(localToken));
         emit Transfer(tokenSender, address(bridgeRouter), amount);
         bridgeRouter.debitTokens(address(localToken), amount);
@@ -108,21 +134,25 @@ contract BridgeRouterTest is BridgeTest {
         vm.stopPrank();
     }
 
-    function test_debitTokensLocalTokensFailZeroAmount() public {
+    function test_debitTokensLocalFailZeroAmount() public {
         uint256 amount = 0;
         vm.expectRevert("!amnt");
         bridgeRouter.debitTokens(address(localToken), amount);
     }
 
-    function test_debitTokensRemoteTokens() public {}
-
-    function test_sendTransferMessage() public {}
-
-    event Receive(
-        uint64 indexed originAndNonce,
-        address indexed token,
-        address indexed recipient,
-        address liquidityProvider,
-        uint256 amount
-    );
+    function test_debitTokensRemoteSuccess() public {
+        uint256 amount = 100;
+        uint256 startingBalance = remoteToken.balanceOf(tokenSender);
+        vm.startPrank(tokenSender);
+        vm.expectEmit(true, true, false, true, address(localToken));
+        emit Approval(tokenSender, address(bridgeRouter), amount);
+        // Expect that the ERC20 will emit an event with the approval
+        localToken.approve(address(bridgeRouter), amount);
+        vm.expectEmit(true, true, false, true, address(remoteToken));
+        emit Transfer(tokenSender, address(0), amount);
+        bridgeRouter.debitTokens(address(remoteToken), amount);
+        uint256 afterBalance = remoteToken.balanceOf(tokenSender);
+        assertEq(afterBalance, startingBalance - amount);
+        vm.stopPrank();
+    }
 }
