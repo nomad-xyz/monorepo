@@ -39,7 +39,7 @@ library BridgeMessage {
 
     uint256 private constant TOKEN_ID_LEN = 36; // 4 bytes domain + 32 bytes id
     uint256 private constant IDENTIFIER_LEN = 1;
-    uint256 private constant TRANSFER_LEN = 97; // 1 byte identifier + 32 bytes recipient or externalId + 32 bytes amount + 32 bytes detailsHash
+    uint256 private constant MIN_TRANSFER_LEN = 97; // 1 byte identifier + 32 bytes recipient or externalId + 32 bytes amount + 32 bytes detailsHash
 
     // ============ Modifiers ============
 
@@ -71,7 +71,7 @@ library BridgeMessage {
      */
     function isValidMessageLength(bytes29 _view) internal pure returns (bool) {
         uint256 _len = _view.len();
-        return _len == TOKEN_ID_LEN + TRANSFER_LEN;
+        return _len >= TOKEN_ID_LEN + MIN_TRANSFER_LEN;
     }
 
     /**
@@ -378,21 +378,6 @@ library BridgeMessage {
         return _transferAction.indexAddress(13);
     }
 
-    /**
-     * @notice Retrieves the hook contract from a TransferWithHook
-     * @param _transferAction The message
-     * @return The hook contract address as an address
-     */
-    function hook(bytes29 _transferAction)
-        internal
-        pure
-        typeAssert(_transferAction, Types.TransferToHook)
-        returns (bytes32)
-    {
-        // before = 1 byte identifier
-        return _transferAction.index(1, 32);
-    }
-
     function extraData(bytes29 _transferAction)
         internal
         pure
@@ -402,8 +387,8 @@ library BridgeMessage {
         // anything past the end is the extradata
         return
             _transferAction.slice(
-                TRANSFER_LEN,
-                _transferAction.length - TRANSFER_LEN,
+                MIN_TRANSFER_LEN,
+                _transferAction.length - MIN_TRANSFER_LEN,
                 uint40(Types.ExtraData)
             );
     }

@@ -1,8 +1,10 @@
 # Changelog
 
 ### Unreleased
+
 - remove ability to handle fast liquidity messages
-- refactor token transfer path with readable helper functions
+- (refactor, patch): token transfer path with readable helper functions
+- (feat, minor): add generic protocol for sending tokens with hooks
 
 ### 1.1.0-rc.0
 

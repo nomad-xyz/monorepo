@@ -41,7 +41,7 @@ contract BridgeRouter is Version0, Router {
     // ============ Upgrade Gap ============
 
     // gap for upgrade safety
-    uint256[48] private __GAP;
+    uint256[49] private __GAP;
 
     // ======== Events =========
 
@@ -167,13 +167,13 @@ contract BridgeRouter is Version0, Router {
      * @param _extraData Extra data that will be passed to the hook for
      *        execution
      */
-    function _xsend(
+    function xsend(
         address _token,
         uint256 _amount,
         uint32 _destination,
         bytes32 _hook,
         bytes calldata _extraData
-    ) internal {
+    ) external {
         // debit tokens from the Connext
         (bytes29 _tokenId, bytes32 _detailsHash) = _debitTokens(
             _token,
@@ -189,50 +189,6 @@ contract BridgeRouter is Version0, Router {
         // send message to destination chain bridge router
         _sendTransferMessage(_destination, _tokenId, _action);
         // TODO: emit special event?
-    }
-
-    /**
-     * @notice Send tokens to a hook on the remote chain
-     * @param _token The token address
-     * @param _amount The token amount
-     * @param _destination The destination domain
-     * @param _hook The hook contract on the remote chain
-     * @param _extraData Extra data that will be passed to the hook for
-     *        execution
-     */
-    function xsend(
-        address _token,
-        uint256 _amount,
-        uint32 _destination,
-        bytes32 _hook,
-        bytes calldata _extraData
-    ) external {
-        _xsend(_token, _amount, _destination, _hook, _extraData);
-    }
-
-    /**
-     * @notice Send tokens to a hook on the remote chain
-     * @param _token The token address
-     * @param _amount The token amount
-     * @param _destination The destination domain
-     * @param _hook The hook contract on the remote chain
-     * @param _extraData Extra data that will be passed to the hook for
-     *        execution
-     */
-    function xsend(
-        address _token,
-        uint256 _amount,
-        uint32 _destination,
-        address _hook,
-        bytes calldata _extraData
-    ) external {
-        _xsend(
-            _token,
-            _amount,
-            _destination,
-            bytes32(uint256(uint160(_hook))),
-            _extraData
-        );
     }
 
     // ======== External: Custom Tokens =========
@@ -386,7 +342,6 @@ contract BridgeRouter is Version0, Router {
     ) internal {
         // tokens will be sent to user-specified hook
         address _hook = _action.evmHook();
-
         // send tokens
         address _token = _creditTokens(
             _origin,
