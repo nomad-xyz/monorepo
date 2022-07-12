@@ -350,7 +350,6 @@ contract BridgeRouter is Version0, Router {
             _action,
             _hook
         );
-
         bytes memory _call = abi.encodeWithSelector(
             IBridgeHook.onReceive.selector,
             _origin,
@@ -360,7 +359,6 @@ contract BridgeRouter is Version0, Router {
             _action.amnt(),
             _action.extraData().clone()
         );
-
         _hook.call(_call);
     }
 
