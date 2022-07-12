@@ -350,8 +350,9 @@ contract BridgeRouter is Version0, Router {
             _action,
             _hook
         );
-        // call Hook.onReceive callback
-        IBridgeHook(_hook).onReceive(
+
+        bytes memory _call = abi.encodeWithSelector(
+            IBridgeHook.onReceive.selector,
             _origin,
             _tokenId.domain(),
             _tokenId.id(),
@@ -359,6 +360,8 @@ contract BridgeRouter is Version0, Router {
             _action.amnt(),
             _action.extraData().clone()
         );
+
+        _hook.call(_call);
     }
 
     /**
