@@ -7,6 +7,7 @@ import {MockHome} from "./MockHome.sol";
 
 // Bridge Contracts
 import {BridgeRouterHarness} from "../harness/BridgeRouterHarness.sol";
+import {TokenRegistryHarness} from "../harness/TokenRegistryHarness.sol";
 import {TokenRegistry} from "../../TokenRegistry.sol";
 import {BridgeToken} from "../../BridgeToken.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
@@ -27,6 +28,7 @@ contract BridgeTest is Test {
     address mockUpdater;
     address bridgeUser;
     uint32 localDomain;
+    uint256 bridgeUserTokenAmount;
 
     // Remote variables
     bytes32 remoteBridgeRouter;
@@ -38,10 +40,12 @@ contract BridgeTest is Test {
     UpgradeBeaconController upgradeBeaconController;
     UpgradeBeacon tokenBeacon;
     // Token Registry for all tokens in the domain
-    TokenRegistry tokenRegistry;
+    TokenRegistryHarness tokenRegistry;
     BridgeToken bridgeToken;
     // Implementation contract for all tokens in the domain
     ERC20Mock localToken;
+    address remoteTokenAddress;
+    BridgeToken remoteToken;
 
     function setUp() public virtual {
         // Mocks
@@ -51,16 +55,21 @@ contract BridgeTest is Test {
         mockUpdater = vm.addr(mockUpdaterPK);
         bridgeUser = vm.addr(9305);
         remoteBridgeRouter = addressToBytes32(vm.addr(99123));
-        uint256 initialAmount = 10000;
+        bridgeUserTokenAmount = 10000;
 
-        localToken = new ERC20Mock("Fake", "FK", bridgeUser, initialAmount);
+        localToken = new ERC20Mock(
+            "Fake",
+            "FK",
+            bridgeUser,
+            bridgeUserTokenAmount
+        );
         localDomain = 1500;
         remoteDomain = 3000;
         mockHome = new MockHome(localDomain);
 
         // Create implementations
         bridgeRouter = new BridgeRouterHarness();
-        tokenRegistry = new TokenRegistry();
+        tokenRegistry = new TokenRegistryHarness();
         xAppConnectionManager = new XAppConnectionManager();
         upgradeBeaconController = new UpgradeBeaconController();
         bridgeToken = new BridgeToken();
@@ -69,6 +78,7 @@ contract BridgeTest is Test {
             address(upgradeBeaconController)
         );
         initializeContracts();
+        createRemoteToken();
     }
 
     function initializeContracts() public {
@@ -80,8 +90,24 @@ contract BridgeTest is Test {
             address(tokenRegistry),
             address(xAppConnectionManager)
         );
+        // The Token Registry should be owned by the Bridge Router
+        tokenRegistry.transferOwnership(address(bridgeRouter));
         xAppConnectionManager.setHome(address(mockHome));
         bridgeRouter.enrollRemoteRouter(remoteDomain, remoteBridgeRouter);
+    }
+
+    function createRemoteToken() public {
+        remoteTokenAddress = tokenRegistry.deployToken(
+            remoteDomain,
+            addressToBytes32(vm.addr(999999999))
+        );
+        // The address is actually that of an UpgradeProxy that points
+        // to the BridgeToken implementation
+        remoteToken = BridgeToken(remoteTokenAddress);
+        assertEq(remoteToken.owner(), address(bridgeRouter));
+        vm.startPrank(remoteToken.owner());
+        remoteToken.mint(bridgeUser, bridgeUserTokenAmount);
+        vm.stopPrank();
     }
 
     function addressToBytes32(address addr) public returns (bytes32) {
