@@ -14,8 +14,10 @@ contract BridgeRouterTest is BridgeTest {
 
     function setUp() public override {
         super.setUp();
-        tokenSender = address(this);
+        tokenSender = bridgeUser;
         tokenReceiver = addressToBytes32(vm.addr(3040));
+        senderDomain = localDomain;
+        receiverDomain = remoteDomain;
     }
 
     function test_dustAmmount() public {
@@ -23,11 +25,16 @@ contract BridgeRouterTest is BridgeTest {
     }
 
     function test_sendFailZeroRecipient() public {
-        address token = vm.addr(123);
         bytes32 zeroReceiver = bytes32(0);
         uint256 amount = 100;
         vm.expectRevert("!recip");
-        bridgeRouter.send(token, amount, receiverDomain, zeroReceiver, false);
+        bridgeRouter.send(
+            address(localToken),
+            amount,
+            receiverDomain,
+            zeroReceiver,
+            false
+        );
     }
 
     event Send(
@@ -39,18 +46,77 @@ contract BridgeRouterTest is BridgeTest {
         bool fastLiquidityEnabled
     );
 
-    function test_sendFailTokenLocalDomain() public {
-        address token = vm.addr(123);
+    function test_sendLocalTokenFailApprove() public {
         uint256 amount = 100;
-        vm.expectRevert();
+        vm.startPrank(tokenSender);
+        vm.expectRevert("ERC20: transfer amount exceeds allowance");
         bridgeRouter.send(
-            token,
+            address(localToken),
             amount,
             receiverDomain,
             tokenReceiver,
             fastLiquidityEnabled
         );
+        vm.stopPrank();
     }
+
+    function test_sendLocalTokenSuccess() public {
+        uint256 amount = 100;
+        vm.startPrank(tokenSender);
+        // Expect that the ERC20 will emit an event with the approval
+        localToken.approve(address(bridgeRouter), 100);
+        // Expect the Bridge Router to emit the correct event
+        vm.expectEmit(true, true, true, true, address(bridgeRouter));
+        emit Send(
+            address(localToken),
+            tokenSender,
+            receiverDomain,
+            tokenReceiver,
+            amount,
+            fastLiquidityEnabled
+        );
+        bridgeRouter.send(
+            address(localToken),
+            amount,
+            receiverDomain,
+            tokenReceiver,
+            fastLiquidityEnabled
+        );
+        vm.stopPrank();
+    }
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
+
+    function test_debitTokensLocalTokensSuccess() public {
+        uint256 amount = 100;
+        uint256 startingBalance = localToken.balanceOf(address(bridgeRouter));
+        vm.expectEmit(true, true, false, true, address(localToken));
+        emit Approval(tokenSender, address(bridgeRouter), amount);
+        vm.startPrank(tokenSender);
+        // Expect that the ERC20 will emit an event with the approval
+        localToken.approve(address(bridgeRouter), 100);
+        vm.expectEmit(true, true, false, true, address(localToken));
+        emit Transfer(tokenSender, address(bridgeRouter), amount);
+        bridgeRouter.debitTokens(address(localToken), amount);
+        uint256 afterBalance = localToken.balanceOf(address(bridgeRouter));
+        assertEq(afterBalance, startingBalance + amount);
+        vm.stopPrank();
+    }
+
+    function test_debitTokensLocalTokensFailZeroAmount() public {
+        uint256 amount = 0;
+        vm.expectRevert("!amnt");
+        bridgeRouter.debitTokens(address(localToken), amount);
+    }
+
+    function test_debitTokensRemoteTokens() public {}
+
+    function test_sendTransferMessage() public {}
 
     event Receive(
         uint64 indexed originAndNonce,
