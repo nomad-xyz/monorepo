@@ -10,7 +10,7 @@ interface IBridgeHook {
      * tokens, at a user's discretion. E.g. recollateralize a CDP, exchange for
      * other tokens, emit an event, etc.
      *
-     * This hook is called AFTER tokens have been transferred to the hook
+     * @dev This hook is called AFTER tokens have been transferred to the hook
      * contract. If this hook errors, the bridge WILL NOT revert, and the hook
      * contract will own those tokens. Hook contracts MUST have a recovery plan
      * in place for these situations.

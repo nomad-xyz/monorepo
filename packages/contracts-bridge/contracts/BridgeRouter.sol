@@ -163,25 +163,25 @@ contract BridgeRouter is Version0, Router {
      * @param _token The token address
      * @param _amount The token amount
      * @param _destination The destination domain
-     * @param _hook The hook contract on the remote chain
+     * @param _remoteHook The hook contract on the remote chain
      * @param _extraData Extra data that will be passed to the hook for
      *        execution
      */
-    function xsend(
+    function sendToHook(
         address _token,
         uint256 _amount,
         uint32 _destination,
-        bytes32 _hook,
+        bytes32 _remoteHook,
         bytes calldata _extraData
     ) external {
-        // debit tokens from the Connext
+        // debit tokens from the Hook
         (bytes29 _tokenId, bytes32 _detailsHash) = _debitTokens(
             _token,
             _amount
         );
-        // format Connext transfer message
+        // format Hook transfer message
         bytes29 _action = BridgeMessage.formatTransferToHook(
-            _hook,
+            _remoteHook,
             _amount,
             _detailsHash,
             _extraData
@@ -326,8 +326,10 @@ contract BridgeRouter is Version0, Router {
     /**
      * @notice Handles an incoming TransferToHook message.
      *
-     * Tokens are sent to the Hook contract
-     * then IBridgeHook.onReceive callback is called
+     * @dev The hook is called AFTER tokens have been transferred to the hook
+     * contract. If this hook errors, the bridge WILL NOT revert, and the hook
+     * contract will own those tokens. Hook contracts MUST have a recovery plan
+     * in place for these situations.
      *
      * @param _origin The domain of the chain from which the transfer originated
      * @param _nonce The unique identifier for the message from origin to destination
