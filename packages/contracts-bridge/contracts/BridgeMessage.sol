@@ -151,7 +151,7 @@ library BridgeMessage {
     }
 
     /**
-     * @notice Formats Connext Transfer
+     * @notice Formats TransferToHook message
      * @param _hook The hook that will handle this token transfer
      * @param _amnt The transfer amount
      * @param _detailsHash The hash of the token name, symbol, and decimals
