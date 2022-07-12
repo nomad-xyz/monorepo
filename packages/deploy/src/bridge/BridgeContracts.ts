@@ -122,7 +122,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const factory = new contracts.BridgeToken__factory(this.deployer);
     const impl = await factory.deploy(this.overrides);
     await impl.deployTransaction.wait(this.confirmations);
-
+    
     this.context.pushVerification(name, {
       name: 'BridgeToken',
       specifier: contracts.BRIDGE_TOKEN_SPECIFIER,
@@ -158,6 +158,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     proxy.proxy = prx.address;
     await prx.deployTransaction.wait(this.confirmations);
 
+    
     this.context.pushVerification(name, {
       name: 'UpgradeBeaconProxy',
       specifier: UBP_SPECIFIER,

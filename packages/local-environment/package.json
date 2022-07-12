@@ -11,7 +11,7 @@
     "src/**/*"
   ],
   "scripts": {
-    "agents_build": "pushd ../../../agents && ./build.sh latest && popd",
+    "agents_build": "pushd ../../../agents && ./build.sh main && popd",
     "agents_clean": "pushd ../../../agents && rm -rf config/16* ; rm -rf *db ; popd",
     "agents_stop": "docker ps --filter name=_agent -aq | xargs docker rm --force",
     "agents_stop_running": "docker ps --filter name=_agent --filter status=running -aq | xargs docker stop",

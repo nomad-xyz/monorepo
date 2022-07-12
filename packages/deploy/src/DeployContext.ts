@@ -138,10 +138,13 @@ export class DeployContext extends MultiProvider<config.Domain> {
     verification: Verification,
   ): void {
     const name = this.resolveDomainName(nameOrDomain);
+    // console.log(name);
     if (!this.verification.has(name)) this.verification.set(name, []);
 
     const net = this._verification.get(name);
+    // console.log(net);
     if (net) net.push(verification);
+    // console.log(this.mustGetVerification(name));
   }
 
   mustGetVerification(nameOrDomain: string | number): readonly Verification[] {

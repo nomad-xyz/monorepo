@@ -4,7 +4,7 @@ image:
   repository: gcr.io/nomad-xyz/nomad-monitor
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: 'latest'
+  tag: 'main'
 
 monitor:
   config: # Contents of .env file
