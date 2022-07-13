@@ -94,28 +94,17 @@ contract BridgeMessageTest is Test {
         assertFalse(BridgeMessage.isValidAction(hookAction));
     }
 
-    function test_formatTokenIdFromDetails() public {
-        bytes29 formated = abi.encodePacked(localDomain, tokenAddress).ref(
-            uint40(BridgeMessage.Types.TokenId)
-        );
-        assertEq(
-            BridgeMessage.formatTokenId(localDomain, tokenAddress).keccak(),
-            formated.keccak()
-        );
-    }
-
-    function test_formatTokenIdFromStruct() public {
-        BridgeMessage.TokenId memory tokenId = BridgeMessage.TokenId(
-            remoteDomain,
-            tokenAddress
-        );
-        bytes29 formated = abi.encodePacked(remoteDomain, tokenAddress).ref(
-            uint40(BridgeMessage.Types.TokenId)
-        );
-        assertEq(
-            BridgeMessage.formatTokenId(tokenId).keccak(),
-            formated.keccak()
-        );
+    /// @notice A BridgeMessage must be at least TOKEN_ID_LEN + MIN_TRANSFER_LEN
+    /// so that it can contain all the required information needed by
+    /// the Bridge. Apart from that, the upper bound is set by the
+    /// Nomad Protocol itself.
+    function test_isValidMessageLength() public {
+        bytes memory longMessage = new bytes(9999999);
+        bytes memory shortMessage = new bytes(10);
+        bytes29 longView = longMessage.ref(0);
+        bytes29 shortView = shortMessage.ref(0);
+        assertFalse(BridgeMessage.isValidMessageLength(shortView));
+        assertTrue(BridgeMessage.isValidMessageLength(longView));
     }
 
     function test_formatMessageFailNotAction() public {
@@ -192,6 +181,30 @@ contract BridgeMessageTest is Test {
         );
         assertEq(parsedAction.keccak(), action.keccak());
         assertEq(parsedTokenId.keccak(), tokenId.keccak());
+    }
+
+    function test_formatTokenIdFromDetails() public {
+        bytes29 formated = abi.encodePacked(localDomain, tokenAddress).ref(
+            uint40(BridgeMessage.Types.TokenId)
+        );
+        assertEq(
+            BridgeMessage.formatTokenId(localDomain, tokenAddress).keccak(),
+            formated.keccak()
+        );
+    }
+
+    function test_formatTokenIdFromStruct() public {
+        BridgeMessage.TokenId memory tokenId = BridgeMessage.TokenId(
+            remoteDomain,
+            tokenAddress
+        );
+        bytes29 formated = abi.encodePacked(remoteDomain, tokenAddress).ref(
+            uint40(BridgeMessage.Types.TokenId)
+        );
+        assertEq(
+            BridgeMessage.formatTokenId(tokenId).keccak(),
+            formated.keccak()
+        );
     }
 
     function test_getDetailsCorrect() public {
