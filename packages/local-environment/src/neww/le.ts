@@ -117,14 +117,6 @@ export class Env {
         return DEPLOYERKEY1;
     }
 
-    get deployerKey2(): string {
-        const DEPLOYERKEY2 = ``+ process.env.DEPLOYER_PRIVATE_KEY_2 + ``;
-        if (!DEPLOYERKEY2) {
-            throw new Error('Add DEPLOYER_PRIVATE_KEY to .env');
-        }
-        return DEPLOYERKEY2;
-    }
-
     setDeployContext(): DeployContext {
         //@TODO remove re-initialization.
         const deployContext = new DeployContext(this.nomadConfig());
@@ -184,7 +176,8 @@ export class Env {
     j.connectNetwork(t);
     console.log(`Connected Tom and Jerry`);
 
-    await t.upAgents();
+    await t.upAgents(t);
+    await j.upAgents(j);
     console.log(`Agents up`);
 
     // Notes, check governance router deployment on Jerry and see if that's actually even passing

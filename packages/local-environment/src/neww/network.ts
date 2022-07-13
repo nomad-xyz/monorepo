@@ -208,7 +208,6 @@ export class HardhatNetwork extends Network {
     firstStart: boolean;
     blockTime: number;
     handler: DockerizedNetworkActor;
-    agents: Agents;
 
     updater: string;
     watcher: string;
@@ -225,7 +224,6 @@ export class HardhatNetwork extends Network {
         this.watcher = '0x'+'01'.repeat(20);
         this.recoveryManager = '0x'+'01'.repeat(20);
         this.weth = "";
-        this.agents = new Agents()
     }
 
     get connections(): string[] {
@@ -240,7 +238,8 @@ export class HardhatNetwork extends Network {
       if (!this.connectedNetworks.includes(n)) this.connectedNetworks.push(n);
     }
 
-    async upAgents() {
+    async upAgents(n: Network) {
+      this.agents = new Agents(n);
       await this.agents.relayer.connect();
       this.agents.relayer.start();
     }

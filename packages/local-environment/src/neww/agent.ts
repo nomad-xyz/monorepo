@@ -2,6 +2,7 @@ import Docker from "dockerode";
 
 import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
+import { Network } from "./network";
 
 export class Agents {
   updater: Agent;
@@ -10,17 +11,18 @@ export class Agents {
   watchers: Agent[];
   kathy: Agent; 
 
-  constructor() {
-      this.updater = new LocalAgent(AgentType.Updater);
-      this.relayer = new LocalAgent(AgentType.Relayer);
-      this.processor = new LocalAgent(AgentType.Processor);
-      this.watchers = [new LocalAgent(AgentType.Watcher)];
-      this.kathy = new LocalAgent(AgentType.Kathy);
+  constructor(network: Network) {
+      this.updater = new LocalAgent(AgentType.Updater, network);
+      this.relayer = new LocalAgent(AgentType.Relayer, network);
+      this.processor = new LocalAgent(AgentType.Processor, network);
+      this.watchers = [new LocalAgent(AgentType.Watcher, network)];
+      this.kathy = new LocalAgent(AgentType.Kathy, network);
   }
 }
 
 export interface Agent {
   agentType: AgentType;
+  network: Network;
 
   connect(): Promise<boolean>;
   start(): Promise<void>;
@@ -80,18 +82,18 @@ function parseAgentType(t: string | AgentType): AgentType {
 
 export class LocalAgent extends DockerizedActor implements Agent {
   agentType: AgentType;
-//   network: Network;
+  network: Network;
 
-  constructor(agentType: AgentType) {
+  constructor(agentType: AgentType, network: Network) {
     agentType = parseAgentType(agentType);
-    super(`${agentType}_${'network.name fix'}`, "agent");
+    super(`${agentType}_${network.name}`, "agent");
     this.agentType = agentType;
 
-    // this.network = network;
+    this.network = network;
   }
 
   containerName(): string {
-    return `${this.name}_${this.actorType}_${'this.nomad.id fix'}`;
+    return `${this.name}_${this.actorType}_${'this.nomad.id_fix'}`;
   }
 
 //   getAdditionalEnvs(): string[] {
@@ -144,7 +146,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
       Cmd: ["./" + this.agentType],
       Env: [
         "RUN_ENV=latest",
-        `BASE_CONFIG=${'this.network.name fix'}_config.json`,
+        `BASE_CONFIG=${this.network.name}_config.json`,
         ...[], //additionalEnvs,
       ],
       HostConfig: {
