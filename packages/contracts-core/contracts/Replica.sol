@@ -167,7 +167,7 @@ contract Replica is Version0, NomadBase {
         bytes32 _messageHash = keccak256(_message);
         require(
             acceptableRoot(messages[_messageHash]) ||
-                prove(keccak256(_message), _proof, _index),
+                prove(_messageHash, _proof, _index),
             "!prove"
         );
         process(_message);
