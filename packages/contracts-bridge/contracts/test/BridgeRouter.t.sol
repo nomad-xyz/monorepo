@@ -118,7 +118,7 @@ contract BridgeRouterTest is BridgeTest {
         uint256 value
     );
 
-    function test_debitTokensLocalSuccess() public {
+    function test_takeTokensLocalSuccess() public {
         uint256 amount = 100;
         uint256 startingBalance = localToken.balanceOf(address(bridgeRouter));
         vm.expectEmit(true, true, false, true, address(localToken));
@@ -128,19 +128,19 @@ contract BridgeRouterTest is BridgeTest {
         localToken.approve(address(bridgeRouter), amount);
         vm.expectEmit(true, true, false, true, address(localToken));
         emit Transfer(tokenSender, address(bridgeRouter), amount);
-        bridgeRouter.debitTokens(address(localToken), amount);
+        bridgeRouter.takeTokens(address(localToken), amount);
         uint256 afterBalance = localToken.balanceOf(address(bridgeRouter));
         assertEq(afterBalance, startingBalance + amount);
         vm.stopPrank();
     }
 
-    function test_debitTokensLocalFailZeroAmount() public {
+    function test_takeTokensLocalFailZeroAmount() public {
         uint256 amount = 0;
         vm.expectRevert("!amnt");
-        bridgeRouter.debitTokens(address(localToken), amount);
+        bridgeRouter.takeTokens(address(localToken), amount);
     }
 
-    function test_debitTokensRemoteSuccess() public {
+    function test_takeTokensRemoteSuccess() public {
         uint256 amount = 100;
         uint256 startingBalance = remoteToken.balanceOf(tokenSender);
         vm.startPrank(tokenSender);
@@ -150,7 +150,7 @@ contract BridgeRouterTest is BridgeTest {
         localToken.approve(address(bridgeRouter), amount);
         vm.expectEmit(true, true, false, true, address(remoteToken));
         emit Transfer(tokenSender, address(0), amount);
-        bridgeRouter.debitTokens(address(remoteToken), amount);
+        bridgeRouter.takeTokens(address(remoteToken), amount);
         uint256 afterBalance = remoteToken.balanceOf(tokenSender);
         assertEq(afterBalance, startingBalance - amount);
         vm.stopPrank();

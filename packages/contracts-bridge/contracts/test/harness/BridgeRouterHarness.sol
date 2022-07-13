@@ -4,11 +4,11 @@ pragma solidity 0.7.6;
 import {BridgeRouter} from "../../BridgeRouter.sol";
 
 contract BridgeRouterHarness is BridgeRouter {
-    function debitTokens(address token, uint256 amount)
+    function takeTokens(address token, uint256 amount)
         external
         returns (bytes29 _tokenId, bytes32 _detailsHash)
     {
-        return _debitTokens(token, amount);
+        return _takeTokens(token, amount);
     }
 
     function sendTransferMessage(
