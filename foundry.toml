@@ -15,7 +15,8 @@ block_timestamp = 1622400000  # Timestamp for tests (non-zero)
 # silence warnings
 # 2462 - ignored constructor visibility in OZ dependency
 # 5868 - Failure condition of 'send' ignored in bridge
-ignored_error_codes = [2462, 5878]
+# 9302 - Failure condition of 'call' ignored in bridge
+ignored_error_codes = [2462, 5878, 9302]
 
 
 [core]

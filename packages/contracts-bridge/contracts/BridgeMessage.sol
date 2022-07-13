@@ -20,7 +20,9 @@ library BridgeMessage {
         TokenId, // 1
         Message, // 2
         Transfer, // 3
-        DeprecatedFastTransfer // 4
+        DeprecatedFastTransfer, // 4
+        TransferToHook, // 5
+        ExtraData // 6
     }
 
     // ============ Structs ============
@@ -37,7 +39,7 @@ library BridgeMessage {
 
     uint256 private constant TOKEN_ID_LEN = 36; // 4 bytes domain + 32 bytes id
     uint256 private constant IDENTIFIER_LEN = 1;
-    uint256 private constant TRANSFER_LEN = 97; // 1 byte identifier + 32 bytes recipient + 32 bytes amount + 32 bytes detailsHash
+    uint256 private constant MIN_TRANSFER_LEN = 97; // 1 byte identifier + 32 bytes recipient or externalId + 32 bytes amount + 32 bytes detailsHash
 
     // ============ Modifiers ============
 
@@ -59,7 +61,7 @@ library BridgeMessage {
      * @return TRUE if action is valid
      */
     function isValidAction(bytes29 _action) internal pure returns (bool) {
-        return isTransfer(_action);
+        return isTransfer(_action) || isTransferToHook(_action);
     }
 
     /**
@@ -69,7 +71,7 @@ library BridgeMessage {
      */
     function isValidMessageLength(bytes29 _view) internal pure returns (bool) {
         uint256 _len = _view.len();
-        return _len == TOKEN_ID_LEN + TRANSFER_LEN;
+        return _len >= TOKEN_ID_LEN + MIN_TRANSFER_LEN;
     }
 
     /**
@@ -122,6 +124,15 @@ library BridgeMessage {
     }
 
     /**
+     * @notice Checks that the message is of type TransferToHook
+     * @param _action The message
+     * @return True if the message is of type TransferToHook
+     */
+    function isTransferToHook(bytes29 _action) internal pure returns (bool) {
+        return isType(_action, Types.TransferToHook);
+    }
+
+    /**
      * @notice Formats Transfer
      * @param _to The recipient address as bytes32
      * @param _amnt The transfer amount
@@ -134,10 +145,35 @@ library BridgeMessage {
         bytes32 _detailsHash
     ) internal pure returns (bytes29) {
         return
+            abi.encodePacked(Types.Transfer, _to, _amnt, _detailsHash).ref(
+                uint40(Types.Transfer)
+            );
+    }
+
+    /**
+     * @notice Formats TransferToHook message
+     * @param _hook The hook that will handle this token transfer
+     * @param _amnt The transfer amount
+     * @param _detailsHash The hash of the token name, symbol, and decimals
+     * @param _extraData User-provided data for the receiving hook
+     * @return
+     */
+    function formatTransferToHook(
+        bytes32 _hook,
+        uint256 _amnt,
+        bytes32 _detailsHash,
+        bytes memory _extraData
+    ) internal pure returns (bytes29) {
+        return
             abi
-                .encodePacked(Types.Transfer, _to, _amnt, _detailsHash)
-                .ref(0)
-                .castTo(uint40(Types.Transfer));
+                .encodePacked(
+                    Types.TransferToHook,
+                    _hook,
+                    _amnt,
+                    _detailsHash,
+                    _extraData
+                )
+                .ref(uint40(Types.TransferToHook));
     }
 
     /**
@@ -164,8 +200,7 @@ library BridgeMessage {
         pure
         returns (bytes29)
     {
-        return
-            abi.encodePacked(_domain, _id).ref(0).castTo(uint40(Types.TokenId));
+        return abi.encodePacked(_domain, _id).ref(uint40(Types.TokenId));
     }
 
     /**
@@ -268,6 +303,7 @@ library BridgeMessage {
     function recipient(bytes29 _transferAction)
         internal
         pure
+        typeAssert(_transferAction, Types.Transfer)
         returns (bytes32)
     {
         // before = 1 byte identifier
@@ -282,6 +318,7 @@ library BridgeMessage {
     function evmRecipient(bytes29 _transferAction)
         internal
         pure
+        typeAssert(_transferAction, Types.Transfer)
         returns (address)
     {
         // before = 1 byte identifier + 12 bytes empty to trim for address = 13 bytes
@@ -324,6 +361,35 @@ library BridgeMessage {
         returns (bytes29)
     {
         return _message.slice(0, TOKEN_ID_LEN, uint40(Types.TokenId));
+    }
+
+    /**
+     * @notice Retrieves the hook contract EVM address from a TransferWithHook
+     * @param _transferAction The message
+     * @return The hook contract address as bytes32
+     */
+    function evmHook(bytes29 _transferAction)
+        internal
+        pure
+        typeAssert(_transferAction, Types.TransferToHook)
+        returns (address)
+    {
+        return _transferAction.indexAddress(13);
+    }
+
+    function extraData(bytes29 _transferAction)
+        internal
+        pure
+        typeAssert(_transferAction, Types.TransferToHook)
+        returns (bytes29)
+    {
+        // anything past the end is the extradata
+        return
+            _transferAction.slice(
+                MIN_TRANSFER_LEN,
+                _transferAction.length - MIN_TRANSFER_LEN,
+                uint40(Types.ExtraData)
+            );
     }
 
     /**
