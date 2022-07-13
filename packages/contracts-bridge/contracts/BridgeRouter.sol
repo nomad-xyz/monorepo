@@ -360,6 +360,7 @@ contract BridgeRouter is Version0, Router {
             _action,
             _hook
         );
+        // ABI-encode the calldata for a `Hook.onRecive` call
         bytes memory _call = abi.encodeWithSelector(
             IBridgeHook.onReceive.selector,
             _origin,
@@ -369,6 +370,13 @@ contract BridgeRouter is Version0, Router {
             _action.amnt(),
             _action.extraData().clone()
         );
+        // Call the hook with the ABI-encoded payload
+        // We use a low-level call here so that solc will skip pre-call
+        // and post-call checks. Specifically we want to skip
+        // 1. pre-flight extcode check
+        // 2. post-flight success check
+        // We do this so that the hook contract need not exist, and need
+        // not execute succesfully
         _hook.call(_call);
     }
 
