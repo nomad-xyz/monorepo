@@ -56,6 +56,9 @@ contract BridgeMessageTest is Test {
         assertEq(uint256(BridgeMessage.Types.TokenId), 1);
         assertEq(uint256(BridgeMessage.Types.Message), 2);
         assertEq(uint256(BridgeMessage.Types.Transfer), 3);
+        assertEq(uint256(BridgeMessage.Types.DeprecatedFastTransfer), 4);
+        assertEq(uint256(BridgeMessage.Types.TransferToHook), 5);
+        assertEq(uint256(BridgeMessage.Types.ExtraData), 6);
     }
 
     function test_isValidActionSuccess() public {}
