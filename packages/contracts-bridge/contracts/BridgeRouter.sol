@@ -194,6 +194,7 @@ contract BridgeRouter is Version0, Router {
         );
         // send message to destination chain bridge router
         _sendTransferMessage(_destination, _tokenId, _action);
+        // emit Send event to record token sender
         emit Send(_token, msg.sender, _destination, _remoteHook, _amount, true);
     }
 
