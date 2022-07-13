@@ -142,10 +142,10 @@ export class Env {
             environment: 'local',
             networks: this.networks.map(n => n.name),
             rpcs: Object.fromEntries(this.networks.map(n => [n.name, n.rpcs])),
+            agent: Object.fromEntries(this.networks.map(n => [n.name, n.agentConfig])),
             protocol: {governor: this.governor, networks: Object.fromEntries(this.networks.map(n => [n.name, n.domain]))},
             core: Object.fromEntries(this.networks.filter(n => n.isDeployed).map(n => [n.name, n.coreContracts!])),
             bridge: Object.fromEntries(this.networks.filter(n => n.isDeployed).map(n => [n.name, n.bridgeContracts!])),
-            agent: Object.fromEntries(this.networks.filter(n => n.isDeployed).map(n => [n.name, n.agentConfig!])),
             bridgeGui: Object.fromEntries(this.networks.filter(n => n.isDeployed).map(n => [n.name, n.bridgeGui!])),
             gas: Object.fromEntries(this.networks.map(n => [n.name, n.gasConfig!])),
         }
@@ -176,10 +176,6 @@ export class Env {
     j.connectNetwork(t);
     console.log(`Connected Tom and Jerry`);
 
-    await t.upAgents(t);
-    await j.upAgents(j);
-    console.log(`Agents up`);
-
     // Notes, check governance router deployment on Jerry and see if that's actually even passing
     // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
@@ -191,5 +187,9 @@ export class Env {
     await le.deploy();
 
     // let myContracts = le.deploymyproject();
+
+    await t.upAgents(t);
+    await j.upAgents(j);
+    console.log(`Agents up`);
 
 })()

@@ -93,7 +93,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
   }
 
   containerName(): string {
-    return `${this.name}_${this.actorType}_${'this.nomad.id_fix'}`;
+    return `${this.name}_${this.actorType}`;
   }
 
 //   getAdditionalEnvs(): string[] {
@@ -134,7 +134,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
   async createContainer(): Promise<Docker.Container> {
     const name = this.containerName();
 
-    const agentConfigPath = '' + __dirname + '/config';//this.nomad.defultDeployLocation();
+    const agentConfigPath = '' + __dirname + '/output/config.json';//this.nomad.defultDeployLocation();
 
     // const additionalEnvs = this.getAdditionalEnvs();
     // Write a method that takes a network name; inject agent config

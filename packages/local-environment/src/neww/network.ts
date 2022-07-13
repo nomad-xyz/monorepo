@@ -1,5 +1,5 @@
 import { Agents } from "./agent";
-import { NetworkSpecs, ContractConfig, BridgeConfiguration, Domain, CoreContracts, BridgeContracts, AgentConfig, AppConfig, NomadGasConfig } from '@nomad-xyz/configuration';
+import { NetworkSpecs, ContractConfig, BridgeConfiguration, BaseAgentConfig, Domain, CoreContracts, BridgeContracts, AgentConfig, LogConfig, AppConfig, NomadGasConfig } from '@nomad-xyz/configuration';
 import { DockerizedActor } from "./actor";
 import Dockerode from "dockerode";
 import { sleep } from "../utils";
@@ -26,7 +26,6 @@ export abstract class Network {
 
     coreContracts?: CoreContracts;
     bridgeContracts?: BridgeContracts;
-    agentConfig?: AgentConfig;
     bridgeGui?: AppConfig;
 
     gasConfig: NomadGasConfig;
@@ -35,6 +34,7 @@ export abstract class Network {
     abstract get rpcs(): string[];
     abstract get config(): ContractConfig;
     abstract get bridgeConfig(): BridgeConfiguration;
+    abstract get agentConfig(): AgentConfig;
 
     abstract up(): Promise<void>;
     abstract down(): Promise<void>;
@@ -242,6 +242,16 @@ export class HardhatNetwork extends Network {
       this.agents = new Agents(n);
       await this.agents.relayer.connect();
       this.agents.relayer.start();
+      await this.agents.updater.connect();
+      this.agents.updater.start();
+      await this.agents.processor.connect();
+      this.agents.processor.start();
+      await this.agents.kathy.connect();
+      this.agents.kathy.start();
+      for (const watcher of this.agents.watchers) {
+        await watcher.connect();
+        watcher.start();
+      }
     }
 
     get specs(): NetworkSpecs {
@@ -269,6 +279,67 @@ export class HardhatNetwork extends Network {
             watchers: [this.watcher]
           }
     }
+  
+    get agentConfig(): AgentConfig {
+        return{ 
+            rpcStyle: "ethereum",
+            timelag: 9090,
+            db: "/usr/share/nomad",
+            subsidizedRemotes: [
+              "tom", 
+              "jerry"
+            ],
+            logging: this.logConfig,
+            updater: this.updaterConfig,
+            relayer: this.relayerConfig,
+            processor: this.processorConfig,
+            watcher: this.watcherConfig,
+            kathy: this.kathyConfig
+        }
+    }
+
+    get logConfig(): LogConfig {
+        return {
+          fmt: "json",
+          level: "info"
+        }
+    }
+
+    get updaterConfig(): BaseAgentConfig {
+        return { 
+          "enabled": true,
+          "interval": 5
+        }
+    }
+
+    get watcherConfig(): BaseAgentConfig {
+        return { 
+          "enabled": true,
+          "interval": 5
+        }
+    }
+
+    get relayerConfig(): BaseAgentConfig {
+        return { 
+          "enabled": true,
+          "interval": 10
+        }
+    }
+
+    get processorConfig(): BaseAgentConfig {
+        return { 
+          "enabled": true,
+          "interval": 5
+        }
+    }
+
+    get kathyConfig(): BaseAgentConfig {
+        return { 
+          "enabled": true,
+          "interval": 500
+        }
+    }
+
     get bridgeConfig(): BridgeConfiguration {
         return {
             weth: "0x2Fd79405E108B80D297b6A95b715258806Cb2537",
