@@ -61,10 +61,9 @@ contract BridgeMessageTest is Test {
     function test_isValidActionSuccess() public {}
 
     function test_formatTokenIdFromDetails() public {
-        bytes29 formated = abi
-            .encodePacked(localDomain, tokenAddress)
-            .ref(0)
-            .castTo(uint40(BridgeMessage.Types.TokenId));
+        bytes29 formated = abi.encodePacked(localDomain, tokenAddress).ref(
+            uint40(BridgeMessage.Types.TokenId)
+        );
         assertEq(
             BridgeMessage.formatTokenId(localDomain, tokenAddress).keccak(),
             formated.keccak()
@@ -76,10 +75,9 @@ contract BridgeMessageTest is Test {
             remoteDomain,
             tokenAddress
         );
-        bytes29 formated = abi
-            .encodePacked(remoteDomain, tokenAddress)
-            .ref(0)
-            .castTo(uint40(BridgeMessage.Types.TokenId));
+        bytes29 formated = abi.encodePacked(remoteDomain, tokenAddress).ref(
+            uint40(BridgeMessage.Types.TokenId)
+        );
         assertEq(
             BridgeMessage.formatTokenId(tokenId).keccak(),
             formated.keccak()
