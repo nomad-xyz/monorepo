@@ -53,7 +53,7 @@ contract BridgeRouter is Version0, Router {
      * @param toDomain the domain of the chain the tokens are being sent to
      * @param toId the bytes32 address of the recipient of the tokens
      * @param amount the amount of tokens sent
-     * @param fastLiquidityEnabled True if fast liquidity is enabled, False
+     * @param toHook True if sent to a hook, on the remote chain, false
      *        otherwise
      */
     event Send(
@@ -62,7 +62,7 @@ contract BridgeRouter is Version0, Router {
         uint32 indexed toDomain,
         bytes32 toId,
         uint256 amount,
-        bool fastLiquidityEnabled
+        bool toHook
     );
 
     /**
@@ -194,7 +194,7 @@ contract BridgeRouter is Version0, Router {
         );
         // send message to destination chain bridge router
         _sendTransferMessage(_destination, _tokenId, _action);
-        // TODO: emit special event?
+        emit Send(_token, msg.sender, _destination, _remoteHook, _amount, true);
     }
 
     // ======== External: Custom Tokens =========
