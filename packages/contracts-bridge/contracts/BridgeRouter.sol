@@ -35,7 +35,8 @@ contract BridgeRouter is Version0, Router {
 
     // contract that manages registry representation tokens
     ITokenRegistry public tokenRegistry;
-    // token transfer prefill ID => LP that pre-filled message to provide fast liquidity
+    // token transfer prefill ID => LP that pre-filled message to provide fast
+    // liquidity
     mapping(bytes32 => address) public liquidityProvider;
 
     // ============ Upgrade Gap ============
@@ -52,7 +53,8 @@ contract BridgeRouter is Version0, Router {
      * @param toDomain the domain of the chain the tokens are being sent to
      * @param toId the bytes32 address of the recipient of the tokens
      * @param amount the amount of tokens sent
-     * @param fastLiquidityEnabled True if fast liquidity is enabled, False otherwise
+     * @param fastLiquidityEnabled True if fast liquidity is enabled, False
+     *        otherwise
      */
     event Send(
         address indexed token,
@@ -65,11 +67,14 @@ contract BridgeRouter is Version0, Router {
 
     /**
      * @notice emitted when tokens are dispensed to an account on this domain
-     * emitted both when fast liquidity is provided, and when the transfer ultimately settles
-     * @param originAndNonce Domain where the transfer originated and the unique identifier
-     * for the message from origin to destination, combined in a single field ((origin << 32) & nonce)
+     *         emitted both when fast liquidity is provided, and when the
+     *         transfer ultimately settles
+     * @param originAndNonce Domain where the transfer originated and the
+     *        unique identifier for the message from origin to destination,
+     *        combined in a single field ((origin << 32) & nonce)
      * @param token The address of the local token contract being received
-     * @param recipient The address receiving the tokens; the original recipient of the transfer
+     * @param recipient The address receiving the tokens; the original
+     *        recipient of the transfer
      * @param liquidityProvider The account providing liquidity
      * @param amount The amount of tokens being received
      */
@@ -99,7 +104,8 @@ contract BridgeRouter is Version0, Router {
     /**
      * @notice Handles an incoming message
      * @param _origin The origin domain
-     * @param _nonce The unique identifier for the message from origin to destination
+     * @param _nonce The unique identifier for the message from origin to
+     *        destination
      * @param _sender The sender address
      * @param _message The message
      */
@@ -142,7 +148,7 @@ contract BridgeRouter is Version0, Router {
         // validate inputs
         require(_recipient != bytes32(0), "!recip");
         // debit tokens from the sender
-        (bytes29 _tokenId, bytes32 _detailsHash) = _debitTokens(
+        (bytes29 _tokenId, bytes32 _detailsHash) = _takeTokens(
             _token,
             _amount
         );
@@ -175,7 +181,7 @@ contract BridgeRouter is Version0, Router {
         bytes calldata _extraData
     ) external {
         // debit tokens from msg.sender
-        (bytes29 _tokenId, bytes32 _detailsHash) = _debitTokens(
+        (bytes29 _tokenId, bytes32 _detailsHash) = _takeTokens(
             _token,
             _amount
         );
@@ -195,7 +201,7 @@ contract BridgeRouter is Version0, Router {
 
     /**
      * @notice Enroll a custom token. This allows projects to work with
-     * governance to specify a custom representation.
+     *         governance to specify a custom representation.
      * @param _domain the domain of the canonical Token to enroll
      * @param _id the bytes32 ID of the canonical of the Token to enroll
      * @param _custom the address of the custom implementation to use.
@@ -214,10 +220,10 @@ contract BridgeRouter is Version0, Router {
 
     /**
      * @notice Migrate all tokens in a previous representation to the latest
-     * custom representation. This works by looking up local mappings and then
-     * burning old tokens and minting new tokens.
+     *         custom representation. This works by looking up local mappings
+     *         and then burning old tokens and minting new tokens.
      * @dev This is explicitly opt-in to allow dapps to decide when and how to
-     * upgrade to the new representation.
+     *      upgrade to the new representation.
      * @param _oldRepr The address of the old token to migrate
      */
     function migrate(address _oldRepr) external {
@@ -233,16 +239,16 @@ contract BridgeRouter is Version0, Router {
     // ============ Internal: Send ============
 
     /**
-     * @notice Debit tokens from the function caller
-     * as part of sending tokens across chains
+     * @notice Take from msg.sender as part of sending tokens across chains
      * @dev Locks canonical tokens in escrow in BridgeRouter
-     * OR Burns representation tokens
+     *      OR Burns representation tokens
      * @param _token The token to pull from the sender
      * @param _amount The amount to pull from the sender
      * @return _tokenId the bytes canonical token identifier
-     * @return _detailsHash the hash of the canonical token details (name, symbol, decimal)
+     * @return _detailsHash the hash of the canonical token details (name,
+     *         symbol, decimal)
      */
-    function _debitTokens(address _token, uint256 _amount)
+    function _takeTokens(address _token, uint256 _amount)
         internal
         returns (bytes29 _tokenId, bytes32 _detailsHash)
     {
@@ -274,9 +280,9 @@ contract BridgeRouter is Version0, Router {
 
     /**
      * @notice Dispatch a message via Nomad to a destination domain
-     * addressed to the remote BridgeRouter on that chain
+     *         addressed to the remote BridgeRouter on that chain
      * @dev Message will trigger `handle` method on the remote BridgeRouter
-     * when it is received on the destination chain
+     *      when it is received on the destination chain
      * @param _destination The domain of the destination chain
      * @param _tokenId The canonical token identifier for the transfer message
      * @param _action The contents of the transfer message
@@ -305,7 +311,8 @@ contract BridgeRouter is Version0, Router {
      * Otherwise, a representation token is minted.
      *
      * @param _origin The domain of the chain from which the transfer originated
-     * @param _nonce The unique identifier for the message from origin to destination
+     * @param _nonce The unique identifier for the message from origin to
+     *        destination
      * @param _tokenId The token ID
      * @param _action The action
      */
@@ -318,7 +325,7 @@ contract BridgeRouter is Version0, Router {
         // tokens will be sent to the specified recipient
         address _recipient = _action.evmRecipient();
         // send tokens
-        _creditTokens(_origin, _nonce, _tokenId, _action, _recipient);
+        _giveTokens(_origin, _nonce, _tokenId, _action, _recipient);
         // dust the recipient with gas tokens
         _dust(_recipient);
     }
@@ -327,9 +334,9 @@ contract BridgeRouter is Version0, Router {
      * @notice Handles an incoming TransferToHook message.
      *
      * @dev The hook is called AFTER tokens have been transferred to the hook
-     * contract. If this hook errors, the bridge WILL NOT revert, and the hook
-     * contract will own those tokens. Hook contracts MUST have a recovery plan
-     * in place for these situations.
+     *      contract. If this hook errors, the bridge WILL NOT revert, and the
+     *      hook contract will own those tokens. Hook contracts MUST have a
+     *      recovery plan in place for these situations.
      *
      * @param _origin The domain of the chain from which the transfer originated
      * @param _nonce The unique identifier for the message from origin to destination
@@ -345,7 +352,7 @@ contract BridgeRouter is Version0, Router {
         // tokens will be sent to user-specified hook
         address _hook = _action.evmHook();
         // send tokens
-        address _token = _creditTokens(
+        address _token = _giveTokens(
             _origin,
             _nonce,
             _tokenId,
@@ -365,17 +372,18 @@ contract BridgeRouter is Version0, Router {
     }
 
     /**
-     * @notice Credit tokens to a specified recipient.
+     * @notice Send tokens to a specified recipient.
      * @dev Unlocks canonical tokens from escrow in BridgeRouter
-     * OR Mints representation tokens
+     *      OR Mints representation tokens
      * @param _origin The domain of the chain from which the transfer originated
-     * @param _nonce The unique identifier for the message from origin to destination
+     * @param _nonce The unique identifier for the message from origin to
+     *        destination
      * @param _tokenId The canonical token identifier to credit
      * @param _action The contents of the transfer message
      * @param _recipient The recipient that will receive tokens
      * @return _token The address of the local token contract
      */
-    function _creditTokens(
+    function _giveTokens(
         uint32 _origin,
         uint32 _nonce,
         bytes29 _tokenId,
@@ -444,10 +452,11 @@ contract BridgeRouter is Version0, Router {
 
     /**
      * @notice Internal utility function that combines
-     * `_origin` and `_nonce`.
+     *         `_origin` and `_nonce`.
      * @dev Both origin and nonce should be less than 2^32 - 1
      * @param _origin Domain of chain where the transfer originated
-     * @param _nonce The unique identifier for the message from origin to destination
+     * @param _nonce The unique identifier for the message from origin to
+              destination
      * @return Returns (`_origin` << 32) & `_nonce`
      */
     function _originAndNonce(uint32 _origin, uint32 _nonce)
@@ -460,8 +469,8 @@ contract BridgeRouter is Version0, Router {
 
     /**
      * @dev should be impossible to renounce ownership;
-     * we override OpenZeppelin OwnableUpgradeable's
-     * implementation of renounceOwnership to make it a no-op
+     *      we override OpenZeppelin OwnableUpgradeable's
+     *      implementation of renounceOwnership to make it a no-op
      */
     function renounceOwnership() public override onlyOwner {
         // do nothing
