@@ -174,7 +174,7 @@ contract BridgeRouter is Version0, Router {
         bytes32 _remoteHook,
         bytes calldata _extraData
     ) external {
-        // debit tokens from the Hook
+        // debit tokens from msg.sender
         (bytes29 _tokenId, bytes32 _detailsHash) = _debitTokens(
             _token,
             _amount
