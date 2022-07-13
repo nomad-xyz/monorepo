@@ -61,7 +61,38 @@ contract BridgeMessageTest is Test {
         assertEq(uint256(BridgeMessage.Types.ExtraData), 6);
     }
 
-    function test_isValidActionSuccess() public {}
+    function test_isValidActionSuccess() public {
+        bytes29 transferAction = abi
+            .encodePacked(BridgeMessage.Types.Transfer)
+            .ref(uint40(BridgeMessage.Types.Transfer));
+        bytes29 hookAction = abi
+            .encodePacked(BridgeMessage.Types.TransferToHook)
+            .ref(uint40(BridgeMessage.Types.TransferToHook));
+
+        assert(BridgeMessage.isValidAction(transferAction));
+        assert(BridgeMessage.isValidAction(hookAction));
+    }
+
+    function test_isValidActionRevertWrongViewType() public {
+        bytes29 hookAction = abi
+            .encodePacked(BridgeMessage.Types.TransferToHook)
+            .ref(uint40(BridgeMessage.Types.Invalid));
+        assertFalse(BridgeMessage.isValidAction(hookAction));
+    }
+
+    function test_isValidActionRevertWrongActionType() public {
+        bytes29 hookAction = abi.encodePacked(BridgeMessage.Types.Invalid).ref(
+            uint40(BridgeMessage.Types.TransferToHook)
+        );
+        assertFalse(BridgeMessage.isValidAction(hookAction));
+    }
+
+    function test_isValidActionRevertWrongActionTypeViewType() public {
+        bytes29 hookAction = abi.encodePacked(BridgeMessage.Types.Invalid).ref(
+            uint40(BridgeMessage.Types.Invalid)
+        );
+        assertFalse(BridgeMessage.isValidAction(hookAction));
+    }
 
     function test_formatTokenIdFromDetails() public {
         bytes29 formated = abi.encodePacked(localDomain, tokenAddress).ref(
@@ -85,6 +116,49 @@ contract BridgeMessageTest is Test {
             BridgeMessage.formatTokenId(tokenId).keccak(),
             formated.keccak()
         );
+    }
+
+    function test_formatMessageFailNotAction() public {
+        bytes memory bytesAction;
+        // I encode the correct type inside the data structure
+        // but set the wrong type in the view
+        // formatMessage() accepts only views of type "Transfer"
+        bytes29 action = abi
+            .encodePacked(
+                BridgeMessage.Types.Transfer,
+                tokenReceiver,
+                tokenAmount,
+                tokenDetailsHash
+            )
+            .ref(uint40(BridgeMessage.Types.Invalid));
+        bytes29 tokenId = BridgeMessage.formatTokenId(
+            localDomain,
+            tokenAddress
+        );
+        vm.expectRevert("!action");
+        BridgeMessage.formatMessage(tokenId, action);
+    }
+
+    function test_formatMessageNotTokenIdType() public {
+        bytes memory bytesAction;
+        // I encode the correct type inside the data structure
+        // but set the wrong type in the view
+        // formatMessage() accepts only tokenId views of the type "TokenId"
+        bytes29 action = abi
+            .encodePacked(
+                BridgeMessage.Types.Transfer,
+                tokenReceiver,
+                tokenAmount,
+                tokenDetailsHash
+            )
+            .ref(uint40(BridgeMessage.Types.Transfer));
+        bytes29 tokenId = abi.encodePacked(localDomain, tokenAddress).ref(
+            uint40(BridgeMessage.Types.Invalid)
+        );
+        vm.expectRevert(
+            "Type assertion failed. Got 0x0000000000. Expected 0x0000000001"
+        );
+        BridgeMessage.formatMessage(tokenId, action);
     }
 
     function test_formatMessageTransfer() public {
