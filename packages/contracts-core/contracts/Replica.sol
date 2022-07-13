@@ -149,20 +149,26 @@ contract Replica is Version0, NomadBase {
     }
 
     /**
-     * @notice First attempts to prove the validity of provided formatted
-     * `message`. If the message is successfully proven, then tries to process
-     * message.
+     * @notice If necessary, attempts to prove the validity of provided
+     *         `_message`. If the message is successfully proven, then tries to
+     *         process the message
      * @dev Reverts if `prove` call returns false
-     * @param _message Formatted message (refer to NomadBase.sol Message library)
-     * @param _proof Merkle proof of inclusion for message's leaf
-     * @param _index Index of leaf in home's merkle tree
+     * @param _message A Nomad message coming from another chain :)
+     * @param _proof Merkle proof of inclusion for message's leaf (optional if
+     *        the message has already been proven).
+     * @param _index Index of leaf in home's merkle tree (optional if the
+     *        message has already been proven).
      */
     function proveAndProcess(
         bytes memory _message,
         bytes32[32] calldata _proof,
         uint256 _index
     ) external {
-        require(prove(keccak256(_message), _proof, _index), "!prove");
+        require(
+            acceptableRoot(messages[_messageHash]) ||
+                prove(keccak256(_message), _proof, _index),
+            "!prove"
+        );
         process(_message);
     }
 
