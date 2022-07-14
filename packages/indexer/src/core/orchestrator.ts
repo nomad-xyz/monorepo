@@ -224,11 +224,15 @@ export class Orchestrator {
       const { origin, destination, state, count } = stat;
 
       const stageStr = state2str[state];
-      const originStr = this.sdk.getDomain(origin)?.name;
-      const destinationStr = this.sdk.getDomain(destination)?.name;
+      try {
+        const originStr = this.sdk.getDomain(origin)?.name;
+        const destinationStr = this.sdk.getDomain(destination)?.name;
 
-      if (destinationStr && originStr) {
-        this.metrics.setNumMessages(stageStr, originStr, destinationStr, count);
+        if (destinationStr && originStr) {
+          this.metrics.setNumMessages(stageStr, originStr, destinationStr, count);
+        }
+      } catch(_) {
+
       }
     });
 
