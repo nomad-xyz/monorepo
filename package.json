@@ -35,8 +35,8 @@
     "sdk-govern": "yarn workspace @nomad-xyz/sdk-govern",
     "test": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy  --exclude @nomad-xyz/local-environment run test",
     "gen-proof": "scripts/accumulator-cli",
-    "snapshot": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core run snapshot",
-    "snapshot:check": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core run snapshot:check"
+    "snapshot": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run snapshot",
+    "snapshot:check": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run snapshot:check"
   },
   "packageManager": "yarn@3.2.0"
 }
