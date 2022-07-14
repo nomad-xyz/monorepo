@@ -395,6 +395,7 @@ export class Orchestrator {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
         const t = m.timings.toProcess();
+        const e2e = m.timings.toE2E();
         const g = e.gasUsed.toNumber();
         if (t) {
           this.metrics.observeLatency('processed', homeName, replicaName, t);
@@ -409,6 +410,9 @@ export class Orchestrator {
               `Replorted timings is below zero`,
             );
           }
+        }
+        if (e2e) {
+          this.metrics.observeLatency('e2e', homeName, replicaName, e2e);
         }
         if (g)
           this.metrics.observeGasUsage('processed', homeName, replicaName, g);

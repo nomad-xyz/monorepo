@@ -191,6 +191,13 @@ export class Timings {
     return undefined;
   }
 
+  toE2E(): number | undefined {
+    if (this.processedAt) {
+      return Math.floor((this.processedAt - this.dispatchedAt) / 1000); // because of the problem with time that it is not ideal from RPC we could have skipped some stages. we take the last available
+    }
+    return undefined;
+  }
+
   serialize() {
     return {
       dispatchedAt: Math.floor(this.dispatchedAt / 1000),

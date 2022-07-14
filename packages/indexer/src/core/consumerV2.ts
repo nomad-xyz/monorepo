@@ -722,7 +722,11 @@ export class ProcessorV2 extends Consumer {
   }
 
   async checkAndUpdateRelay(m: NomadMessage) {
-    const events: NomadishEvent[] = await this.pool.getRelay(m.origin, m.destination, m.root);
+    const events: NomadishEvent[] = await this.pool.getRelay(
+      m.origin,
+      m.destination,
+      m.root,
+    );
     events.forEach((event) => {
       this.msgRelay(event, m);
     });
@@ -802,7 +806,11 @@ export class ProcessorV2 extends Consumer {
     const oldRoot = (e.eventData as Update).oldRoot;
     const homeDomain = (e.eventData as Update).homeDomain;
     const destinationDomain = e.domain;
-    const ms = await this.getMsgsByOriginDestinationAndRoot(homeDomain, destinationDomain, oldRoot);
+    const ms = await this.getMsgsByOriginDestinationAndRoot(
+      homeDomain,
+      destinationDomain,
+      oldRoot,
+    );
 
     // IMPORTANT! we still store the event for update and relay even though it is already appliable, but it needs to be checked for dups
     await this.pool.storeEvent(e);
@@ -929,7 +937,11 @@ export class ProcessorV2 extends Consumer {
     destination: number,
     root: string,
   ): Promise<NomadMessage[]> {
-    return await this.db.getMessagesByOriginDestinationAndRoot(origin, destination, root);
+    return await this.db.getMessagesByOriginDestinationAndRoot(
+      origin,
+      destination,
+      root,
+    );
   }
 
   async getMsgByOriginNonceAndDestination(
