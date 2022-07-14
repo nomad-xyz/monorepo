@@ -39,5 +39,13 @@ out = 'packages/contracts-router/foundry_artifacts'
 src = 'packages/contracts-bridge/contracts'
 test = 'packages/contracts-bridge/contracts/test'
 out = 'packages/contracts-bridge/foundry_artifacts'
+ffi = true
+
+[profile.bridge-ci]
+src = 'packages/contracts-bridge/contracts'
+test = 'packages/contracts-bridge/contracts/test'
+out = 'packages/contracts-bridge/foundry_artifacts'
+ffi = true
+fuzz-runs = 10_000
 
 
