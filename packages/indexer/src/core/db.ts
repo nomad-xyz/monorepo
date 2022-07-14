@@ -146,6 +146,26 @@ export class DB {
       : null;
   }
 
+  async getMessageStats() {
+    const rawStats = await this.client.messages.groupBy({
+      by: ['state', 'origin', 'destination'],
+      _count: {
+        _all: true,
+      },
+    });
+
+    const stats = rawStats.map((row) => {
+      return {
+        origin: row.origin,
+        destination: row.destination,
+        state: row.state,
+        count: row._count._all,
+      };
+    });
+
+    return stats;
+  }
+
   async getMessageBySendValues(
     destination: number,
     recipient: Padded,

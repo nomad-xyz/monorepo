@@ -7,7 +7,7 @@ import { DB } from './db';
 import { eventTypeToOrder, NomadishEvent } from './event';
 import { Indexer } from './indexer';
 import { IndexerCollector } from './metrics';
-import { RedisClient } from './types';
+import { RedisClient, state2str } from './types';
 import { sleep } from './utils';
 import { nodeEnv } from '../config';
 
@@ -102,6 +102,7 @@ export class Orchestrator {
   }
 
   async init(): Promise<void> {
+    await this.collectStatistics();
     await this.initIndexers();
     await this.initHealthCheckers();
     await this.initalFeedConsumer();
@@ -113,7 +114,6 @@ export class Orchestrator {
       this.logger.error(`Initial integrity failed:`, e);
       throw e;
     }
-    await this.collectStatistics();
   }
 
   get allowedDomains(): number[] {
@@ -158,7 +158,7 @@ export class Orchestrator {
           });
 
           this.logger.info(
-            `Received ${eventsForDomain.length} events after reindexing for domain: ${domain}`,
+            `Received ${eventsForDomain.length} events after reindexing for domain ${domain}`,
           );
           await this.consumer.consume(eventsForDomain);
           await this.checkHealth(domain);
@@ -216,24 +216,22 @@ export class Orchestrator {
 
   async collectStatistics() {
     this.logger.info(`Started collecting statistics`);
-    const stats = await this.consumer.stats();
+
+    const stats = await this.db.getMessageStats();
     this.logger.info(`Statistics acquired`);
 
-    this.allowedDomains.forEach((domain: number) => {
-      const network = this.domain2name(domain);
-      try {
-        const s = stats.forDomain(domain).counts;
-        this.metrics.setNumMessages('dispatched', network, s.dispatched);
-        this.metrics.setNumMessages('updated', network, s.updated);
-        this.metrics.setNumMessages('relayed', network, s.relayed);
-        this.metrics.setNumMessages('received', network, s.received);
-        this.metrics.setNumMessages('processed', network, s.processed);
-      } catch (e: any) {
-        this.logger.error(
-          `Tried to collect statistics for domain ${domain}, but error happened: ${e.message}`,
-        );
+    stats.forEach((stat) => {
+      const { origin, destination, state, count } = stat;
+
+      const stageStr = state2str[state];
+      const originStr = this.sdk.getDomain(origin)?.name;
+      const destinationStr = this.sdk.getDomain(destination)?.name;
+
+      if (destinationStr && originStr) {
+        this.metrics.setNumMessages(stageStr, originStr, destinationStr, count);
       }
     });
+
     this.logger.info(`Fed statistics to metrics`);
   }
 

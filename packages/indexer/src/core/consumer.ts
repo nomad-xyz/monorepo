@@ -69,7 +69,6 @@ export class StatisticsCollector {
 
 export abstract class Consumer extends EventEmitter {
   abstract consume(evens: NomadishEvent[]): Promise<void>;
-  abstract stats(): Promise<Statistics>;
 }
 
 enum MsgState {

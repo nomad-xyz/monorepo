@@ -166,3 +166,11 @@ export class Statistics {
     };
   }
 }
+
+export const state2str = [
+  'dispatched',
+  'updated',
+  'relayed',
+  'received',
+  'processed',
+];

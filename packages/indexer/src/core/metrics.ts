@@ -93,7 +93,7 @@ export class IndexerCollector extends MetricsCollector {
     this.numMessages = new Gauge({
       name: prefix + '_number_messages',
       help: 'Gauge that indicates how many messages are in dispatch, update, relay, receive or process stages',
-      labelNames: ['stage', 'network', 'environment'],
+      labelNames: ['stage', 'network', 'replica', 'environment'],
     });
 
     this.dbRequests = new Counter({
@@ -166,14 +166,21 @@ export class IndexerCollector extends MetricsCollector {
     );
   }
 
-  incNumMessages(stage: string, network: string) {
-    this.numMessages.labels(stage, network, this.environment).inc();
+  incNumMessages(stage: string, network: string, replica: string) {
+    this.numMessages.labels(stage, network, replica, this.environment).inc();
   }
-  decNumMessages(stage: string, network: string) {
-    this.numMessages.labels(stage, network, this.environment).dec();
+  decNumMessages(stage: string, network: string, replica: string) {
+    this.numMessages.labels(stage, network, replica, this.environment).dec();
   }
-  setNumMessages(stage: string, network: string, count: number) {
-    this.numMessages.labels(stage, network, this.environment).set(count);
+  setNumMessages(
+    stage: string,
+    network: string,
+    replica: string,
+    count: number,
+  ) {
+    this.numMessages
+      .labels(stage, network, replica, this.environment)
+      .set(count);
   }
 
   observeLatency(stage: string, home: string, replica: string, ms: number) {
