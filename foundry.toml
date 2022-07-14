@@ -3,7 +3,8 @@ solc_version = '0.7.6'        # Version of solc that we use
 remappings = [                # Libraries that we use from node_modules and are used by the smart contracts
 "@openzeppelin/=node_modules/@openzeppelin/",
 "@summa-tx/=node_modules/@summa-tx/",
-"@nomad-xyz/=packages/"
+"@nomad-xyz/=packages/",
+"forge-std/=lib/forge-std/src/"
 ]
 offline = true                # Disable downloading of missing solc version(s)
 optimizer = true              # Enable or disable the solc optimizer
