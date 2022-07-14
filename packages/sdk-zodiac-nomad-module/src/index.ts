@@ -1,5 +1,6 @@
 import { NomadContext, NomadMessage } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
+import { utils } from '@nomad-xyz/multi-provider'
 import { ethers } from 'ethers';
 import { Address, Domain, GovernanceConfig, Proposal, CallData } from './types';
 import NomadModule from './abis/NomadModule.json';
@@ -90,24 +91,20 @@ export class GovernanceContext extends NomadContext {
 
   async encodeProposalData(proposal: Proposal): Promise<CallData> {
     // TODO: pass in props
-    const origin = 'ethereum';
+    const origin = 'goerli';
     const domain = this.resolveDomain(proposal.module.domain);
 
     // destructure call data
     const { to, value, data, operation } = proposal.calls;
-    // get governor module at destination
-    const module = this.getGovModule(domain);
-    // encode exec function data
-    const message = module.interface.encodeFunctionData('exec', [
-      to,
-      value,
-      data,
-      operation,
-    ]);
+    const message = ethers.utils.solidityPack(
+      ['address', 'uint256', 'bytes', 'uint8'],
+      [to, value, data, operation]
+    )
 
     // get home contract and construct dispatch transaction
     const { home } = this.mustGetCore(origin);
-    const dispatchTx = await home.populateTransaction.dispatch(domain, proposal.module.address, message);
+    const toAddress = utils.canonizeId(proposal.module.address)
+    const dispatchTx = await home.populateTransaction.dispatch(domain, toAddress, message);
     return {
       to: home, // Nomad Home contract 
       data: dispatchTx, // dispatch
