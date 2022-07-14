@@ -387,7 +387,7 @@ library BridgeMessage {
         return
             _transferAction.slice(
                 MIN_TRANSFER_LEN,
-                _transferAction.length - MIN_TRANSFER_LEN,
+                _transferAction.len() - MIN_TRANSFER_LEN,
                 uint40(Types.ExtraData)
             );
     }
