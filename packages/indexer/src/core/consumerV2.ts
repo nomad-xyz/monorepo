@@ -518,7 +518,8 @@ class EventsPool {
       }
     } else if (e.eventType === EventType.ReplicaUpdate) {
       const eventData = e.eventData as Update;
-      const key = `${eventData.homeDomain};${eventData.oldRoot}`;
+      const destination = e.domain;
+      const key = `${eventData.homeDomain};${destination};${eventData.oldRoot}`;
       const exists = await this.redis.hExists('relay', key);
       if (!exists) {
         await this.redis.hSet('relay', key, JSON.stringify([value]));
@@ -564,8 +565,8 @@ class EventsPool {
 
     return valuesArr.map((v) => JSON.parse(v, reviver));
   }
-  async getRelay(origin: number, root: string) {
-    const key = `${origin};${root}`;
+  async getRelay(origin: number, destination: number, root: string) {
+    const key = `${origin};${destination};${root}`;
     const values = await this.redis.hGet('relay', key);
     if (!values) return [];
     const valuesArr: string[] = JSON.parse(values);
@@ -721,7 +722,7 @@ export class ProcessorV2 extends Consumer {
   }
 
   async checkAndUpdateRelay(m: NomadMessage) {
-    const events: NomadishEvent[] = await this.pool.getRelay(m.origin, m.root);
+    const events: NomadishEvent[] = await this.pool.getRelay(m.origin, m.destination, m.root);
     events.forEach((event) => {
       this.msgRelay(event, m);
     });
@@ -799,7 +800,9 @@ export class ProcessorV2 extends Consumer {
   async replicaUpdate(e: NomadishEvent) {
     const logger = this.logger.child({ eventName: 'relayed' });
     const oldRoot = (e.eventData as Update).oldRoot;
-    const ms = await this.getMsgsByOriginAndRoot(e.replicaOrigin, oldRoot);
+    const homeDomain = (e.eventData as Update).homeDomain;
+    const destinationDomain = e.domain;
+    const ms = await this.getMsgsByOriginDestinationAndRoot(homeDomain, destinationDomain, oldRoot);
 
     // IMPORTANT! we still store the event for update and relay even though it is already appliable, but it needs to be checked for dups
     await this.pool.storeEvent(e);
@@ -919,6 +922,14 @@ export class ProcessorV2 extends Consumer {
     root: string,
   ): Promise<NomadMessage[]> {
     return await this.db.getMessagesByOriginAndRoot(origin, root);
+  }
+
+  async getMsgsByOriginDestinationAndRoot(
+    origin: number,
+    destination: number,
+    root: string,
+  ): Promise<NomadMessage[]> {
+    return await this.db.getMessagesByOriginDestinationAndRoot(origin, destination, root);
   }
 
   async getMsgByOriginNonceAndDestination(

@@ -90,6 +90,24 @@ export class DB {
     );
   }
 
+  async getMessagesByOriginDestinationAndRoot(
+    origin: number,
+    destination: number,
+    root: string,
+  ): Promise<NomadMessage[]> {
+    this.metrics.incDbRequests(DbRequestType.Select);
+    const messages = await this.client.messages.findMany({
+      where: {
+        origin,
+        destination,
+        root,
+      },
+    });
+    return messages.map((m) =>
+      NomadMessage.deserialize(m, this.logger, this.sdk),
+    );
+  }
+
   async getAllMessages(take = 0, skip = 0): Promise<NomadMessage[]> {
     const args: { take?: number; skip?: number } = {};
     if (take) {
