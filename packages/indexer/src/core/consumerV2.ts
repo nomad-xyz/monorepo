@@ -955,21 +955,4 @@ export class ProcessorV2 extends Consumer {
       destination,
     );
   }
-
-  async stats(): Promise<Statistics> {
-    const collector = new StatisticsCollector(this.domains);
-
-    let batch = 0;
-    const batchSize = 10000;
-
-    let messages: NomadMessage[];
-    do {
-      messages = await this.db.getAllMessages(batchSize, batchSize * batch++);
-      messages.forEach((m) => {
-        collector.contributeToCount(m);
-      });
-    } while (messages.length === batchSize);
-
-    return collector.stats();
-  }
 }
