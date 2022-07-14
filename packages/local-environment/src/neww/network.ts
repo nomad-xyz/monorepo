@@ -4,6 +4,8 @@ import { DockerizedActor } from "./actor";
 import Dockerode from "dockerode";
 import { sleep } from "../utils";
 import { ethers } from 'ethers';
+import { Key } from "./key";
+import { Env } from "./le";
 import {  } from "@nomad-xyz/configuration";
 //import { getContractAddress } from "ethers/lib/utils";
 
@@ -23,6 +25,9 @@ export abstract class Network {
     domainNumber: number;
     chainId: number;
     deployOverrides: ethers.Overrides;
+    signers: Map<number | string, Key>;
+    updaters: Map<number | string, Key>;
+    watchers: Map<number | string, Key>;
 
     coreContracts?: CoreContracts;
     bridgeContracts?: BridgeContracts;
@@ -45,6 +50,9 @@ export abstract class Network {
         this.name = name;
         this.domainNumber = domainNumber;
         this.chainId = chainId;
+        this.signers = new Map();
+        this.updaters = new Map();
+        this.watchers = new Map();
         this.deployOverrides = { gasLimit: 30000000 };
 
         try {
@@ -238,8 +246,8 @@ export class HardhatNetwork extends Network {
       if (!this.connectedNetworks.includes(n)) this.connectedNetworks.push(n);
     }
 
-    async upAgents(n: Network) {
-      this.agents = new Agents(n);
+    async upAgents(n: Network, env: Env) {
+      this.agents = new Agents(n, env);
       await this.agents.relayer.connect();
       this.agents.relayer.start();
       await this.agents.updater.connect();
@@ -285,10 +293,6 @@ export class HardhatNetwork extends Network {
             rpcStyle: "ethereum",
             timelag: 9090,
             db: "/usr/share/nomad",
-            subsidizedRemotes: [
-              "tom", 
-              "jerry"
-            ],
             logging: this.logConfig,
             updater: this.updaterConfig,
             relayer: this.relayerConfig,
@@ -329,7 +333,11 @@ export class HardhatNetwork extends Network {
     get processorConfig(): BaseAgentConfig {
         return { 
           "enabled": true,
-          "interval": 5
+          "interval": 5,
+          subsidizedRemotes: [
+            "tom", 
+            "jerry"
+          ]
         }
     }
 

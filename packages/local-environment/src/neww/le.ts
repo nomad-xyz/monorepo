@@ -37,7 +37,7 @@ export class Env {
         
         fs.mkdirSync(outputDir, {recursive: true});
         fs.writeFileSync(
-            `${outputDir}/config.json`,
+            `${outputDir}/test_config.json`,
             JSON.stringify(this.deployContext.data, null, 2),
         );
         // if new contracts were deployed,
@@ -73,7 +73,7 @@ export class Env {
         // output the config
         fs.mkdirSync(outputDir, {recursive: true});
         fs.writeFileSync(
-            `${outputDir}/config.json`,
+            `${outputDir}/test_config.json`,
             JSON.stringify(deployContext.data, null, 2),
         );
         // if new contracts were deployed,
@@ -116,6 +116,10 @@ export class Env {
         }
         return DEPLOYERKEY1;
     }
+
+    getNetworks(): Network[] {
+        return Array.from(this.networks.values());
+   }
 
     setDeployContext(): DeployContext {
         //@TODO remove re-initialization.
@@ -188,8 +192,8 @@ export class Env {
 
     // let myContracts = le.deploymyproject();
 
-    await t.upAgents(t);
-    await j.upAgents(j);
+    await t.upAgents(t, le);
+    await j.upAgents(j, le);
     console.log(`Agents up`);
 
 })()

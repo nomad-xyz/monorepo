@@ -3,20 +3,22 @@ import Docker from "dockerode";
 import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
 import { Network } from "./network";
+import { Env } from "./le";
+import { Key } from "./key";
 
 export class Agents {
   updater: Agent;
   relayer: Agent;
   processor: Agent;
   watchers: Agent[];
-  kathy: Agent; 
+  kathy: Agent;
 
-  constructor(network: Network) {
-      this.updater = new LocalAgent(AgentType.Updater, network);
-      this.relayer = new LocalAgent(AgentType.Relayer, network);
-      this.processor = new LocalAgent(AgentType.Processor, network);
-      this.watchers = [new LocalAgent(AgentType.Watcher, network)];
-      this.kathy = new LocalAgent(AgentType.Kathy, network);
+  constructor(network: Network, env: Env) {
+      this.updater = new LocalAgent(AgentType.Updater, network, env);
+      this.relayer = new LocalAgent(AgentType.Relayer, network, env);
+      this.processor = new LocalAgent(AgentType.Processor, network, env);
+      this.watchers = [new LocalAgent(AgentType.Watcher, network, env)];
+      this.kathy = new LocalAgent(AgentType.Kathy, network, env);
   }
 }
 
@@ -83,58 +85,115 @@ function parseAgentType(t: string | AgentType): AgentType {
 export class LocalAgent extends DockerizedActor implements Agent {
   agentType: AgentType;
   network: Network;
+  env: Env;
 
-  constructor(agentType: AgentType, network: Network) {
+  constructor(agentType: AgentType, network: Network, env: Env) {
     agentType = parseAgentType(agentType);
     super(`${agentType}_${network.name}`, "agent");
     this.agentType = agentType;
 
     this.network = network;
+
+    this.env = env;
   }
 
   containerName(): string {
     return `${this.name}_${this.actorType}`;
   }
 
-//   getAdditionalEnvs(): string[] {
-//     const envs = [];
+   setSigner(network: Network, key: Key, agentType?: string | AgentType) {
+     const domain = network.domainNumber;
+     if (domain) {
+       if (agentType) {
+         const mapKey = `${agentType.toLowerCase()}_${domain}`;
+         network.signers.set(mapKey, key);
+       } else {
+         network.signers.set(domain, key);
+       }
+     }
+   }
 
-//     this.nomad.getNetworks().forEach((network) => {
-//       const signer = this.nomad.getSignerKey(network, this.agentType);
+   setUpdater(network: Network, key: Key) {
+     const domain = network.domainNumber;
 
-//       if (signer) {
-//         const name = network.name.toUpperCase();
-//         const agentTypeUpperStr = agentTypeToString(
-//           this.agentType
-//         ).toUpperCase();
+     if (domain) network.updaters.set(domain, key);
+   }
 
-//         envs.push(
-//           `OPT_${agentTypeUpperStr}_SIGNERS_${name}_KEY=${signer.toString()}`
-//         );
-//         envs.push(`OPT_${agentTypeUpperStr}_SIGNERS_${name}_TYPE=hexKey`);
-//       }
-//     });
+   setWatcher(network: Network, key: Key) {
+    const domain = network.domainNumber;
 
-//     switch (this.agentType) {
-//       case AgentType.Updater: {
-//         const key = this.nomad.getUpdaterKey(this.network);
-//         if (key) envs.push(`OPT_UPDATER_UPDATER_KEY=${key.toString()}`);
-//         break;
-//       }
-//       case AgentType.Watcher: {
-//         const key = this.nomad.getWatcherKey(this.network);
-//         if (key) envs.push(`OPT_WATCHER_WATCHER_KEY=${key.toString()}`);
-//         break;
-//       }
-//     }
+    if (domain) network.watchers.set(domain, key);
+  }
 
-//     return envs;
-//   }
+  getSignerKey(
+    network: Network,
+    agentType?: string | AgentType
+   ): Key | undefined {
+     const domain = network.domainNumber;
+     if (domain) {
+       if (agentType) {
+         const mapKey = `${agentType.toLowerCase()}_${domain}`;
+         return network.signers.get(mapKey);
+       } else {
+         return network.signers.get(domain);
+       }
+     }
+     return undefined;
+   }
+
+  getUpdaterKey(network: Network): Key | undefined {
+     const domain = network.domainNumber;
+     if (domain) return network.updaters.get(domain);
+     return undefined;
+   }
+
+   getWatcherKey(network: Network): Key | undefined {
+     const domain = network.domainNumber;
+     if (domain) return network.watchers.get(domain);
+     return undefined;
+   }
+
+  //@TODO! MAKE THIS SECTION WORKING, ALSO MAKE SURE YOUR DOCKER INCLUDES THE ENV VARIABLES FROM https://github.com/nomad-xyz/rust/blob/main/fixtures/env.external
+
+  getAdditionalEnvs(): string[] {
+    const envs: Array<any> = [];
+
+     this.env.getNetworks().forEach((network) => {
+     const signer = this.getSignerKey(network, this.agentType);
+
+      if (signer) {
+         const name = network.name.toUpperCase();
+         const agentTypeUpperStr = this.agentType.toUpperCase();
+
+         envs.push(
+           `OPT_${this.agentType}_SIGNERS_${name}_KEY=${signer.toString()}`
+         );
+         envs.push(`OPT_${agentTypeUpperStr}_SIGNERS_${name}_TYPE=hexKey`);
+       }
+     });
+
+     switch (this.agentType) {
+       case AgentType.Updater: {
+         const key = this.getUpdaterKey(this.network);
+         if (key) envs.push(`OPT_UPDATER_UPDATER_KEY=${key.toString()}`);
+         break;
+       }
+       case AgentType.Watcher: {
+         const key = this.getWatcherKey(this.network);
+         if (key) envs.push(`OPT_WATCHER_WATCHER_KEY=${key.toString()}`);
+         break;
+       }
+     }
+
+     return envs;
+   }
 
   async createContainer(): Promise<Docker.Container> {
     const name = this.containerName();
 
-    const agentConfigPath = '' + __dirname + '/output/config.json';//this.nomad.defultDeployLocation();
+    const agentConfigPath = '' + __dirname + '/output/test_config.json';//this.nomad.defultDeployLocation();
+
+    const additionalEnvs = this.getAdditionalEnvs();
 
     // const additionalEnvs = this.getAdditionalEnvs();
     // Write a method that takes a network name; inject agent config
@@ -145,14 +204,20 @@ export class LocalAgent extends DockerizedActor implements Agent {
       name,
       Cmd: ["./" + this.agentType],
       Env: [
-        "RUN_ENV=latest",
-        `BASE_CONFIG=${this.network.name}_config.json`,
-        ...[], //additionalEnvs,
+        "RUN_ENV=test",
+        `BASE_CONFIG=test_config.json`,
+        `AGENT_HOME_NAME=${this.network.name}`,
+        `CONFIG_PATH=/app/config/test`,
+        `ETHEREUM_SUBMITTER_TYPE=local`,
+        `ETHEREUM_TXSIGNER_KEY=0x1111111111111111111111111111111111111111111111111111111111111111`,
+        `ATTESTATION_SIGNER_ID=dummy_id`,
+        `AGENT_REPLICA_0_NAME=${this.network.domain.connections[0]}`,
+        ...additionalEnvs,
       ],
       HostConfig: {
         Mounts: [
           {
-            Target: "/app/config",
+            Target: "/app/config/test",
             Source: agentConfigPath,
             Type: "bind",
           },
