@@ -305,6 +305,12 @@ export class Orchestrator {
 
   subscribeStatisticEvents() {
     this.consumer.on('dispatched', (m: NomadMessage, e: NomadishEvent) => {
+      this.logger.info(`Message have been dispatched`, {
+        messageHash: m.messageHash,
+        origin: m.origin,
+        destination: m.destination,
+        stage: 'dispatched',
+      });
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
@@ -320,6 +326,12 @@ export class Orchestrator {
     });
 
     this.consumer.on('updated', (m: NomadMessage, e: NomadishEvent) => {
+      this.logger.info(`Message have been updated`, {
+        messageHash: m.messageHash,
+        origin: m.origin,
+        destination: m.destination,
+        stage: 'updated',
+      });
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
@@ -349,6 +361,12 @@ export class Orchestrator {
     });
 
     this.consumer.on('relayed', (m: NomadMessage, e: NomadishEvent) => {
+      this.logger.info(`Message have been relayed`, {
+        messageHash: m.messageHash,
+        origin: m.origin,
+        destination: m.destination,
+        stage: 'relayed',
+      });
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
@@ -378,6 +396,12 @@ export class Orchestrator {
     });
 
     this.consumer.on('received', (m: NomadMessage, e: NomadishEvent) => {
+      this.logger.info(`Message have been received`, {
+        messageHash: m.messageHash,
+        origin: m.origin,
+        destination: m.destination,
+        stage: 'received',
+      });
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
@@ -408,6 +432,12 @@ export class Orchestrator {
     });
 
     this.consumer.on('processed', (m: NomadMessage, e: NomadishEvent) => {
+      this.logger.info(`Message have been processed`, {
+        messageHash: m.messageHash,
+        origin: m.origin,
+        destination: m.destination,
+        stage: 'processed',
+      });
       try {
         const homeName = this.domain2name(m.origin);
         const replicaName = this.domain2name(m.destination);
