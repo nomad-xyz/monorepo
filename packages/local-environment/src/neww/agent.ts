@@ -226,7 +226,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
         RestartPolicy: {
           Name: "always",
         },
-        NetworkMode: "host",
+        NetworkMode: "host", //Set up portmapping for agent containers. We also need to set up portmappping for hardhat network containers
         // AutoRemove: true,
       },
     });
