@@ -1994,10 +1994,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/configuration@npm:0.1.0-rc.18":
-  version: 0.1.0-rc.18
-  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.18"
-  checksum: b24b5e0d2b115d577bc55fd3353d2775ea39b6aa8d4573bc212af4c3eab21bd924df2fa17907d8790b6dcc38c85054304479b1deb8a65d10bde69092dbeb8d8b
+"@nomad-xyz/configuration@npm:0.1.0-rc.25":
+  version: 0.1.0-rc.25
+  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.25"
+  checksum: 6bdbc188e43167c7f4da28e8f9cbb594b5832a03916a11cb6fc6be2ad2cc00fd91cf20ad6e0b82da1a17a9be0b73f1222bf58c41263f69a7d5e90bd5449faede
   languageName: node
   linkType: hard
 
@@ -2194,7 +2194,7 @@ __metadata:
   resolution: "@nomad-xyz/local-environment@workspace:packages/local-environment"
   dependencies:
     "@ethersproject/experimental": ^5.5.0
-    "@nomad-xyz/configuration": 0.1.0-rc.18
+    "@nomad-xyz/configuration": 0.1.0-rc.25
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/deploy": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"

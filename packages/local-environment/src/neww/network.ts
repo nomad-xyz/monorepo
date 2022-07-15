@@ -291,8 +291,8 @@ export class HardhatNetwork extends Network {
     get agentConfig(): AgentConfig {
         return{ 
             rpcStyle: "ethereum",
-            timelag: 9090,
-            db: "/usr/share/nomad",
+            metrics: 9090,
+            db: "/app",
             logging: this.logConfig,
             updater: this.updaterConfig,
             relayer: this.relayerConfig,

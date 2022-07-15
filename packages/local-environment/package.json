@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@ethersproject/experimental": "^5.5.0",
-    "@nomad-xyz/configuration": "0.1.0-rc.18",
+    "@nomad-xyz/configuration": "0.1.0-rc.25",
     "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/deploy": "workspace:^",
     "@nomad-xyz/sdk": "workspace:^",

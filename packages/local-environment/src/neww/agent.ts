@@ -101,7 +101,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
     return `${this.name}_${this.actorType}`;
   }
 
-   setSigner(network: Network, key: Key, agentType?: string | AgentType) {
+  setSigner(network: Network, key: Key, agentType?: string | AgentType) {
      const domain = network.domainNumber;
      if (domain) {
        if (agentType) {
@@ -112,7 +112,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
        }
      }
    }
-
+   /*
    setUpdater(network: Network, key: Key) {
      const domain = network.domainNumber;
 
@@ -124,6 +124,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
 
     if (domain) network.watchers.set(domain, key);
   }
+  */
 
   getSignerKey(
     network: Network,
@@ -140,11 +141,11 @@ export class LocalAgent extends DockerizedActor implements Agent {
      }
      return undefined;
    }
-
+ /*
   getUpdaterKey(network: Network): Key | undefined {
      const domain = network.domainNumber;
      if (domain) return network.updaters.get(domain);
-     return undefined;
+     return undefined; //RETURN HARDCODED
    }
 
    getWatcherKey(network: Network): Key | undefined {
@@ -152,38 +153,38 @@ export class LocalAgent extends DockerizedActor implements Agent {
      if (domain) return network.watchers.get(domain);
      return undefined;
    }
-
+ */
   //@TODO! MAKE THIS SECTION WORKING, ALSO MAKE SURE YOUR DOCKER INCLUDES THE ENV VARIABLES FROM https://github.com/nomad-xyz/rust/blob/main/fixtures/env.external
 
   getAdditionalEnvs(): string[] {
     const envs: Array<any> = [];
-
-     this.env.getNetworks().forEach((network) => {
-     const signer = this.getSignerKey(network, this.agentType);
-
-      if (signer) {
-         const name = network.name.toUpperCase();
-         const agentTypeUpperStr = this.agentType.toUpperCase();
-
-         envs.push(
-           `OPT_${this.agentType}_SIGNERS_${name}_KEY=${signer.toString()}`
-         );
-         envs.push(`OPT_${agentTypeUpperStr}_SIGNERS_${name}_TYPE=hexKey`);
-       }
-     });
-
+    //Hardcoded, HRE generated TX SIGNER KEYS unique to each agent, same on multiple networks.
      switch (this.agentType) {
-       case AgentType.Updater: {
-         const key = this.getUpdaterKey(this.network);
-         if (key) envs.push(`OPT_UPDATER_UPDATER_KEY=${key.toString()}`);
+      case AgentType.Updater: {
+         envs.push(
+            `DEFAULT_TXSIGNER_KEY=0x1000000000000000000000000000000000000000000000000000000000000001`  
+         );
+         envs.push(`ATTESTATION_SIGNER_KEY=0x1000000000000000000000000000000000000000000000000000000000000001`); //Important that all agents have unique TXSIGNER keys, but not attestation. Updater uses this key to sign merkle-root transitions.
          break;
        }
-       case AgentType.Watcher: {
-         const key = this.getWatcherKey(this.network);
-         if (key) envs.push(`OPT_WATCHER_WATCHER_KEY=${key.toString()}`);
-         break;
-       }
-     }
+      case AgentType.Watcher: {
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x2000000000000000000000000000000000000000000000000000000000000002`);
+        envs.push(`ATTESTATION_SIGNER_KEY=0x1000000000000000000000000000000000000000000000000000000000000001`); //Watchers use this key to sign attestations of fraudulent roots.
+        break;
+      }
+      case AgentType.Relayer: {
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x3000000000000000000000000000000000000000000000000000000000000003`);
+        break;
+      }
+      case AgentType.Kathy: {
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x4000000000000000000000000000000000000000000000000000000000000004`);
+        break;
+      }
+      case AgentType.Processor: {
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x5000000000000000000000000000000000000000000000000000000000000005`);
+        break;
+      }
+     };
 
      return envs;
    }
@@ -191,33 +192,33 @@ export class LocalAgent extends DockerizedActor implements Agent {
   async createContainer(): Promise<Docker.Container> {
     const name = this.containerName();
 
-    const agentConfigPath = '' + __dirname + '/output/test_config.json';//this.nomad.defultDeployLocation();
+    const agentConfigPath = '' + __dirname + '/output/test_config.json';
 
     const additionalEnvs = this.getAdditionalEnvs();
 
     // const additionalEnvs = this.getAdditionalEnvs();
-    // Write a method that takes a network name; inject agent config
-    // Tag both tom and jerry appropriately - subsidize remote
+
     // docker run --name $1_$2_agent --env RUN_ENV=main --restart=always --network="host" --env BASE_CONFIG=$1_config.json -v $(pwd)/../../rust/config:/app/config -d gcr.io/nomad-xyz/nomad-agent ./$2
     return this.docker.createContainer({
       Image: "gcr.io/nomad-xyz/nomad-agent",
       name,
       Cmd: ["./" + this.agentType],
       Env: [
-        "RUN_ENV=test",
-        `BASE_CONFIG=test_config.json`,
         `AGENT_HOME_NAME=${this.network.name}`,
-        `CONFIG_PATH=/app/config/test`,
-        `ETHEREUM_SUBMITTER_TYPE=local`,
-        `ETHEREUM_TXSIGNER_KEY=0x1111111111111111111111111111111111111111111111111111111111111111`,
-        `ATTESTATION_SIGNER_ID=dummy_id`,
-        `AGENT_REPLICA_0_NAME=${this.network.domain.connections[0]}`,
+        `TOM_CONNECTION_URL=http://localhost:1337`,
+        `JERRY_CONNECTION_URL=http://localhost:1338`,
+        `CONFIG_PATH=/app/config/test_config.json`,
+        `RUST_BACKTRACE=FULL`,
+        `AGENT_REPLICAS_ALL=true`,
+        `DEFAULT_RPCSTYLE=ethereum`,
+        `DEFAULT_SUBMITTER_TYPE=local`,
+        // ${this.network.domain.connections[0]}
         ...additionalEnvs,
       ],
       HostConfig: {
         Mounts: [
           {
-            Target: "/app/config/test",
+            Target: "/app/config/test_config.json",
             Source: agentConfigPath,
             Type: "bind",
           },
