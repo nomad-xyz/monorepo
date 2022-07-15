@@ -1,9 +1,10 @@
-[default]
+[profile.default]
 solc_version = '0.7.6'        # Version of solc that we use
 remappings = [                # Libraries that we use from node_modules and are used by the smart contracts
 "@openzeppelin/=node_modules/@openzeppelin/",
 "@summa-tx/=node_modules/@summa-tx/",
-"@nomad-xyz/=packages/"
+"@nomad-xyz/=packages/",
+"forge-std/=lib/forge-std/src/"
 ]
 offline = true                # Disable downloading of missing solc version(s)
 optimizer = true              # Enable or disable the solc optimizer
@@ -19,24 +20,33 @@ block_timestamp = 1622400000  # Timestamp for tests (non-zero)
 ignored_error_codes = [2462, 5878, 9302]
 
 
-[core]
+[profile.core]
 src = 'packages/contracts-core/contracts'
 test = 'packages/contracts-core/contracts/foundry-tests'
 out = 'packages/contracts-core/foundry_artifacts'
 ffi = true
 
-[core-ci]
+[profile.core-ci]
 src = 'packages/contracts-core/contracts'
 test = 'packages/contracts-core/contracts/foundry-tests'
 out = 'packages/contracts-core/foundry_artifacts'
 fuzz-runs = 10_000
 
-[router]
+[profile.router]
 src = 'packages/contracts-router/contracts'
 out = 'packages/contracts-router/foundry_artifacts'
 
-[bridge]
+[profile.bridge]
 src = 'packages/contracts-bridge/contracts'
+test = 'packages/contracts-bridge/contracts/test'
 out = 'packages/contracts-bridge/foundry_artifacts'
+ffi = true
+
+[profile.bridge-ci]
+src = 'packages/contracts-bridge/contracts'
+test = 'packages/contracts-bridge/contracts/test'
+out = 'packages/contracts-bridge/foundry_artifacts'
+ffi = true
+fuzz-runs = 10_000
 
 
