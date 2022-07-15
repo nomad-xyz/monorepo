@@ -72,7 +72,7 @@ export class Orchestrator {
   healthCheckers: Map<number, HomeHealth>;
   gov: number;
   done: boolean;
-  chaseMode: boolean;
+  live: boolean;
   metrics: IndexerCollector;
   logger: Logger;
   db: DB;
@@ -93,7 +93,7 @@ export class Orchestrator {
     this.healthCheckers = new Map();
     this.gov = sdk.governor.domain;
     this.done = false;
-    this.chaseMode = true;
+    this.live = false;
     this.metrics = metrics;
     this.logger = logger;
     this.db = db;
@@ -102,6 +102,7 @@ export class Orchestrator {
   }
 
   async init(): Promise<void> {
+    this.live = false;
     await this.collectStatistics();
     await this.initIndexers();
     await this.initHealthCheckers();
@@ -114,6 +115,7 @@ export class Orchestrator {
       this.logger.error(`Initial integrity failed:`, e);
       throw e;
     }
+    this.live = true;
   }
 
   get allowedDomains(): number[] {
@@ -229,11 +231,14 @@ export class Orchestrator {
         const destinationStr = this.sdk.getDomain(destination)?.name;
 
         if (destinationStr && originStr) {
-          this.metrics.setNumMessages(stageStr, originStr, destinationStr, count);
+          this.metrics.setNumMessages(
+            stageStr,
+            originStr,
+            destinationStr,
+            count,
+          );
         }
-      } catch(_) {
-
-      }
+      } catch (_) {}
     });
 
     this.logger.info(`Fed statistics to metrics`);
@@ -306,6 +311,9 @@ export class Orchestrator {
         const g = e.gasUsed.toNumber();
         if (g)
           this.metrics.observeGasUsage('dispatched', homeName, replicaName, g);
+
+        if (this.live)
+          this.metrics.incEvents('dispatched', homeName, replicaName);
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
@@ -333,6 +341,8 @@ export class Orchestrator {
         }
         if (g)
           this.metrics.observeGasUsage('updated', homeName, replicaName, g);
+
+        if (this.live) this.metrics.incEvents('updated', homeName, replicaName);
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
@@ -360,6 +370,8 @@ export class Orchestrator {
         }
         if (g)
           this.metrics.observeGasUsage('relayed', homeName, replicaName, g);
+
+        if (this.live) this.metrics.incEvents('relayed', homeName, replicaName);
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
@@ -387,6 +399,9 @@ export class Orchestrator {
         }
         if (g)
           this.metrics.observeGasUsage('received', homeName, replicaName, g);
+
+        if (this.live)
+          this.metrics.incEvents('received', homeName, replicaName);
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
@@ -418,6 +433,9 @@ export class Orchestrator {
         }
         if (g)
           this.metrics.observeGasUsage('processed', homeName, replicaName, g);
+
+        if (this.live)
+          this.metrics.incEvents('processed', homeName, replicaName);
       } catch (e) {
         this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
       }
@@ -457,10 +475,6 @@ export class Orchestrator {
       await this.checkAllHealth();
 
       if (eventsLength > 0) await this.collectStatistics();
-
-      if (this.chaseMode) {
-        this.chaseMode = false;
-      }
 
       this.logger.info(
         `Finished reindexing after ${
