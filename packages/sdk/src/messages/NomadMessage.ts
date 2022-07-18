@@ -3,6 +3,7 @@ import { keccak256 } from 'ethers/lib/utils';
 import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
+import { ErrorCode } from 'ethers/node_modules/@ethersproject/logger';
 import { Logger } from '@ethersproject/logger';
 import axios from 'axios';
 import * as core from '@nomad-xyz/contracts-core';
@@ -15,7 +16,7 @@ import {
   Dispatch,
   ParsedMessage,
   ReplicaStatusNames,
-  ReplicaMessageStatus
+  ReplicaMessageStatus,
 } from './types';
 
 
@@ -78,17 +79,17 @@ export class NomadMessage<T extends NomadContext> {
     context: T,
     receipt: TransactionReceipt,
   ): Promise<NomadMessage<T>[]> {
-    console.log('receipt', receipt)
-    let messages: NomadMessage<T>[] = [];
+    console.log('receipt', receipt);
+    const messages: NomadMessage<T>[] = [];
     const home = core.Home__factory.createInterface();
-    console.log(receipt.logs.length)
+    console.log(receipt.logs.length);
 
     for (const log of receipt.logs) {
       // console.log('log', log)
       try {
         const parsed = home.parseLog(log);
         if (parsed.name === 'Dispatch') {
-          console.log('aaaa')
+          console.log('aaaa');
           const {
             messageHash,
             leafIndex,
@@ -96,7 +97,7 @@ export class NomadMessage<T extends NomadContext> {
             committedRoot,
             message,
           } = parsed.args;
-          console.log('bbbb')
+          console.log('bbbb');
           const dispatch: Dispatch = {
             args: {
               messageHash,
@@ -106,24 +107,25 @@ export class NomadMessage<T extends NomadContext> {
               message,
             },
             transactionHash: receipt.transactionHash,
-            receipt
+            receipt,
           };
-          console.log('ccccc')
+          console.log('ccccc');
           messages.push(new NomadMessage(context, dispatch));
-          console.log('dddd')
+          console.log('dddd');
         }
       } catch (e: unknown) {
-        const err = e as any
+        console.log('Unexpected error', e);
+        const err = e as { code: ErrorCode, reason: string };
 
         // Catch known errors that we'd like to squash
         if (
           err.code == Logger.errors.INVALID_ARGUMENT &&
           err.reason == 'no matching event'
         )
-        continue;
+          continue;
       }
     }
-    return messages
+    return messages;
   }
 
   /**
@@ -237,9 +239,9 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An record of all events and correlating txs
    */
   private async _events(): Promise<IndexerTx> {
-    if (this.cache.processed) return this.cache
-    this.cache = await getEvents(this.transactionHash)
-    return this.cache
+    if (this.cache.processed) return this.cache;
+    this.cache = await getEvents(this.transactionHash);
+    return this.cache;
   }
 
   /**
@@ -266,7 +268,7 @@ export class NomadMessage<T extends NomadContext> {
     if (!this.cache.confirmAt || this.cache.confirmAt === 0) {
       await this._events();
     }
-    if (this.cache.confirmAt === 0) return
+    if (this.cache.confirmAt === 0) return;
     return this.cache.confirmAt;
   }
 

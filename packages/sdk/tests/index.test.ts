@@ -1,13 +1,19 @@
-import { before, describe, it } from 'mocha';
+import { describe, it } from 'mocha';
 import { expect } from 'chai';
 import { constants, getDefaultProvider, VoidSigner } from 'ethers';
-import { NomadContext, CoreContracts } from '@nomad-xyz/sdk';
+import { NomadContext } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
 
 const ENVIRONMENTS = ['test', 'development', 'staging', 'production'];
 
 describe('sdk', async () => {
   describe('NomadContext', () => {
+    it('fetches from hosted configs', async () => {
+      for (const env of ENVIRONMENTS) {
+        const context = await NomadContext.fetch(env);
+        console.log(context);
+      }
+    });
     it('Is properly instantiated from a NomadConfig', async () => {
       for (const env of ENVIRONMENTS) {
         const conf = config.getBuiltin(env);
@@ -95,42 +101,42 @@ describe('sdk', async () => {
     });
   });
 
-  describe('CoreContracts', () => {
-    let conf: config.NomadConfig;
-    let coreContracts: CoreContracts<NomadContext>;
-    let context: NomadContext;
+  // describe.skip('CoreContracts', () => {
+  //   let conf: config.NomadConfig;
+  //   let coreContracts: CoreContracts<NomadContext>;
+  //   let context: NomadContext;
 
-    before('instantiates contracts', () => {
-      conf = config.getBuiltin('development');
-      context = new NomadContext(conf);
-      coreContracts = new CoreContracts(
-        context,
-        'rinkeby',
-        conf.core['rinkeby'],
-      );
-    });
+  //   before('instantiates contracts', () => {
+  //     conf = config.getBuiltin('development');
+  //     context = new NomadContext(conf);
+  //     coreContracts = new CoreContracts(
+  //       context,
+  //       'rinkeby',
+  //       conf.core['rinkeby'],
+  //     );
+  //   });
 
-    it.skip('gets governor and stores in class state', async () => {
-      // TODO:
-      // const provider = getDefaultProvider();
-      // coreContracts.connect(provider);
-      // const localGovernor: LocalGovernor = {
-      //   location: 'local',
-      //   identifier: conf.protocol.governor.id
-      // };
-      // const remoteGovernor: RemoteGovernor = {
-      //   location: 'remote',
-      //   domain: 2000
-      // }
-      // let governor = await coreContracts.governor();
-      // expect(governor).to.equal(localGovernor);
-      // // should retrieve from class state second time
-      // governor = await coreContracts.governor();
-      // expect(governor).to.equal(localGovernor);
-      // // gets governor from non-governor chain
-      // const nonGovCore = new CoreContracts('kovan', conf.core['kovan']);
-      // governor = await nonGovCore.governor();
-      // expect(governor).to.equal(remoteGovernor);
-    });
-  });
+  //   it('gets governor and stores in class state', async () => {
+  //     // TODO:
+  //     const provider = getDefaultProvider();
+  //     coreContracts.connect(provider);
+  //     const localGovernor: LocalGovernor = {
+  //       location: 'local',
+  //       identifier: conf.protocol.governor.id
+  //     };
+  //     const remoteGovernor: RemoteGovernor = {
+  //       location: 'remote',
+  //       domain: 2000
+  //     }
+  //     let governor = await coreContracts.governor();
+  //     expect(governor).to.equal(localGovernor);
+  //     // should retrieve from class state second time
+  //     governor = await coreContracts.governor();
+  //     expect(governor).to.equal(localGovernor);
+  //     // gets governor from non-governor chain
+  //     const nonGovCore = new CoreContracts('kovan', conf.core['kovan']);
+  //     governor = await nonGovCore.governor();
+  //     expect(governor).to.equal(remoteGovernor);
+  //   });
+  // });
 });
