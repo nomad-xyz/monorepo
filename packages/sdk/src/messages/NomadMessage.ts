@@ -79,17 +79,13 @@ export class NomadMessage<T extends NomadContext> {
     context: T,
     receipt: TransactionReceipt,
   ): Promise<NomadMessage<T>[]> {
-    console.log('receipt', receipt);
     const messages: NomadMessage<T>[] = [];
     const home = core.Home__factory.createInterface();
-    console.log(receipt.logs.length);
 
     for (const log of receipt.logs) {
-      // console.log('log', log)
       try {
         const parsed = home.parseLog(log);
         if (parsed.name === 'Dispatch') {
-          console.log('aaaa');
           const {
             messageHash,
             leafIndex,
@@ -97,7 +93,6 @@ export class NomadMessage<T extends NomadContext> {
             committedRoot,
             message,
           } = parsed.args;
-          console.log('bbbb');
           const dispatch: Dispatch = {
             args: {
               messageHash,
@@ -109,9 +104,7 @@ export class NomadMessage<T extends NomadContext> {
             transactionHash: receipt.transactionHash,
             receipt,
           };
-          console.log('ccccc');
           messages.push(new NomadMessage(context, dispatch));
-          console.log('dddd');
         }
       } catch (e: unknown) {
         console.log('Unexpected error', e);
