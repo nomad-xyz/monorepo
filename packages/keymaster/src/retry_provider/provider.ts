@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { Context } from "../context";
-import { retry } from "../utils";
+import { sleep } from "../utils";
 
 export class MyJRPCProvider extends ethers.providers.StaticJsonRpcProvider {
   networkName: string;
@@ -20,18 +20,20 @@ export class MyJRPCProvider extends ethers.providers.StaticJsonRpcProvider {
 
   async perform(method: string, params: any): Promise<any> {
     this.ctx.logger.debug(`Performing method: ${method}`);
+    const timeout = 2000;
 
-    const [result, error] = await retry(
-      async () => {
+    let lastError;
+
+    for (let attempt = 0; attempt <= 5; attempt++) {
+      try {
         this.ctx.metrics.incRpcRequests(this.networkName, method);
         const start = new Date().valueOf();
         const result = await super.perform(method, params);
         const time = new Date().valueOf() - start;
         this.ctx.metrics.observeLatency(this.networkName, method, time);
         return result;
-      },
-      5,
-      (e) => {
+      } catch (e: any) {
+        lastError = e;
         this.ctx.logger.error(
           {
             method,
@@ -47,14 +49,16 @@ export class MyJRPCProvider extends ethers.providers.StaticJsonRpcProvider {
           method,
           e.code || "NO_CODE"
         );
-      }
-    );
 
-    if (result) {
-      return result;
-    } else {
-      throw error;
+        if (e.code === "INSUFFICIENT_FUNDS" || e.code === "INVALID_ARGUMENT") {
+          throw e;
+        } else {
+          await sleep(timeout * 2 ** attempt);
+        }
+      }
     }
+
+    throw lastError;
   }
 
   async sendTransactionPlus(

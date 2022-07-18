@@ -1,4 +1,4 @@
-import { KeymasterConfig } from "./config";
+import { AgentRole, allowAgent, KeymasterConfig } from "./config";
 import { Accountable, Network, RemoteAgent, RemoteWatcher } from "./account";
 import { Context } from "./context";
 
@@ -30,28 +30,50 @@ export class Keymaster {
 
       for (const replica of homeNetConfig.replicas) {
         const replicaNetwork = this.networks.get(replica);
+        const replicaNetworkConfig = this.config.networks.find(
+          (n) => n.name === replica
+        );
+
+        if (!replicaNetworkConfig)
+          throw new Error(
+            `Mentioned replica ${replica} doesn't exist in the original configuration`
+          );
 
         if (!replicaNetwork) throw new Error(`Replica ${replica} not found`);
 
-        const balances: Accountable[] = [
-          new RemoteAgent(
-            homeNetwork,
-            replicaNetwork,
-            "relayer",
-            homeAgents.relayer,
-            this.ctx
-          ),
-          new RemoteAgent(
-            homeNetwork,
-            replicaNetwork,
-            "processor",
-            homeAgents.processor,
-            this.ctx
-          ),
-          ...homeAgents.watchers.map(
-            (w) => new RemoteWatcher(homeNetwork, replicaNetwork, w, this.ctx)
-          ),
-        ];
+        const balances: Accountable[] = [];
+
+        if (allowAgent(replicaNetworkConfig, "remote", AgentRole.Relayer)) {
+          balances.push(
+            new RemoteAgent(
+              homeNetwork,
+              replicaNetwork,
+              AgentRole.Relayer,
+              homeAgents.relayer,
+              this.ctx
+            )
+          );
+        }
+
+        if (allowAgent(replicaNetworkConfig, "remote", AgentRole.Processor)) {
+          balances.push(
+            new RemoteAgent(
+              homeNetwork,
+              replicaNetwork,
+              AgentRole.Processor,
+              homeAgents.processor,
+              this.ctx
+            )
+          );
+        }
+
+        if (allowAgent(replicaNetworkConfig, "remote", AgentRole.Watcher)) {
+          balances.push(
+            ...homeAgents.watchers.map(
+              (w) => new RemoteWatcher(homeNetwork, replicaNetwork, w, this.ctx)
+            )
+          );
+        }
 
         this.networks.get(replica)!.balances.push(...balances);
       }

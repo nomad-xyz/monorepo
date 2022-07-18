@@ -1,5 +1,11 @@
 import { ethers } from "ethers";
-import { AddressWithThreshold, INetwork, justAddress } from "./config";
+import {
+  AddressWithThreshold,
+  AgentRole,
+  allowAgent,
+  INetwork,
+  justAddress,
+} from "./config";
 import { green, red, yellow } from "./color";
 import { eth, OptionalNetworkArgs, sleep } from "./utils";
 import { MyJRPCProvider } from "./retry_provider/provider";
@@ -10,6 +16,13 @@ import { formatEther } from "ethers/lib/utils";
 dotenv.config();
 
 const prettyPrint = process.env.PRETTY_PRINT === "true";
+
+const hardcodedGasLimits: Record<string, ethers.BigNumberish> = {
+  "bsctestnet": 30000,
+  "arbitrumrinkeby": 600000,
+  "optimismkovan": 30000,
+  "optimismgoerli": 30000,
+};
 
 export abstract class Accountable {
   name: string;
@@ -347,7 +360,8 @@ export class Bank extends Accountable {
       `Paying from signer of a bank`
     );
 
-    const sent = await this.signer.sendTransaction({ to, value });
+    const gasLimit = hardcodedGasLimits[this.home.name]
+    const sent = await this.signer.sendTransaction({ to, value, gasLimit });
 
     let receipt;
 
@@ -465,7 +479,11 @@ export class Network {
       (acc, v) => acc.add(v),
       ethers.BigNumber.from("0")
     );
-    this.bank._threshold = threshold;
+
+    // Temporary hardcode value, so that we don't get much noise when currently we don't want to put 26 eth into the bank
+    // TODO: fix strategy
+    // this.bank._threshold = threshold;
+    this.bank._threshold = eth(4);
   }
 
   async checkAllBalances() {
@@ -543,7 +561,7 @@ export class Network {
                 bankThreshold.sub(bankBalance)
               )} currency. Has ${formatEther(bankBalance)} out of ${formatEther(
                 bankThreshold
-              )}`
+              )}. Address: ${bankAddress}`
             )
           );
       } else {
@@ -682,13 +700,26 @@ export class Network {
       ...options,
     });
 
-    const balances = [
-      new LocalAgent(network, "updater", n.agents.updater, ctx),
-      ...n.agents.watchers.map((w) => new LocalWatcher(network, w, ctx)), // should be this only watcher
-      ...(n.agents.kathy
-        ? [new LocalAgent(network, "kathy", n.agents.kathy!, ctx)]
-        : []),
-    ];
+    const balances = [];
+
+    if (allowAgent(n, "local", AgentRole.Updater)) {
+      balances.push(
+        new LocalAgent(network, AgentRole.Updater, n.agents.updater, ctx)
+      );
+    }
+
+    if (allowAgent(n, "local", AgentRole.Watcher)) {
+      balances.push(
+        ...n.agents.watchers.map((w) => new LocalWatcher(network, w, ctx))
+      );
+    }
+
+    if (n.agents.kathy && allowAgent(n, "local", AgentRole.Kathy)) {
+      balances.push(
+        new LocalAgent(network, AgentRole.Kathy, n.agents.kathy!, ctx)
+      );
+    }
+
     network.addBalances(...balances);
 
     return network;
