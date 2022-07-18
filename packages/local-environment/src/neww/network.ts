@@ -246,8 +246,8 @@ export class HardhatNetwork extends Network {
       if (!this.connectedNetworks.includes(n)) this.connectedNetworks.push(n);
     }
 
-    async upAgents(n: Network, env: Env) {
-      this.agents = new Agents(n, env);
+    async upAgents(n: Network, env: Env, metricsPort: number) {
+      this.agents = new Agents(n, env, metricsPort);
       await this.agents.relayer.connect();
       this.agents.relayer.start();
       await this.agents.updater.connect();
@@ -289,18 +289,18 @@ export class HardhatNetwork extends Network {
     }
   
     get agentConfig(): AgentConfig {
-        return{ 
-            rpcStyle: "ethereum",
-            metrics: 9090,
-            db: "/app",
-            logging: this.logConfig,
-            updater: this.updaterConfig,
-            relayer: this.relayerConfig,
-            processor: this.processorConfig,
-            watcher: this.watcherConfig,
-            kathy: this.kathyConfig
-        }
-    }
+      return{ 
+          rpcStyle: "ethereum",
+          metrics: 9090,
+          db: "/app",
+          logging: this.logConfig,
+          updater: this.updaterConfig,
+          relayer: this.relayerConfig,
+          processor: this.processorConfig,
+          watcher: this.watcherConfig,
+          kathy: this.kathyConfig
+      } as unknown as AgentConfig
+  }
 
     get logConfig(): LogConfig {
         return {
@@ -334,12 +334,12 @@ export class HardhatNetwork extends Network {
         return { 
           "enabled": true,
           "interval": 5,
-          subsidizedRemotes: [
-            "tom", 
-            "jerry"
-          ]
-        }
-    }
+        subsidizedRemotes: [
+          "tom", 
+          "jerry"
+        ]
+      } as BaseAgentConfig
+  }
 
     get kathyConfig(): BaseAgentConfig {
         return { 

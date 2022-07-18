@@ -4,7 +4,6 @@ import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
 import { Network } from "./network";
 import { Env } from "./le";
-import { Key } from "./key";
 
 export class Agents {
   updater: Agent;
@@ -13,12 +12,12 @@ export class Agents {
   watchers: Agent[];
   kathy: Agent;
 
-  constructor(network: Network, env: Env) {
-      this.updater = new LocalAgent(AgentType.Updater, network, env);
-      this.relayer = new LocalAgent(AgentType.Relayer, network, env);
-      this.processor = new LocalAgent(AgentType.Processor, network, env);
-      this.watchers = [new LocalAgent(AgentType.Watcher, network, env)];
-      this.kathy = new LocalAgent(AgentType.Kathy, network, env);
+  constructor(network: Network, env: Env, metricsPort: number) {
+      this.updater = new LocalAgent(AgentType.Updater, network, env, metricsPort);
+      this.relayer = new LocalAgent(AgentType.Relayer, network, env, metricsPort+1);
+      this.processor = new LocalAgent(AgentType.Processor, network, env, metricsPort+2);
+      this.watchers = [new LocalAgent(AgentType.Watcher, network, env, metricsPort+3)];
+      this.kathy = new LocalAgent(AgentType.Kathy, network, env, metricsPort+4);
   }
 }
 
@@ -86,8 +85,9 @@ export class LocalAgent extends DockerizedActor implements Agent {
   agentType: AgentType;
   network: Network;
   env: Env;
+  metricsPort: number;
 
-  constructor(agentType: AgentType, network: Network, env: Env) {
+  constructor(agentType: AgentType, network: Network, env: Env, metricsPort: number) {
     agentType = parseAgentType(agentType);
     super(`${agentType}_${network.name}`, "agent");
     this.agentType = agentType;
@@ -95,12 +95,14 @@ export class LocalAgent extends DockerizedActor implements Agent {
     this.network = network;
 
     this.env = env;
+    this.metricsPort = metricsPort;
+
   }
 
   containerName(): string {
     return `${this.name}_${this.actorType}`;
   }
-
+  /*
   setSigner(network: Network, key: Key, agentType?: string | AgentType) {
      const domain = network.domainNumber;
      if (domain) {
@@ -112,6 +114,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
        }
      }
    }
+   */
    /*
    setUpdater(network: Network, key: Key) {
      const domain = network.domainNumber;
@@ -125,7 +128,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
     if (domain) network.watchers.set(domain, key);
   }
   */
-
+  /*
   getSignerKey(
     network: Network,
     agentType?: string | AgentType
@@ -141,6 +144,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
      }
      return undefined;
    }
+   */
  /*
   getUpdaterKey(network: Network): Key | undefined {
      const domain = network.domainNumber;
@@ -200,13 +204,14 @@ export class LocalAgent extends DockerizedActor implements Agent {
 
     // docker run --name $1_$2_agent --env RUN_ENV=main --restart=always --network="host" --env BASE_CONFIG=$1_config.json -v $(pwd)/../../rust/config:/app/config -d gcr.io/nomad-xyz/nomad-agent ./$2
     return this.docker.createContainer({
-      Image: "gcr.io/nomad-xyz/nomad-agent",
+      Image: "gcr.io/nomad-xyz/nomad-agent:prestwich-remove-deploy-gas",
       name,
       Cmd: ["./" + this.agentType],
       Env: [
         `AGENT_HOME_NAME=${this.network.name}`,
         `TOM_CONNECTION_URL=http://localhost:1337`,
         `JERRY_CONNECTION_URL=http://localhost:1338`,
+        `METRICS_PORT=${this.metricsPort}`,
         `CONFIG_PATH=/app/config/test_config.json`,
         `RUST_BACKTRACE=FULL`,
         `AGENT_REPLICAS_ALL=true`,

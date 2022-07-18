@@ -192,8 +192,8 @@ export class Env {
 
     // let myContracts = le.deploymyproject();
 
-    await t.upAgents(t, le);
-    await j.upAgents(j, le);
+    await t.upAgents(t, le, 9080);
+    await j.upAgents(j, le, 9090);
     console.log(`Agents up`);
 
 })()
