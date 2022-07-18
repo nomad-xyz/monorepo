@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### 2.0.0
+
+- remove rc label
+
 ### 2.0.0-rc.21
 
 - upgrade: contracts
