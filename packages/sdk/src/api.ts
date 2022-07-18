@@ -1,6 +1,6 @@
-import { request, gql } from 'graphql-request'
+import { request, gql } from 'graphql-request';
 
-const { NOMAD_API } = process.env
+const { NOMAD_API } = process.env;
 
 export type IndexerTx = {
   origin?: number
@@ -49,10 +49,10 @@ export async function getEvents(dispatchTx: string): Promise<IndexerTx> {
   const variables = JSON.stringify({
     where: {
       dispatchTx: {
-        equals: dispatchTx
-      }
+        equals: dispatchTx,
+      },
     },
-  })
+  });
   const query = gql`
     query Query($where: MessagesWhereInput) {
       findFirstMessages(where: $where) {
@@ -65,11 +65,11 @@ export async function getEvents(dispatchTx: string): Promise<IndexerTx> {
         processTx
         confirmAt
       }
-    }`
+    }`;
   return await request(`${NOMAD_API}`, query, variables).then(
     async (res) => {
-      console.log('result:\n', res.findFirstMessages)
-      return res.findFirstMessages
+      console.log('result:\n', res.findFirstMessages);
+      return res.findFirstMessages;
     }
-  )
+  );
 }

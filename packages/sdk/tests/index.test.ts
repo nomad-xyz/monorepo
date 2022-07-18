@@ -4,19 +4,19 @@ import { constants, getDefaultProvider, VoidSigner } from 'ethers';
 import { NomadContext } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
 
-const ENVIRONMENTS = ['test', 'development', 'staging', 'production'];
+const ENVIRONMENTS = ['development', 'staging', 'production'];
 
 describe('sdk', async () => {
   describe('NomadContext', () => {
     it('fetches from hosted configs', async () => {
       for (const env of ENVIRONMENTS) {
-        const context = await NomadContext.fetch(env);
-        console.log(context);
+        const context = await NomadContext.fetch(env, false);
+        expect(context).to.not.be.undefined;
       }
     });
     it('Is properly instantiated from a NomadConfig', async () => {
       for (const env of ENVIRONMENTS) {
-        const conf = config.getBuiltin(env);
+        const conf = await NomadContext.fetchConfig(env);
         const context = new NomadContext(conf);
         const domains = conf.networks;
 
