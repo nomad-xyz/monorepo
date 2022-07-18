@@ -22,6 +22,12 @@ cd hardhat
 docker build .
 ```
 
+cd into the local-environment folder and do.
+
+```sh
+yarn install
+```
+
 cd into the neww folder and do:
 
 ```sh
