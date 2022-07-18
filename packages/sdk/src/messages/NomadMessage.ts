@@ -1,82 +1,23 @@
-import { ContractTransaction } from 'ethers';
+import { ethers, ContractTransaction } from 'ethers';
+import { keccak256 } from 'ethers/lib/utils';
 import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
-import * as core from '@nomad-xyz/contracts-core';
-import { NomadContext } from '..';
-import { utils } from '@nomad-xyz/multi-provider';
 import { Logger } from '@ethersproject/logger';
-
-import {
-  DispatchEvent,
-  AnnotatedDispatch,
-  AnnotatedUpdate,
-  AnnotatedProcess,
-  UpdateTypes,
-  UpdateArgs,
-  ProcessTypes,
-  ProcessArgs,
-  AnnotatedLifecycleEvent,
-  Annotated,
-  DispatchTypes,
-} from '../events';
-
-import { queryAnnotatedEvents } from '..';
-import { keccak256 } from 'ethers/lib/utils';
-import { MessageProof } from '../NomadContext';
 import axios from 'axios';
-import { ethers } from 'ethers';
+import * as core from '@nomad-xyz/contracts-core';
+import { utils } from '@nomad-xyz/multi-provider';
 
-export type ParsedMessage = {
-  from: number;
-  sender: string;
-  nonce: number;
-  destination: number;
-  recipient: string;
-  body: string;
-};
+import { NomadContext } from '..';
+import { getEvents, IndexerTx } from '../api';
+import { MessageProof } from '../NomadContext';
+import {
+  Dispatch,
+  ParsedMessage,
+  ReplicaStatusNames,
+  ReplicaMessageStatus
+} from './types';
 
-export type NomadStatus = {
-  status: MessageStatus;
-  events: AnnotatedLifecycleEvent[];
-};
-
-export enum MessageStatus {
-  Dispatched = 0,
-  Included = 1,
-  Relayed = 2,
-  Processed = 3,
-}
-
-export enum ReplicaStatusNames {
-  None = 'none',
-  Proven = 'proven',
-  Processed = 'processed',
-}
-
-type ReplicaMessageStatusNone = {
-  status: ReplicaStatusNames.None;
-};
-
-type ReplicaMessageStatusProcess = {
-  status: ReplicaStatusNames.Processed;
-};
-
-type ReplicaMessageStatusProven = {
-  status: ReplicaStatusNames.Proven;
-  root: string;
-};
-
-export type ReplicaMessageStatus =
-  | ReplicaMessageStatusNone
-  | ReplicaMessageStatusProcess
-  | ReplicaMessageStatusProven;
-
-export type EventCache = {
-  homeUpdate?: AnnotatedUpdate;
-  replicaUpdate?: AnnotatedUpdate;
-  process?: AnnotatedProcess;
-};
 
 /**
  * Parse a serialized Nomad message from raw bytes.
@@ -96,37 +37,20 @@ export function parseMessage(message: string): ParsedMessage {
 }
 
 /**
- * Checks for distinct updates in update logs array. If updates are
- * not equal, this indicates a flaw in our event query logic.
- *
- * @param updates
- * @returns True if valid
- */
-function checkDistinctUpdates(updates: AnnotatedUpdate[]): boolean {
-  return updates.every((update) => {
-    return (
-      update.domain === updates[0].domain &&
-      update.event.transactionHash === updates[0].event.transactionHash &&
-      update.event.logIndex === updates[0].event.logIndex
-    );
-  });
-}
-
-/**
  * A deserialized Nomad message.
  */
 export class NomadMessage<T extends NomadContext> {
-  readonly dispatch: AnnotatedDispatch;
+  readonly dispatch: Dispatch;
   readonly message: ParsedMessage;
   readonly home: core.Home;
   readonly replica: core.Replica;
 
   readonly context: T;
-  protected cache: EventCache;
+  protected cache: IndexerTx;
 
-  constructor(context: T, dispatch: AnnotatedDispatch) {
+  constructor(context: T, dispatch: Dispatch) {
     this.context = context;
-    this.message = parseMessage(dispatch.event.args.message);
+    this.message = parseMessage(dispatch.args.message);
     this.dispatch = dispatch;
     this.home = context.mustGetCore(this.message.from).home;
     this.replica = context.mustGetReplicaFor(
@@ -147,65 +71,59 @@ export class NomadMessage<T extends NomadContext> {
    * Instantiate one or more messages from a receipt.
    *
    * @param context the {@link NomadContext} object to use
-   * @param nameOrDomain the domain on which the receipt was logged
    * @param receipt the receipt
    * @returns an array of {@link NomadMessage} objects
    */
-  static baseFromReceipt<T extends NomadContext>(
+  static async fromReceipt<T extends NomadContext>(
     context: T,
-    nameOrDomain: string | number,
     receipt: TransactionReceipt,
-  ): NomadMessage<T>[] {
-    const messages: NomadMessage<T>[] = [];
+  ): Promise<NomadMessage<T>[]> {
+    console.log('receipt', receipt)
+    let messages: NomadMessage<T>[] = [];
     const home = core.Home__factory.createInterface();
+    console.log(receipt.logs.length)
 
     for (const log of receipt.logs) {
+      // console.log('log', log)
       try {
         const parsed = home.parseLog(log);
         if (parsed.name === 'Dispatch') {
-          const dispatch = parsed as unknown as DispatchEvent;
-          dispatch.getBlock = () => {
-            return context
-              .mustGetProvider(nameOrDomain)
-              .getBlock(log.blockHash);
+          console.log('aaaa')
+          const {
+            messageHash,
+            leafIndex,
+            destinationAndNonce,
+            committedRoot,
+            message,
+          } = parsed.args;
+          console.log('bbbb')
+          const dispatch: Dispatch = {
+            args: {
+              messageHash,
+              leafIndex,
+              destinationAndNonce,
+              committedRoot,
+              message,
+            },
+            transactionHash: receipt.transactionHash,
+            receipt
           };
-          dispatch.getTransaction = () => {
-            return context
-              .mustGetProvider(nameOrDomain)
-              .getTransaction(log.transactionHash);
-          };
-          dispatch.getTransactionReceipt = () => {
-            return context
-              .mustGetProvider(nameOrDomain)
-              .getTransactionReceipt(log.transactionHash);
-          };
-
-          const annotated = new Annotated<DispatchTypes, DispatchEvent>(
-            context.resolveDomain(nameOrDomain),
-            receipt,
-            dispatch,
-            true,
-          );
-          annotated.event.blockNumber = annotated.receipt.blockNumber;
-          const message = new NomadMessage(context, annotated);
-          messages.push(message);
+          console.log('ccccc')
+          messages.push(new NomadMessage(context, dispatch));
+          console.log('dddd')
         }
       } catch (e: unknown) {
-        if (!e) throw e;
-        if (typeof e !== 'object') throw e;
-
-        const err = e as Record<string, unknown>;
-        if (!err.code || !err.reason) throw e;
+        const err = e as any
 
         // Catch known errors that we'd like to squash
         if (
           err.code == Logger.errors.INVALID_ARGUMENT &&
           err.reason == 'no matching event'
         )
-          continue;
+        continue;
       }
     }
-    return messages;
+    return messages
   }
 
   /**
@@ -217,14 +135,13 @@ export class NomadMessage<T extends NomadContext> {
    * @returns an array of {@link NomadMessage} objects
    * @throws if there is not EXACTLY 1 dispatch in the receipt
    */
-  static baseSingleFromReceipt<T extends NomadContext>(
+  static async singleFromReceipt<T extends NomadContext>(
     context: T,
     nameOrDomain: string | number,
     receipt: TransactionReceipt,
-  ): NomadMessage<T> {
-    const messages: NomadMessage<T>[] = NomadMessage.baseFromReceipt(
+  ): Promise<NomadMessage<T>> {
+    const messages: NomadMessage<T>[] = await NomadMessage.fromReceipt(
       context,
-      nameOrDomain,
       receipt,
     );
     if (messages.length !== 1) {
@@ -242,7 +159,7 @@ export class NomadMessage<T extends NomadContext> {
    * @returns an array of {@link NomadMessage} objects
    * @throws if there is no receipt for the TX
    */
-  static async baseFromTransactionHash<T extends NomadContext>(
+  static async fromTransactionHash<T extends NomadContext>(
     context: T,
     nameOrDomain: string | number,
     transactionHash: string,
@@ -252,7 +169,7 @@ export class NomadMessage<T extends NomadContext> {
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return NomadMessage.baseFromReceipt(context, nameOrDomain, receipt);
+    return NomadMessage.fromReceipt(context, receipt);
   }
 
   /**
@@ -265,7 +182,7 @@ export class NomadMessage<T extends NomadContext> {
    * @throws if there is no receipt for the TX, or if not EXACTLY 1 dispatch in
    *         the receipt
    */
-  static async baseSingleFromTransactionHash<T extends NomadContext>(
+  static async singleFromTransactionHash<T extends NomadContext>(
     context: T,
     nameOrDomain: string | number,
     transactionHash: string,
@@ -275,155 +192,54 @@ export class NomadMessage<T extends NomadContext> {
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return NomadMessage.baseSingleFromReceipt(context, nameOrDomain, receipt);
+    return NomadMessage.singleFromReceipt(context, nameOrDomain, receipt);
   }
 
   /**
-   * Get the Home `Update` event associated with this message (if any)
+   * Get the `Relay` event associated with this message (if any)
    *
-   * @returns An {@link AnnotatedUpdate} (if any)
+   * @returns An relay tx (if any)
    */
-  async getHomeUpdate(): Promise<AnnotatedUpdate | undefined> {
-    // if we have already gotten the event,
-    // return it without re-querying
-    if (this.cache.homeUpdate) {
-      return this.cache.homeUpdate;
+  async getRelay(): Promise<string | undefined> {
+    if (!this.cache.relayed) {
+      await this._events();
     }
-
-    // if not, attempt to query the event
-    const updateFilter = this.home.filters.Update(
-      undefined,
-      this.committedRoot,
-    );
-
-    const updateLogs: AnnotatedUpdate[] = await queryAnnotatedEvents<
-      UpdateTypes,
-      UpdateArgs
-    >(this.context, this.origin, this.home, updateFilter);
-
-    if (updateLogs.length === 1) {
-      this.cache.homeUpdate = updateLogs[0];
-    } else if (updateLogs.length > 1) {
-      // check for distinct (fraudulent) updates
-      const validUpdates = checkDistinctUpdates(updateLogs);
-      if (validUpdates) {
-        // if event is returned and valid, store it to the object
-        this.cache.homeUpdate = updateLogs[0];
-      } else {
-        throw new Error('multiple home updates for same root');
-      }
-    }
-    // return the event or undefined if it doesn't exist
-    return this.cache.homeUpdate;
+    return this.cache.relayTx;
   }
 
   /**
-   * Get the Replica `Update` event associated with this message (if any)
+   * Get the `Update` event associated with this message (if any)
    *
-   * @returns An {@link AnnotatedUpdate} (if any)
+   * @returns An update tx (if any)
    */
-  async getReplicaUpdate(): Promise<AnnotatedUpdate | undefined> {
-    // if we have already gotten the event,
-    // return it without re-querying
-    if (this.cache.replicaUpdate) {
-      return this.cache.replicaUpdate;
+  async getUpdate(): Promise<string | undefined> {
+    if (!this.cache.updated) {
+      await this._events();
     }
-    // if not, attempt to query the event
-    const updateFilter = this.replica.filters.Update(
-      undefined,
-      this.committedRoot,
-    );
-    const updateLogs: AnnotatedUpdate[] = await queryAnnotatedEvents<
-      UpdateTypes,
-      UpdateArgs
-    >(this.context, this.destination, this.replica, updateFilter);
-
-    if (updateLogs.length === 1) {
-      this.cache.replicaUpdate = updateLogs[0];
-    } else if (updateLogs.length > 1) {
-      // check for distinct (fraudulent) updates
-      const validUpdates = checkDistinctUpdates(updateLogs);
-      if (validUpdates) {
-        // if event is returned and valid, store it to the object
-        this.cache.replicaUpdate = updateLogs[0];
-      } else {
-        throw new Error('multiple replica updates for same root');
-      }
-    }
-    // return the event or undefined if it wasn't found
-    return this.cache.replicaUpdate;
+    return this.cache.updateTx;
   }
 
   /**
    * Get the Replica `Process` event associated with this message (if any)
    *
-   * @returns An {@link AnnotatedProcess} (if any)
+   * @returns An process tx (if any)
    */
-  async getProcess(): Promise<AnnotatedProcess | undefined> {
-    // if we have already gotten the event,
-    // return it without re-querying
-    if (this.cache.process) {
-      return this.cache.process;
+  async getProcess(): Promise<string | undefined> {
+    if (!this.cache.processed) {
+      await this._events();
     }
-    // if not, attempt to query the event
-    const processFilter = this.replica.filters.Process(this.leaf);
-    const processLogs = await queryAnnotatedEvents<ProcessTypes, ProcessArgs>(
-      this.context,
-      this.destination,
-      this.replica,
-      processFilter,
-    );
-    if (processLogs.length === 1) {
-      // if event is returned, store it to the object
-      this.cache.process = processLogs[0];
-    } else if (processLogs.length > 1) {
-      throw new Error('multiple replica process for same message');
-    }
-    // return the update or undefined if it doesn't exist
-    return this.cache.process;
+    return this.cache.processTx;
   }
 
   /**
    * Get all lifecycle events associated with this message
    *
-   * @returns An array of {@link AnnotatedLifecycleEvent} objects
+   * @returns An record of all events and correlating txs
    */
-  async events(): Promise<NomadStatus> {
-    const events: AnnotatedLifecycleEvent[] = [this.dispatch];
-    // attempt to get Home update
-    const homeUpdate = await this.getHomeUpdate();
-    if (!homeUpdate) {
-      return {
-        status: MessageStatus.Dispatched, // the message has been sent; nothing more
-        events,
-      };
-    }
-    events.push(homeUpdate);
-    // attempt to get Replica update
-    const replicaUpdate = await this.getReplicaUpdate();
-    if (!replicaUpdate) {
-      return {
-        status: MessageStatus.Included, // the message was sent, then included in an Update on Home
-        events,
-      };
-    }
-    events.push(replicaUpdate);
-    // attempt to get Replica process
-    const process = await this.getProcess();
-    if (!process) {
-      // NOTE: when this is the status, you may way to
-      // query confirmAt() to check if challenge period
-      // on the Replica has elapsed or not
-      return {
-        status: MessageStatus.Relayed, // the message was sent, included in an Update, then relayed to the Replica
-        events,
-      };
-    }
-    events.push(process);
-    return {
-      status: MessageStatus.Processed, // the message was processed
-      events,
-    };
+  private async _events(): Promise<IndexerTx> {
+    if (this.cache.processed) return this.cache
+    this.cache = await getEvents(this.transactionHash)
+    return this.cache
   }
 
   /**
@@ -446,13 +262,12 @@ export class NomadMessage<T extends NomadContext> {
    *
    * @returns The timestamp at which a message can confirm
    */
-  async confirmAt(): Promise<BigNumber> {
-    const update = await this.getHomeUpdate();
-    if (!update) {
-      return BigNumber.from(0);
+  async confirmAt(): Promise<number | undefined> {
+    if (!this.cache.confirmAt || this.cache.confirmAt === 0) {
+      await this._events();
     }
-    const { newRoot } = update.event.args;
-    return this.replica.confirmAt(newRoot);
+    if (this.cache.confirmAt === 0) return
+    return this.cache.confirmAt;
   }
 
   async process(): Promise<ContractTransaction> {
@@ -602,35 +417,35 @@ export class NomadMessage<T extends NomadContext> {
    * The hash of the transaction that dispatched this message
    */
   get transactionHash(): string {
-    return this.dispatch.event.transactionHash;
+    return this.dispatch.transactionHash;
   }
 
   /**
    * The messageHash committed to the tree in the Home contract.
    */
   get leaf(): string {
-    return this.dispatch.event.args.messageHash;
+    return this.dispatch.args.messageHash;
   }
 
   /**
    * The index of the leaf in the contract.
    */
   get leafIndex(): BigNumber {
-    return this.dispatch.event.args.leafIndex;
+    return this.dispatch.args.leafIndex;
   }
 
   /**
    * The destination and nonceof this message.
    */
   get destinationAndNonce(): BigNumber {
-    return this.dispatch.event.args.destinationAndNonce;
+    return this.dispatch.args.destinationAndNonce;
   }
 
   /**
    * The committed root when this message was dispatched.
    */
   get committedRoot(): string {
-    return this.dispatch.event.args.committedRoot;
+    return this.dispatch.args.committedRoot;
   }
 
   /**

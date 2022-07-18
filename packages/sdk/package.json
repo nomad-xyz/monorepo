@@ -35,7 +35,9 @@
     "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/multi-provider": "workspace:^",
     "axios": "^0.27.2",
-    "ethers": "^5.0.0"
+    "ethers": "^5.0.0",
+    "graphql": "^16.5.0",
+    "graphql-request": "^4.3.0"
   },
   "devDependencies": {
     "@nomad-xyz/local-environment": "workspace:^",
