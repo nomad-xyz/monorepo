@@ -10,6 +10,7 @@ import { IndexerCollector } from './metrics';
 import { RedisClient, state2str } from './types';
 import { sleep } from './utils';
 import { nodeEnv } from '../config';
+import { MsgSync } from './seenStates';
 
 interface TbdPackage {
   ts: Date;
@@ -78,6 +79,7 @@ export class Orchestrator {
   db: DB;
   redis?: RedisClient;
   forbiddenDomains: number[];
+  msgSync: MsgSync;
 
   constructor(
     sdk: BridgeContext,
@@ -99,6 +101,7 @@ export class Orchestrator {
     this.db = db;
     this.redis = redis;
     this.forbiddenDomains = []; // 2019844457
+    this.msgSync = new MsgSync(12 * 60 * 60 * 1000, 30);
   }
 
   async init(): Promise<void> {
@@ -305,93 +308,112 @@ export class Orchestrator {
 
   subscribeStatisticEvents() {
     this.consumer.on('dispatched', (m: NomadMessage, e: NomadishEvent) => {
-      this.logger.info(`Message have been dispatched`, {
+      const logger = this.logger.child({
         messageHash: m.messageHash,
         origin: m.origin,
         destination: m.destination,
         stage: 'dispatched',
       });
-      try {
-        const homeName = this.domain2name(m.origin);
-        const replicaName = this.domain2name(m.destination);
-        const g = e.gasUsed.toNumber();
-        if (g)
-          this.metrics.observeGasUsage('dispatched', homeName, replicaName, g);
 
-        if (this.live)
-          this.metrics.incEvents('dispatched', homeName, replicaName);
-      } catch (e) {
-        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
+      if (!this.msgSync.seen(m.messageHash, 'dispatched')) {
+        logger.info(`Message have been dispatched`);
+        try {
+          const homeName = this.domain2name(m.origin);
+          const replicaName = this.domain2name(m.destination);
+          const g = e.gasUsed.toNumber();
+          if (g)
+            this.metrics.observeGasUsage(
+              'dispatched',
+              homeName,
+              replicaName,
+              g,
+            );
+
+          if (this.live)
+            this.metrics.incEvents('dispatched', homeName, replicaName);
+        } catch (e) {
+          logger.error(`Domain ${m.origin} or ${m.destination} not found`);
+        }
+      } else {
+        logger.info(`Have seen the message in this status in recent time`);
       }
     });
 
     this.consumer.on('updated', (m: NomadMessage, e: NomadishEvent) => {
-      this.logger.info(`Message have been updated`, {
+      const logger = this.logger.child({
         messageHash: m.messageHash,
         origin: m.origin,
         destination: m.destination,
         stage: 'updated',
       });
-      try {
-        const homeName = this.domain2name(m.origin);
-        const replicaName = this.domain2name(m.destination);
-        const t = m.timings.toUpdate();
-        const g = e.gasUsed.toNumber();
-        if (t) {
-          this.metrics.observeLatency('updated', homeName, replicaName, t);
-          if (t < 0) {
-            this.logger.warn(
-              {
-                origin: m.origin,
-                destination: m.destination,
-                stage: 'updated',
-                value: t,
-              },
-              `Replorted timings is below zero`,
-            );
-          }
-        }
-        if (g)
-          this.metrics.observeGasUsage('updated', homeName, replicaName, g);
 
-        if (this.live) this.metrics.incEvents('updated', homeName, replicaName);
-      } catch (e) {
-        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
+      if (!this.msgSync.seen(m.messageHash, 'updated')) {
+        logger.info(`Message have been updated`);
+        try {
+          const homeName = this.domain2name(m.origin);
+          const replicaName = this.domain2name(m.destination);
+          const t = m.timings.toUpdate();
+          const g = e.gasUsed.toNumber();
+          if (t) {
+            this.metrics.observeLatency('updated', homeName, replicaName, t);
+            if (t < 0) {
+              logger.warn(
+                {
+                  value: t,
+                },
+                `Replorted timings is below zero`,
+              );
+            }
+          }
+          if (g)
+            this.metrics.observeGasUsage('updated', homeName, replicaName, g);
+
+          if (this.live)
+            this.metrics.incEvents('updated', homeName, replicaName);
+        } catch (e) {
+          logger.error(`Domain ${m.origin} or ${m.destination} not found`);
+        }
+      } else {
+        logger.info(`Have seen the message in this status in recent time`);
       }
     });
 
     this.consumer.on('relayed', (m: NomadMessage, e: NomadishEvent) => {
-      this.logger.info(`Message have been relayed`, {
+      const logger = this.logger.child({
         messageHash: m.messageHash,
         origin: m.origin,
         destination: m.destination,
         stage: 'relayed',
       });
-      try {
-        const homeName = this.domain2name(m.origin);
-        const replicaName = this.domain2name(m.destination);
-        const t = m.timings.toRelay();
-        const g = e.gasUsed.toNumber();
-        if (t) {
-          this.metrics.observeLatency('relayed', homeName, replicaName, t);
-          if (t < 0) {
-            this.logger.warn(
-              {
-                origin: m.origin,
-                destination: m.destination,
-                stage: 'relayed',
-                value: t,
-              },
-              `Replorted timings is below zero`,
-            );
-          }
-        }
-        if (g)
-          this.metrics.observeGasUsage('relayed', homeName, replicaName, g);
 
-        if (this.live) this.metrics.incEvents('relayed', homeName, replicaName);
-      } catch (e) {
-        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
+      if (!this.msgSync.seen(m.messageHash, 'relayed')) {
+        logger.info(`Message have been relayed`);
+        try {
+          const homeName = this.domain2name(m.origin);
+          const replicaName = this.domain2name(m.destination);
+          const t = m.timings.toRelay();
+          const g = e.gasUsed.toNumber();
+          if (t) {
+            this.metrics.observeLatency('relayed', homeName, replicaName, t);
+            if (t < 0) {
+              this.logger.warn(
+                {
+                  value: t,
+                },
+                `Replorted timings is below zero`,
+              );
+            }
+          }
+          if (g)
+            this.metrics.observeGasUsage('relayed', homeName, replicaName, g);
+
+          if (this.live)
+            this.metrics.incEvents('relayed', homeName, replicaName);
+        } catch (e) {
+          logger.error(`Domain ${m.origin} or ${m.destination} not found`);
+        }
+      } else {
+        logger.info(`Have seen the message in this status in recent time`);
       }
     });
 
@@ -432,42 +454,50 @@ export class Orchestrator {
     });
 
     this.consumer.on('processed', (m: NomadMessage, e: NomadishEvent) => {
-      this.logger.info(`Message have been processed`, {
+      const logger = this.logger.child({
         messageHash: m.messageHash,
         origin: m.origin,
         destination: m.destination,
         stage: 'processed',
       });
-      try {
-        const homeName = this.domain2name(m.origin);
-        const replicaName = this.domain2name(m.destination);
-        const t = m.timings.toProcess();
-        const e2e = m.timings.toE2E();
-        const g = e.gasUsed.toNumber();
-        if (t) {
-          this.metrics.observeLatency('processed', homeName, replicaName, t);
-          if (t < 0) {
-            this.logger.warn(
-              {
-                origin: m.origin,
-                destination: m.destination,
-                stage: 'processed',
-                value: t,
-              },
-              `Replorted timings is below zero`,
-            );
-          }
-        }
-        if (e2e) {
-          this.metrics.observeLatency('e2e', homeName, replicaName, e2e);
-        }
-        if (g)
-          this.metrics.observeGasUsage('processed', homeName, replicaName, g);
 
-        if (this.live)
-          this.metrics.incEvents('processed', homeName, replicaName);
-      } catch (e) {
-        this.logger.error(`Domain ${m.origin} or ${m.destination} not found`);
+      if (!this.msgSync.seen(m.messageHash, 'processed')) {
+        logger.info(`Message have been processed`, {
+          messageHash: m.messageHash,
+          origin: m.origin,
+          destination: m.destination,
+          stage: 'processed',
+        });
+        try {
+          const homeName = this.domain2name(m.origin);
+          const replicaName = this.domain2name(m.destination);
+          const t = m.timings.toProcess();
+          const e2e = m.timings.toE2E();
+          const g = e.gasUsed.toNumber();
+          if (t) {
+            this.metrics.observeLatency('processed', homeName, replicaName, t);
+            if (t < 0) {
+              logger.warn(
+                {
+                  value: t,
+                },
+                `Replorted timings is below zero`,
+              );
+            }
+          }
+          if (e2e) {
+            this.metrics.observeLatency('e2e', homeName, replicaName, e2e);
+          }
+          if (g)
+            this.metrics.observeGasUsage('processed', homeName, replicaName, g);
+
+          if (this.live)
+            this.metrics.incEvents('processed', homeName, replicaName);
+        } catch (e) {
+          logger.error(`Domain ${m.origin} or ${m.destination} not found`);
+        }
+      } else {
+        logger.info(`Have seen the message in this status in recent time`);
       }
     });
   }
