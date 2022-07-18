@@ -58,7 +58,7 @@ abstract contract Router is XAppConnectionClient, IMessageRecipient {
         view
         returns (bool)
     {
-        return remotes[_domain] == _router;
+        return remotes[_domain] == _router && _router != bytes32(0);
     }
 
     /**
