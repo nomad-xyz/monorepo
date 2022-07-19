@@ -52,7 +52,7 @@ export class GovernanceContext extends NomadContext {
     return context;
   }
 
-  enrollGovConfig(govConfig: GovernanceConfig) {
+  enrollGovConfig(govConfig: GovernanceConfig): void {
     this.govModules = new Map();
     if (govConfig) {
       this.governorModule = govConfig.governor;
