@@ -1,12 +1,12 @@
-import { NomadContext, NomadMessage } from '@nomad-xyz/sdk';
-import * as config from '@nomad-xyz/configuration';
-import { utils } from '@nomad-xyz/multi-provider'
-import { ethers } from 'ethers';
-import { Address, Domain, GovernanceConfig, Proposal, CallData } from './types';
-import NomadModule from './abis/NomadModule.json';
+import { NomadContext, NomadMessage } from "@nomad-xyz/sdk";
+import * as config from "@nomad-xyz/configuration";
+import { utils } from "@nomad-xyz/multi-provider";
+import { ethers } from "ethers";
+import { Address, Domain, GovernanceConfig, Proposal, CallData } from "./types";
+import NomadModule from "./abis/NomadModule.json";
 const { abi: NomadModuleABI } = NomadModule;
 
-export const EXEC_CALL_TYPES = ['address', 'uint256', 'bytes', 'uint8']
+export const EXEC_CALL_TYPES = ["address", "uint256", "bytes", "uint8"];
 
 /**
  * The GovernanceContext manages connections to Nomad Governance contracts.
@@ -19,7 +19,10 @@ export class GovernanceContext extends NomadContext {
   private governorModule: Address | undefined;
   private govModules: Map<string, Address>;
 
-  constructor(environment: string | config.NomadConfig = 'development', govConfig?: GovernanceConfig ) {
+  constructor(
+    environment: string | config.NomadConfig = "development",
+    govConfig?: GovernanceConfig
+  ) {
     super(environment);
 
     this.govModules = new Map();
@@ -32,7 +35,10 @@ export class GovernanceContext extends NomadContext {
     }
   }
 
-  static fromNomadContext(nomadContext: NomadContext, govConfig?: GovernanceConfig): GovernanceContext {
+  static fromNomadContext(
+    nomadContext: NomadContext,
+    govConfig?: GovernanceConfig
+  ): GovernanceContext {
     const context = new GovernanceContext(nomadContext.conf, govConfig);
 
     for (const domain of context.domainNumbers) {
@@ -93,36 +99,46 @@ export class GovernanceContext extends NomadContext {
 
   async encodeProposalData(proposal: Proposal): Promise<CallData> {
     // TODO: pass in props
-    const origin = 'goerli';
+    const origin = "goerli";
     const domain = this.resolveDomain(proposal.module.domain);
 
     // destructure call data
     const { to, value, data, operation } = proposal.calls;
     // encode into message
-    const message = ethers.utils.defaultAbiCoder.encode(
-      EXEC_CALL_TYPES,
-      [to, value, data, operation]
-    )
+    const message = ethers.utils.defaultAbiCoder.encode(EXEC_CALL_TYPES, [
+      to,
+      value,
+      data,
+      operation,
+    ]);
 
     // get home contract and construct dispatch transaction
     const { home } = this.mustGetCore(origin);
-    const toAddress = utils.canonizeId(proposal.module.address)
-    const dispatchTx = await home.populateTransaction.dispatch(domain, toAddress, message);
+    const toAddress = utils.canonizeId(proposal.module.address);
+    const dispatchTx = await home.populateTransaction.dispatch(
+      domain,
+      toAddress,
+      message
+    );
     return {
-      to: home, // Nomad Home contract 
+      to: home, // Nomad Home contract
       data: dispatchTx, // dispatch
       message, // encoded function data for Gnosis module
     };
   }
 
   async decodeProposalData(domain: Domain, tx: string): Promise<Proposal[]> {
-    const messages = await NomadMessage.baseFromTransactionHash(this, domain, tx);
-    let proposals: Proposal[] = []
+    const messages = await NomadMessage.baseFromTransactionHash(
+      this,
+      domain,
+      tx
+    );
+    const proposals: Proposal[] = [];
     for (const message of messages) {
       const { dispatch } = message;
       try {
         const decoded = ethers.utils.defaultAbiCoder.decode(
-          ['address', 'uint256', 'bytes', 'uint8'],
+          ["address", "uint256", "bytes", "uint8"],
           dispatch.event.args.message
         );
         const proposal: Proposal = {
@@ -135,14 +151,13 @@ export class GovernanceContext extends NomadContext {
             value: decoded[1].toNumber(),
             data: decoded[2],
             operation: decoded[3],
-          }
-        }
+          },
+        };
         proposals.push(proposal);
-      } catch(e) {
-        console.log(e)
+      } catch (e) {
+        console.log(e);
       }
     }
     return proposals;
   }
 }
-
