@@ -2,9 +2,13 @@ import { ethers } from "ethers";
 
 export type Address = string;
 export type Domain = string | number;
+export type Locator = {
+  domain: Domain;
+  id: Address;
+};
 
 export type GovernanceConfig = {
-  governor: Address; // TODO: should be locator with domain/address
+  governor: Locator;
   modules: Record<number, string>;
 };
 

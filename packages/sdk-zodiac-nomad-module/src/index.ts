@@ -2,7 +2,14 @@ import { NomadContext, NomadMessage } from "@nomad-xyz/sdk";
 import * as config from "@nomad-xyz/configuration";
 import { utils } from "@nomad-xyz/multi-provider";
 import { ethers } from "ethers";
-import { Address, Domain, GovernanceConfig, Proposal, CallData } from "./types";
+import {
+  Address,
+  Domain,
+  Locator,
+  GovernanceConfig,
+  Proposal,
+  CallData,
+} from "./types";
 import NomadModule from "./abis/NomadModule.json";
 const { abi: NomadModuleABI } = NomadModule;
 
@@ -16,7 +23,7 @@ export const EXEC_CALL_TYPES = ["address", "uint256", "bytes", "uint8"];
  */
 export class GovernanceContext extends NomadContext {
   // private bridges: Map<string, BridgeContracts>;
-  private governorModule: Address | undefined;
+  private governorModule: Locator | undefined;
   private govModules: Map<string, Address>;
 
   constructor(
@@ -63,7 +70,7 @@ export class GovernanceContext extends NomadContext {
     }
   }
 
-  get governorMod(): Address | undefined {
+  get governorMod(): Locator | undefined {
     return this.governorModule;
   }
 
@@ -97,9 +104,14 @@ export class GovernanceContext extends NomadContext {
     return new ethers.Contract(addr, NomadModuleABI);
   }
 
-  async encodeProposalData(proposal: Proposal): Promise<CallData> {
-    // TODO: pass in props
-    const origin = "goerli";
+  async encodeProposalData(
+    proposal: Proposal,
+    sender?: Domain
+  ): Promise<CallData> {
+    if (!sender && !this.governorModule) {
+      throw new Error("must register governor or specify sender");
+    }
+    const origin = sender || this.governorModule?.domain;
     const domain = this.resolveDomain(proposal.module.domain);
 
     // destructure call data
@@ -154,8 +166,8 @@ export class GovernanceContext extends NomadContext {
           },
         };
         proposals.push(proposal);
-      } catch (e) {
-        console.log(e);
+      } catch (_) {
+        console.log("invalid message, could not decode proposal data");
       }
     }
     return proposals;

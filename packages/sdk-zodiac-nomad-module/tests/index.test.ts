@@ -6,7 +6,10 @@ import { ethers } from "ethers";
 
 // example governanceConfig
 export const governanceConfig: GovernanceConfig = {
-  governor: "0x" + "aa".repeat(20),
+  governor: {
+    domain: "goerli",
+    id: "0x" + "aa".repeat(20),
+  },
   modules: {
     1001: "0x" + "bb".repeat(20),
     3001: "0x" + "cc".repeat(20),
@@ -59,7 +62,10 @@ describe("sdk-govern", async () => {
     expect(decoded[3]).to.equal(proposal.calls.operation);
   });
 
-  it("decodes proposal data", async () => {
-    // const proposalTx = "0x" + "11".repeat(32);
+  it("returns empty array if it does not contain any proposal txs", async () => {
+    const tx =
+      "0x7b7b52f5a2607a154bf5f3a1610fed208a6c4c9ecf1a0ab9df9f322471fcc3de";
+    const decoded = await context.decodeProposalData("goerli", tx);
+    expect(decoded.length).to.equal(0);
   });
 });
