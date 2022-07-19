@@ -2,8 +2,10 @@
 
 
 ```sh
+foundryup
 yarn install
 yarn build
+yarn deploy build
 ```
 
 Create a .env file in neww with:
