@@ -115,11 +115,34 @@ export class GovernanceContext extends NomadContext {
     };
   }
 
-  async decodeProposalData(domain: Domain, tx: string): Promise<undefined> {
-    const message = await NomadMessage.baseSingleFromTransactionHash(this, domain, tx);
-    const { dispatch } = message;
-    console.log(dispatch);
-    return;
+  async decodeProposalData(domain: Domain, tx: string): Promise<Proposal[]> {
+    const messages = await NomadMessage.baseFromTransactionHash(this, domain, tx);
+    let proposals: Proposal[] = []
+    for (const message of messages) {
+      const { dispatch } = message;
+      try {
+        const decoded = ethers.utils.defaultAbiCoder.decode(
+          ['address', 'uint256', 'bytes', 'uint8'],
+          dispatch.event.args.message
+        );
+        const proposal: Proposal = {
+          module: {
+            domain: message.origin,
+            address: message.sender,
+          },
+          calls: {
+            to: decoded[0],
+            value: decoded[1].toNumber(),
+            data: decoded[2],
+            operation: decoded[3],
+          }
+        }
+        proposals.push(proposal);
+      } catch(e) {
+        console.log(e)
+      }
+    }
+    return proposals;
   }
 }
 
