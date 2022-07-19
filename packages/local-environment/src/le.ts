@@ -1,6 +1,6 @@
 import { NomadLocator, NomadConfig } from "@nomad-xyz/configuration";
 import * as dotenv from 'dotenv';
-import { DeployContext } from "../../../deploy/src/DeployContext";
+import { DeployContext } from "../../deploy/src/DeployContext";
 import { HardhatNetwork, Network } from "./network";
 import * as ethers from 'ethers';
 import { NonceManager } from "@ethersproject/experimental";
