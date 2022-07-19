@@ -228,9 +228,9 @@ export class HardhatNetwork extends Network {
         this.blockTime = 5;
         this.firstStart = false;
 
-        this.updater = '0x'+'01'.repeat(20);
-        this.watcher = '0x'+'01'.repeat(20);
-        this.recoveryManager = '0x'+'01'.repeat(20);
+        this.updater = "0x9C7BC14e8a4B054e98C6DB99B9f1Ea2797BAee7B";
+        this.watcher = "0x9C7BC14e8a4B054e98C6DB99B9f1Ea2797BAee7B";
+        this.recoveryManager = "0x9C7BC14e8a4B054e98C6DB99B9f1Ea2797BAee7B";
         this.weth = "";
     }
 
