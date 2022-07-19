@@ -6,6 +6,8 @@ import { Address, Domain, GovernanceConfig, Proposal, CallData } from './types';
 import NomadModule from './abis/NomadModule.json';
 const { abi: NomadModuleABI } = NomadModule;
 
+export const EXEC_CALL_TYPES = ['address', 'uint256', 'bytes', 'uint8']
+
 /**
  * The GovernanceContext manages connections to Nomad Governance contracts.
  * It inherits from the {@link MultiProvider} and {@link NomadContext} and
@@ -96,8 +98,9 @@ export class GovernanceContext extends NomadContext {
 
     // destructure call data
     const { to, value, data, operation } = proposal.calls;
-    const message = ethers.utils.solidityPack(
-      ['address', 'uint256', 'bytes', 'uint8'],
+    // encode into message
+    const message = ethers.utils.defaultAbiCoder.encode(
+      EXEC_CALL_TYPES,
       [to, value, data, operation]
     )
 
