@@ -1,36 +1,23 @@
 ## Bootup instructions
 
-
 ```sh
 foundryup
 yarn install
 yarn build
+#Just to make sure build isn't stuck in some sort of weird state...
 yarn deploy build
 ```
 
-Create a .env file in neww with:
+Create a .env file with:
 
 ```markdown
-DEPLOYER_PRIVATE_KEY=   
-ETHERSCAN_KEY=
+DEPLOYER_PRIVATE_KEY=0x1000000000000000000000000000000000000000000000000000000000000001
 ```
 
 Then, boot up docker.
 
-Run the following
+Run the following inside /packages/local-environment
 
 ```sh
-cd hardhat
-docker build . -t hardhat:latest
-```
-
-Finally, go into local-environment/src and do
-```
-docker pull gcr.io/nomad-xyz/nomad-agent:prestwich-remove-deploy-gas
-```
-
-cd into the neww folder and do:
-
-```sh
-yarn run ts-node le.ts
+yarn bootup
 ```
