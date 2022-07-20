@@ -5,11 +5,14 @@ import { HardhatNetwork, Network } from "./network";
 import * as ethers from 'ethers';
 import { NonceManager } from "@ethersproject/experimental";
 import fs from 'fs';
+import bunyan from 'bunyan';
+
 dotenv.config();
 
 export class Env {
     networks: Network[];
     governor: NomadLocator;
+    log = bunyan.createLogger({name: 'localenv'});
 
     constructor(governor: NomadLocator) {
         this.networks = [];
@@ -159,6 +162,8 @@ export class Env {
 (async () => {
 
     // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
+    const log = bunyan.createLogger({name: 'localenv'});
+
     const t = new HardhatNetwork('tom', 1, []);
 
     const j = new HardhatNetwork('jerry', 2, []);
@@ -168,32 +173,32 @@ export class Env {
         j.up(),
     ])
 
-    console.log(`Upped Tom and Jerry`);
+    log.info(`Upped Tom and Jerry`);
 
     const le = new Env({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
 
     le.addNetwork(t);
     le.addNetwork(j);
-    console.log(`Added Tom and Jerry`);
+    log.info(`Added Tom and Jerry`);
 
     t.connectNetwork(j);
     j.connectNetwork(t);
-    console.log(`Connected Tom and Jerry`);
+    log.info(`Connected Tom and Jerry`);
 
     // Notes, check governance router deployment on Jerry and see if that's actually even passing
     // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
-    console.log(await Promise.all([
+    log.info(await Promise.all([
         t.deployWETHTom(),
         j.deployWETHJerry()
     ]))
 
-    await le.deploy();
+    log.info(await le.deploy());
 
     // let myContracts = le.deploymyproject();
 
     await t.upAgents(t, le, 9080);
     await j.upAgents(j, le, 9090);
-    console.log(`Agents up`);
+    log.info(`Agents up`);
 
 })()

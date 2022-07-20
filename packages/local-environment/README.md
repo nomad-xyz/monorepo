@@ -16,8 +16,14 @@ DEPLOYER_PRIVATE_KEY=0x100000000000000000000000000000000000000000000000000000000
 
 Then, boot up docker.
 
-Run the following inside /packages/local-environment
+Run the following inside /packages/local-environment if this is your first time booting up.
 
 ```sh
 yarn bootup
+```
+
+For any subsequent runs, do:
+
+```sh
+yarn start
 ```

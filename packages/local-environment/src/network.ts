@@ -224,7 +224,7 @@ export class HardhatNetwork extends Network {
 
     constructor(name: string, domain: number, connectedNetworks: []) {
         super(name, domain, domain, connectedNetworks);
-        this.handler = new DockerizedNetworkActor(this.name+'kek');
+        this.handler = new DockerizedNetworkActor(this.name);
         this.blockTime = 5;
         this.firstStart = false;
 

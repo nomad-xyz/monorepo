@@ -2199,8 +2199,10 @@ __metadata:
     "@nomad-xyz/deploy": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"
     "@nomiclabs/hardhat-ethers": ^2.0.2
+    "@types/bunyan": ^1.8.8
     "@types/chai": ^4.3.0
     "@types/dockerode": ^3.3.0
+    bunyan: ^1.8.15
     chai: ^4.3.4
     dockerode: ^3.3.1
     dotenv: ^10.0.0
@@ -2249,6 +2251,8 @@ __metadata:
 "@nomad-xyz/monorepo@workspace:.":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/monorepo@workspace:."
+  dependencies:
+    bunyan: ^1.8.15
   languageName: unknown
   linkType: soft
 
@@ -3177,7 +3181,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/bunyan@npm:^1.8.7":
+"@types/bunyan@npm:^1.8.7, @types/bunyan@npm:^1.8.8":
   version: 1.8.8
   resolution: "@types/bunyan@npm:1.8.8"
   dependencies:
