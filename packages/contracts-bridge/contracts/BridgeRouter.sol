@@ -148,10 +148,7 @@ contract BridgeRouter is Version0, Router {
         // validate inputs
         require(_recipient != bytes32(0), "!recip");
         // debit tokens from the sender
-        (bytes29 _tokenId, bytes32 _detailsHash) = _takeTokens(
-            _token,
-            _amount
-        );
+        (bytes29 _tokenId, bytes32 _detailsHash) = _takeTokens(_token, _amount);
         // format Transfer message
         bytes29 _action = BridgeMessage.formatTransfer(
             _recipient,
@@ -181,10 +178,7 @@ contract BridgeRouter is Version0, Router {
         bytes calldata _extraData
     ) external {
         // debit tokens from msg.sender
-        (bytes29 _tokenId, bytes32 _detailsHash) = _takeTokens(
-            _token,
-            _amount
-        );
+        (bytes29 _tokenId, bytes32 _detailsHash) = _takeTokens(_token, _amount);
         // format Hook transfer message
         bytes29 _action = BridgeMessage.formatTransferToHook(
             _remoteHook,
@@ -353,13 +347,7 @@ contract BridgeRouter is Version0, Router {
         // tokens will be sent to user-specified hook
         address _hook = _action.evmHook();
         // send tokens
-        address _token = _giveTokens(
-            _origin,
-            _nonce,
-            _tokenId,
-            _action,
-            _hook
-        );
+        address _token = _giveTokens(_origin, _nonce, _tokenId, _action, _hook);
         // ABI-encode the calldata for a `Hook.onRecive` call
         bytes memory _call = abi.encodeWithSelector(
             IBridgeHook.onReceive.selector,

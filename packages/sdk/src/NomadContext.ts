@@ -270,7 +270,9 @@ export class NomadContext extends MultiProvider<config.Domain> {
   }
 
   async checkHomes(networks: (string | number)[]): Promise<void> {
-    networks.forEach(async (n) => await this.checkHome(n));
+    for (const n of networks) {
+      await this.checkHome(n);
+    }
   }
 
   async checkHome(nameOrDomain: string | number): Promise<void> {
