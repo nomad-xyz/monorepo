@@ -10,6 +10,21 @@ const Weth: TokenIdentifier = {
   id: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
 };
 
+const wEVMOS: TokenIdentifier = {
+  domain: 'evmos',
+  id: '0xD4949664cD82660AaE99bEdc034a0deA8A0bd517',
+};
+
+const WADA: TokenIdentifier = {
+  domain: 'milkomedaC1',
+  id: '0xAE83571000aF4499798d1e3b0fA0070EB3A3E3F9',
+};
+
+const WGLMR: TokenIdentifier = {
+  domain: 'moonbeam',
+  id: '0xAcc15dC74880C9944775448304B263D191c6077F',
+};
+
 const WBTC: TokenIdentifier = {
   domain: 'ethereum',
   id: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
@@ -35,36 +50,27 @@ const USDT: TokenIdentifier = {
   id: '0xdac17f958d2ee523a2206206994597c13d831ec7',
 };
 
-const Celo: TokenIdentifier = {
-  domain: 'celo',
-  id: '0x471EcE3750Da237f93B8E339c536989b8978a438',
-};
-
-const cUSD: TokenIdentifier = {
-  domain: 'celo',
-  id: '0x765DE816845861e75A25fCA122bb6898B8B1282a',
-};
-
-const cEUR: TokenIdentifier = {
-  domain: 'celo',
-  id: '0xD8763CBa276a3738E6DE85b4b3bF5FDed6D6cA73',
-};
-
 const WMATIC: TokenIdentifier = {
   domain: 'polygon',
   id: '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270',
 };
 
+const DAI: TokenIdentifier = {
+  domain: 'ethereum',
+  id: '0x6b175474e89094c44da98b954eedeac495271d0f',
+};
+
 export default {
   Sushi,
   Weth,
+  wEVMOS,
+  WGLMR,
+  WADA,
   WBTC,
   UNI,
   LINK,
   USDC,
   USDT,
-  Celo,
-  cUSD,
-  cEUR,
   WMATIC,
+  DAI,
 };

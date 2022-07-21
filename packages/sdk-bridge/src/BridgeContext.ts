@@ -338,12 +338,12 @@ export class BridgeContext extends NomadContext {
     const dispatch = await this.mustGetSigner(from).sendTransaction(tx);
     const receipt = await dispatch.wait();
 
-    const message = TransferMessage.singleFromReceipt(this, from, receipt);
+    const message = await TransferMessage.singleFromReceipt(this, receipt);
     if (!message) {
       throw new Error();
     }
 
-    return message as TransferMessage;
+    return message;
   }
 
   /**
@@ -440,11 +440,11 @@ export class BridgeContext extends NomadContext {
     const dispatch = await this.mustGetSigner(from).sendTransaction(tx);
     const receipt = await dispatch.wait();
 
-    const message = TransferMessage.singleFromReceipt(this, from, receipt);
+    const message = await TransferMessage.singleFromReceipt(this, receipt);
     if (!message) {
       throw new Error();
     }
 
-    return message as TransferMessage;
+    return message;
   }
 }

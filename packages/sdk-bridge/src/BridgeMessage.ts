@@ -3,7 +3,7 @@ import { arrayify, hexlify } from '@ethersproject/bytes';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { ethers } from 'ethers';
 import * as bridge from '@nomad-xyz/contracts-bridge';
-import { NomadMessage, AnnotatedDispatch } from '@nomad-xyz/sdk';
+import { NomadMessage, Dispatch } from '@nomad-xyz/sdk';
 import { ResolvedTokenInfo, TokenIdentifier } from './tokens';
 import { BridgeContracts } from './BridgeContracts';
 import { BridgeContext } from './BridgeContext';
@@ -82,14 +82,14 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
    */
   constructor(
     context: BridgeContext,
-    event: AnnotatedDispatch,
+    dispatch: Dispatch,
     token: TokenIdentifier,
     callerKnowsWhatTheyAreDoing: boolean,
   ) {
     if (!callerKnowsWhatTheyAreDoing) {
       throw new Error('Use `fromReceipt` to instantiate');
     }
-    super(context, event);
+    super(context, dispatch);
 
     const fromBridge = context.mustGetBridge(this.message.from);
     const toBridge = context.mustGetBridge(this.message.destination);
@@ -129,13 +129,12 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
    * @returns an array of {@link BridgeMessage} objects
    * @throws if any message cannot be parsed as a bridge message
    */
-  static fromReceipt(
+  static async fromReceipt(
     context: BridgeContext,
-    nameOrDomain: string | number,
     receipt: TransactionReceipt,
-  ): AnyBridgeMessage[] {
+  ): Promise<AnyBridgeMessage[]> {
     const nomadMessages: NomadMessage<BridgeContext>[] =
-      NomadMessage.baseFromReceipt(context, nameOrDomain, receipt);
+      await NomadMessage.baseFromReceipt(context, receipt);
     const bridgeMessages: AnyBridgeMessage[] = [];
     for (const nomadMessage of nomadMessages) {
       try {
@@ -161,14 +160,12 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
    * @throws if any message cannot be parsed as a bridge message, or if there
    *         is not EXACTLY 1 BridgeMessage in the receipt
    */
-  static singleFromReceipt(
+  static async singleFromReceipt(
     context: BridgeContext,
-    nameOrDomain: string | number,
     receipt: TransactionReceipt,
-  ): AnyBridgeMessage {
-    const messages: AnyBridgeMessage[] = BridgeMessage.fromReceipt(
+  ): Promise<AnyBridgeMessage> {
+    const messages: AnyBridgeMessage[] = await BridgeMessage.fromReceipt(
       context,
-      nameOrDomain,
       receipt,
     );
     if (messages.length !== 1) {
@@ -197,7 +194,7 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return BridgeMessage.fromReceipt(context, nameOrDomain, receipt);
+    return BridgeMessage.fromReceipt(context, receipt);
   }
 
   /**
@@ -221,7 +218,7 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return BridgeMessage.singleFromReceipt(context, nameOrDomain, receipt);
+    return BridgeMessage.singleFromReceipt(context, receipt);
   }
 
   /**
@@ -272,10 +269,10 @@ export class TransferMessage extends BridgeMessage {
 
   constructor(
     context: BridgeContext,
-    event: AnnotatedDispatch,
+    dispatch: Dispatch,
     parsed: ParsedTransferMessage,
   ) {
-    super(context, event, parsed.token, true);
+    super(context, dispatch, parsed.token, true);
     this.action = parsed.action;
   }
 
