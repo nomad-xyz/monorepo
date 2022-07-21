@@ -809,30 +809,34 @@ export class Indexer {
             const { timestamp, gasUsed } = await this.getAdditionalInfo(
               event.transactionHash,
             );
-            allEvents.push(new NomadishEvent(
-              this.domain,
-              EventType.BridgeRouterSend,
-              0,
-              timestamp,
-              event.blockNumber,
-              EventSource.Fresh,
-              gasUsed,
-              event.transactionHash,
-              {
-                token: event.args[0],
-                from: event.args[1],
-                toDomain: event.args[2],
-                toId: event.args[3],
-                amount: event.args[4],
-                fastLiquidityEnabled: event.args[5],
-              },
-            ));
-          } catch(e) {
-            this.logger.warn(`Skipped BridgeRouter.Send event due to failure with TX: ${e}`, {tx: event.transactionHash})
+            allEvents.push(
+              new NomadishEvent(
+                this.domain,
+                EventType.BridgeRouterSend,
+                0,
+                timestamp,
+                event.blockNumber,
+                EventSource.Fresh,
+                gasUsed,
+                event.transactionHash,
+                {
+                  token: event.args[0],
+                  from: event.args[1],
+                  toDomain: event.args[2],
+                  toId: event.args[3],
+                  amount: event.args[4],
+                  fastLiquidityEnabled: event.args[5],
+                },
+              ),
+            );
+          } catch (e) {
+            this.logger.warn(
+              `Skipped BridgeRouter.Send event due to failure with TX: ${e}`,
+              { tx: event.transactionHash },
+            );
           }
         }),
       );
-      
     }
 
     {
@@ -882,7 +886,8 @@ export class Indexer {
             const { timestamp, gasUsed } = await this.getAdditionalInfo(
               event.transactionHash,
             );
-            allEvents.push(new NomadishEvent(
+            allEvents.push(
+              new NomadishEvent(
                 this.domain,
                 EventType.BridgeRouterReceive,
                 0,
@@ -898,9 +903,13 @@ export class Indexer {
                   liquidityProvider: event.args[3],
                   amount: event.args[4],
                 },
-              ));
-          } catch(e) {
-            this.logger.warn(`Skipped BridgeRouter.Receive event due to failure with TX: ${e}`, {tx:event.transactionHash} )
+              ),
+            );
+          } catch (e) {
+            this.logger.warn(
+              `Skipped BridgeRouter.Receive event due to failure with TX: ${e}`,
+              { tx: event.transactionHash },
+            );
           }
         }),
       );
@@ -961,7 +970,8 @@ export class Indexer {
             const { timestamp, gasUsed } = await this.getAdditionalInfo(
               event.transactionHash,
             );
-            fetchedEvents.push(new NomadishEvent(
+            fetchedEvents.push(
+              new NomadishEvent(
                 this.domain,
                 EventType.HomeDispatch,
                 0,
@@ -977,9 +987,13 @@ export class Indexer {
                   committedRoot: event.args[3],
                   message: event.args[4],
                 },
-              ));
-          } catch(e) {
-            this.logger.warn(`Skipped Home.Dispatch event due to failure with TX: ${e}`, {tx: event.transactionHash})
+              ),
+            );
+          } catch (e) {
+            this.logger.warn(
+              `Skipped Home.Dispatch event due to failure with TX: ${e}`,
+              { tx: event.transactionHash },
+            );
           }
         }),
       );
@@ -1033,7 +1047,8 @@ export class Indexer {
             const { timestamp, gasUsed } = await this.getAdditionalInfo(
               event.transactionHash,
             );
-            fetchedEvents.push(new NomadishEvent(
+            fetchedEvents.push(
+              new NomadishEvent(
                 this.domain,
                 EventType.HomeUpdate,
                 0,
@@ -1048,9 +1063,13 @@ export class Indexer {
                   newRoot: event.args[2],
                   signature: event.args[3],
                 },
-              ));
-          } catch(e) {
-            this.logger.warn(`Skipped Home.Update event due to failure with TX: ${e}`, {tx: event.transactionHash})
+              ),
+            );
+          } catch (e) {
+            this.logger.warn(
+              `Skipped Home.Update event due to failure with TX: ${e}`,
+              { tx: event.transactionHash },
+            );
           }
         }),
       );
@@ -1115,7 +1134,8 @@ export class Indexer {
             const { timestamp, gasUsed } = await this.getAdditionalInfo(
               event.transactionHash,
             );
-            fetchedEvents.push(new NomadishEvent(
+            fetchedEvents.push(
+              new NomadishEvent(
                 this.domain,
                 EventType.ReplicaUpdate,
                 domain,
@@ -1130,9 +1150,13 @@ export class Indexer {
                   newRoot: event.args[2],
                   signature: event.args[3],
                 },
-              ));
-          } catch(e) {
-            this.logger.warn(`Skipped Replica.Update event due to failure with TX: ${e}`, {tx: event.transactionHash})
+              ),
+            );
+          } catch (e) {
+            this.logger.warn(
+              `Skipped Replica.Update event due to failure with TX: ${e}`,
+              { tx: event.transactionHash },
+            );
           }
         }),
       );
@@ -1191,7 +1215,8 @@ export class Indexer {
             const { timestamp, gasUsed } = await this.getAdditionalInfo(
               event.transactionHash,
             );
-            fetchedEvents.push(new NomadishEvent(
+            fetchedEvents.push(
+              new NomadishEvent(
                 this.domain,
                 EventType.ReplicaProcess,
                 domain,
@@ -1205,9 +1230,13 @@ export class Indexer {
                   success: event.args[1],
                   returnData: event.args[2],
                 },
-              ));
-          } catch(e) {
-            this.logger.warn(`Skipped Replica.Process event due to failure with TX: ${e}`, {tx: event.transactionHash})
+              ),
+            );
+          } catch (e) {
+            this.logger.warn(
+              `Skipped Replica.Process event due to failure with TX: ${e}`,
+              { tx: event.transactionHash },
+            );
           }
         }),
       );
