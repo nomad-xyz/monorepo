@@ -3,7 +3,7 @@ import { keccak256 } from 'ethers/lib/utils';
 import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
-import { ErrorCode } from 'ethers/node_modules/@ethersproject/logger';
+import { ErrorCode } from '@ethersproject/logger';
 import { Logger } from '@ethersproject/logger';
 import axios from 'axios';
 import * as core from '@nomad-xyz/contracts-core';
@@ -47,7 +47,7 @@ export class NomadMessage<T extends NomadContext> {
   readonly replica: core.Replica;
 
   readonly context: T;
-  protected cache: IndexerTx;
+  protected eventCache: IndexerTx;
 
   constructor(context: T, dispatch: Dispatch) {
     this.context = context;
@@ -58,7 +58,7 @@ export class NomadMessage<T extends NomadContext> {
       this.message.from,
       this.message.destination,
     );
-    this.cache = {};
+    this.eventCache = {};
   }
 
   /**
@@ -75,7 +75,7 @@ export class NomadMessage<T extends NomadContext> {
    * @param receipt the receipt
    * @returns an array of {@link NomadMessage} objects
    */
-  static async fromReceipt<T extends NomadContext>(
+  static async baseFromReceipt<T extends NomadContext>(
     context: T,
     receipt: TransactionReceipt,
   ): Promise<NomadMessage<T>[]> {
@@ -130,12 +130,11 @@ export class NomadMessage<T extends NomadContext> {
    * @returns an array of {@link NomadMessage} objects
    * @throws if there is not EXACTLY 1 dispatch in the receipt
    */
-  static async singleFromReceipt<T extends NomadContext>(
+  static async baseSingleFromReceipt<T extends NomadContext>(
     context: T,
-    nameOrDomain: string | number,
     receipt: TransactionReceipt,
   ): Promise<NomadMessage<T>> {
-    const messages: NomadMessage<T>[] = await NomadMessage.fromReceipt(
+    const messages: NomadMessage<T>[] = await NomadMessage.baseFromReceipt(
       context,
       receipt,
     );
@@ -154,7 +153,7 @@ export class NomadMessage<T extends NomadContext> {
    * @returns an array of {@link NomadMessage} objects
    * @throws if there is no receipt for the TX
    */
-  static async fromTransactionHash<T extends NomadContext>(
+  static async baseFromTransactionHash<T extends NomadContext>(
     context: T,
     nameOrDomain: string | number,
     transactionHash: string,
@@ -164,7 +163,7 @@ export class NomadMessage<T extends NomadContext> {
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return NomadMessage.fromReceipt(context, receipt);
+    return NomadMessage.baseFromReceipt(context, receipt);
   }
 
   /**
@@ -177,7 +176,7 @@ export class NomadMessage<T extends NomadContext> {
    * @throws if there is no receipt for the TX, or if not EXACTLY 1 dispatch in
    *         the receipt
    */
-  static async singleFromTransactionHash<T extends NomadContext>(
+  static async baseSingleFromTransactionHash<T extends NomadContext>(
     context: T,
     nameOrDomain: string | number,
     transactionHash: string,
@@ -187,7 +186,7 @@ export class NomadMessage<T extends NomadContext> {
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return NomadMessage.singleFromReceipt(context, nameOrDomain, receipt);
+    return NomadMessage.baseSingleFromReceipt(context, receipt);
   }
 
   /**
@@ -196,10 +195,10 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An relay tx (if any)
    */
   async getRelay(): Promise<string | undefined> {
-    if (!this.cache.relayed) {
+    if (!this.eventCache.relayed) {
       await this._events();
     }
-    return this.cache.relayTx;
+    return this.eventCache.relayTx;
   }
 
   /**
@@ -208,10 +207,10 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An update tx (if any)
    */
   async getUpdate(): Promise<string | undefined> {
-    if (!this.cache.updated) {
+    if (!this.eventCache.updated) {
       await this._events();
     }
-    return this.cache.updateTx;
+    return this.eventCache.updateTx;
   }
 
   /**
@@ -220,10 +219,10 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An process tx (if any)
    */
   async getProcess(): Promise<string | undefined> {
-    if (!this.cache.processed) {
+    if (!this.eventCache.processed) {
       await this._events();
     }
-    return this.cache.processTx;
+    return this.eventCache.processTx;
   }
 
   /**
@@ -232,9 +231,9 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An record of all events and correlating txs
    */
   private async _events(): Promise<IndexerTx> {
-    if (this.cache.processed) return this.cache;
-    this.cache = await getEvents(this.transactionHash);
-    return this.cache;
+    if (this.eventCache.processed) return this.eventCache;
+    this.eventCache = await getEvents(this.transactionHash);
+    return this.eventCache;
   }
 
   /**
@@ -258,11 +257,11 @@ export class NomadMessage<T extends NomadContext> {
    * @returns The timestamp at which a message can confirm
    */
   async confirmAt(): Promise<number | undefined> {
-    if (!this.cache.confirmAt || this.cache.confirmAt === 0) {
+    if (!this.eventCache.confirmAt || this.eventCache.confirmAt === 0) {
       await this._events();
     }
-    if (this.cache.confirmAt === 0) return;
-    return this.cache.confirmAt;
+    if (this.eventCache.confirmAt === 0) return;
+    return this.eventCache.confirmAt;
   }
 
   async process(): Promise<ContractTransaction> {
