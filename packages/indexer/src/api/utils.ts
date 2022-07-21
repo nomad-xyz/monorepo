@@ -2,9 +2,7 @@ import { Router } from 'express';
 import * as Sentry from '@sentry/node';
 import * as Tracing from '@sentry/tracing';
 import { register } from 'prom-client';
-import {
-  useAllResolvers,
-} from '../config';
+import { useAllResolvers } from '../config';
 import { NonEmptyArray } from 'type-graphql';
 import {
   resolvers,
@@ -32,7 +30,6 @@ import { randomString } from '../core/utils';
 import { prefix } from '../core/metrics';
 import promBundle from 'express-prom-bundle';
 import Logger from 'bunyan';
-
 
 export const getGraphqlSchema = async (): Promise<GraphQLSchema> => {
   const resolversToBuild: NonEmptyArray<Function> | NonEmptyArray<string> =

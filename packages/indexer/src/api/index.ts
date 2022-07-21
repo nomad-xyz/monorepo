@@ -9,10 +9,7 @@ import {
 import http from 'http';
 import promBundle from 'express-prom-bundle';
 import { register } from 'prom-client';
-import {
-  getGraphqlSchema,
-  initSentry,
-} from './utils';
+import { getGraphqlSchema, initSentry } from './utils';
 import * as Sentry from '@sentry/node';
 import { isProduction, port } from '../config';
 import { getRouter } from './routes';
@@ -35,13 +32,15 @@ export async function run(db: DB, logger: Logger) {
   app.use(cors());
   app.disable('x-powered-by');
 
-  app.use(promBundle({
-    httpDurationMetricName: prefix + '_api',
-    buckets: [0.1, 0.3, 0.6, 1, 1.5, 2.5, 5],
-    includeMethod: true,
-    includePath: true,
-    promRegistry: register,
-  }));
+  app.use(
+    promBundle({
+      httpDurationMetricName: prefix + '_api',
+      buckets: [0.1, 0.3, 0.6, 1, 1.5, 2.5, 5],
+      includeMethod: true,
+      includePath: true,
+      promRegistry: register,
+    }),
+  );
 
   const router = await getRouter(db, logger);
 
@@ -71,7 +70,6 @@ export async function run(db: DB, logger: Logger) {
     // The error handler must be before any other error middleware and after all controllers
     app.use(Sentry.Handlers.errorHandler());
   }
-
 
   await graphqlServer.start();
   graphqlServer.applyMiddleware({ app });

@@ -85,6 +85,8 @@ export class IndexerCollector extends MetricsCollector {
 
   private blocksToTipGauge: Gauge<string>;
 
+  private events: Counter<string>;
+
   constructor(environment: string, logger: Logger) {
     super(environment, logger);
 
@@ -93,7 +95,7 @@ export class IndexerCollector extends MetricsCollector {
     this.numMessages = new Gauge({
       name: prefix + '_number_messages',
       help: 'Gauge that indicates how many messages are in dispatch, update, relay, receive or process stages',
-      labelNames: ['stage', 'network', 'environment'],
+      labelNames: ['stage', 'network', 'replica', 'environment'],
     });
 
     this.dbRequests = new Counter({
@@ -154,6 +156,12 @@ export class IndexerCollector extends MetricsCollector {
       help: 'Gauge that indicates how many blocks to the tip is left to index.',
       labelNames: ['network', 'environment'],
     });
+
+    this.events = new Counter({
+      name: prefix + '_events',
+      help: 'Counter that tracks amount of events successfully applied to messages during live run (not the initial feed ie. after restart)',
+      labelNames: ['stage', 'network', 'replica', 'environment'],
+    });
   }
 
   /**
@@ -166,14 +174,21 @@ export class IndexerCollector extends MetricsCollector {
     );
   }
 
-  incNumMessages(stage: string, network: string) {
-    this.numMessages.labels(stage, network, this.environment).inc();
+  incNumMessages(stage: string, network: string, replica: string) {
+    this.numMessages.labels(stage, network, replica, this.environment).inc();
   }
-  decNumMessages(stage: string, network: string) {
-    this.numMessages.labels(stage, network, this.environment).dec();
+  decNumMessages(stage: string, network: string, replica: string) {
+    this.numMessages.labels(stage, network, replica, this.environment).dec();
   }
-  setNumMessages(stage: string, network: string, count: number) {
-    this.numMessages.labels(stage, network, this.environment).set(count);
+  setNumMessages(
+    stage: string,
+    network: string,
+    replica: string,
+    count: number,
+  ) {
+    this.numMessages
+      .labels(stage, network, replica, this.environment)
+      .set(count);
   }
 
   observeLatency(stage: string, home: string, replica: string, ms: number) {
@@ -202,5 +217,9 @@ export class IndexerCollector extends MetricsCollector {
 
   incRpcErrors(method: RpcRequestMethod, network: string, code: string) {
     this.rpcErrors.labels(code, method, network, this.environment).inc();
+  }
+
+  incEvents(stage: string, network: string, replica: string, count?: number) {
+    this.events.labels(stage, network, replica, this.environment).inc(count);
   }
 }

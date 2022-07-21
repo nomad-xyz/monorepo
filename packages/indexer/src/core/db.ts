@@ -44,11 +44,11 @@ export class DB {
     return !value;
   }
 
-  async getMessageByEvm(tx: string): Promise<NomadMessage[]> {
+  async getMessageByEvm(dispatchTx: string): Promise<NomadMessage[]> {
     this.metrics.incDbRequests(DbRequestType.Select);
     const messages = await this.client.messages.findMany({
       where: {
-        tx,
+        dispatchTx,
       },
     });
 
@@ -82,6 +82,24 @@ export class DB {
     const messages = await this.client.messages.findMany({
       where: {
         origin,
+        root,
+      },
+    });
+    return messages.map((m) =>
+      NomadMessage.deserialize(m, this.logger, this.sdk),
+    );
+  }
+
+  async getMessagesByOriginDestinationAndRoot(
+    origin: number,
+    destination: number,
+    root: string,
+  ): Promise<NomadMessage[]> {
+    this.metrics.incDbRequests(DbRequestType.Select);
+    const messages = await this.client.messages.findMany({
+      where: {
+        origin,
+        destination,
         root,
       },
     });
@@ -126,6 +144,26 @@ export class DB {
     return message
       ? NomadMessage.deserialize(message, this.logger, this.sdk)
       : null;
+  }
+
+  async getMessageStats() {
+    const rawStats = await this.client.messages.groupBy({
+      by: ['state', 'origin', 'destination'],
+      _count: {
+        _all: true,
+      },
+    });
+
+    const stats = rawStats.map((row) => {
+      return {
+        origin: row.origin,
+        destination: row.destination,
+        state: row.state,
+        count: row._count._all,
+      };
+    });
+
+    return stats;
   }
 
   async getMessageBySendValues(
