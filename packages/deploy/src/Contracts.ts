@@ -21,7 +21,7 @@ export default abstract class Contracts<T> {
   assertIsComplete(): void {
     for (const key of this.keys) {
       if (!this.data[key]) {
-        throw new Error(`Missing key ${key}`);
+        throw new Error(`Missing key ${String(key)}`);
       }
     }
   }
