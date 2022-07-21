@@ -19,7 +19,6 @@ import {
   ReplicaMessageStatus,
 } from './types';
 
-
 /**
  * Parse a serialized Nomad message from raw bytes.
  *
@@ -108,7 +107,7 @@ export class NomadMessage<T extends NomadContext> {
         }
       } catch (e: unknown) {
         console.log('Unexpected error', e);
-        const err = e as { code: ErrorCode, reason: string };
+        const err = e as { code: ErrorCode; reason: string };
 
         // Catch known errors that we'd like to squash
         if (

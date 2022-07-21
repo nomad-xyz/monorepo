@@ -1,5 +1,5 @@
 import {
-  AnnotatedDispatch,
+  Dispatch,
   CoreContracts,
   NomadContext,
   NomadMessage,
@@ -72,13 +72,13 @@ class GovernanceMessage extends NomadMessage<NomadContext> {
    */
   constructor(
     context: NomadContext,
-    event: AnnotatedDispatch,
+    dispatch: Dispatch,
     callerKnowsWhatTheyAreDoing: boolean,
   ) {
     if (!callerKnowsWhatTheyAreDoing) {
       throw new Error('Use `fromReceipt` to instantiate');
     }
-    super(context, event);
+    super(context, dispatch);
 
     this.fromCore = context.mustGetCore(this.message.from);
     this.toCore = context.mustGetCore(this.message.destination);
@@ -221,8 +221,8 @@ class GovernanceMessage extends NomadMessage<NomadContext> {
 export class BatchMessage extends GovernanceMessage {
   readonly action: Batch;
 
-  constructor(context: NomadContext, event: AnnotatedDispatch, parsed: Batch) {
-    super(context, event, true);
+  constructor(context: NomadContext, dispatch: Dispatch, parsed: Batch) {
+    super(context, dispatch, true);
     this.action = parsed;
   }
 
@@ -269,10 +269,10 @@ export class TransferGovernorMessage extends GovernanceMessage {
 
   constructor(
     context: NomadContext,
-    event: AnnotatedDispatch,
+    dispatch: Dispatch,
     parsed: TransferGovernor,
   ) {
-    super(context, event, true);
+    super(context, dispatch, true);
     this.action = parsed;
   }
 

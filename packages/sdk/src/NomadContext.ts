@@ -3,7 +3,7 @@ import { providers, Signer, ContractTransaction, BytesLike } from 'ethers';
 import { MultiProvider } from '@nomad-xyz/multi-provider';
 import * as core from '@nomad-xyz/contracts-core';
 import * as config from '@nomad-xyz/configuration';
-import fetch from "cross-fetch";
+import fetch from 'cross-fetch';
 
 import { CoreContracts } from './CoreContracts';
 import { NomadMessage } from './messages/NomadMessage';

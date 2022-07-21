@@ -9,7 +9,7 @@ export type Dispatch = {
     destinationAndNonce: BigNumber;
     committedRoot: string;
     message: string;
-  },
+  };
   transactionHash: string;
   receipt: TransactionReceipt;
 };
