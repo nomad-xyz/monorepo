@@ -22,12 +22,12 @@
   },
   "dependencies": {
     "@nomad-xyz/configuration": "^0.1.0-rc.23",
-    "@nomad-xyz/contracts-bridge": "workspace:^",
-    "@nomad-xyz/contracts-core": "workspace:^",
-    "@nomad-xyz/contracts-router": "workspace:^",
-    "@nomad-xyz/multi-provider": "workspace:^",
-    "@nomad-xyz/sdk": "workspace:^",
-    "@nomad-xyz/sdk-govern": "workspace:^",
+    "@nomad-xyz/contracts-bridge": "^1.1.0-rc.0",
+    "@nomad-xyz/contracts-core": "^1.1.0-rc.0",
+    "@nomad-xyz/contracts-router": "^1.1.0-rc.0",
+    "@nomad-xyz/multi-provider": "1.0.0-rc.5",
+    "@nomad-xyz/sdk": "^2.1.0-rc.0",
+    "@nomad-xyz/sdk-govern": "^1.1.0-rc.0",
     "axios": "^0.21.3",
     "chai": "^4.3.4"
   },
