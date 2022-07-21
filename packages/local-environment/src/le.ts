@@ -197,6 +197,10 @@ export class Env {
 
     // let myContracts = le.deploymyproject();
 
+    /* TODO Input keysetting logic here
+
+    */
+
     await t.upAgents(t, le, 9080);
     await j.upAgents(j, le, 9090);
     log.info(`Agents up`);

@@ -1,4 +1,4 @@
-import { Agents } from "./agent";
+import { Agents, AgentType } from "./agent";
 import { NetworkSpecs, ContractConfig, BridgeConfiguration, BaseAgentConfig, Domain, CoreContracts, BridgeContracts, AgentConfig, LogConfig, AppConfig, NomadGasConfig } from '@nomad-xyz/configuration';
 import { DockerizedActor } from "./actor";
 import Dockerode from "dockerode";
@@ -163,11 +163,17 @@ let ports = 1337;
 export class DockerizedNetworkActor extends DockerizedActor {
     port: number;
     blockTime: number;
+    keys: Key[];
 
     constructor(name: string) {
         super(name, 'network');
         this.port = ports++;
         this.blockTime = 1*1000;
+        this.keys = [];
+    }
+
+    addKeys(...keys: Key[]) {
+      this.keys.push(...keys);
     }
 
     async createContainer(): Promise<Dockerode.Container> {
@@ -178,7 +184,7 @@ export class DockerizedNetworkActor extends DockerizedActor {
           name,
           Env: [
             `BLOCK_TIME=${this.blockTime}`,
-            // ...this.keys.map((k, i) => `PRIVATE_KEY${i + 1}=${k.toString()}`),
+            ...this.keys.map((k, i) => `PRIVATE_KEY${i + 1}=${k.toString()}`),
           ],
           ExposedPorts: {
             "8545/tcp:": {},
@@ -211,10 +217,21 @@ export class DockerizedNetworkActor extends DockerizedActor {
 
 }
 
+interface AnyNetworkOptions {
+  port?: number;
+  scheme?: string;
+  keys?: Key[];
+ }
+
+ interface HardhatNetworkOptions extends AnyNetworkOptions {
+   notFirstStart?: boolean;
+   keys?: Key[];
+ }
 
 export class HardhatNetwork extends Network {
     firstStart: boolean;
     blockTime: number;
+    keys: Key[];
     handler: DockerizedNetworkActor;
 
     updater: string;
@@ -222,17 +239,110 @@ export class HardhatNetwork extends Network {
     recoveryManager: string;
     weth: string;
 
-    constructor(name: string, domain: number, connectedNetworks: []) {
+    constructor(name: string, domain: number, connectedNetworks: [], options?: HardhatNetworkOptions) {
         super(name, domain, domain, connectedNetworks);
         this.handler = new DockerizedNetworkActor(this.name);
         this.blockTime = 5;
         this.firstStart = false;
+        this.keys = options?.keys || [];
 
         this.updater = "0x9C7BC14e8a4B054e98C6DB99B9f1Ea2797BAee7B";
         this.watcher = "0x9C7BC14e8a4B054e98C6DB99B9f1Ea2797BAee7B";
         this.recoveryManager = "0x9C7BC14e8a4B054e98C6DB99B9f1Ea2797BAee7B";
         this.weth = "";
     }
+
+    /* TODO: reimplement abstractions for MULTIPLE hardhat networks (i.e. any Nomad domain).
+    //   static fromObject(o: Object): Network {
+    //     const name = Object(o)["name"];
+    //     const domain = Object(o)["domain"];
+    //     const locationStr = Object(o)["location"];
+    //     const notFirstStart = Object(o)["notFirstStart"];
+    //     const keys = Object(o)["keys"];
+
+    //     return new LocalNetwork(name, domain, locationStr, {
+    //       notFirstStart,
+    //       keys,
+    //     });
+    //   }
+
+    //   toObject(): Object {
+    //     return {
+    //       name: this.name,
+    //       domain: this.domain,
+    //       location: this.location.toString(),
+    //       firstStart: this.firstStart,
+    //       keys: this.keys,
+    //       // May be keys?
+    //     };
+    //   }
+        
+    */
+
+   addKeys(...ks: Key[]) {
+     this.handler.addKeys(...ks);
+     this.keys.push(...ks);
+   }
+
+   // Add keys to agents logic:
+   setUpdater(network: Network, key: Key) {
+    const domain = network.domain;
+
+    if (domain) this.updaters.set(network.domainNumber, key);
+   }
+
+   setWatcher(network: Network, key: Key) {
+    const domain = network.domain;
+
+    if (domain) this.watchers.set(network.domainNumber, key);
+   }
+
+   setSigner(network: Network, key: Key, agentType?: string | AgentType) {
+     const domain = network.domain;
+
+     if (domain) {
+       if (agentType) {
+         const mapKey = `${agentType}_${domain}`;
+         this.signers.set(mapKey, key);
+       } else {
+         this.signers.set(this.domainNumber, key);
+       }
+     }
+   }
+
+   getSignerKey(
+     network: Network,
+     agentType?: string | AgentType
+   ): Key | undefined {
+     const domain = network.domain;
+     if (domain) {
+       if (agentType) {
+         const mapKey = `agentType_${domain}`;
+         return this.signers.get(mapKey);
+       } else {
+         return this.signers.get(network.domainNumber);
+       }
+     }
+     return undefined;
+   }
+
+   getUpdaterKey(network: Network): Key | undefined {
+     const domain = network.domain;
+     if (domain) return this.updaters.get(network.domainNumber);
+     return undefined;
+   }
+
+   getWatcherKey(network: Network): Key | undefined {
+     const domain = network.domain;
+     if (domain) return this.watchers.get(network.domainNumber);
+     return undefined;
+   }
+
+   setAllKeys(network: Network, key: Key) {
+     this.setSigner(network, key);
+     this.setUpdater(network, key);
+     this.setWatcher(network, key);
+   }
 
     get connections(): string[] {
         return this.connectedNetworks.map(n => n.name);
