@@ -118,13 +118,12 @@ class GovernanceMessage extends NomadMessage<NomadContext> {
    * @param receipt The receipt
    * @returns an array of {@link GovernanceMessage} objects
    */
-  static fromReceipt(
+  static async fromReceipt(
     context: NomadContext,
-    nameOrDomain: string | number,
     receipt: ethers.providers.TransactionReceipt,
-  ): AnyGovernanceMessage[] {
+  ): Promise<AnyGovernanceMessage[]> {
     const nomadMessages: NomadMessage<NomadContext>[] =
-      NomadMessage.baseFromReceipt(context, nameOrDomain, receipt);
+      await NomadMessage.baseFromReceipt(context, receipt);
     const governanceMessages: AnyGovernanceMessage[] = [];
     for (const nomadMessage of nomadMessages) {
       try {
@@ -149,14 +148,12 @@ class GovernanceMessage extends NomadMessage<NomadContext> {
    * @returns an array of {@link GovernanceMessage} objects
    * @throws if there is not EXACTLY 1 GovernanceMessage in the receipt
    */
-  static singleFromReceipt(
+  static async singleFromReceipt(
     context: NomadContext,
-    nameOrDomain: string | number,
     receipt: ethers.providers.TransactionReceipt,
-  ): AnyGovernanceMessage {
-    const messages = GovernanceMessage.fromReceipt(
+  ): Promise<AnyGovernanceMessage> {
+    const messages = await GovernanceMessage.fromReceipt(
       context,
-      nameOrDomain,
       receipt,
     );
     if (messages.length !== 1) {
@@ -185,7 +182,7 @@ class GovernanceMessage extends NomadMessage<NomadContext> {
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return GovernanceMessage.fromReceipt(context, nameOrDomain, receipt);
+    return await GovernanceMessage.fromReceipt(context, receipt);
   }
 
   /**
@@ -210,7 +207,7 @@ class GovernanceMessage extends NomadMessage<NomadContext> {
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return GovernanceMessage.singleFromReceipt(context, nameOrDomain, receipt);
+    return GovernanceMessage.singleFromReceipt(context, receipt);
   }
 }
 

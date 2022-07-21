@@ -58,6 +58,9 @@ export async function getEvents(dispatchTx: string): Promise<IndexerTx> {
       findFirstMessages(where: $where) {
         root
         state
+        updated
+        relayed
+        processed
         dispatchedAt
         updatedAt
         relayedAt
