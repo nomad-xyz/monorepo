@@ -173,6 +173,10 @@ export class Env {
         j.up(),
     ])
 
+    /* TODO Input keysetting logic here
+
+    */
+
     log.info(`Upped Tom and Jerry`);
 
     const le = new Env({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
@@ -196,10 +200,6 @@ export class Env {
     log.info(await le.deploy());
 
     // let myContracts = le.deploymyproject();
-
-    /* TODO Input keysetting logic here
-
-    */
 
     await t.upAgents(t, le, 9080);
     await j.upAgents(j, le, 9090);

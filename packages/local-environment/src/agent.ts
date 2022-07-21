@@ -167,26 +167,26 @@ export class LocalAgent extends DockerizedActor implements Agent {
      switch (this.agentType) {
       case AgentType.Updater: {
          envs.push(
-            `DEFAULT_TXSIGNER_KEY=0x1000000000000000000000000000000000000000000000000000000000000001`  
+            `DEFAULT_TXSIGNER_KEY=${process.env.PRIVATE_KEY1}`  
          );
          envs.push(`ATTESTATION_SIGNER_KEY=0x1000000000000000000000000000000000000000000000000000000000000001`); //Important that all agents have unique TXSIGNER keys, but not attestation. Updater uses this key to sign merkle-root transitions.
          break;
        }
       case AgentType.Watcher: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x2000000000000000000000000000000000000000000000000000000000000002`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=${process.env.PRIVATE_KEY2}`);
         envs.push(`ATTESTATION_SIGNER_KEY=0x1000000000000000000000000000000000000000000000000000000000000001`); //Watchers use this key to sign attestations of fraudulent roots.
         break;
       }
       case AgentType.Relayer: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x3000000000000000000000000000000000000000000000000000000000000003`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=${process.env.PRIVATE_KEY3}`);
         break;
       }
       case AgentType.Kathy: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x4000000000000000000000000000000000000000000000000000000000000004`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=${process.env.PRIVATE_KEY4}`);
         break;
       }
       case AgentType.Processor: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x5000000000000000000000000000000000000000000000000000000000000005`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=${process.env.PRIVATE_KEY5}`);
         break;
       }
      };
