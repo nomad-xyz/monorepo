@@ -95,7 +95,7 @@ export class IndexerCollector extends MetricsCollector {
     this.numMessages = new Gauge({
       name: prefix + '_number_messages',
       help: 'Gauge that indicates how many messages are in dispatch, update, relay, receive or process stages',
-      labelNames: ['stage', 'network', 'replica', 'environment'],
+      labelNames: ['stage', 'home', 'replica', 'environment'],
     });
 
     this.dbRequests = new Counter({
@@ -107,20 +107,20 @@ export class IndexerCollector extends MetricsCollector {
     this.rpcRequests = new Counter({
       name: prefix + '_rpc_requests',
       help: 'Count that indicates how many PRC requests are made',
-      labelNames: ['method', 'network', 'environment'],
+      labelNames: ['method', 'home', 'environment'],
     });
 
     this.rpcLatency = new Histogram({
       name: prefix + '_rpc_latency',
       help: 'Histogram that tracks latency of how long does it take to make request in ms',
-      labelNames: ['method', 'network', 'environment'],
+      labelNames: ['method', 'home', 'environment'],
       buckets,
     });
 
     this.rpcErrors = new Counter({
       name: prefix + '_rpc_errors',
       help: 'Counter that tracks error codes from RPC endpoint',
-      labelNames: ['code', 'method', 'network', 'environment'],
+      labelNames: ['code', 'method', 'home', 'environment'],
     });
 
     // Time Histograms
@@ -146,7 +146,7 @@ export class IndexerCollector extends MetricsCollector {
     this.homeFailedGauge = new Gauge({
       name: prefix + '_home_failed',
       help: 'Gauge that indicates if home of a network is in failed state.',
-      labelNames: ['network', 'environment'],
+      labelNames: ['home', 'environment'],
     });
 
     // Blocks to tip
@@ -154,40 +154,40 @@ export class IndexerCollector extends MetricsCollector {
     this.blocksToTipGauge = new Gauge({
       name: prefix + '_blocks_to_tip',
       help: 'Gauge that indicates how many blocks to the tip is left to index.',
-      labelNames: ['network', 'environment'],
+      labelNames: ['home', 'environment'],
     });
 
     this.events = new Counter({
       name: prefix + '_events',
       help: 'Counter that tracks amount of events successfully applied to messages during live run (not the initial feed ie. after restart)',
-      labelNames: ['stage', 'network', 'replica', 'environment'],
+      labelNames: ['stage', 'home', 'replica', 'environment'],
     });
   }
 
   /**
    * Sets the state for a bridge.
    */
-  setHomeState(network: string, homeFailed: boolean) {
+  setHomeState(home: string, homeFailed: boolean) {
     this.homeFailedGauge.set(
-      { network, environment: this.environment },
+      { home, environment: this.environment },
       homeFailed ? 1 : 0,
     );
   }
 
-  incNumMessages(stage: string, network: string, replica: string) {
-    this.numMessages.labels(stage, network, replica, this.environment).inc();
+  incNumMessages(stage: string, home: string, replica: string) {
+    this.numMessages.labels(stage, home, replica, this.environment).inc();
   }
-  decNumMessages(stage: string, network: string, replica: string) {
-    this.numMessages.labels(stage, network, replica, this.environment).dec();
+  decNumMessages(stage: string, home: string, replica: string) {
+    this.numMessages.labels(stage, home, replica, this.environment).dec();
   }
   setNumMessages(
     stage: string,
-    network: string,
+    home: string,
     replica: string,
     count: number,
   ) {
     this.numMessages
-      .labels(stage, network, replica, this.environment)
+      .labels(stage, home, replica, this.environment)
       .set(count);
   }
 
@@ -199,27 +199,27 @@ export class IndexerCollector extends MetricsCollector {
     this.gasUsage.labels(stage, home, replica, this.environment).observe(gas);
   }
 
-  observeBlocksToTip(network: string, count: number) {
-    this.blocksToTipGauge.labels(network, this.environment).set(count);
+  observeBlocksToTip(home: string, count: number) {
+    this.blocksToTipGauge.labels(home, this.environment).set(count);
   }
 
   incDbRequests(type: DbRequestType, req?: number) {
     this.dbRequests.labels(type, this.environment).inc(req);
   }
 
-  incRpcRequests(method: RpcRequestMethod, network: string, req?: number) {
-    this.rpcRequests.labels(method, network, this.environment).inc(req);
+  incRpcRequests(method: RpcRequestMethod, home: string, req?: number) {
+    this.rpcRequests.labels(method, home, this.environment).inc(req);
   }
 
-  observeRpcLatency(method: RpcRequestMethod, network: string, ms: number) {
-    this.rpcLatency.labels(method, network, this.environment).observe(ms);
+  observeRpcLatency(method: RpcRequestMethod, home: string, ms: number) {
+    this.rpcLatency.labels(method, home, this.environment).observe(ms);
   }
 
-  incRpcErrors(method: RpcRequestMethod, network: string, code: string) {
-    this.rpcErrors.labels(code, method, network, this.environment).inc();
+  incRpcErrors(method: RpcRequestMethod, home: string, code: string) {
+    this.rpcErrors.labels(code, method, home, this.environment).inc();
   }
 
-  incEvents(stage: string, network: string, replica: string, count?: number) {
-    this.events.labels(stage, network, replica, this.environment).inc(count);
+  incEvents(stage: string, home: string, replica: string, count?: number) {
+    this.events.labels(stage, home, replica, this.environment).inc(count);
   }
 }
