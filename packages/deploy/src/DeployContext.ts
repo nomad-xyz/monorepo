@@ -7,6 +7,7 @@ import ethers from 'ethers';
 
 import BridgeContracts from './bridge/BridgeContracts';
 import CoreContracts from './core/CoreContracts';
+import fs from "fs";
 
 export interface Verification {
   name: string;
@@ -21,13 +22,15 @@ export class DeployContext extends MultiProvider<config.Domain> {
   protected _data: config.NomadConfig;
   protected _verification: Map<string, Array<Verification>>;
   protected _callBatch: CallBatch;
+  protected _outputDir: string;
 
-  constructor(data: config.NomadConfig) {
+  constructor(data: config.NomadConfig, outputDir: string) {
     super();
 
     this._data = data;
     this.overrides = new Map();
     this._verification = new Map();
+    this._outputDir = outputDir;
 
     for (const network of this.data.networks) {
       this.registerDomain(this.data.protocol.networks[network]);
@@ -66,6 +69,10 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
   get data(): Readonly<config.NomadConfig> {
     return this._data;
+  }
+
+  get outputDir(): Readonly<string> {
+    return this._outputDir;
   }
 
   get verification(): Readonly<Map<string, ReadonlyArray<Verification>>> {
@@ -155,6 +162,36 @@ export class DeployContext extends MultiProvider<config.Domain> {
     return verification;
   }
 
+  output(): void {
+    // output the config
+    fs.mkdirSync(this.outputDir, {recursive: true});
+    fs.writeFileSync(
+        `${this.outputDir}/config.json`,
+        JSON.stringify(this.data, null, 2),
+    );
+    // if new contracts were deployed,
+    const verification = Object.fromEntries(this.verification);
+    if (Object.keys(verification).length > 0) {
+      // output the verification inputs
+      fs.writeFileSync(
+          `${this.outputDir}/verification-${Date.now()}.json`,
+          JSON.stringify(verification, null, 2),
+      );
+    }
+  }
+
+  async outputGovernance(): Promise<void> {
+    const governanceBatch = this.callBatch;
+    if (!governanceBatch.isEmpty()) {
+      // build & write governance batch
+      await governanceBatch.build();
+      fs.writeFileSync(
+          `${this.outputDir}/governanceTransactions.json`,
+          JSON.stringify(governanceBatch, null, 2),
+      );
+    }
+  }
+
   protected async deployCore(domain: config.Domain): Promise<void> {
     this.addDomain(domain);
 
@@ -193,8 +230,10 @@ export class DeployContext extends MultiProvider<config.Domain> {
   async ensureCores(): Promise<void> {
     const networksToDeploy = this.networks.filter((net) => !this.cores[net]);
     await Promise.all(
-      networksToDeploy.map((net) =>
-        this.deployCore(this.mustGetDomainConfig(net)),
+      networksToDeploy.map(async (net) => {
+          await this.deployCore(this.mustGetDomainConfig(net));
+          this.output();
+        },
       ),
     );
   }
@@ -219,12 +258,14 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
         // wait on the first replica deploy to ensure that the implementation and beacon are deployed
         const firstReplicaTxns = await core.enrollRemote(firstDomain);
+        this.output();
         this._callBatch.append(firstReplicaTxns);
 
         // perform subsequent replica deploys concurrently (will use same implementation and beacon)
         await Promise.all(
           restDomains.map(async (remote) => {
             const batch = await core.enrollRemote(remote);
+            this.output();
             if (batch) this._callBatch.append(batch);
           }),
         );
@@ -235,7 +276,10 @@ export class DeployContext extends MultiProvider<config.Domain> {
   /// Deploys all configured bridges.
   async ensureBridges(): Promise<void> {
     const toDeploy = this.networks.filter((net) => !this.bridges[net]);
-    await Promise.all(toDeploy.map((net) => this.deployBridge(net)));
+    await Promise.all(toDeploy.map(async (net) => {
+      await this.deployBridge(net);
+      this.output();
+    }));
   }
 
   async ensureBridgeConnections(): Promise<void> {
@@ -298,6 +342,10 @@ export class DeployContext extends MultiProvider<config.Domain> {
         this.mustGetCore(network).appointGovernor(),
       ),
     );
+
+    // output governance transactions
+    // once all actions have completed
+    await this.outputGovernance();
   }
 
   // perform validation checks on core and bridges
