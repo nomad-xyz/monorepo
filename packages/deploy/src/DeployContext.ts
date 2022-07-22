@@ -7,7 +7,7 @@ import ethers from 'ethers';
 
 import BridgeContracts from './bridge/BridgeContracts';
 import CoreContracts from './core/CoreContracts';
-import fs from "fs";
+import fs from 'fs';
 
 export interface Verification {
   name: string;
@@ -172,10 +172,10 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
   output(): void {
     // output the config
-    fs.mkdirSync(this.outputDir, {recursive: true});
+    fs.mkdirSync(this.outputDir, { recursive: true });
     fs.writeFileSync(
-        `${this.outputDir}/config.json`,
-        JSON.stringify(this.data, null, 2),
+      `${this.outputDir}/config.json`,
+      JSON.stringify(this.data, null, 2),
     );
     // if new contracts were deployed,
     const verification = Object.fromEntries(this.verification);
@@ -184,8 +184,8 @@ export class DeployContext extends MultiProvider<config.Domain> {
       // Note: append the timestamp so that
       // verification outputs for different runs are disambiguated
       fs.writeFileSync(
-          `${this.outputDir}/verification-${this.instantiatedAt}.json`,
-          JSON.stringify(verification, null, 2),
+        `${this.outputDir}/verification-${this.instantiatedAt}.json`,
+        JSON.stringify(verification, null, 2),
       );
     }
   }
@@ -196,8 +196,8 @@ export class DeployContext extends MultiProvider<config.Domain> {
       // build & write governance batch
       await governanceBatch.build();
       fs.writeFileSync(
-          `${this.outputDir}/governanceTransactions.json`,
-          JSON.stringify(governanceBatch, null, 2),
+        `${this.outputDir}/governanceTransactions.json`,
+        JSON.stringify(governanceBatch, null, 2),
       );
     }
   }
@@ -240,7 +240,9 @@ export class DeployContext extends MultiProvider<config.Domain> {
   async ensureCores(): Promise<void> {
     const networksToDeploy = this.networks.filter((net) => !this.cores[net]);
     await Promise.all(
-      networksToDeploy.map((net) => this.deployCore(this.mustGetDomainConfig(net))),
+      networksToDeploy.map((net) =>
+        this.deployCore(this.mustGetDomainConfig(net)),
+      ),
     );
   }
 
