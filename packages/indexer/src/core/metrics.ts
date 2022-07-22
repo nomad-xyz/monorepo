@@ -37,7 +37,7 @@ const buckets = [
 
 export class MetricsCollector {
   readonly environment: string;
-  private readonly logger: Logger;
+  readonly logger: Logger;
 
   constructor(environment: string, logger: Logger) {
     this.environment = environment;
@@ -168,6 +168,7 @@ export class IndexerCollector extends MetricsCollector {
    * Sets the state for a bridge.
    */
   setHomeState(home: string, homeFailed: boolean) {
+    this.logger.info(`Reporting metric`, {metricName: 'homeFailedGauge'})
     this.homeFailedGauge.set(
       { home, environment: this.environment },
       homeFailed ? 1 : 0,
@@ -175,9 +176,11 @@ export class IndexerCollector extends MetricsCollector {
   }
 
   incNumMessages(stage: string, home: string, replica: string) {
+    this.logger.info(`Reporting metric`, {metricName: 'numMessages'})
     this.numMessages.labels(stage, home, replica, this.environment).inc();
   }
   decNumMessages(stage: string, home: string, replica: string) {
+    this.logger.info(`Reporting metric`, {metricName: 'numMessages'})
     this.numMessages.labels(stage, home, replica, this.environment).dec();
   }
   setNumMessages(
@@ -186,40 +189,49 @@ export class IndexerCollector extends MetricsCollector {
     replica: string,
     count: number,
   ) {
+    this.logger.info(`Reporting metric`, {metricName: 'numMessages'})
     this.numMessages
       .labels(stage, home, replica, this.environment)
       .set(count);
   }
 
   observeLatency(stage: string, home: string, replica: string, ms: number) {
+    this.logger.info(`Reporting metric`, {metricName: 'latency'})
     this.latency.labels(stage, home, replica, this.environment).observe(ms);
   }
 
   observeGasUsage(stage: string, home: string, replica: string, gas: number) {
+    this.logger.info(`Reporting metric`, {metricName: 'gasUsage'})
     this.gasUsage.labels(stage, home, replica, this.environment).observe(gas);
   }
 
   observeBlocksToTip(home: string, count: number) {
+    this.logger.info(`Reporting metric`, {metricName: 'blocksToTipGauge'})
     this.blocksToTipGauge.labels(home, this.environment).set(count);
   }
 
   incDbRequests(type: DbRequestType, req?: number) {
+    this.logger.info(`Reporting metric`, {metricName: 'dbRequests'})
     this.dbRequests.labels(type, this.environment).inc(req);
   }
 
   incRpcRequests(method: RpcRequestMethod, home: string, req?: number) {
+    this.logger.info(`Reporting metric`, {metricName: 'rpcRequests'})
     this.rpcRequests.labels(method, home, this.environment).inc(req);
   }
 
   observeRpcLatency(method: RpcRequestMethod, home: string, ms: number) {
+    this.logger.info(`Reporting metric`, {metricName: 'rpcLatency'})
     this.rpcLatency.labels(method, home, this.environment).observe(ms);
   }
 
   incRpcErrors(method: RpcRequestMethod, home: string, code: string) {
+    this.logger.info(`Reporting metric`, {metricName: 'rpcErrors'})
     this.rpcErrors.labels(code, method, home, this.environment).inc();
   }
 
   incEvents(stage: string, home: string, replica: string, count?: number) {
+    this.logger.info(`Reporting metric`, {metricName: 'events'})
     this.events.labels(stage, home, replica, this.environment).inc(count);
   }
 }
