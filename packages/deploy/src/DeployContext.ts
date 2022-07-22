@@ -134,10 +134,12 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
   protected addCore(name: string, core: config.EvmCoreContracts): void {
     this._data = config.addCore(this.data, name, core);
+    this.output();
   }
 
   protected addBridge(name: string, bridge: config.EvmBridgeContracts): void {
     this._data = config.addBridge(this.data, name, bridge);
+    this.output();
   }
 
   pushVerification(
@@ -230,11 +232,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
   async ensureCores(): Promise<void> {
     const networksToDeploy = this.networks.filter((net) => !this.cores[net]);
     await Promise.all(
-      networksToDeploy.map(async (net) => {
-          await this.deployCore(this.mustGetDomainConfig(net));
-          this.output();
-        },
-      ),
+      networksToDeploy.map(async (net) => this.deployCore(this.mustGetDomainConfig(net))),
     );
   }
 
@@ -276,10 +274,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
   /// Deploys all configured bridges.
   async ensureBridges(): Promise<void> {
     const toDeploy = this.networks.filter((net) => !this.bridges[net]);
-    await Promise.all(toDeploy.map(async (net) => {
-      await this.deployBridge(net);
-      this.output();
-    }));
+    await Promise.all(toDeploy.map(async (net) => this.deployBridge(net)));
   }
 
   async ensureBridgeConnections(): Promise<void> {
