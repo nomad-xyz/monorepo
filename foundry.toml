@@ -6,7 +6,6 @@ remappings = [                # Libraries that we use from node_modules and are 
 "@nomad-xyz/=packages/",
 "forge-std/=lib/forge-std/src/"
 ]
-offline = true                # Disable downloading of missing solc version(s)
 optimizer = true              # Enable or disable the solc optimizer
 optimizer_runs = 999999       # The number of optimizer runs
 verbosity = 3                 # The verbosity of tests
