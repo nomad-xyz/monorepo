@@ -175,15 +175,15 @@ export class LocalAgent extends DockerizedActor implements Agent {
         break;
       }
       case AgentType.Relayer: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x3000000000000000000000000000000000000000000000000000000000000003`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.network.getRelayerKey()}`);
         break;
       }
       case AgentType.Kathy: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x4000000000000000000000000000000000000000000000000000000000000004`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.network.getKathyKey()}`);
         break;
       }
       case AgentType.Processor: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x5000000000000000000000000000000000000000000000000000000000000005`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.network.getProcessorKey()}`);
         break;
       }
      };

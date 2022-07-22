@@ -182,12 +182,20 @@ export class Env {
     log.info(`Added Tom and Jerry`);
 
     // Set keys
-    log.info(t.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``)));
-    log.info(t.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``)));
+    t.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    t.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
+    t.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
+    t.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
+    t.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
+    t.setGovernanceKeys(new Key(`` + process.env.PRIVATE_KEY_1 + ``)); // setGovernanceKeys should have the same PK as the signer keys
     t.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
 
-    log.info(j.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``)));
-    log.info(j.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``)));
+    j.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    j.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
+    j.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
+    j.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
+    j.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
+    j.setGovernanceKeys(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
     j.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
     log.info(`Added Keys`)
     
@@ -198,10 +206,10 @@ export class Env {
     // Notes, check governance router deployment on Jerry and see if that's actually even passing
     // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
-    log.info(await Promise.all([
-        t.deployWETHTom(),
-        j.deployWETHJerry()
-    ]))
+    await Promise.all([
+        t.setWETH(t.deployWETH()),
+        j.setWETH(j.deployWETH())
+    ])
 
     log.info(await le.deploy());
 
