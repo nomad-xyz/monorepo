@@ -6,7 +6,7 @@ import * as ethers from 'ethers';
 import { NonceManager } from "@ethersproject/experimental";
 import fs from 'fs';
 import bunyan from 'bunyan';
-
+import { Key } from './key';
 dotenv.config();
 
 export class Env {
@@ -112,12 +112,12 @@ export class Env {
         return true;
     }
 
-    get deployerKey1(): string {
-        const DEPLOYERKEY1 = ``+ process.env.DEPLOYER_PRIVATE_KEY_1 + ``;
-        if (!DEPLOYERKEY1) {
+    get deployerKey(): string {
+        const DEPLOYERKEY = ``+ process.env.PRIVATE_KEY + ``;
+        if (!DEPLOYERKEY) {
             throw new Error('Add DEPLOYER_PRIVATE_KEY to .env');
         }
-        return DEPLOYERKEY1;
+        return DEPLOYERKEY;
     }
 
     getNetworks(): Network[] {
@@ -131,7 +131,7 @@ export class Env {
         for (const network of this.networks) {
             const name = network.name;
             const provider = deployContext.mustGetProvider(name);
-            const wallet = new ethers.Wallet(this.deployerKey1, provider);
+            const wallet = new ethers.Wallet(this.deployerKey, provider);
             const signer = new NonceManager(wallet);
             deployContext.registerSigner(name, signer);
             deployContext.overrides.set(name, network.deployOverrides);
@@ -173,10 +173,6 @@ export class Env {
         j.up(),
     ])
 
-    /* TODO Input keysetting logic here
-
-    */
-
     log.info(`Upped Tom and Jerry`);
 
     const le = new Env({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
@@ -185,6 +181,16 @@ export class Env {
     le.addNetwork(j);
     log.info(`Added Tom and Jerry`);
 
+    // Set keys
+    log.info(t.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``)));
+    log.info(t.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``)));
+    t.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+
+    log.info(j.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``)));
+    log.info(j.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``)));
+    j.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    log.info(`Added Keys`)
+    
     t.connectNetwork(j);
     j.connectNetwork(t);
     log.info(`Connected Tom and Jerry`);

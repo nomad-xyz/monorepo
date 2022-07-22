@@ -156,6 +156,35 @@ export abstract class Network {
       return !!this.agents
     }
 
+    getSignerKey(
+      agentType?: string | AgentType
+    ): Key | undefined {
+      const domain = this.domainNumber;
+      if (domain) {
+        if (agentType) {
+          const mapKey = `agentType_${domain}`;
+          return this.signers.get(mapKey);
+        } else {
+          return this.signers.get(this.domainNumber);
+        }
+      }
+      return undefined;
+    }
+ 
+    getUpdaterKey(): Key | undefined {
+      const domain = this.domainNumber;
+      if (domain) {
+        return this.updaters.get(this.domainNumber);
+      }
+      return undefined;
+    }
+ 
+    getWatcherKey(): Key | undefined {
+      const domain = this.domainNumber;
+      if (domain) return this.watchers.get(this.domainNumber);
+      return undefined;
+    }
+
 }
 
 let ports = 1337;
@@ -285,20 +314,20 @@ export class HardhatNetwork extends Network {
    }
 
    // Add keys to agents logic:
-   setUpdater(network: Network, key: Key) {
-    const domain = network.domain;
+   setUpdater(key: Key) {
+    const domain = this.domainNumber;
 
-    if (domain) this.updaters.set(network.domainNumber, key);
+    if (domain) this.updaters.set(this.domainNumber, key);
    }
 
-   setWatcher(network: Network, key: Key) {
-    const domain = network.domain;
+   setWatcher(key: Key) {
+    const domain = this.domainNumber;
 
-    if (domain) this.watchers.set(network.domainNumber, key);
+    if (domain) this.watchers.set(this.domainNumber, key);
    }
 
-   setSigner(network: Network, key: Key, agentType?: string | AgentType) {
-     const domain = network.domain;
+   setSigner(key: Key, agentType?: string | AgentType) {
+     const domain = this.domainNumber;
 
      if (domain) {
        if (agentType) {
@@ -308,40 +337,6 @@ export class HardhatNetwork extends Network {
          this.signers.set(this.domainNumber, key);
        }
      }
-   }
-
-   getSignerKey(
-     network: Network,
-     agentType?: string | AgentType
-   ): Key | undefined {
-     const domain = network.domain;
-     if (domain) {
-       if (agentType) {
-         const mapKey = `agentType_${domain}`;
-         return this.signers.get(mapKey);
-       } else {
-         return this.signers.get(network.domainNumber);
-       }
-     }
-     return undefined;
-   }
-
-   getUpdaterKey(network: Network): Key | undefined {
-     const domain = network.domain;
-     if (domain) return this.updaters.get(network.domainNumber);
-     return undefined;
-   }
-
-   getWatcherKey(network: Network): Key | undefined {
-     const domain = network.domain;
-     if (domain) return this.watchers.get(network.domainNumber);
-     return undefined;
-   }
-
-   setAllKeys(network: Network, key: Key) {
-     this.setSigner(network, key);
-     this.setUpdater(network, key);
-     this.setWatcher(network, key);
    }
 
     get connections(): string[] {

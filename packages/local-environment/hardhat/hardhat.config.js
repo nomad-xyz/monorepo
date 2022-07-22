@@ -2,8 +2,6 @@ require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-etherscan");
 require("dotenv").config();
 
-import { Key } from "./key";
-
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   const accounts = await hre.ethers.getSigners();
 
@@ -13,15 +11,16 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 });
 
 const accounts = [
-    new Key(), // Service account
-  process.env.PRIVATE_KEY ||
-    new Key(),
+    "a00000000000000000000000000000000000000000000000000000000000000a", // Service account
+    process.env.PRIVATE_KEY ||
+    "1337000000000000000000000000000000000000000000000000000000001337",
 
-  process.env.PRIVATE_KEY1 || new Key(),
-  process.env.PRIVATE_KEY2 || new Key(),
-  process.env.PRIVATE_KEY3 || new Key(),
-  process.env.PRIVATE_KEY4 || new Key(),
-  process.env.PRIVATE_KEY5 || new Key(),
+
+    process.env.PRIVATE_KEY1 || '1000000000000000000000000000000000000000000000000000000000000001',
+    process.env.PRIVATE_KEY2 || '2000000000000000000000000000000000000000000000000000000000000002',
+    process.env.PRIVATE_KEY3 || '3000000000000000000000000000000000000000000000000000000000000003',
+    process.env.PRIVATE_KEY4 || '4000000000000000000000000000000000000000000000000000000000000004',
+    process.env.PRIVATE_KEY5 || '5000000000000000000000000000000000000000000000000000000000000005',
 
   ...Object.entries(process.env)
     .filter(([k, _]) => k.match(/PRIVATE_KEY\d+/))
