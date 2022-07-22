@@ -58,7 +58,10 @@ export type MinimumSerializedNomadMessage = {
   receivedAt: number;
   processedAt: number;
   sender: string | null;
-  tx: string | null;
+  dispatchTx: string | null;
+  updateTx: string | null;
+  relayTx: string | null;
+  processTx: string | null;
   state: MsgState;
   gasAtDispatch: string;
   gasAtUpdate: string;
@@ -128,7 +131,11 @@ export class NomadMessage {
 
   state: MsgState;
   dispatchBlock: number;
-  tx?: string;
+
+  dispatchTx?: string;
+  updateTx?: string;
+  relayTx?: string;
+  processTx?: string;
 
   timings: Timings;
   gasUsed: GasUsed;
@@ -181,7 +188,7 @@ export class NomadMessage {
     this.gasUsed = gasUsed || new GasUsed();
     this.logger = logger.child({ messageHash });
     this.checkbox = new Checkbox();
-    this.tx = tx;
+    this.dispatchTx = tx;
   }
 
   messageTypeStr(): string {
@@ -277,6 +284,8 @@ export class NomadMessage {
     this.timings.updated(event.ts);
     this.gasUsed.update = event.gasUsed;
     this.checkbox.updated = true;
+    this.updateTx = event.tx;
+
     if (this.state < MsgState.Updated) {
       this.logger.debug(
         `Updated message from state ${this.state} to ${MsgState.Updated} (Updated)`,
@@ -295,6 +304,8 @@ export class NomadMessage {
     this.timings.relayed(event.ts);
     this.gasUsed.relay = event.gasUsed;
     this.checkbox.relayed = true;
+    this.relayTx = event.tx;
+
     if (this.state < MsgState.Relayed) {
       this.logger.debug(
         `Updated message from state ${this.state} to ${MsgState.Relayed} (Relayed)`,
@@ -331,6 +342,7 @@ export class NomadMessage {
     this.timings.processed(event.ts);
     this.gasUsed.process = event.gasUsed;
     this.checkbox.processed = true;
+    this.processTx = event.tx;
 
     if (this.state < MsgState.Processed) {
       this.logger.debug(
@@ -365,7 +377,7 @@ export class NomadMessage {
       logger.child({ messageSource: 'deserialize' }),
       sdk,
       undefined,
-      s.tx || undefined,
+      s.dispatchTx || undefined,
     );
     m.timings.updated(s.updatedAt * 1000);
     m.timings.relayed(s.relayedAt * 1000);
@@ -385,7 +397,10 @@ export class NomadMessage {
     m.checkbox.processed = s.processed;
 
     m.sender = s.sender || undefined;
-    m.tx = s.tx || undefined;
+    m.dispatchTx = s.dispatchTx || undefined;
+    m.updateTx = s.updateTx || undefined;
+    m.relayTx = s.relayTx || undefined;
+    m.processTx = s.processTx || undefined;
     m.state = s.state;
     return m;
   }
@@ -401,7 +416,10 @@ export class NomadMessage {
       sender: this.sender || null,
       state: this.state,
       ...this.timings.serialize(),
-      tx: this.tx || null,
+      dispatchTx: this.dispatchTx || null,
+      updateTx: this.updateTx || null,
+      relayTx: this.relayTx || null,
+      processTx: this.processTx || null,
       body: this.body,
       dispatchBlock: this.dispatchBlock,
       internalSender: this.internalSender.pretty(),
@@ -500,7 +518,8 @@ class EventsPool {
       }
     } else if (e.eventType === EventType.ReplicaUpdate) {
       const eventData = e.eventData as Update;
-      const key = `${eventData.homeDomain};${eventData.oldRoot}`;
+      const destination = e.domain;
+      const key = `${eventData.homeDomain};${destination};${eventData.oldRoot}`;
       const exists = await this.redis.hExists('relay', key);
       if (!exists) {
         await this.redis.hSet('relay', key, JSON.stringify([value]));
@@ -546,8 +565,8 @@ class EventsPool {
 
     return valuesArr.map((v) => JSON.parse(v, reviver));
   }
-  async getRelay(origin: number, root: string) {
-    const key = `${origin};${root}`;
+  async getRelay(origin: number, destination: number, root: string) {
+    const key = `${origin};${destination};${root}`;
     const values = await this.redis.hGet('relay', key);
     if (!values) return [];
     const valuesArr: string[] = JSON.parse(values);
@@ -613,8 +632,10 @@ export class ProcessorV2 extends Consumer {
       } else if (event.eventType === EventType.BridgeRouterReceive) {
         await this.bridgeRouterReceive(event);
       }
-      const percentage = ((++consumed) * 100 / events.length).toFixed(2);
-      this.logger.debug(`Consumed ${percentage}% (${consumed}/${events.length}) events.`); // debug
+      const percentage = ((++consumed * 100) / events.length).toFixed(2);
+      this.logger.debug(
+        `Consumed ${percentage}% (${consumed}/${events.length}) events.`,
+      ); // debug
     }
   }
 
@@ -665,7 +686,7 @@ export class ProcessorV2 extends Consumer {
   msgSend(event: NomadishEvent, message: NomadMessage) {
     const eventData = event.eventData as Send;
     message.sender = eventData.from;
-    message.tx = event.tx;
+    message.dispatchTx = event.tx;
     message.checkbox.sent = true;
   }
 
@@ -701,7 +722,11 @@ export class ProcessorV2 extends Consumer {
   }
 
   async checkAndUpdateRelay(m: NomadMessage) {
-    const events: NomadishEvent[] = await this.pool.getRelay(m.origin, m.root);
+    const events: NomadishEvent[] = await this.pool.getRelay(
+      m.origin,
+      m.destination,
+      m.root,
+    );
     events.forEach((event) => {
       this.msgRelay(event, m);
     });
@@ -769,7 +794,7 @@ export class ProcessorV2 extends Consumer {
         }),
       );
     } else {
-      logger.warn(
+      logger.debug(
         { origin: e.replicaOrigin, root: oldRoot },
         `Haven't found a message for Update event`,
       );
@@ -779,7 +804,13 @@ export class ProcessorV2 extends Consumer {
   async replicaUpdate(e: NomadishEvent) {
     const logger = this.logger.child({ eventName: 'relayed' });
     const oldRoot = (e.eventData as Update).oldRoot;
-    const ms = await this.getMsgsByOriginAndRoot(e.replicaOrigin, oldRoot);
+    const homeDomain = (e.eventData as Update).homeDomain;
+    const destinationDomain = e.domain;
+    const ms = await this.getMsgsByOriginDestinationAndRoot(
+      homeDomain,
+      destinationDomain,
+      oldRoot,
+    );
 
     // IMPORTANT! we still store the event for update and relay even though it is already appliable, but it needs to be checked for dups
     await this.pool.storeEvent(e);
@@ -793,7 +824,7 @@ export class ProcessorV2 extends Consumer {
         }),
       );
     } else {
-      logger.warn(
+      logger.debug(
         { origin: e.replicaOrigin, root: oldRoot },
         `Haven't found a message for ReplicaUpdate event`,
       );
@@ -810,7 +841,7 @@ export class ProcessorV2 extends Consumer {
       await this.updateMessage(m);
     } else {
       await this.pool.storeEvent(e);
-      logger.warn(
+      logger.debug(
         { messageHash },
         `Haven't found a message for Processed event`,
       );
@@ -839,7 +870,7 @@ export class ProcessorV2 extends Consumer {
       await this.updateMessage(m);
     } else {
       await this.pool.storeEvent(e);
-      logger.warn(
+      logger.debug(
         { destination, recipient, amount },
         `Haven't found a message for Send event`,
       );
@@ -860,7 +891,7 @@ export class ProcessorV2 extends Consumer {
     } else {
       await this.pool.storeEvent(e);
       const [origin, nonce] = e.originAndNonce();
-      logger.warn(
+      logger.debug(
         { origin, nonce },
         `Haven't found a message for BridgeReceived event`,
       );
@@ -901,6 +932,18 @@ export class ProcessorV2 extends Consumer {
     return await this.db.getMessagesByOriginAndRoot(origin, root);
   }
 
+  async getMsgsByOriginDestinationAndRoot(
+    origin: number,
+    destination: number,
+    root: string,
+  ): Promise<NomadMessage[]> {
+    return await this.db.getMessagesByOriginDestinationAndRoot(
+      origin,
+      destination,
+      root,
+    );
+  }
+
   async getMsgByOriginNonceAndDestination(
     origin: number,
     nonce: number,
@@ -911,22 +954,5 @@ export class ProcessorV2 extends Consumer {
       nonce,
       destination,
     );
-  }
-
-  async stats(): Promise<Statistics> {
-    const collector = new StatisticsCollector(this.domains);
-
-    let batch = 0;
-    const batchSize = 10000;
-
-    let messages: NomadMessage[];
-    do {
-      messages = await this.db.getAllMessages(batchSize, batchSize * batch++);
-      messages.forEach((m) => {
-        collector.contributeToCount(m);
-      });
-    } while (messages.length === batchSize);
-
-    return collector.stats();
   }
 }

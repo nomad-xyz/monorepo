@@ -69,7 +69,6 @@ export class StatisticsCollector {
 
 export abstract class Consumer extends EventEmitter {
   abstract consume(evens: NomadishEvent[]): Promise<void>;
-  abstract stats(): Promise<Statistics>;
 }
 
 enum MsgState {
@@ -187,6 +186,13 @@ export class Timings {
           Math.max(this.relayedAt, this.updatedAt, this.dispatchedAt)) /
           1000,
       ); // because of the problem with time that it is not ideal from RPC we could have skipped some stages. we take the last available
+    }
+    return undefined;
+  }
+
+  toE2E(): number | undefined {
+    if (this.processedAt) {
+      return Math.floor((this.processedAt - this.dispatchedAt) / 1000); // because of the problem with time that it is not ideal from RPC we could have skipped some stages. we take the last available
     }
     return undefined;
   }

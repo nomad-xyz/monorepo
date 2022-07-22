@@ -1,15 +1,18 @@
-FROM python:3.9-bullseye
-WORKDIR /code
+FROM node:16
+# ENV NODE_ENV=production
 
-# Allows docker to cache installed dependencies between builds
-COPY ./requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+ARG GIT_COMMIT
+ENV GIT_COMMIT=$GIT_COMMIT
 
-COPY src/keymaster.py keymaster.py
-COPY src/__init__.py __init__.py
-COPY src/config.py config.py
-COPY src/utils.py utils.py
+WORKDIR /app
 
-RUN adduser --disabled-password --gecos '' unpriv
-RUN chown -R unpriv: /code
-CMD python3 keymaster.py monitor
+COPY tsconfig.json ./tsconfig.json
+COPY package.json ./package.json
+RUN yarn install
+
+# RUN yarn build
+
+ADD src /app/src/
+# ADD configs /app/configs/
+
+CMD [ "yarn", "start" ]

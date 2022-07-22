@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/contracts-core",
-  "version": "1.0.0-rc.2",
+  "version": "1.1.0-rc.0",
   "description": "Nomad contracts",
   "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/contracts-core#readme",
   "bugs": {
@@ -50,6 +50,7 @@
     "ethers": "^5.4.4",
     "hardhat": "^2.8.3",
     "hardhat-gas-reporter": "^1.0.4",
+    "hardhat-packager": "~1.2.1",
     "prettier": "^2.2.1",
     "prettier-plugin-solidity": "^1.0.0-beta.5",
     "solhint": "^3.3.2",

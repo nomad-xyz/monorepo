@@ -79,15 +79,6 @@ contract HomeTest is NomadTestWithUpdaterManager {
         bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
         address sender = vm.addr(1555);
         bytes memory messageBody = new bytes(2 * 2**10 + 1);
-        uint32 nonce = home.nonces(remoteDomain);
-        bytes memory message = Message.formatMessage(
-            homeDomain,
-            bytes32(uint256(uint160(sender))),
-            nonce,
-            remoteDomain,
-            recipient,
-            messageBody
-        );
         vm.prank(sender);
         vm.expectRevert("msg too long");
         home.dispatch(remoteDomain, recipient, messageBody);

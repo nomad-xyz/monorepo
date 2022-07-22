@@ -1,8 +1,9 @@
 FROM node:16
 ENV NODE_ENV=production
 
-ARG GIT_COMMIT
-ENV GIT_COMMIT=$GIT_COMMIT
+ARG GITHUB_SHA="default"
+ENV GIT_COMMIT=$GITHUB_SHA
+RUN echo $GIT_COMMIT
 
 WORKDIR /app
 
@@ -14,4 +15,4 @@ RUN yarn prisma:generate
 
 ADD src /app/
 
-CMD [ "yarn", "start:all" ]
+CMD [ "yarn", "start" ]

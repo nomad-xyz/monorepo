@@ -6,7 +6,6 @@ import * as config from '@nomad-xyz/configuration';
 
 import { CoreContracts } from './CoreContracts';
 import { NomadMessage } from './messages/NomadMessage';
-import axios from 'axios';
 
 export type Address = string;
 
@@ -271,7 +270,9 @@ export class NomadContext extends MultiProvider<config.Domain> {
   }
 
   async checkHomes(networks: (string | number)[]): Promise<void> {
-    networks.forEach(async (n) => await this.checkHome(n));
+    for (const n of networks) {
+      await this.checkHome(n);
+    }
   }
 
   async checkHome(nameOrDomain: string | number): Promise<void> {
@@ -296,17 +297,10 @@ export class NomadContext extends MultiProvider<config.Domain> {
    */
   static async fetchConfig(environment: string): Promise<config.NomadConfig> {
     const uri = `https://nomad-xyz.github.io/config/${environment}.json`;
-    const confStr: string = await (
-      await axios.get(uri, {
-        // query URL without using browser cache
-        headers: {
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-          Expires: '0',
-        },
-      })
-    ).data;
-    return config.configFromString(confStr);
+    const config: config.NomadConfig = await (
+      await fetch(uri, { cache: 'no-cache' })
+    ).json();
+    return config;
   }
 
   /**

@@ -5,6 +5,7 @@ pragma solidity 0.7.6;
 import {BridgeMessage} from "./BridgeMessage.sol";
 import {IBridgeToken} from "./interfaces/IBridgeToken.sol";
 import {ITokenRegistry} from "./interfaces/ITokenRegistry.sol";
+import {IBridgeHook} from "./interfaces/IBridgeHook.sol";
 // ============ External Imports ============
 import {XAppConnectionClient} from "@nomad-xyz/contracts-router/contracts/XAppConnectionClient.sol";
 import {Router} from "@nomad-xyz/contracts-router/contracts/Router.sol";
@@ -34,7 +35,8 @@ contract BridgeRouter is Version0, Router {
 
     // contract that manages registry representation tokens
     ITokenRegistry public tokenRegistry;
-    // token transfer prefill ID => LP that pre-filled message to provide fast liquidity
+    // token transfer prefill ID => LP that pre-filled message to provide fast
+    // liquidity
     mapping(bytes32 => address) public liquidityProvider;
 
     // ============ Upgrade Gap ============
@@ -51,7 +53,8 @@ contract BridgeRouter is Version0, Router {
      * @param toDomain the domain of the chain the tokens are being sent to
      * @param toId the bytes32 address of the recipient of the tokens
      * @param amount the amount of tokens sent
-     * @param fastLiquidityEnabled True if fast liquidity is enabled, False otherwise
+     * @param toHook True if sent to a hook, on the remote chain, false
+     *        otherwise
      */
     event Send(
         address indexed token,
@@ -59,16 +62,19 @@ contract BridgeRouter is Version0, Router {
         uint32 indexed toDomain,
         bytes32 toId,
         uint256 amount,
-        bool fastLiquidityEnabled
+        bool toHook
     );
 
     /**
      * @notice emitted when tokens are dispensed to an account on this domain
-     * emitted both when fast liquidity is provided, and when the transfer ultimately settles
-     * @param originAndNonce Domain where the transfer originated and the unique identifier
-     * for the message from origin to destination, combined in a single field ((origin << 32) & nonce)
+     *         emitted both when fast liquidity is provided, and when the
+     *         transfer ultimately settles
+     * @param originAndNonce Domain where the transfer originated and the
+     *        unique identifier for the message from origin to destination,
+     *        combined in a single field ((origin << 32) & nonce)
      * @param token The address of the local token contract being received
-     * @param recipient The address receiving the tokens; the original recipient of the transfer
+     * @param recipient The address receiving the tokens; the original
+     *        recipient of the transfer
      * @param liquidityProvider The account providing liquidity
      * @param amount The amount of tokens being received
      */
@@ -98,7 +104,8 @@ contract BridgeRouter is Version0, Router {
     /**
      * @notice Handles an incoming message
      * @param _origin The origin domain
-     * @param _nonce The unique identifier for the message from origin to destination
+     * @param _nonce The unique identifier for the message from origin to
+     *        destination
      * @param _sender The sender address
      * @param _message The message
      */
@@ -114,9 +121,9 @@ contract BridgeRouter is Version0, Router {
         bytes29 _action = _msg.action();
         // handle message based on the intended action
         if (_action.isTransfer()) {
-            _handleTransfer(_origin, _nonce, _tokenId, _action, false);
-        } else if (_action.isFastTransfer()) {
-            _handleTransfer(_origin, _nonce, _tokenId, _action, true);
+            _handleTransfer(_origin, _nonce, _tokenId, _action);
+        } else if (_action.isTransferToHook()) {
+            _handleTransferToHook(_origin, _nonce, _tokenId, _action);
         } else {
             require(false, "!valid action");
         }
@@ -138,61 +145,64 @@ contract BridgeRouter is Version0, Router {
         bytes32 _recipient,
         bool /*_enableFast - deprecated field, left argument for backwards compatibility */
     ) external {
-        require(_amount > 0, "!amnt");
+        // validate inputs
         require(_recipient != bytes32(0), "!recip");
-        // get remote BridgeRouter address; revert if not found
-        bytes32 _remote = _mustHaveRemote(_destination);
-        // Setup vars used in both if branches
-        IBridgeToken _t = IBridgeToken(_token);
-        bytes32 _detailsHash;
-        // remove tokens from circulation on this chain
-        if (tokenRegistry.isLocalOrigin(_token)) {
-            // if the token originates on this chain,
-            // hold the tokens in escrow in the Router
-            IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-            // query token contract for details and calculate detailsHash
-            _detailsHash = BridgeMessage.getDetailsHash(
-                _t.name(),
-                _t.symbol(),
-                _t.decimals()
-            );
-        } else {
-            // if the token originates on a remote chain,
-            // burn the representation tokens on this chain
-            _t.burn(msg.sender, _amount);
-            _detailsHash = _t.detailsHash();
-        }
-        // format Transfer Tokens action
+        // debit tokens from the sender
+        (bytes29 _tokenId, bytes32 _detailsHash) = _takeTokens(
+            _token,
+            _amount
+        );
+        // format Transfer message
         bytes29 _action = BridgeMessage.formatTransfer(
             _recipient,
             _amount,
             _detailsHash
         );
-        // get the tokenID
-        (uint32 _domain, bytes32 _id) = tokenRegistry.getTokenId(_token);
-        bytes29 _tokenId = BridgeMessage.formatTokenId(_domain, _id);
-        // send message to remote chain via Nomad
-        Home(xAppConnectionManager.home()).dispatch(
-            _destination,
-            _remote,
-            BridgeMessage.formatMessage(_tokenId, _action)
-        );
+        // send message to destination chain bridge router
+        _sendTransferMessage(_destination, _tokenId, _action);
         // emit Send event to record token sender
-        emit Send(
+        emit Send(_token, msg.sender, _destination, _recipient, _amount, false);
+    }
+
+    /**
+     * @notice Send tokens to a hook on the remote chain
+     * @param _token The token address
+     * @param _amount The token amount
+     * @param _destination The destination domain
+     * @param _remoteHook The hook contract on the remote chain
+     * @param _extraData Extra data that will be passed to the hook for
+     *        execution
+     */
+    function sendToHook(
+        address _token,
+        uint256 _amount,
+        uint32 _destination,
+        bytes32 _remoteHook,
+        bytes calldata _extraData
+    ) external {
+        // debit tokens from msg.sender
+        (bytes29 _tokenId, bytes32 _detailsHash) = _takeTokens(
             _token,
-            msg.sender,
-            _destination,
-            _recipient,
-            _amount,
-            false
+            _amount
         );
+        // format Hook transfer message
+        bytes29 _action = BridgeMessage.formatTransferToHook(
+            _remoteHook,
+            _amount,
+            _detailsHash,
+            _extraData
+        );
+        // send message to destination chain bridge router
+        _sendTransferMessage(_destination, _tokenId, _action);
+        // emit Send event to record token sender
+        emit Send(_token, msg.sender, _destination, _remoteHook, _amount, true);
     }
 
     // ======== External: Custom Tokens =========
 
     /**
      * @notice Enroll a custom token. This allows projects to work with
-     * governance to specify a custom representation.
+     *         governance to specify a custom representation.
      * @param _domain the domain of the canonical Token to enroll
      * @param _id the bytes32 ID of the canonical of the Token to enroll
      * @param _custom the address of the custom implementation to use.
@@ -211,10 +221,10 @@ contract BridgeRouter is Version0, Router {
 
     /**
      * @notice Migrate all tokens in a previous representation to the latest
-     * custom representation. This works by looking up local mappings and then
-     * burning old tokens and minting new tokens.
+     *         custom representation. This works by looking up local mappings
+     *         and then burning old tokens and minting new tokens.
      * @dev This is explicitly opt-in to allow dapps to decide when and how to
-     * upgrade to the new representation.
+     *      upgrade to the new representation.
      * @param _oldRepr The address of the old token to migrate
      */
     function migrate(address _oldRepr) external {
@@ -227,6 +237,72 @@ contract BridgeRouter is Version0, Router {
         IBridgeToken(_currentRepr).mint(msg.sender, _bal);
     }
 
+    // ============ Internal: Send ============
+
+    /**
+     * @notice Take from msg.sender as part of sending tokens across chains
+     * @dev Locks canonical tokens in escrow in BridgeRouter
+     *      OR Burns representation tokens
+     * @param _token The token to pull from the sender
+     * @param _amount The amount to pull from the sender
+     * @return _tokenId the bytes canonical token identifier
+     * @return _detailsHash the hash of the canonical token details (name,
+     *         symbol, decimal)
+     */
+    function _takeTokens(address _token, uint256 _amount)
+        internal
+        returns (bytes29 _tokenId, bytes32 _detailsHash)
+    {
+        // ensure that amount is non-zero
+        require(_amount > 0, "!amnt");
+        // Setup vars used in both if branches
+        IBridgeToken _t = IBridgeToken(_token);
+        // remove tokens from circulation on this chain
+        if (tokenRegistry.isLocalOrigin(_token)) {
+            // if the token originates on this chain,
+            // hold the tokens in escrow in the Router
+            IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+            // query token contract for details and calculate detailsHash
+            _detailsHash = BridgeMessage.getDetailsHash(
+                _t.name(),
+                _t.symbol(),
+                _t.decimals()
+            );
+        } else {
+            // if the token originates on a remote chain,
+            // burn the representation tokens on this chain
+            _t.burn(msg.sender, _amount);
+            _detailsHash = _t.detailsHash();
+        }
+        // get the tokenID
+        (uint32 _domain, bytes32 _id) = tokenRegistry.getTokenId(_token);
+        _tokenId = BridgeMessage.formatTokenId(_domain, _id);
+    }
+
+    /**
+     * @notice Dispatch a message via Nomad to a destination domain
+     *         addressed to the remote BridgeRouter on that chain
+     * @dev Message will trigger `handle` method on the remote BridgeRouter
+     *      when it is received on the destination chain
+     * @param _destination The domain of the destination chain
+     * @param _tokenId The canonical token identifier for the transfer message
+     * @param _action The contents of the transfer message
+     */
+    function _sendTransferMessage(
+        uint32 _destination,
+        bytes29 _tokenId,
+        bytes29 _action
+    ) internal {
+        // get remote BridgeRouter address; revert if not found
+        bytes32 _remote = _mustHaveRemote(_destination);
+        // send message to remote chain via Nomad
+        Home(xAppConnectionManager.home()).dispatch(
+            _destination,
+            _remote,
+            BridgeMessage.formatMessage(_tokenId, _action)
+        );
+    }
+
     // ============ Internal: Handle ============
 
     /**
@@ -236,43 +312,101 @@ contract BridgeRouter is Version0, Router {
      * Otherwise, a representation token is minted.
      *
      * @param _origin The domain of the chain from which the transfer originated
-     * @param _nonce The unique identifier for the message from origin to destination
+     * @param _nonce The unique identifier for the message from origin to
+     *        destination
      * @param _tokenId The token ID
      * @param _action The action
-     * @param _fastEnabled True if fast liquidity was enabled, False otherwise
      */
     function _handleTransfer(
         uint32 _origin,
         uint32 _nonce,
         bytes29 _tokenId,
-        bytes29 _action,
-        bool _fastEnabled
+        bytes29 _action
     ) internal {
+        // tokens will be sent to the specified recipient
+        address _recipient = _action.evmRecipient();
+        // send tokens
+        _giveTokens(_origin, _nonce, _tokenId, _action, _recipient);
+        // dust the recipient with gas tokens
+        _dust(_recipient);
+    }
+
+    /**
+     * @notice Handles an incoming TransferToHook message.
+     *
+     * @dev The hook is called AFTER tokens have been transferred to the hook
+     *      contract. If this hook errors, the bridge WILL NOT revert, and the
+     *      hook contract will own those tokens. Hook contracts MUST have a
+     *      recovery plan in place for these situations.
+     *
+     * @param _origin The domain of the chain from which the transfer originated
+     * @param _nonce The unique identifier for the message from origin to destination
+     * @param _tokenId The token ID
+     * @param _action The action
+     */
+    function _handleTransferToHook(
+        uint32 _origin,
+        uint32 _nonce,
+        bytes29 _tokenId,
+        bytes29 _action
+    ) internal {
+        // tokens will be sent to user-specified hook
+        address _hook = _action.evmHook();
+        // send tokens
+        address _token = _giveTokens(
+            _origin,
+            _nonce,
+            _tokenId,
+            _action,
+            _hook
+        );
+        // ABI-encode the calldata for a `Hook.onRecive` call
+        bytes memory _call = abi.encodeWithSelector(
+            IBridgeHook.onReceive.selector,
+            _origin,
+            _tokenId.domain(),
+            _tokenId.id(),
+            _token,
+            _action.amnt(),
+            _action.extraData().clone()
+        );
+        // Call the hook with the ABI-encoded payload
+        // We use a low-level call here so that solc will skip pre-call
+        // and post-call checks. Specifically we want to skip
+        // 1. pre-flight extcode check
+        // 2. post-flight success check
+        // We do this so that the hook contract need not exist, and need
+        // not execute succesfully
+        _hook.call(_call);
+    }
+
+    /**
+     * @notice Send tokens to a specified recipient.
+     * @dev Unlocks canonical tokens from escrow in BridgeRouter
+     *      OR Mints representation tokens
+     * @param _origin The domain of the chain from which the transfer originated
+     * @param _nonce The unique identifier for the message from origin to
+     *        destination
+     * @param _tokenId The canonical token identifier to credit
+     * @param _action The contents of the transfer message
+     * @param _recipient The recipient that will receive tokens
+     * @return _token The address of the local token contract
+     */
+    function _giveTokens(
+        uint32 _origin,
+        uint32 _nonce,
+        bytes29 _tokenId,
+        bytes29 _action,
+        address _recipient
+    ) internal returns (address _token) {
         // get the token contract for the given tokenId on this chain;
         // (if the token is of remote origin and there is
         // no existing representation token contract, the TokenRegistry will
         // deploy a new one)
-        address _token = tokenRegistry.ensureLocalToken(
+        _token = tokenRegistry.ensureLocalToken(
             _tokenId.domain(),
             _tokenId.id()
         );
-        // load the original recipient of the tokens
-        address _recipient = _action.evmRecipient();
-        if (_fastEnabled) {
-            // If an LP has prefilled this token transfer,
-            // send the tokens to the LP instead of the recipient
-            bytes32 _id = BridgeMessage.getPreFillId(
-                _origin,
-                _nonce,
-                _tokenId,
-                _action
-            );
-            address _lp = liquidityProvider[_id];
-            if (_lp != address(0)) {
-                _recipient = _lp;
-                delete liquidityProvider[_id];
-            }
-        }
         // load amount once
         uint256 _amount = _action.amnt();
         // send the tokens into circulation on this chain
@@ -289,8 +423,6 @@ contract BridgeRouter is Version0, Router {
             // Tell the token what its detailsHash is
             IBridgeToken(_token).setDetailsHash(_action.detailsHash());
         }
-        // dust the recipient if appropriate
-        _dust(_recipient);
         // emit Receive event
         emit Receive(
             _originAndNonce(_origin, _nonce),
@@ -329,10 +461,11 @@ contract BridgeRouter is Version0, Router {
 
     /**
      * @notice Internal utility function that combines
-     * `_origin` and `_nonce`.
+     *         `_origin` and `_nonce`.
      * @dev Both origin and nonce should be less than 2^32 - 1
      * @param _origin Domain of chain where the transfer originated
-     * @param _nonce The unique identifier for the message from origin to destination
+     * @param _nonce The unique identifier for the message from origin to
+              destination
      * @return Returns (`_origin` << 32) & `_nonce`
      */
     function _originAndNonce(uint32 _origin, uint32 _nonce)
@@ -344,9 +477,9 @@ contract BridgeRouter is Version0, Router {
     }
 
     /**
-    * @dev should be impossible to renounce ownership;
-     * we override OpenZeppelin OwnableUpgradeable's
-     * implementation of renounceOwnership to make it a no-op
+     * @dev should be impossible to renounce ownership;
+     *      we override OpenZeppelin OwnableUpgradeable's
+     *      implementation of renounceOwnership to make it a no-op
      */
     function renounceOwnership() public override onlyOwner {
         // do nothing
