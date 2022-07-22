@@ -524,6 +524,37 @@ export class HardhatNetwork extends Network {
         return wethAddyTom;
     }
 
+    async deployToken(
+      contractFactory: ethers.ContractFactory,
+      from: string | ethers.providers.JsonRpcSigner,
+      ...args: string[]
+    ): Promise<ethers.Contract> {
+      let signer: ethers.providers.JsonRpcSigner;
+      if (typeof from === "string") {
+        signer = this.getJsonRpcSigner(from);
+      } else {
+        signer = from;
+      }
+ 
+      contractFactory = contractFactory.connect(signer);
+ 
+      const contract = await contractFactory.deploy(...args);
+ 
+      await contract.deployed();
+      return contract;
+    }
+ 
+    getJsonRpcSigner(
+      addressOrIndex: string | number
+    ): ethers.providers.JsonRpcSigner {
+      const provider = this.getJsonRpcProvider();
+      return provider.getSigner(addressOrIndex);
+    }
+ 
+    getJsonRpcProvider(): ethers.providers.JsonRpcProvider {
+      return new ethers.providers.JsonRpcProvider(`http://localhost:${this.handler.port}`);
+    }
+
     private async connect() {
         this.firstStart = await this.handler.connect();
     }
