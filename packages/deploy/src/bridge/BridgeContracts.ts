@@ -360,7 +360,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const enrolledRemote = await this.bridgeRouterContract.remotes(
       remoteConfig.domain,
     );
-    if (!utils.equalIds(enrolledRemote, remoteBridge.bridgeRouterContract.address)) return;
+    if (utils.equalIds(enrolledRemote, remoteBridge.bridgeRouterContract.address)) return;
     log(`enroll BridgeRouter for ${remoteName} on ${local}`);
 
     // Check that this key has permissions to set this
