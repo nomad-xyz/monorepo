@@ -23,6 +23,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
   protected _verification: Map<string, Array<Verification>>;
   protected _callBatch: CallBatch;
   protected _outputDir: string;
+  protected _instantiatedAt: number;
 
   constructor(data: config.NomadConfig, outputDir: string) {
     super();
@@ -31,6 +32,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
     this.overrides = new Map();
     this._verification = new Map();
     this._outputDir = outputDir;
+    this._instantiatedAt = Date.now();
 
     for (const network of this.data.networks) {
       this.registerDomain(this.data.protocol.networks[network]);
@@ -73,6 +75,10 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
   get outputDir(): Readonly<string> {
     return this._outputDir;
+  }
+
+  get instantiatedAt(): Readonly<number> {
+    return this._instantiatedAt;
   }
 
   get verification(): Readonly<Map<string, ReadonlyArray<Verification>>> {
@@ -175,8 +181,10 @@ export class DeployContext extends MultiProvider<config.Domain> {
     const verification = Object.fromEntries(this.verification);
     if (Object.keys(verification).length > 0) {
       // output the verification inputs
+      // Note: append the timestamp so that
+      // verification outputs for different runs are disambiguated
       fs.writeFileSync(
-          `${this.outputDir}/verification-${Date.now()}.json`,
+          `${this.outputDir}/verification-${this.instantiatedAt}.json`,
           JSON.stringify(verification, null, 2),
       );
     }
