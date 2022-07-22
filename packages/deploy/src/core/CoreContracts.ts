@@ -603,7 +603,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const enrolledRemote = await this.governanceRouter.routers(
       remoteConfig.domain,
     );
-    if (!utils.equalIds(enrolledRemote, ethers.constants.AddressZero)) return;
+    if (!utils.equalIds(enrolledRemote, remoteCore.governanceRouter.address)) return;
     log(`enroll GovernanceRouter for ${remote} on ${local}`);
 
     // Check that this key has permissions to set this
