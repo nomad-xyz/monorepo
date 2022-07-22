@@ -240,7 +240,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
   async ensureCores(): Promise<void> {
     const networksToDeploy = this.networks.filter((net) => !this.cores[net]);
     await Promise.all(
-      networksToDeploy.map(async (net) => this.deployCore(this.mustGetDomainConfig(net))),
+      networksToDeploy.map((net) => this.deployCore(this.mustGetDomainConfig(net))),
     );
   }
 
@@ -282,7 +282,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
   /// Deploys all configured bridges.
   async ensureBridges(): Promise<void> {
     const toDeploy = this.networks.filter((net) => !this.bridges[net]);
-    await Promise.all(toDeploy.map(async (net) => this.deployBridge(net)));
+    await Promise.all(toDeploy.map((net) => this.deployBridge(net)));
   }
 
   async ensureBridgeConnections(): Promise<void> {
