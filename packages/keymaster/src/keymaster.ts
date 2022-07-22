@@ -1,6 +1,7 @@
 import { AgentRole, allowAgent, KeymasterConfig } from "./config";
 import { Accountable, Network, RemoteAgent, RemoteWatcher } from "./account";
 import { Context } from "./context";
+import { sleep } from "./utils";
 
 export class Keymaster {
   config: KeymasterConfig;
@@ -90,20 +91,27 @@ export class Keymaster {
 
   async checkAndPayEnabledNetworks(
     networks: string[],
+    period: number,
     dryrun = false
   ): Promise<void> {
-    for (const net of this.networks.values()) {
-      try {
-        if (networks.length === 0 || networks.includes(net.name)) {
-          await net.checkAndPay(dryrun);
+    const promises = Array.from(this.networks.values()).map(async (net) => {
+      while (true) {
+        try {
+          if (networks.length === 0 || networks.includes(net.name)) {
+            await net.checkAndPay(dryrun);
+          }
+          await sleep(period * 1000);
+        } catch (e) {
+          net.ctx.logger.error(
+            `Failed check and pay loop for the whole network.`
+          );
+          net.ctx.metrics.incMalfunctions(net.name, "checkAndPay");
+          await sleep(period * 10 * 1000);
         }
-      } catch (e) {
-        net.ctx.logger.error(
-          `Failed check and pay loop for the whole network.`
-        );
-        net.ctx.metrics.incMalfunctions(net.name, "checkAndPay");
       }
-    }
+    });
+
+    await Promise.all(promises); // basically, block here
   }
 
   get networkNames(): string[] {
