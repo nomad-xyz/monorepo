@@ -1,11 +1,10 @@
-import { Agents, AgentType } from "./agent";
+import { Agents } from "./agent";
 import { NetworkSpecs, ContractConfig, BridgeConfiguration, BaseAgentConfig, Domain, CoreContracts, BridgeContracts, AgentConfig, LogConfig, AppConfig, NomadGasConfig } from '@nomad-xyz/configuration';
 import { DockerizedActor } from "./actor";
 import Dockerode from "dockerode";
 import { sleep } from "./utils";
 import { ethers } from 'ethers';
 import { Key } from "./key";
-import { NomadEnv } from "./le";
 import {  } from "@nomad-xyz/configuration";
 //import { getContractAddress } from "ethers/lib/utils";
 
@@ -25,12 +24,6 @@ export abstract class Network {
     domainNumber: number;
     chainId: number;
     deployOverrides: ethers.Overrides;
-    signers: Map<number | string, Key>;
-    updaters: Map<number | string, Key>;
-    watchers: Map<number | string, Key>;
-    relayers: Map<number | string, Key>;
-    kathys: Map<number | string, Key>;
-    processors: Map<number | string, Key>;
 
     coreContracts?: CoreContracts;
     bridgeContracts?: BridgeContracts;
@@ -53,12 +46,6 @@ export abstract class Network {
         this.name = name;
         this.domainNumber = domainNumber;
         this.chainId = chainId;
-        this.signers = new Map();
-        this.updaters = new Map();
-        this.watchers = new Map();
-        this.relayers = new Map();
-        this.kathys = new Map();
-        this.processors = new Map();
         this.deployOverrides = { gasLimit: 30000000 };
 
         try {
@@ -158,54 +145,6 @@ export abstract class Network {
       return !!this.coreContracts && !!this.bridgeContracts
     }
 
-    get isAgentUp(): boolean {
-      return !!this.agents
-    }
-
-    getSignerKey(
-      agentType?: string | AgentType
-    ): Key | undefined {
-      const domain = this.domainNumber;
-      if (domain) {
-        if (agentType) {
-          const mapKey = `agentType_${domain}`;
-          return this.signers.get(mapKey);
-        } else {
-          return this.signers.get(this.domainNumber);
-        }
-      }
-      return undefined;
-    }
- 
-    getUpdaterKey(): Key | undefined {
-      const domain = this.domainNumber;
-      if (domain) {
-        return this.updaters.get(this.domainNumber);
-      }
-      return undefined;
-    }
- 
-    getWatcherKey(): Key | undefined {
-      const domain = this.domainNumber;
-      if (domain) return this.watchers.get(this.domainNumber);
-      return undefined;
-    }
-
-    getKathyKey(): Key | undefined {
-      const domain = this.domainNumber;
-      if (domain) return this.kathys.get(this.domainNumber);
-      return undefined;
-    }
-    getProcessorKey(): Key | undefined {
-      const domain = this.domainNumber;
-      if (domain) return this.processors.get(this.domainNumber);
-      return undefined;
-    }
-    getRelayerKey(): Key | undefined {
-      const domain = this.domainNumber;
-      if (domain) return this.relayers.get(this.domainNumber);
-      return undefined;
-    }
 }
 
 let ports = 1337;
@@ -334,57 +273,6 @@ export class HardhatNetwork extends Network {
      this.keys.push(...ks);
    }
 
-   // Add keys to agents logic:
-   setUpdater(key: Key) {
-    const domain = this.domainNumber;
-
-    if (domain) this.updaters.set(this.domainNumber, key);
-   }
-
-   setWatcher(key: Key) {
-    const domain = this.domainNumber;
-
-    if (domain) this.watchers.set(this.domainNumber, key);
-   }
-
-   setKathy(key: Key) {
-    const domain = this.domainNumber;
-
-    if (domain) this.kathys.set(this.domainNumber, key);
-   }
-
-   setProcessor(key: Key) {
-    const domain = this.domainNumber;
-
-    if (domain) this.processors.set(this.domainNumber, key);
-   }
-
-   setRelayer(key: Key) {
-    const domain = this.domainNumber;
-
-    if (domain) this.relayers.set(this.domainNumber, key);
-   }
-
-   setSigner(key: Key, agentType?: string | AgentType) {
-     const domain = this.domainNumber;
-
-     if (domain) {
-       if (agentType) {
-         const mapKey = `${agentType}_${domain}`;
-         this.signers.set(mapKey, key);
-       } else {
-         this.signers.set(this.domainNumber, key);
-       }
-     }
-   }
-   
-   //Used for governor settings on this.updater, this.watcher, this.recoveryManager
-   setGovernanceKeys(key: Key) {
-    this.updater = key.toAddress();
-    this.watcher = key.toAddress();
-    this.recoveryManager = key.toAddress();
-   }
-
     get connections(): string[] {
         return this.connectedNetworks.map(n => n.name);
     }
@@ -397,20 +285,11 @@ export class HardhatNetwork extends Network {
       if (!this.connectedNetworks.includes(n)) this.connectedNetworks.push(n);
     }
 
-    async upAgents(n: Network, env: NomadEnv, metricsPort: number) {
-      this.agents = new Agents(n, env, metricsPort);
-      await this.agents.relayer.connect();
-      this.agents.relayer.start();
-      await this.agents.updater.connect();
-      this.agents.updater.start();
-      await this.agents.processor.connect();
-      this.agents.processor.start();
-      await this.agents.kathy.connect();
-      this.agents.kathy.start();
-      for (const watcher of this.agents.watchers) {
-        await watcher.connect();
-        watcher.start();
-      }
+    //Used for governor settings on this.updater, this.watcher, this.recoveryManager
+    setGovernanceAddresses(key: Key) {
+      this.updater = key.toAddress();
+      this.watcher = key.toAddress();
+      this.recoveryManager = key.toAddress();
     }
 
     get specs(): NetworkSpecs {

@@ -7,17 +7,149 @@ import { NonceManager } from "@ethersproject/experimental";
 import fs from 'fs';
 import bunyan from 'bunyan';
 import { Key } from './key';
+import { Agents , AgentType } from "./agent";
+
 dotenv.config();
 
 export class NomadEnv {
+    agents?: Agents;
     networks: Network[];
     governor: NomadLocator;
     log = bunyan.createLogger({name: 'localenv'});
+    signers: Map<number | string, Key>;
+    updaters: Map<number | string, Key>;
+    watchers: Map<number | string, Key>;
+    relayers: Map<number | string, Key>;
+    kathys: Map<number | string, Key>;
+    processors: Map<number | string, Key>;
 
     constructor(governor: NomadLocator) {
         this.networks = [];
         this.governor = governor;
+        this.signers = new Map();
+        this.updaters = new Map();
+        this.watchers = new Map();
+        this.relayers = new Map();
+        this.kathys = new Map();
+        this.processors = new Map();
     }
+
+    get isAgentUp(): boolean {
+      return !!this.agents
+    }
+
+    getSignerKey(
+      network: Network,
+      agentType?: string | AgentType
+    ): Key | undefined {
+      const domain = network.domainNumber;
+      if (domain) {
+        if (agentType) {
+          const mapKey = `agentType_${domain}`;
+          return this.signers.get(mapKey);
+        } else {
+          return this.signers.get(network.domainNumber);
+        }
+      }
+      return undefined;
+    }
+ 
+    getUpdaterKey(network: Network): Key | undefined {
+      const domain = network.domainNumber;
+      if (domain) {
+        return this.updaters.get(network.domainNumber);
+      }
+      return undefined;
+    }
+ 
+    getWatcherKey(network: Network): Key | undefined {
+      const domain = network.domainNumber;
+      if (domain) return this.watchers.get(network.domainNumber);
+      return undefined;
+    }
+
+    getKathyKey(network: Network): Key | undefined {
+      const domain = network.domainNumber;
+      if (domain) return this.kathys.get(network.domainNumber);
+      return undefined;
+    }
+    getProcessorKey(network: Network): Key | undefined {
+      const domain = network.domainNumber;
+      if (domain) return this.processors.get(network.domainNumber);
+      return undefined;
+    }
+    getRelayerKey(network: Network): Key | undefined {
+      const domain = network.domainNumber;
+      if (domain) return this.relayers.get(network.domainNumber);
+      return undefined;
+    }
+
+   // Sets keys for each agent across all Nomad networks.
+   setUpdater(key: Key) {
+    for (const network of this.networks) {
+      const domain = network.domainNumber;
+      if (domain) this.updaters.set(network.domainNumber, key);
+    }
+   }
+
+   setWatcher(key: Key) {
+    for (const network of this.networks) {
+      const domain = network.domainNumber;
+      if (domain) this.watchers.set(network.domainNumber, key);
+    }
+   }
+
+   setKathy(key: Key) {
+    for (const network of this.networks) {
+      const domain = network.domainNumber;
+      if (domain) this.kathys.set(network.domainNumber, key);
+    }
+   }
+
+   setProcessor(key: Key) {
+    for (const network of this.networks) {
+      const domain = network.domainNumber;
+      if (domain) this.processors.set(network.domainNumber, key);
+    }
+   }
+
+   setRelayer(key: Key) {
+    for (const network of this.networks) {
+      const domain = network.domainNumber;
+      if (domain) this.relayers.set(network.domainNumber, key);
+    }
+   }
+
+   setSigner(key: Key, agentType?: string | AgentType) {
+    for (const network of this.networks) {
+     const domain = network.domainNumber;
+
+     if (domain) {
+       if (agentType) {
+         const mapKey = `${agentType}_${domain}`;
+         this.signers.set(mapKey, key);
+       } else {
+         this.signers.set(network.domainNumber, key);
+       }
+     }
+    }
+  }   
+
+  async upAgents(n: Network, env: NomadEnv, metricsPort: number) {
+      this.agents = new Agents(n, env, metricsPort);
+      await this.agents.relayer.connect();
+      this.agents.relayer.start();
+      await this.agents.updater.connect();
+      this.agents.updater.start();
+      await this.agents.processor.connect();
+      this.agents.processor.start();
+      await this.agents.kathy.connect();
+      this.agents.kathy.start();
+      for (const watcher of this.agents.watchers) {
+        await watcher.connect();
+        watcher.start();
+      }
+  }
 
     // Adds a network to the array of networks if it's not already there.
     addNetwork(n: Network) {
@@ -182,21 +314,16 @@ export class NomadEnv {
     log.info(`Added Tom and Jerry`);
 
     // Set keys
-    t.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
-    t.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
-    t.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
-    t.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
-    t.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
-    t.setGovernanceKeys(new Key(`` + process.env.PRIVATE_KEY_1 + ``)); // setGovernanceKeys should have the same PK as the signer keys
-    t.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    le.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    le.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
+    le.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
+    le.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
+    le.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
+    le.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
 
-    j.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
-    j.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
-    j.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
-    j.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
-    j.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
-    j.setGovernanceKeys(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
-    j.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    t.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``)); // setGovernanceKeys should have the same PK as the signer keys
+    j.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+
     log.info(`Added Keys`)
     
     t.connectNetwork(j);
@@ -215,8 +342,8 @@ export class NomadEnv {
 
     // let myContracts = le.deploymyproject();
 
-    await t.upAgents(t, le, 9080);
-    await j.upAgents(j, le, 9090);
+    await le.upAgents(t, le, 9080);
+    await le.upAgents(j, le, 9090);
     log.info(`Agents up`);
 
 })()

@@ -164,26 +164,26 @@ export class LocalAgent extends DockerizedActor implements Agent {
      switch (this.agentType) {
       case AgentType.Updater: {
          envs.push(
-            `DEFAULT_TXSIGNER_KEY=0x${this.network.getUpdaterKey()}` //Gets the key after LE assigns off of domainNumber.
+            `DEFAULT_TXSIGNER_KEY=0x${this.env.getUpdaterKey(this.network)}` //Gets the key after LE assigns off of domainNumber.
          );
-         envs.push(`ATTESTATION_SIGNER_KEY=0x${this.network.getSignerKey()}`); //Important that all agents have unique TXSIGNER keys, but not attestation. Updater uses this key to sign merkle-root transitions.
+         envs.push(`ATTESTATION_SIGNER_KEY=0x${this.env.getSignerKey(this.network)}`); //Important that all agents have unique TXSIGNER keys, but not attestation. Updater uses this key to sign merkle-root transitions.
          break;
        }
       case AgentType.Watcher: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.network.getWatcherKey()}`);
-        envs.push(`ATTESTATION_SIGNER_KEY=0x${this.network.getSignerKey()}`); //Watchers use this key to sign attestations of fraudulent roots.
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.env.getWatcherKey(this.network)}`);
+        envs.push(`ATTESTATION_SIGNER_KEY=0x${this.env.getSignerKey(this.network)}`); //Watchers use this key to sign attestations of fraudulent roots.
         break;
       }
       case AgentType.Relayer: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.network.getRelayerKey()}`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.env.getRelayerKey(this.network)}`);
         break;
       }
       case AgentType.Kathy: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.network.getKathyKey()}`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.env.getKathyKey(this.network)}`);
         break;
       }
       case AgentType.Processor: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.network.getProcessorKey()}`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.env.getProcessorKey(this.network)}`);
         break;
       }
      };
