@@ -124,7 +124,6 @@ export class CallBatch {
 
   isEmpty(): boolean {
     return this.local.length == 0 && this.remoteDomains.length == 0;
-
   }
 
   pushLocal(call: Call): void {
@@ -201,7 +200,7 @@ export class CallBatch {
   // @dev ensure waitDomain returns before attempting to executeDomain
   async executeDomain(
     nameOrDomain: number | string,
-    overrides: ethers.Overrides = {}
+    overrides: ethers.Overrides = {},
   ): Promise<ethers.providers.TransactionResponse> {
     const domain = this.context.resolveDomain(nameOrDomain);
     const calls = this.remote.get(domain);

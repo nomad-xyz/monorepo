@@ -48,11 +48,29 @@ export enum MessageStatus {
   Processed = 3,
 }
 
-export enum ReplicaMessageStatus {
-  None = 0,
-  Proven,
-  Processed,
+export enum ReplicaStatusNames {
+  None = 'none',
+  Proven = 'proven',
+  Processed = 'processed',
 }
+
+type ReplicaMessageStatusNone = {
+  status: ReplicaStatusNames.None;
+};
+
+type ReplicaMessageStatusProcess = {
+  status: ReplicaStatusNames.Processed;
+};
+
+type ReplicaMessageStatusProven = {
+  status: ReplicaStatusNames.Proven;
+  root: string;
+};
+
+export type ReplicaMessageStatus =
+  | ReplicaMessageStatusNone
+  | ReplicaMessageStatusProcess
+  | ReplicaMessageStatusProven;
 
 export type EventCache = {
   homeUpdate?: AnnotatedUpdate;
@@ -450,13 +468,23 @@ export class NomadMessage<T extends NomadContext> {
   async replicaStatus(): Promise<ReplicaMessageStatus> {
     // backwards compatibility. Older replica versions returned a number,
     // newer versions return a hash
-    const root = (await this.replica.messages(this.leaf)) as string | number;
-    if (root === ethers.constants.HashZero || root === 0)
-      return ReplicaMessageStatus.None;
-    if (root === `0x${'00'.repeat(31)}02` || root === 2)
-      return ReplicaMessageStatus.Processed;
+    let root: string | number = await this.replica.messages(this.leaf);
+    root = root as string | number;
 
-    return ReplicaMessageStatus.Proven;
+    // case one: root is 0
+    if (root === ethers.constants.HashZero || root === 0)
+      return { status: ReplicaStatusNames.None };
+
+    // case two: root is 2
+    const legacyProcessed = `0x${'00'.repeat(31)}02`;
+    if (root === legacyProcessed || root === 2)
+      return { status: ReplicaStatusNames.Processed };
+
+    // case 3: root is proven. Could be either the root, or the legacy proven
+    // status
+    const legacyProven = `0x${'00'.repeat(31)}01`;
+    if (typeof root === 'number') root = legacyProven;
+    return { status: ReplicaStatusNames.Proven, root: root as string };
   }
 
   /**
@@ -465,8 +493,8 @@ export class NomadMessage<T extends NomadContext> {
    * @returns true if processed, else false.
    */
   async delivered(): Promise<boolean> {
-    const status = await this.replicaStatus();
-    return status === ReplicaMessageStatus.Processed;
+    const { status } = await this.replicaStatus();
+    return status === ReplicaStatusNames.Processed;
   }
 
   /**

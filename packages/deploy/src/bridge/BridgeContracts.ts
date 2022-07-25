@@ -290,9 +290,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       );
 
     const factory = new contracts.BridgeRouter__factory(this.deployer);
-    const implementation = await factory.deploy(
-      this.overrides,
-    );
+    const implementation = await factory.deploy(this.overrides);
     await implementation.deployTransaction.wait(this.confirmations);
 
     this._data.bridgeRouter = await this.newProxy(

@@ -10,7 +10,6 @@ import {Message} from "../libs/Message.sol";
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 
 contract ReplicaTest is ReplicaHandlers {
-
     // Read about memview: https://github.com/summa-tx/memview-sol
     using TypedMemView for bytes;
     using TypedMemView for bytes29;
@@ -227,12 +226,8 @@ contract ReplicaTest is ReplicaHandlers {
             receiver,
             messageBody
         );
-        (
-            bytes32 root,
-            bytes32 leaf,
-            uint256 index,
-            bytes32[32] memory proof
-        ) = merkleTest.getProof(message);
+        (bytes32 root, , uint256 index, bytes32[32] memory proof) = merkleTest
+            .getProof(message);
         replica.setCommittedRoot(root);
         vm.expectEmit(true, true, true, true);
         bytes memory returnData = hex"";
@@ -331,6 +326,7 @@ contract ReplicaTest is ReplicaHandlers {
         emit Process(message.ref(0).keccak(), true, "");
         assertTrue(replica.process(message));
     }
+
     /// @notice It should revert because it calls a handle() function that has a require() that is not satisfied
     function test_notProcessLegacyProvenMessageRevertingHandlers1() public {
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
@@ -351,6 +347,7 @@ contract ReplicaTest is ReplicaHandlers {
         vm.expectRevert();
         replica.process(message);
     }
+
     /// @notice It revert because it calls a handle() function that has a require() that isn't satisfied. That require
     //also returns a revert reason string
     function test_notProcessLegacyProvenMessageRevertingHandlers2() public {
@@ -372,6 +369,7 @@ contract ReplicaTest is ReplicaHandlers {
         vm.expectRevert("no can do");
         replica.process(message);
     }
+
     /// @notice It should revert because it calls a handle() function that has a revert() call in the assembly{} block
     function test_notProcessLegacyProvenMessageRevertingHandlers3() public {
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
@@ -435,6 +433,7 @@ contract ReplicaTest is ReplicaHandlers {
         vm.expectRevert("!destination");
         replica.process(message);
     }
+
     /// @notice It should revert because the message is not proven, i.e is not included in the committed Root
     function test_notProcessUnprovenMessage() public {
         replica.setCommittedRoot(exampleRoot);
@@ -528,12 +527,7 @@ contract ReplicaTest is ReplicaHandlers {
             receiver,
             messageBody
         );
-        (
-            bytes32 newRoot,
-            bytes32 leaf,
-            uint256 index,
-            bytes32[32] memory proof
-        ) = merkleTest.getProof(message);
+        (bytes32 newRoot, , , ) = merkleTest.getProof(message);
         bytes32 oldRoot = committedRoot;
         bytes memory sig = signRemoteUpdate(updaterPK, oldRoot, newRoot);
         replica.update(oldRoot, newRoot, sig);

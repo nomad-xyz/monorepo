@@ -49,7 +49,10 @@ model messages {
   tokenId           String?  @map("token_id") @db.VarChar(66)
   body              String   @db.VarChar
   leafIndex         String   @map("leaf_index") @db.VarChar(256)
-  tx                String?  @db.VarChar(66)
+  dispatchTx        String?  @map("dispatch_tx") @db.VarChar(66)
+  updateTx          String?  @map("update_tx") @db.VarChar(66)
+  relayTx           String?  @map("relay_tx") @db.VarChar(66)
+  processTx         String?  @map("process_tx") @db.VarChar(66)
   gasAtDispatch     String  @map("gas_at_dispatch") @db.VarChar(256)
   gasAtUpdate       String  @map("gas_at_update") @db.VarChar(256)
   gasAtRelay        String  @map("gas_at_relay") @db.VarChar(256)

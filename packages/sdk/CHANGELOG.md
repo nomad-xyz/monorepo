@@ -2,6 +2,15 @@
 
 ### Unreleased
 
+- (major) refactor: change message status to a tagged union instead of an enum,
+  added the root to the `proven` message status
+- fix: checkHomes async handling in for loop
+
+### 2.1.0-rc.0
+
+- upgrade: contracts
+- fix: config fetch header override
+
 ### 2.0.0-rc.20
 
 - docs: update readme with examples/links

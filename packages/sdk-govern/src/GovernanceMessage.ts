@@ -15,13 +15,13 @@ const ACTION_LEN = {
 enum ActionTypes {
   batch = 1,
   transferGovernor = 2,
-};
+}
 
 enum BatchStatus {
   Unknown = 0,
   Pending,
   Complete,
-};
+}
 
 type Batch = {
   type: 'batch';
