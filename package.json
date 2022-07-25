@@ -36,7 +36,9 @@
     "test": "yarn workspaces foreach -Apv --exclude @nomad-xyz/deploy  --exclude @nomad-xyz/local-environment run test",
     "gen-proof": "scripts/accumulator-cli",
     "snapshot": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run snapshot",
-    "snapshot:check": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run snapshot:check"
+    "snapshot:check": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run snapshot:check",
+    "storage-inspect:generate": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run storage-inspect:generate",
+    "storage-inspect:check": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run storage-inspect:check"
   },
   "packageManager": "yarn@3.2.0"
 }

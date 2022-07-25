@@ -31,7 +31,9 @@
     "link:node_modules": "ln -s ../../node_modules",
     "snapshot": "forge clean && FOUNDRY_PROFILE=bridge forge snapshot",
     "snapshot:check": "forge clean && FOUNDRY_PROFILE=bridge forge snapshot --check",
-    "gen-proof": "../../scripts/accumulator-cli"
+    "gen-proof": "../../scripts/accumulator-cli",
+    "storage-inspect:check": "../../scripts/storage-inspect.sh check BridgeRouter BridgeToken ETHHelper TokenRegistry",
+    "storage-inspect:generate": "../../scripts/storage-inspect.sh generate BridgeRouter BridgeToken ETHHelper TokenRegistry"
   },
   "dependencies": {
     "@nomad-xyz/contracts-core": "workspace:^",
