@@ -1608,14 +1608,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/configuration@npm:0.1.0-rc.25":
-  version: 0.1.0-rc.25
-  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.25"
-  checksum: 6bdbc188e43167c7f4da28e8f9cbb594b5832a03916a11cb6fc6be2ad2cc00fd91cf20ad6e0b82da1a17a9be0b73f1222bf58c41263f69a7d5e90bd5449faede
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/configuration@npm:^0.1.0-rc.23":
+"@nomad-xyz/configuration@npm:0.1.0-rc.25, @nomad-xyz/configuration@npm:^0.1.0-rc.23":
   version: 0.1.0-rc.25
   resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.25"
   checksum: 6bdbc188e43167c7f4da28e8f9cbb594b5832a03916a11cb6fc6be2ad2cc00fd91cf20ad6e0b82da1a17a9be0b73f1222bf58c41263f69a7d5e90bd5449faede
@@ -1749,7 +1742,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-
 "@nomad-xyz/contracts-router@npm:^1.0.0-rc.3":
   version: 1.0.0-rc.3
   resolution: "@nomad-xyz/contracts-router@npm:1.0.0-rc.3"
@@ -1762,7 +1754,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/deploy@workspace:packages/deploy":
+"@nomad-xyz/deploy@workspace:^, @nomad-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/deploy@workspace:packages/deploy"
   dependencies:
@@ -6622,7 +6614,6 @@ __metadata:
   checksum: 3b374666a85ea3ca43fa49aa3a048d21c9b475c96eb13c133505d2324e7ae5efd6a454f41efe46a152269e9b6a00c9edbe63ec7fa1921957165aae16625acd67
   languageName: node
   linkType: hard
-
 
 "ci-info@npm:^3.1.1, ci-info@npm:^3.2.0":
   version: 3.3.2
@@ -12636,15 +12627,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-core-module@npm:^2.9.0":
-  version: 2.9.0
-  resolution: "is-core-module@npm:2.9.0"
-  dependencies:
-    has: ^1.0.3
-  checksum: b27034318b4b462f1c8f1dfb1b32baecd651d891a4e2d1922135daeff4141dfced2b82b07aef83ef54275c4a3526aa38da859223664d0868ca24182badb784ce
-  languageName: node
-  linkType: hard
-
 "is-data-descriptor@npm:^0.1.4":
   version: 0.1.4
   resolution: "is-data-descriptor@npm:0.1.4"
@@ -15313,7 +15295,6 @@ __metadata:
   checksum: dccd976a8d753e19d3c7602ea422d1f7137def3c1128c177e1f5500fe8c50ec15fe0937cfc3a15c4577fe7adb9a37628b92da9294d13d90f08be4b669b0fca76
   languageName: node
   linkType: hard
-
 
 "moment@npm:^2.15.1, moment@npm:^2.19.3, moment@npm:^2.24.0, moment@npm:^2.29.1":
   version: 2.29.4
@@ -18299,7 +18280,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-
 "resolve@npm:1.22.0":
   version: 1.22.0
   resolution: "resolve@npm:1.22.0"
@@ -18319,7 +18299,6 @@ __metadata:
   checksum: c3b5d34ba79635ffe380eb0e428e0b49259734ad2c86945c6b3238155b0753d8bcf858c6b99966b3fdb536062f6e204675e4542269f065e34210bb3a6f602f9d
   languageName: node
   linkType: hard
-
 
 "resolve@npm:^1.0.0, resolve@npm:^1.1.10, resolve@npm:^1.1.5, resolve@npm:^1.1.6, resolve@npm:^1.10.0, resolve@npm:^1.8.1, resolve@npm:~1.22.0":
   version: 1.22.1
@@ -18343,7 +18322,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-
 "resolve@patch:resolve@1.22.0#~builtin<compat/resolve>":
   version: 1.22.0
   resolution: "resolve@patch:resolve@npm%3A1.22.0#~builtin<compat/resolve>::version=1.22.0&hash=07638b"
@@ -18363,7 +18341,6 @@ __metadata:
   checksum: fbdc248b89f655da8ff1509c000027702455d36e99943307d6e939bbef8b6f2bf67f82aa82ceb968f121febea128dd9b3e544fc6497c105204b1633bee1efad9
   languageName: node
   linkType: hard
-
 
 "resolve@patch:resolve@^1.0.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.1.10#~builtin<compat/resolve>, resolve@patch:resolve@^1.1.5#~builtin<compat/resolve>, resolve@patch:resolve@^1.1.6#~builtin<compat/resolve>, resolve@patch:resolve@^1.10.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.8.1#~builtin<compat/resolve>, resolve@patch:resolve@~1.22.0#~builtin<compat/resolve>":
   version: 1.22.1
@@ -21282,11 +21259,11 @@ __metadata:
 
 "typescript@patch:typescript@^4.4.3#~builtin<compat/typescript>, typescript@patch:typescript@^4.5.5#~builtin<compat/typescript>, typescript@patch:typescript@^4.7.2#~builtin<compat/typescript>":
   version: 4.7.4
-  resolution: "typescript@patch:typescript@npm%3A4.7.4#~builtin<compat/typescript>::version=4.7.4&hash=bda367"
+  resolution: "typescript@patch:typescript@npm%3A4.7.4#~builtin<compat/typescript>::version=4.7.4&hash=f456af"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 96d3030cb01143570567cb4f3a616b10df65f658f0e74e853e77a089a6a954e35c800be7db8b9bfe9a1ae05d9c2897e281359f65e4caa1caf266368e1c4febd3
+  checksum: 9096d8f6c16cb80ef3bf96fcbbd055bf1c4a43bd14f3b7be45a9fbe7ada46ec977f604d5feed3263b4f2aa7d4c7477ce5f9cd87de0d6feedec69a983f3a4f93e
   languageName: node
   linkType: hard
 
