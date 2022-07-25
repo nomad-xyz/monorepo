@@ -1,5 +1,7 @@
 ## Bootup instructions
 
+The following commands should be ran in monorepo root.
+
 ```sh
 foundryup
 yarn install
@@ -7,6 +9,8 @@ yarn build
 #Just to make sure build isn't stuck in some sort of weird state...
 yarn deploy build
 ```
+
+The following should be done inside local-environment package root.
 
 Create a .env file with:
 
