@@ -18,10 +18,10 @@ dotenv.config();
 const prettyPrint = process.env.PRETTY_PRINT === "true";
 
 const hardcodedGasLimits: Record<string, ethers.BigNumberish> = {
-  "bsctestnet": 30000,
-  "arbitrumrinkeby": 600000,
-  "optimismkovan": 30000,
-  "optimismgoerli": 30000,
+  bsctestnet: 30000,
+  arbitrumrinkeby: 600000,
+  optimismkovan: 30000,
+  optimismgoerli: 30000,
 };
 
 export abstract class Accountable {
@@ -360,7 +360,7 @@ export class Bank extends Accountable {
       `Paying from signer of a bank`
     );
 
-    const gasLimit = hardcodedGasLimits[this.home.name]
+    const gasLimit = hardcodedGasLimits[this.home.name];
     const sent = await this.signer.sendTransaction({ to, value, gasLimit });
 
     let receipt;
