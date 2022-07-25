@@ -346,7 +346,6 @@ contract GovernanceRouter is Version0, Initializable, IMessageRecipient {
      * dispatch the change to all remote routers
      * @param _domain The domain
      * @param _router The address of the new router
-     * Router domain NOT GETTING SET PROPERLY FOR JERRY.
      */
     function setRouterGlobal(uint32 _domain, bytes32 _router)
         external
@@ -546,7 +545,6 @@ contract GovernanceRouter is Version0, Initializable, IMessageRecipient {
         // require that the new governor is not the zero address
         require(_newGovernor != address(0), "cannot renounce governor");
         // require that the governor domain has a valid router
-        // returns false on jerry because governor is 0x0.
         if (!_isLocalGovernor) {
             _mustHaveRouter(_newDomain);
         }

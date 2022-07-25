@@ -138,7 +138,6 @@ export class DeployContext extends MultiProvider<config.Domain> {
     verification: Verification,
   ): void {
     const name = this.resolveDomainName(nameOrDomain);
-    // console.log(name);
     if (!this.verification.has(name)) this.verification.set(name, []);
 
     const net = this._verification.get(name);

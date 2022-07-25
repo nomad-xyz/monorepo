@@ -705,8 +705,6 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       );
       await tx.wait(this.confirmations);
     }
-
-    console.log(this.context.verification);
   }
 
   async checkDeploy(
