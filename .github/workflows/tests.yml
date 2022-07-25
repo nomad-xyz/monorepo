@@ -46,3 +46,8 @@ jobs:
         id: snapshot-check
         run: |
           yarn snapshot:check
+      - name: "Inspect Storage Layout"
+        continue-on-error: false
+        id: storage-inspect-check
+        run: |
+          yarn storage-inspect:check
