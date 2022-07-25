@@ -95,6 +95,11 @@ export class Keymaster {
     dryrun = false
   ): Promise<void> {
     const promises = Array.from(this.networks.values()).map(async (net) => {
+      // Here we are creating a promise for every network,
+      // which is just try-catch loop, that isn't expected to stop.
+      // That's why we don't want to return anything that would be processed.
+      // If there would be an unhandled promise rejection it would kill the app anyways,
+      // so we don't attempt to handle it higher the stack.
       while (true) {
         try {
           if (networks.length === 0 || networks.includes(net.name)) {
