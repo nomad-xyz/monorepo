@@ -17,7 +17,6 @@ enum DockerNetworkStatus {
 
 export abstract class Network {
     agents?: Agents;
-
     connectedNetworks: Network[];
 
     name: string;
@@ -42,11 +41,11 @@ export abstract class Network {
     abstract isConnected(): Promise<boolean>;
 
     constructor(name: string, domainNumber: number, chainId: number, connectedNetworks: []) {
-        this.connectedNetworks = connectedNetworks;
         this.name = name;
         this.domainNumber = domainNumber;
         this.chainId = chainId;
         this.deployOverrides = { gasLimit: 30000000 };
+        this.connectedNetworks = connectedNetworks;
 
         try {
           this.gasConfig = {
@@ -127,14 +126,14 @@ export abstract class Network {
     }
 
     get connections(): string[] {
-        return this.connectedNetworks.map(n => n.name);
+      return this.connectedNetworks.map(n => n.name);
     }
 
     get domain(): Domain {
         return {
             name: this.name,
             domain: this.domainNumber,
-            connections: this.connections,
+            connections: this.connections, //@NOTE MOVE THE GETTER AND SETTERS OF THIS TO NOMAD
             specs: this.specs,
             configuration: this.config,
             bridgeConfiguration: this.bridgeConfig,
@@ -279,10 +278,6 @@ export class HardhatNetwork extends Network {
 
     get rpcs(): string[] {
         return [`http://localhost:${this.handler.port}`];
-    }
-
-    connectNetwork(n: Network) {
-      if (!this.connectedNetworks.includes(n)) this.connectedNetworks.push(n);
     }
 
     //Used for governor settings on this.updater, this.watcher, this.recoveryManager

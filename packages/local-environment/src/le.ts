@@ -13,15 +13,17 @@ dotenv.config();
 
 export class NomadEnv {
     agents?: Agents;
-    networks: Network[];
-    governor: NomadLocator;
-    log = bunyan.createLogger({name: 'localenv'});
     signers: Map<number | string, Key>;
     updaters: Map<number | string, Key>;
     watchers: Map<number | string, Key>;
     relayers: Map<number | string, Key>;
     kathys: Map<number | string, Key>;
     processors: Map<number | string, Key>;
+    
+    networks: Network[];
+    governor: NomadLocator;
+
+    log = bunyan.createLogger({name: 'localenv'});
 
     constructor(governor: NomadLocator) {
         this.networks = [];
@@ -256,6 +258,10 @@ export class NomadEnv {
         return Array.from(this.networks.values());
    }
 
+   connectNetwork(n: Network, target: Network) {
+      if (!n.connectedNetworks.includes(target)) n.connectedNetworks.push(target);
+    }
+
     setDeployContext(): DeployContext {
         //@TODO remove re-initialization.
         const deployContext = new DeployContext(this.nomadConfig());
@@ -326,8 +332,8 @@ export class NomadEnv {
 
     log.info(`Added Keys`)
     
-    t.connectNetwork(j);
-    j.connectNetwork(t);
+    le.connectNetwork(j, t);
+    le.connectNetwork(t, j);
     log.info(`Connected Tom and Jerry`);
 
     // Notes, check governance router deployment on Jerry and see if that's actually even passing

@@ -1,8 +1,8 @@
 import { HardhatNetwork } from "../src/network";
-import { Env } from "../src/le";
+import { NomadEnv } from "../src/le";
 import { Key } from "../src/key";
 import type { TokenIdentifier } from "@nomad-xyz/sdk/nomad/tokens";
-import fs from "fs";
+// import fs from "fs";
 import { getCustomToken } from "./utils/token/deployERC20";
 import { getRandomTokenAmount } from "../src/utils";
 import { sendTokensAndConfirm } from "./common";
@@ -12,65 +12,58 @@ import bunyan from 'bunyan';
 
   // Test setup
   // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
-  const log = bunyan.createLogger({name: 'localenv'});
+    // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
+    const log = bunyan.createLogger({name: 'localenv'});
 
-  const t = new HardhatNetwork('tom', 1, []);
+    const t = new HardhatNetwork('tom', 1, []);
 
-  const j = new HardhatNetwork('jerry', 2, []);
+    const j = new HardhatNetwork('jerry', 2, []);
 
-  await Promise.all([
-      t.up(),
-      j.up(),
-  ])
+    await Promise.all([
+        t.up(),
+        j.up(),
+    ])
 
-  log.info(`Upped Tom and Jerry`);
+    log.info(`Upped Tom and Jerry`);
 
-  const le = new Env({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
+    const le = new NomadEnv({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
 
-  le.addNetwork(t);
-  le.addNetwork(j);
-  log.info(`Added Tom and Jerry`);
+    le.addNetwork(t);
+    le.addNetwork(j);
+    log.info(`Added Tom and Jerry`);
 
-  // Set keys
-  t.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
-  t.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
-  t.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
-  t.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
-  t.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
-  t.setGovernanceKeys(new Key(`` + process.env.PRIVATE_KEY_1 + ``)); // setGovernanceKeys should have the same PK as the signer keys
-  t.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    // Set keys
+    le.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    le.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
+    le.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
+    le.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
+    le.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
+    le.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
 
-  const sender = new Key();
-  const receiver = new Key();
+    t.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``)); // setGovernanceKeys should have the same PK as the signer keys
+    j.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
 
-  j.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
-  j.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
-  j.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
-  j.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
-  j.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
-  j.setGovernanceKeys(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
-  j.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
-  log.info(`Added Keys`)
-  
-  t.connectNetwork(j);
-  j.connectNetwork(t);
-  log.info(`Connected Tom and Jerry`);
+    log.info(`Added Keys`)
+    
+    le.connectNetwork(j, t);
+    le.connectNetwork(t, j);
+    log.info(`Connected Tom and Jerry`);
 
-  // Notes, check governance router deployment on Jerry and see if that's actually even passing
-  // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
+    // Notes, check governance router deployment on Jerry and see if that's actually even passing
+    // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
-  await Promise.all([
-      t.setWETH(t.deployWETH()),
-      j.setWETH(j.deployWETH())
-  ])
+    await Promise.all([
+        t.setWETH(t.deployWETH()),
+        j.setWETH(j.deployWETH())
+    ])
 
-  log.info(await le.deploy());
+    log.info(await le.deploy());
 
-  // let myContracts = le.deploymyproject();
+    // let myContracts = le.deploymyproject();
 
-  await t.upAgents(t, le, 9080);
-  await j.upAgents(j, le, 9090);
-  log.info(`Agents up`);
+    await le.upAgents(t, le, 9080);
+    await le.upAgents(j, le, 9090);
+    log.info(`Agents up`);
 
   // fs.writeFileSync("/tmp/nomad.json", JSON.stringify(n.toObject()));
 
