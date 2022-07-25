@@ -168,31 +168,6 @@ export class NomadEnv {
     async deployFresh(): Promise<void> {
         console.log(`Deploying!`, JSON.stringify(this.nomadConfig(), null, 4));
 
-        const outputDir = './output';
-        const governanceBatch = await this.deployContext.deployAndRelinquish();
-        console.log(`Deployed! gov batch:`, governanceBatch);
-        
-        fs.mkdirSync(outputDir, {recursive: true});
-        fs.writeFileSync(
-            `${outputDir}/test_config.json`,
-            JSON.stringify(this.deployContext.data, null, 2),
-        );
-        // if new contracts were deployed,
-        const verification = Object.fromEntries(this.deployContext.verification);
-        if (Object.keys(verification).length > 0) {
-          // output the verification inputs
-          fs.writeFileSync(
-              `${outputDir}/verification-${Date.now()}.json`,
-              JSON.stringify(verification, null, 2),
-          );
-        }
-    }
-
-    async deploy(): Promise<void> {
-        if (this.deployedOnce()) {
-
-        console.log(`Deploying!`, JSON.stringify(this.nomadConfig(), null, 4));
-
         const deployContext = this.setDeployContext();
 
         const outputDir = './output';
@@ -200,9 +175,15 @@ export class NomadEnv {
         console.log(`Deployed! gov batch:`, governanceBatch);
         await this.outputConfigAndVerification(outputDir, deployContext);
         await this.outputCallBatch(outputDir, deployContext);
+    }
+
+    async deploy(): Promise<void> {
+        if (this.deployedOnce()) {
+
+         //TODO: INPUT RESUME DEPLOYMENT LOGIC HERE
+
         } else {
                 this.deployFresh()
-                return
         }
     }
 
@@ -243,7 +224,7 @@ export class NomadEnv {
 
     //@TODO Feature: switches after contracts exist
     deployedOnce(): boolean {
-        return true;
+        return false;
     }
 
     get deployerKey(): string {
@@ -262,7 +243,7 @@ export class NomadEnv {
       if (!n.connectedNetworks.includes(target)) n.connectedNetworks.push(target);
     }
 
-    setDeployContext(): DeployContext {
+   setDeployContext(): DeployContext {
         //@TODO remove re-initialization.
         const deployContext = new DeployContext(this.nomadConfig());
         // add deploy signer and overrides for each network
