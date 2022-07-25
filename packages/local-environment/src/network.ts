@@ -5,7 +5,7 @@ import Dockerode from "dockerode";
 import { sleep } from "./utils";
 import { ethers } from 'ethers';
 import { Key } from "./key";
-import { Env } from "./le";
+import { NomadEnv } from "./le";
 import {  } from "@nomad-xyz/configuration";
 //import { getContractAddress } from "ethers/lib/utils";
 
@@ -397,7 +397,7 @@ export class HardhatNetwork extends Network {
       if (!this.connectedNetworks.includes(n)) this.connectedNetworks.push(n);
     }
 
-    async upAgents(n: Network, env: Env, metricsPort: number) {
+    async upAgents(n: Network, env: NomadEnv, metricsPort: number) {
       this.agents = new Agents(n, env, metricsPort);
       await this.agents.relayer.connect();
       this.agents.relayer.start();

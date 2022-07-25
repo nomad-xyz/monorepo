@@ -3,7 +3,7 @@ import Docker from "dockerode";
 import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
 import { Network } from "./network";
-import { Env } from "./le";
+import { NomadEnv } from "./le";
 
 export class Agents {
   updater: Agent;
@@ -12,7 +12,7 @@ export class Agents {
   watchers: Agent[];
   kathy: Agent;
 
-  constructor(network: Network, env: Env, metricsPort: number) {
+  constructor(network: Network, env: NomadEnv, metricsPort: number) {
       this.updater = new LocalAgent(AgentType.Updater, network, env, metricsPort);
       this.relayer = new LocalAgent(AgentType.Relayer, network, env, metricsPort+1);
       this.processor = new LocalAgent(AgentType.Processor, network, env, metricsPort+2);
@@ -84,10 +84,10 @@ function parseAgentType(t: string | AgentType): AgentType {
 export class LocalAgent extends DockerizedActor implements Agent {
   agentType: AgentType;
   network: Network;
-  env: Env;
+  env: NomadEnv;
   metricsPort: number;
 
-  constructor(agentType: AgentType, network: Network, env: Env, metricsPort: number) {
+  constructor(agentType: AgentType, network: Network, env: NomadEnv, metricsPort: number) {
     agentType = parseAgentType(agentType);
     super(`${agentType}_${network.name}`, "agent");
     this.agentType = agentType;

@@ -15,4 +15,4 @@ scripts/accumulator-cli
 !.yarn/versions
 .DS_STORE
 
-xh.gpg
+.gpg

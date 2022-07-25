@@ -9,7 +9,7 @@ import bunyan from 'bunyan';
 import { Key } from './key';
 dotenv.config();
 
-export class Env {
+export class NomadEnv {
     networks: Network[];
     governor: NomadLocator;
     log = bunyan.createLogger({name: 'localenv'});
@@ -175,7 +175,7 @@ export class Env {
 
     log.info(`Upped Tom and Jerry`);
 
-    const le = new Env({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
+    const le = new NomadEnv({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
 
     le.addNetwork(t);
     le.addNetwork(j);
