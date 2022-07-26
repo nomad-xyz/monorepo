@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+### 1.0.0
+
 ### 1.0.0-rc.5
 
 - docs: update readme with link to documentation
