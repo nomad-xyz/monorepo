@@ -9,12 +9,9 @@ dotenv.config();
 run();
 
 async function run() {
-  // define the directory for deploy outputs
-  const outputDir = './output';
-
   // instantiate deploy context
   const DEPLOY_CONFIG: config.NomadConfig = getConfig();
-  const deployContext = new DeployContext(DEPLOY_CONFIG, outputDir);
+  const deployContext = new DeployContext(DEPLOY_CONFIG);
 
   // get deploy signer and overrides
   const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
