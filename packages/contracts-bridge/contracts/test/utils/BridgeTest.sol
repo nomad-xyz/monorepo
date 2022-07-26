@@ -110,7 +110,7 @@ contract BridgeTest is Test {
         vm.stopPrank();
     }
 
-    function addressToBytes32(address addr) public returns (bytes32) {
+    function addressToBytes32(address addr) public pure returns (bytes32) {
         return bytes32(uint256(uint160(addr)) << 96);
     }
 }
