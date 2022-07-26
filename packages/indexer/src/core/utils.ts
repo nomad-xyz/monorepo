@@ -28,8 +28,8 @@ export async function retry<T>(
       if (onError) {
         try {
           await onError(e);
-        } catch(e){
-          console.error(`Failed retrying - onError has error: ${e}`)
+        } catch (e) {
+          console.error(`Failed retrying - onError has error: ${e}`);
         }
       }
       lastError = e;

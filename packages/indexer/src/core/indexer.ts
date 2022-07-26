@@ -282,8 +282,8 @@ export class Indexer {
           `Retrying after getBlock RPC Error... Block number: ${blockNumber}`,
           {
             blockNumber,
-            error
-          }
+            error,
+          },
         );
         this.failureCounter.add();
       },
@@ -293,8 +293,8 @@ export class Indexer {
         `An RPC getBlock error occured, retried exhausted. Block number: ${blockNumber}`,
         {
           blockNumber,
-          error
-        }
+          error,
+        },
       );
       throw new Error(
         `An RPC getBlock error occured, retried exhausted. Block number: ${blockNumber} Error: ${error}`,
@@ -338,17 +338,25 @@ export class Indexer {
           error.code,
         );
         this.logger.warn(
-          `Retrying after RPC Error... TX hash: ${hash}, Error: ${error.code}, msg: ${error.message}`,
+          `Retrying after getTransaction RPC Error... TX hash: ${hash}`,
+          {
+            tx: hash,
+            error,
+          },
         );
         this.failureCounter.add();
       },
     );
     if (!tx) {
       this.logger.error(
-        `An RPC error occured, retried exhausted. TX hash: ${hash} Error: ${error}`,
+        `A getTransaction RPC error occured, retried exhausted. TX hash: ${hash}`,
+        {
+          tx: hash,
+          error,
+        },
       );
       throw new Error(
-        `An RPC foo error occured, retried exhausted. TX hash: ${hash} Error: ${error}`,
+        `A getTransaction RPC foo error occured, retried exhausted. TX hash: ${hash} Error: ${error}`,
       );
     }
 
@@ -411,17 +419,25 @@ export class Indexer {
           error.code,
         );
         this.logger.warn(
-          `Retrying after RPC Error... , Error: ${error.code}, msg: ${error.message}`,
+          `Retrying after getTransactionReceipt RPC Error... Tx: ${hash}`,
+          {
+            error,
+            tx: hash,
+          },
         );
         this.failureCounter.add();
       },
     );
     if (!receipt) {
       this.logger.error(
-        `An RPC error occured, retried exhausted. TX hash: ${hash} Error: ${error}`,
+        `A getTransactionReceipt RPC error occured, retried exhausted. TX hash: ${hash}`,
+        {
+          tx: hash,
+          error,
+        },
       );
       throw new Error(
-        `An RPC receipt error occured, retried exhausted. TX hash: ${hash} Error: ${error}`,
+        `A getTransactionReceipt RPC receipt error occured, retried exhausted. TX hash: ${hash} Error: ${error}`,
       );
     }
 
