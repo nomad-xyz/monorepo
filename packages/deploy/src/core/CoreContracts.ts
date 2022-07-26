@@ -920,7 +920,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     checklist.equalIds(
       domainConfig.configuration.governance.recoveryManager,
       recoveryManager,
-      'GovernanceRouter Recovery Manager is properly configured',
+      'GovernanceRouter Recovery Manager address is properly set`,
     );
     // governor
     checklist.exists(this.context.protocol, 'Protocol config exists');
