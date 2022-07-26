@@ -5,20 +5,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
       - name: Install Foundry
         uses: onbjerg/foundry-toolchain@v1
         with:
           version: nightly
       - run: |
-          yarn install
+          yarn install --immutable-cache
       - run: |
           yarn lint
       - name: Get latest accumulator-cli version
         id: acli-version
         run: |
           echo "::set-output name=ACLI_HASH::$(curl https://api.github.com/repos/odyslam/accumulator-cli/git/refs/heads/master | jq '.object.sha' -r)"
-      - name: Cache Accumulator-cli
+      - name: Accumulator-cli Cache
         id: cache-acli
         uses: actions/cache@v3
         with:
@@ -31,16 +30,46 @@ jobs:
           toolchain: stable
       - run: |
           yarn build:accumulator-cli
+      - name: Cache forge libs
+        id: cache-forge-libs
+        uses: actions/cache@v3
+        with:
+          path: lib
+          key: ${{ hashFiles('scripts/install-deps.sh') }}
+      - name: Cache contracts-core
+        id: cache-contracts-core
+        uses: actions/cache@v3
+        with:
+          path: |
+            packages/contracts-core/src
+            packages/contracts-core/cache
+            packages/contracts-core/artifacts
+            packages/contracts-core/foundry_artifacts
+          key: ${{ hashFiles('packages/contracts-core/contracts/**') }}
+      - name: Cache contracts-bridge
+        id: cache-contracts-bridge
+        uses: actions/cache@v3
+        with:
+          path: |
+            packages/contracts-bridge/src
+            packages/contracts-bridge/cache
+            packages/contracts-bridge/artifacts
+            packages/contracts-bridge/foundry_artifacts
+          key: ${{ hashFiles('packages/contracts-bridge/contracts/**') }}
+      - name: Cache contracts-router
+        id: cache-contracts-router
+        uses: actions/cache@v3
+        with:
+          path: |
+            packages/contracts-router/src
+            packages/contracts-router/cache
+            packages/contracts-router/artifacts
+            packages/contracts-router/foundry_artifacts
+          key: ${{ hashFiles('packages/contracts-router/contracts/**') }}
       - run: |
           yarn build
       - run: |
           yarn test
-      - name: "Static Analysis: Core"
-        uses: crytic/slither-action@v0.1.1
-        id: slither
-        continue-on-error: true
-        with:
-          target: "packages/contracts-core"
       - name: "Check Gas snapshot"
         continue-on-error: true
         id: snapshot-check
