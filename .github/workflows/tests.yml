@@ -9,6 +9,11 @@ jobs:
         uses: onbjerg/foundry-toolchain@v1
         with:
           version: nightly
+      - name: "Node Modules Cache"
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: |
           yarn install
       - run: |
@@ -17,7 +22,7 @@ jobs:
         id: acli-version
         run: |
           echo "::set-output name=ACLI_HASH::$(curl https://api.github.com/repos/odyslam/accumulator-cli/git/refs/heads/master | jq '.object.sha' -r)"
-      - name: Cache Accumulator-cli
+      - name: Accumulator-cli Cache
         id: cache-acli
         uses: actions/cache@v3
         with:
