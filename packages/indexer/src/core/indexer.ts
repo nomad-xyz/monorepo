@@ -279,14 +279,25 @@ export class Indexer {
           error.code,
         );
         this.logger.warn(
-          `Retrying after RPC Error... Block number: ${blockNumber}, Error: ${error.code}, msg: ${error.message}`,
+          `Retrying after getBlock RPC Error... Block number: ${blockNumber}`,
+          {
+            blockNumber,
+            error
+          }
         );
         this.failureCounter.add();
       },
     );
     if (!block) {
+      this.logger.error(
+        `An RPC getBlock error occured, retried exhausted. Block number: ${blockNumber}`,
+        {
+          blockNumber,
+          error
+        }
+      );
       throw new Error(
-        `An RPC foo error occured, retried exhausted. Block number: ${blockNumber} Error: ${error}`,
+        `An RPC getBlock error occured, retried exhausted. Block number: ${blockNumber} Error: ${error}`,
       );
     }
 
