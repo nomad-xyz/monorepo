@@ -25,7 +25,7 @@
     "start:core": "yarn prisma:all && yarn run:core",
     "start:legacy": "yarn prisma:all && yarn start:any",
     "test": "echo TODO",
-    "test:load": "element run ./load-tests/transaction-history.ts --mu"
+    "test:load": "element run ./load-tests/get-events.ts --mu"
   },
   "dependencies": {
     "@graphql-tools/schema": "^8.3.5",

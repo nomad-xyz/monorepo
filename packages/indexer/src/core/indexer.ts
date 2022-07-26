@@ -550,7 +550,7 @@ export class Indexer {
       let batchFrom = from - FROM_BLOCK_LAG;
 
       while (true) {
-        let batchTo = Math.min(to, batchFrom + batchSize - 1);
+        const batchTo = Math.min(to, batchFrom + batchSize - 1);
 
         const done = Math.floor(((batchTo - from + 1) / (to - from + 1)) * 100);
         this.logger.info(
