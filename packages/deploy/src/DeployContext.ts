@@ -25,7 +25,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
   protected _outputDir: string;
   protected _instantiatedAt: number;
 
-  constructor(data: config.NomadConfig, outputDir: string) {
+  constructor(data: config.NomadConfig, outputDir = "./output") {
     super();
 
     this._data = data;
