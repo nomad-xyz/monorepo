@@ -31,7 +31,9 @@
     "link:node_modules": "ln -s ../../node_modules",
     "snapshot": "forge clean && FOUNDRY_PROFILE=core forge snapshot",
     "snapshot:check": "forge clean && FOUNDRY_PROFILE=core forge snapshot --check",
-    "gen-proof": "../../scripts/accumulator-cli"
+    "gen-proof": "../../scripts/accumulator-cli",
+    "storage-inspect:check": "../../scripts/storage-inspect.sh check Home Replica UpdaterManager XAppConnectionManager GovernanceRouter",
+    "storage-inspect:generate": "../../scripts/storage-inspect.sh generate Home Replica UpdaterManager XAppConnectionManager GovernanceRouter"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.2",
