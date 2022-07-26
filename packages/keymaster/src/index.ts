@@ -17,10 +17,7 @@ async function run(
   const km = await new Keymaster(config).init();
   km.ctx.metrics.startServer(port);
 
-  while (true) {
-    await km.checkAndPayEnabledNetworks(NETWORK_ENABLED, dryrun);
-    await sleep(period * 1000);
-  }
+  await km.checkAndPayEnabledNetworks(NETWORK_ENABLED, period, dryrun);
 }
 
 (async () => {
