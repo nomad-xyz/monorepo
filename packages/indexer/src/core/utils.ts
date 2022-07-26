@@ -25,7 +25,13 @@ export async function retry<T>(
     try {
       return [await callback(), undefined];
     } catch (e) {
-      if (onError) await onError(e);
+      if (onError) {
+        try {
+          await onError(e);
+        } catch(e){
+          console.error(`Failed retrying - onError has error: ${e}`)
+        }
+      }
       lastError = e;
       await sleep(timeout * 2 ** attempt);
     }
