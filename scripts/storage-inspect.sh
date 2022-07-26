@@ -10,16 +10,14 @@ generate() {
     echo "..."
   fi
 
-  echo "=======================" > $file
-  echo "👁👁 STORAGE LAYOUT snapshot 👁👁" >$file
-  echo "=======================" >> $file
-
+  echo "=======================" > "$file"
+  echo "👁️ STORAGE LAYOUT snapsho 👁️ ">> "$file"
+  echo "=======================" >> "$file"
+# shellcheck disable=SC2068
   for contract in ${contracts[@]}
   do
-    echo -e "\n=======================" >> $file
-    echo "➡ $contract">> $file
-    echo -e "=======================\n" >> $file
-    FOUNDRY_PROFILE=$profile forge inspect --pretty $contract storage-layout >> $file
+    { echo -e "\n======================="; echo " ➡ $contract" ; echo -e "=======================\n"; } >> "$file"
+    FOUNDRY_PROFILE=$profile forge inspect --pretty "$contract" storage-layout >> "$file"
   done
   if [[ $func == "generate" ]]; then
     echo "Storage layout snapshot stored at $file"
@@ -32,9 +30,8 @@ then
     echo "curl -L https://foundry.paradigm.xyz | bash"
     exit
 fi
-
+# shellcheck disable=SC2124
 contracts="${@:2}"
-dir=$(dirname "$0")
 func=$1
 filename=.storage-layout
 profile=""
@@ -56,17 +53,18 @@ if [[ $func == "check" ]]; then
   if ! cmp -s .storage-layout $new_filename ; then
     echo "storage-layout test: fails ❌"
     echo "The following lines are different:"
-    diff -a --suppress-common-lines $filename $new_filename
+    diff -a --suppress-common-lines "$filename" "$new_filename"
     rm $new_filename
     exit 1
   else
-    echo "storage-layout test: passes ✅"
+    echo "storage-layout test: passes storage-layout test: passes ✅"
     rm $new_filename
     exit 0
   fi
 elif [[ $func == "generate" ]]; then
-  generate $filename $profile
+  generate "$filename" "$profile"
 else
   echo "unknown command. Use 'generate' or 'check' as the first argument."
   exit 1
 fi
+
