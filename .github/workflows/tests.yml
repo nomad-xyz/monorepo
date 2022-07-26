@@ -38,7 +38,7 @@ jobs:
             packages/contracts-core/src
             packages/contracts-core/cache
             packages/contracts-core/artifacts
-          key: ${{ hashFiles('packages/contracts-core/contracts/*') }}
+          key: ${{ hashFiles('packages/contracts-core/contracts/**') }}
       - name: Cache contracts-bridge
         id: cache-contracts-bridge
         uses: actions/cache@v3
@@ -47,7 +47,7 @@ jobs:
             packages/contracts-bridge/src
             packages/contracts-bridge/cache
             packages/contracts-bridge/artifacts
-          key: ${{ hashFiles('packages/contracts-bridge/contracts/*') }}
+          key: ${{ hashFiles('packages/contracts-bridge/contracts/**') }}
       - name: Cache contracts-router
         id: cache-contracts-router
         uses: actions/cache@v3
@@ -56,7 +56,7 @@ jobs:
             packages/contracts-router/src
             packages/contracts-router/cache
             packages/contracts-router/artifacts
-          key: ${{ hashFiles('packages/contracts-router/contracts/*') }}
+          key: ${{ hashFiles('packages/contracts-router/contracts/**') }}
       - run: |
           yarn build
       - run: |
