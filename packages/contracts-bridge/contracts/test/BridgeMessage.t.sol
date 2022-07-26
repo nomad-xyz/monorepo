@@ -208,7 +208,7 @@ contract BridgeMessageTest is Test {
         );
     }
 
-    function test_isTypeDetectsCorrectType() public {
+    function test_isTypeDetectsCorrectType() public view {
         bytes29 action;
         action = abi
             .encodePacked(
@@ -564,7 +564,7 @@ contract BridgeMessageTest is Test {
         );
     }
 
-    function test_actionReturnsCorrectAction() public {
+    function test_actionReturnsCorrectAction() public view {
         bytes29 action = abi
             .encodePacked(
                 BridgeMessage.Types.TransferToHook,
@@ -573,10 +573,10 @@ contract BridgeMessageTest is Test {
                 tokenDetailsHash
             )
             .ref(uint40(BridgeMessage.Types.TransferToHook));
-        bytes29 extraData = TypedMemView.nullView();
+        assert(action.isType(BridgeMessage.Types.TransferToHook));
     }
 
-    function test_tryAsMessageReturnsTypedMessage() public {
+    function test_tryAsMessageReturnsTypedMessage() public view {
         bytes29 action = abi
             .encodePacked(
                 BridgeMessage.Types.Transfer,
@@ -594,7 +594,7 @@ contract BridgeMessageTest is Test {
         assert(typedMessage.isType(uint40(BridgeMessage.Types.Message)));
     }
 
-    function test_tryAsMessageReturnsNullForInvalidMessage() public {
+    function test_tryAsMessageReturnsNullForInvalidMessage() public pure {
         bytes29 message = bytes("very smol message").ref(0);
         bytes29 typedMessage = BridgeMessage.tryAsMessage(message);
         assert(typedMessage.isNull());
@@ -605,10 +605,10 @@ contract BridgeMessageTest is Test {
             uint40(BridgeMessage.Types.Transfer)
         );
         vm.expectRevert("Validity assertion failed");
-        bytes29 typedMessage = BridgeMessage.mustBeMessage(message);
+        message.mustBeMessage();
     }
 
-    function test_mustBeMessageValidMessage() public {
+    function test_mustBeMessageValidMessage() public view {
         bytes29 action = abi
             .encodePacked(
                 BridgeMessage.Types.Transfer,
@@ -622,6 +622,6 @@ contract BridgeMessageTest is Test {
             tokenAddress
         );
         bytes29 message = BridgeMessage.formatMessage(tokenId, action).ref(0);
-        bytes29 typedMessage = BridgeMessage.mustBeMessage(message);
+        message.mustBeMessage();
     }
 }
