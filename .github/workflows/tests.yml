@@ -30,6 +30,12 @@ jobs:
           toolchain: stable
       - run: |
           yarn build:accumulator-cli
+      - name: Cache forge libs
+        id: cache-forge-libs
+        uses: actions/cache@v3
+        with:
+          path: lib
+          key: ${{ hashFiles('scripts/install-deps.sh') }}
       - name: Cache contracts-core
         id: cache-contracts-core
         uses: actions/cache@v3
@@ -38,6 +44,7 @@ jobs:
             packages/contracts-core/src
             packages/contracts-core/cache
             packages/contracts-core/artifacts
+            packages/contracts-core/foundry_artifacts
           key: ${{ hashFiles('packages/contracts-core/contracts/**') }}
       - name: Cache contracts-bridge
         id: cache-contracts-bridge
@@ -47,6 +54,7 @@ jobs:
             packages/contracts-bridge/src
             packages/contracts-bridge/cache
             packages/contracts-bridge/artifacts
+            packages/contracts-bridge/foundry_artifacts
           key: ${{ hashFiles('packages/contracts-bridge/contracts/**') }}
       - name: Cache contracts-router
         id: cache-contracts-router
@@ -56,6 +64,7 @@ jobs:
             packages/contracts-router/src
             packages/contracts-router/cache
             packages/contracts-router/artifacts
+            packages/contracts-router/foundry_artifacts
           key: ${{ hashFiles('packages/contracts-router/contracts/**') }}
       - run: |
           yarn build
