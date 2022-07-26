@@ -837,7 +837,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     checklist.equalIds(
       xappsOwner,
       this.governanceRouter.address,
-      'xAppConnectionManager owner is governance',
+      'xAppConnectionManager owner is the Governance Router',
     );
     //   .true;
 

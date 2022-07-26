@@ -585,7 +585,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     checklist.equalIds(
       core.governanceRouter.address,
       bridgeRouterOwner,
-      'BridgeRouter is owned by Governance',
+      'BridgeRouter is owned by the GovernanceRouter',
     );
     // tokenRegistry
 
@@ -655,7 +655,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       checklist.equals(
         undefined,
         this.data.ethHelper,
-        "ethHelper doesn't exist (as expected)",
+        "expected ethHelper, but it doesn't exist",
       );
     }
 
@@ -673,7 +673,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
           checklist.equalIds(
             addresses.implementation,
             this.data.bridgeToken.implementation,
-            'Custom Token uses normal BridgeToken implementation',
+            'Custom Token uses the bridgeToken.sol implementation',
           );
           checklist.notEqualIds(
             addresses.beacon,
