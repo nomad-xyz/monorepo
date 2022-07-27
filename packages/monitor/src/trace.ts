@@ -43,6 +43,6 @@ async function traceTransfer(
     transactionHash,
   );
   console.log(`Leaf Index: ${message.leafIndex}`)
-  const status = await message.events();
+  const status = await message.status();
   printStatus(context, status);
 }

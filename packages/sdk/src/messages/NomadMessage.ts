@@ -15,6 +15,7 @@ import { MessageProof } from '../NomadContext';
 import {
   Dispatch,
   ParsedMessage,
+  MessageStatus,
   ReplicaStatusNames,
   ReplicaMessageStatus,
 } from './types';
@@ -259,7 +260,7 @@ export class NomadMessage<T extends NomadContext> {
     if (!this.eventCache.confirmAt || this.eventCache.confirmAt === 0) {
       await this._events();
     }
-    if (this.eventCache.confirmAt === 0) return;
+    if (!this.eventCache.confirmAt || this.eventCache.confirmAt === 0) return;
     return this.eventCache.confirmAt;
   }
 
@@ -322,6 +323,14 @@ export class NomadMessage<T extends NomadContext> {
       }
       await utils.delay(interval);
     }
+  }
+
+  async status(): Promise<MessageStatus | undefined> {
+    if (this.eventCache.processed) return MessageStatus.processed
+    const confirmAt = await this.confirmAt()
+    const now = Date.now() / 1000
+    if (confirmAt && confirmAt < now) return MessageStatus.relayed
+    return (await this._events()).state
   }
 
   /**

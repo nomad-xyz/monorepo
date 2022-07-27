@@ -120,12 +120,12 @@ const message = await BridgeMessage.singleFromTransactionHash(
   '0x1234'
 )
 
-// get the status of a message (NOT RECOMMENDED FOR USAGE IN PRODUCTION)
-// 1 = dispatched
-// 2 = included
-// 3 = relayed
+// 0 = dispatched
+// 1 = included
+// 2 = relayed
+// 3 = received
 // 4 = processed
-const { status } = await message.events()
+const status = await message.status()
 // get a timestamp (in seconds) when a message will be ready to process
 // on the destination
 const confirmAt = await message.confirmAt()

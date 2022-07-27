@@ -23,11 +23,19 @@ export type ParsedMessage = {
   body: string;
 };
 
+export enum MessageStatus {
+  dispatched = 0,
+  relayed,
+  updated,
+  received,
+  processed
+}
+
 export enum ReplicaStatusNames {
   None = 'none',
   Proven = 'proven',
   Processed = 'processed',
-}
+};
 
 type ReplicaMessageStatusNone = {
   status: ReplicaStatusNames.None;

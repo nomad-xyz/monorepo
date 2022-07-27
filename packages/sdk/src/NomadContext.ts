@@ -231,7 +231,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
    * @dev Ensure that a transaction is ready to be processed. You should ensure the following
    * criteria have been met prior to calling this function:
    *  1. The tx has been relayed (has status of 2):
-   *       `const { status } = await NomadMessage.events()`
+   *       `const status = await NomadMessage.status()`
    *  2. The `confirmAt` timestamp for the tx is in the past:
    *       `const confirmAt = await NomadMessage.confirmAt()`
    *
