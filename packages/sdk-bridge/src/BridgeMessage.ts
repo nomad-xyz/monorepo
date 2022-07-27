@@ -124,7 +124,6 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
    * Attempt to instantiate some BridgeMessages from a transaction receipt
    *
    * @param context The {@link NomadContext} to use.
-   * @param nameOrDomain the domain on which the receipt was logged
    * @param receipt The receipt
    * @returns an array of {@link BridgeMessage} objects
    * @throws if any message cannot be parsed as a bridge message
@@ -154,7 +153,6 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
    * Attempt to instantiate EXACTLY one BridgeMessage from a transaction receipt
    *
    * @param context The {@link BridgeContext} to use.
-   * @param nameOrDomain the domain on which the receipt was logged
    * @param receipt The receipt
    * @returns an array of {@link BridgeMessage} objects
    * @throws if any message cannot be parsed as a bridge message, or if there
@@ -180,7 +178,7 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
    *
    * @param context The {@link NomadContext} to use.
    * @param nameOrDomain the domain on which the receipt was logged
-   * @param transactionHash The transaction hash
+   * @param transactionHash the transaction hash on the origin chain
    * @returns an array of {@link BridgeMessage} objects
    * @throws if any message cannot be parsed as a bridge message
    */
@@ -203,7 +201,7 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
    *
    * @param context The {@link NomadContext} to use.
    * @param nameOrDomain the domain on which the receipt was logged
-   * @param transactionHash The transaction hash
+   * @param transactionHash the transaction hash on the origin chain
    * @returns an array of {@link BridgeMessage} objects
    * @throws if any message cannot be parsed as a bridge message, or if there is
    *         not EXACTLY one such message

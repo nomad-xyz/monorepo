@@ -25,11 +25,12 @@ export type ParsedMessage = {
 
 export enum MessageStatus {
   dispatched = 0,
+  included,
   relayed,
   updated,
   received,
   processed
-}
+};
 
 export enum ReplicaStatusNames {
   None = 'none',

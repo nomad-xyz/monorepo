@@ -125,7 +125,6 @@ export class NomadMessage<T extends NomadContext> {
    * Instantiate EXACTLY one message from a receipt.
    *
    * @param context the {@link NomadContext} object to use
-   * @param nameOrDomain the domain on which the receipt was logged
    * @param receipt the receipt
    * @returns an array of {@link NomadMessage} objects
    * @throws if there is not EXACTLY 1 dispatch in the receipt
@@ -149,7 +148,7 @@ export class NomadMessage<T extends NomadContext> {
    *
    * @param context the {@link NomadContext} object to use
    * @param nameOrDomain the domain on which the receipt was logged
-   * @param receipt the receipt
+   * @param transactionHash the transaction hash on the origin chain
    * @returns an array of {@link NomadMessage} objects
    * @throws if there is no receipt for the TX
    */
@@ -171,7 +170,7 @@ export class NomadMessage<T extends NomadContext> {
    *
    * @param context the {@link NomadContext} object to use
    * @param nameOrDomain the domain on which the receipt was logged
-   * @param receipt the receipt
+   * @param transactionHash the transaction hash on the origin chain
    * @returns an array of {@link NomadMessage} objects
    * @throws if there is no receipt for the TX, or if not EXACTLY 1 dispatch in
    *         the receipt
@@ -260,7 +259,7 @@ export class NomadMessage<T extends NomadContext> {
     if (!this.eventCache.confirmAt || this.eventCache.confirmAt === 0) {
       await this._events();
     }
-    if (!this.eventCache.confirmAt || this.eventCache.confirmAt === 0) return;
+    if (this.eventCache.confirmAt === 0) return;
     return this.eventCache.confirmAt;
   }
 
@@ -325,6 +324,18 @@ export class NomadMessage<T extends NomadContext> {
     }
   }
 
+  /**
+   * Get the status of a message
+   * 
+   *    0 = dispatched
+   *    1 = included
+   *    2 = relayed
+   *    3 = updated
+   *    4 = received
+   *    5 = processed
+   *
+   * @returns An record of all events and correlating txs
+   */
   async status(): Promise<MessageStatus | undefined> {
     if (this.eventCache.processed) return MessageStatus.processed
     const confirmAt = await this.confirmAt()
