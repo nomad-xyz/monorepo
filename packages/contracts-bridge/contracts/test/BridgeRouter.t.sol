@@ -2,6 +2,7 @@
 pragma solidity 0.7.6;
 
 import {BridgeTest} from "./utils/BridgeTest.sol";
+import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/libs/TypeCasts.sol";
 import "forge-std/console2.sol";
 
 contract BridgeRouterTest is BridgeTest {
@@ -23,6 +24,14 @@ contract BridgeRouterTest is BridgeTest {
 
     function test_dustAmmountIs006() public {
         assertEq(bridgeRouter.DUST_AMOUNT(), 0.06 ether);
+    }
+
+    function test_handleRevertNotReplica() public {
+        uint32 nonce = 1;
+        bytes32 sender = TypeCasts.addressToBytes32(vm.addr(234));
+        bytes memory message = bytes("not a mesasge");
+        vm.expectRevert("!replica");
+        bridgeRouter.handle(senderDomain, nonce, sender, message);
     }
 
     function test_sendFailZeroRecipient() public {
