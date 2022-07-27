@@ -836,6 +836,19 @@ export class Indexer {
             const { timestamp, gasUsed } = await this.getAdditionalInfo(
               event.transactionHash,
             );
+            this.logger.info(`Observed an event`, {
+              eventType: EventType.BridgeRouterSend,
+              token: event.args[0],
+              from: event.args[1],
+              toDomain: event.args[2],
+              toId: event.args[3],
+              amount: event.args[4],
+              fastLiquidityEnabled: event.args[5],
+              domain: this.domain,
+              tx: event.transactionHash,
+              blockNumber: event.blockNumber,
+              timestamp,
+            });
             allEvents.push(
               new NomadishEvent(
                 this.domain,
@@ -913,6 +926,18 @@ export class Indexer {
             const { timestamp, gasUsed } = await this.getAdditionalInfo(
               event.transactionHash,
             );
+            this.logger.info(`Observed an event`, {
+              eventType: EventType.BridgeRouterReceive,
+              originAndNonce: event.args[0],
+              token: event.args[1],
+              recipient: event.args[2],
+              liquidityProvider: event.args[3],
+              amount: event.args[4],
+              domain: this.domain,
+              tx: event.transactionHash,
+              blockNumber: event.blockNumber,
+              timestamp,
+            });
             allEvents.push(
               new NomadishEvent(
                 this.domain,
@@ -997,6 +1022,18 @@ export class Indexer {
             const { timestamp, gasUsed } = await this.getAdditionalInfo(
               event.transactionHash,
             );
+            this.logger.info(`Observed an event`, {
+              eventType: EventType.HomeDispatch,
+              messageHash: event.args[0],
+              leafIndex: event.args[1],
+              destinationAndNonce: event.args[2],
+              committedRoot: event.args[3],
+              message: event.args[4],
+              domain: this.domain,
+              tx: event.transactionHash,
+              blockNumber: event.blockNumber,
+              timestamp,
+            });
             fetchedEvents.push(
               new NomadishEvent(
                 this.domain,
@@ -1074,6 +1111,17 @@ export class Indexer {
             const { timestamp, gasUsed } = await this.getAdditionalInfo(
               event.transactionHash,
             );
+            this.logger.info(`Observed an event`, {
+              eventType: EventType.HomeUpdate,
+              homeDomain: event.args[0],
+              oldRoot: event.args[1],
+              newRoot: event.args[2],
+              signature: event.args[3],
+              domain: this.domain,
+              tx: event.transactionHash,
+              blockNumber: event.blockNumber,
+              timestamp,
+            });
             fetchedEvents.push(
               new NomadishEvent(
                 this.domain,
@@ -1161,6 +1209,17 @@ export class Indexer {
             const { timestamp, gasUsed } = await this.getAdditionalInfo(
               event.transactionHash,
             );
+            this.logger.info(`Observed an event`, {
+              eventType: EventType.ReplicaUpdate,
+              homeDomain: event.args[0],
+              oldRoot: event.args[1],
+              newRoot: event.args[2],
+              signature: event.args[3],
+              domain: this.domain,
+              tx: event.transactionHash,
+              blockNumber: event.blockNumber,
+              timestamp,
+            });
             fetchedEvents.push(
               new NomadishEvent(
                 this.domain,
@@ -1242,6 +1301,16 @@ export class Indexer {
             const { timestamp, gasUsed } = await this.getAdditionalInfo(
               event.transactionHash,
             );
+            this.logger.info(`Observed an event`, {
+              eventType: EventType.ReplicaProcess,
+              messageHash: event.args[0],
+              success: event.args[1],
+              returnData: event.args[2],
+              domain: this.domain,
+              tx: event.transactionHash,
+              blockNumber: event.blockNumber,
+              timestamp,
+            });
             fetchedEvents.push(
               new NomadishEvent(
                 this.domain,
