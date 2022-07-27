@@ -153,6 +153,16 @@ export class NomadEnv {
       }
   }
 
+  async stopAgents() {
+    this.agents!.relayer.stop();
+    this.agents!.updater.stop();
+    this.agents!.processor.stop();
+    this.agents!.kathy.stop();
+    for (const watcher of this.agents!.watchers) {
+      watcher.stop();
+    }
+  }
+
     // Adds a network to the array of networks if it's not already there.
     addNetwork(n: Network) {
         if (!this.networks.includes(n)) this.networks.push(n);

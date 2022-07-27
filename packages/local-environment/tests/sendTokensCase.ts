@@ -65,6 +65,9 @@ import bunyan from 'bunyan';
     await le.upAgents(j, le, 9090);
     log.info(`Agents up`);
 
+    const sender = new Key();
+    const receiver = new Key();
+
   // fs.writeFileSync("/tmp/nomad.json", JSON.stringify(n.toObject()));
 
   // Scenario
@@ -87,8 +90,7 @@ import bunyan from 'bunyan';
       id: tokenOnTom.address,
     };
 
-    // @TODO NOMAD NO LONGER EXISTS - MULTIPROVIDER?
-    const ctx = n.getMultiprovider();
+    const ctx = le.getMultiprovider();
 
     // Default multiprovider comes with signer (`o.setSigner(jerry, signer);`) assigned
     // to each domain, but we change it to allow sending from different signer
@@ -100,14 +102,14 @@ import bunyan from 'bunyan';
     const amount2 = getRandomTokenAmount();
     const amount3 = getRandomTokenAmount();
 
-    await sendTokensAndConfirm(n, t, j, token, receiver.toAddress(), [
+    await sendTokensAndConfirm(le, t, j, token, receiver.toAddress(), [
       amount1,
       amount2,
       amount3,
     ]);
 
     const tokenContract = await sendTokensAndConfirm(
-      n,
+      le,
       t,
       j,
       token,
@@ -130,7 +132,7 @@ import bunyan from 'bunyan';
 
   // Teardown
 
-  await n.end();
+  await le.stopAgents();
 
   await Promise.all([t.down(), j.down()]);
 
