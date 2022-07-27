@@ -1,4 +1,4 @@
-import { NomadLocator, NomadConfig } from "@nomad-xyz/configuration";
+import { NomadLocator, NomadConfig, AgentConfig, LogConfig, BaseAgentConfig, NomadGasConfig} from "@nomad-xyz/configuration";
 import * as dotenv from 'dotenv';
 import { DeployContext } from "../../deploy/src/DeployContext";
 import { HardhatNetwork, Network } from "./network";
@@ -7,6 +7,7 @@ import { NonceManager } from "@ethersproject/experimental";
 import fs from 'fs';
 import bunyan from 'bunyan';
 import { Key } from './key';
+import { Domain } from '@nomad-xyz/configuration'
 import { Agents , AgentType } from "./agent";
 
 dotenv.config();
@@ -22,6 +23,9 @@ export class NomadEnv {
     
     networks: Network[];
     governor: NomadLocator;
+    connectedNetworks: Map<number | string, Network[]>;
+
+    gasConfig: NomadGasConfig;
 
     log = bunyan.createLogger({name: 'localenv'});
 
@@ -34,6 +38,83 @@ export class NomadEnv {
         this.relayers = new Map();
         this.kathys = new Map();
         this.processors = new Map();
+        this.connectedNetworks = new Map();
+
+        try {
+          this.gasConfig = {
+            core: {
+              home: {
+                update: {
+                  base: 100000,
+                  perMessage: 10000
+                },
+                improperUpdate: {
+                  base: 100000,
+                  perMessage: 10000
+                },
+                doubleUpdate: 200000
+              },
+              replica: {
+                update: 140000,
+                prove: 200000,
+                process: 1700000,
+                proveAndProcess: 1900000,
+                doubleUpdate: 200000
+              },
+              connectionManager: {
+                ownerUnenrollReplica: 120000,
+                unenrollReplica: 120000
+              }
+            },
+            bridge: {
+              bridgeRouter: {
+                send: 500000
+              },
+              ethHelper: {
+                send: 800000,
+                sendToEvmLike: 800000
+              }
+            }
+          }
+        } catch(e) {
+          console.log(e)
+        }
+    
+        this.gasConfig = {
+          core: {
+            home: {
+              update: {
+                base: 100000,
+                perMessage: 10000
+              },
+              improperUpdate: {
+                base: 100000,
+                perMessage: 10000
+              },
+              doubleUpdate: 200000
+            },
+            replica: {
+              update: 140000,
+              prove: 200000,
+              process: 1700000,
+              proveAndProcess: 1900000,
+              doubleUpdate: 200000
+            },
+            connectionManager: {
+              ownerUnenrollReplica: 120000,
+              unenrollReplica: 120000
+            }
+          },
+          bridge: {
+            bridgeRouter: {
+              send: 500000
+            },
+            ethHelper: {
+              send: 800000,
+              sendToEvmLike: 800000
+            }
+          }
+        }
     }
 
     get isAgentUp(): boolean {
@@ -175,6 +256,21 @@ export class NomadEnv {
         return n;
     }
 
+    connections(n: Network): string[] {
+      return this.connectedNetworks.get(n.domainNumber)!.map(n => n.name)
+    }
+
+    domain(n: Network): Domain {
+      return {
+          name: n.name,
+          domain: n.domainNumber,
+          connections: this.connections(n), //@NOTE MOVE THE GETTER AND SETTERS OF THIS TO NOMAD
+          specs: n.specs,
+          configuration: n.config,
+          bridgeConfiguration: n.bridgeConfig,
+      }
+    }
+
     async deployFresh(): Promise<void> {
         console.log(`Deploying!`, JSON.stringify(this.nomadConfig(), null, 4));
 
@@ -250,7 +346,8 @@ export class NomadEnv {
    }
 
    connectNetwork(n: Network, target: Network) {
-      if (!n.connectedNetworks.includes(target)) n.connectedNetworks.push(target);
+      if (!this.connectedNetworks.get(n.domainNumber)) this.connectedNetworks.set(n.domainNumber, [target]);
+      if (!this.connections(n).includes(target.name)) this.connectedNetworks.get(n.name)!.push(target);
     }
 
    setDeployContext(): DeployContext {
@@ -272,18 +369,78 @@ export class NomadEnv {
         return this.deployContext;
     }
 
+    get agentConfig(): AgentConfig {
+      return{ 
+          rpcStyle: "ethereum",
+          metrics: 9090,
+          db: "/app",
+          logging: this.logConfig,
+          updater: this.updaterConfig,
+          relayer: this.relayerConfig,
+          processor: this.processorConfig,
+          watcher: this.watcherConfig,
+          kathy: this.kathyConfig
+      } as unknown as AgentConfig
+  }
+
+    get logConfig(): LogConfig {
+        return {
+          fmt: "json",
+          level: "info"
+        }
+    }
+
+    get updaterConfig(): BaseAgentConfig {
+        return { 
+          "enabled": true,
+          "interval": 5
+        }
+    }
+
+    get watcherConfig(): BaseAgentConfig {
+        return { 
+          "enabled": true,
+          "interval": 5
+        }
+    }
+
+    get relayerConfig(): BaseAgentConfig {
+        return { 
+          "enabled": true,
+          "interval": 10
+        }
+    }
+
+    get processorConfig(): BaseAgentConfig {
+        return { 
+          "enabled": true,
+          "interval": 5,
+        subsidizedRemotes: [
+          "tom", 
+          "jerry"
+        ]
+      } as BaseAgentConfig
+  }
+
+    get kathyConfig(): BaseAgentConfig {
+        return { 
+          "enabled": true,
+          "interval": 500
+        }
+    }
+
     nomadConfig(): NomadConfig {
         return {
             version: 0,
             environment: 'local',
             networks: this.networks.map(n => n.name),
             rpcs: Object.fromEntries(this.networks.map(n => [n.name, n.rpcs])),
-            agent: Object.fromEntries(this.networks.map(n => [n.name, n.agentConfig])),
-            protocol: {governor: this.governor, networks: Object.fromEntries(this.networks.map(n => [n.name, n.domain]))},
+            agent: Object.fromEntries(this.networks.map(n => [n.name, this.agentConfig])),
+            protocol: {governor: this.governor, networks: Object.fromEntries(this.networks.map(n => [n.name, this.domain(n)]))},
             core: Object.fromEntries(this.networks.filter(n => n.isDeployed).map(n => [n.name, n.coreContracts!])),
             bridge: Object.fromEntries(this.networks.filter(n => n.isDeployed).map(n => [n.name, n.bridgeContracts!])),
             bridgeGui: Object.fromEntries(this.networks.filter(n => n.isDeployed).map(n => [n.name, n.bridgeGui!])),
-            gas: Object.fromEntries(this.networks.map(n => [n.name, n.gasConfig!])),
+            gas: Object.fromEntries(this.networks.map(n => [n.name, this.gasConfig!])),
         }
     }
 }
@@ -293,9 +450,9 @@ export class NomadEnv {
     // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
     const log = bunyan.createLogger({name: 'localenv'});
 
-    const t = new HardhatNetwork('tom', 1, []);
+    const t = new HardhatNetwork('tom', 1);
 
-    const j = new HardhatNetwork('jerry', 2, []);
+    const j = new HardhatNetwork('jerry', 2);
 
     await Promise.all([
         t.up(),

@@ -1,5 +1,5 @@
 import { Agents } from "./agent";
-import { NetworkSpecs, ContractConfig, BridgeConfiguration, BaseAgentConfig, Domain, CoreContracts, BridgeContracts, AgentConfig, LogConfig, AppConfig, NomadGasConfig } from '@nomad-xyz/configuration';
+import { NetworkSpecs, ContractConfig, BridgeConfiguration, CoreContracts, BridgeContracts, AppConfig } from '@nomad-xyz/configuration';
 import { DockerizedActor } from "./actor";
 import Dockerode from "dockerode";
 import { sleep } from "./utils";
@@ -17,7 +17,6 @@ enum DockerNetworkStatus {
 
 export abstract class Network {
     agents?: Agents;
-    connectedNetworks: Network[];
 
     name: string;
     domainNumber: number;
@@ -28,116 +27,21 @@ export abstract class Network {
     bridgeContracts?: BridgeContracts;
     bridgeGui?: AppConfig;
 
-    gasConfig: NomadGasConfig;
-
     abstract get specs(): NetworkSpecs;
     abstract get rpcs(): string[];
     abstract get config(): ContractConfig;
     abstract get bridgeConfig(): BridgeConfiguration;
-    abstract get agentConfig(): AgentConfig;
 
     abstract up(): Promise<void>;
     abstract down(): Promise<void>;
     abstract isConnected(): Promise<boolean>;
 
-    constructor(name: string, domainNumber: number, chainId: number, connectedNetworks: []) {
+    constructor(name: string, domainNumber: number, chainId: number) {
         this.name = name;
         this.domainNumber = domainNumber;
         this.chainId = chainId;
         this.deployOverrides = { gasLimit: 30000000 };
-        this.connectedNetworks = connectedNetworks;
-
-        try {
-          this.gasConfig = {
-            core: {
-              home: {
-                update: {
-                  base: 100000,
-                  perMessage: 10000
-                },
-                improperUpdate: {
-                  base: 100000,
-                  perMessage: 10000
-                },
-                doubleUpdate: 200000
-              },
-              replica: {
-                update: 140000,
-                prove: 200000,
-                process: 1700000,
-                proveAndProcess: 1900000,
-                doubleUpdate: 200000
-              },
-              connectionManager: {
-                ownerUnenrollReplica: 120000,
-                unenrollReplica: 120000
-              }
-            },
-            bridge: {
-              bridgeRouter: {
-                send: 500000
-              },
-              ethHelper: {
-                send: 800000,
-                sendToEvmLike: 800000
-              }
-            }
-          }
-        } catch(e) {
-          console.log(e)
-        }
-
-        this.gasConfig = {
-          core: {
-            home: {
-              update: {
-                base: 100000,
-                perMessage: 10000
-              },
-              improperUpdate: {
-                base: 100000,
-                perMessage: 10000
-              },
-              doubleUpdate: 200000
-            },
-            replica: {
-              update: 140000,
-              prove: 200000,
-              process: 1700000,
-              proveAndProcess: 1900000,
-              doubleUpdate: 200000
-            },
-            connectionManager: {
-              ownerUnenrollReplica: 120000,
-              unenrollReplica: 120000
-            }
-          },
-          bridge: {
-            bridgeRouter: {
-              send: 500000
-            },
-            ethHelper: {
-              send: 800000,
-              sendToEvmLike: 800000
-            }
-          }
-        }
         
-    }
-
-    get connections(): string[] {
-      return this.connectedNetworks.map(n => n.name);
-    }
-
-    get domain(): Domain {
-        return {
-            name: this.name,
-            domain: this.domainNumber,
-            connections: this.connections, //@NOTE MOVE THE GETTER AND SETTERS OF THIS TO NOMAD
-            specs: this.specs,
-            configuration: this.config,
-            bridgeConfiguration: this.bridgeConfig,
-        }
     }
 
     get isDeployed(): boolean {
@@ -227,8 +131,8 @@ export class HardhatNetwork extends Network {
     recoveryManager: string;
     weth: string;
 
-    constructor(name: string, domain: number, connectedNetworks: [], options?: HardhatNetworkOptions) {
-        super(name, domain, domain, connectedNetworks);
+    constructor(name: string, domain: number, options?: HardhatNetworkOptions) {
+        super(name, domain, domain);
         this.handler = new DockerizedNetworkActor(this.name);
         this.blockTime = 5;
         this.firstStart = false;
@@ -272,10 +176,6 @@ export class HardhatNetwork extends Network {
      this.keys.push(...ks);
    }
 
-    get connections(): string[] {
-        return this.connectedNetworks.map(n => n.name);
-    }
-
     get rpcs(): string[] {
         return [`http://localhost:${this.handler.port}`];
     }
@@ -311,66 +211,6 @@ export class HardhatNetwork extends Network {
             updater: this.updater,
             watchers: [this.watcher]
           }
-    }
-  
-    get agentConfig(): AgentConfig {
-      return{ 
-          rpcStyle: "ethereum",
-          metrics: 9090,
-          db: "/app",
-          logging: this.logConfig,
-          updater: this.updaterConfig,
-          relayer: this.relayerConfig,
-          processor: this.processorConfig,
-          watcher: this.watcherConfig,
-          kathy: this.kathyConfig
-      } as unknown as AgentConfig
-  }
-
-    get logConfig(): LogConfig {
-        return {
-          fmt: "json",
-          level: "info"
-        }
-    }
-
-    get updaterConfig(): BaseAgentConfig {
-        return { 
-          "enabled": true,
-          "interval": 5
-        }
-    }
-
-    get watcherConfig(): BaseAgentConfig {
-        return { 
-          "enabled": true,
-          "interval": 5
-        }
-    }
-
-    get relayerConfig(): BaseAgentConfig {
-        return { 
-          "enabled": true,
-          "interval": 10
-        }
-    }
-
-    get processorConfig(): BaseAgentConfig {
-        return { 
-          "enabled": true,
-          "interval": 5,
-        subsidizedRemotes: [
-          "tom", 
-          "jerry"
-        ]
-      } as BaseAgentConfig
-  }
-
-    get kathyConfig(): BaseAgentConfig {
-        return { 
-          "enabled": true,
-          "interval": 500
-        }
     }
 
     async setWETH(wethAddy: Promise<string>): Promise<void> {
