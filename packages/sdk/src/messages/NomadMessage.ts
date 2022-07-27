@@ -326,7 +326,7 @@ export class NomadMessage<T extends NomadContext> {
 
   /**
    * Get the status of a message
-   * 
+   *
    *    0 = dispatched
    *    1 = included
    *    2 = relayed
@@ -337,11 +337,11 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An record of all events and correlating txs
    */
   async status(): Promise<MessageStatus | undefined> {
-    if (this.eventCache.processed) return MessageStatus.processed
-    const confirmAt = await this.confirmAt()
-    const now = Date.now() / 1000
-    if (confirmAt && confirmAt < now) return MessageStatus.relayed
-    return (await this._events()).state
+    if (this.eventCache.processed) return MessageStatus.processed;
+    const confirmAt = await this.confirmAt();
+    const now = Date.now() / 1000;
+    if (confirmAt && confirmAt < now) return MessageStatus.relayed;
+    return (await this._events()).state;
   }
 
   /**

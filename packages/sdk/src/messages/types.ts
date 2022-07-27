@@ -29,14 +29,14 @@ export enum MessageStatus {
   relayed,
   updated,
   received,
-  processed
-};
+  processed,
+}
 
 export enum ReplicaStatusNames {
   None = 'none',
   Proven = 'proven',
   Processed = 'processed',
-};
+}
 
 type ReplicaMessageStatusNone = {
   status: ReplicaStatusNames.None;

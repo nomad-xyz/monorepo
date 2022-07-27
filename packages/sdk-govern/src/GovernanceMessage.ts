@@ -231,7 +231,7 @@ export class BatchMessage extends GovernanceMessage {
    * Query the recipient governance router for the batch status
    * @returns The status of the batch
    */
-  async status(): Promise<BatchStatus> {
+  async batchStatus(): Promise<BatchStatus> {
     const core = this.context.mustGetCore(this.destination);
     const status = await core.governanceRouter.inboundCallBatches(
       this.batchHash,
@@ -243,14 +243,14 @@ export class BatchMessage extends GovernanceMessage {
    * Query the recipient domain to see if the batch is complete
    */
   async isExecuted(): Promise<boolean> {
-    return (await this.status()) === BatchStatus.Complete;
+    return (await this.batchStatus()) === BatchStatus.Complete;
   }
 
   /**
    * Query the recipient domain to see if the batch is pending
    */
   async isPending(): Promise<boolean> {
-    return (await this.status()) === BatchStatus.Pending;
+    return (await this.batchStatus()) === BatchStatus.Pending;
   }
 }
 
