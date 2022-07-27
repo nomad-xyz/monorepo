@@ -152,10 +152,7 @@ class GovernanceMessage extends NomadMessage<NomadContext> {
     context: NomadContext,
     receipt: ethers.providers.TransactionReceipt,
   ): Promise<AnyGovernanceMessage> {
-    const messages = await GovernanceMessage.fromReceipt(
-      context,
-      receipt,
-    );
+    const messages = await GovernanceMessage.fromReceipt(context, receipt);
     if (messages.length !== 1) {
       throw new Error('Expected single Dispatch in transaction');
     }
