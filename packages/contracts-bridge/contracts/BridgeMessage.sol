@@ -15,6 +15,17 @@ library BridgeMessage {
     // WARNING: do NOT re-write the numbers / order
     // of message types in an upgrade;
     // will cause in-flight messages to be mis-interpreted
+    // The Types enum has to do with the TypedMemView library and it defines
+    // the types of `views` that we use in BridgeMessage. A view is not interesting data
+    // itself, but rather it points to a specific part of the memory where
+    // the data we care about live. When we give a `type` to a view, we define what type
+    // is the data it points to, so that we can do easy runtime assertions without
+    // having to fetch the whole data from memory and check for ourselves. In BridgeMessage.sol
+    // the types of `data` we can have are defined in this enum and may belong to different taxonomies.
+    // For example, a `Message` includes a `TokenId` and an Action, either a `Transfer` or a `TransferToHook`.
+    // The Message is a different TYPE of data than a TokenId or Transfer, as TokenId and Transfer live inside
+    // the message. For that reason, we define them as different data types and we add them to the same enum 
+    // for ease of use.
     enum Types {
         Invalid, // 0
         TokenId, // 1
