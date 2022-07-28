@@ -1,4 +1,5 @@
 import { NomadLocator, NomadConfig, AgentConfig, LogConfig, BaseAgentConfig, NomadGasConfig} from "@nomad-xyz/configuration";
+import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import * as dotenv from 'dotenv';
 import { DeployContext } from "../../deploy/src/DeployContext";
 import { HardhatNetwork, Network } from "./network";
@@ -28,6 +29,8 @@ export class NomadEnv {
     gasConfig: NomadGasConfig;
 
     log = bunyan.createLogger({name: 'localenv'});
+
+    multiprovider ?: BridgeContext;
 
     constructor(governor: NomadLocator) {
         this.networks = [];
@@ -269,6 +272,11 @@ export class NomadEnv {
           configuration: n.config,
           bridgeConfiguration: n.bridgeConfig,
       }
+    }
+    
+    getMultiprovider(): BridgeContext {
+      if (!this.multiprovider) throw new Error(`No multiprovider`);
+      return this.multiprovider;
     }
 
     async deployFresh(): Promise<void> {

@@ -1,7 +1,7 @@
 import { HardhatNetwork } from "../src/network";
 import { NomadEnv } from "../src/le";
 import { Key } from "../src/key";
-import type { TokenIdentifier } from "@nomad-xyz/sdk/nomad/tokens";
+import type { TokenIdentifier } from "@nomad-xyz/sdk-bridge";
 // import fs from "fs";
 import { getCustomToken } from "./utils/token/deployERC20";
 import { getRandomTokenAmount } from "../src/utils";
@@ -10,14 +10,12 @@ import bunyan from 'bunyan';
 
 (async () => {
 
-  // Test setup
-  // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
     // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
     const log = bunyan.createLogger({name: 'localenv'});
 
-    const t = new HardhatNetwork('tom', 1, []);
+    const t = new HardhatNetwork('tom', 1);
 
-    const j = new HardhatNetwork('jerry', 2, []);
+    const j = new HardhatNetwork('jerry', 2);
 
     await Promise.all([
         t.up(),
@@ -83,10 +81,11 @@ import bunyan from 'bunyan';
       "MyToken",
       "MTK"
     );
+
+    const tDomain = le.domain(t).name;
     
-  // @TODO: FIX THIS ABSTRACTION
     const token: TokenIdentifier = {
-      domain: t.domain,
+      domain: tDomain,
       id: tokenOnTom.address,
     };
 
@@ -131,10 +130,10 @@ import bunyan from 'bunyan';
   }
 
   // Teardown
-
   await le.stopAgents();
 
   await Promise.all([t.down(), j.down()]);
 
   if (!success) process.exit(1);
+
 })();
