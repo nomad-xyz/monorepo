@@ -5,7 +5,7 @@ import { arrayify, hexlify } from '@ethersproject/bytes';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { ErrorCode } from '@ethersproject/logger';
 import { Logger } from '@ethersproject/logger';
-import axios from 'axios';
+import fetch from 'cross-fetch';
 import * as core from '@nomad-xyz/contracts-core';
 import { utils } from '@nomad-xyz/multi-provider';
 
@@ -378,7 +378,7 @@ export class NomadMessage<T extends NomadContext> {
    */
   get s3Uri(): string | undefined {
     const s3 = this.context.conf.s3;
-    if (!s3) return;
+    if (!s3) throw new Error('s3 data not configured');
     const { bucket, region } = s3;
     const root = `https://${bucket}.s3.${region}.amazonaws.com`;
     return `${root}/${this.s3Name}`;
@@ -470,10 +470,11 @@ export class NomadMessage<T extends NomadContext> {
   async getProof(): Promise<MessageProof | undefined> {
     const uri = this.s3Uri;
     if (!uri) throw new Error('No s3 configuration');
-    const res = await axios.get(uri);
-    const { data, status, statusText } = res;
+    const response = await fetch(uri);
+    if (!response) throw new Error('Unable to fetch proof');
+    const { data, status, statusText } = await response.json();
     if (status !== 200) throw new Error(statusText);
-    if (data.proof && data.message) return data as MessageProof;
+    if (data.proof && data.message) return data;
     throw new Error('Server returned invalid proof');
   }
 }

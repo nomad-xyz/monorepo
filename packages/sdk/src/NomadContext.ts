@@ -241,17 +241,11 @@ export class NomadContext extends MultiProvider<config.Domain> {
   async process(
     message: NomadMessage<NomadContext>,
   ): Promise<ContractTransaction> {
-    const s3URL = `https://nomadxyz-${this.environment}-proofs.s3.us-west-2.amazonaws.com/`;
-
-    const originNetwork = this.resolveDomainName(message.origin);
-    const destNetwork = this.resolveDomainName(message.destination);
-    const index = message.leafIndex.toString();
-    const s3Res = await fetch(`${s3URL}${originNetwork}_${index}`);
-    if (!s3Res) throw new Error('Not able to fetch proof');
-    const data: MessageProof = await s3Res.json();
+    const data = await message.getProof();
+    if (!data) throw new Error('Unable to fetch proof');
 
     // get replica contract
-    const replica = this.mustGetReplicaFor(originNetwork, destNetwork);
+    const replica = this.mustGetReplicaFor(message.origin, message.destination);
 
     await replica.callStatic.proveAndProcess(
       data.message,
