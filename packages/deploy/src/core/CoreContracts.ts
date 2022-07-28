@@ -1048,6 +1048,20 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
             remoteConfig.configuration.updater,
             `Replica of ${remoteDomain} - updater is correctly configured`,
           );
+          checklist.currentCheck = `Replica of ${remoteDomain} - remoteDomain is correctly configured`;
+          const replicaDomain = await replica.remoteDomain();
+          checklist.equals(
+            replicaDomain,
+            remoteConfig.domain,
+            `Replica of ${remoteDomain} - domain number is correctly configured`,
+          );
+          checklist.currentCheck = `Replica of ${remoteDomain} - owner is GovernanceRouter`;
+          const replicaOwner = await replica.owner();
+          checklist.equals(
+            replicaOwner,
+            this.governanceRouter.address,
+            `Replica of ${remoteDomain} - domain number is owned by GovernaceRouter`,
+          );
         }
       }
       return checklist;
