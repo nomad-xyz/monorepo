@@ -82,8 +82,15 @@ export class CheckList {
       this.fail(message + ' is undefined');
     } else {
       try {
-        expect(left, this.prefix + message).to.be.equal(right);
-        this.pass(message);
+        if (typeof right == 'string' && typeof left == 'string') {
+          expect(String(left).toLowerCase(), this.prefix + message).to.be.equal(
+            String(left).toLowerCase(),
+          );
+          this.pass(message);
+        } else {
+          expect(left, this.prefix + message).to.be.equal(right);
+          this.pass(message);
+        }
       } catch (e) {
         this.fail(e);
       }
@@ -174,7 +181,7 @@ export class CheckList {
     };
     const out = `  ${data.output} | ${data.network}${' '.repeat(
       15 - data.network.length,
-    )} | ${data.check}${' '.repeat(100 - data.check.length)}|`;
+    )} | ${data.check}${' '.repeat(150 - data.check.length)}|`;
     console.log(out);
     this.ok.push(out);
   }
@@ -187,7 +194,7 @@ export class CheckList {
       };
       const out = `  ${data.output} | ${data.network}${' '.repeat(
         15 - data.network.length,
-      )} | ${this.currentCheck}${' '.repeat(100 - this.currentCheck.length)}|`;
+      )} | ${this.currentCheck}${' '.repeat(150 - this.currentCheck.length)}|`;
       console.log(out);
       this.error.push({
         check: this.currentCheck,
@@ -201,7 +208,7 @@ export class CheckList {
       };
       const out = `  ${data.output} | ${data.network}${' '.repeat(
         15 - data.network.length,
-      )} | ${this.currentCheck}${' '.repeat(100 - this.currentCheck.length)}|`;
+      )} | ${this.currentCheck}${' '.repeat(150 - this.currentCheck.length)}|`;
       console.log(out);
       this.error.push({
         network: this.prefix,
