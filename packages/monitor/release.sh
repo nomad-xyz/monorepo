@@ -1,1 +1,0 @@
-docker push gcr.io/nomad-xyz/nomad-monitor:$1
