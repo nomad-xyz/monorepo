@@ -209,12 +209,7 @@ export class Orchestrator {
   async index(domain: number) {
     const indexer = this.indexers.get(domain)!;
 
-    let replicas = [];
-    if (domain === this.gov) {
-      replicas = this.allowedDomains.filter((d) => d != this.gov);
-    } else {
-      replicas = [this.gov];
-    }
+    const replicas = this.allowedDomains.filter((d) => d != domain);
 
     return await indexer.updateAll(replicas);
   }
