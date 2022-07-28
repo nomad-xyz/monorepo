@@ -3,7 +3,6 @@ import { expect } from 'chai';
 import * as config from '@nomad-xyz/configuration';
 import { utils } from '@nomad-xyz/multi-provider';
 import chalk from 'chalk';
-
 export type SignerOrProvider = ethers.providers.Provider | ethers.Signer;
 
 export function log(str: string): void {
@@ -27,11 +26,14 @@ export class CheckList {
   prefix: string; // prefix for all messages in this checklist
   ok: string[]; // successful items
   error: unknown[]; // failed items with associated error from chai assertion or plain error
+  //
+  currentCheck: string;
 
   constructor(prefix: string | void) {
     this.prefix = prefix ? prefix : '';
     this.ok = [];
     this.error = [];
+    this.currentCheck = '';
   }
 
   static combine(lists: CheckList[]): CheckList {
@@ -45,16 +47,19 @@ export class CheckList {
 
   output(): void {
     // TODO: improve output readability
-    console.log('Failed: ', JSON.stringify(this.error, null, 2));
     if (this.hasErrors()) {
-      throw new Error(
-        `Test result:${chalk.red('FAIL')} | ${this.ok.length} Passed, ${
+      console.error(
+        `\nTest result: ${chalk.red('FAIL')} | ${this.ok.length} Passed, ${
           this.error.length
         } Failed.`,
       );
+      console.log(`\n ${chalk.bold('Errors')}\n`);
+      this.error.map(console.log);
     } else {
       console.log(
-        `Test result: ${chalk.green('OK')} | ${this.ok.length} Checks Passed!`,
+        `\nTest result: ${chalk.green('OK')} | ${
+          this.ok.length
+        } Checks Passed!`,
       );
     }
   }
@@ -162,23 +167,47 @@ export class CheckList {
   }
 
   pass(msg: string): void {
-    console.log(`${chalk.green('[PASS]')} - ${this.prefix} - ${msg}`);
-    this.ok.push(this.prefix + msg);
+    const data = {
+      output: chalk.green('[PASS]'),
+      network: this.prefix,
+      check: msg,
+    };
+    const out = `  ${data.output} | ${data.network}${' '.repeat(
+      15 - data.network.length,
+    )} | ${data.check}${' '.repeat(100 - data.check.length)}|`;
+    console.log(out);
+    this.ok.push(out);
   }
 
   fail(e: string | unknown): void {
     if (typeof e == 'string') {
-      console.log(`${chalk.red('[FAIL]')} - ${this.prefix} - ${e}`);
-      this.error.push(new Error(this.prefix + e));
+      const data = {
+        output: chalk.red('[FAIL]'),
+        network: this.prefix,
+      };
+      const out = `  ${data.output} | ${data.network}${' '.repeat(
+        15 - data.network.length,
+      )} | ${this.currentCheck}${' '.repeat(100 - this.currentCheck.length)}|`;
+      console.log(out);
+      this.error.push({
+        check: this.currentCheck,
+        error: e,
+        network: this.prefix,
+      });
     } else {
-      console.log(
-        `${chalk.red('[FAIL]')} - ${this.prefix} - ${JSON.stringify(
-          e,
-          null,
-          2,
-        )}`,
-      );
-      this.error.push(e);
+      const data = {
+        output: chalk.red('[FAIL]'),
+        network: this.prefix,
+      };
+      const out = `  ${data.output} | ${data.network}${' '.repeat(
+        15 - data.network.length,
+      )} | ${this.currentCheck}${' '.repeat(100 - this.currentCheck.length)}|`;
+      console.log(out);
+      this.error.push({
+        network: this.prefix,
+        check: this.currentCheck,
+        error: e,
+      });
     }
   }
 }

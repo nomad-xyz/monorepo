@@ -603,7 +603,8 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const enrolledRemote = await this.governanceRouter.routers(
       remoteConfig.domain,
     );
-    if (utils.equalIds(enrolledRemote, remoteCore.governanceRouter.address)) return;
+    if (utils.equalIds(enrolledRemote, remoteCore.governanceRouter.address))
+      return;
     log(`enroll GovernanceRouter for ${remote} on ${local}`);
 
     // Check that this key has permissions to set this
@@ -709,30 +710,25 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     remoteDomains: string[],
     governorDomain: number,
   ): Promise<CheckList> {
-    const checklist = new CheckList(`${this.domain.toUpperCase()}: `);
+    const checklist = new CheckList(`${this.domain.toUpperCase()}`);
+    try {
+      checklist.currentCheck = `Home for domain ${this.domain}`;
+      checklist.exists(this.data.home, checklist.currentCheck);
+      checklist.currentCheck = `UpdaterManager for domain ${this.domain}`;
+      checklist.exists(this.data.updaterManager, checklist.currentCheck);
+      checklist.currentCheck = `GovernanceRouter for domain ${this.domain}`;
+      checklist.exists(this.data.governanceRouter, checklist.currentCheck);
+      checklist.currentCheck = `upgradeBeaconController for domain ${this.domain}`;
+      checklist.exists(
+        this.data.upgradeBeaconController,
+        checklist.currentCheck,
+      );
+      checklist.currentCheck = `xAppConnectionManager for domain ${this.domain}`;
+      checklist.exists(this.data.xAppConnectionManager, checklist.currentCheck);
 
-    checklist.exists(this.data.home, `Home for domain ${this.domain}`);
-    checklist.exists(
-      this.data.updaterManager,
-      `UpdaterManager for domain ${this.domain}`,
-    );
-    checklist.exists(
-      this.data.governanceRouter,
-      `GovernanceRouter for domain ${this.domain}`,
-    );
-
-    checklist.exists(
-      this.data.upgradeBeaconController,
-      `upgradeBeaconController for domain ${this.domain}`,
-    );
-    checklist.exists(
-      this.data.xAppConnectionManager,
-      `xAppConnectionManager for domain ${this.domain}`,
-    );
-
-    const isGovernor = governorDomain === this.domainNumber;
-    const domainConfig = this.context.mustGetDomainConfig(this.domain);
-    /*
+      const isGovernor = governorDomain === this.domainNumber;
+      const domainConfig = this.context.mustGetDomainConfig(this.domain);
+      /*
     Check list:
     # Home
      * updaterManager
@@ -767,235 +763,298 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
      * owner
     */
 
-    //  ========= Home =========
-    // Home upgrade setup contracts are defined
-    checklist.assertBeaconProxy(this.data.home, 'Home beacon proxy is defined');
+      //  ========= Home =========
+      // Home upgrade setup contracts are defined
+      checklist.currentCheck = 'Home beacon proxy is defined';
+      checklist.assertBeaconProxy(this.data.home, checklist.currentCheck);
 
-    // updaterManager is set on Home
-    const updaterManager = await this.home.updaterManager();
-    checklist.equalIds(
-      updaterManager,
-      this.data.updaterManager,
-      'UpdaterManager is configured on Home',
-    );
+      // updaterManager is set on Home
+      checklist.currentCheck = 'UpdaterManager is configured on Home';
+      const updaterManager = await this.home.updaterManager();
+      checklist.equalIds(
+        updaterManager,
+        this.data.updaterManager,
+        checklist.currentCheck,
+      );
 
-    // state
-    const state = await this.home.state();
-    checklist.equals(1, state, `Home state is Active`);
+      // state
+      checklist.currentCheck = `Home state is active`;
+      const state = await this.home.state();
+      checklist.equals(1, state, checklist.currentCheck);
 
-    // updater
-    const homeUpdater = await this.home.updater();
-    checklist.equalIds(
-      homeUpdater,
-      domainConfig.configuration.updater,
-      'Home updater is correctly configured',
-    );
+      // updater
+      checklist.currentCheck = 'Home updater is correctly configured';
+      const homeUpdater = await this.home.updater();
+      checklist.equalIds(
+        homeUpdater,
+        domainConfig.configuration.updater,
+        checklist.currentCheck,
+      );
 
-    // localDomain
-    const homeLocalDomain = await this.home.localDomain();
-    checklist.equals(
-      this.domainNumber,
-      homeLocalDomain,
-      `Home local domain is correctly configured`,
-    );
+      // localDomain
+      checklist.currentCheck = `Home local domain is correctly configured`;
+      const homeLocalDomain = await this.home.localDomain();
+      checklist.equals(
+        this.domainNumber,
+        homeLocalDomain,
+        checklist.currentCheck,
+      );
 
-    // owner
-    const homeOwner = await this.home.owner();
-    expect(utils.equalIds(homeOwner, this.governanceRouter.address)).to.be.true;
-    checklist.equalIds(
-      homeOwner,
-      this.governanceRouter.address,
-      'Home owner is governance router',
-    );
-    //  ========= UpdaterManager =========
-    // updater
-    const updaterAtUpdaterManager = await this.updaterManager.updater();
-    checklist.equalIds(
-      updaterAtUpdaterManager,
-      domainConfig.configuration.updater,
-      'UpdaterManager updater is correctly configured',
-    );
+      // owner
+      checklist.currentCheck = 'Home owner is governance router';
+      const homeOwner = await this.home.owner();
+      expect(utils.equalIds(homeOwner, this.governanceRouter.address)).to.be
+        .true;
+      checklist.equalIds(
+        homeOwner,
+        this.governanceRouter.address,
+        checklist.currentCheck,
+      );
+      //  ========= UpdaterManager =========
+      // updater
+      checklist.currentCheck = 'UpdaterManager updater is correctly configured';
+      const updaterAtUpdaterManager = await this.updaterManager.updater();
+      checklist.equalIds(
+        updaterAtUpdaterManager,
+        domainConfig.configuration.updater,
+        'UpdaterManager updater is correctly configured',
+      );
 
-    // owner
-    const updaterManagersOwner = await this.updaterManager.owner();
-    checklist.equalIds(
-      updaterManagersOwner,
-      this.governanceRouter.address,
-      'UpdaterManager owner is governance router',
-    );
+      // owner
+      checklist.currentCheck = 'UpdaterManager owner is governance router';
+      const updaterManagersOwner = await this.updaterManager.owner();
+      checklist.equalIds(
+        updaterManagersOwner,
+        this.governanceRouter.address,
+        'UpdaterManager owner is governance router',
+      );
 
-    //  ========= xAppConnectionManager =========
-    // home
-    const xappHome = await this.xAppConnectionManager.home();
-    checklist.equalIds(
-      xappHome,
-      this.data.home?.proxy,
-      'xAppConnectionManager Home is equal to Home',
-    );
-    // owner
-    const xappsOwner = await this.xAppConnectionManager.owner();
-    checklist.equalIds(
-      xappsOwner,
-      this.governanceRouter.address,
-      'xAppConnectionManager owner is the Governance Router',
-    );
-    //   .true;
+      //  ========= xAppConnectionManager =========
+      // home
+      checklist.currentCheck = 'xAppConnectionManager Home is equal to Home';
+      const xappHome = await this.xAppConnectionManager.home();
+      checklist.equalIds(
+        xappHome,
+        this.data.home?.proxy,
+        'xAppConnectionManager Home is equal to Home',
+      );
+      // owner
+      checklist.currentCheck = `xAppConnectionManager owner is the Governance Router`;
+      const xappsOwner = await this.xAppConnectionManager.owner();
+      checklist.equalIds(
+        xappsOwner,
+        this.governanceRouter.address,
+        'xAppConnectionManager owner is the Governance Router',
+      );
+      //   .true;
 
-    const replicas = this.data.replicas;
-    checklist.exists(replicas, 'Replica mapping exists');
-    if (replicas) {
-      for (const remoteDomain of remoteDomains) {
-        checklist.assertBeaconProxy(
-          replicas[remoteDomain],
-          `Replica for ${remoteDomain} is deployed`,
-        );
+      checklist.currentCheck = 'Replica mapping exists';
+      const replicas = this.data.replicas;
+      checklist.exists(replicas, 'Replica mapping exists');
+      if (replicas) {
+        for (const remoteDomain of remoteDomains) {
+          checklist.currentCheck = ` Replica for ${remoteDomain} is deployed`;
+          checklist.assertBeaconProxy(
+            replicas[remoteDomain],
+            `Replica for ${remoteDomain} is deployed`,
+          );
 
-        const remoteDomainNumber =
-          this.context.mustGetDomain(remoteDomain).domain;
-        const assumedDomain = await this.xAppConnectionManager.replicaToDomain(
-          replicas[remoteDomain].proxy,
-        );
-        checklist.equals(
-          remoteDomainNumber,
-          assumedDomain,
-          `Replica for ${remoteDomain} is configured in xAppConnectionManager replicaToDomain`,
-        );
-        // domainToReplica
-        const assumedReplicaAddress =
-          await this.xAppConnectionManager.domainToReplica(remoteDomainNumber);
-        checklist.equalIds(
-          assumedReplicaAddress,
-          replicas[remoteDomain].proxy,
-          `Replica for ${remoteDomain} is configured in xAppConnectionManager domainToReplica`,
-        );
-
-        // watcherPermission
-        const remoteConfig = this.context.mustGetDomainConfig(remoteDomain);
-        for (const watcher of remoteConfig.configuration.watchers) {
-          const watcherPermission =
-            await this.xAppConnectionManager.watcherPermission(
-              watcher,
-              remoteDomainNumber,
+          const remoteDomainNumber =
+            this.context.mustGetDomain(remoteDomain).domain;
+          checklist.currentCheck = `Replica for ${remoteDomain} is configured in this.xAppConnectionManager replicaToDomain`;
+          const assumedDomain =
+            await this.xAppConnectionManager.replicaToDomain(
+              replicas[remoteDomain].proxy,
             );
           checklist.equals(
-            true,
-            watcherPermission,
-            `Watcher permission for ${remoteDomain} is set`,
+            remoteDomainNumber,
+            assumedDomain,
+            `Replica for ${remoteDomain} is configured in xAppConnectionManager replicaToDomain`,
+          );
+          // domainToReplica
+          checklist.currentCheck = `Replica for ${remoteDomain} is configured in this.xAppConnectionManager domainToReplica`;
+          const assumedReplicaAddress =
+            await this.xAppConnectionManager.domainToReplica(
+              remoteDomainNumber,
+            );
+          checklist.equalIds(
+            assumedReplicaAddress,
+            replicas[remoteDomain].proxy,
+            `Replica for ${remoteDomain} is configured in xAppConnectionManager domainToReplica`,
+          );
+
+          checklist.currentCheck = `Watcher permission for ${remoteDomain} is set`;
+          // watcherPermission
+          const remoteConfig = this.context.mustGetDomainConfig(remoteDomain);
+          for (const watcher of remoteConfig.configuration.watchers) {
+            const watcherPermission =
+              await this.xAppConnectionManager.watcherPermission(
+                watcher,
+                remoteDomainNumber,
+              );
+            checklist.equals(
+              true,
+              watcherPermission,
+              `Watcher permission for ${remoteDomain} is set`,
+            );
+          }
+        }
+      }
+      //  ========= GovRouter =========
+      // GovernanceRouter upgrade setup contracts are defined
+      checklist.currentCheck = `Governance router is deployed`;
+      checklist.assertBeaconProxy(
+        this.data.governanceRouter,
+        'Governance router is deployed',
+      );
+      // localDomain
+      checklist.currentCheck = `GovernanceRouter localDomain is properly configured`;
+      const govLocalDomain = await this.governanceRouter.localDomain();
+      checklist.equals(
+        this.domainNumber,
+        govLocalDomain,
+        'GovernanceRouter localDomain is properly configured',
+      );
+      // recoveryTimelock
+      checklist.currentCheck = `GovernanceRouter recovery time lock si properly configured`;
+      const recoveryTimelock = await this.governanceRouter.recoveryTimelock();
+      checklist.equals(
+        ethers.BigNumber.from(
+          domainConfig.configuration.governance.recoveryTimelock,
+        ).toHexString(),
+        recoveryTimelock.toHexString(),
+        'GovernanceRouter Recovery time lock is properly configured',
+      );
+      // recoveryActiveAt
+      checklist.currentCheck = 'GovernanceRouter Recovery is not initiated';
+      const recoveryActiveAt = await this.governanceRouter.recoveryActiveAt();
+      checklist.equals(
+        true,
+        recoveryActiveAt.eq(0),
+        'GovernanceRouter Recovery is not initiated',
+      );
+      // recoveryManager
+      checklist.currentCheck = 'GovernanceRouter Recovery is properly set';
+      const recoveryManager = await this.governanceRouter.recoveryManager();
+      checklist.equalIds(
+        domainConfig.configuration.governance.recoveryManager,
+        recoveryManager,
+        'GovernanceRouter Recovery Manager address is properly set',
+      );
+      // governor
+      checklist.currentCheck = 'Protocol config exists';
+      checklist.exists(this.context.protocol, 'Protocol config exists');
+      if (this.context.protocol) {
+        const govId = await this.governanceRouter.governor();
+        const expectedGovId = isGovernor
+          ? this.context.protocol.governor.id
+          : ethers.constants.AddressZero;
+        checklist.equalIds(expectedGovId, govId, 'Governor address is set');
+
+        checklist.currentCheck = 'Governor domain is set';
+        const govDomain = await this.governanceRouter.governorDomain();
+        const expectedGovDomain = this.context.protocol.governor.domain;
+        checklist.equals(
+          expectedGovDomain,
+          govDomain,
+          'Governor domain is set',
+        );
+      }
+
+      checklist.currentCheck = 'xAppConnectionManager is deployed';
+      checklist.exists(
+        this.data.xAppConnectionManager,
+        'xAppConnectionManager is deployed',
+      );
+      if (this.data.xAppConnectionManager) {
+        // xAppConnectionManager
+        checklist.currentCheck =
+          'GovernanceRouter xAppConnectionManager is configured';
+        const xAppConnectionManager =
+          await this.governanceRouter.xAppConnectionManager();
+        checklist.equalIds(
+          this.data.xAppConnectionManager,
+          xAppConnectionManager,
+          'GovernanceRouter xAppConnectionManager is configured',
+        );
+      }
+
+      // GovernanceRouters enrolled
+      for (const domain of remoteDomains) {
+        const remoteDomainNumber = this.context.mustGetDomain(domain).domain;
+        checklist.currentCheck = `GovernanceRouter for ${domain} is enrolled`;
+        const remoteRouter = await this.governanceRouter.routers(
+          remoteDomainNumber,
+        );
+        checklist.equalIds(
+          this.context.mustGetCore(domain).governanceRouter.address,
+          remoteRouter,
+          `GovernanceRouter for ${domain} is enrolled`,
+        );
+      }
+
+      //  ========= UpgradeBeaconController =========
+      // owner
+      const beaconOwner = await this.upgradeBeaconController.owner();
+      checklist.equalIds(
+        beaconOwner,
+        this.governanceRouter.address,
+        'UpgradeBeacon Controller is owned by governance router',
+      );
+
+      if (remoteDomains.length > 0 && replicas) {
+        // expect all replicas to have to same implementation and upgradeBeacon
+        const firstReplica = replicas[remoteDomains[0]];
+        const replicaImpl = firstReplica.implementation;
+        const replicaBeacon = firstReplica.beacon;
+        // check every other implementation/beacon matches the first
+        remoteDomains.slice(1).forEach((remoteDomain) => {
+          const replica = replicas[remoteDomain];
+          checklist.currentCheck = `Replica for ${remoteDomain} has the same implementation`;
+          const implementation = replica.implementation;
+          checklist.currentCheck = `Replica for ${remoteDomain} has the same beacon`;
+          const beacon = replica.beacon;
+          checklist.equalIds(
+            implementation,
+            replicaImpl,
+            'Replicas all have the same implementation',
+          );
+          checklist.equalIds(
+            beacon,
+            replicaBeacon,
+            'Replicas all have the same beacon',
+          );
+        });
+      }
+
+      // ======== Replicas ========
+
+      if (replicas) {
+        for (const remoteDomain of remoteDomains) {
+          const remote = this.context.resolveDomainName(remoteDomain);
+          const remoteConfig = this.context.mustGetDomainConfig(remoteDomain);
+          const replica = this.getReplica(remote);
+          checklist.currentCheck = `Replica of ${remoteDomain} is in Active state`;
+          const state = await replica.state();
+          checklist.equals(
+            1,
+            state,
+            `Replica of ${remoteDomain} is in Active state`,
+          );
+          checklist.currentCheck = `Replica of ${remoteDomain} - updater is correctly configured`;
+          const replicaUpdater = await replica.updater();
+          checklist.equalIds(
+            replicaUpdater,
+            remoteConfig.configuration.updater,
+            `Replica of ${remoteDomain} - updater is correctly configured`,
           );
         }
       }
+      return checklist;
+    } catch (error) {
+      checklist.fail(error);
+      return checklist;
     }
-
-    //  ========= GovRouter =========
-    // GovernanceRouter upgrade setup contracts are defined
-    checklist.assertBeaconProxy(
-      this.data.governanceRouter,
-      'Governance router is deployed',
-    );
-    // localDomain
-    const govLocalDomain = await this.governanceRouter.localDomain();
-    checklist.equals(
-      this.domainNumber,
-      govLocalDomain,
-      'GovernanceRouter localDomain is properly configured',
-    );
-    // recoveryTimelock
-    const recoveryTimelock = await this.governanceRouter.recoveryTimelock();
-    checklist.equals(
-      ethers.BigNumber.from(
-        domainConfig.configuration.governance.recoveryTimelock,
-      ).toHexString(),
-      recoveryTimelock.toHexString(),
-      'GovernanceRouter Recovery time lock is properly configured',
-    );
-    // recoveryActiveAt
-    const recoveryActiveAt = await this.governanceRouter.recoveryActiveAt();
-    checklist.equals(
-      true,
-      recoveryActiveAt.eq(0),
-      'GovernanceRouter Recovery is not initiated',
-    );
-    // recoveryManager
-    const recoveryManager = await this.governanceRouter.recoveryManager();
-    checklist.equalIds(
-      domainConfig.configuration.governance.recoveryManager,
-      recoveryManager,
-      'GovernanceRouter Recovery Manager address is properly set`,
-    );
-    // governor
-    checklist.exists(this.context.protocol, 'Protocol config exists');
-    if (this.context.protocol) {
-      const govId = await this.governanceRouter.governor();
-      const expectedGovId = isGovernor
-        ? this.context.protocol.governor.id
-        : ethers.constants.AddressZero;
-      checklist.equalIds(expectedGovId, govId, 'Governor address is set');
-
-      const govDomain = await this.governanceRouter.governorDomain();
-      const expectedGovDomain = this.context.protocol.governor.domain;
-      checklist.equals(expectedGovDomain, govDomain, 'Governor domain is set');
-    }
-
-    checklist.exists(
-      this.data.xAppConnectionManager,
-      'xAppConnection is deployed',
-    );
-    if (this.data.xAppConnectionManager) {
-      // xAppConnectionManager
-      const xAppConnectionManager =
-        await this.governanceRouter.xAppConnectionManager();
-      checklist.equalIds(
-        this.data.xAppConnectionManager,
-        xAppConnectionManager,
-        'GovernanceRouter xAppConnectionManager is configured',
-      );
-    }
-
-    // GovernanceRouters enrolled
-    for (const domain of remoteDomains) {
-      const remoteDomainNumber = this.context.mustGetDomain(domain).domain;
-      const remoteRouter = await this.governanceRouter.routers(
-        remoteDomainNumber,
-      );
-      checklist.equalIds(
-        this.context.mustGetCore(domain).governanceRouter.address,
-        remoteRouter,
-        `GovernanceRouter for ${domain} is enrolled`,
-      );
-    }
-
-    //  ========= UpgradeBeaconController =========
-    // owner
-    const beaconOwner = await this.upgradeBeaconController.owner();
-    checklist.equalIds(
-      beaconOwner,
-      this.governanceRouter.address,
-      'UpgradeBeacon Controller is owned by governance router',
-    );
-
-    if (remoteDomains.length > 0 && replicas) {
-      // expect all replicas to have to same implementation and upgradeBeacon
-      const firstReplica = replicas[remoteDomains[0]];
-      const replicaImpl = firstReplica.implementation;
-      const replicaBeacon = firstReplica.beacon;
-      // check every other implementation/beacon matches the first
-      remoteDomains.slice(1).forEach((remoteDomain) => {
-        const replica = replicas[remoteDomain];
-        const implementation = replica.implementation;
-        const beacon = replica.beacon;
-        checklist.equalIds(
-          implementation,
-          replicaImpl,
-          'Replicas all have the same implementation',
-        );
-        checklist.equalIds(
-          beacon,
-          replicaBeacon,
-          'Replicas all have the same beacon',
-        );
-      });
-    }
-    return checklist;
   }
 
   checkVerificationInput(name: string, addr: string): void {
