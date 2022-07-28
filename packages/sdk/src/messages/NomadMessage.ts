@@ -231,7 +231,10 @@ export class NomadMessage<T extends NomadContext> {
    */
   private async _events(): Promise<IndexerTx> {
     if (this.eventCache.processed) return this.eventCache;
-    this.eventCache = await getEvents(this.context.conf.environment, this.transactionHash);
+    this.eventCache = await getEvents(
+      this.context.conf.environment,
+      this.transactionHash,
+    );
     return this.eventCache;
   }
 

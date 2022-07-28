@@ -2,7 +2,7 @@
 
 ### Unreleased
 
-### 2.0.0
+### 2.1.0
 
 - (major) refactor: change message status to a tagged union instead of an enum,
   added the root to the `proven` message status
