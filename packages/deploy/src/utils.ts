@@ -2,6 +2,7 @@ import ethers, { BytesLike } from 'ethers';
 import { expect } from 'chai';
 import * as config from '@nomad-xyz/configuration';
 import { utils } from '@nomad-xyz/multi-provider';
+import chalk from 'chalk';
 
 export type SignerOrProvider = ethers.providers.Provider | ethers.Signer;
 
@@ -47,10 +48,14 @@ export class CheckList {
     console.log('Failed: ', JSON.stringify(this.error, null, 2));
     if (this.hasErrors()) {
       throw new Error(
-          `${this.ok.length} Checks Passed, ${this.error.length} Checks Failed.`,
+        `Test result:${chalk.red('FAIL')} | ${this.ok.length} Passed, ${
+          this.error.length
+        } Failed.`,
       );
     } else {
-      console.log(`${this.ok.length} Checks Passed!`);
+      console.log(
+        `Test result: ${chalk.green('OK')} | ${this.ok.length} Checks Passed!`,
+      );
     }
   }
 
@@ -157,16 +162,22 @@ export class CheckList {
   }
 
   pass(msg: string): void {
-    console.log(`✅ ${this.prefix + msg}`)
+    console.log(`${chalk.green('[PASS]')} - ${this.prefix} - ${msg}`);
     this.ok.push(this.prefix + msg);
   }
 
   fail(e: string | unknown): void {
     if (typeof e == 'string') {
-      console.log(`❌ ${this.prefix + e}`);
+      console.log(`${chalk.red('[FAIL]')} - ${this.prefix} - ${e}`);
       this.error.push(new Error(this.prefix + e));
     } else {
-      console.log(`❌ ${JSON.stringify(e, null, 2)}`);
+      console.log(
+        `${chalk.red('[FAIL]')} - ${this.prefix} - ${JSON.stringify(
+          e,
+          null,
+          2,
+        )}`,
+      );
       this.error.push(e);
     }
   }
