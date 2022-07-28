@@ -2129,18 +2129,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/contracts-core@npm:^1.0.0-rc.3":
-  version: 1.0.0-rc.3
-  resolution: "@nomad-xyz/contracts-core@npm:1.0.0-rc.3"
-  dependencies:
-    "@openzeppelin/contracts": ^3.4.2
-    "@openzeppelin/contracts-upgradeable": ~3.4.2
-    "@summa-tx/memview-sol": ^2.0.0
-  checksum: 005d98a5b49389342b8a0847d9f9fdfb391930fe5a94517b95870e754c3fcefbff843974e28e3f3af248358bdbefef758b63d1e176ad2060ebed5ffb922e2acb
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
+"@nomad-xyz/contracts-core@^1.0.0-rc.3, @nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-core@workspace:packages/contracts-core"
   dependencies:
