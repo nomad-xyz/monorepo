@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### 1.1.0
+
+- (major) refactor: change message status to a tagged union instead of an enum,
+  added the root to the `proven` message status
 - (major) refactor: rewrite status queries, remove parameter from fromReceipt methods
 
 ### 1.1.0-rc.0

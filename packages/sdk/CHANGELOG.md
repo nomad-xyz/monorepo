@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+### 2.1.0
+
 - (major) refactor: change message status to a tagged union instead of an enum,
   added the root to the `proven` message status
 - fix: checkHomes async handling in for loop
