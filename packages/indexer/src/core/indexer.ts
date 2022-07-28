@@ -973,7 +973,7 @@ export class Indexer {
   async fetchHome(from: number, to: number) {
     const fetchedEvents: NomadishEvent[] = [];
 
-    this.logger.info(`Going to fetch Home`, {home: this.domain, from, to})
+    this.logger.info(`Going to fetch Home`, { home: this.domain, from, to });
 
     const home = this.home();
     {
@@ -1158,7 +1158,12 @@ export class Indexer {
   async fetchReplica(domain: number, from: number, to: number) {
     const fetchedEvents: NomadishEvent[] = [];
 
-    this.logger.info(`Going to fetch Replica`, {home: domain, replica: this.domain, from, to})
+    this.logger.info(`Going to fetch Replica`, {
+      home: domain,
+      replica: this.domain,
+      from,
+      to,
+    });
 
     const replica = this.replicaForDomain(domain);
     {
