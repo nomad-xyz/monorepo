@@ -162,7 +162,7 @@ export class NomadMessage<T extends NomadContext> {
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return NomadMessage.baseFromReceipt(context, receipt);
+    return await NomadMessage.baseFromReceipt(context, receipt);
   }
 
   /**
@@ -185,7 +185,7 @@ export class NomadMessage<T extends NomadContext> {
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return NomadMessage.baseSingleFromReceipt(context, receipt);
+    return await NomadMessage.baseSingleFromReceipt(context, receipt);
   }
 
   /**
