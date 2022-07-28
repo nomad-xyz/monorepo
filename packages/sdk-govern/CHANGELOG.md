@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- (major) refactor: rewrite status queries, remove parameter from fromReceipt methods, rename status method to batchStatus
+
 ### 1.1.0-rc.0
 
 - upgrade: contracts

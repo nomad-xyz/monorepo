@@ -1,5 +1,5 @@
 import {
-  AnnotatedDispatch,
+  Dispatch,
   CoreContracts,
   NomadContext,
   NomadMessage,
@@ -72,13 +72,13 @@ class GovernanceMessage extends NomadMessage<NomadContext> {
    */
   constructor(
     context: NomadContext,
-    event: AnnotatedDispatch,
+    dispatch: Dispatch,
     callerKnowsWhatTheyAreDoing: boolean,
   ) {
     if (!callerKnowsWhatTheyAreDoing) {
       throw new Error('Use `fromReceipt` to instantiate');
     }
-    super(context, event);
+    super(context, dispatch);
 
     this.fromCore = context.mustGetCore(this.message.from);
     this.toCore = context.mustGetCore(this.message.destination);
@@ -118,13 +118,12 @@ class GovernanceMessage extends NomadMessage<NomadContext> {
    * @param receipt The receipt
    * @returns an array of {@link GovernanceMessage} objects
    */
-  static fromReceipt(
+  static async fromReceipt(
     context: NomadContext,
-    nameOrDomain: string | number,
     receipt: ethers.providers.TransactionReceipt,
-  ): AnyGovernanceMessage[] {
+  ): Promise<AnyGovernanceMessage[]> {
     const nomadMessages: NomadMessage<NomadContext>[] =
-      NomadMessage.baseFromReceipt(context, nameOrDomain, receipt);
+      await NomadMessage.baseFromReceipt(context, receipt);
     const governanceMessages: AnyGovernanceMessage[] = [];
     for (const nomadMessage of nomadMessages) {
       try {
@@ -149,16 +148,11 @@ class GovernanceMessage extends NomadMessage<NomadContext> {
    * @returns an array of {@link GovernanceMessage} objects
    * @throws if there is not EXACTLY 1 GovernanceMessage in the receipt
    */
-  static singleFromReceipt(
+  static async singleFromReceipt(
     context: NomadContext,
-    nameOrDomain: string | number,
     receipt: ethers.providers.TransactionReceipt,
-  ): AnyGovernanceMessage {
-    const messages = GovernanceMessage.fromReceipt(
-      context,
-      nameOrDomain,
-      receipt,
-    );
+  ): Promise<AnyGovernanceMessage> {
+    const messages = await GovernanceMessage.fromReceipt(context, receipt);
     if (messages.length !== 1) {
       throw new Error('Expected single Dispatch in transaction');
     }
@@ -185,7 +179,7 @@ class GovernanceMessage extends NomadMessage<NomadContext> {
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return GovernanceMessage.fromReceipt(context, nameOrDomain, receipt);
+    return await GovernanceMessage.fromReceipt(context, receipt);
   }
 
   /**
@@ -210,7 +204,7 @@ class GovernanceMessage extends NomadMessage<NomadContext> {
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return GovernanceMessage.singleFromReceipt(context, nameOrDomain, receipt);
+    return GovernanceMessage.singleFromReceipt(context, receipt);
   }
 }
 
@@ -221,8 +215,8 @@ class GovernanceMessage extends NomadMessage<NomadContext> {
 export class BatchMessage extends GovernanceMessage {
   readonly action: Batch;
 
-  constructor(context: NomadContext, event: AnnotatedDispatch, parsed: Batch) {
-    super(context, event, true);
+  constructor(context: NomadContext, dispatch: Dispatch, parsed: Batch) {
+    super(context, dispatch, true);
     this.action = parsed;
   }
 
@@ -237,7 +231,7 @@ export class BatchMessage extends GovernanceMessage {
    * Query the recipient governance router for the batch status
    * @returns The status of the batch
    */
-  async status(): Promise<BatchStatus> {
+  async batchStatus(): Promise<BatchStatus> {
     const core = this.context.mustGetCore(this.destination);
     const status = await core.governanceRouter.inboundCallBatches(
       this.batchHash,
@@ -249,14 +243,14 @@ export class BatchMessage extends GovernanceMessage {
    * Query the recipient domain to see if the batch is complete
    */
   async isExecuted(): Promise<boolean> {
-    return (await this.status()) === BatchStatus.Complete;
+    return (await this.batchStatus()) === BatchStatus.Complete;
   }
 
   /**
    * Query the recipient domain to see if the batch is pending
    */
   async isPending(): Promise<boolean> {
-    return (await this.status()) === BatchStatus.Pending;
+    return (await this.batchStatus()) === BatchStatus.Pending;
   }
 }
 
@@ -269,10 +263,10 @@ export class TransferGovernorMessage extends GovernanceMessage {
 
   constructor(
     context: NomadContext,
-    event: AnnotatedDispatch,
+    dispatch: Dispatch,
     parsed: TransferGovernor,
   ) {
-    super(context, event, true);
+    super(context, dispatch, true);
     this.action = parsed;
   }
 

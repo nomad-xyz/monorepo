@@ -82,13 +82,14 @@ const message = await NomadMessage.baseSingleFromTransactionHash(nomadContext, '
 // 2 = included
 // 3 = relayed
 // 4 = processed
-const { status } = await message.events()
+const status = await message.status()
 // get a timestamp (in seconds) when a message will be ready to process
 // on the destination
 const confirmAt = await message.confirmAt()
 // manually claim on destination after latency period
 // Ethereum destination only
 const receipt = await message.process()
+const processTx = await message.getProcess()
 ```
 
 -------------------------

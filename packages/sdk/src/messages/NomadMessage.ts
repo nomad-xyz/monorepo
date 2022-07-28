@@ -1,82 +1,24 @@
-import { ContractTransaction } from 'ethers';
+import { ethers, ContractTransaction } from 'ethers';
+import { keccak256 } from 'ethers/lib/utils';
 import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
-import * as core from '@nomad-xyz/contracts-core';
-import { NomadContext } from '..';
-import { utils } from '@nomad-xyz/multi-provider';
+import { ErrorCode } from '@ethersproject/logger';
 import { Logger } from '@ethersproject/logger';
+import fetch from 'cross-fetch';
+import * as core from '@nomad-xyz/contracts-core';
+import { utils } from '@nomad-xyz/multi-provider';
 
-import {
-  DispatchEvent,
-  AnnotatedDispatch,
-  AnnotatedUpdate,
-  AnnotatedProcess,
-  UpdateTypes,
-  UpdateArgs,
-  ProcessTypes,
-  ProcessArgs,
-  AnnotatedLifecycleEvent,
-  Annotated,
-  DispatchTypes,
-} from '../events';
-
-import { queryAnnotatedEvents } from '..';
-import { keccak256 } from 'ethers/lib/utils';
+import { NomadContext } from '..';
+import { getEvents, IndexerTx } from '../api';
 import { MessageProof } from '../NomadContext';
-import axios from 'axios';
-import { ethers } from 'ethers';
-
-export type ParsedMessage = {
-  from: number;
-  sender: string;
-  nonce: number;
-  destination: number;
-  recipient: string;
-  body: string;
-};
-
-export type NomadStatus = {
-  status: MessageStatus;
-  events: AnnotatedLifecycleEvent[];
-};
-
-export enum MessageStatus {
-  Dispatched = 0,
-  Included = 1,
-  Relayed = 2,
-  Processed = 3,
-}
-
-export enum ReplicaStatusNames {
-  None = 'none',
-  Proven = 'proven',
-  Processed = 'processed',
-}
-
-type ReplicaMessageStatusNone = {
-  status: ReplicaStatusNames.None;
-};
-
-type ReplicaMessageStatusProcess = {
-  status: ReplicaStatusNames.Processed;
-};
-
-type ReplicaMessageStatusProven = {
-  status: ReplicaStatusNames.Proven;
-  root: string;
-};
-
-export type ReplicaMessageStatus =
-  | ReplicaMessageStatusNone
-  | ReplicaMessageStatusProcess
-  | ReplicaMessageStatusProven;
-
-export type EventCache = {
-  homeUpdate?: AnnotatedUpdate;
-  replicaUpdate?: AnnotatedUpdate;
-  process?: AnnotatedProcess;
-};
+import {
+  Dispatch,
+  ParsedMessage,
+  MessageStatus,
+  ReplicaStatusNames,
+  ReplicaMessageStatus,
+} from './types';
 
 /**
  * Parse a serialized Nomad message from raw bytes.
@@ -96,44 +38,27 @@ export function parseMessage(message: string): ParsedMessage {
 }
 
 /**
- * Checks for distinct updates in update logs array. If updates are
- * not equal, this indicates a flaw in our event query logic.
- *
- * @param updates
- * @returns True if valid
- */
-function checkDistinctUpdates(updates: AnnotatedUpdate[]): boolean {
-  return updates.every((update) => {
-    return (
-      update.domain === updates[0].domain &&
-      update.event.transactionHash === updates[0].event.transactionHash &&
-      update.event.logIndex === updates[0].event.logIndex
-    );
-  });
-}
-
-/**
  * A deserialized Nomad message.
  */
 export class NomadMessage<T extends NomadContext> {
-  readonly dispatch: AnnotatedDispatch;
+  readonly dispatch: Dispatch;
   readonly message: ParsedMessage;
   readonly home: core.Home;
   readonly replica: core.Replica;
 
   readonly context: T;
-  protected cache: EventCache;
+  protected eventCache: IndexerTx;
 
-  constructor(context: T, dispatch: AnnotatedDispatch) {
+  constructor(context: T, dispatch: Dispatch) {
     this.context = context;
-    this.message = parseMessage(dispatch.event.args.message);
+    this.message = parseMessage(dispatch.args.message);
     this.dispatch = dispatch;
     this.home = context.mustGetCore(this.message.from).home;
     this.replica = context.mustGetReplicaFor(
       this.message.from,
       this.message.destination,
     );
-    this.cache = {};
+    this.eventCache = {};
   }
 
   /**
@@ -147,15 +72,13 @@ export class NomadMessage<T extends NomadContext> {
    * Instantiate one or more messages from a receipt.
    *
    * @param context the {@link NomadContext} object to use
-   * @param nameOrDomain the domain on which the receipt was logged
    * @param receipt the receipt
    * @returns an array of {@link NomadMessage} objects
    */
-  static baseFromReceipt<T extends NomadContext>(
+  static async baseFromReceipt<T extends NomadContext>(
     context: T,
-    nameOrDomain: string | number,
     receipt: TransactionReceipt,
-  ): NomadMessage<T>[] {
+  ): Promise<NomadMessage<T>[]> {
     const messages: NomadMessage<T>[] = [];
     const home = core.Home__factory.createInterface();
 
@@ -163,39 +86,29 @@ export class NomadMessage<T extends NomadContext> {
       try {
         const parsed = home.parseLog(log);
         if (parsed.name === 'Dispatch') {
-          const dispatch = parsed as unknown as DispatchEvent;
-          dispatch.getBlock = () => {
-            return context
-              .mustGetProvider(nameOrDomain)
-              .getBlock(log.blockHash);
-          };
-          dispatch.getTransaction = () => {
-            return context
-              .mustGetProvider(nameOrDomain)
-              .getTransaction(log.transactionHash);
-          };
-          dispatch.getTransactionReceipt = () => {
-            return context
-              .mustGetProvider(nameOrDomain)
-              .getTransactionReceipt(log.transactionHash);
-          };
-
-          const annotated = new Annotated<DispatchTypes, DispatchEvent>(
-            context.resolveDomain(nameOrDomain),
+          const {
+            messageHash,
+            leafIndex,
+            destinationAndNonce,
+            committedRoot,
+            message,
+          } = parsed.args;
+          const dispatch: Dispatch = {
+            args: {
+              messageHash,
+              leafIndex,
+              destinationAndNonce,
+              committedRoot,
+              message,
+            },
+            transactionHash: receipt.transactionHash,
             receipt,
-            dispatch,
-            true,
-          );
-          annotated.event.blockNumber = annotated.receipt.blockNumber;
-          const message = new NomadMessage(context, annotated);
-          messages.push(message);
+          };
+          messages.push(new NomadMessage(context, dispatch));
         }
       } catch (e: unknown) {
-        if (!e) throw e;
-        if (typeof e !== 'object') throw e;
-
-        const err = e as Record<string, unknown>;
-        if (!err.code || !err.reason) throw e;
+        console.log('Unexpected error', e);
+        const err = e as { code: ErrorCode; reason: string };
 
         // Catch known errors that we'd like to squash
         if (
@@ -212,19 +125,16 @@ export class NomadMessage<T extends NomadContext> {
    * Instantiate EXACTLY one message from a receipt.
    *
    * @param context the {@link NomadContext} object to use
-   * @param nameOrDomain the domain on which the receipt was logged
    * @param receipt the receipt
    * @returns an array of {@link NomadMessage} objects
    * @throws if there is not EXACTLY 1 dispatch in the receipt
    */
-  static baseSingleFromReceipt<T extends NomadContext>(
+  static async baseSingleFromReceipt<T extends NomadContext>(
     context: T,
-    nameOrDomain: string | number,
     receipt: TransactionReceipt,
-  ): NomadMessage<T> {
-    const messages: NomadMessage<T>[] = NomadMessage.baseFromReceipt(
+  ): Promise<NomadMessage<T>> {
+    const messages: NomadMessage<T>[] = await NomadMessage.baseFromReceipt(
       context,
-      nameOrDomain,
       receipt,
     );
     if (messages.length !== 1) {
@@ -238,7 +148,7 @@ export class NomadMessage<T extends NomadContext> {
    *
    * @param context the {@link NomadContext} object to use
    * @param nameOrDomain the domain on which the receipt was logged
-   * @param receipt the receipt
+   * @param transactionHash the transaction hash on the origin chain
    * @returns an array of {@link NomadMessage} objects
    * @throws if there is no receipt for the TX
    */
@@ -252,7 +162,7 @@ export class NomadMessage<T extends NomadContext> {
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return NomadMessage.baseFromReceipt(context, nameOrDomain, receipt);
+    return await NomadMessage.baseFromReceipt(context, receipt);
   }
 
   /**
@@ -260,7 +170,7 @@ export class NomadMessage<T extends NomadContext> {
    *
    * @param context the {@link NomadContext} object to use
    * @param nameOrDomain the domain on which the receipt was logged
-   * @param receipt the receipt
+   * @param transactionHash the transaction hash on the origin chain
    * @returns an array of {@link NomadMessage} objects
    * @throws if there is no receipt for the TX, or if not EXACTLY 1 dispatch in
    *         the receipt
@@ -275,155 +185,54 @@ export class NomadMessage<T extends NomadContext> {
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return NomadMessage.baseSingleFromReceipt(context, nameOrDomain, receipt);
+    return await NomadMessage.baseSingleFromReceipt(context, receipt);
   }
 
   /**
-   * Get the Home `Update` event associated with this message (if any)
+   * Get the `Relay` event associated with this message (if any)
    *
-   * @returns An {@link AnnotatedUpdate} (if any)
+   * @returns An relay tx (if any)
    */
-  async getHomeUpdate(): Promise<AnnotatedUpdate | undefined> {
-    // if we have already gotten the event,
-    // return it without re-querying
-    if (this.cache.homeUpdate) {
-      return this.cache.homeUpdate;
+  async getRelay(): Promise<string | undefined> {
+    if (!this.eventCache.relayed) {
+      await this._events();
     }
-
-    // if not, attempt to query the event
-    const updateFilter = this.home.filters.Update(
-      undefined,
-      this.committedRoot,
-    );
-
-    const updateLogs: AnnotatedUpdate[] = await queryAnnotatedEvents<
-      UpdateTypes,
-      UpdateArgs
-    >(this.context, this.origin, this.home, updateFilter);
-
-    if (updateLogs.length === 1) {
-      this.cache.homeUpdate = updateLogs[0];
-    } else if (updateLogs.length > 1) {
-      // check for distinct (fraudulent) updates
-      const validUpdates = checkDistinctUpdates(updateLogs);
-      if (validUpdates) {
-        // if event is returned and valid, store it to the object
-        this.cache.homeUpdate = updateLogs[0];
-      } else {
-        throw new Error('multiple home updates for same root');
-      }
-    }
-    // return the event or undefined if it doesn't exist
-    return this.cache.homeUpdate;
+    return this.eventCache.relayTx;
   }
 
   /**
-   * Get the Replica `Update` event associated with this message (if any)
+   * Get the `Update` event associated with this message (if any)
    *
-   * @returns An {@link AnnotatedUpdate} (if any)
+   * @returns An update tx (if any)
    */
-  async getReplicaUpdate(): Promise<AnnotatedUpdate | undefined> {
-    // if we have already gotten the event,
-    // return it without re-querying
-    if (this.cache.replicaUpdate) {
-      return this.cache.replicaUpdate;
+  async getUpdate(): Promise<string | undefined> {
+    if (!this.eventCache.updated) {
+      await this._events();
     }
-    // if not, attempt to query the event
-    const updateFilter = this.replica.filters.Update(
-      undefined,
-      this.committedRoot,
-    );
-    const updateLogs: AnnotatedUpdate[] = await queryAnnotatedEvents<
-      UpdateTypes,
-      UpdateArgs
-    >(this.context, this.destination, this.replica, updateFilter);
-
-    if (updateLogs.length === 1) {
-      this.cache.replicaUpdate = updateLogs[0];
-    } else if (updateLogs.length > 1) {
-      // check for distinct (fraudulent) updates
-      const validUpdates = checkDistinctUpdates(updateLogs);
-      if (validUpdates) {
-        // if event is returned and valid, store it to the object
-        this.cache.replicaUpdate = updateLogs[0];
-      } else {
-        throw new Error('multiple replica updates for same root');
-      }
-    }
-    // return the event or undefined if it wasn't found
-    return this.cache.replicaUpdate;
+    return this.eventCache.updateTx;
   }
 
   /**
    * Get the Replica `Process` event associated with this message (if any)
    *
-   * @returns An {@link AnnotatedProcess} (if any)
+   * @returns An process tx (if any)
    */
-  async getProcess(): Promise<AnnotatedProcess | undefined> {
-    // if we have already gotten the event,
-    // return it without re-querying
-    if (this.cache.process) {
-      return this.cache.process;
+  async getProcess(): Promise<string | undefined> {
+    if (!this.eventCache.processed) {
+      await this._events();
     }
-    // if not, attempt to query the event
-    const processFilter = this.replica.filters.Process(this.leaf);
-    const processLogs = await queryAnnotatedEvents<ProcessTypes, ProcessArgs>(
-      this.context,
-      this.destination,
-      this.replica,
-      processFilter,
-    );
-    if (processLogs.length === 1) {
-      // if event is returned, store it to the object
-      this.cache.process = processLogs[0];
-    } else if (processLogs.length > 1) {
-      throw new Error('multiple replica process for same message');
-    }
-    // return the update or undefined if it doesn't exist
-    return this.cache.process;
+    return this.eventCache.processTx;
   }
 
   /**
    * Get all lifecycle events associated with this message
    *
-   * @returns An array of {@link AnnotatedLifecycleEvent} objects
+   * @returns An record of all events and correlating txs
    */
-  async events(): Promise<NomadStatus> {
-    const events: AnnotatedLifecycleEvent[] = [this.dispatch];
-    // attempt to get Home update
-    const homeUpdate = await this.getHomeUpdate();
-    if (!homeUpdate) {
-      return {
-        status: MessageStatus.Dispatched, // the message has been sent; nothing more
-        events,
-      };
-    }
-    events.push(homeUpdate);
-    // attempt to get Replica update
-    const replicaUpdate = await this.getReplicaUpdate();
-    if (!replicaUpdate) {
-      return {
-        status: MessageStatus.Included, // the message was sent, then included in an Update on Home
-        events,
-      };
-    }
-    events.push(replicaUpdate);
-    // attempt to get Replica process
-    const process = await this.getProcess();
-    if (!process) {
-      // NOTE: when this is the status, you may way to
-      // query confirmAt() to check if challenge period
-      // on the Replica has elapsed or not
-      return {
-        status: MessageStatus.Relayed, // the message was sent, included in an Update, then relayed to the Replica
-        events,
-      };
-    }
-    events.push(process);
-    return {
-      status: MessageStatus.Processed, // the message was processed
-      events,
-    };
+  private async _events(): Promise<IndexerTx> {
+    if (this.eventCache.processed) return this.eventCache;
+    this.eventCache = await getEvents(this.transactionHash);
+    return this.eventCache;
   }
 
   /**
@@ -446,13 +255,12 @@ export class NomadMessage<T extends NomadContext> {
    *
    * @returns The timestamp at which a message can confirm
    */
-  async confirmAt(): Promise<BigNumber> {
-    const update = await this.getHomeUpdate();
-    if (!update) {
-      return BigNumber.from(0);
+  async confirmAt(): Promise<number | undefined> {
+    if (!this.eventCache.confirmAt || this.eventCache.confirmAt === 0) {
+      await this._events();
     }
-    const { newRoot } = update.event.args;
-    return this.replica.confirmAt(newRoot);
+    if (this.eventCache.confirmAt === 0) return;
+    return this.eventCache.confirmAt;
   }
 
   async process(): Promise<ContractTransaction> {
@@ -517,6 +325,26 @@ export class NomadMessage<T extends NomadContext> {
   }
 
   /**
+   * Get the status of a message
+   *
+   *    0 = dispatched
+   *    1 = included
+   *    2 = relayed
+   *    3 = updated
+   *    4 = received
+   *    5 = processed
+   *
+   * @returns An record of all events and correlating txs
+   */
+  async status(): Promise<MessageStatus | undefined> {
+    if (this.eventCache.processed) return MessageStatus.processed;
+    const confirmAt = await this.confirmAt();
+    const now = Date.now() / 1000;
+    if (confirmAt && confirmAt < now) return MessageStatus.relayed;
+    return (await this._events()).state;
+  }
+
+  /**
    * The domain from which the message was sent
    */
   get from(): number {
@@ -550,7 +378,7 @@ export class NomadMessage<T extends NomadContext> {
    */
   get s3Uri(): string | undefined {
     const s3 = this.context.conf.s3;
-    if (!s3) return;
+    if (!s3) throw new Error('s3 data not configured');
     const { bucket, region } = s3;
     const root = `https://${bucket}.s3.${region}.amazonaws.com`;
     return `${root}/${this.s3Name}`;
@@ -602,35 +430,35 @@ export class NomadMessage<T extends NomadContext> {
    * The hash of the transaction that dispatched this message
    */
   get transactionHash(): string {
-    return this.dispatch.event.transactionHash;
+    return this.dispatch.transactionHash;
   }
 
   /**
    * The messageHash committed to the tree in the Home contract.
    */
   get leaf(): string {
-    return this.dispatch.event.args.messageHash;
+    return this.dispatch.args.messageHash;
   }
 
   /**
    * The index of the leaf in the contract.
    */
   get leafIndex(): BigNumber {
-    return this.dispatch.event.args.leafIndex;
+    return this.dispatch.args.leafIndex;
   }
 
   /**
    * The destination and nonceof this message.
    */
   get destinationAndNonce(): BigNumber {
-    return this.dispatch.event.args.destinationAndNonce;
+    return this.dispatch.args.destinationAndNonce;
   }
 
   /**
    * The committed root when this message was dispatched.
    */
   get committedRoot(): string {
-    return this.dispatch.event.args.committedRoot;
+    return this.dispatch.args.committedRoot;
   }
 
   /**
@@ -642,10 +470,11 @@ export class NomadMessage<T extends NomadContext> {
   async getProof(): Promise<MessageProof | undefined> {
     const uri = this.s3Uri;
     if (!uri) throw new Error('No s3 configuration');
-    const res = await axios.get(uri);
-    const { data, status, statusText } = res;
+    const response = await fetch(uri);
+    if (!response) throw new Error('Unable to fetch proof');
+    const { data, status, statusText } = await response.json();
     if (status !== 200) throw new Error(statusText);
-    if (data.proof && data.message) return data as MessageProof;
+    if (data.proof && data.message) return data;
     throw new Error('Server returned invalid proof');
   }
 }

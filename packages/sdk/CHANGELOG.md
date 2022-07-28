@@ -5,6 +5,8 @@
 - (major) refactor: change message status to a tagged union instead of an enum,
   added the root to the `proven` message status
 - fix: checkHomes async handling in for loop
+- (major) refactor: rewrite status event queries, remove parameter from `fromReceipt` methods
+- fix: import `fetch` from cross-fetch, remove `axios`
 
 ### 2.1.0-rc.0
 

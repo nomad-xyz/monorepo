@@ -3,6 +3,7 @@ import { providers, Signer, ContractTransaction, BytesLike } from 'ethers';
 import { MultiProvider } from '@nomad-xyz/multi-provider';
 import * as core from '@nomad-xyz/contracts-core';
 import * as config from '@nomad-xyz/configuration';
+import fetch from 'cross-fetch';
 
 import { CoreContracts } from './CoreContracts';
 import { NomadMessage } from './messages/NomadMessage';
@@ -230,7 +231,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
    * @dev Ensure that a transaction is ready to be processed. You should ensure the following
    * criteria have been met prior to calling this function:
    *  1. The tx has been relayed (has status of 2):
-   *       `const { status } = await NomadMessage.events()`
+   *       `const status = await NomadMessage.status()`
    *  2. The `confirmAt` timestamp for the tx is in the past:
    *       `const confirmAt = await NomadMessage.confirmAt()`
    *
@@ -240,17 +241,11 @@ export class NomadContext extends MultiProvider<config.Domain> {
   async process(
     message: NomadMessage<NomadContext>,
   ): Promise<ContractTransaction> {
-    const s3URL = `https://nomadxyz-${this.environment}-proofs.s3.us-west-2.amazonaws.com/`;
-
-    const originNetwork = this.resolveDomainName(message.origin);
-    const destNetwork = this.resolveDomainName(message.destination);
-    const index = message.leafIndex.toString();
-    const s3Res = await fetch(`${s3URL}${originNetwork}_${index}`);
-    if (!s3Res) throw new Error('Not able to fetch proof');
-    const data: MessageProof = await s3Res.json();
+    const data = await message.getProof();
+    if (!data) throw new Error('Unable to fetch proof');
 
     // get replica contract
-    const replica = this.mustGetReplicaFor(originNetwork, destNetwork);
+    const replica = this.mustGetReplicaFor(message.origin, message.destination);
 
     await replica.callStatic.proveAndProcess(
       data.message,
