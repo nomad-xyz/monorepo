@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+### 1.1.0
+
 ### 1.1.0-rc.0
 
 - upgrade: contracts

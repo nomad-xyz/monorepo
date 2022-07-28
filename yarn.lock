@@ -2085,20 +2085,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/contracts-bridge@npm:1.0.0-rc.3, @nomad-xyz/contracts-bridge@npm:^1.0.0-rc.3":
-  version: 1.0.0-rc.3
-  resolution: "@nomad-xyz/contracts-bridge@npm:1.0.0-rc.3"
-  dependencies:
-    "@nomad-xyz/contracts-core": ^1.0.0-rc.3
-    "@nomad-xyz/contracts-router": ^1.0.0-rc.3
-    "@openzeppelin/contracts": ~3.4.2
-    "@openzeppelin/contracts-upgradeable": ~3.4.2
-    "@summa-tx/memview-sol": ^2.0.0
-  checksum: 4ddda3c323b529d596397acc442686852e9a6f736327bbc72d44397275da66b207d270d2e24b70b424fce922e98f87fc0f95ced35da67517a0bc2c751290ccd0
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
+"@nomad-xyz/contracts-bridge@^1.0.0-rc.3, @nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge"
   dependencies:
@@ -2129,18 +2116,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/contracts-core@npm:^1.0.0-rc.3":
+"@nomad-xyz/contracts-bridge@npm:1.0.0-rc.3":
   version: 1.0.0-rc.3
-  resolution: "@nomad-xyz/contracts-core@npm:1.0.0-rc.3"
+  resolution: "@nomad-xyz/contracts-bridge@npm:1.0.0-rc.3"
   dependencies:
-    "@openzeppelin/contracts": ^3.4.2
+    "@nomad-xyz/contracts-core": ^1.0.0-rc.3
+    "@nomad-xyz/contracts-router": ^1.0.0-rc.3
+    "@openzeppelin/contracts": ~3.4.2
     "@openzeppelin/contracts-upgradeable": ~3.4.2
     "@summa-tx/memview-sol": ^2.0.0
-  checksum: 005d98a5b49389342b8a0847d9f9fdfb391930fe5a94517b95870e754c3fcefbff843974e28e3f3af248358bdbefef758b63d1e176ad2060ebed5ffb922e2acb
+  checksum: 4ddda3c323b529d596397acc442686852e9a6f736327bbc72d44397275da66b207d270d2e24b70b424fce922e98f87fc0f95ced35da67517a0bc2c751290ccd0
   languageName: node
   linkType: hard
 
-"@nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
+"@nomad-xyz/contracts-core@^1.0.0-rc.3, @nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-core@workspace:packages/contracts-core"
   dependencies:
@@ -2168,19 +2157,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/contracts-router@npm:^1.0.0-rc.3":
-  version: 1.0.0-rc.3
-  resolution: "@nomad-xyz/contracts-router@npm:1.0.0-rc.3"
-  dependencies:
-    "@nomad-xyz/contracts-core": ^1.0.0-rc.3
-    "@openzeppelin/contracts": ~3.4.2
-    "@openzeppelin/contracts-upgradeable": ~3.4.2
-    "@summa-tx/memview-sol": ^2.0.0
-  checksum: daf0091c625354822a5215728dd73a7fe1d54c2e3dbc21a50794b629908436372f3522922a55d646e525b0524580b22c80aaea2cd75366b9a9bc69afc08c2728
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/contracts-router@workspace:^, @nomad-xyz/contracts-router@workspace:packages/contracts-router":
+"@nomad-xyz/contracts-router@^1.0.0-rc.3, @nomad-xyz/contracts-router@workspace:^, @nomad-xyz/contracts-router@workspace:packages/contracts-router":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-router@workspace:packages/contracts-router"
   dependencies:
