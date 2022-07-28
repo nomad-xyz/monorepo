@@ -1,7 +1,5 @@
 import { request, gql } from 'graphql-request';
 
-const { NOMAD_API } = process.env;
-
 export type IndexerTx = {
   origin?: number;
   destination?: number;
@@ -45,7 +43,23 @@ export type IndexerTx = {
   processed?: boolean;
 };
 
-export async function getEvents(dispatchTx: string): Promise<IndexerTx> {
+function getGqlUrl(environment: string): string {
+  let env = ''
+  switch(environment) {
+    case 'development':
+      env = 'dev';
+      break;
+    case 'production':
+      env = 'prod';
+      break;
+    default:
+      env = environment;
+  }
+  return `https://bridge-indexer.${env}.madlads.tools/graphql`
+}
+
+export async function getEvents(env: string, dispatchTx: string): Promise<IndexerTx> {
+  const NOMAD_API = getGqlUrl(env);
   const variables = JSON.stringify({
     where: {
       dispatchTx: {
