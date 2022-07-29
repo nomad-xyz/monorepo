@@ -61,49 +61,54 @@ class TokenFetcher {
 
   async fetch(id: string, domain: number) {
     this.logger.debug(`Started fetching of token [${domain}, ${id}]`);
-    const provider = this.sdk.mustGetProvider(domain);
-    const token = erc20(id, provider);
-    let name: string;
-    let decimals: number;
-    let symbol: string;
+    let name: string | undefined;
+    let decimals: number | undefined;
+    let symbol: string | undefined;
     let totalSupply: ethers.BigNumber;
     let balance: ethers.BigNumber;
     try {
-      [[name], [decimals], [symbol], [totalSupply], [balance]] =
-        await new MakeFun(token)
-          .with('name', 'decimals', 'symbol', 'totalSupply', [
-            'balanceOf',
-            this.sdk.mustGetBridge(domain).bridgeRouter.address,
-          ])
-          .celebrate();
-    } catch (e) {
-      this.logger.error(`Failed having fun with ${id} ${domain}`);
-      return;
-    }
+      const provider = this.sdk.mustGetProvider(domain);
+      const token = erc20(id, provider);
 
-    const data = {
-      id,
-      domain,
-      name,
-      decimals,
-      symbol,
-      totalSupply: totalSupply.toHexString(),
-      balance: balance.toHexString(),
-    };
+      try {
+        [[name], [decimals], [symbol], [totalSupply], [balance]] =
+          await new MakeFun(token)
+            .with('name', 'decimals', 'symbol', 'totalSupply', [
+              'balanceOf',
+              this.sdk.mustGetBridge(domain).bridgeRouter.address,
+            ])
+            .celebrate();
+      } catch (e) {
+        this.logger.error(`Failed having fun with ${id} ${domain}`);
+        return;
+      }
 
-    // Updating data in the db
-    await this.prisma.token.upsert({
-      where: {
-        id_domain: {
-          id,
-          domain,
+      const data = {
+        id,
+        domain,
+        name,
+        decimals,
+        symbol,
+        totalSupply: totalSupply.toHexString(),
+        balance: balance.toHexString(),
+      };
+
+      // Updating data in the db
+      await this.prisma.token.upsert({
+        where: {
+          id_domain: {
+            id,
+            domain,
+          },
         },
-      },
-      update: data,
-      create: data,
-    });
+        update: data,
+        create: data,
+      });
 
-    this.logger.debug(`Updated token [${domain}, ${id}]`);
+      this.logger.debug(`Updated token [${domain}, ${id}]`);
+    } catch (e) {
+      this.logger.warn(`Failed updating token [${domain}, ${id}]`);
+    }
 
     // Determine remotes whether network is gov or not
     const remotes = this.sdk.domainNumbers.filter(
@@ -152,15 +157,15 @@ class TokenFetcher {
           return;
         }
 
-        if (name !== _name)
+        if (name && name !== _name)
           this.logger.warn(
             `Original token name !== replica's _name in TokenFetcher.fetch(): ${name} !== ${_name}. Domain: ${remoteDomain}, id: ${remoteId}`,
           );
-        if (decimals !== _decimals)
+        if (decimals && decimals !== _decimals)
           this.logger.warn(
             `Original token decimals !== replica's _decimals in TokenFetcher.fetch(): ${decimals} !== ${_decimals}. Domain: ${remoteDomain}, id: ${remoteId}, name: ${name}, remote name: ${_name}`,
           );
-        if (symbol !== _symbol)
+        if (symbol && symbol !== _symbol)
           this.logger.warn(
             `Original token symbol !== replica's _symbol in TokenFetcher.fetch(): ${symbol} !== ${_symbol}. Domain: ${remoteDomain}, id: ${remoteId}, name: ${name}`,
           );
