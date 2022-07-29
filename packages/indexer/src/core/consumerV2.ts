@@ -359,7 +359,7 @@ export class NomadMessage {
     }
 
     this.logger.debug(
-      `The message is in the higher state for being Proce. Want < ${MsgState.Processed}, is ${this.state}`,
+      `The message is in the higher state for being Processed. Want < ${MsgState.Processed}, is ${this.state}`,
     );
     return false;
   }
