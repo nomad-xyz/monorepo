@@ -70,9 +70,9 @@ class TokenFetcher {
       const provider = this.sdk.mustGetProvider(domain);
       const token = erc20(id, provider);
 
-      let name: string | undefined;
-      let decimals: number | undefined;
-      let symbol: string | undefined;
+      let name: string;
+      let decimals: number;
+      let symbol: string;
       let totalSupply: ethers.BigNumber;
       let balance: ethers.BigNumber;
 
