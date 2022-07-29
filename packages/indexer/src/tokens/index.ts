@@ -61,14 +61,20 @@ class TokenFetcher {
 
   async fetch(id: string, domain: number) {
     this.logger.debug(`Started fetching of token [${domain}, ${id}]`);
-    let name: string | undefined;
-    let decimals: number | undefined;
-    let symbol: string | undefined;
-    let totalSupply: ethers.BigNumber;
-    let balance: ethers.BigNumber;
+    let __name: string | undefined;
+    let __decimals: number | undefined;
+    let __symbol: string | undefined;
+    let __totalSupply: ethers.BigNumber;
+    let __balance: ethers.BigNumber;
     try {
       const provider = this.sdk.mustGetProvider(domain);
       const token = erc20(id, provider);
+
+      let name: string | undefined;
+      let decimals: number | undefined;
+      let symbol: string | undefined;
+      let totalSupply: ethers.BigNumber;
+      let balance: ethers.BigNumber;
 
       try {
         [[name], [decimals], [symbol], [totalSupply], [balance]] =
@@ -82,6 +88,13 @@ class TokenFetcher {
         this.logger.error(`Failed having fun with ${id} ${domain}`);
         return;
       }
+
+      __name = name;
+      __decimals = decimals;
+      __symbol = symbol;
+      __totalSupply = totalSupply;
+      __balance = balance;
+      
 
       const data = {
         id,
@@ -157,17 +170,17 @@ class TokenFetcher {
           return;
         }
 
-        if (name && name !== _name)
+        if (__name && __name !== _name)
           this.logger.warn(
-            `Original token name !== replica's _name in TokenFetcher.fetch(): ${name} !== ${_name}. Domain: ${remoteDomain}, id: ${remoteId}`,
+            `Original token name !== replica's _name in TokenFetcher.fetch(): ${__name} !== ${_name}. Domain: ${remoteDomain}, id: ${remoteId}`,
           );
-        if (decimals && decimals !== _decimals)
+        if (__decimals && __decimals !== _decimals)
           this.logger.warn(
-            `Original token decimals !== replica's _decimals in TokenFetcher.fetch(): ${decimals} !== ${_decimals}. Domain: ${remoteDomain}, id: ${remoteId}, name: ${name}, remote name: ${_name}`,
+            `Original token decimals !== replica's _decimals in TokenFetcher.fetch(): ${__decimals} !== ${_decimals}. Domain: ${remoteDomain}, id: ${remoteId}, name: ${__name}, remote name: ${_name}`,
           );
-        if (symbol && symbol !== _symbol)
+        if (__symbol && __symbol !== _symbol)
           this.logger.warn(
-            `Original token symbol !== replica's _symbol in TokenFetcher.fetch(): ${symbol} !== ${_symbol}. Domain: ${remoteDomain}, id: ${remoteId}, name: ${name}`,
+            `Original token symbol !== replica's _symbol in TokenFetcher.fetch(): ${__symbol} !== ${_symbol}. Domain: ${remoteDomain}, id: ${remoteId}, name: ${__name}`,
           );
         // if (!balance.eq(_totalSupply)) console.warn(`totalSupply of ${symbol} (from ${domain}) at ${remoteDomain}\nis ${_totalSupply.toString()}\n want: ${balance}`);
 
