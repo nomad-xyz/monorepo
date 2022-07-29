@@ -84,39 +84,38 @@ class TokenFetcher {
               this.sdk.mustGetBridge(domain).bridgeRouter.address,
             ])
             .celebrate();
-            __name = name;
-            __decimals = decimals;
-            __symbol = symbol;
-            __totalSupply = totalSupply;
-            __balance = balance;
+        __name = name;
+        __decimals = decimals;
+        __symbol = symbol;
+        __totalSupply = totalSupply;
+        __balance = balance;
 
-            const data = {
+        const data = {
+          id,
+          domain,
+          name,
+          decimals,
+          symbol,
+          totalSupply: totalSupply.toHexString(),
+          balance: balance.toHexString(),
+        };
+
+        // Updating data in the db
+        await this.prisma.token.upsert({
+          where: {
+            id_domain: {
               id,
               domain,
-              name,
-              decimals,
-              symbol,
-              totalSupply: totalSupply.toHexString(),
-              balance: balance.toHexString(),
-            };
-      
-            // Updating data in the db
-            await this.prisma.token.upsert({
-              where: {
-                id_domain: {
-                  id,
-                  domain,
-                },
-              },
-              update: data,
-              create: data,
-            });
-      
-            this.logger.info(`Updated token [${domain}, ${id}]`);
+            },
+          },
+          update: data,
+          create: data,
+        });
+
+        this.logger.info(`Updated token [${domain}, ${id}]`);
       } catch (e) {
         this.logger.error(`Failed having fun with ${id} ${domain}`, e);
       }
-      
     } catch (e) {
       this.logger.warn(`Failed updating token [${domain}, ${id}]`);
     }
@@ -148,72 +147,77 @@ class TokenFetcher {
           );
           return;
         }
-        const provider = this.sdk.mustGetProvider(remoteDomain);
-        const token = erc20(remoteId, provider);
-
-        let _name: string;
-        let _decimals: number;
-        let _symbol: string;
-        let _totalSupply: ethers.BigNumber;
         try {
-          [[_name], [_decimals], [_symbol], [_totalSupply]] = await new MakeFun(
-            token,
-          )
-            .with('name', 'decimals', 'symbol', 'totalSupply')
-            .celebrate();
-        } catch (e) {
-          this.logger.error(
-            `Failed getting info for replica from ${domain} as ${remoteDomain} id: ${id}, remoteId: ${remoteId}`,
-          );
-          return;
-        }
+          const provider = this.sdk.mustGetProvider(remoteDomain);
+          const token = erc20(remoteId, provider);
 
-        if (__name && __name !== _name)
-          this.logger.warn(
-            `Original token name !== replica's _name in TokenFetcher.fetch(): ${__name} !== ${_name}. Domain: ${remoteDomain}, id: ${remoteId}`,
-          );
-        if (__decimals && __decimals !== _decimals)
-          this.logger.warn(
-            `Original token decimals !== replica's _decimals in TokenFetcher.fetch(): ${__decimals} !== ${_decimals}. Domain: ${remoteDomain}, id: ${remoteId}, name: ${__name}, remote name: ${_name}`,
-          );
-        if (__symbol && __symbol !== _symbol)
-          this.logger.warn(
-            `Original token symbol !== replica's _symbol in TokenFetcher.fetch(): ${__symbol} !== ${_symbol}. Domain: ${remoteDomain}, id: ${remoteId}, name: ${__name}`,
-          );
-        // if (!balance.eq(_totalSupply)) console.warn(`totalSupply of ${symbol} (from ${domain}) at ${remoteDomain}\nis ${_totalSupply.toString()}\n want: ${balance}`);
+          let _name: string;
+          let _decimals: number;
+          let _symbol: string;
+          let _totalSupply: ethers.BigNumber;
+          try {
+            [[_name], [_decimals], [_symbol], [_totalSupply]] =
+              await new MakeFun(token)
+                .with('name', 'decimals', 'symbol', 'totalSupply')
+                .celebrate();
+          } catch (e) {
+            this.logger.error(
+              `Failed getting info for replica from ${domain} as ${remoteDomain} id: ${id}, remoteId: ${remoteId}`,
+            );
+            return;
+          }
 
-        const data = {
-          id: remoteId,
-          domain: remoteDomain,
-          decimals: _decimals,
-          symbol: _symbol,
-          name: _name,
-          token: {
-            connect: {
-              id_domain: {
-                id,
-                domain,
+          if (__name && __name !== _name)
+            this.logger.warn(
+              `Original token name !== replica's _name in TokenFetcher.fetch(): ${__name} !== ${_name}. Domain: ${remoteDomain}, id: ${remoteId}`,
+            );
+          if (__decimals && __decimals !== _decimals)
+            this.logger.warn(
+              `Original token decimals !== replica's _decimals in TokenFetcher.fetch(): ${__decimals} !== ${_decimals}. Domain: ${remoteDomain}, id: ${remoteId}, name: ${__name}, remote name: ${_name}`,
+            );
+          if (__symbol && __symbol !== _symbol)
+            this.logger.warn(
+              `Original token symbol !== replica's _symbol in TokenFetcher.fetch(): ${__symbol} !== ${_symbol}. Domain: ${remoteDomain}, id: ${remoteId}, name: ${__name}`,
+            );
+          // if (!balance.eq(_totalSupply)) console.warn(`totalSupply of ${symbol} (from ${domain}) at ${remoteDomain}\nis ${_totalSupply.toString()}\n want: ${balance}`);
+
+          const data = {
+            id: remoteId,
+            domain: remoteDomain,
+            decimals: _decimals,
+            symbol: _symbol,
+            name: _name,
+            token: {
+              connect: {
+                id_domain: {
+                  id,
+                  domain,
+                },
               },
             },
-          },
-          totalSupply: _totalSupply.toHexString(),
-        };
+            totalSupply: _totalSupply.toHexString(),
+          };
 
-        // Update replicas
-        await this.prisma.replica.upsert({
-          where: {
-            id_domain: {
-              id: remoteId,
-              domain: remoteDomain,
+          // Update replicas
+          await this.prisma.replica.upsert({
+            where: {
+              id_domain: {
+                id: remoteId,
+                domain: remoteDomain,
+              },
             },
-          },
-          update: data,
-          create: data,
-        });
+            update: data,
+            create: data,
+          });
 
-        this.logger.info(
-          `Updated Replica at domain ${remoteDomain} for [${domain}, ${id}]`,
-        );
+          this.logger.info(
+            `Updated Replica at domain ${remoteDomain} for [${domain}, ${id}]`,
+          );
+        } catch (e) {
+          this.logger.error(
+            `Failed updating Replica at domain ${remoteDomain} for [${domain}, ${id}]`,
+          );
+        }
       }),
     );
   }
