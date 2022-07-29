@@ -1608,7 +1608,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/configuration@npm:^0.1.0-rc.23":
+"@nomad-xyz/configuration@npm:0.1.0-rc.25, @nomad-xyz/configuration@npm:^0.1.0-rc.23":
   version: 0.1.0-rc.25
   resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.25"
   checksum: 6bdbc188e43167c7f4da28e8f9cbb594b5832a03916a11cb6fc6be2ad2cc00fd91cf20ad6e0b82da1a17a9be0b73f1222bf58c41263f69a7d5e90bd5449faede
@@ -1754,7 +1754,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/deploy@workspace:packages/deploy":
+"@nomad-xyz/deploy@workspace:^, @nomad-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/deploy@workspace:packages/deploy"
   dependencies:
@@ -1864,14 +1864,18 @@ __metadata:
   resolution: "@nomad-xyz/local-environment@workspace:packages/local-environment"
   dependencies:
     "@ethersproject/experimental": ^5.5.0
-    "@nomad-xyz/contract-interfaces": 1.1.1
+    "@nomad-xyz/configuration": 0.1.0-rc.25
     "@nomad-xyz/contracts-core": "workspace:^"
+    "@nomad-xyz/deploy": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"
     "@nomiclabs/hardhat-ethers": ^2.0.2
+    "@types/bunyan": ^1.8.8
     "@types/chai": ^4.3.0
     "@types/dockerode": ^3.3.0
+    bunyan: ^1.8.15
     chai: ^4.3.4
     dockerode: ^3.3.1
+    dotenv: ^10.0.0
     ethers: ^5.5.1
     hardhat: ^2.6.8
     keccak: ^3.0.2
@@ -1917,6 +1921,8 @@ __metadata:
 "@nomad-xyz/monorepo@workspace:.":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/monorepo@workspace:."
+  dependencies:
+    bunyan: ^1.8.15
   languageName: unknown
   linkType: soft
 
@@ -21219,7 +21225,7 @@ __metadata:
 
 "typescript@patch:typescript@3.7.4#~builtin<compat/typescript>":
   version: 3.7.4
-  resolution: "typescript@patch:typescript@npm%3A3.7.4#~builtin<compat/typescript>::version=3.7.4&hash=bda367"
+  resolution: "typescript@patch:typescript@npm%3A3.7.4#~builtin<compat/typescript>::version=3.7.4&hash=f456af"
   bin:
     tsc: ./bin/tsc
     tsserver: ./bin/tsserver
@@ -21229,7 +21235,7 @@ __metadata:
 
 "typescript@patch:typescript@3.7.x#~builtin<compat/typescript>":
   version: 3.7.7
-  resolution: "typescript@patch:typescript@npm%3A3.7.7#~builtin<compat/typescript>::version=3.7.7&hash=bda367"
+  resolution: "typescript@patch:typescript@npm%3A3.7.7#~builtin<compat/typescript>::version=3.7.7&hash=f456af"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
@@ -21239,11 +21245,11 @@ __metadata:
 
 "typescript@patch:typescript@^4.4.3#~builtin<compat/typescript>, typescript@patch:typescript@^4.5.5#~builtin<compat/typescript>, typescript@patch:typescript@^4.7.2#~builtin<compat/typescript>":
   version: 4.7.4
-  resolution: "typescript@patch:typescript@npm%3A4.7.4#~builtin<compat/typescript>::version=4.7.4&hash=bda367"
+  resolution: "typescript@patch:typescript@npm%3A4.7.4#~builtin<compat/typescript>::version=4.7.4&hash=f456af"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 96d3030cb01143570567cb4f3a616b10df65f658f0e74e853e77a089a6a954e35c800be7db8b9bfe9a1ae05d9c2897e281359f65e4caa1caf266368e1c4febd3
+  checksum: 9096d8f6c16cb80ef3bf96fcbbd055bf1c4a43bd14f3b7be45a9fbe7ada46ec977f604d5feed3263b4f2aa7d4c7477ce5f9cd87de0d6feedec69a983f3a4f93e
   languageName: node
   linkType: hard
 

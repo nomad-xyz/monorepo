@@ -40,5 +40,8 @@
     "storage-inspect:generate": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run storage-inspect:generate",
     "storage-inspect:check": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run storage-inspect:check"
   },
-  "packageManager": "yarn@3.2.0"
+  "packageManager": "yarn@3.2.2",
+  "dependencies": {
+    "bunyan": "^1.8.15"
+  }
 }
