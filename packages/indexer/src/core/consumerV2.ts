@@ -183,7 +183,7 @@ export class NomadMessage {
       } else {
         this.msgType = MessageType.NoMessage;
       }
-    } catch(e) {
+    } catch (e) {
       this.msgType = MessageType.FailedMessage;
     }
 
