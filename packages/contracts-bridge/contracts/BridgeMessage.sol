@@ -411,7 +411,7 @@ library BridgeMessage {
     /**
      * @notice Retrieves the extra data from a TransferWithHook
      * @param _transferAction The message
-     * @return The extra data as a bytes29
+     * @return A TypedMemview of extraData
      */
     function extraData(bytes29 _transferAction)
         internal
