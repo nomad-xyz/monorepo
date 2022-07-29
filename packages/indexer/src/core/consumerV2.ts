@@ -351,7 +351,7 @@ export class NomadMessage {
 
     if (this.state < MsgState.Processed) {
       this.logger.debug(
-        `Updated message from state ${this.state} to ${MsgState.Processed} (Processed)`,
+        `Updated message from state ${this.state} to ${MsgState.Processed} (Processed).`,
       );
       this.state = MsgState.Processed;
 
