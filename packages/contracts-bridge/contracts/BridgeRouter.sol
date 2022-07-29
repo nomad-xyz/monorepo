@@ -10,6 +10,7 @@ import {IBridgeHook} from "./interfaces/IBridgeHook.sol";
 import {XAppConnectionClient} from "@nomad-xyz/contracts-router/contracts/XAppConnectionClient.sol";
 import {Router} from "@nomad-xyz/contracts-router/contracts/Router.sol";
 import {Home} from "@nomad-xyz/contracts-core/contracts/Home.sol";
+import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/libs/TypeCasts.sol";
 import {Version0} from "@nomad-xyz/contracts-core/contracts/Version0.sol";
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -190,6 +191,7 @@ contract BridgeRouter is Version0, Router {
             _remoteHook,
             _amount,
             _detailsHash,
+            TypeCasts.addressToBytes32(msg.sender),
             _extraData
         );
         // send message to destination chain bridge router
@@ -364,6 +366,7 @@ contract BridgeRouter is Version0, Router {
         bytes memory _call = abi.encodeWithSelector(
             IBridgeHook.onReceive.selector,
             _origin,
+            _action.sender(),
             _tokenId.domain(),
             _tokenId.id(),
             _token,
