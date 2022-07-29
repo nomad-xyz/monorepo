@@ -50,7 +50,8 @@ library BridgeMessage {
 
     uint256 private constant TOKEN_ID_LEN = 36; // 4 bytes domain + 32 bytes id
     uint256 private constant IDENTIFIER_LEN = 1;
-    uint256 private constant MIN_TRANSFER_LEN = 97; // 1 byte identifier + 32 bytes recipient or externalId + 32 bytes amount + 32 bytes detailsHash
+    uint256 private constant TRANSFER_LEN = 97; // 1 byte identifier + 32 bytes recipient + 32 bytes amount + 32 bytes detailsHash
+    uint256 private constant MIN_TRANSFER_HOOK_LEN = 129; // 1 byte identifier + 32 bytes hook address + 32 bytes amount + 32 bytes detailsHash + 32 bytes sender + X bytes extraData
 
     // ============ Modifiers ============
 
@@ -82,7 +83,9 @@ library BridgeMessage {
      */
     function isValidMessageLength(bytes29 _view) internal pure returns (bool) {
         uint256 _len = _view.len();
-        return _len >= TOKEN_ID_LEN + MIN_TRANSFER_LEN;
+        return
+            _len == TOKEN_ID_LEN + TRANSFER_LEN ||
+            _len >= TOKEN_ID_LEN + MIN_TRANSFER_HOOK_LEN;
     }
 
     /**
@@ -173,6 +176,7 @@ library BridgeMessage {
         bytes32 _hook,
         uint256 _amnt,
         bytes32 _detailsHash,
+        bytes32 _sender,
         bytes memory _extraData
     ) internal pure returns (bytes29) {
         return
@@ -182,6 +186,7 @@ library BridgeMessage {
                     _hook,
                     _amnt,
                     _detailsHash,
+                    _sender,
                     _extraData
                 )
                 .ref(uint40(Types.TransferToHook));
@@ -377,7 +382,7 @@ library BridgeMessage {
     /**
      * @notice Retrieves the hook contract EVM address from a TransferWithHook
      * @param _transferAction The message
-     * @return The hook contract address as bytes32
+     * @return The hook contract address
      */
     function evmHook(bytes29 _transferAction)
         internal
@@ -388,6 +393,26 @@ library BridgeMessage {
         return _transferAction.indexAddress(13);
     }
 
+    /**
+     * @notice Retrieves the sender from a TransferWithHook
+     * @param _transferAction The message
+     * @return The sender as bytes32
+     */
+    function sender(bytes29 _transferAction)
+        internal
+        pure
+        typeAssert(_transferAction, Types.TransferToHook)
+        returns (bytes32)
+    {
+        // before = 1 byte identifier + 32 bytes hook address + 32 bytes amount + 32 bytes detailsHash = 97
+        return _transferAction.index(97, 32);
+    }
+
+    /**
+     * @notice Retrieves the extra data from a TransferWithHook
+     * @param _transferAction The message
+     * @return A TypedMemview of extraData
+     */
     function extraData(bytes29 _transferAction)
         internal
         pure
@@ -397,8 +422,8 @@ library BridgeMessage {
         // anything past the end is the extradata
         return
             _transferAction.slice(
-                MIN_TRANSFER_LEN,
-                _transferAction.len() - MIN_TRANSFER_LEN,
+                MIN_TRANSFER_HOOK_LEN,
+                _transferAction.len() - MIN_TRANSFER_HOOK_LEN,
                 uint40(Types.ExtraData)
             );
     }

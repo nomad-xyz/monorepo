@@ -16,6 +16,7 @@ interface IBridgeHook {
      * in place for these situations.
      *
      * @param _origin The domain of the chain from which the transfer originated
+     * @param _sender The identifier of the caller which sent the tokens over the bridge
      * @param _tokenDomain The canonical deployment domain of the token
      * @param _tokenAddress The identifier for the token on its canonical domain
      * @param _localToken The local address of the token (its canonical
@@ -26,6 +27,7 @@ interface IBridgeHook {
      */
     function onReceive(
         uint32 _origin,
+        bytes32 _sender,
         uint32 _tokenDomain,
         bytes32 _tokenAddress,
         address _localToken,
