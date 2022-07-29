@@ -140,7 +140,7 @@ class TokenFetcher {
           );
           if (e?.code !== 'CALL_EXCEPTION') {
             this.logger.error(
-              `NOT A CALL_EXCEPTION ${domain} at ${remoteDomain}. id: ${id}`,
+              `NOT A CALL_EXCEPTION of ${domain} at ${remoteDomain}. id: ${id}`,
               { error: e },
             );
           }
