@@ -112,7 +112,7 @@ class TokenFetcher {
               create: data,
             });
       
-            this.logger.debug(`Updated token [${domain}, ${id}]`);
+            this.logger.info(`Updated token [${domain}, ${id}]`);
       } catch (e) {
         this.logger.error(`Failed having fun with ${id} ${domain}`, e);
       }
@@ -136,14 +136,14 @@ class TokenFetcher {
             .mustGetBridge(remoteDomain)
             .tokenRegistry.getRepresentationAddress(domain, _id.valueOf());
         } catch (e: any) {
-          this.logger.debug(
+          this.logger.error(
             `Failed searching for replica from ${domain} at ${remoteDomain}. id: ${id}`,
           );
           if (e?.code !== 'CALL_EXCEPTION') throw e;
           return;
         }
         if (remoteId === '0x' + '00'.repeat(20)) {
-          this.logger.debug(
+          this.logger.info(
             `Haven't found the replica from ${domain} at ${remoteDomain}. id: ${id}`,
           );
           return;
@@ -211,7 +211,7 @@ class TokenFetcher {
           create: data,
         });
 
-        this.logger.debug(
+        this.logger.info(
           `Updated Replica at domain ${remoteDomain} for [${domain}, ${id}]`,
         );
       }),
