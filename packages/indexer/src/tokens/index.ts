@@ -138,7 +138,12 @@ class TokenFetcher {
           this.logger.error(
             `Failed searching for replica from ${domain} at ${remoteDomain}. id: ${id}`,
           );
-          if (e?.code !== 'CALL_EXCEPTION') throw e;
+          if (e?.code !== 'CALL_EXCEPTION') {
+            this.logger.error(
+              `NOT A CALL_EXCEPTION ${domain} at ${remoteDomain}. id: ${id}`,
+              { error: e },
+            );
+          }
           return;
         }
         if (remoteId === '0x' + '00'.repeat(20)) {
