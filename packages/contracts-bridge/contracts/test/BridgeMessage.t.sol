@@ -224,7 +224,8 @@ contract BridgeMessageTest is Test {
                 BridgeMessage.Types.TransferToHook,
                 tokenReceiver,
                 tokenAmount,
-                tokenDetailsHash
+                tokenDetailsHash,
+                tokenSender
             )
             .ref(uint40(BridgeMessage.Types.TransferToHook));
         assert(
@@ -270,7 +271,8 @@ contract BridgeMessageTest is Test {
                 BridgeMessage.Types.TransferToHook,
                 tokenReceiver,
                 tokenAmount,
-                tokenDetailsHash
+                tokenDetailsHash,
+                tokenSender
             )
             .ref(uint40(BridgeMessage.Types.TransferToHook));
         assert(BridgeMessage.isTransferToHook(action));
@@ -310,6 +312,7 @@ contract BridgeMessageTest is Test {
                 tokenReceiver,
                 tokenAmount,
                 tokenDetailsHash,
+                tokenSender,
                 extraData
             )
             .ref(uint40(BridgeMessage.Types.TransferToHook));
@@ -317,6 +320,7 @@ contract BridgeMessageTest is Test {
             tokenReceiver,
             tokenAmount,
             tokenDetailsHash,
+            tokenSender,
             extraData
         );
         assertEq(transfer.keccak(), manualTransfer.keccak());
@@ -448,7 +452,8 @@ contract BridgeMessageTest is Test {
                 BridgeMessage.Types.TransferToHook,
                 tokenReceiver,
                 tokenAmount,
-                tokenDetailsHash
+                tokenDetailsHash,
+                tokenSender
             )
             .ref(0);
         assertEq(
@@ -538,6 +543,7 @@ contract BridgeMessageTest is Test {
                 tokenReceiver,
                 tokenAmount,
                 tokenDetailsHash,
+                tokenSender,
                 new bytes(100)
             )
             .ref(uint40(BridgeMessage.Types.TransferToHook));
@@ -545,6 +551,20 @@ contract BridgeMessageTest is Test {
             BridgeMessage.evmHook(action),
             TypeCasts.bytes32ToAddress(tokenReceiver)
         );
+    }
+
+    function test_senderReturnsCorrectBytes32() public {
+        bytes29 action = abi
+            .encodePacked(
+                BridgeMessage.Types.TransferToHook,
+                tokenReceiver,
+                tokenAmount,
+                tokenDetailsHash,
+                tokenSender,
+                new bytes(100)
+            )
+            .ref(uint40(BridgeMessage.Types.TransferToHook));
+        assertEq(BridgeMessage.sender(action), tokenSender);
     }
 
     function test_extraDataReturnsCorrectData() public {
@@ -555,6 +575,7 @@ contract BridgeMessageTest is Test {
                 tokenReceiver,
                 tokenAmount,
                 tokenDetailsHash,
+                tokenSender,
                 manExtraData
             )
             .ref(uint40(BridgeMessage.Types.TransferToHook));
@@ -570,7 +591,8 @@ contract BridgeMessageTest is Test {
                 BridgeMessage.Types.TransferToHook,
                 tokenReceiver,
                 tokenAmount,
-                tokenDetailsHash
+                tokenDetailsHash,
+                tokenSender
             )
             .ref(uint40(BridgeMessage.Types.TransferToHook));
         assert(action.isType(BridgeMessage.Types.TransferToHook));
