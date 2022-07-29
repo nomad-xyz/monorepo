@@ -84,41 +84,39 @@ class TokenFetcher {
               this.sdk.mustGetBridge(domain).bridgeRouter.address,
             ])
             .celebrate();
-      } catch (e) {
-        this.logger.error(`Failed having fun with ${id} ${domain}`);
-        return;
-      }
+            __name = name;
+            __decimals = decimals;
+            __symbol = symbol;
+            __totalSupply = totalSupply;
+            __balance = balance;
 
-      __name = name;
-      __decimals = decimals;
-      __symbol = symbol;
-      __totalSupply = totalSupply;
-      __balance = balance;
+            const data = {
+              id,
+              domain,
+              name,
+              decimals,
+              symbol,
+              totalSupply: totalSupply.toHexString(),
+              balance: balance.toHexString(),
+            };
       
-
-      const data = {
-        id,
-        domain,
-        name,
-        decimals,
-        symbol,
-        totalSupply: totalSupply.toHexString(),
-        balance: balance.toHexString(),
-      };
-
-      // Updating data in the db
-      await this.prisma.token.upsert({
-        where: {
-          id_domain: {
-            id,
-            domain,
-          },
-        },
-        update: data,
-        create: data,
-      });
-
-      this.logger.debug(`Updated token [${domain}, ${id}]`);
+            // Updating data in the db
+            await this.prisma.token.upsert({
+              where: {
+                id_domain: {
+                  id,
+                  domain,
+                },
+              },
+              update: data,
+              create: data,
+            });
+      
+            this.logger.debug(`Updated token [${domain}, ${id}]`);
+      } catch (e) {
+        this.logger.error(`Failed having fun with ${id} ${domain}`, e);
+      }
+      
     } catch (e) {
       this.logger.warn(`Failed updating token [${domain}, ${id}]`);
     }
