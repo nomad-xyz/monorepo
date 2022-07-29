@@ -41,6 +41,7 @@ enum MessageType {
   NoMessage,
   TransferMessage,
   GovernanceMessage,
+  FailedMessage,
 }
 
 export type MinimumSerializedNomadMessage = {
@@ -172,14 +173,18 @@ export class NomadMessage {
     this.internalSender = new Padded(parsed.sender);
     this.internalRecipient = new Padded(parsed.recipient);
 
-    if (this.isBridgeMessage()) {
-      this.tryParseTransferMessage(parsed.body);
-      this.msgType = MessageType.TransferMessage;
-    } else if (this.isGovernanceMessage()) {
-      this.tryParseGovernanceMessage(parsed.body);
-      this.msgType = MessageType.GovernanceMessage;
-    } else {
-      this.msgType = MessageType.NoMessage;
+    try {
+      if (this.isBridgeMessage()) {
+        this.tryParseTransferMessage(parsed.body);
+        this.msgType = MessageType.TransferMessage;
+      } else if (this.isGovernanceMessage()) {
+        this.tryParseGovernanceMessage(parsed.body);
+        this.msgType = MessageType.GovernanceMessage;
+      } else {
+        this.msgType = MessageType.NoMessage;
+      }
+    } catch (e) {
+      this.msgType = MessageType.FailedMessage;
     }
 
     this.state = MsgState.Dispatched;
@@ -346,7 +351,7 @@ export class NomadMessage {
 
     if (this.state < MsgState.Processed) {
       this.logger.debug(
-        `Updated message from state ${this.state} to ${MsgState.Processed} (Processed)`,
+        `Updated message from state ${this.state} to ${MsgState.Processed} (Processed).`,
       );
       this.state = MsgState.Processed;
 
@@ -354,7 +359,7 @@ export class NomadMessage {
     }
 
     this.logger.debug(
-      `The message is in the higher state for being Proce. Want < ${MsgState.Processed}, is ${this.state}`,
+      `The message is in the higher state for being Processed. Want < ${MsgState.Processed}, is ${this.state}`,
     );
     return false;
   }

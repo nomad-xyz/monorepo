@@ -279,14 +279,25 @@ export class Indexer {
           error.code,
         );
         this.logger.warn(
-          `Retrying after RPC Error... Block number: ${blockNumber}, Error: ${error.code}, msg: ${error.message}`,
+          `Retrying after getBlock RPC Error... Block number: ${blockNumber}`,
+          {
+            blockNumber,
+            error,
+          },
         );
         this.failureCounter.add();
       },
     );
     if (!block) {
+      this.logger.error(
+        `An RPC getBlock error occured, retried exhausted. Block number: ${blockNumber}`,
+        {
+          blockNumber,
+          error,
+        },
+      );
       throw new Error(
-        `An RPC foo error occured, retried exhausted. Block number: ${blockNumber} Error: ${error}`,
+        `An RPC getBlock error occured, retried exhausted. Block number: ${blockNumber} Error: ${error}`,
       );
     }
 
@@ -327,17 +338,25 @@ export class Indexer {
           error.code,
         );
         this.logger.warn(
-          `Retrying after RPC Error... TX hash: ${hash}, Error: ${error.code}, msg: ${error.message}`,
+          `Retrying after getTransaction RPC Error... TX hash: ${hash}`,
+          {
+            tx: hash,
+            error,
+          },
         );
         this.failureCounter.add();
       },
     );
     if (!tx) {
       this.logger.error(
-        `An RPC error occured, retried exhausted. TX hash: ${hash} Error: ${error}`,
+        `A getTransaction RPC error occured, retried exhausted. TX hash: ${hash}`,
+        {
+          tx: hash,
+          error,
+        },
       );
       throw new Error(
-        `An RPC foo error occured, retried exhausted. TX hash: ${hash} Error: ${error}`,
+        `A getTransaction RPC foo error occured, retried exhausted. TX hash: ${hash} Error: ${error}`,
       );
     }
 
@@ -400,17 +419,25 @@ export class Indexer {
           error.code,
         );
         this.logger.warn(
-          `Retrying after RPC Error... , Error: ${error.code}, msg: ${error.message}`,
+          `Retrying after getTransactionReceipt RPC Error... Tx: ${hash}`,
+          {
+            error,
+            tx: hash,
+          },
         );
         this.failureCounter.add();
       },
     );
     if (!receipt) {
       this.logger.error(
-        `An RPC error occured, retried exhausted. TX hash: ${hash} Error: ${error}`,
+        `A getTransactionReceipt RPC error occured, retried exhausted. TX hash: ${hash}`,
+        {
+          tx: hash,
+          error,
+        },
       );
       throw new Error(
-        `An RPC receipt error occured, retried exhausted. TX hash: ${hash} Error: ${error}`,
+        `A getTransactionReceipt RPC receipt error occured, retried exhausted. TX hash: ${hash} Error: ${error}`,
       );
     }
 
@@ -761,7 +788,7 @@ export class Indexer {
 
   async fetchBridgeRouter(from: number, to: number) {
     const br = this.bridgeRouter();
-    const allEvents = [];
+    const allEvents: NomadishEvent[] = [];
     {
       const [events, error] = await retry(
         async () => {
@@ -803,32 +830,53 @@ export class Indexer {
           `There is no error, but events for some reason are still undefined`,
         );
       }
-      const parsedEvents = await Promise.all(
+      await Promise.all(
         events.map(async (event) => {
-          const { timestamp, gasUsed } = await this.getAdditionalInfo(
-            event.transactionHash,
-          );
-          return new NomadishEvent(
-            this.domain,
-            EventType.BridgeRouterSend,
-            0,
-            timestamp,
-            event.blockNumber,
-            EventSource.Fresh,
-            gasUsed,
-            event.transactionHash,
-            {
+          try {
+            const { timestamp, gasUsed } = await this.getAdditionalInfo(
+              event.transactionHash,
+            );
+            this.logger.info(`Observed an event`, {
+              eventType: EventType.BridgeRouterSend,
               token: event.args[0],
               from: event.args[1],
               toDomain: event.args[2],
               toId: event.args[3],
               amount: event.args[4],
               fastLiquidityEnabled: event.args[5],
-            },
-          );
+              domain: this.domain,
+              tx: event.transactionHash,
+              blockNumber: event.blockNumber,
+              timestamp,
+            });
+            allEvents.push(
+              new NomadishEvent(
+                this.domain,
+                EventType.BridgeRouterSend,
+                0,
+                timestamp,
+                event.blockNumber,
+                EventSource.Fresh,
+                gasUsed,
+                event.transactionHash,
+                {
+                  token: event.args[0],
+                  from: event.args[1],
+                  toDomain: event.args[2],
+                  toId: event.args[3],
+                  amount: event.args[4],
+                  fastLiquidityEnabled: event.args[5],
+                },
+              ),
+            );
+          } catch (e) {
+            this.logger.warn(
+              `Skipped BridgeRouter.Send event due to failure with TX: ${e}`,
+              { tx: event.transactionHash },
+            );
+          }
         }),
       );
-      allEvents.push(...parsedEvents);
     }
 
     {
@@ -872,31 +920,51 @@ export class Indexer {
           `There is no error, but events for some reason are still undefined`,
         );
       }
-      const parsedEvents = await Promise.all(
+      await Promise.all(
         events.map(async (event) => {
-          const { timestamp, gasUsed } = await this.getAdditionalInfo(
-            event.transactionHash,
-          );
-          return new NomadishEvent(
-            this.domain,
-            EventType.BridgeRouterReceive,
-            0,
-            timestamp,
-            event.blockNumber,
-            EventSource.Fresh,
-            gasUsed,
-            event.transactionHash,
-            {
+          try {
+            const { timestamp, gasUsed } = await this.getAdditionalInfo(
+              event.transactionHash,
+            );
+            this.logger.info(`Observed an event`, {
+              eventType: EventType.BridgeRouterReceive,
               originAndNonce: event.args[0],
               token: event.args[1],
               recipient: event.args[2],
               liquidityProvider: event.args[3],
               amount: event.args[4],
-            },
-          );
+              domain: this.domain,
+              tx: event.transactionHash,
+              blockNumber: event.blockNumber,
+              timestamp,
+            });
+            allEvents.push(
+              new NomadishEvent(
+                this.domain,
+                EventType.BridgeRouterReceive,
+                0,
+                timestamp,
+                event.blockNumber,
+                EventSource.Fresh,
+                gasUsed,
+                event.transactionHash,
+                {
+                  originAndNonce: event.args[0],
+                  token: event.args[1],
+                  recipient: event.args[2],
+                  liquidityProvider: event.args[3],
+                  amount: event.args[4],
+                },
+              ),
+            );
+          } catch (e) {
+            this.logger.warn(
+              `Skipped BridgeRouter.Receive event due to failure with TX: ${e}`,
+              { tx: event.transactionHash },
+            );
+          }
         }),
       );
-      allEvents.push(...parsedEvents);
     }
 
     return allEvents;
@@ -904,6 +972,8 @@ export class Indexer {
 
   async fetchHome(from: number, to: number) {
     const fetchedEvents: NomadishEvent[] = [];
+
+    this.logger.info(`Going to fetch Home`, { home: this.domain, from, to });
 
     const home = this.home();
     {
@@ -948,33 +1018,51 @@ export class Indexer {
         );
       }
 
-      const parsedEvents = await Promise.all(
+      await Promise.all(
         events.map(async (event) => {
-          const { timestamp, gasUsed } = await this.getAdditionalInfo(
-            event.transactionHash,
-          );
-
-          return new NomadishEvent(
-            this.domain,
-            EventType.HomeDispatch,
-            0,
-            timestamp,
-            event.blockNumber,
-            EventSource.Fresh,
-            gasUsed,
-            event.transactionHash,
-            {
+          try {
+            const { timestamp, gasUsed } = await this.getAdditionalInfo(
+              event.transactionHash,
+            );
+            this.logger.info(`Observed an event`, {
+              eventType: EventType.HomeDispatch,
               messageHash: event.args[0],
               leafIndex: event.args[1],
               destinationAndNonce: event.args[2],
               committedRoot: event.args[3],
               message: event.args[4],
-            },
-          );
+              domain: this.domain,
+              tx: event.transactionHash,
+              blockNumber: event.blockNumber,
+              timestamp,
+            });
+            fetchedEvents.push(
+              new NomadishEvent(
+                this.domain,
+                EventType.HomeDispatch,
+                0,
+                timestamp,
+                event.blockNumber,
+                EventSource.Fresh,
+                gasUsed,
+                event.transactionHash,
+                {
+                  messageHash: event.args[0],
+                  leafIndex: event.args[1],
+                  destinationAndNonce: event.args[2],
+                  committedRoot: event.args[3],
+                  message: event.args[4],
+                },
+              ),
+            );
+          } catch (e) {
+            this.logger.warn(
+              `Skipped Home.Dispatch event due to failure with TX: ${e}`,
+              { tx: event.transactionHash },
+            );
+          }
         }),
       );
-
-      fetchedEvents.push(...parsedEvents);
     }
 
     {
@@ -1019,30 +1107,49 @@ export class Indexer {
         );
       }
 
-      const parsedEvents = await Promise.all(
+      await Promise.all(
         events.map(async (event) => {
-          const { timestamp, gasUsed } = await this.getAdditionalInfo(
-            event.transactionHash,
-          );
-          return new NomadishEvent(
-            this.domain,
-            EventType.HomeUpdate,
-            0,
-            timestamp,
-            event.blockNumber,
-            EventSource.Fresh,
-            gasUsed,
-            event.transactionHash,
-            {
+          try {
+            const { timestamp, gasUsed } = await this.getAdditionalInfo(
+              event.transactionHash,
+            );
+            this.logger.info(`Observed an event`, {
+              eventType: EventType.HomeUpdate,
               homeDomain: event.args[0],
               oldRoot: event.args[1],
               newRoot: event.args[2],
               signature: event.args[3],
-            },
-          );
+              domain: this.domain,
+              tx: event.transactionHash,
+              blockNumber: event.blockNumber,
+              timestamp,
+            });
+            fetchedEvents.push(
+              new NomadishEvent(
+                this.domain,
+                EventType.HomeUpdate,
+                0,
+                timestamp,
+                event.blockNumber,
+                EventSource.Fresh,
+                gasUsed,
+                event.transactionHash,
+                {
+                  homeDomain: event.args[0],
+                  oldRoot: event.args[1],
+                  newRoot: event.args[2],
+                  signature: event.args[3],
+                },
+              ),
+            );
+          } catch (e) {
+            this.logger.warn(
+              `Skipped Home.Update event due to failure with TX: ${e}`,
+              { tx: event.transactionHash },
+            );
+          }
         }),
       );
-      fetchedEvents.push(...parsedEvents);
     }
 
     return fetchedEvents;
@@ -1050,6 +1157,13 @@ export class Indexer {
 
   async fetchReplica(domain: number, from: number, to: number) {
     const fetchedEvents: NomadishEvent[] = [];
+
+    this.logger.info(`Going to fetch Replica`, {
+      home: domain,
+      replica: this.domain,
+      from,
+      to,
+    });
 
     const replica = this.replicaForDomain(domain);
     {
@@ -1098,30 +1212,49 @@ export class Indexer {
         );
       }
 
-      const parsedEvents = await Promise.all(
+      await Promise.all(
         events.map(async (event) => {
-          const { timestamp, gasUsed } = await this.getAdditionalInfo(
-            event.transactionHash,
-          );
-          return new NomadishEvent(
-            this.domain,
-            EventType.ReplicaUpdate,
-            domain,
-            timestamp,
-            event.blockNumber,
-            EventSource.Fresh,
-            gasUsed,
-            event.transactionHash,
-            {
+          try {
+            const { timestamp, gasUsed } = await this.getAdditionalInfo(
+              event.transactionHash,
+            );
+            this.logger.info(`Observed an event`, {
+              eventType: EventType.ReplicaUpdate,
               homeDomain: event.args[0],
               oldRoot: event.args[1],
               newRoot: event.args[2],
               signature: event.args[3],
-            },
-          );
+              domain: this.domain,
+              tx: event.transactionHash,
+              blockNumber: event.blockNumber,
+              timestamp,
+            });
+            fetchedEvents.push(
+              new NomadishEvent(
+                this.domain,
+                EventType.ReplicaUpdate,
+                domain,
+                timestamp,
+                event.blockNumber,
+                EventSource.Fresh,
+                gasUsed,
+                event.transactionHash,
+                {
+                  homeDomain: event.args[0],
+                  oldRoot: event.args[1],
+                  newRoot: event.args[2],
+                  signature: event.args[3],
+                },
+              ),
+            );
+          } catch (e) {
+            this.logger.warn(
+              `Skipped Replica.Update event due to failure with TX: ${e}`,
+              { tx: event.transactionHash },
+            );
+          }
         }),
       );
-      fetchedEvents.push(...parsedEvents);
     }
 
     {
@@ -1171,29 +1304,47 @@ export class Indexer {
         );
       }
 
-      const parsedEvents = await Promise.all(
+      await Promise.all(
         events.map(async (event) => {
-          const { timestamp, gasUsed } = await this.getAdditionalInfo(
-            event.transactionHash,
-          );
-          return new NomadishEvent(
-            this.domain,
-            EventType.ReplicaProcess,
-            domain,
-            timestamp,
-            event.blockNumber,
-            EventSource.Fresh,
-            gasUsed,
-            event.transactionHash,
-            {
+          try {
+            const { timestamp, gasUsed } = await this.getAdditionalInfo(
+              event.transactionHash,
+            );
+            this.logger.info(`Observed an event`, {
+              eventType: EventType.ReplicaProcess,
               messageHash: event.args[0],
               success: event.args[1],
               returnData: event.args[2],
-            },
-          );
+              domain: this.domain,
+              tx: event.transactionHash,
+              blockNumber: event.blockNumber,
+              timestamp,
+            });
+            fetchedEvents.push(
+              new NomadishEvent(
+                this.domain,
+                EventType.ReplicaProcess,
+                domain,
+                timestamp,
+                event.blockNumber,
+                EventSource.Fresh,
+                gasUsed,
+                event.transactionHash,
+                {
+                  messageHash: event.args[0],
+                  success: event.args[1],
+                  returnData: event.args[2],
+                },
+              ),
+            );
+          } catch (e) {
+            this.logger.warn(
+              `Skipped Replica.Process event due to failure with TX: ${e}`,
+              { tx: event.transactionHash },
+            );
+          }
         }),
       );
-      fetchedEvents.push(...parsedEvents);
     }
     return fetchedEvents;
   }
