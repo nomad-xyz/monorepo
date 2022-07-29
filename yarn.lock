@@ -1626,7 +1626,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/contracts-bridge@1.1.0-rc.0, @nomad-xyz/contracts-bridge@^1.1.0-rc.0, @nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
+"@nomad-xyz/contracts-bridge@^1.1.0-rc.0, @nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge"
   dependencies:
@@ -1658,6 +1658,19 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nomad-xyz/contracts-bridge@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@nomad-xyz/contracts-bridge@npm:1.1.0"
+  dependencies:
+    "@nomad-xyz/contracts-core": ^1.1.0
+    "@nomad-xyz/contracts-router": ^1.1.0
+    "@openzeppelin/contracts": ~3.4.2
+    "@openzeppelin/contracts-upgradeable": ~3.4.2
+    "@summa-tx/memview-sol": ^2.0.0
+  checksum: c5e9c9af0d0633487ab4872d46073daa08f83f40ba6ca28ce69556d3e78adae23ac6a75e66a872dcff002ad08329f546a4a6cd0034a947baa535e9f8f370e708
+  languageName: node
+  linkType: hard
+
 "@nomad-xyz/contracts-core@^1.1.0-rc.0, @nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-core@workspace:packages/contracts-core"
@@ -1686,6 +1699,17 @@ __metadata:
     typescript: ^4.5.5
   languageName: unknown
   linkType: soft
+
+"@nomad-xyz/contracts-core@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@nomad-xyz/contracts-core@npm:1.1.0"
+  dependencies:
+    "@openzeppelin/contracts": ^3.4.2
+    "@openzeppelin/contracts-upgradeable": ~3.4.2
+    "@summa-tx/memview-sol": ^2.0.0
+  checksum: ab558d2fe2cdab3bec338be05922eacb6757ccff569652ad3f176d278f61d9a893b8434174242990c473876b0ef7f06ca4414240c63daa25bbf7f6a70dab75b8
+  languageName: node
+  linkType: hard
 
 "@nomad-xyz/contracts-router@^1.1.0-rc.0, @nomad-xyz/contracts-router@workspace:^, @nomad-xyz/contracts-router@workspace:packages/contracts-router":
   version: 0.0.0-use.local
@@ -1717,6 +1741,18 @@ __metadata:
     typescript: ^4.5.5
   languageName: unknown
   linkType: soft
+
+"@nomad-xyz/contracts-router@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@nomad-xyz/contracts-router@npm:1.1.0"
+  dependencies:
+    "@nomad-xyz/contracts-core": ^1.1.0
+    "@openzeppelin/contracts": ~3.4.2
+    "@openzeppelin/contracts-upgradeable": ~3.4.2
+    "@summa-tx/memview-sol": ^2.0.0
+  checksum: 1e68d32bbb5c125c9922acaa3be6c6a03ef40cf459e36d91a7a77a29e434a9fc9d95513a7adb970e73f8e55ea87d41900d63c0277efd71f339d2e12def53d6a3
+  languageName: node
+  linkType: hard
 
 "@nomad-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
@@ -1753,11 +1789,11 @@ __metadata:
   dependencies:
     "@apollo/client": ^3.6.9
     "@graphql-tools/schema": ^8.3.5
-    "@nomad-xyz/contracts-bridge": 1.1.0-rc.0
-    "@nomad-xyz/multi-provider": ^1.0.0-rc.5
-    "@nomad-xyz/sdk": ^2.1.0-rc.0
-    "@nomad-xyz/sdk-bridge": ^1.1.0-rc.0
-    "@nomad-xyz/sdk-govern": ^1.1.0-rc.0
+    "@nomad-xyz/contracts-bridge": 1.1.0
+    "@nomad-xyz/multi-provider": ^1.1.0
+    "@nomad-xyz/sdk": ^2.1.0
+    "@nomad-xyz/sdk-bridge": ^1.1.0
+    "@nomad-xyz/sdk-govern": ^1.1.0
     "@prisma/client": ^3.14.0
     "@sentry/node": ^7.1.1
     "@sentry/tracing": ^7.1.1
@@ -1884,7 +1920,27 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/multi-provider@^1.0.0-rc.5, @nomad-xyz/multi-provider@workspace:^, @nomad-xyz/multi-provider@workspace:packages/multi-provider":
+"@nomad-xyz/multi-provider@npm:1.0.0-rc.5":
+  version: 1.0.0-rc.5
+  resolution: "@nomad-xyz/multi-provider@npm:1.0.0-rc.5"
+  dependencies:
+    ethers: ^5.4.6
+    web3: ^1.6.1
+  checksum: d1993e56d9d419db2344f2c468d11537d933d184b09e72a19a9cc48c49980b6ed638617d45d1d9d51e1072bbedc3384250624fec0c46eda81ff632646dfa7d79
+  languageName: node
+  linkType: hard
+
+"@nomad-xyz/multi-provider@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@nomad-xyz/multi-provider@npm:1.1.0"
+  dependencies:
+    ethers: ^5.4.6
+    web3: ^1.6.1
+  checksum: b9e6d010ff7649df9e4c2e94a44c4babb0d0992b7f77a4707957bd321fbb606c5921d6aa3ba8e55f198324548fe2495d6a7a8b0eac87dfca73edfb4ad9654919
+  languageName: node
+  linkType: hard
+
+"@nomad-xyz/multi-provider@workspace:^, @nomad-xyz/multi-provider@workspace:packages/multi-provider":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/multi-provider@workspace:packages/multi-provider"
   dependencies:
@@ -1906,17 +1962,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/multi-provider@npm:1.0.0-rc.5":
-  version: 1.0.0-rc.5
-  resolution: "@nomad-xyz/multi-provider@npm:1.0.0-rc.5"
-  dependencies:
-    ethers: ^5.4.6
-    web3: ^1.6.1
-  checksum: d1993e56d9d419db2344f2c468d11537d933d184b09e72a19a9cc48c49980b6ed638617d45d1d9d51e1072bbedc3384250624fec0c46eda81ff632646dfa7d79
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/sdk-bridge@^1.1.0-rc.0, @nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
+"@nomad-xyz/sdk-bridge@^1.1.0, @nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
@@ -1942,7 +1988,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk-govern@^1.1.0-rc.0, @nomad-xyz/sdk-govern@workspace:packages/sdk-govern":
+"@nomad-xyz/sdk-govern@^1.1.0, @nomad-xyz/sdk-govern@^1.1.0-rc.0, @nomad-xyz/sdk-govern@workspace:packages/sdk-govern":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-govern@workspace:packages/sdk-govern"
   dependencies:
@@ -1971,7 +2017,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk@^2.1.0-rc.0, @nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
+"@nomad-xyz/sdk@^2.1.0, @nomad-xyz/sdk@^2.1.0-rc.0, @nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
