@@ -41,6 +41,7 @@ enum MessageType {
   NoMessage,
   TransferMessage,
   GovernanceMessage,
+  FailedMessage,
 }
 
 export type MinimumSerializedNomadMessage = {
@@ -172,14 +173,18 @@ export class NomadMessage {
     this.internalSender = new Padded(parsed.sender);
     this.internalRecipient = new Padded(parsed.recipient);
 
-    if (this.isBridgeMessage()) {
-      this.tryParseTransferMessage(parsed.body);
-      this.msgType = MessageType.TransferMessage;
-    } else if (this.isGovernanceMessage()) {
-      this.tryParseGovernanceMessage(parsed.body);
-      this.msgType = MessageType.GovernanceMessage;
-    } else {
-      this.msgType = MessageType.NoMessage;
+    try {
+      if (this.isBridgeMessage()) {
+        this.tryParseTransferMessage(parsed.body);
+        this.msgType = MessageType.TransferMessage;
+      } else if (this.isGovernanceMessage()) {
+        this.tryParseGovernanceMessage(parsed.body);
+        this.msgType = MessageType.GovernanceMessage;
+      } else {
+        this.msgType = MessageType.NoMessage;
+      }
+    } catch(e) {
+      this.msgType = MessageType.FailedMessage;
     }
 
     this.state = MsgState.Dispatched;
