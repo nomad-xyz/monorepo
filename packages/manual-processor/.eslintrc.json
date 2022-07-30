@@ -1,13 +1,20 @@
 {
     "env": {
-        "browser": true,
-        "es2021": true
+      "node": true
     },
-    "extends": ["eslint:recommended"],
-    "parserOptions": {
-        "ecmaVersion": 12,
-        "sourceType": "module"
-    },
+    "root": true,
+    "parser": "@typescript-eslint/parser",
+    "plugins": ["@typescript-eslint"],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "prettier"
+    ],
     "rules": {
+      "comma-dangle": ["error", "always-multiline"],
+      "semi": ["error", "always"],
+      "@typescript-eslint/explicit-module-boundary-types": ["error"],
+      "@typescript-eslint/no-non-null-assertion": ["error"],
+      "@typescript-eslint/no-explicit-any": ["error", { "ignoreRestArgs": true }]
     }
-}
+  }
