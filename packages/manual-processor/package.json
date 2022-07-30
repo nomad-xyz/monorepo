@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
-    "lint": "eslint --fix ./src",
+    "lint": "eslint --fix .",
     "prettier": "prettier --write ./src"
   },
   "main": "dist/index.js",

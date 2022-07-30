@@ -1,6 +1,6 @@
-import { BridgeContext } from "@nomad-xyz/sdk-bridge"
+import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import { request, gql } from "graphql-request";
-import { NomadContext } from "@nomad-xyz/sdk"
+import { NomadContext } from "@nomad-xyz/sdk";
 
 const nomadAPI = "https://bridge-indexer.prod.madlads.tools/";
 
@@ -99,15 +99,15 @@ async function main() {
   // This uses a helper function defined in ./registerRpcs.ts
   // to register RPCs placed in environment variables
   type Env = 'production' | 'staging' | 'development'
-  const environment: Env = 'production'
-  const nomadContext = await NomadContext.fetch(environment)
-  const bridgeContext = await BridgeContext.fetch('production')
+  const environment: Env = 'production';
+  const nomadContext = await NomadContext.fetch(environment);
+  const bridgeContext = await BridgeContext.fetch('production');
 
 
   console.log(`Registered Domains: ${nomadContext.domainNames}`);
 
   // const bridgeContext = BridgeContext.fromNomadContext(core);
-  const domainID = bridgeContext.resolveDomain('moonbeam')
+  const domainID = bridgeContext.resolveDomain('moonbeam');
   const txArray = await getTransactionsForProcessing(
     [domainID], 
     "moonbeam",
@@ -117,7 +117,7 @@ async function main() {
   );
   txArray.forEach((transaction) => {
     // nomadContext.processByOriginDestinationAndLeaf(transaction.origin, transaction.destination, transaction.leafIndex);
-    console.log('tx leaf index: %s', transaction.leafIndex)
+    console.log('tx leaf index: %s', transaction.leafIndex);
 
   });
 }
