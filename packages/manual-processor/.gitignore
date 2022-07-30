@@ -4,8 +4,7 @@ artifacts/
 coverage/
 coverage.json
 .env
-src.ts/
-src/
 dist/
 foundry_artifacts/
 scripts/accumulator-cli
+.yarn
