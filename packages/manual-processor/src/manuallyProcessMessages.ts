@@ -1,5 +1,6 @@
+import { BridgeContext } from "@nomad-xyz/sdk-bridge"
 import { request, gql } from "graphql-request";
-const { NomadContext } = await import('@nomad-xyz/sdk')
+import { NomadContext } from "@nomad-xyz/sdk"
 
 const nomadAPI = "https://bridge-indexer.prod.madlads.tools/";
 
@@ -100,20 +101,24 @@ async function main() {
   type Env = 'production' | 'staging' | 'development'
   const environment: Env = 'production'
   const nomadContext = await NomadContext.fetch(environment)
+  const bridgeContext = await BridgeContext.fetch('production')
 
 
   console.log(`Registered Domains: ${nomadContext.domainNames}`);
 
   // const bridgeContext = BridgeContext.fromNomadContext(core);
+  const domainID = bridgeContext.resolveDomain('moonbeam')
   const txArray = await getTransactionsForProcessing(
-    [0, 1], 
+    [domainID], 
     "moonbeam",
-    0,
+    1,
     [2, 3],
-    1
+    100
   );
   txArray.forEach((transaction) => {
-    nomadContext.processByOriginDestinationAndLeaf(transaction.origin, transaction.destination, transaction.leafIndex);
+    // nomadContext.processByOriginDestinationAndLeaf(transaction.origin, transaction.destination, transaction.leafIndex);
+    console.log('tx leaf index: %s', transaction.leafIndex)
+
   });
 }
 

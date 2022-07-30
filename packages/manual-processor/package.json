@@ -16,6 +16,7 @@
   "types": "dist/index.d.ts",
   "dependencies": {
     "@nomad-xyz/sdk": "workspace:^",
+    "@nomad-xyz/sdk-bridge": "workspace:^",
     "graphql": "^16.5.0",
     "graphql-request": "^4.3.0"
   }

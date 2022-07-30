@@ -1,5 +1,7 @@
 {
     "extends": "../tsconfig.package.json",
+    "module" : "node16",
+    "target": "es2022",
     "compilerOptions": {
       "outDir": "./dist",
       "rootDir": "./src",
