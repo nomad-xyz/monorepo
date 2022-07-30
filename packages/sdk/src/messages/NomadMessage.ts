@@ -5,7 +5,6 @@ import { arrayify, hexlify } from '@ethersproject/bytes';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { ErrorCode } from '@ethersproject/logger';
 import { Logger } from '@ethersproject/logger';
-import fetch from 'cross-fetch';
 import * as core from '@nomad-xyz/contracts-core';
 import { utils } from '@nomad-xyz/multi-provider';
 
@@ -471,13 +470,6 @@ export class NomadMessage<T extends NomadContext> {
    * @throws if s3 is not configured for this env
    */
   async getProof(): Promise<MessageProof | undefined> {
-    const uri = this.s3Uri;
-    if (!uri) throw new Error('No s3 configuration');
-    const response = await fetch(uri);
-    if (!response) throw new Error('Unable to fetch proof');
-    const { data, status, statusText } = await response.json();
-    if (status !== 200) throw new Error(statusText);
-    if (data.proof && data.message) return data;
-    throw new Error('Server returned invalid proof');
+    return this.context.fetchProof(this.origin, this.leafIndex.toNumber());
   }
 }
