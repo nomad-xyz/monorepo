@@ -8,6 +8,7 @@
     "packages/deploy",
     "packages/multi-provider",
     "packages/local-environment",
+    "packages/manual-processor",
     "packages/sdk",
     "packages/sdk-bridge",
     "packages/sdk-govern",
@@ -26,6 +27,7 @@
     "indexer": "yarn workspace @nomad-xyz/indexer",
     "lint": "yarn workspaces foreach -Apv --exclude @nomad-xyz/indexer --exclude @nomad-xyz/local-environment run lint",
     "local-environment": "yarn workspace @nomad-xyz/local-environment",
+    "manual-processor": "yarn workspace @nomad-xyz/manual-processor",
     "multi-provider": "yarn workspace @nomad-xyz/multi-provider",
     "prettier": "yarn workspaces foreach -Apv --exclude @nomad-xyz/local-environment run prettier",
     "sdk": "yarn workspace @nomad-xyz/sdk",
@@ -38,14 +40,5 @@
     "storage-inspect:generate": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run storage-inspect:generate",
     "storage-inspect:check": "yarn workspaces foreach -Apv --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run storage-inspect:check"
   },
-  "packageManager": "yarn@3.2.0",
-  "dependencies": {
-    "graphql": "^16.5.0",
-    "graphql-request": "^4.3.0",
-    "ts-node": "^10.9.1",
-    "typescript": "^4.7.4"
-  },
-  "compilerOptions": {
-    "esModuleInterop": true
-  }
+  "packageManager": "yarn@3.2.0"
 }

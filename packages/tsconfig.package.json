@@ -39,6 +39,9 @@
       "path": "./local-environment"
     },
     {
+      "path": "./manual-processor"
+    },
+    {
       "path": "./multi-provider"
     },
     {
