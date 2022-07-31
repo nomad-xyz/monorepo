@@ -25,8 +25,8 @@
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
-    "lint": "eslint --fix ./src ./tests",
-    "prettier": "prettier --write ./src ./tests",
+    "lint": "eslint --fix ./src",
+    "prettier": "prettier --write ./src",
     "manual-process": "npx ts-node ./src/index.ts"
   },
   "dependencies": {

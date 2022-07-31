@@ -6,7 +6,7 @@ const { PRIVATE_KEY, DEST_RPC_URL } = process.env;
 const ENV = 'production';
 const nomadAPI = 'https://bridge-indexer.prod.madlads.tools/graphql';
 let bridgeContext: BridgeContext;
-console.log(ENV)
+console.log(ENV);
 
 export type IndexerTx = {
   origin: number
@@ -74,10 +74,10 @@ export async function getUnprocessed(
         state
         leafIndex
       }
-    }`
+    }`;
   return await request(nomadAPI, query, variables).then(
     (res) => res.findManyMessages
-  )
+  );
 }
 
 // loop over transactions in a batch and process each one, continue if there is an error
