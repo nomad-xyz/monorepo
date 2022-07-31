@@ -279,9 +279,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
     const uri = `https://${bucket}.s3.${region}.amazonaws.com/${originName}_${leafIndex}`;
     const response = await fetch(uri);
     if (!response) throw new Error('Unable to fetch proof');
-    console.log(await response.json())
-    const { data, status, statusText } = await response.json();
-    if (status !== 200) throw new Error(statusText);
+    const data = await response.json();
     if (data.proof && data.message) return data;
     throw new Error('Server returned invalid proof');
   }

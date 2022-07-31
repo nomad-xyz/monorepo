@@ -73,13 +73,13 @@ export const processAll = async (origin: string | number, destination: string | 
   const provider = bridgeContext.getProvider('moonbeam');
   const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
   bridgeContext.registerSigner('moonbeam', wallet);
-  
+
   const originDomain = bridgeContext.resolveDomain(origin);
   const destDomain = bridgeContext.resolveDomain(destination);
   const txArray = await getUnprocessed(
     originDomain,
     destDomain,
-    50,
+    10,
   );
   console.log('txs', txArray)
   for (const transaction of txArray) {
