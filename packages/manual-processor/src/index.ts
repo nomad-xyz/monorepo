@@ -1,4 +1,8 @@
-import { BridgeContext, BridgeMessage, TransferMessage } from '@nomad-xyz/sdk-bridge';
+import {
+  BridgeContext,
+  BridgeMessage,
+  TransferMessage,
+} from '@nomad-xyz/sdk-bridge';
 import { request, gql } from 'graphql-request';
 import { ethers } from 'ethers';
 
@@ -9,21 +13,19 @@ let bridgeContext: BridgeContext;
 console.log(ENV);
 
 export type IndexerTx = {
-  origin: number
-  destination: number
-  leafIndex: string
-  state: number
-  dispatchTx: string
-}
+  origin: number;
+  destination: number;
+  leafIndex: string;
+  state: number;
+  dispatchTx: string;
+};
 
 // instanitiate BridgeContext, register provider and signer
-export async function init(
-  destination: string | number
-) {
+export async function init(destination: string | number): Promise<void> {
   const bridgeContext = await BridgeContext.fetch(ENV);
   if (DEST_RPC_URL) {
     const destDomain = bridgeContext.resolveDomain(destination);
-    bridgeContext.registerRpcProvider(destDomain, DEST_RPC_URL!);
+    bridgeContext.registerRpcProvider(destDomain, DEST_RPC_URL);
   }
 
   // register signer
@@ -41,7 +43,7 @@ export async function getUnprocessed(
   origin: string | number,
   destination: string | number,
   size: number,
-  page: number
+  page: number,
 ): Promise<Array<IndexerTx>> {
   let take = size;
   if (!size || size > 100) {
@@ -76,19 +78,27 @@ export async function getUnprocessed(
       }
     }`;
   return await request(nomadAPI, query, variables).then(
-    (res) => res.findManyMessages
+    (res) => res.findManyMessages,
   );
 }
 
 // loop over transactions in a batch and process each one, continue if there is an error
-export async function processBatch (origin: string | number, txArray: IndexerTx[]): Promise<void> {
+export async function processBatch(
+  origin: string | number,
+  txArray: IndexerTx[],
+): Promise<void> {
   console.log(`processing batch of ${txArray.length} transactions`);
   for (const transaction of txArray) {
     try {
       console.log(`fprocessing ${transaction.dispatchTx}`);
-      const message: TransferMessage = await BridgeMessage.singleFromTransactionHash(bridgeContext, origin, transaction.dispatchTx);
+      const message: TransferMessage =
+        await BridgeMessage.singleFromTransactionHash(
+          bridgeContext,
+          origin,
+          transaction.dispatchTx,
+        );
       await message.process();
-    } catch(e) {
+    } catch (e) {
       // if error, log and continue to next transaction
       console.log(e);
     }
@@ -96,16 +106,14 @@ export async function processBatch (origin: string | number, txArray: IndexerTx[
 }
 
 // query and submit batches for all pending transactions
-export async function processAll (origin: string | number, destination: string | number): Promise<void> {
+export async function processAll(
+  origin: string | number,
+  destination: string | number,
+): Promise<void> {
   let queryNextBatch = true;
   let page = 1;
   while (queryNextBatch) {
-    const txArray = await getUnprocessed(
-      origin,
-      destination,
-      100,
-      page
-    );
+    const txArray = await getUnprocessed(origin, destination, 100, page);
     if (txArray.length > 0) {
       await processBatch(origin, txArray);
       page += 1;
@@ -120,7 +128,7 @@ async function start() {
   const origin = 'ethereum';
   const destination = 'moonbeam';
   await init(destination);
-  
+
   await processAll(origin, destination);
 }
 start();

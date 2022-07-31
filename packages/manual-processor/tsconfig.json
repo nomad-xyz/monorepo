@@ -3,7 +3,15 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "composite": true
+    "composite": true,
+    /*
+      TODO: should remove "skipLibCheck": true
+
+      Workaround for conflicting identifier 'process' when
+      using a custom.d.ts file and trying to define the
+      process.env variables to avoid lint errors.
+    */
+    "skipLibCheck": true
   },
   "exclude": [
     "./node_modules",
@@ -11,17 +19,6 @@
     "./src/tmp.ts"
   ],
   "include": [
-    "./src/*.ts",
-    "src/contracts/*.ts",
-    "src/domains/*.ts",
-    "src/events/*.ts",
-    "src/messages/*.ts",
-    "src/tokens/*.ts",
-    "src/govern/*.ts"
-  ],
-  "references": [
-    { "path": "../contracts-core" },
-    { "path": "../contracts-bridge" },
-    { "path": "../multi-provider" }
+    "src/*.ts"
   ]
 }
