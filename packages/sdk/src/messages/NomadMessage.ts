@@ -106,7 +106,7 @@ export class NomadMessage<T extends NomadContext> {
           messages.push(new NomadMessage(context, dispatch));
         }
       } catch (e: unknown) {
-        // console.log('Unexpected error', e);
+        console.log('Unexpected error', e);
         const err = e as { code: ErrorCode; reason: string };
 
         // Catch known errors that we'd like to squash
