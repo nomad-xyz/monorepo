@@ -22,18 +22,54 @@ export function assertBeaconProxy(
   expect(beaconProxy.implementation, message).to.not.be.undefined;
 }
 
+export interface checkToRun {
+  msg: string;
+  check: () => void;
+}
+
+export interface checkError {
+  network: string;
+  message: string;
+
+  error: any;
+}
+
 export class CheckList {
   prefix: string; // prefix for all messages in this checklist
   ok: string[]; // successful items
-  error: unknown[]; // failed items with associated error from chai assertion or plain error
+  error: checkError[]; // failed items with associated error from chai assertion or plain error
   //
   currentCheck: string;
+
+  checksToRun: checkToRun[];
+
+  bufferedOutput: string[];
+
+  addCheck(check: checkToRun) {
+    this.currentCheck = check.msg;
+    this.checksToRun.push(check);
+  }
+
+  async executeChecks() {
+    for (const c of this.checksToRun) {
+      this.currentCheck = c.msg;
+      try {
+        await c.check();
+      } catch (e) {
+        this.fail(e);
+      }
+    }
+    // Empty queue of checks that have not ran
+    this.checksToRun.length = 0;
+  }
 
   constructor(prefix: string | void) {
     this.prefix = prefix ? prefix : '';
     this.ok = [];
     this.error = [];
     this.currentCheck = '';
+    this.checksToRun = [];
+    this.bufferedOutput = [];
   }
 
   static combine(lists: CheckList[]): CheckList {
@@ -46,38 +82,45 @@ export class CheckList {
   }
 
   output(): void {
-    // TODO: improve output readability
     if (this.hasErrors()) {
-      console.error(
+      this.bufferedOutput.push(
         `\nTest result: ${chalk.red('FAIL')} | ${this.ok.length} Passed, ${
           this.error.length
         } Failed.`,
       );
-      console.log(`\n ${chalk.bold('Errors')}\n`);
-      this.error.map(console.log);
+      this.bufferedOutput.push(`\n ${chalk.bold('Errors')} \n`);
+      this.error.map((error) => {
+        this.colorNetwork(error.network);
+        this.bufferedOutput.push(`Check: ${chalk.red(error.message)}`);
+        this.bufferedOutput.push(error.error);
+      });
     } else {
-      console.log(
+      this.bufferedOutput.push(
         `\nTest result: ${chalk.green('OK')} | ${
           this.ok.length
         } Checks Passed!`,
       );
     }
+    this.bufferedOutput.sort();
+    this.bufferedOutput.forEach(console.log);
   }
 
   check(f: () => void, message: string): void {
     try {
       f();
       this.pass(message);
-    } catch (e: unknown) {
+    } catch (e) {
       this.fail(e);
     }
   }
 
-  exists<T>(value: T | undefined, message: string): void {
+  exists<T>(value: T | undefined): void {
+    const message = this.currentCheck;
     this.check(() => expect(value, this.prefix + message).to.exist, message);
   }
 
-  equals<T>(left: T, right: T | undefined, message: string): void {
+  equals<T>(left: T, right: T | undefined): void {
+    const message = this.currentCheck;
     if (right === undefined) {
       this.fail(message + ' is undefined');
     } else {
@@ -98,11 +141,8 @@ export class CheckList {
   }
 
   // This method tries to assert using expect(), in the worst case, uses utils.equalIds
-  equalIds(
-    left: BytesLike,
-    right: BytesLike | undefined,
-    message: string,
-  ): void {
+  equalIds(left: BytesLike, right: BytesLike | undefined): void {
+    const message = this.currentCheck;
     if (right === undefined) {
       this.fail(message + ' is undefined');
     } else {
@@ -120,11 +160,8 @@ export class CheckList {
   }
 
   // This method tries to assert using expect(), in the worst case, uses utils.equalIds
-  notEqualIds(
-    left: BytesLike,
-    right: BytesLike | undefined,
-    message: string,
-  ): void {
+  notEqualIds(left: BytesLike, right: BytesLike | undefined): void {
+    const message = this.currentCheck;
     if (right === undefined) {
       this.pass(message);
     } else {
@@ -141,10 +178,8 @@ export class CheckList {
     }
   }
 
-  assertBeaconProxy(
-    beaconProxy: config.Proxy | undefined,
-    message?: string,
-  ): void {
+  assertBeaconProxy(beaconProxy: config.Proxy | undefined): void {
+    const message = this.currentCheck;
     if (beaconProxy) {
       this.check(
         () =>
@@ -179,10 +214,12 @@ export class CheckList {
       network: this.prefix,
       check: msg,
     };
-    const out = `  ${data.output} | ${data.network}${' '.repeat(
-      15 - data.network.length,
-    )} | ${data.check}${' '.repeat(150 - data.check.length)}|`;
-    console.log(out);
+    const out = `  ${data.output} | ${this.colorNetwork(
+      data.network,
+    )}${' '.repeat(15 - data.network.length)} | ${data.check}${' '.repeat(
+      process.stdout.columns / 2 - data.check.length,
+    )}|`;
+    this.bufferedOutput.push(out);
     this.ok.push(out);
   }
 
@@ -192,12 +229,14 @@ export class CheckList {
         output: chalk.red('[FAIL]'),
         network: this.prefix,
       };
-      const out = `  ${data.output} | ${data.network}${' '.repeat(
-        15 - data.network.length,
-      )} | ${this.currentCheck}${' '.repeat(150 - this.currentCheck.length)}|`;
-      console.log(out);
+      const out = `  ${data.output} | ${this.colorNetwork(
+        data.network,
+      )}${' '.repeat(15 - data.network.length)} | ${
+        this.currentCheck
+      }${' '.repeat(process.stdout.columns / 2 - this.currentCheck.length)}|`;
+      this.bufferedOutput.push(out);
       this.error.push({
-        check: this.currentCheck,
+        message: this.currentCheck,
         error: e,
         network: this.prefix,
       });
@@ -206,15 +245,40 @@ export class CheckList {
         output: chalk.red('[FAIL]'),
         network: this.prefix,
       };
-      const out = `  ${data.output} | ${data.network}${' '.repeat(
-        15 - data.network.length,
-      )} | ${this.currentCheck}${' '.repeat(150 - this.currentCheck.length)}|`;
-      console.log(out);
+      const out = `  ${data.output} | ${this.colorNetwork(
+        data.network,
+      )}${' '.repeat(15 - data.network.length)} | ${
+        this.currentCheck
+      }${' '.repeat(process.stdout.columns / 2 - this.currentCheck.length)}|`;
+      this.bufferedOutput.push(out);
       this.error.push({
         network: this.prefix,
-        check: this.currentCheck,
+        message: this.currentCheck,
         error: e,
       });
+    }
+  }
+
+  colorNetwork(n: string): string {
+    n = chalk.bold(n);
+    if (n.toLowerCase().includes('polygon')) {
+      return chalk.magenta(n);
+    } else if (n.toLowerCase().includes('optimism')) {
+      return chalk.red(n);
+    } else if (n.toLowerCase().includes('ethereum')) {
+      return chalk.blue(n);
+    } else if (n.toLowerCase().includes('goerli')) {
+      return chalk.blueBright(n);
+    } else if (n.toLowerCase().includes('avalanche')) {
+      return chalk.red(n);
+    } else if (n.toLowerCase().includes('evmos')) {
+      return chalk.bgWhiteBright.black(n);
+    } else if (n.toLowerCase().includes('milkomeda')) {
+      return chalk.white(n);
+    } else if (n.toLowerCase().includes('moon')) {
+      return chalk.blueBright(n);
+    } else {
+      return n;
     }
   }
 }
