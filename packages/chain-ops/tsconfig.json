@@ -3,22 +3,16 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "composite": true,
-    /*
-      TODO: should remove "skipLibCheck": true
-
-      Workaround for conflicting identifier 'process' when
-      using a custom.d.ts file and trying to define the
-      process.env variables to avoid lint errors.
-    */
-    "skipLibCheck": true
+    "composite": true
   },
   "exclude": [
-    "./node_modules",
-    "./dist",
-    "./src/tmp.ts"
+    "node_modules",
+    "dist"
   ],
   "include": [
     "src/*.ts"
+  ],
+  "references": [
+    { "path": "../sdk-bridge" },
   ]
 }
