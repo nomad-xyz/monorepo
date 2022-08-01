@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/chain-ops",
-  "version": "2.1.0",
+  "version": "0.0.1",
   "description": "Nomad Manual Processor",
   "keywords": [
     "nomad",
