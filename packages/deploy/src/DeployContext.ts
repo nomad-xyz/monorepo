@@ -375,13 +375,12 @@ export class DeployContext extends MultiProvider<config.Domain> {
   async checkCores(): Promise<CheckList> {
     const out = `  ${chalk.bold('STATUS')} | ${chalk.bold(
       'NETWORK',
-    )}${' '.repeat(13 - 'NETWORK'.length)} | ${chalk.bold('PART')}${' '.repeat(
-      6 - 'PART'.length,
-    )} | ${chalk.bold('PROTOCOL CHECK')}${' '.repeat(
-      process.stdout.columns / 2 - 'PROTOCOL CHECK'.length,
-    )}|`;
+    )}${' '.repeat(15 - 'NETWORK'.length)} | ${chalk.bold('PART')}${' '.repeat(
+      10 - 'PART'.length,
+    )} | ${chalk.bold('PROTOCOL CHECK')}`;
     console.log(out);
-    console.log('');
+    const out2 = `        | ${' '.repeat(15)} | ${' '.repeat(10)} |`;
+    console.log(out2);
     const checklists = await Promise.all(
       this.networks.map(async (net) => {
         const coreConfig = this.data.core[net];
