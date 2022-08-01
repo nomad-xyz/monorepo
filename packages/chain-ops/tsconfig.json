@@ -14,5 +14,6 @@
   ],
   "references": [
     { "path": "../sdk-bridge" },
+    { "path": "../contracts-core" }
   ]
 }
