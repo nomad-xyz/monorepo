@@ -1,4 +1,3 @@
-import { Agents } from "./agent";
 import { NetworkSpecs, ContractConfig, BridgeConfiguration, CoreContracts, BridgeContracts, AppConfig } from '@nomad-xyz/configuration';
 import { DockerizedActor } from "./actor";
 import Dockerode from "dockerode";
@@ -16,10 +15,8 @@ enum DockerNetworkStatus {
   }
 
 export abstract class Network {
-    agents?: Agents;
-
-    name: string;
     domainNumber: number;
+    name: string;
     chainId: number;
     deployOverrides: ethers.Overrides;
 
@@ -131,7 +128,7 @@ export class HardhatNetwork extends Network {
     recoveryManager: string;
     weth: string;
 
-    constructor(name: string, domain: number, options?: HardhatNetworkOptions) {
+    constructor(name: string, domain: number, chainID?: number, options?: HardhatNetworkOptions) {
         super(name, domain, domain);
         this.handler = new DockerizedNetworkActor(this.name);
         this.blockTime = 5;
@@ -198,6 +195,7 @@ export class HardhatNetwork extends Network {
             indexPageSize: 2000,
           }
     }
+
     get config(): ContractConfig {
         return {
             optimisticSeconds: 18,

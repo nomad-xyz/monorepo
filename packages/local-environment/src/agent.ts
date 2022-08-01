@@ -2,8 +2,7 @@ import Docker from "dockerode";
 
 import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
-import { Network } from "./network";
-import { NomadEnv } from "./le";
+import { NomadEnv, NomadDomain } from "./le";
 
 export class Agents {
   updater: Agent;
@@ -12,18 +11,18 @@ export class Agents {
   watchers: Agent[];
   kathy: Agent;
 
-  constructor(network: Network, env: NomadEnv, metricsPort: number) {
-      this.updater = new LocalAgent(AgentType.Updater, network, env, metricsPort);
-      this.relayer = new LocalAgent(AgentType.Relayer, network, env, metricsPort+1);
-      this.processor = new LocalAgent(AgentType.Processor, network, env, metricsPort+2);
-      this.watchers = [new LocalAgent(AgentType.Watcher, network, env, metricsPort+3)];
-      this.kathy = new LocalAgent(AgentType.Kathy, network, env, metricsPort+4);
+  constructor(domain: NomadDomain, env: NomadEnv, metricsPort: number) {
+      this.updater = new LocalAgent(AgentType.Updater, domain, env, metricsPort);
+      this.relayer = new LocalAgent(AgentType.Relayer, domain, env, metricsPort+1);
+      this.processor = new LocalAgent(AgentType.Processor, domain, env, metricsPort+2);
+      this.watchers = [new LocalAgent(AgentType.Watcher, domain, env, metricsPort+3)];
+      this.kathy = new LocalAgent(AgentType.Kathy, domain, env, metricsPort+4);
   }
 }
 
 export interface Agent {
   agentType: AgentType;
-  network: Network;
+  domain: NomadDomain;
 
   connect(): Promise<boolean>;
   start(): Promise<void>;
@@ -83,16 +82,16 @@ function parseAgentType(t: string | AgentType): AgentType {
 
 export class LocalAgent extends DockerizedActor implements Agent {
   agentType: AgentType;
-  network: Network;
+  domain: NomadDomain;
   env: NomadEnv;
   metricsPort: number;
 
-  constructor(agentType: AgentType, network: Network, env: NomadEnv, metricsPort: number) {
+  constructor(agentType: AgentType, domain: NomadDomain, env: NomadEnv, metricsPort: number) {
     agentType = parseAgentType(agentType);
-    super(`${agentType}_${network.name}`, "agent");
+    super(`${agentType}_${domain.name}`, "agent");
     this.agentType = agentType;
 
-    this.network = network;
+    this.domain = domain;
 
     this.env = env;
 
@@ -164,26 +163,26 @@ export class LocalAgent extends DockerizedActor implements Agent {
      switch (this.agentType) {
       case AgentType.Updater: {
          envs.push(
-            `DEFAULT_TXSIGNER_KEY=0x${this.env.getUpdaterKey(this.network)}` //Gets the key after LE assigns off of domainNumber.
+            `DEFAULT_TXSIGNER_KEY=0x${this.domain.getUpdaterKey()}` //Gets the key after LE assigns off of domainNumber.
          );
-         envs.push(`ATTESTATION_SIGNER_KEY=0x${this.env.getSignerKey(this.network)}`); //Important that all agents have unique TXSIGNER keys, but not attestation. Updater uses this key to sign merkle-root transitions.
+         envs.push(`ATTESTATION_SIGNER_KEY=0x${this.domain.getSignerKey()}`); //Important that all agents have unique TXSIGNER keys, but not attestation. Updater uses this key to sign merkle-root transitions.
          break;
        }
       case AgentType.Watcher: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.env.getWatcherKey(this.network)}`);
-        envs.push(`ATTESTATION_SIGNER_KEY=0x${this.env.getSignerKey(this.network)}`); //Watchers use this key to sign attestations of fraudulent roots.
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getWatcherKey()}`);
+        envs.push(`ATTESTATION_SIGNER_KEY=0x${this.domain.getSignerKey()}`); //Watchers use this key to sign attestations of fraudulent roots.
         break;
       }
       case AgentType.Relayer: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.env.getRelayerKey(this.network)}`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getRelayerKey()}`);
         break;
       }
       case AgentType.Kathy: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.env.getKathyKey(this.network)}`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getKathyKey()}`);
         break;
       }
       case AgentType.Processor: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.env.getProcessorKey(this.network)}`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getProcessorKey()}`);
         break;
       }
      };
@@ -206,7 +205,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
       name,
       Cmd: ["./" + this.agentType],
       Env: [
-        `AGENT_HOME_NAME=${this.network.name}`,
+        `AGENT_HOME_NAME=${this.domain.name}`,
         `TOM_CONNECTION_URL=http://localhost:1337`,
         `JERRY_CONNECTION_URL=http://localhost:1338`,
         `METRICS_PORT=${this.metricsPort}`,
