@@ -51,9 +51,6 @@
       "path": "./sdk-bridge"
     },
     {
-      "path": "./monitor"
-    },
-    {
       "path": "./indexer"
     },
     {
