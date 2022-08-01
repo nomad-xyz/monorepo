@@ -24,7 +24,7 @@ export const program = process.env.PROGRAM as Program;
 export const logLevel = (process.env.LOG_LEVEL || 'debug') as BunyanLevel;
 
 // CORE CONFIG
-export const batchSize = parseInt(process.env.BATCH_SIZE || '2000');
+export const batchSize = parseInt(process.env.BATCH_SIZE || '500');
 export const redisUrl = process.env.REDIS_URL || 'redis://redis:6379';
 
 // API CONFIG

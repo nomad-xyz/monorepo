@@ -92,7 +92,7 @@ function txReceiptDecode(encoded: string): ShortTxReceipt {
 }
 
 const BATCH_SIZE = batchSize;
-const RETRIES = 100;
+const RETRIES = 8;
 const TO_BLOCK_LAG = 1;
 const FROM_BLOCK_LAG = 40;
 
@@ -585,7 +585,15 @@ export class Indexer {
         );
 
         const startBatch = new Date();
+        this.logger.info(`Going to fetch events for the batch`, {
+          from: batchFrom,
+          to: batchTo,
+        });
         const events = await fetchEvents(batchFrom, batchTo);
+        this.logger.info(`Fetched events for the batch`, {
+          from: batchFrom,
+          to: batchTo,
+        });
         const finishBatch = new Date();
         if (!events) throw new Error(`KEk`);
         events.sort((a, b) =>
