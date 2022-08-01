@@ -6,19 +6,21 @@ import {
 import { request, gql } from 'graphql-request';
 import { ethers } from 'ethers';
 
+type Env = 'production' | 'staging' | 'development'
+
 // user-defined script values
 const { PRIVATE_KEY, DEST_RPC_URL } = process.env;
 const ORIGIN = 'ethereum';
 const DESTINATION = 'moonbeam';
-const ENV = 'production';
+const ENV: Env = 'production';
 const PAGE_SIZE = 100;
 console.log(`${ENV}: ${ORIGIN} to ${DESTINATION}`);
 
-const nomadAPI = 'https://bridge-indexer.prod.madlads.tools/graphql';
+const NOMAD_API = getApiUrl();
 
 let bridgeContext: BridgeContext;
 
-export type IndexerTx = {
+type IndexerTx = {
   origin: number;
   destination: number;
   leafIndex: string;
@@ -26,8 +28,23 @@ export type IndexerTx = {
   dispatchTx: string;
 };
 
+function getApiUrl(): string {
+  let env = '';
+  switch(ENV) {
+    case 'production':
+      env = 'prod';
+      break;
+    case 'development':
+      env = 'dev';
+      break;
+    default:
+      env = ENV
+  }
+  return `https://bridge-indexer.${env}.madlads.tools/graphql`
+}
+
 // instanitiate BridgeContext, register provider and signer
-export async function init(destination: string | number): Promise<void> {
+async function init(destination: string | number): Promise<void> {
   bridgeContext = await BridgeContext.fetch(ENV);
   if (DEST_RPC_URL) {
     const destDomain = bridgeContext.resolveDomain(destination);
@@ -78,13 +95,13 @@ export async function getUnprocessed(
         leafIndex
       }
     }`;
-  return await request(nomadAPI, query, variables).then(
+  return await request(NOMAD_API, query, variables).then(
     (res) => res.findManyMessages,
   );
 }
 
 // loop over transactions in a batch and process each one, continue if there is an error
-export async function processBatch(
+async function processBatch(
   origin: string | number,
   txArray: IndexerTx[],
 ): Promise<void> {
@@ -108,7 +125,7 @@ export async function processBatch(
 }
 
 // query and submit batches for all pending transactions
-export async function processAll(
+async function processAll(
   origin: string | number,
   destination: string | number,
 ): Promise<void> {
