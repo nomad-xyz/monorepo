@@ -6,7 +6,7 @@ import {
 import { request, gql } from 'graphql-request';
 import { ethers } from 'ethers';
 
-type Env = 'production' | 'staging' | 'development'
+type Env = 'production' | 'staging' | 'development';
 
 // user-defined script values
 const { PRIVATE_KEY, DEST_RPC_URL } = process.env;
@@ -30,7 +30,7 @@ type IndexerTx = {
 
 function getApiUrl(): string {
   let env = '';
-  switch(ENV) {
+  switch (ENV) {
     case 'production':
       env = 'prod';
       break;
@@ -38,9 +38,9 @@ function getApiUrl(): string {
       env = 'dev';
       break;
     default:
-      env = ENV
+      env = ENV;
   }
-  return `https://bridge-indexer.${env}.madlads.tools/graphql`
+  return `https://bridge-indexer.${env}.madlads.tools/graphql`;
 }
 
 // instanitiate BridgeContext, register provider and signer
@@ -108,8 +108,10 @@ async function processBatch(
   console.log(`processing batch of ${txArray.length} transactions`);
   for (let i = 0; i < txArray.length; i++) {
     const transaction = txArray[i];
-      try {
-      console.log(`processing ${transaction.dispatchTx} - ${i} of ${txArray.length}`);
+    try {
+      console.log(
+        `processing ${transaction.dispatchTx} - ${i} of ${txArray.length}`,
+      );
       const message: TransferMessage =
         await BridgeMessage.singleFromTransactionHash(
           bridgeContext,
