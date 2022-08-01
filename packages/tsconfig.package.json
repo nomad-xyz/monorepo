@@ -39,7 +39,7 @@
       "path": "./local-environment"
     },
     {
-      "path": "./manual-processor"
+      "path": "./chain-ops"
     },
     {
       "path": "./multi-provider"

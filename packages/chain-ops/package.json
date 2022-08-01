@@ -1,5 +1,5 @@
 {
-  "name": "@nomad-xyz/manual-processor",
+  "name": "@nomad-xyz/chain-ops",
   "version": "2.1.0",
   "description": "Nomad Manual Processor",
   "keywords": [
@@ -27,7 +27,7 @@
     "check": "tsc --noEmit",
     "lint": "eslint --fix ./src",
     "prettier": "prettier --write ./src",
-    "manual-process": "npx ts-node ./src/index.ts"
+    "manual-process": "npx ts-node ./src/manual-process.ts"
   },
   "dependencies": {
     "@nomad-xyz/sdk-bridge": "workspace:^",
