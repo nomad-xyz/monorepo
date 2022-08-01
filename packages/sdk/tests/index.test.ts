@@ -5,6 +5,8 @@ import { NomadContext } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
 
 const ENVIRONMENTS = ['development', 'staging', 'production'];
+const domainA = 1001;
+const domainB = 3001;
 
 describe('NomadContext', () => {
   it('fetches from hosted configs', async () => {
@@ -73,12 +75,12 @@ describe('NomadContext', () => {
 
   it('gets replica by name or domain', () => {
     const context = new NomadContext('development');
-    context.registerRpcProvider(2001, 'http://dummy-rpc-url');
-    context.registerRpcProvider(3001, 'http://dummy-rpc-url');
-    const core = context.mustGetCore(2001);
-    const replica = core.getReplica(3001);
+    context.registerRpcProvider(domainA, 'http://dummy-rpc-url');
+    context.registerRpcProvider(domainB, 'http://dummy-rpc-url');
+    const core = context.mustGetCore(domainA);
+    const replica = core.getReplica(domainB);
     expect(replica).to.not.be.undefined;
-    const replicaFor = context.getReplicaFor(2001, 3001);
+    const replicaFor = context.getReplicaFor(domainA, domainB);
     expect(replicaFor).to.not.be.undefined;
   });
 
@@ -90,13 +92,13 @@ describe('NomadContext', () => {
     context.domainNames.forEach((domain) => {
       context.registerProvider(domain, provider);
     });
-    context.registerSigner(2001, signer);
-    context.registerSigner(3001, signer);
-    context.unregisterSigner(2001);
-    expect(context.getConnection(2001)).to.not.be.undefined;
+    context.registerSigner(domainA, signer);
+    context.registerSigner(domainB, signer);
+    context.unregisterSigner(domainA);
+    expect(context.getConnection(domainA)).to.not.be.undefined;
     context.clearSigners();
-    expect(context.getConnection(2001)).to.not.be.undefined;
-    expect(context.getConnection(3001)).to.not.be.undefined;
+    expect(context.getConnection(domainA)).to.not.be.undefined;
+    expect(context.getConnection(domainB)).to.not.be.undefined;
   });
 });
 
