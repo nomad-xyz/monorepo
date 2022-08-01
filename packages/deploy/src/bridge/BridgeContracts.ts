@@ -383,7 +383,6 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const tx = await this.bridgeRouterContract.enrollRemoteRouter(
       remoteDomain,
       utils.canonizeId(remoteRouter),
-      this.overrides,
     );
     await tx.wait(this.confirmations);
     return;
@@ -430,7 +429,6 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
         const beacon = await beaconFactory.deploy(
           implementation,
           controller.address,
-          this.overrides,
         );
         await beacon.deployTransaction.wait(this.confirmations);
 
@@ -445,7 +443,6 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
         // pre-emptively transfer ownership of controller to governance
         const relinquish = await controller.transferOwnership(
           core.governanceRouter.address,
-          this.overrides,
         );
         await relinquish.wait(this.confirmations);
 
@@ -505,7 +502,6 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
           custom.token.domain,
           utils.canonizeId(custom.token.id),
           proxy.address,
-          this.overrides,
         );
         await enroll.wait(this.confirmations);
         return [];
@@ -530,7 +526,6 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       log(`transfer token registry ownership on ${name}`);
       const tx = await this.tokenRegistryContract.transferOwnership(
         this.bridgeRouterContract.address,
-        this.overrides,
       );
       await tx.wait(this.confirmations);
     }

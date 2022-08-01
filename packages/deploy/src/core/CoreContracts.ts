@@ -699,7 +699,6 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       const tx = await this.governanceRouter.transferGovernor(
         governor.domain,
         utils.evmId(governor.id),
-        this.overrides,
       );
       await tx.wait(this.confirmations);
     }
