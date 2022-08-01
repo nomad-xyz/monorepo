@@ -28,7 +28,7 @@ export type IndexerTx = {
 
 // instanitiate BridgeContext, register provider and signer
 export async function init(destination: string | number): Promise<void> {
-  const bridgeContext = await BridgeContext.fetch(ENV);
+  bridgeContext = await BridgeContext.fetch(ENV);
   if (DEST_RPC_URL) {
     const destDomain = bridgeContext.resolveDomain(destination);
     bridgeContext.registerRpcProvider(destDomain, DEST_RPC_URL);
