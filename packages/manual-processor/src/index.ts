@@ -6,11 +6,17 @@ import {
 import { request, gql } from 'graphql-request';
 import { ethers } from 'ethers';
 
+// user-defined script values
 const { PRIVATE_KEY, DEST_RPC_URL } = process.env;
+const ORIGIN = 'ethereum';
+const DESTINATION = 'moonbeam';
 const ENV = 'production';
+const PAGE_SIZE = 100;
+console.log(`${ENV}: ${ORIGIN} to ${DESTINATION}`);
+
 const nomadAPI = 'https://bridge-indexer.prod.madlads.tools/graphql';
+
 let bridgeContext: BridgeContext;
-console.log(ENV);
 
 export type IndexerTx = {
   origin: number;
@@ -32,9 +38,9 @@ export async function init(destination: string | number): Promise<void> {
   if (!PRIVATE_KEY) {
     throw new Error('No private key configured');
   }
-  const provider = bridgeContext.getProvider('moonbeam');
+  const provider = bridgeContext.getProvider(destination);
   const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
-  bridgeContext.registerSigner('moonbeam', wallet);
+  bridgeContext.registerSigner(destination, wallet);
   console.log('bridgeContext initiated');
 }
 
@@ -42,14 +48,9 @@ export async function init(destination: string | number): Promise<void> {
 export async function getUnprocessed(
   origin: string | number,
   destination: string | number,
-  size: number,
   page: number,
 ): Promise<Array<IndexerTx>> {
-  let take = size;
-  if (!size || size > 100) {
-    take = 100;
-  }
-  const skip = (page - 1) * take;
+  const skip = (page - 1) * PAGE_SIZE;
 
   const originDomain = bridgeContext.resolveDomain(origin);
   const destDomain = bridgeContext.resolveDomain(destination);
@@ -69,7 +70,7 @@ export async function getUnprocessed(
   });
   const query = gql`
     query Query($where: MessagesWhereInput) {
-      findManyMessages(where: $where, take: ${take}, skip: ${skip}) {
+      findManyMessages(where: $where, take: ${PAGE_SIZE}, skip: ${skip}) {
         dispatchTx
         origin
         destination
@@ -88,9 +89,10 @@ export async function processBatch(
   txArray: IndexerTx[],
 ): Promise<void> {
   console.log(`processing batch of ${txArray.length} transactions`);
-  for (const transaction of txArray) {
-    try {
-      console.log(`fprocessing ${transaction.dispatchTx}`);
+  for (let i = 0; i < txArray.length; i++) {
+    const transaction = txArray[i];
+      try {
+      console.log(`processing ${transaction.dispatchTx} - ${i} of ${txArray.length}`);
       const message: TransferMessage =
         await BridgeMessage.singleFromTransactionHash(
           bridgeContext,
@@ -113,7 +115,7 @@ export async function processAll(
   let queryNextBatch = true;
   let page = 1;
   while (queryNextBatch) {
-    const txArray = await getUnprocessed(origin, destination, 100, page);
+    const txArray = await getUnprocessed(origin, destination, page);
     if (txArray.length > 0) {
       await processBatch(origin, txArray);
       page += 1;
@@ -125,10 +127,7 @@ export async function processAll(
 }
 
 async function start() {
-  const origin = 'ethereum';
-  const destination = 'moonbeam';
-  await init(destination);
-
-  await processAll(origin, destination);
+  await init(DESTINATION);
+  await processAll(ORIGIN, DESTINATION);
 }
 start();
