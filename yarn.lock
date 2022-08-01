@@ -1525,6 +1525,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nomad-xyz/configuration@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "@nomad-xyz/configuration@npm:0.1.0"
+  checksum: b75f717e130e42b4fcae7924db99b1ef72c11dab2ce12bd81f41f73500b82da7d43b4a21adcb6481a351ca92754f8ed166cff88e9bd4bbffde7678dcf02b913d
+  languageName: node
+  linkType: hard
+
 "@nomad-xyz/configuration@npm:^0.1.0-rc.23":
   version: 0.1.0-rc.25
   resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.25"
@@ -1818,7 +1825,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.23
+    "@nomad-xyz/configuration": ^0.1.0
     "@nomad-xyz/contracts-bridge": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"
     "@types/chai": ^4.2.21
@@ -1847,7 +1854,7 @@ __metadata:
     "@gnosis.pm/safe-core-sdk": ^2.0.0
     "@gnosis.pm/safe-ethers-adapters": ^0.1.0-alpha.8
     "@gnosis.pm/safe-ethers-lib": ^1.0.0
-    "@nomad-xyz/configuration": ^0.1.0-rc.23
+    "@nomad-xyz/configuration": ^0.1.0
     "@nomad-xyz/sdk": "workspace:^"
     "@types/chai": ^4.2.21
     "@types/mocha": ^9.1.0
@@ -1873,7 +1880,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.23
+    "@nomad-xyz/configuration": ^0.1.0
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/local-environment": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
