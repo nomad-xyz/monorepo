@@ -340,10 +340,10 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An record of all events and correlating txs
    */
   async status(): Promise<MessageStatus | undefined> {
-    if (this.eventCache.processed) return MessageStatus.processed;
+    if (this.eventCache.processed) return MessageStatus.Processed;
     const confirmAt = await this.confirmAt();
     const now = Date.now() / 1000;
-    if (confirmAt && confirmAt < now) return MessageStatus.relayed;
+    if (confirmAt && confirmAt < now) return MessageStatus.Relayed;
     return (await this._events()).state;
   }
 
@@ -475,8 +475,7 @@ export class NomadMessage<T extends NomadContext> {
     if (!uri) throw new Error('No s3 configuration');
     const response = await fetch(uri);
     if (!response) throw new Error('Unable to fetch proof');
-    const { data, status, statusText } = await response.json();
-    if (status !== 200) throw new Error(statusText);
+    const data = await response.json();
     if (data.proof && data.message) return data;
     throw new Error('Server returned invalid proof');
   }

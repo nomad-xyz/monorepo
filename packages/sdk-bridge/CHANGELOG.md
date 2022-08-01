@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### 1.1.1
+
+- fix: getProof error, MessageStatus enum
+
 ### 1.1.0
 
 - (major) refactor: change message status to a tagged union instead of an enum,
