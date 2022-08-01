@@ -36,14 +36,13 @@ export interface checkError {
 
 export class CheckList {
   prefix: string; // prefix for all messages in this checklist
+  part: string;
   ok: string[]; // successful items
   error: checkError[]; // failed items with associated error from chai assertion or plain error
   //
   currentCheck: string;
 
   checksToRun: checkToRun[];
-
-  bufferedOutput: string[];
 
   addCheck(check: checkToRun) {
     this.currentCheck = check.msg;
@@ -63,13 +62,13 @@ export class CheckList {
     this.checksToRun.length = 0;
   }
 
-  constructor(prefix: string | void) {
+  constructor(prefix: string | void, part: string | void) {
     this.prefix = prefix ? prefix : '';
+    this.part = part ? part : '';
     this.ok = [];
     this.error = [];
     this.currentCheck = '';
     this.checksToRun = [];
-    this.bufferedOutput = [];
   }
 
   static combine(lists: CheckList[]): CheckList {
@@ -83,26 +82,24 @@ export class CheckList {
 
   output(): void {
     if (this.hasErrors()) {
-      this.bufferedOutput.push(
+      console.log(
         `\nTest result: ${chalk.red('FAIL')} | ${this.ok.length} Passed, ${
           this.error.length
         } Failed.`,
       );
-      this.bufferedOutput.push(`\n ${chalk.bold('Errors')} \n`);
+      console.log(`\n ${chalk.bold('Errors')} \n`);
       this.error.map((error) => {
         this.colorNetwork(error.network);
-        this.bufferedOutput.push(`Check: ${chalk.red(error.message)}`);
-        this.bufferedOutput.push(error.error);
+        console.log(`Check: ${chalk.red(error.message)}`);
+        console.log(error.error);
       });
     } else {
-      this.bufferedOutput.push(
+      console.log(
         `\nTest result: ${chalk.green('OK')} | ${
           this.ok.length
         } Checks Passed!`,
       );
     }
-    this.bufferedOutput.sort();
-    this.bufferedOutput.forEach(console.log);
   }
 
   check(f: () => void, message: string): void {
@@ -184,18 +181,18 @@ export class CheckList {
       this.check(
         () =>
           expect(beaconProxy.beacon, this.prefix + message).to.not.be.undefined,
-        message + ' beacon',
+        `${message} -- beacon`,
       );
       this.check(
         () =>
           expect(beaconProxy.proxy, this.prefix + message).to.not.be.undefined,
-        message + ' proxy',
+        `${message} -- proxy`,
       );
       this.check(
         () =>
           expect(beaconProxy.implementation, this.prefix + message).to.not.be
             .undefined,
-        message + ' implementation',
+        `${message} -- implementation`,
       );
     } else {
       this.fail(message + ' beacon is undefined');
@@ -209,54 +206,32 @@ export class CheckList {
   }
 
   pass(msg: string): void {
-    const data = {
-      output: chalk.green('[PASS]'),
-      network: this.prefix,
-      check: msg,
-    };
-    const out = `  ${data.output} | ${this.colorNetwork(
-      data.network,
-    )}${' '.repeat(15 - data.network.length)} | ${data.check}${' '.repeat(
-      process.stdout.columns / 2 - data.check.length,
-    )}|`;
-    this.bufferedOutput.push(out);
+    const out = this.formatCheck('success', msg);
+    console.log(out);
     this.ok.push(out);
   }
 
   fail(e: string | unknown): void {
-    if (typeof e == 'string') {
-      const data = {
-        output: chalk.red('[FAIL]'),
-        network: this.prefix,
-      };
-      const out = `  ${data.output} | ${this.colorNetwork(
-        data.network,
-      )}${' '.repeat(15 - data.network.length)} | ${
-        this.currentCheck
-      }${' '.repeat(process.stdout.columns / 2 - this.currentCheck.length)}|`;
-      this.bufferedOutput.push(out);
-      this.error.push({
-        message: this.currentCheck,
-        error: e,
-        network: this.prefix,
-      });
-    } else {
-      const data = {
-        output: chalk.red('[FAIL]'),
-        network: this.prefix,
-      };
-      const out = `  ${data.output} | ${this.colorNetwork(
-        data.network,
-      )}${' '.repeat(15 - data.network.length)} | ${
-        this.currentCheck
-      }${' '.repeat(process.stdout.columns / 2 - this.currentCheck.length)}|`;
-      this.bufferedOutput.push(out);
-      this.error.push({
-        network: this.prefix,
-        message: this.currentCheck,
-        error: e,
-      });
+    const out = this.formatCheck('fail', this.currentCheck);
+    console.log(out);
+    this.error.push({
+      network: this.prefix,
+      message: this.currentCheck,
+      error: e,
+    });
+  }
+  formatCheck(status: string, msg: string): string {
+    if (status == 'pending') {
+      status = chalk.white('[PENDING]');
+    } else if (status == 'success') {
+      status = chalk.green('[PASS]');
+    } else if (status == 'fail') {
+      status = chalk.red('[FAIL]');
     }
+    const out = `  ${status} | ${this.colorNetwork(this.prefix)}${' '.repeat(
+      15 - this.prefix.length,
+    )} | ${this.part}${' '.repeat(10 - this.part.length)} | ${msg}`;
+    return out;
   }
 
   colorNetwork(n: string): string {

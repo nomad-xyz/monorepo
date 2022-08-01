@@ -4,6 +4,7 @@ import { NomadContext } from '@nomad-xyz/sdk';
 import { CallBatch } from '@nomad-xyz/sdk-govern';
 import { expect } from 'chai';
 import ethers from 'ethers';
+import chalk from 'chalk';
 
 import BridgeContracts from './bridge/BridgeContracts';
 import CoreContracts from './core/CoreContracts';
@@ -356,6 +357,13 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
   // perform validation checks on core and bridges
   async checkDeployment(): Promise<void> {
+    console.log();
+    console.log(chalk.bold.black(`NOMAD DEPLOYMENT CHECK`));
+    console.log(
+      `Environment: ${chalk.green(this.data.environment.toUpperCase())}`,
+    );
+    console.log(``);
+    console.log();
     const core = await this.checkCores();
     const bridge = await this.checkBridges();
     // combine core and bridge checks
@@ -365,6 +373,15 @@ export class DeployContext extends MultiProvider<config.Domain> {
   }
 
   async checkCores(): Promise<CheckList> {
+    const out = `  ${chalk.bold('STATUS')} | ${chalk.bold(
+      'NETWORK',
+    )}${' '.repeat(13 - 'NETWORK'.length)} | ${chalk.bold('PART')}${' '.repeat(
+      6 - 'PART'.length,
+    )} | ${chalk.bold('PROTOCOL CHECK')}${' '.repeat(
+      process.stdout.columns / 2 - 'PROTOCOL CHECK'.length,
+    )}|`;
+    console.log(out);
+    console.log('');
     const checklists = await Promise.all(
       this.networks.map(async (net) => {
         const coreConfig = this.data.core[net];

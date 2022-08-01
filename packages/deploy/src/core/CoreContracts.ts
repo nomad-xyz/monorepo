@@ -709,7 +709,7 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     remoteDomains: string[],
     governorDomain: number,
   ): Promise<CheckList> {
-    const checklist = new CheckList(`${this.domain.toUpperCase()}`);
+    const checklist = new CheckList(`${this.domain.toUpperCase()}`, 'CORE');
     // What's the purpose of this checks? If I remove them from from the config, I get an error from parsing the config
     checklist.addCheck({
       msg: `Home for domain ${this.domain}`,
@@ -962,13 +962,14 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
       if (remoteDomains.length > 0) {
         // expect all replicas to have to same implementation and upgradeBeacon
         // @ts-ignore: Object is possibly 'null'.
-        const firstReplica = replicas[remoteDomains[0]];
-        const replicaImpl = firstReplica.implementation;
-        const replicaBeacon = firstReplica.beacon;
         remoteDomains.slice(1).forEach((remoteDomain) => {
           checklist.addCheck({
             msg: `Replica for ${remoteDomain} has the same implementation`,
             check: async () => {
+              const replicas = this.data.replicas;
+              // @ts-ignore: Object is possibly 'null'.
+              const firstReplica = replicas[remoteDomains[0]];
+              const replicaImpl = firstReplica.implementation;
               // @ts-ignore: Object is possibly 'null'.
               const replica = replicas[remoteDomain];
               const implementation = replica.implementation;
@@ -978,6 +979,10 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
           checklist.addCheck({
             msg: `Replica for ${remoteDomain} has the same beacon`,
             check: async () => {
+              const replicas = this.data.replicas;
+              // @ts-ignore: Object is possibly 'null'.
+              const firstReplica = replicas[remoteDomains[0]];
+              const replicaBeacon = firstReplica.beacon;
               // @ts-ignore: Object is possibly 'null'.
               const replica = replicas[remoteDomain];
               const beacon = replica.beacon;
@@ -1045,88 +1050,72 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         checklist.exists(this.context.protocol);
       },
     });
-    checklist.executeChecks();
-    // @ts-ignore: Object is possibly 'null'.
-    if (
-      checklist.error.length == 0 ||
-      // @ts-ignore: Object is possibly 'null'.
-      checklist.error.at(-1).message != checklist.currentCheck
-    ) {
-      checklist.addCheck({
-        msg: 'Governor Address is set',
-        check: async () => {
-          const govId = await this.governanceRouter.governor();
-          // @ts-ignore: Object is possibly 'null'.
-          const expectedGovId = isGovernor
-            ? // @ts-ignore: Object is possibly 'null'.
-              this.context.protocol.governor.id
-            : ethers.constants.AddressZero;
-          checklist.equals(expectedGovId, govId);
-        },
-      });
-
-      checklist.addCheck({
-        msg: 'Governor Domain set',
-        check: async () => {
-          const govDomain = await this.governanceRouter.governorDomain();
-          // @ts-ignore: Object is possibly 'null'.
-          const expectedGovDomain = this.context.protocol.governor.domain;
-          checklist.equals(expectedGovDomain, govDomain);
-        },
-      });
-
-      checklist.addCheck({
-        msg: 'xAppConnectionManager is deployed',
-        check: async () => {
-          this.data.xAppConnectionManager;
-        },
-      });
-      await checklist.executeChecks();
-      if (
-        checklist.error.length === 0 ||
+    checklist.addCheck({
+      msg: 'Governor Address is set',
+      check: async () => {
+        const govId = await this.governanceRouter.governor();
         // @ts-ignore: Object is possibly 'null'.
-        checklist.error.at(-1).message != checklist.currentCheck
-      ) {
-        checklist.addCheck({
-          msg: "Governance Router's xAppConnectionManager is configured",
-          check: async () => {
-            const xAppConnectionManager =
-              await this.governanceRouter.xAppConnectionManager();
-            checklist.equalIds(
-              // @ts-ignore: Object is possibly 'null'.
-              this.data.xAppConnectionManager.toString(),
-              xAppConnectionManager,
-            );
-          },
-        });
-      }
-      // Governance Routers enrolled
-      for (const domain of remoteDomains) {
-        checklist.addCheck({
-          msg: `GovernanceRouter for ${domain} is enrolled`,
-          check: async () => {
-            const remoteDomainNumber =
-              this.context.mustGetDomain(domain).domain;
-            const remoteRouter = await this.governanceRouter.routers(
-              remoteDomainNumber,
-            );
-            checklist.equalIds(
-              this.context.mustGetCore(domain).governanceRouter.address,
-              remoteRouter,
-            );
-          },
-        });
-      }
-      //  ========= UpgradeBeaconController =========
-      // owner
+        const expectedGovId = isGovernor
+          ? // @ts-ignore: Object is possibly 'null'.
+            this.context.protocol.governor.id
+          : ethers.constants.AddressZero;
+        checklist.equals(expectedGovId, govId);
+      },
+    });
+
+    checklist.addCheck({
+      msg: 'Governor Domain set',
+      check: async () => {
+        const govDomain = await this.governanceRouter.governorDomain();
+        // @ts-ignore: Object is possibly 'null'.
+        const expectedGovDomain = this.context.protocol.governor.domain;
+        checklist.equals(expectedGovDomain, govDomain);
+      },
+    });
+
+    checklist.addCheck({
+      msg: 'xAppConnectionManager is deployed',
+      check: async () => {
+        this.data.xAppConnectionManager;
+      },
+    });
+    checklist.addCheck({
+      msg: "Governance Router's xAppConnectionManager is configured",
+      check: async () => {
+        const xAppConnectionManager =
+          await this.governanceRouter.xAppConnectionManager();
+        checklist.equalIds(
+          // @ts-ignore: Object is possibly 'null'.
+          this.data.xAppConnectionManager.toString(),
+          xAppConnectionManager,
+        );
+      },
+    });
+    // Governance Routers enrolled
+    for (const domain of remoteDomains) {
       checklist.addCheck({
-        msg: 'UpgradeBeacon Controller is owned by the Governance Router',
+        msg: `Governance Router for ${domain} is enrolled`,
         check: async () => {
-          const beaconOwner = await this.upgradeBeaconController.owner();
-          checklist.equalIds(beaconOwner, this.governanceRouter.address);
+          const remoteDomainNumber = this.context.mustGetDomain(domain).domain;
+          const remoteRouter = await this.governanceRouter.routers(
+            remoteDomainNumber,
+          );
+          checklist.equalIds(
+            this.context.mustGetCore(domain).governanceRouter.address,
+            remoteRouter,
+          );
         },
       });
     }
+    //  ========= UpgradeBeaconController =========
+    // owner
+    checklist.addCheck({
+      msg: 'UpgradeBeacon Controller is owned by the Governance Router',
+      check: async () => {
+        const beaconOwner = await this.upgradeBeaconController.owner();
+        checklist.equalIds(beaconOwner, this.governanceRouter.address);
+      },
+    });
     await checklist.executeChecks();
     return checklist;
   }
