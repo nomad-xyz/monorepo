@@ -571,6 +571,7 @@ export class Indexer {
       const domain2batchSize = new Map([
         [1650811245, 500],
         [6648936, 5000],
+        [8881, 500],
       ]);
 
       const batchSize = domain2batchSize.get(this.domain) || BATCH_SIZE;
