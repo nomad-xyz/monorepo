@@ -42,6 +42,8 @@ export class CheckList {
   //
   currentCheck: string;
 
+  outputString: string;
+
   checksToRun: checkToRun[];
 
   addCheck(check: checkToRun) {
@@ -58,6 +60,7 @@ export class CheckList {
         this.fail(e);
       }
     }
+    process.stdout.write(this.outputString);
     // Empty queue of checks that have not ran
     this.checksToRun.length = 0;
   }
@@ -69,6 +72,7 @@ export class CheckList {
     this.error = [];
     this.currentCheck = '';
     this.checksToRun = [];
+    this.outputString = '';
   }
 
   static combine(lists: CheckList[]): CheckList {
@@ -207,13 +211,15 @@ export class CheckList {
 
   pass(msg: string): void {
     const out = this.formatCheck('success', msg);
-    console.log(out);
+    this.outputString = `${this.outputString}${out}\n`;
+    // console.log(out);
     this.ok.push(out);
   }
 
   fail(e: string | unknown): void {
     const out = this.formatCheck('fail', this.currentCheck);
-    console.log(out);
+    // console.log(out);
+    this.outputString = `${this.outputString}${out}\n`;
     this.error.push({
       network: this.prefix,
       message: this.currentCheck,

@@ -712,31 +712,31 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     const checklist = new CheckList(`${this.domain.toUpperCase()}`, 'CORE');
     // What's the purpose of this checks? If I remove them from from the config, I get an error from parsing the config
     checklist.addCheck({
-      msg: `Home for domain ${this.domain}`,
+      msg: `Home for domain ${this.domain} exists`,
       check: () => {
         checklist.exists(this.data.home);
       },
     });
     checklist.addCheck({
-      msg: `UpdaterManager for domain ${this.domain}}`,
+      msg: `UpdaterManager exists`,
       check: () => {
         checklist.exists(this.data.updaterManager);
       },
     });
     checklist.addCheck({
-      msg: `GovernanceRouter for domain ${this.domain}`,
+      msg: `GovernanceRouter exists`,
       check: () => {
         checklist.exists(this.data.governanceRouter);
       },
     });
     checklist.addCheck({
-      msg: `upgradeBeaconController for domain ${this.domain}`,
+      msg: `upgradeBeaconController `,
       check: () => {
         checklist.exists(this.data.upgradeBeaconController);
       },
     });
     checklist.addCheck({
-      msg: `xAppConnectionManager for domain ${this.domain}`,
+      msg: `xAppConnectionManager `,
       check: () => {
         checklist.exists(this.data.xAppConnectionManager);
       },
@@ -882,7 +882,9 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     ) {
       for (const remoteDomain of remoteDomains) {
         checklist.addCheck({
-          msg: `Replica for ${remoteDomain} is deployed`,
+          msg: `Replica for ${checklist.colorNetwork(
+            remoteDomain,
+          )} is deployed`,
           check: async () => {
             // We know replicas is not null, because the previous check
             const replicas = this.data.replicas;
@@ -895,7 +897,9 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
           this.context.mustGetDomain(remoteDomain).domain;
         // replicaToDomain
         checklist.addCheck({
-          msg: `Replica for ${remoteDomain} is configured in the xAppConnectionManager replicaToDomain mapping`,
+          msg: `Replica for ${checklist.colorNetwork(
+            remoteDomain,
+          )} is configured in the xAppConnectionManager replicaToDomain mapping`,
           check: async () => {
             const replicas = this.data.replicas;
             const assumedDomain =
@@ -908,7 +912,9 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         });
         // domainToReplica
         checklist.addCheck({
-          msg: `Replica for ${remoteDomain} is configured in the xAppConnectionManager domainToReplica mapping`,
+          msg: `Replica for ${checklist.colorNetwork(
+            remoteDomain,
+          )} is configured in the xAppConnectionManager domainToReplica mapping`,
           check: async () => {
             const replicas = this.data.replicas;
             const assumedREplicaAddress =
@@ -942,7 +948,9 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         const remoteConfig = this.context.mustGetDomainConfig(remoteDomain);
         const replica = this.getReplica(remote);
         checklist.addCheck({
-          msg: `Replica of ${remoteDomain} - updater is correctly configured`,
+          msg: `Replica of ${checklist.colorNetwork(
+            remoteDomain,
+          )} - updater is correctly configured`,
           check: async () => {
             const replicaUpdater = await replica.updater();
             checklist.equalIds(
@@ -952,7 +960,9 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
           },
         });
         checklist.addCheck({
-          msg: `Replica of ${remoteDomain} - owner is Governance Router`,
+          msg: `Replica of ${checklist.colorNetwork(
+            remoteDomain,
+          )} - owner is Governance Router`,
           check: async () => {
             const replicaOwner = await replica.owner();
             checklist.equalIds(replicaOwner, this.governanceRouter.address);
@@ -964,7 +974,9 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
         // @ts-ignore: Object is possibly 'null'.
         remoteDomains.slice(1).forEach((remoteDomain) => {
           checklist.addCheck({
-            msg: `Replica for ${remoteDomain} has the same implementation`,
+            msg: `Replica for ${checklist.colorNetwork(
+              remoteDomain,
+            )} has the same implementation`,
             check: async () => {
               const replicas = this.data.replicas;
               // @ts-ignore: Object is possibly 'null'.
@@ -977,7 +989,9 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
             },
           });
           checklist.addCheck({
-            msg: `Replica for ${remoteDomain} has the same beacon`,
+            msg: `Replica for ${checklist.colorNetwork(
+              remoteDomain,
+            )} has the same beacon`,
             check: async () => {
               const replicas = this.data.replicas;
               // @ts-ignore: Object is possibly 'null'.
@@ -1094,7 +1108,9 @@ export default class EvmCoreDeploy extends AbstractCoreDeploy<config.EvmCoreCont
     // Governance Routers enrolled
     for (const domain of remoteDomains) {
       checklist.addCheck({
-        msg: `Governance Router for ${domain} is enrolled`,
+        msg: `Governance Router for ${checklist.colorNetwork(
+          domain,
+        )} is enrolled`,
         check: async () => {
           const remoteDomainNumber = this.context.mustGetDomain(domain).domain;
           const remoteRouter = await this.governanceRouter.routers(
