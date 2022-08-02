@@ -7,6 +7,8 @@ import { Key } from "./key";
 import {  } from "@nomad-xyz/configuration";
 //import { getContractAddress } from "ethers/lib/utils";
 
+// A Network is any arbitrary blockchain, local or testnet.
+
 enum DockerNetworkStatus {
     Running,
     Stopped,
@@ -24,6 +26,13 @@ export abstract class Network {
     bridgeContracts?: BridgeContracts;
     bridgeGui?: AppConfig;
 
+    handler: DockerizedNetworkActor;
+
+    updater: string;
+    watcher: string;
+    recoveryManager: string;
+    weth: string;
+
     abstract get specs(): NetworkSpecs;
     abstract get rpcs(): string[];
     abstract get config(): ContractConfig;
@@ -39,8 +48,12 @@ export abstract class Network {
         this.name = name;
         this.domainNumber = domainNumber;
         this.chainId = chainId;
+        this.handler = new DockerizedNetworkActor(this.name);
         this.deployOverrides = { gasLimit: 30000000 };
-        
+        this.updater = "";
+        this.watcher = "";
+        this.recoveryManager = "";
+        this.weth = "";
     }
 
     get isDeployed(): boolean {
@@ -125,22 +138,12 @@ export class HardhatNetwork extends Network {
     keys: Key[];
     handler: DockerizedNetworkActor;
 
-    updater: string;
-    watcher: string;
-    recoveryManager: string;
-    weth: string;
-
-    constructor(name: string, domain: number, chainID?: number, options?: HardhatNetworkOptions) {
+    constructor(name: string, domain: number, options?: HardhatNetworkOptions) {
         super(name, domain, domain);
         this.handler = new DockerizedNetworkActor(this.name);
         this.blockTime = 5;
         this.firstStart = false;
         this.keys = options?.keys || [];
-
-        this.updater = "";
-        this.watcher = "";
-        this.recoveryManager = "";
-        this.weth = "";
     }
 
     /* TODO: reimplement abstractions for MULTIPLE hardhat networks (i.e. any Nomad domain).
@@ -177,13 +180,6 @@ export class HardhatNetwork extends Network {
 
     get rpcs(): string[] {
         return [`http://localhost:${this.handler.port}`];
-    }
-
-    //Used for governor settings on this.updater, this.watcher, this.recoveryManager
-    setGovernanceAddresses(key: Key) {
-      this.updater = key.toAddress();
-      this.watcher = key.toAddress();
-      this.recoveryManager = key.toAddress();
     }
 
     get specs(): NetworkSpecs {

@@ -1,5 +1,4 @@
 import { NomadLocator, NomadConfig } from "@nomad-xyz/configuration";
-import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import * as dotenv from 'dotenv';
 import { DeployContext } from "../../deploy/src/DeployContext";
 import * as ethers from 'ethers';
@@ -8,6 +7,8 @@ import fs from 'fs';
 import bunyan from 'bunyan';
 import { Key } from './key';
 import { NomadDomain } from './domain';
+import { Agents } from "./agent";
+import { HardhatNetwork } from "./network";
 
 dotenv.config();
 
@@ -16,8 +17,6 @@ export class NomadEnv {
     governor: NomadLocator;
 
     log = bunyan.createLogger({name: 'localenv'});
-
-    multiprovider ?: BridgeContext; //@move to nomaddomain
 
     constructor(governor: NomadLocator) {
         this.domains = [];
@@ -31,14 +30,9 @@ export class NomadEnv {
     
     // Gets governing network
     get govNetwork(): NomadDomain {
-        const d = this.domains.find(d => d.domainNumber === this.governor.domain);
-        if (!d) throw new Error(`Governing network is not present. GovDomain ${this.governor.domain}, present network domains: ${this.domains.map(d => d.domainNumber).join(', ')}`);
+        const d = this.domains.find(d => d.network.domainNumber === this.governor.domain);
+        if (!d) throw new Error(`Governing network is not present. GovDomain ${this.governor.domain}, present network domains: ${this.domains.map(d => d.network.domainNumber).join(', ')}`);
         return d;
-    }
-    
-    getMultiprovider(): BridgeContext {
-      if (!this.multiprovider) throw new Error(`No multiprovider`);
-      return this.multiprovider;
     }
 
     async deployFresh(): Promise<void> {
@@ -120,12 +114,12 @@ export class NomadEnv {
         const deployContext = new DeployContext(this.nomadConfig());
         // add deploy signer and overrides for each network
         for (const domain of this.domains) {
-            const name = domain.name;
+            const name = domain.network.name;
             const provider = deployContext.mustGetProvider(name);
             const wallet = new ethers.Wallet(this.deployerKey, provider);
             const signer = new NonceManager(wallet);
             deployContext.registerSigner(name, signer);
-            deployContext.overrides.set(name, domain.deployOverrides);
+            deployContext.overrides.set(name, domain.network.deployOverrides);
         }
         return deployContext;
     }
@@ -138,16 +132,43 @@ export class NomadEnv {
         return {
             version: 0,
             environment: 'local',
-            networks: this.domains.map(d => d.name),
-            rpcs: Object.fromEntries(this.domains.map(d => [d.name, d.rpcs])),
-            agent: Object.fromEntries(this.domains.map(d => [d.name, d.agentConfig])),
-            protocol: {governor: this.governor, networks: Object.fromEntries(this.domains.map(d => [d.name, d.domain]))},
-            core: Object.fromEntries(this.domains.filter(d => d.isDeployed).map(d => [d.name, d.coreContracts!])),
-            bridge: Object.fromEntries(this.domains.filter(d => d.isDeployed).map(d => [d.name, d.bridgeContracts!])),
-            bridgeGui: Object.fromEntries(this.domains.filter(d => d.isDeployed).map(d => [d.name, d.bridgeGui!])),
-            gas: Object.fromEntries(this.domains.map(d => [d.name, d.gasConfig!])),
+            networks: this.domains.map(d => d.network.name),
+            rpcs: Object.fromEntries(this.domains.map(d => [d.network.name, d.rpcs])),
+            agent: Object.fromEntries(this.domains.map(d => [d.network.name, d.agentConfig])),
+            protocol: {governor: this.governor, networks: Object.fromEntries(this.domains.map(d => [d.network.name, d.domain]))},
+            core: Object.fromEntries(this.domains.filter(d => d.network.isDeployed).map(d => [d.network.name, d.network.coreContracts!])),
+            bridge: Object.fromEntries(this.domains.filter(d => d.network.isDeployed).map(d => [d.network.name, d.network.bridgeContracts!])),
+            bridgeGui: Object.fromEntries(this.domains.filter(d => d.network.isDeployed).map(d => [d.network.name, d.network.bridgeGui!])),
+            gas: Object.fromEntries(this.domains.map(d => [d.network.name, d.gasConfig!])),
         }
     }
+
+
+  async upAgents(d: NomadDomain, metricsPort: number) {
+    d.agents = new Agents(d, metricsPort);
+    await d.agents.relayer.connect();
+    d.agents.relayer.start();
+    await d.agents.updater.connect();
+    d.agents.updater.start();
+    await d.agents.processor.connect();
+    d.agents.processor.start();
+    await d.agents.kathy.connect();
+    d.agents.kathy.start();
+    for (const watcher of d.agents.watchers) {
+      await watcher.connect();
+      watcher.start();
+    }
+  }
+
+  async stopAgents(d: NomadDomain) {
+    d.agents!.relayer.stop();
+    d.agents!.updater.stop();
+    d.agents!.processor.stop();
+    d.agents!.kathy.stop();
+    for (const watcher of d.agents!.watchers) {
+      watcher.stop();
+    }
+  }
 }
 
 (async () => {
@@ -155,45 +176,50 @@ export class NomadEnv {
     // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
     const log = bunyan.createLogger({name: 'localenv'});
 
-    const t = new NomadDomain('tom', 1);
+    // Instantiate HardhatNetworks
+    const t = new HardhatNetwork('tom', 1);
+    const j = new HardhatNetwork('jerry', 2);
 
-    const j = new NomadDomain('jerry', 2);
+    // Instantiate Nomad domains
+    const tDomain = new NomadDomain(t);
+    const jDomain = new NomadDomain(j);
 
+    // Await domains to up networks.
     await Promise.all([
-        t.up(),
-        j.up(),
+        tDomain.network.up(),
+        jDomain.network.up(),
     ])
 
     log.info(`Upped Tom and Jerry`);
 
-    const le = new NomadEnv({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
+    const le = new NomadEnv({domain: tDomain.network.domainNumber, id: '0x'+'20'.repeat(20)});
 
-    le.addDomain(t);
-    le.addDomain(j);
+    le.addDomain(tDomain);
+    le.addDomain(jDomain);
     log.info(`Added Tom and Jerry`);
 
     // Set keys
-    t.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
-    t.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
-    t.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
-    t.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
-    t.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
-    t.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    tDomain.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    tDomain.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
+    tDomain.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
+    tDomain.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
+    tDomain.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
+    tDomain.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
 
-    j.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
-    j.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
-    j.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
-    j.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
-    j.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
-    j.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    jDomain.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    jDomain.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
+    jDomain.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
+    jDomain.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
+    jDomain.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
+    jDomain.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
 
-    t.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``)); // setGovernanceKeys should have the same PK as the signer keys
-    j.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    tDomain.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``)); // setGovernanceKeys should have the same PK as the signer keys
+    jDomain.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
 
     log.info(`Added Keys`)
     
-    t.connectNetwork(j);
-    j.connectNetwork(t);
+    tDomain.connectNetwork(jDomain);
+    jDomain.connectNetwork(tDomain);
     log.info(`Connected Tom and Jerry`);
 
     // Notes, check governance router deployment on Jerry and see if that's actually even passing
@@ -208,8 +234,8 @@ export class NomadEnv {
 
     // let myContracts = le.deploymyproject();
 
-    await t.upAgents(t, le, 9080);
-    await j.upAgents(j, le, 9090);
+    await le.upAgents(tDomain, 9080);
+    await le.upAgents(jDomain, 9090);
     log.info(`Agents up`);
 
 })()

@@ -2,7 +2,7 @@ import Docker from "dockerode";
 
 import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
-import { NomadEnv, NomadDomain } from "./le";
+import { NomadDomain } from './domain';
 
 export class Agents {
   updater: Agent;
@@ -11,12 +11,12 @@ export class Agents {
   watchers: Agent[];
   kathy: Agent;
 
-  constructor(domain: NomadDomain, env: NomadEnv, metricsPort: number) {
-      this.updater = new LocalAgent(AgentType.Updater, domain, env, metricsPort);
-      this.relayer = new LocalAgent(AgentType.Relayer, domain, env, metricsPort+1);
-      this.processor = new LocalAgent(AgentType.Processor, domain, env, metricsPort+2);
-      this.watchers = [new LocalAgent(AgentType.Watcher, domain, env, metricsPort+3)];
-      this.kathy = new LocalAgent(AgentType.Kathy, domain, env, metricsPort+4);
+  constructor(domain: NomadDomain, metricsPort: number) {
+      this.updater = new LocalAgent(AgentType.Updater, domain, metricsPort);
+      this.relayer = new LocalAgent(AgentType.Relayer, domain, metricsPort+1);
+      this.processor = new LocalAgent(AgentType.Processor, domain, metricsPort+2);
+      this.watchers = [new LocalAgent(AgentType.Watcher, domain, metricsPort+3)];
+      this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort+4);
   }
 }
 
@@ -83,17 +83,14 @@ function parseAgentType(t: string | AgentType): AgentType {
 export class LocalAgent extends DockerizedActor implements Agent {
   agentType: AgentType;
   domain: NomadDomain;
-  env: NomadEnv;
   metricsPort: number;
 
-  constructor(agentType: AgentType, domain: NomadDomain, env: NomadEnv, metricsPort: number) {
+  constructor(agentType: AgentType, domain: NomadDomain, metricsPort: number) {
     agentType = parseAgentType(agentType);
-    super(`${agentType}_${domain.name}`, "agent");
+    super(`${agentType}_${domain.network.name}`, "agent");
     this.agentType = agentType;
 
     this.domain = domain;
-
-    this.env = env;
 
     this.metricsPort = metricsPort;
 
@@ -205,7 +202,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
       name,
       Cmd: ["./" + this.agentType],
       Env: [
-        `AGENT_HOME_NAME=${this.domain.name}`,
+        `AGENT_HOME_NAME=${this.domain.network.name}`,
         `TOM_CONNECTION_URL=http://localhost:1337`,
         `JERRY_CONNECTION_URL=http://localhost:1338`,
         `METRICS_PORT=${this.metricsPort}`,
