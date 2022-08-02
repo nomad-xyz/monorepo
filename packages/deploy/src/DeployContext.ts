@@ -358,14 +358,16 @@ export class DeployContext extends MultiProvider<config.Domain> {
   // perform validation checks on core and bridges
   async checkDeployment(): Promise<void> {
     console.log();
-    console.log(chalk.bold.black(`NOMAD DEPLOYMENT CHECK`));
+    console.log(chalk.bold.black.bgWhiteBright(`NOMAD DEPLOYMENT CHECK`));
     console.log(
       `Environment: ${chalk.green(this.data.environment.toUpperCase())}`,
     );
     console.log(``);
     console.log();
-    const core = await this.checkCores();
-    const bridge = await this.checkBridges();
+    const [core, bridge] = await Promise.all([
+      this.checkCores(),
+      this.checkBridges(),
+    ]);
     // combine core and bridge checks
     const list = CheckList.combine([core, bridge]);
     // print the results of all checks
@@ -379,7 +381,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
       10 - 'PART'.length,
     )} | ${chalk.bold('PROTOCOL CHECK')}`;
     console.log(out);
-    const out2 = `        | ${' '.repeat(15)} | ${' '.repeat(10)} |`;
+    const out2 = `         | ${' '.repeat(15)} | ${' '.repeat(10)} |`;
     console.log(out2);
     const checklists = await Promise.all(
       this.networks.map(async (net) => {
