@@ -32,6 +32,8 @@ export abstract class Network {
     abstract up(): Promise<void>;
     abstract down(): Promise<void>;
     abstract isConnected(): Promise<boolean>;
+    abstract getJsonRpcSigner(addressOrIndex: string | number): ethers.providers.JsonRpcSigner;
+    abstract getJsonRpcProvider(): ethers.providers.JsonRpcProvider;
 
     constructor(name: string, domainNumber: number, chainId: number) {
         this.name = name;
