@@ -6,16 +6,6 @@ import { Agents , AgentType } from "./agent";
 import { BridgeContext } from '@nomad-xyz/sdk-bridge';
 
 // NomadDomain as a concept refers to settings, configs, and actors (agents, SDK) that are auxiliary to each arbitrary Network.
-
-enum AgentKeys {
-    Signer = `` + process.env.PRIVATE_KEY_1 + ``,
-    Updater =`` + process.env.PRIVATE_KEY_1 + ``,
-    Watcher = `` + process.env.PRIVATE_KEY_2 + ``,
-    Relayer = `` + process.env.PRIVATE_KEY_3 + ``,
-    Kathy = `` + process.env.PRIVATE_KEY_4 + ``,
-    Processor = `` + process.env.PRIVATE_KEY_5 + ``
-  }
-
 export class NomadDomain {
     agents?: Agents;
     sdk?: BridgeContext;
