@@ -2,35 +2,39 @@ import { AgentConfig, LogConfig, BaseAgentConfig, NomadGasConfig, BridgeConfigur
 import { Key } from './key';
 import { Network } from "./network";
 import { Domain } from '@nomad-xyz/configuration'
-import { Agents , AgentType } from "./agent";
-import { BridgeContext } from '@nomad-xyz/sdk-bridge';
+import { Agents , LocalAgent } from "./agent";
+import { ethers } from 'ethers';
 
 // NomadDomain as a concept refers to settings, configs, and actors (agents, SDK) that are auxiliary to each arbitrary Network.
+
 export class NomadDomain {
     agents?: Agents;
-    sdk?: BridgeContext;
+    keys: Key[];
     network: Network;
-    signers: Map<number | string, Key>;
-    updaters: Map<number | string, Key>;
-    watchers: Map<number | string, Key>;
-    relayers: Map<number | string, Key>;
-    kathys: Map<number | string, Key>;
-    processors: Map<number | string, Key>;
+    signer: Key;
+    updater: Key;
+    watchers: Key[];
+    relayer: Key;
+    kathy: Key;
+    processor: Key;
 
     connectedNetworks: NomadDomain[];
-
-    //TODO: This should be arbitrary across all networks
     
-    constructor(network: Network) {
-      this.signers = new Map();
-      this.updaters = new Map();
-      this.watchers = new Map();
-      this.relayers = new Map();
-      this.kathys = new Map();
-      this.processors = new Map();
+    constructor(network: Network, extraKeys?: Key[]) {
+      this.signer = new Key(`` + process.env.PRIVATE_KEY_1 + ``);
+      this.updater = new Key(`` + process.env.PRIVATE_KEY_1 + ``);
+      this.watchers = [new Key(`` + process.env.PRIVATE_KEY_2 + ``)];
+      this.relayer = new Key(`` + process.env.PRIVATE_KEY_3 + ``);
+      this.kathy = new Key(`` + process.env.PRIVATE_KEY_4 + ``);
+      this.processor = new Key(`` + process.env.PRIVATE_KEY_5 + ``);
       this.connectedNetworks = [];
+      this.keys = [];
       this.network = network;
+      if (extraKeys) {
+        this.keys.push(...extraKeys)
+      }
 
+      this.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``), new Key(`` + process.env.PRIVATE_KEY_1 + ``), new Key(`` + process.env.PRIVATE_KEY_1 + ``))
     }
 
     connectNetwork(d: NomadDomain) {
@@ -41,101 +45,47 @@ export class NomadDomain {
       return !!this.agents;
     }
 
-    getSDK(): BridgeContext {
-        if (!this.sdk) throw new Error(`No multiprovider`);
-        return this.sdk;
+    networkJsonRpcSigner(addressOrIndex: string | number): ethers.providers.JsonRpcSigner {
+      return this.network.getJsonRpcSigner(addressOrIndex);
     }
 
-    getSignerKey(
-      agentType?: string | AgentType
-    ): Key | undefined {
-      const domain = this.network.domainNumber;
-      if (domain) {
-        if (agentType) {
-          const mapKey = `agentType_${domain}`;
-          return this.signers.get(mapKey);
-        } else {
-          return this.signers.get(this.network.domainNumber);
-        }
-      }
-      return undefined;
-    }
- 
-    getUpdaterKey(): Key | undefined {
-      const domain = this.network.domainNumber;
-      if (domain) {
-        return this.updaters.get(this.network.domainNumber);
-      }
-      return undefined;
-    }
- 
-    getWatcherKey(): Key | undefined {
-      const domain = this.network.domainNumber;
-      if (domain) return this.watchers.get(this.network.domainNumber);
-      return undefined;
+    networkJsonRpcProvider(): ethers.providers.JsonRpcProvider {
+      return this.network.getJsonRpcProvider();
     }
 
-    getKathyKey(): Key | undefined {
-      const domain = this.network.domainNumber;
-      if (domain) return this.kathys.get(this.network.domainNumber);
-      return undefined;
-    }
-    getProcessorKey(): Key | undefined {
-      const domain = this.network.domainNumber;
-      if (domain) return this.processors.get(this.network.domainNumber);
-      return undefined;
-    }
-    getRelayerKey(): Key | undefined {
-      const domain = this.network.domainNumber;
-      if (domain) return this.relayers.get(this.network.domainNumber);
-      return undefined;
+    networkRpcs(): string[] {
+      return this.network.rpcs;
     }
 
-   // Sets keys for each agent across all Nomad networks.
-   setUpdater(key: Key) {
-    const domain = this.network.domainNumber;
-    if (domain) this.updaters.set(this.network.domainNumber, key);
-   }
+    watcherKeys(): Key[] {
+      return this.watchers;
+    }
+  
+  // Agent Key setting functions
+  getAgentAddress(agent: LocalAgent): string {
+    return agent.key.toAddress();
+  }
 
-   setWatcher(key: Key) {
-    const domain = this.network.domainNumber;
-    if (domain) this.watchers.set(this.network.domainNumber, key);
-   }
+  getAgentSigner(agent: LocalAgent): Key {
+    return agent.key;
+  }
 
-   setKathy(key: Key) {
-    const domain = this.network.domainNumber;
-    if (domain) this.kathys.set(this.network.domainNumber, key);
-   }
-
-   setProcessor(key: Key) {
-    const domain = this.network.domainNumber;
-    if (domain) this.processors.set(this.network.domainNumber, key);
-   }
-
-   setRelayer(key: Key) {
-    const domain = this.network.domainNumber;
-    if (domain) this.relayers.set(this.network.domainNumber, key);
-   }
-
-   setSigner(key: Key, agentType?: string | AgentType) {
+  setAgentAddress(pk: string, agent: LocalAgent): void {
      const domain = this.network.domainNumber;
+     if (domain) agent.key = new Key(pk);
+  }
 
-     if (domain) {
-       if (agentType) {
-         const mapKey = `${agentType}_${domain}`;
-         this.signers.set(mapKey, key);
-       } else {
-         this.signers.set(this.network.domainNumber, key);
-       }
-     }
-  }   
+  //Used for governor settings on this.updater, this.watcher, this.recoveryManager
+  setGovernanceAddresses(updaterKey?: Key, watcherKey?: Key, recoveryManagerKey?: Key) {
+    this.network.updater = updaterKey!.toAddress();
+    this.network.watcher = watcherKey!.toAddress();
+    this.network.recoveryManager = recoveryManagerKey!.toAddress();
+  }
 
-    //Used for governor settings on this.updater, this.watcher, this.recoveryManager
-    setGovernanceAddresses(key: Key) {
-      this.network.updater = key.toAddress();
-      this.network.watcher = key.toAddress();
-      this.network.recoveryManager = key.toAddress();
-    }
+  // Add arbitrary keys post deployment.
+  addExtraKeys(...keys: Key[]) {
+    this.keys.push(...keys);
+  }
 
   connections(): string[] {
     return this.connectedNetworks.map(d => d.network.name);

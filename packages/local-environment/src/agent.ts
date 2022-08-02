@@ -3,6 +3,7 @@ import Docker from "dockerode";
 import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
 import { NomadDomain } from './domain';
+import { Key } from './key';
 
 export class Agents {
   updater: Agent;
@@ -84,6 +85,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
   agentType: AgentType;
   domain: NomadDomain;
   metricsPort: number;
+  key: Key;
 
   constructor(agentType: AgentType, domain: NomadDomain, metricsPort: number) {
     agentType = parseAgentType(agentType);
@@ -93,6 +95,8 @@ export class LocalAgent extends DockerizedActor implements Agent {
     this.domain = domain;
 
     this.metricsPort = metricsPort;
+
+    this.key = new Key("");
 
   }
 
@@ -160,26 +164,26 @@ export class LocalAgent extends DockerizedActor implements Agent {
      switch (this.agentType) {
       case AgentType.Updater: {
          envs.push(
-            `DEFAULT_TXSIGNER_KEY=0x${this.domain.getUpdaterKey()}` //Gets the key after LE assigns off of domainNumber.
+            `DEFAULT_TXSIGNER_KEY=0x${this.domain.updater}` //Gets the key after LE assigns off of domainNumber.
          );
-         envs.push(`ATTESTATION_SIGNER_KEY=0x${this.domain.getSignerKey()}`); //Important that all agents have unique TXSIGNER keys, but not attestation. Updater uses this key to sign merkle-root transitions.
+         envs.push(`ATTESTATION_SIGNER_KEY=0x${this.domain.signer}`); //Important that all agents have unique TXSIGNER keys, but not attestation. Updater uses this key to sign merkle-root transitions.
          break;
        }
       case AgentType.Watcher: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getWatcherKey()}`);
-        envs.push(`ATTESTATION_SIGNER_KEY=0x${this.domain.getSignerKey()}`); //Watchers use this key to sign attestations of fraudulent roots.
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.watchers[0]}`);
+        envs.push(`ATTESTATION_SIGNER_KEY=0x${this.domain.signer}`); //Watchers use this key to sign attestations of fraudulent roots.
         break;
       }
       case AgentType.Relayer: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getRelayerKey()}`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.relayer}`);
         break;
       }
       case AgentType.Kathy: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getKathyKey()}`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.kathy}`);
         break;
       }
       case AgentType.Processor: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getProcessorKey()}`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.processor}`);
         break;
       }
      };

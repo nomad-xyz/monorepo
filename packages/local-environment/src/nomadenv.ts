@@ -5,22 +5,28 @@ import * as ethers from 'ethers';
 import { NonceManager } from "@ethersproject/experimental";
 import fs from 'fs';
 import bunyan from 'bunyan';
-import { Key } from './key';
+// import { Key } from './key';
 import { NomadDomain } from './domain';
 import { Agents } from "./agent";
 import { HardhatNetwork } from "./network";
+import { BridgeContext } from '@nomad-xyz/sdk-bridge';
+import { NomadContext } from '@nomad-xyz/sdk';
 
 dotenv.config();
 
 export class NomadEnv {
     domains: NomadDomain[];
     governor: NomadLocator;
+    bridgeSDK: BridgeContext;
+    coreSDK: NomadContext;
 
     log = bunyan.createLogger({name: 'localenv'});
 
     constructor(governor: NomadLocator) {
         this.domains = [];
         this.governor = governor;
+        this.bridgeSDK = new BridgeContext(this.nomadConfig());
+        this.coreSDK = new NomadContext(this.nomadConfig());
     }
 
     // Adds a network to the array of networks if it's not already there.
@@ -33,6 +39,16 @@ export class NomadEnv {
         const d = this.domains.find(d => d.network.domainNumber === this.governor.domain);
         if (!d) throw new Error(`Governing network is not present. GovDomain ${this.governor.domain}, present network domains: ${this.domains.map(d => d.network.domainNumber).join(', ')}`);
         return d;
+    }
+
+    getCoreSDK(): NomadContext {
+        if (!this.coreSDK) throw new Error(`No core SDK`);
+        return this.coreSDK;
+    }
+  
+    getBridgeSDK(): BridgeContext {
+        if (!this.bridgeSDK) throw new Error(`No bridge SDK`);
+        return this.bridgeSDK;
     }
 
     async deployFresh(): Promise<void> {
@@ -198,8 +214,8 @@ export class NomadEnv {
     le.addDomain(jDomain);
     log.info(`Added Tom and Jerry`);
 
-    // Set keys
-    tDomain.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    /* Manual Keysetting logic 
+    tDomain.setAgentAddress(tDomain.updater, new Key(`` + process.env.PRIVATE_KEY_1 + ``));
     tDomain.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
     tDomain.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
     tDomain.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
@@ -214,10 +230,10 @@ export class NomadEnv {
     jDomain.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
 
     tDomain.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``)); // setGovernanceKeys should have the same PK as the signer keys
-    jDomain.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    tDomain.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
 
     log.info(`Added Keys`)
-    
+    */
     tDomain.connectNetwork(jDomain);
     jDomain.connectNetwork(tDomain);
     log.info(`Connected Tom and Jerry`);
