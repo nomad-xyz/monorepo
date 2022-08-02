@@ -2,7 +2,7 @@ import { AgentConfig, LogConfig, BaseAgentConfig, NomadGasConfig, BridgeConfigur
 import { Key } from './key';
 import { Network } from "./network";
 import { Domain } from '@nomad-xyz/configuration'
-import { Agents , LocalAgent } from "./agent";
+import { Agents } from "./agent";
 import { ethers } from 'ethers';
 
 // NomadDomain as a concept refers to settings, configs, and actors (agents, SDK) that are auxiliary to each arbitrary Network.
@@ -21,12 +21,12 @@ export class NomadDomain {
     connectedNetworks: NomadDomain[];
     
     constructor(network: Network, extraKeys?: Key[]) {
-      this.signer = new Key(`` + process.env.PRIVATE_KEY_1 + ``);
-      this.updater = new Key(`` + process.env.PRIVATE_KEY_1 + ``);
-      this.watchers = [new Key(`` + process.env.PRIVATE_KEY_2 + ``)];
-      this.relayer = new Key(`` + process.env.PRIVATE_KEY_3 + ``);
-      this.kathy = new Key(`` + process.env.PRIVATE_KEY_4 + ``);
-      this.processor = new Key(`` + process.env.PRIVATE_KEY_5 + ``);
+      this.signer = new Key(`` + AgentKeys.signer + ``);
+      this.updater = new Key(`` + AgentKeys.updater + ``);
+      this.watchers = [new Key(`` + AgentKeys.watcher + ``)];
+      this.relayer = new Key(`` + AgentKeys.relayer + ``);
+      this.kathy = new Key(`` + AgentKeys.kathy + ``);
+      this.processor = new Key(`` + AgentKeys.processor + ``);
       this.connectedNetworks = [];
       this.keys = [];
       this.network = network;
@@ -34,7 +34,7 @@ export class NomadDomain {
         this.keys.push(...extraKeys)
       }
 
-      this.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``), new Key(`` + process.env.PRIVATE_KEY_1 + ``), new Key(`` + process.env.PRIVATE_KEY_1 + ``))
+      this.setGovernanceAddresses(new Key(`` + AgentKeys.signer + ``), new Key(`` + AgentKeys.signer + ``), new Key(`` + AgentKeys.signer + ``))
     }
 
     connectNetwork(d: NomadDomain) {
@@ -62,17 +62,18 @@ export class NomadDomain {
     }
   
   // Agent Key setting functions
-  getAgentAddress(agent: LocalAgent): string {
-    return agent.key.toAddress();
+  getAgentAddress(agent: AgentKeys): string {
+    return new Key(agent).toAddress();
   }
 
-  getAgentSigner(agent: LocalAgent): Key {
-    return agent.key;
+  getAgentSigner(agent: AgentKeys): Key {
+    return new Key(agent);
   }
 
-  setAgentAddress(pk: string, agent: LocalAgent): void {
+  setAgentAddress(pk: string): string {
      const domain = this.network.domainNumber;
-     if (domain) agent.key = new Key(pk);
+     if (domain) return pk;
+     else return "";
   }
 
   //Used for governor settings on this.updater, this.watcher, this.recoveryManager
@@ -240,4 +241,13 @@ export class NomadDomain {
       return [`http://localhost:${this.network.handler.port}`];
   }
 
+}
+
+enum AgentKeys {
+  signer = "1337000000000000000000000000000000000000000000000000000000001337",
+  updater = "1000000000000000000000000000000000000000000000000000000000000001",
+  watcher = "2000000000000000000000000000000000000000000000000000000000000002",
+  relayer = "3000000000000000000000000000000000000000000000000000000000000003",
+  kathy = "4000000000000000000000000000000000000000000000000000000000000004",
+  processor = "5000000000000000000000000000000000000000000000000000000000000005"
 }

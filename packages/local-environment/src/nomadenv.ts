@@ -214,26 +214,6 @@ export class NomadEnv {
     le.addDomain(jDomain);
     log.info(`Added Tom and Jerry`);
 
-    /* Manual Keysetting logic 
-    tDomain.setAgentAddress(tDomain.updater, new Key(`` + process.env.PRIVATE_KEY_1 + ``));
-    tDomain.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
-    tDomain.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
-    tDomain.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
-    tDomain.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
-    tDomain.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
-
-    jDomain.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
-    jDomain.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
-    jDomain.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
-    jDomain.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
-    jDomain.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
-    jDomain.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
-
-    tDomain.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``)); // setGovernanceKeys should have the same PK as the signer keys
-    tDomain.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
-
-    log.info(`Added Keys`)
-    */
     tDomain.connectNetwork(jDomain);
     jDomain.connectNetwork(tDomain);
     log.info(`Connected Tom and Jerry`);
