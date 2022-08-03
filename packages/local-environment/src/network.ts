@@ -3,7 +3,7 @@ import { DockerizedActor } from "./actor";
 import Dockerode from "dockerode";
 import { sleep } from "./utils";
 import { ethers } from 'ethers';
-import { Key } from "./key";
+import { Key } from "./keys/key";
 import {  } from "@nomad-xyz/configuration";
 //import { getContractAddress } from "ethers/lib/utils";
 
@@ -77,6 +77,9 @@ export class DockerizedNetworkActor extends DockerizedActor {
     }
 
     addKeys(...keys: Key[]) {
+      // TODO: add a check that network hasn't started yet.
+      // Keep in mind! That if the network is like a Test network which already exists,
+      // we should adjust this method to create keys and fund them during the call to this method
       this.keys.push(...keys);
     }
 
@@ -131,6 +134,26 @@ interface AnyNetworkOptions {
    notFirstStart?: boolean;
    keys?: Key[];
  }
+
+
+ // TODO: Some idea to abstract test net
+//  export class TestNetwork extends Network {
+
+
+//   constructor(name: string, rpc: string, bank: string|Key) {
+
+//   }
+
+//   addKeys(...keys) {
+//     keys.map(key => {
+//       this.fundKeyFromBank(key)
+//     })
+//   }
+
+//   down() {
+//     this.returnFundsToBank()
+//   }
+//  }
 
 export class HardhatNetwork extends Network {
     firstStart: boolean;
@@ -197,9 +220,6 @@ export class HardhatNetwork extends Network {
     get config(): ContractConfig {
         return {
             optimisticSeconds: 18,
-            processGas: 850000,
-            reserveGas: 25000,
-            maximumGas: 1000000,
             governance: {
                 recoveryManager: this.recoveryManager,
                 recoveryTimelock: 86400
@@ -217,8 +237,8 @@ export class HardhatNetwork extends Network {
         return {
             weth: this.weth,
             customs: [],
-            mintGas: 200000,
-            deployGas: 850000
+            // mintGas: 200000,
+            // deployGas: 850000
           }
     }
 

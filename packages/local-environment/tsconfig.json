@@ -11,7 +11,7 @@
     "./src/tmp.ts"
   ],
   "include": [
-    "./src/*.ts", "src/neww/utils.ts",
+    "./src/**/*.ts",
   ],
   "references": [
     { "path": "../sdk" },
