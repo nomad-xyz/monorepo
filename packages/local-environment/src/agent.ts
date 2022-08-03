@@ -207,8 +207,8 @@ export class LocalAgent extends DockerizedActor implements Agent {
       Cmd: ["./" + this.agentType],
       Env: [
         `AGENT_HOME_NAME=${this.domain.network.name}`,
-        `TOM_CONNECTION_URL=http://localhost:1337`,
-        `JERRY_CONNECTION_URL=http://localhost:1338`,
+        `TOM_CONNECTION_URL=http://localhost:1338`,
+        `JERRY_CONNECTION_URL=http://localhost:1340`,
         `METRICS_PORT=${this.metricsPort}`,
         `CONFIG_PATH=/app/config/test_config.json`,
         `RUST_BACKTRACE=FULL`,

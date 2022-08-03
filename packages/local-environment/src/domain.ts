@@ -231,7 +231,7 @@ export class NomadDomain {
   }
 
   get rpcs(): string[] {
-    return [`http://localhost:${this.network.handler.port}`];
+    return this.network.rpcs;
   }
 
 }

@@ -1,5 +1,5 @@
 import { Nomad, utils, Network, LocalNetwork, Key } from "../src";
-import type { TokenIdentifier } from "@nomad-xyz/sdk/nomad/tokens";
+import type { TokenIdentifier } from "@nomad-xyz/sdk-bridge";
 import { ethers } from "ethers";
 import { TransferMessage } from "@nomad-xyz/sdk/nomad";
 import fs from "fs";
