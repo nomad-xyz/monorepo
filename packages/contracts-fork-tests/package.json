@@ -1,0 +1,25 @@
+{
+  "name": "contracts-fork-tests",
+  "packageManager": "yarn@3.2.0",
+  "dependencies": {
+    "@nomad-xyz/contracts-bridge": "workspace:^",
+    "@nomad-xyz/contracts-core": "workspace:^",
+    "@nomad-xyz/contracts-router": "workspace:^"
+  },
+  "description": "Nomad Fork Tests",
+  "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/contracts-fork-tests#readme",
+  "bugs": {
+    "url": "https://github.com/nomad-xyz/monorepo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nomad-xyz/monorepo.git"
+  },
+  "license": "MIT OR Apache-2.0",
+  "author": "Odysseas.eth",
+  "scripts": {
+    "test": "FOUNDRY_PROFILE=fork-tests forge test",
+    "test:ci": "FOUNDRY_PROFILE=fork-tests-ci forge test",
+    "format": "FOUNDRY_PROFILE=fork-tests-ci forge fmt"
+  }
+}

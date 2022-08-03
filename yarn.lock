@@ -6675,6 +6675,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"contracts-fork-tests@workspace:packages/contracts-fork-tests":
+  version: 0.0.0-use.local
+  resolution: "contracts-fork-tests@workspace:packages/contracts-fork-tests"
+  dependencies:
+    "@nomad-xyz/contracts-bridge": "workspace:^"
+    "@nomad-xyz/contracts-core": "workspace:^"
+    "@nomad-xyz/contracts-router": "workspace:^"
+  languageName: unknown
+  linkType: soft
+
 "convert-source-map@npm:^1.5.1, convert-source-map@npm:^1.7.0":
   version: 1.8.0
   resolution: "convert-source-map@npm:1.8.0"

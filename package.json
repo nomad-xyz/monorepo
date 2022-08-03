@@ -5,6 +5,7 @@
     "packages/contracts-bridge",
     "packages/contracts-core",
     "packages/contracts-router",
+    "packages/contracts-fork-tests",
     "packages/deploy",
     "packages/multi-provider",
     "packages/local-environment",
