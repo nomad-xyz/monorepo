@@ -1,14 +1,29 @@
 import Docker from "dockerode";
 
-import { DockerizedActor } from "./actors";
-import { Network } from "./network";
-import { Nomad } from "./nomad";
+import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
+import { NomadDomain } from './domain';
+import { Key } from './keys/key';
+
+export class Agents {
+  updater: Agent;
+  relayer: Agent;
+  processor: Agent;
+  watchers: Agent[];
+  kathy: Agent;
+
+  constructor(domain: NomadDomain, metricsPort: number) {
+      this.updater = new LocalAgent(AgentType.Updater, domain, metricsPort);
+      this.relayer = new LocalAgent(AgentType.Relayer, domain, metricsPort+1);
+      this.processor = new LocalAgent(AgentType.Processor, domain, metricsPort+2);
+      this.watchers = [new LocalAgent(AgentType.Watcher, domain, metricsPort+3)];
+      this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort+4);
+  }
+}
 
 export interface Agent {
   agentType: AgentType;
-  network: Network;
-  nomad: Nomad;
+  domain: NomadDomain;
 
   connect(): Promise<boolean>;
   start(): Promise<void>;
@@ -20,11 +35,11 @@ export interface Agent {
 }
 
 export enum AgentType {
-  Updater,
-  Relayer,
-  Processor,
-  Watcher,
-  Kathy,
+  Updater = 'updater',
+  Relayer = 'relayer',
+  Processor = 'processor',
+  Watcher = 'watcher',
+  Kathy = 'kathy',
 }
 
 function parseAgentType(t: string | AgentType): AgentType {
@@ -47,99 +62,166 @@ function parseAgentType(t: string | AgentType): AgentType {
   }
 }
 
-export function agentTypeToString(t: string | AgentType): string {
-  if (typeof t === "string") {
-    return t.toLowerCase();
-  } else {
-    switch (t) {
-      case AgentType.Updater:
-        return "updater";
-      case AgentType.Relayer:
-        return "relayer";
-      case AgentType.Processor:
-        return "processor";
-      case AgentType.Watcher:
-        return "watcher";
-      case AgentType.Kathy:
-        return "kathy";
-    }
-  }
-}
+// export function agentTypeToString(t: string | AgentType): string {
+//   if (typeof t === "string") {
+//     return t.toLowerCase();
+//   } else {
+//     switch (t) {
+//       case AgentType.Updater:
+//         return "updater";
+//       case AgentType.Relayer:
+//         return "relayer";
+//       case AgentType.Processor:
+//         return "processor";
+//       case AgentType.Watcher:
+//         return "watcher";
+//       case AgentType.Kathy:
+//         return "kathy";
+//     }
+//   }
+// }
 
 export class LocalAgent extends DockerizedActor implements Agent {
   agentType: AgentType;
-  network: Network;
-  nomad: Nomad;
+  domain: NomadDomain;
+  metricsPort: number;
+  key: Key;
 
-  constructor(agentType: string | AgentType, network: Network, nomad: Nomad) {
+  constructor(agentType: AgentType, domain: NomadDomain, metricsPort: number) {
     agentType = parseAgentType(agentType);
-    super(`${agentTypeToString(agentType)}_${network.name}`, "agent");
+    super(`${agentType}_${domain.network.name}`, "agent");
     this.agentType = agentType;
 
-    this.network = network;
-    this.nomad = nomad;
+    this.domain = domain;
+
+    this.metricsPort = metricsPort;
+
+    this.key = new Key("");
+
   }
 
   containerName(): string {
-    return `${this.name}_${this.actorType}_${this.nomad.id}`;
+    return `${this.name}_${this.actorType}`;
   }
+  /*
+  setSigner(network: Network, key: Key, agentType?: string | AgentType) {
+     const domain = network.domainNumber;
+     if (domain) {
+       if (agentType) {
+         const mapKey = `${agentType.toLowerCase()}_${domain}`;
+         network.signers.set(mapKey, key);
+       } else {
+         network.signers.set(domain, key);
+       }
+     }
+   }
+   */
+   /*
+   setUpdater(network: Network, key: Key) {
+     const domain = network.domainNumber;
+     if (domain) network.updaters.set(domain, key);
+   }
+   setWatcher(network: Network, key: Key) {
+    const domain = network.domainNumber;
+    if (domain) network.watchers.set(domain, key);
+  }
+  */
+  /*
+  getSignerKey(
+    network: Network,
+    agentType?: string | AgentType
+   ): Key | undefined {
+     const domain = network.domainNumber;
+     if (domain) {
+       if (agentType) {
+         const mapKey = `${agentType.toLowerCase()}_${domain}`;
+         return network.signers.get(mapKey);
+       } else {
+         return network.signers.get(domain);
+       }
+     }
+     return undefined;
+   }
+   */
+ /*
+  getUpdaterKey(network: Network): Key | undefined {
+     const domain = network.domainNumber;
+     if (domain) return network.updaters.get(domain);
+     return undefined; //RETURN HARDCODED
+   }
+   getWatcherKey(network: Network): Key | undefined {
+     const domain = network.domainNumber;
+     if (domain) return network.watchers.get(domain);
+     return undefined;
+   }
+ */
+
+  //Let's use the network key-add logic here for default signer keys.
 
   getAdditionalEnvs(): string[] {
-    const envs = [];
-
-    this.nomad.getNetworks().forEach((network) => {
-      const signer = this.nomad.getSignerKey(network, this.agentType);
-
-      if (signer) {
-        const name = network.name.toUpperCase();
-        const agentTypeUpperStr = agentTypeToString(
-          this.agentType
-        ).toUpperCase();
-
-        envs.push(
-          `OPT_${agentTypeUpperStr}_SIGNERS_${name}_KEY=${signer.toString()}`
-        );
-        envs.push(`OPT_${agentTypeUpperStr}_SIGNERS_${name}_TYPE=hexKey`);
-      }
-    });
-
-    switch (this.agentType) {
+    const envs: Array<any> = [];
+    //Hardcoded, HRE generated TX SIGNER KEYS unique to each agent, same on multiple networks.
+     switch (this.agentType) {
       case AgentType.Updater: {
-        const key = this.nomad.getUpdaterKey(this.network);
-        if (key) envs.push(`OPT_UPDATER_UPDATER_KEY=${key.toString()}`);
-        break;
-      }
+         envs.push(
+            `DEFAULT_TXSIGNER_KEY=0x${this.domain.getAgentSigner(AgentType.Updater).toString()}` //Gets the key after LE assigns off of domainNumber.
+         );
+         envs.push(`ATTESTATION_SIGNER_KEY=0x${this.domain.getAgentSigner().toString()}`); //Important that all agents have unique TXSIGNER keys, but not attestation. Updater uses this key to sign merkle-root transitions.
+         break;
+       }
       case AgentType.Watcher: {
-        const key = this.nomad.getWatcherKey(this.network);
-        if (key) envs.push(`OPT_WATCHER_WATCHER_KEY=${key.toString()}`);
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getAgentSigner(AgentType.Watcher).toString()}`);
+        envs.push(`ATTESTATION_SIGNER_KEY=0x${this.domain.getAgentSigner().toString()}`); //Watchers use this key to sign attestations of fraudulent roots.
         break;
       }
-    }
+      case AgentType.Relayer: {
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getAgentSigner(AgentType.Relayer).toString()}`);
+        break;
+      }
+      case AgentType.Kathy: {
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getAgentSigner(AgentType.Kathy).toString()}`);
+        break;
+      }
+      case AgentType.Processor: {
+        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getAgentSigner(AgentType.Processor).toString()}`);
+        break;
+      }
+     };
 
-    return envs;
-  }
+     return envs;
+   }
 
   async createContainer(): Promise<Docker.Container> {
     const name = this.containerName();
 
-    const agentConfigPath = this.nomad.defultDeployLocation();
+    const agentConfigPath = '' + process.cwd() + '/output/test_config.json';
 
     const additionalEnvs = this.getAdditionalEnvs();
 
-    // docker run --name $1_$2_agent --env RUN_ENV=latest --restart=always --network="host" --env BASE_CONFIG=$1_config.json -v $(pwd)/../../rust/config:/app/config -d gcr.io/nomad-xyz/nomad-agent ./$2
+    // const additionalEnvs = this.getAdditionalEnvs();
+
+    // docker run --name $1_$2_agent --env RUN_ENV=main --restart=always --network="host" --env BASE_CONFIG=$1_config.json -v $(pwd)/../../rust/config:/app/config -d gcr.io/nomad-xyz/nomad-agent ./$2
     return this.docker.createContainer({
-      Image: "gcr.io/nomad-xyz/nomad-agent",
+      Image: "gcr.io/nomad-xyz/nomad-agent:prestwich-remove-deploy-gas",
       name,
-      Cmd: ["./" + agentTypeToString(this.agentType)],
+      Cmd: ["./" + this.agentType],
       Env: [
-        "RUN_ENV=latest",
-        `BASE_CONFIG=${this.network.name}_config.json`,
+        `AGENT_HOME_NAME=${this.domain.network.name}`,
+        `TOM_CONNECTION_URL=http://localhost:1337`,
+        `JERRY_CONNECTION_URL=http://localhost:1338`,
+        `METRICS_PORT=${this.metricsPort}`,
+        `CONFIG_PATH=/app/config/test_config.json`,
+        `RUST_BACKTRACE=FULL`,
+        `AGENT_REPLICAS_ALL=true`,
+        `DEFAULT_RPCSTYLE=ethereum`,
+        `DEFAULT_SUBMITTER_TYPE=local`,
+        // ${this.network.domain.connections[0]}
         ...additionalEnvs,
       ],
       HostConfig: {
         Mounts: [
           {
-            Target: "/app/config",
+            Target: "/app/config/test_config.json",
             Source: agentConfigPath,
             Type: "bind",
           },
@@ -147,7 +229,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
         RestartPolicy: {
           Name: "always",
         },
-        NetworkMode: "host",
+        NetworkMode: "host", //Set up portmapping for agent containers. We also need to set up portmappping for hardhat network containers
         // AutoRemove: true,
       },
     });

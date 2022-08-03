@@ -1,70 +1,72 @@
-import { LocalNetwork, Nomad, Key, utils } from "../src";
-import type { TokenIdentifier } from "@nomad-xyz/sdk/nomad/tokens";
-import fs from "fs";
+import { HardhatNetwork } from "../src/network";
+import { NomadEnv } from "../src/le";
+import { Key } from "../src/key";
+import type { TokenIdentifier } from "@nomad-xyz/sdk-bridge";
+// import fs from "fs";
 import { getCustomToken } from "./utils/token/deployERC20";
 import { getRandomTokenAmount } from "../src/utils";
 import { sendTokensAndConfirm } from "./common";
+import bunyan from 'bunyan';
 
 (async () => {
-  const tom = new LocalNetwork("tom", 1000, "http://localhost:9545");
-  const jerry = new LocalNetwork("jerry", 2000, "http://localhost:9546");
 
-  const sender = new Key();
-  const receiver = new Key();
+    // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
+    const log = bunyan.createLogger({name: 'localenv'});
 
-  const t = utils.generateDefaultKeys();
-  const j = utils.generateDefaultKeys();
+    const t = new HardhatNetwork('tom', 1);
 
-  tom.addKeys(
-    sender,
-    t.updater,
-    t.watcher,
-    t.deployer,
-    t.signer.base,
-    t.signer.updater,
-    t.signer.watcher,
-    t.signer.relayer,
-    t.signer.processor
-  );
-  jerry.addKeys(
-    receiver,
-    j.updater,
-    j.watcher,
-    j.deployer,
-    j.signer.base,
-    j.signer.updater,
-    j.signer.watcher,
-    j.signer.relayer,
-    j.signer.processor
-  );
+    const j = new HardhatNetwork('jerry', 2);
 
-  await Promise.all([tom.up(), jerry.up()]);
+    await Promise.all([
+        t.up(),
+        j.up(),
+    ])
 
-  const n = new Nomad(tom);
-  n.addNetwork(jerry);
+    log.info(`Upped Tom and Jerry`);
 
-  n.setUpdater(jerry, j.updater); // Need for an update like updater
-  n.setWatcher(jerry, j.watcher); // Need for the watcher
-  n.setDeployer(jerry, j.deployer); // Need to deploy all
-  n.setSigner(jerry, j.signer.base); // Need for home.dispatch
-  n.setSigner(jerry, j.signer.updater, "updater"); // Need for home.dispatch
-  n.setSigner(jerry, j.signer.relayer, "relayer"); // Need for home.dispatch
-  n.setSigner(jerry, j.signer.watcher, "watcher"); // Need for home.dispatch
-  n.setSigner(jerry, j.signer.processor, "processor"); // Need for home.dispatch
+    const le = new NomadEnv({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
 
-  n.setUpdater(tom, t.updater); // Need for an update like updater
-  n.setWatcher(tom, t.watcher); // Need for the watcher
-  n.setDeployer(tom, t.deployer); // Need to deploy all
-  n.setSigner(tom, t.signer.base); // Need for home.dispatch
-  n.setSigner(tom, t.signer.updater, "updater"); // Need for home.dispatch
-  n.setSigner(tom, t.signer.relayer, "relayer"); // Need for home.dispatch
-  n.setSigner(tom, t.signer.watcher, "watcher"); // Need for home.dispatch
-  n.setSigner(tom, t.signer.processor, "processor"); // Need for home.dispatch
+    le.addNetwork(t);
+    le.addNetwork(j);
+    log.info(`Added Tom and Jerry`);
 
-  await n.deploy({ injectSigners: true });
-  await n.startAllAgents();
+    // Set keys
+    le.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    le.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
+    le.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
+    le.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
+    le.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
+    le.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
 
-  fs.writeFileSync("/tmp/nomad.json", JSON.stringify(n.toObject()));
+    t.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``)); // setGovernanceKeys should have the same PK as the signer keys
+    j.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+
+    log.info(`Added Keys`)
+    
+    le.connectNetwork(j, t);
+    le.connectNetwork(t, j);
+    log.info(`Connected Tom and Jerry`);
+
+    // Notes, check governance router deployment on Jerry and see if that's actually even passing
+    // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
+
+    await Promise.all([
+        t.setWETH(t.deployWETH()),
+        j.setWETH(j.deployWETH())
+    ])
+
+    log.info(await le.deploy());
+
+    // let myContracts = le.deploymyproject();
+
+    await le.upAgents(t, le, 9080);
+    await le.upAgents(j, le, 9090);
+    log.info(`Agents up`);
+
+    const sender = new Key();
+    const receiver = new Key();
+
+  // fs.writeFileSync("/tmp/nomad.json", JSON.stringify(n.toObject()));
 
   // Scenario
 
@@ -73,40 +75,42 @@ import { sendTokensAndConfirm } from "./common";
   try {
     // Deploying a custom ERC20 contract
     const tokenFactory = getCustomToken();
-    const tokenOnTom = await tom.deployToken(
+    const tokenOnTom = await t.deployToken(
       tokenFactory,
       sender.toAddress(),
       "MyToken",
       "MTK"
     );
 
+    const tDomain = le.domain(t).name;
+    
     const token: TokenIdentifier = {
-      domain: tom.domain,
+      domain: tDomain,
       id: tokenOnTom.address,
     };
 
-    const ctx = n.getMultiprovider();
+    const ctx = le.getMultiprovider();
 
     // Default multiprovider comes with signer (`o.setSigner(jerry, signer);`) assigned
     // to each domain, but we change it to allow sending from different signer
-    ctx.registerWalletSigner(tom.name, sender.toString());
-    ctx.registerWalletSigner(jerry.name, receiver.toString());
+    ctx.registerWalletSigner(t.name, sender.toString());
+    ctx.registerWalletSigner(j.name, receiver.toString());
 
     // get 3 random amounts which will be bridged
     const amount1 = getRandomTokenAmount();
     const amount2 = getRandomTokenAmount();
     const amount3 = getRandomTokenAmount();
 
-    await sendTokensAndConfirm(n, tom, jerry, token, receiver.toAddress(), [
+    await sendTokensAndConfirm(le, t, j, token, receiver.toAddress(), [
       amount1,
       amount2,
       amount3,
     ]);
 
     const tokenContract = await sendTokensAndConfirm(
-      n,
-      jerry,
-      tom,
+      le,
+      t,
+      j,
       token,
       new Key().toAddress(),
       [amount3, amount2, amount1]
@@ -126,10 +130,10 @@ import { sendTokensAndConfirm } from "./common";
   }
 
   // Teardown
+  await le.stopAgents();
 
-  await n.end();
-
-  await Promise.all([tom.down(), jerry.down()]);
+  await Promise.all([t.down(), j.down()]);
 
   if (!success) process.exit(1);
+
 })();

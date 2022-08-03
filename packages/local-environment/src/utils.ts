@@ -1,6 +1,6 @@
 import * as Stream from "stream";
 import { ethers } from "ethers";
-import { Key } from "./key";
+import { Key } from "./keys/key";
 
 export function sleep(ms: number) {
   return new Promise((res) => setTimeout(res, ms));
@@ -94,6 +94,7 @@ export class Waiter<T> {
   async wait(): Promise<T | null> {
     return await this.promise;
   }
+
 }
 
 class Matcher {
@@ -247,4 +248,5 @@ export function filterUndefined<T>(arr: (T | undefined)[]): T[] {
     return !!item;
   };
   return arr.filter(f);
+
 }
