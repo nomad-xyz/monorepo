@@ -1,11 +1,4 @@
-<<<<<<< Updated upstream
 [profile.default]
-||||||| constructed merge base
-[default]
-=======
-profile = { default = { libs = ["node_modules", "lib"] } }
-[default]
->>>>>>> Stashed changes
 solc_version = '0.7.6'        # Version of solc that we use
 remappings = [                # Libraries that we use from node_modules and are used by the smart contracts
 "@openzeppelin/=node_modules/@openzeppelin/",
@@ -57,7 +50,7 @@ fuzz-runs = 10_000
 
 
 # Fork endpoints based on https://github.com/nomad-xyz/config/blob/main/production.json
-[forkTests]
+[profile.forkTests]
 src = 'packages/contracts-fork-tests/'
 test = 'packages/contracts-fork-tests/'
 ethereum = "https://main-light.eth.linkpool.io/"
