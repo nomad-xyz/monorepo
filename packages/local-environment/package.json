@@ -11,14 +11,15 @@
     "src/**/*"
   ],
   "scripts": {
-    "agents_build": "pushd ../../../agents && ./build.sh latest && popd",
+    "agents_build": "pushd ../../../agents && ./build.sh main && popd",
     "agents_clean": "pushd ../../../agents && rm -rf config/16* ; rm -rf *db ; popd",
     "agents_stop": "docker ps --filter name=_agent -aq | xargs docker rm --force",
     "agents_stop_running": "docker ps --filter name=_agent --filter status=running -aq | xargs docker stop",
     "build": "tsc --build",
+    "bootup": "chmod ug+x ./bootup.sh && ./bootup.sh",
     "cleanup": "npm run hardhat_stop && npm run agents_stop && npm run agents_clean",
-    "hardhat_build": "pushd hardhat && docker build -t hardhat . && popd",
     "hardhat_stop": "docker ps --filter name=_net -aq | xargs docker rm --force",
+    "start": "npx ts-node src/nomadenv.ts",
     "test-agents-die": "npx ts-node tests/agentsDieOnImproperUpdate.ts",
     "test-double-update": "npx ts-node tests/watcherDoubleUpdate.ts",
     "test-improper-update": "npx ts-node tests/watcherImproperUpdate.ts",
@@ -27,11 +28,15 @@
   },
   "dependencies": {
     "@ethersproject/experimental": "^5.5.0",
-    "@nomad-xyz/contract-interfaces": "1.1.1",
+    "@nomad-xyz/configuration": "0.1.0",
     "@nomad-xyz/contracts-core": "workspace:^",
+    "@nomad-xyz/deploy": "workspace:^",
     "@nomad-xyz/sdk": "workspace:^",
+    "@nomad-xyz/sdk-bridge": "workspace:^",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@types/bunyan": "^1.8.8",
     "@types/dockerode": "^3.3.0",
+    "bunyan": "^1.8.15",
     "chai": "^4.3.4",
     "dockerode": "^3.3.1",
     "ethers": "^5.5.1",
@@ -43,6 +48,7 @@
   },
   "devDependencies": {
     "@types/chai": "^4.3.0",
+    "dotenv": "^10.0.0",
     "typescript": "^4.4.3"
   }
 }

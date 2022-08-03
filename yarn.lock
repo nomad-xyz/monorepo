@@ -744,7 +744,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ethersproject/experimental@npm:^5.3.0, @ethersproject/experimental@npm:^5.5.0":
+"@ethersproject/experimental@npm:^5.5.0":
   version: 5.6.3
   resolution: "@ethersproject/experimental@npm:5.6.3"
   dependencies:
@@ -1525,32 +1525,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/configuration@npm:^0.1.0":
+"@nomad-xyz/configuration@npm:0.1.0, @nomad-xyz/configuration@npm:^0.1.0":
   version: 0.1.0
   resolution: "@nomad-xyz/configuration@npm:0.1.0"
   checksum: b75f717e130e42b4fcae7924db99b1ef72c11dab2ce12bd81f41f73500b82da7d43b4a21adcb6481a351ca92754f8ed166cff88e9bd4bbffde7678dcf02b913d
   languageName: node
   linkType: hard
 
-"@nomad-xyz/configuration@npm:^0.1.0-rc.23":
-  version: 0.1.0-rc.25
-  resolution: "@nomad-xyz/configuration@npm:0.1.0-rc.25"
-  checksum: 6bdbc188e43167c7f4da28e8f9cbb594b5832a03916a11cb6fc6be2ad2cc00fd91cf20ad6e0b82da1a17a9be0b73f1222bf58c41263f69a7d5e90bd5449faede
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/contract-interfaces@npm:1.1.1":
-  version: 1.1.1
-  resolution: "@nomad-xyz/contract-interfaces@npm:1.1.1"
-  dependencies:
-    "@ethersproject/experimental": ^5.3.0
-    "@types/node": ^16.10.2
-    typescript: ^4.4.3
-  checksum: 620b179dda18c3afa339d056cacfd3cb48960b2925a1d403b1c2101aa3e4227d1e6f511c5d0760daafa57b7b4fe1b15fc3833eb9cbaf8655ffff709478e3e195
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/contracts-bridge@^1.1.0-rc.0, @nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
+"@nomad-xyz/contracts-bridge@^1.1.0, @nomad-xyz/contracts-bridge@workspace:^, @nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-bridge@workspace:packages/contracts-bridge"
   dependencies:
@@ -1595,7 +1577,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/contracts-core@^1.0.0-rc.3, @nomad-xyz/contracts-core@^1.1.0-rc.0, @nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
+"@nomad-xyz/contracts-core@^1.0.0-rc.3, @nomad-xyz/contracts-core@^1.1.0, @nomad-xyz/contracts-core@workspace:^, @nomad-xyz/contracts-core@workspace:packages/contracts-core":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-core@workspace:packages/contracts-core"
   dependencies:
@@ -1624,7 +1606,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/contracts-router@^1.0.0-rc.3, @nomad-xyz/contracts-router@^1.1.0-rc.0, @nomad-xyz/contracts-router@workspace:^, @nomad-xyz/contracts-router@workspace:packages/contracts-router":
+"@nomad-xyz/contracts-router@^1.0.0-rc.3, @nomad-xyz/contracts-router@^1.1.0, @nomad-xyz/contracts-router@workspace:^, @nomad-xyz/contracts-router@workspace:packages/contracts-router":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/contracts-router@workspace:packages/contracts-router"
   dependencies:
@@ -1655,17 +1637,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/deploy@workspace:packages/deploy":
+"@nomad-xyz/deploy@workspace:^, @nomad-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/deploy@workspace:packages/deploy"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0-rc.23
-    "@nomad-xyz/contracts-bridge": ^1.1.0-rc.0
-    "@nomad-xyz/contracts-core": ^1.1.0-rc.0
-    "@nomad-xyz/contracts-router": ^1.1.0-rc.0
+    "@nomad-xyz/configuration": ^0.1.0
+    "@nomad-xyz/contracts-bridge": ^1.1.0
+    "@nomad-xyz/contracts-core": ^1.1.0
+    "@nomad-xyz/contracts-router": ^1.1.0
     "@nomad-xyz/multi-provider": 1.0.0-rc.5
-    "@nomad-xyz/sdk": ^2.1.0-rc.0
-    "@nomad-xyz/sdk-govern": ^1.1.0-rc.0
+    "@nomad-xyz/sdk": ^2.1.1
+    "@nomad-xyz/sdk-govern": ^1.1.1
     "@types/chai": ^4.2.21
     "@types/node": ^17.0.23
     "@typescript-eslint/eslint-plugin": ^5.20.0
@@ -1765,14 +1747,19 @@ __metadata:
   resolution: "@nomad-xyz/local-environment@workspace:packages/local-environment"
   dependencies:
     "@ethersproject/experimental": ^5.5.0
-    "@nomad-xyz/contract-interfaces": 1.1.1
+    "@nomad-xyz/configuration": 0.1.0
     "@nomad-xyz/contracts-core": "workspace:^"
+    "@nomad-xyz/deploy": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"
+    "@nomad-xyz/sdk-bridge": "workspace:^"
     "@nomiclabs/hardhat-ethers": ^2.0.2
+    "@types/bunyan": ^1.8.8
     "@types/chai": ^4.3.0
     "@types/dockerode": ^3.3.0
+    bunyan: ^1.8.15
     chai: ^4.3.4
     dockerode: ^3.3.1
+    dotenv: ^10.0.0
     ethers: ^5.5.1
     hardhat: ^2.6.8
     keccak: ^3.0.2
@@ -1821,7 +1808,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nomad-xyz/sdk-bridge@^1.0.0-rc.21, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
+"@nomad-xyz/sdk-bridge@^1.0.0-rc.21, @nomad-xyz/sdk-bridge@workspace:^, @nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
@@ -1847,7 +1834,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk-govern@^1.0.0-rc.17, @nomad-xyz/sdk-govern@^1.1.0-rc.0, @nomad-xyz/sdk-govern@workspace:packages/sdk-govern":
+"@nomad-xyz/sdk-govern@^1.0.0-rc.17, @nomad-xyz/sdk-govern@^1.1.1, @nomad-xyz/sdk-govern@workspace:packages/sdk-govern":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-govern@workspace:packages/sdk-govern"
   dependencies:
@@ -1876,7 +1863,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk@^2.0.0-rc.21, @nomad-xyz/sdk@^2.1.0-rc.0, @nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
+"@nomad-xyz/sdk@^2.0.0-rc.21, @nomad-xyz/sdk@^2.1.1, @nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -2964,7 +2951,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^16.10.2, @types/node@npm:^16.9.1":
+"@types/node@npm:^16.9.1":
   version: 16.11.43
   resolution: "@types/node@npm:16.11.43"
   checksum: 96d09e68347c49ebf84fe1443360edc3f98336f0794256abc8e4f29ef3070546357cae17083d6fd9767b631239367c4f245fe64accff4af057d17bd6694f0b2b

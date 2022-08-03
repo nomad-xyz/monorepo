@@ -11,10 +11,11 @@
     "./src/tmp.ts"
   ],
   "include": [
-    "./src/*.ts",
+    "./src/**/*.ts",
   ],
   "references": [
     { "path": "../sdk" },
+    { "path": "../sdk-bridge" },
     { "path": "../contracts-core" },
     { "path": "../deploy" },
   ]
