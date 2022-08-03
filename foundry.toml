@@ -53,6 +53,10 @@ fuzz-runs = 10_000
 [profile.forkTests]
 src = 'packages/contracts-fork-tests/'
 test = 'packages/contracts-fork-tests/'
+
+
+
+[rpc_endpoints]
 ethereum = "https://main-light.eth.linkpool.io/"
 milkomeda = "https://rpc.c1.milkomeda.com:8545"
 evmos = "https://eth.bd.evmos.org:8545"
