@@ -227,7 +227,7 @@ export class NomadEnv {
         j.setWETH(j.deployWETH())
     ])
 
-    log.info(await le.deploy());
+    await le.deploy();
 
     // let myContracts = le.deploymyproject();
 
