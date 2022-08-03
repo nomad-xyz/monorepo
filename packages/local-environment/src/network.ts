@@ -159,11 +159,9 @@ export class HardhatNetwork extends Network {
     firstStart: boolean;
     blockTime: number;
     keys: Key[];
-    handler: DockerizedNetworkActor;
 
     constructor(name: string, domain: number, options?: HardhatNetworkOptions) {
         super(name, domain, domain);
-        this.handler = new DockerizedNetworkActor(this.name);
         this.blockTime = 5;
         this.firstStart = false;
         this.keys = options?.keys || [];

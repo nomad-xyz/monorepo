@@ -30,7 +30,7 @@ import {
 
 
 export class NomadDomain {
-  agents ? : Agents;
+  agents?: Agents;
   keys: AgentKeys;
   network: Network;
 
