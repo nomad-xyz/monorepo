@@ -1,6 +1,5 @@
 import * as Stream from "stream";
 import { ethers } from "ethers";
-import { Key } from "./keys/key";
 
 export function sleep(ms: number) {
   return new Promise((res) => setTimeout(res, ms));
@@ -94,7 +93,6 @@ export class Waiter<T> {
   async wait(): Promise<T | null> {
     return await this.promise;
   }
-
 }
 
 class Matcher {
@@ -207,21 +205,6 @@ function getMessage(
   );
 }
 
-export function generateDefaultKeys() {
-  return {
-    updater: new Key(),
-    watcher: new Key(),
-    deployer: new Key(),
-    signer: {
-      base: new Key(),
-      updater: new Key(),
-      watcher: new Key(),
-      relayer: new Key(),
-      processor: new Key(),
-    },
-  };
-}
-
 /**
  * An analog of `zip` from Python. Takes 2 arrays
  * of same length, and forms andother array, where
@@ -248,5 +231,4 @@ export function filterUndefined<T>(arr: (T | undefined)[]): T[] {
     return !!item;
   };
   return arr.filter(f);
-
 }

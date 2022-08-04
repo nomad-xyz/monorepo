@@ -41,6 +41,8 @@ if (process.env.BLOCK_TIME) {
   } catch (_) {}
 }
 
+console.log(`Staring with accounts:`, accounts.map(a=>a.privateKey))
+
 module.exports = {
   solidity: "0.8.4",
   defaultNetwork: "hardhat",

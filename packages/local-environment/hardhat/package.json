@@ -17,7 +17,7 @@
         "dotenv": "^10.0.0",
         "ethereum-waffle": "^3.4.0",
         "ethers": "^5.5.1",
-        "hardhat": "^2.8.2"
+        "hardhat": "^2.10.1"
     },
     "dependencies": {
         "solc": "^0.8.9"

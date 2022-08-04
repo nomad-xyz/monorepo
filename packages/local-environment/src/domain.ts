@@ -5,57 +5,59 @@ import {
   NomadGasConfig,
   BridgeConfiguration,
   NetworkSpecs,
-  ContractConfig
+  ContractConfig,
 } from "@nomad-xyz/configuration";
-import {
-  Key
-} from './keys/key';
-import {
-  Network
-} from "./network";
-import {
-  Domain
-} from '@nomad-xyz/configuration'
-import {
-  Agents, AgentType
-} from "./agent";
-import {
-  ethers
-} from 'ethers';
-import {
-  AgentKeys
-} from './keys/index';
+import { Key } from "./keys/key";
+import { HardhatNetwork, Network } from "./network";
+import { Domain } from "@nomad-xyz/configuration";
+import { Agents, AgentType } from "./agent";
+import { ethers } from "ethers";
+import { AgentKeys } from "./keys/index";
 
 // NomadDomain as a concept refers to settings, configs, and actors (agents, SDK) that are auxiliary to each arbitrary Network.
 
-
 export class NomadDomain {
-  agents ? : Agents;
+  agents?: Agents;
   keys: AgentKeys;
   network: Network;
+  metricsPort?: number;
 
   connectedNetworks: NomadDomain[];
 
-  constructor(network: Network, extraKeys ? : Key[]) {
-
+  constructor(network: Network, extraKeys?: Key[]) {
     this.connectedNetworks = [];
     this.keys = new AgentKeys();
     this.network = network;
 
-    const signer = this.keys.getAgentKey('signer');
+    const signer = this.keys.getAgentKey("signer");
 
-    this.setGovernanceAddresses(signer, signer, signer)
+    this.setGovernanceAddresses({
+      updater: signer,
+      watcher: signer,
+      recoveryManager: signer,
+    });
+  }
+
+  get name(): string {
+    return this.network.name;
+  }
+
+  ensureAgents(metricsPort = 9090) {
+    if (!this.agents) this.agents = new Agents(this, metricsPort);
   }
 
   connectNetwork(d: NomadDomain) {
-    if (!this.connections().includes(d.network.name)) this.connectedNetworks.push(d);
+    if (!this.connections().includes(d.network.name))
+      this.connectedNetworks.push(d);
   }
 
   get isAgentUp(): boolean {
     return !!this.agents;
   }
 
-  networkJsonRpcSigner(addressOrIndex: string | number): ethers.providers.JsonRpcSigner {
+  networkJsonRpcSigner(
+    addressOrIndex: string | number
+  ): ethers.providers.JsonRpcSigner {
     return this.network.getJsonRpcSigner(addressOrIndex);
   }
 
@@ -72,25 +74,53 @@ export class NomadDomain {
   }
 
   // Agent Key setting functions
-  getAgentAddress(type: AgentType, watcherNumber=0): string {
-    return this.keys.getAgentAddress(type, watcherNumber)
+  getAgentAddress(type: AgentType, watcherNumber = 0): string {
+    return this.keys.getAgentAddress(type, watcherNumber);
   }
 
-  getAgentSigner(type?: AgentType, watcherNumber=0): Key {
-    if (type) return this.keys.getAgentKey(type, watcherNumber)
-    return this.keys.getAgentKey(type, watcherNumber)
-    
+  getAgentSigner(type?: AgentType, watcherNumber = 0): Key {
+    if (type) return this.keys.getAgentKey(type, watcherNumber);
+    return this.keys.getAgentKey(type, watcherNumber);
   }
 
   //Used for governor settings on this.updater, this.watcher, this.recoveryManager
-  setGovernanceAddresses(updaterKey ? : Key, watcherKey ? : Key, recoveryManagerKey ? : Key) {
-    this.network.updater = updaterKey!.toAddress();
-    this.network.watcher = watcherKey!.toAddress();
-    this.network.recoveryManager = recoveryManagerKey!.toAddress();
+  setGovernanceAddresses(a: {
+    updater?: Key;
+    watcher?: Key;
+    recoveryManager?: Key;
+  }) {
+    if (a.updater) this.network.updater = a.updater.toAddress();
+    if (a.watcher) this.network.watcher = a.watcher.toAddress();
+    if (a.recoveryManager)
+      this.network.recoveryManager = a.recoveryManager.toAddress();
   }
 
   connections(): string[] {
-    return this.connectedNetworks.map(d => d.network.name);
+    return this.connectedNetworks.map((d) => d.network.name);
+  }
+
+  localNetEnsureKeys() {
+    // TODO: this is not thought through. Docker nets should have keys beforehand
+    (this.network as HardhatNetwork).addKeys(...this.keys.array);
+  }
+
+  async networkUp() {
+    await this.localNetEnsureKeys();
+    await this.network.up();
+  }
+
+  async agentsUp(metricsPort?: number) {
+    await this.ensureAgents(metricsPort);
+    await this.agents!.upAll();
+  }
+
+  async up(metricsPort?: number) {
+    await this.networkUp();
+    await this.agentsUp(metricsPort);
+  }
+
+  async down() {
+    return await this.agents?.downAll();
   }
 
   get domain(): Domain {
@@ -101,7 +131,7 @@ export class NomadDomain {
       specs: this.specs,
       configuration: this.config,
       bridgeConfiguration: this.bridgeConfig,
-    }
+    };
   }
 
   get agentConfig(): AgentConfig {
@@ -114,82 +144,88 @@ export class NomadDomain {
       relayer: this.relayerConfig,
       processor: this.processorConfig,
       watcher: this.watcherConfig,
-      kathy: this.kathyConfig
-    }
+      kathy: this.kathyConfig,
+    };
   }
 
   get logConfig(): LogConfig {
     return {
       fmt: "json",
-      level: "info"
-    }
+      level: "info",
+    };
   }
 
   get updaterConfig(): BaseAgentConfig {
     return {
-      "interval": 5
-    }
+      interval: 5,
+    };
   }
 
   get watcherConfig(): BaseAgentConfig {
     return {
-      "interval": 5
-    }
+      interval: 5,
+    };
   }
 
   get relayerConfig(): BaseAgentConfig {
     return {
-      "interval": 10
-    }
+      interval: 10,
+    };
   }
 
   get processorConfig(): BaseAgentConfig {
     return {
-      "interval": 5,
+      interval: 5,
       // subsidizedRemotes: [
       //   "tom",
       //   "jerry"
       // ]
-    }
+    };
   }
 
   get kathyConfig(): BaseAgentConfig {
     return {
-      "interval": 500
-    }
+      interval: 500,
+    };
   }
 
   get bridgeConfig(): BridgeConfiguration {
-    return this.network.bridgeConfig || {
-      weth: this.network.weth,
-      customs: [],
-      // mintGas: 200000,
-      // deployGas: 850000
-    }
+    return (
+      this.network.bridgeConfig || {
+        weth: this.network.weth,
+        customs: [],
+        // mintGas: 200000,
+        // deployGas: 850000
+      }
+    );
   }
 
   get specs(): NetworkSpecs {
-    return this.network.specs || {
-      chainId: this.network.chainId,
-      finalizationBlocks: 2,
-      blockTime: this.network.handler.blockTime,
-      supports1559: true,
-      confirmations: 2,
-      blockExplorer: '',
-      indexPageSize: 2000,
-    }
+    return (
+      this.network.specs || {
+        chainId: this.network.chainId,
+        finalizationBlocks: 2,
+        blockTime: this.network.blockTime,
+        supports1559: true,
+        confirmations: 2,
+        blockExplorer: "",
+        indexPageSize: 2000,
+      }
+    );
   }
 
   get config(): ContractConfig {
-    return this.network.config || {
-      optimisticSeconds: 18,
-      governance: {
-        recoveryManager: this.network.recoveryManager,
-        recoveryTimelock: 86400
-      },
-      updater: this.network.updater,
-      watchers: [this.network.watcher]
-    }
+    return (
+      this.network.config || {
+        optimisticSeconds: 18,
+        governance: {
+          recoveryManager: this.network.recoveryManager,
+          recoveryTimelock: 86400,
+        },
+        updater: this.network.updater,
+        watchers: [this.network.watcher],
+      }
+    );
   }
 
   get gasConfig(): NomadGasConfig {
@@ -198,40 +234,39 @@ export class NomadDomain {
         home: {
           update: {
             base: 100000,
-            perMessage: 10000
+            perMessage: 10000,
           },
           improperUpdate: {
             base: 100000,
-            perMessage: 10000
+            perMessage: 10000,
           },
-          doubleUpdate: 200000
+          doubleUpdate: 200000,
         },
         replica: {
           update: 140000,
           prove: 200000,
           process: 1700000,
           proveAndProcess: 1900000,
-          doubleUpdate: 200000
+          doubleUpdate: 200000,
         },
         connectionManager: {
           ownerUnenrollReplica: 120000,
-          unenrollReplica: 120000
-        }
+          unenrollReplica: 120000,
+        },
       },
       bridge: {
         bridgeRouter: {
-          send: 500000
+          send: 500000,
         },
         ethHelper: {
           send: 800000,
-          sendToEvmLike: 800000
-        }
-      }
-    }
+          sendToEvmLike: 800000,
+        },
+      },
+    };
   }
 
   get rpcs(): string[] {
-    return [`http://localhost:${this.network.handler.port}`];
+    return [this.network.rpcs[0]];
   }
-
 }

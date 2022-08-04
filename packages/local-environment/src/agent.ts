@@ -2,8 +2,8 @@ import Docker from "dockerode";
 
 import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
-import { NomadDomain } from './domain';
-import { Key } from './keys/key';
+import { NomadDomain } from "./domain";
+import { Key } from "./keys/key";
 
 export class Agents {
   updater: Agent;
@@ -11,13 +11,43 @@ export class Agents {
   processor: Agent;
   watchers: Agent[];
   kathy: Agent;
+  metricsPort: number;
 
   constructor(domain: NomadDomain, metricsPort: number) {
-      this.updater = new LocalAgent(AgentType.Updater, domain, metricsPort);
-      this.relayer = new LocalAgent(AgentType.Relayer, domain, metricsPort+1);
-      this.processor = new LocalAgent(AgentType.Processor, domain, metricsPort+2);
-      this.watchers = [new LocalAgent(AgentType.Watcher, domain, metricsPort+3)];
-      this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort+4);
+    this.metricsPort = metricsPort;
+    this.updater = new LocalAgent(AgentType.Updater, domain, metricsPort);
+    this.relayer = new LocalAgent(AgentType.Relayer, domain, metricsPort + 1);
+    this.processor = new LocalAgent(
+      AgentType.Processor,
+      domain,
+      metricsPort + 2
+    );
+    this.watchers = [
+      new LocalAgent(AgentType.Watcher, domain, metricsPort + 3),
+    ];
+    this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort + 4);
+  }
+
+  async upAll() {
+    return await Promise.all([
+      this.relayer.connect().then(() => this.relayer.start()),
+      this.updater.connect().then(() => this.updater.start()),
+      this.processor.connect().then(() => this.processor.start()),
+      this.kathy.connect().then(() => this.kathy.start()),
+      ...this.watchers.map((watcher) =>
+        watcher.connect().then(() => watcher.start())
+      ),
+    ]);
+  }
+
+  async downAll() {
+    await Promise.all([
+      this.relayer.stop(),
+      this.updater.stop(),
+      this.processor.stop(),
+      this.kathy.stop(),
+      ...this.watchers.map((w) => w.stop()),
+    ]);
   }
 }
 
@@ -35,11 +65,11 @@ export interface Agent {
 }
 
 export enum AgentType {
-  Updater = 'updater',
-  Relayer = 'relayer',
-  Processor = 'processor',
-  Watcher = 'watcher',
-  Kathy = 'kathy',
+  Updater = "updater",
+  Relayer = "relayer",
+  Processor = "processor",
+  Watcher = "watcher",
+  Kathy = "kathy",
 }
 
 function parseAgentType(t: string | AgentType): AgentType {
@@ -96,8 +126,9 @@ export class LocalAgent extends DockerizedActor implements Agent {
 
     this.metricsPort = metricsPort;
 
-    this.key = new Key("");
-
+    this.key = new Key(
+      "1000000000000000000000000000000000000000000000000000000000000005"
+    );
   }
 
   containerName(): string {
@@ -116,7 +147,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
      }
    }
    */
-   /*
+  /*
    setUpdater(network: Network, key: Key) {
      const domain = network.domainNumber;
      if (domain) network.updaters.set(domain, key);
@@ -143,7 +174,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
      return undefined;
    }
    */
- /*
+  /*
   getUpdaterKey(network: Network): Key | undefined {
      const domain = network.domainNumber;
      if (domain) return network.updaters.get(domain);
@@ -161,40 +192,62 @@ export class LocalAgent extends DockerizedActor implements Agent {
   getAdditionalEnvs(): string[] {
     const envs: Array<any> = [];
     //Hardcoded, HRE generated TX SIGNER KEYS unique to each agent, same on multiple networks.
-     switch (this.agentType) {
+    switch (this.agentType) {
       case AgentType.Updater: {
-         envs.push(
-            `DEFAULT_TXSIGNER_KEY=0x${this.domain.getAgentSigner(AgentType.Updater).toString()}` //Gets the key after LE assigns off of domainNumber.
-         );
-         envs.push(`ATTESTATION_SIGNER_KEY=0x${this.domain.getAgentSigner().toString()}`); //Important that all agents have unique TXSIGNER keys, but not attestation. Updater uses this key to sign merkle-root transitions.
-         break;
-       }
+        envs.push(
+          `DEFAULT_TXSIGNER_KEY=0x${this.domain
+            .getAgentSigner(AgentType.Updater)
+            .toString()}` //Gets the key after LE assigns off of domainNumber.
+        );
+        envs.push(
+          `ATTESTATION_SIGNER_KEY=0x${this.domain.getAgentSigner().toString()}`
+        ); //Important that all agents have unique TXSIGNER keys, but not attestation. Updater uses this key to sign merkle-root transitions.
+        break;
+      }
       case AgentType.Watcher: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getAgentSigner(AgentType.Watcher).toString()}`);
-        envs.push(`ATTESTATION_SIGNER_KEY=0x${this.domain.getAgentSigner().toString()}`); //Watchers use this key to sign attestations of fraudulent roots.
+        envs.push(
+          `DEFAULT_TXSIGNER_KEY=0x${this.domain
+            .getAgentSigner(AgentType.Watcher)
+            .toString()}`
+        );
+        envs.push(
+          `ATTESTATION_SIGNER_KEY=0x${this.domain.getAgentSigner().toString()}`
+        ); //Watchers use this key to sign attestations of fraudulent roots.
         break;
       }
       case AgentType.Relayer: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getAgentSigner(AgentType.Relayer).toString()}`);
+        envs.push(
+          `DEFAULT_TXSIGNER_KEY=0x${this.domain
+            .getAgentSigner(AgentType.Relayer)
+            .toString()}`
+        );
         break;
       }
       case AgentType.Kathy: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getAgentSigner(AgentType.Kathy).toString()}`);
+        envs.push(
+          `DEFAULT_TXSIGNER_KEY=0x${this.domain
+            .getAgentSigner(AgentType.Kathy)
+            .toString()}`
+        );
         break;
       }
       case AgentType.Processor: {
-        envs.push(`DEFAULT_TXSIGNER_KEY=0x${this.domain.getAgentSigner(AgentType.Processor).toString()}`);
+        envs.push(
+          `DEFAULT_TXSIGNER_KEY=0x${this.domain
+            .getAgentSigner(AgentType.Processor)
+            .toString()}`
+        );
         break;
       }
-     };
+    }
 
-     return envs;
-   }
+    return envs;
+  }
 
   async createContainer(): Promise<Docker.Container> {
     const name = this.containerName();
 
-    const agentConfigPath = '' + process.cwd() + '/output/test_config.json';
+    const agentConfigPath = "" + process.cwd() + "/output/test_config.json";
 
     const additionalEnvs = this.getAdditionalEnvs();
 
