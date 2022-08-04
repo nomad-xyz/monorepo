@@ -1,51 +1,64 @@
 import { HardhatNetwork } from "../src/network";
-import { NomadEnv } from "../src/le";
-import { Key } from "../src/key";
+import { NomadEnv } from "../src/nomadenv";
+import { Key } from "../src/keys/key";
 import type { TokenIdentifier } from "@nomad-xyz/sdk-bridge";
 // import fs from "fs";
 import { getCustomToken } from "./utils/token/deployERC20";
 import { getRandomTokenAmount } from "../src/utils";
 import { sendTokensAndConfirm } from "./common";
 import bunyan from 'bunyan';
+import { NomadDomain } from "../src/domain";
 
 (async () => {
 
     // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
     const log = bunyan.createLogger({name: 'localenv'});
 
+    // Instantiate HardhatNetworks
     const t = new HardhatNetwork('tom', 1);
-
     const j = new HardhatNetwork('jerry', 2);
 
-    await Promise.all([
-        t.up(),
-        j.up(),
-    ])
+    const sender = new Key();
+    const receiver = new Key();
+
+    t.addKeys(sender);
+    t.addKeys(receiver);
+
+    // Instantiate Nomad domains
+    const tDomain = new NomadDomain(t);
+    const jDomain = new NomadDomain(j);
+
+
+
+    log.info(`Upped Tom and Jerry`);
 
     log.info(`Upped Tom and Jerry`);
 
     const le = new NomadEnv({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
 
-    le.addNetwork(t);
-    le.addNetwork(j);
+    le.addDomain(tDomain);
+    le.addDomain(jDomain);
     log.info(`Added Tom and Jerry`);
 
     // Set keys
-    le.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
-    le.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
-    le.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
-    le.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
-    le.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
-    le.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    // le.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    // le.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
+    // le.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
+    // le.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
+    // le.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
+    // le.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
 
-    t.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``)); // setGovernanceKeys should have the same PK as the signer keys
-    j.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    // t.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``)); // setGovernanceKeys should have the same PK as the signer keys
+    // j.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
 
-    log.info(`Added Keys`)
+    // log.info(`Added Keys`)
     
-    le.connectNetwork(j, t);
-    le.connectNetwork(t, j);
+    tDomain.connectNetwork(jDomain);
+    jDomain.connectNetwork(tDomain);
     log.info(`Connected Tom and Jerry`);
+
+    await le.upNetworks();
+    log.info(`Upped Tom and Jerry`);
 
     // Notes, check governance router deployment on Jerry and see if that's actually even passing
     // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
@@ -57,14 +70,17 @@ import bunyan from 'bunyan';
 
     log.info(await le.deploy());
 
-    // let myContracts = le.deploymyproject();
+    // // let myContracts = le.deploymyproject();
+    // await Promise.all([
+    //   tDomain.upAllAgents(9080),
+    //   jDomain.upAllAgents(9090),
+    // ]);
 
-    await le.upAgents(t, le, 9080);
-    await le.upAgents(j, le, 9090);
+    await le.upAllAgents();
+
     log.info(`Agents up`);
 
-    const sender = new Key();
-    const receiver = new Key();
+    
 
   // fs.writeFileSync("/tmp/nomad.json", JSON.stringify(n.toObject()));
 
@@ -82,39 +98,50 @@ import bunyan from 'bunyan';
       "MTK"
     );
 
-    const tDomain = le.domain(t).name;
+    // const tDomain = le.domain(t).name;
     
     const token: TokenIdentifier = {
-      domain: tDomain,
+      domain: tDomain.network.name,
       id: tokenOnTom.address,
     };
 
-    const ctx = le.getMultiprovider();
+    console.log(`kkeeeeeeek--->`)
+    const ctx = le.getBridgeSDK();
+    console.log(`loooooooll--->`)
 
     // Default multiprovider comes with signer (`o.setSigner(jerry, signer);`) assigned
     // to each domain, but we change it to allow sending from different signer
     ctx.registerWalletSigner(t.name, sender.toString());
     ctx.registerWalletSigner(j.name, receiver.toString());
+    console.log(`fooooo--->`)
 
     // get 3 random amounts which will be bridged
     const amount1 = getRandomTokenAmount();
     const amount2 = getRandomTokenAmount();
     const amount3 = getRandomTokenAmount();
 
-    await sendTokensAndConfirm(le, t, j, token, receiver.toAddress(), [
+    console.log(`bazz 1--->`)
+
+
+    await sendTokensAndConfirm(le, tDomain, jDomain, token, receiver.toAddress(), [
       amount1,
       amount2,
       amount3,
     ]);
 
+    console.log(`bazz 2--->`)
+
+
     const tokenContract = await sendTokensAndConfirm(
       le,
-      t,
-      j,
+      tDomain,
+      jDomain,
       token,
       new Key().toAddress(),
       [amount3, amount2, amount1]
     );
+
+    console.log(`bazz 3--->`)
 
     if (
       tokenContract.address.toLowerCase() !== token.id.toString().toLowerCase()
@@ -130,7 +157,7 @@ import bunyan from 'bunyan';
   }
 
   // Teardown
-  await le.stopAgents();
+  await le.down();
 
   await Promise.all([t.down(), j.down()]);
 

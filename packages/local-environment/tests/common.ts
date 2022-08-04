@@ -1,10 +1,15 @@
-import { Nomad, utils, Network, LocalNetwork, Key } from "../src";
-import type { TokenIdentifier } from "@nomad-xyz/sdk/nomad/tokens";
+// import { Nomad, utils, Network, LocalNetwork, Key } from "../src";
+import type { TokenIdentifier } from "@nomad-xyz/sdk-bridge/src";
 import { ethers } from "ethers";
-import { TransferMessage } from "@nomad-xyz/sdk/nomad";
-import fs from "fs";
+// import { TransferMessage } from "@nomad-xyz/sdk/nomad";
+
 import { Waiter } from "../src/utils";
-import { LocalAgent } from "../src/agent";
+
+import { NomadEnv } from "../src/nomadenv";
+import { NomadDomain } from "../src/domain";
+
+import fs from 'fs';
+import { TransferMessage } from "@nomad-xyz/sdk-bridge";
 
 //
 /**
@@ -20,23 +25,28 @@ import { LocalAgent } from "../src/agent";
  * @returns a promise of pair [`success`, `tokenContract` ERC20 if it was created]
  */
 export async function sendTokensAndConfirm(
-  n: Nomad,
-  from: Network,
-  to: Network,
+  n: NomadEnv,
+  from: NomadDomain,
+  to: NomadDomain,
   token: TokenIdentifier,
   receiver: string,
   amounts: ethers.BigNumberish[],
   fastLiquidity = false
 ) {
-  const ctx = n.getMultiprovider();
+  console.log(`===  Start!`);
+  const ctx = n.getBridgeSDK();
+  console.log(`===  got sdk`, ctx.domainNames,ctx.domainNumbers);
+
+  fs.writeFileSync('./ctx.json', JSON.stringify(ctx.conf));
 
   let amountTotal = ethers.BigNumber.from(0);
 
-  let result: TransferMessage | undefined = undefined;
-  for (const amountish of amounts) {
-    const amount = ethers.BigNumber.from(amountish);
+  const rr: TransferMessage[] = [];
 
-    result = await ctx.send(
+  for (const a of amounts) {
+    const amount = ethers.BigNumber.from(a);
+
+    const tx = await ctx.send(
       from.name,
       to.name,
       token,
@@ -48,27 +58,47 @@ export async function sendTokensAndConfirm(
       }
     );
 
+    rr.push(tx);
+
+
+    console.log(`===  Dispatched send transaction!`, from.name, to.name);
+
     amountTotal = amountTotal.add(amount);
+
+    await tx.wait();
 
     console.log(
       `Sent from ${from.name} to ${to.name} ${amount.toString()} tokens`
     );
   }
 
-  if (!result) throw new Error(`Didn't get the result from transactions`);
+  rr
 
-  console.log(
-    `Waiting for the last transactions of ${amounts.length} to be delivered:`
-  );
+  // await Promise.all(amounts.map(async (a) => {
+  //   const amount = ethers.BigNumber.from(a);
+  //   console.log(`===  Dispatching send transaction!`);
 
-  await result.wait();
+  //   const x = await ctx.send(
+  //     from.name,
+  //     to.name,
+  //     token,
+  //     amount,
+  //     receiver,
+  //     fastLiquidity,
+  //     {
+  //       gasLimit: 10000000,
+  //     }
+  //   );
+    
+  // }))
+
 
   console.log(`Waiting for asset to be created at destination!`);
 
   // Waiting until the token contract is created at destination network tom
-  let waiter = new utils.Waiter(
+  let waiter = new Waiter(
     async () => {
-      const tokenContract = await result!.assetAtDestination();
+      const tokenContract = await rr[rr.length - 1]!.assetAtDestination();
 
       if (
         tokenContract?.address !== "0x0000000000000000000000000000000000000000"
@@ -92,7 +122,7 @@ export async function sendTokensAndConfirm(
   let newBalance = await tokenContract!.balanceOf(receiver);
 
   // Waiting until all 3 transactions will land at tom
-  let waiter2 = new utils.Waiter(
+  let waiter2 = new Waiter(
     async () => {
       if (newBalance.eq(amountTotal)) {
         return true;
@@ -117,6 +147,12 @@ export async function sendTokensAndConfirm(
 
   return tokenContract!;
 }
+
+/*
+Shut for now, so doesnt bother from sentTokentsCase.ts
+
+// import fs from "fs";
+// import { LocalAgent } from "../src/agent";
 
 export async function setupTwo() {
   const tom = new LocalNetwork("tom", 1000, "http://localhost:9545");
@@ -236,3 +272,6 @@ export async function waitAgentFailure(
     2_000
   );
 }
+
+
+*/
