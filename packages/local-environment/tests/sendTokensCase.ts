@@ -77,7 +77,7 @@ import { NomadDomain } from "../src/domain";
     // ]);
 
     
-    await le.upAgents() // warning: nokathy.
+    await le.upAgents()
     // await le.upAgents({kathy:false, watcher: false}) // warning: nokathy.
     
 
@@ -88,22 +88,6 @@ import { NomadDomain } from "../src/domain";
   // fs.writeFileSync("/tmp/nomad.json", JSON.stringify(n.toObject()));
 
   // Scenario
-
-  // stopper
-  console.log(`Starting to wait`)
-  await new Promise((resolve, reject) => {
-    const readline = require('readline').createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-    
-    readline.question(`What's your name?`,( name: string) => {
-      console.log(`Hi ${name}!`);
-      resolve(true)
-      readline.close();
-    });
-  })
-  console.log(`Awaited`)
 
   let success = false;
 
