@@ -64,8 +64,10 @@ export async function sendTokensAndConfirm(
     console.log(`===  Dispatched send transaction!`, from.name, to.name);
 
     amountTotal = amountTotal.add(amount);
-
-    await tx.wait();
+    
+    console.log(await tx.getUpdate())
+    console.log(await tx.getProcess())
+    console.log(await tx.getRelay())
 
     console.log(
       `Sent from ${from.name} to ${to.name} ${amount.toString()} tokens`
