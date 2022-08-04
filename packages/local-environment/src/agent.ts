@@ -10,7 +10,7 @@ export class Agents {
   relayer: Agent;
   processor: Agent;
   watchers: Agent[];
-  // kathy: Agent; // nokathy
+  kathy: Agent;
   metricsPort: number;
 
   constructor(domain: NomadDomain, metricsPort: number) {
@@ -25,7 +25,7 @@ export class Agents {
     this.watchers = [
       new LocalAgent(AgentType.Watcher, domain, metricsPort + 3),
     ]; // metricsPort4 - 4 ports for a single argument.
-    // this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort + 4); // nokathy
+    this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort + 4);
   }
 
   async upAll() {
@@ -33,7 +33,7 @@ export class Agents {
       this.relayer.connect().then(() => this.relayer.start()),
       this.updater.connect().then(() => this.updater.start()),
       this.processor.connect().then(() => this.processor.start()),
-      // this.kathy.connect().then(() => this.kathy.start()), // nokathy
+      this.kathy.connect().then(() => this.kathy.start()),
       ...this.watchers.map((watcher) =>
         watcher.connect().then(() => watcher.start())
       ),
@@ -45,7 +45,7 @@ export class Agents {
       this.relayer.stop(),
       this.updater.stop(),
       this.processor.stop(),
-      // this.kathy.stop(), // nokathy
+      this.kathy.stop(),
       ...this.watchers.map((w) => w.stop()),
     ]);
   }
@@ -260,8 +260,8 @@ export class LocalAgent extends DockerizedActor implements Agent {
       Cmd: ["./" + this.agentType],
       Env: [
         `AGENT_HOME_NAME=${this.domain.network.name}`,
-        `TOM_CONNECTION_URL=http://localhost:1337`, // TODO: fix that
-        `JERRY_CONNECTION_URL=http://localhost:1338`, // TODO: fix that
+        `TOM_CONNECTION_URL=http://localhost:1337`,
+        `JERRY_CONNECTION_URL=http://localhost:1338`,
         `METRICS_PORT=${this.metricsPort}`,
         `CONFIG_PATH=/app/config/test_config.json`,
         `RUST_BACKTRACE=FULL`,
