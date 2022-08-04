@@ -35,8 +35,6 @@ export abstract class Network {
 
   blockTime: number;
 
-  // handler: DockerizedNetworkActor;
-
   updater: string;
   watcher: string;
   recoveryManager: string;
@@ -64,7 +62,6 @@ export abstract class Network {
     this.name = name;
     this.domainNumber = domainNumber;
     this.chainId = chainId;
-    // this.handler = new DockerizedNetworkActor(this.name);
     this.deployOverrides = { gasLimit: 30000000 };
     this.updater = "";
     this.watcher = "";
