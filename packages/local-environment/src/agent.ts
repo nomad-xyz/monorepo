@@ -10,22 +10,22 @@ export class Agents {
   relayer: Agent;
   processor: Agent;
   watchers: Agent[];
-  kathy: Agent;
+  // kathy: Agent; // nokathy
   metricsPort: number;
 
   constructor(domain: NomadDomain, metricsPort: number) {
-    this.metricsPort = metricsPort;
-    this.updater = new LocalAgent(AgentType.Updater, domain, metricsPort);
-    this.relayer = new LocalAgent(AgentType.Relayer, domain, metricsPort + 1);
+    this.metricsPort = metricsPort; // metricsPort4 - 4 ports for a single argument.
+    this.updater = new LocalAgent(AgentType.Updater, domain, metricsPort); // metricsPort4 - 4 ports for a single argument.
+    this.relayer = new LocalAgent(AgentType.Relayer, domain, metricsPort + 1); // metricsPort4 - 4 ports for a single argument.
     this.processor = new LocalAgent(
       AgentType.Processor,
       domain,
       metricsPort + 2
-    );
+    ); // metricsPort4 - 4 ports for a single argument.
     this.watchers = [
       new LocalAgent(AgentType.Watcher, domain, metricsPort + 3),
-    ];
-    this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort + 4);
+    ]; // metricsPort4 - 4 ports for a single argument.
+    // this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort + 4); // nokathy
   }
 
   async upAll() {
@@ -33,7 +33,7 @@ export class Agents {
       this.relayer.connect().then(() => this.relayer.start()),
       this.updater.connect().then(() => this.updater.start()),
       this.processor.connect().then(() => this.processor.start()),
-      this.kathy.connect().then(() => this.kathy.start()),
+      // this.kathy.connect().then(() => this.kathy.start()), // nokathy
       ...this.watchers.map((watcher) =>
         watcher.connect().then(() => watcher.start())
       ),
@@ -45,7 +45,7 @@ export class Agents {
       this.relayer.stop(),
       this.updater.stop(),
       this.processor.stop(),
-      this.kathy.stop(),
+      // this.kathy.stop(), // nokathy
       ...this.watchers.map((w) => w.stop()),
     ]);
   }
@@ -260,8 +260,8 @@ export class LocalAgent extends DockerizedActor implements Agent {
       Cmd: ["./" + this.agentType],
       Env: [
         `AGENT_HOME_NAME=${this.domain.network.name}`,
-        `TOM_CONNECTION_URL=http://localhost:1337`,
-        `JERRY_CONNECTION_URL=http://localhost:1338`,
+        `TOM_CONNECTION_URL=http://localhost:1337`, // TODO: fix that
+        `JERRY_CONNECTION_URL=http://localhost:1338`, // TODO: fix that
         `METRICS_PORT=${this.metricsPort}`,
         `CONFIG_PATH=/app/config/test_config.json`,
         `RUST_BACKTRACE=FULL`,

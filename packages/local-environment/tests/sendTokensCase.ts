@@ -76,7 +76,10 @@ import { NomadDomain } from "../src/domain";
     //   jDomain.upAllAgents(9090),
     // ]);
 
-    await le.upAllAgents();
+    
+    await le.upAgents() // warning: nokathy.
+    // await le.upAgents({kathy:false, watcher: false}) // warning: nokathy.
+    
 
     log.info(`Agents up`);
 
@@ -85,6 +88,45 @@ import { NomadDomain } from "../src/domain";
   // fs.writeFileSync("/tmp/nomad.json", JSON.stringify(n.toObject()));
 
   // Scenario
+
+  // stopper
+  console.log(`Starting to wait`)
+  await new Promise((resolve, reject) => {
+    const readline = require('readline').createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    
+    readline.question(`What's your name?`,( name: string) => {
+      console.log(`Hi ${name}!`);
+      resolve(true)
+      readline.close();
+    });
+  })
+  console.log(`Awaited`)
+
+  /*
+
+{"timestamp":"2022-08-04T18:28:09.494082Z","level":"INFO","fields":{"message":"No produced update to submit for committed_root.","committed_root":"0x0000000000000000000000000000000000000000000000000000000000000000"},"target":"updater::submit"}
+{"timestamp":"2022-08-04T18:28:10.345618Z","level":"INFO","fields":{"message":"No updates to sign. Waiting for new root building off of current root 0x0000000000000000000000000000000000000000000000000000000000000000."},"target":"updater::produce"}
+{"timestamp":"2022-08-04T18:28:14.496438Z","level":"INFO","fields":{"message":"No produced update to submit for committed_root.","committed_root":"0x0000000000000000000000000000000000000000000000000000000000000000"},"target":"updater::submit"}
+{"timestamp":"2022-08-04T18:28:15.379967Z","level":"INFO","fields":{"message":"No updates to sign. Waiting for new root building off of current root 0x0000000000000000000000000000000000000000000000000000000000000000."},"target":"updater::produce"}
+{"timestamp":"2022-08-04T18:28:19.500297Z","level":"INFO","fields":{"message":"No produced update to submit for committed_root.","committed_root":"0x0000000000000000000000000000000000000000000000000000000000000000"},"target":"updater::submit"}
+{"timestamp":"2022-08-04T18:28:20.419136Z","level":"INFO","fields":{"message":"No updates to sign. Waiting for new root building off of current root 0x0000000000000000000000000000000000000000000000000000000000000000."},"target":"updater::produce"}
+{"timestamp":"2022-08-04T18:28:24.497739Z","level":"INFO","fields":{"message":"No produced update to submit for committed_root.","committed_root":"0x0000000000000000000000000000000000000000000000000000000000000000"},"target":"updater::submit"}
+{"timestamp":"2022-08-04T18:28:25.456688Z","level":"INFO","fields":{"message":"No updates to sign. Waiting for new root building off of current root 0x0000000000000000000000000000000000000000000000000000000000000000."},"target":"updater::produce"}
+{"timestamp":"2022-08-04T18:28:29.508127Z","level":"INFO","fields":{"message":"No produced update to submit for committed_root.","committed_root":"0x0000000000000000000000000000000000000000000000000000000000000000"},"target":"updater::submit"}
+{"timestamp":"2022-08-04T18:28:30.500689Z","level":"INFO","fields":{"message":"Storing new update in DB for broadcast","previous_root":"0x0000000000000000000000000000000000000000000000000000000000000000","new_root":"0x030026068ae264babb866dc4c2b247eceaee25caa3152ddf98f127149545ebd2","hex_signature":"0xd8a3d4e7bfc24b376c2aa31d46ffd3150fc4d25c92164fa0ecba1a9f79d3cd8643fd1d4592e3fc330c557205312f65c3821b16b57db4d8a0b3bc049ea3e2058b1b"},"target":"updater::produce"}
+{"timestamp":"2022-08-04T18:28:34.511915Z","level":"INFO","fields":{"message":"Submitting update to chain","previous_root":"0x0000000000000000000000000000000000000000000000000000000000000000","new_root":"0x030026068ae264babb866dc4c2b247eceaee25caa3152ddf98f127149545ebd2","hex_signature":"0xd8a3d4e7bfc24b376c2aa31d46ffd3150fc4d25c92164fa0ecba1a9f79d3cd8643fd1d4592e3fc330c557205312f65c3821b16b57db4d8a0b3bc049ea3e2058b1b"},"target":"updater::submit"}
+{"timestamp":"2022-08-04T18:28:34.522433Z","level":"INFO","fields":{"message":"Dispatching transaction","to":"Address(0xdaefe73ee4405b27e684cf1e963326d2bb59bc32)","data":"0xb31c01fb0000000000000000000000000000000000000000000000000000000000000000030026068ae264babb866dc4c2b247eceaee25caa3152ddf98f127149545ebd200000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000041d8a3d4e7bfc24b376c2aa31d46ffd3150fc4d25c92164fa0ecba1a9f79d3cd8643fd1d4592e3fc330c557205312f65c3821b16b57db4d8a0b3bc049ea3e2058b1b00000000000000000000000000000000000000000000000000000000000000"},"target":"nomad_ethereum::submitter","span":{"update":"SignedUpdate { Update { home_domain: 1, previous_root: 0x0000000000000000000000000000000000000000000000000000000000000000, new_root: 0x030026068ae264babb866dc4c2b247eceaee25caa3152ddf98f127149545ebd2 } Signature: 0xd8a3d4e7bfc24b376c2aa31d46ffd3150fc4d25c92164fa0ecba1a9f79d3cd8643fd1d4592e3fc330c557205312f65c3821b16b57db4d8a0b3bc049ea3e2058b1b  }","name":"update"},"spans":[{"update":"SignedUpdate { Update { home_domain: 1, previous_root: 0x0000000000000000000000000000000000000000000000000000000000000000, new_root: 0x030026068ae264babb866dc4c2b247eceaee25caa3152ddf98f127149545ebd2 } Signature: 0xd8a3d4e7bfc24b376c2aa31d46ffd3150fc4d25c92164fa0ecba1a9f79d3cd8643fd1d4592e3fc330c557205312f65c3821b16b57db4d8a0b3bc049ea3e2058b1b  }","name":"update"}]}
+{"timestamp":"2022-08-04T18:28:40.588908Z","level":"INFO","fields":{"message":"No updates to sign. Waiting for new root building off of current root 0x030026068ae264babb866dc4c2b247eceaee25caa3152ddf98f127149545ebd2."},"target":"updater::produce"}
+{"timestamp":"2022-08-04T18:28:41.572596Z","level":"INFO","fields":{"message":"Confirmed transaction","tx_hash":"0xc5ea22140d7ffc818ce50ca16c9416fb30c01bfe2a43934b64cee0ecf304471c"},"target":"nomad_ethereum::submitter","span":{"update":"SignedUpdate { Update { home_domain: 1, previous_root: 0x0000000000000000000000000000000000000000000000000000000000000000, new_root: 0x030026068ae264babb866dc4c2b247eceaee25caa3152ddf98f127149545ebd2 } Signature: 0xd8a3d4e7bfc24b376c2aa31d46ffd3150fc4d25c92164fa0ecba1a9f79d3cd8643fd1d4592e3fc330c557205312f65c3821b16b57db4d8a0b3bc049ea3e2058b1b  }","name":"update"},"spans":[{"update":"SignedUpdate { Update { home_domain: 1, previous_root: 0x0000000000000000000000000000000000000000000000000000000000000000, new_root: 0x030026068ae264babb866dc4c2b247eceaee25caa3152ddf98f127149545ebd2 } Signature: 0xd8a3d4e7bfc24b376c2aa31d46ffd3150fc4d25c92164fa0ecba1a9f79d3cd8643fd1d4592e3fc330c557205312f65c3821b16b57db4d8a0b3bc049ea3e2058b1b  }","name":"update"}]}
+{"timestamp":"2022-08-04T18:28:41.574522Z","level":"INFO","fields":{"message":"Submitted update with tx hash 0xc5ea22140d7ffc818ce50ca16c9416fb30c01bfe2a43934b64cee0ecf304471c. Sleeping before next tx submission.","tx_hash":"0xc5ea22140d7ffc818ce50ca16c9416fb30c01bfe2a43934b64cee0ecf304471c","sleep":10},"target":"updater::submit"}
+{"timestamp":"2022-08-04T18:28:45.635503Z","level":"INFO","fields":{"message":"No updates to sign. Waiting for new root building off of current root 0x030026068ae264babb866dc4c2b247eceaee25caa3152ddf98f127149545ebd2."},"target":"updater::produce"}
+
+
+  */
+
 
   let success = false;
 
