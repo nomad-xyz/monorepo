@@ -76,6 +76,10 @@ export class NomadEnv {
     const outputDir = "./output";
     const governanceBatch = await deployContext.deployAndRelinquish();
     console.log(`Deployed! gov batch:`, governanceBatch);
+
+    await deployContext.checkDeployment();
+    console.log(`Checked deployment`);
+
     await this.outputConfigAndVerification(outputDir, deployContext);
     await this.outputCallBatch(outputDir, deployContext);
 
@@ -212,9 +216,9 @@ export class NomadEnv {
     };
   }
 
-  async upAllAgents() {
-    let metrics = 9010;
-    await Promise.all(this.domains.map((d) => d.up(metrics++)));
+  async upAgents() {
+    let metrics = 9000;
+    await Promise.all(this.domains.map((d, i) => d.up(metrics + i * 10)));
   }
 
   async down() {
@@ -266,7 +270,7 @@ export async function defaultStart() {
 
   // let myContracts = le.deploymyproject();
 
-  await le.upAllAgents();
+  await le.upAgents();
 
   log.info(`Agents up`);
 }
