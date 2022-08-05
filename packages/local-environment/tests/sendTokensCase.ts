@@ -22,7 +22,7 @@ import { NomadDomain } from "../src/domain";
     const receiver = new Key();
 
     t.addKeys(sender);
-    t.addKeys(receiver);
+    j.addKeys(receiver);
 
     // Instantiate Nomad domains
     const tDomain = new NomadDomain(t);
@@ -108,14 +108,15 @@ import { NomadDomain } from "../src/domain";
       id: tokenOnTom.address,
     };
 
-    console.log(`Tokenfactory, token deployed`)
+    console.log(`Tokenfactory, token deployed:`, tokenOnTom.address)
+
     const ctx = le.getBridgeSDK();
     console.log(`Initialized Bridge SDK context`)
 
     // Default multiprovider comes with signer (`o.setSigner(jerry, signer);`) assigned
     // to each domain, but we change it to allow sending from different signer
-    // ctx.registerWalletSigner(j.name, receiver.toString());
     ctx.registerWalletSigner(t.name, sender.toString());
+    ctx.registerWalletSigner(j.name, receiver.toString());
     console.log(`registered wallet signers for tom and jerry`)
 
     // get 3 random amounts which will be bridged
@@ -135,14 +136,18 @@ import { NomadDomain } from "../src/domain";
     console.log(`Phase 2 done`)
 
 
+
+
     const tokenContract = await sendTokensAndConfirm(
       le,
-      tDomain,
       jDomain,
+      tDomain,
       token,
       new Key().toAddress(),
       [amount3, amount2, amount1]
     );
+
+      
 
     console.log(`Phase 3 done`)
 
@@ -152,6 +157,8 @@ import { NomadDomain } from "../src/domain";
       throw new Error(
         `Resolved asset at destination Jerry is not the same as the token. ${tokenContract.address.toLowerCase()} != ${token.id.toString().toLowerCase()}`
       );
+    } else {
+      console.log(`All cool!`)
     }
 
     success = true;
@@ -160,9 +167,9 @@ import { NomadDomain } from "../src/domain";
   }
 
   // Teardown
-  await le.down();
+  // await le.down();
 
-  await Promise.all([t.down(), j.down()]);
+  // await Promise.all([t.down(), j.down()]);
 
   if (!success) process.exit(1);
 
