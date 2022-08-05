@@ -5,12 +5,14 @@ import { EventEmitter } from "events";
 import { NomadDomain } from "./domain";
 import { Key } from "./keys/key";
 
+const kathyOn = false;
+
 export class Agents {
   updater: Agent;
   relayer: Agent;
   processor: Agent;
   watchers: Agent[];
-  kathy: Agent;
+  kathy?: Agent;
   metricsPort: number;
 
   constructor(domain: NomadDomain, metricsPort: number) {
@@ -25,7 +27,7 @@ export class Agents {
     this.watchers = [
       new LocalAgent(AgentType.Watcher, domain, metricsPort + 3),
     ]; // metricsPort4 - 4 ports for a single argument.
-    this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort + 4);
+    if (kathyOn) this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort + 4);
   }
 
   async upAll() {
@@ -33,7 +35,7 @@ export class Agents {
       this.relayer.connect().then(() => this.relayer.start()),
       this.updater.connect().then(() => this.updater.start()),
       this.processor.connect().then(() => this.processor.start()),
-      this.kathy.connect().then(() => this.kathy.start()),
+      ...(kathyOn ? [this.kathy!.connect().then(() => this.kathy!.start())] : []),
       ...this.watchers.map((watcher) =>
         watcher.connect().then(() => watcher.start())
       ),
@@ -45,7 +47,7 @@ export class Agents {
       this.relayer.stop(),
       this.updater.stop(),
       this.processor.stop(),
-      this.kathy.stop(),
+      ...(kathyOn ? [this.kathy!.stop()] : []),
       ...this.watchers.map((w) => w.stop()),
     ]);
   }

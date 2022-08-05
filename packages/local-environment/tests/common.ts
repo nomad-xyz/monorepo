@@ -60,14 +60,38 @@ export async function sendTokensAndConfirm(
 
     rr.push(tx);
 
+    // tx.committedRoot
 
-    console.log(`===  Dispatched send transaction!`, from.name, to.name);
+    console.log(`===  Dispatched send transaction!`, from.name, to.name, tx.committedRoot, tx.bodyHash);
 
     amountTotal = amountTotal.add(amount);
     
-    console.log(await tx.getUpdate())
-    console.log(await tx.getProcess())
-    console.log(await tx.getRelay())
+    // console.log(await tx.getUpdate())
+    // console.log(`===  Got UPDATE!`);
+    // console.log(await tx.getRelay())
+    // console.log(`===  Got RELAY!`);
+    // console.log(await tx.getProcess())
+    // console.log(`===  Got PROCESS!`);
+
+    // Wait until on tom's replica on jerry 
+    const replica = ctx.mustGetCore(to.domain.domain).getReplica(from.domain.domain);
+    if (replica) {
+      console.log(`Waiting for update and process events...`);
+      await new Promise((resolve, reject) => {
+        replica.once(replica.filters.Update(null, null, null, null), (homeDomain, oldRoot, newRoot, _signature) => {
+          console.log(`New Update event\n    homeDomain: ${homeDomain},\n    oldRoot: ${oldRoot},\n    newRoot: ${newRoot}`)
+        })
+  
+        replica.once(replica.filters.Process(null, null, null), (messageHash, success, _returnData) => {
+          console.log(`New Process event\n    messageHash: ${messageHash},\n    success:`, success)
+          resolve(null)
+        })
+      })
+      console.log(`Awaited process event!`);
+    } else {
+      console.log(`No replica`);
+      throw new Error(`No replica!`);
+    }
 
     console.log(
       `Sent from ${from.name} to ${to.name} ${amount.toString()} tokens`
@@ -134,7 +158,7 @@ export async function sendTokensAndConfirm(
           `New balance:`,
           parseInt(newBalance.toString()),
           "must be:",
-          parseInt(tokenContract.toString())
+          parseInt(amountTotal.toString())
         );
       }
     },
@@ -145,7 +169,9 @@ export async function sendTokensAndConfirm(
   const success = await waiter2.wait();
 
   if (success === null)
-    throw new Error(`Tokens transfer from ${from.name} to ${to.name} failed`);
+    throw new Error(`Tokens transfer from ${from.name} to ${to.name} failed`)
+  if (success === true) 
+    console.log(`Received tokens from ${from.name} to ${to.name}`)
 
   return tokenContract!;
 }

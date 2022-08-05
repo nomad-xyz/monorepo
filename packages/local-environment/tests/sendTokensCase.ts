@@ -123,7 +123,7 @@ import { NomadDomain } from "../src/domain";
     const amount2 = getRandomTokenAmount();
     const amount3 = getRandomTokenAmount();
 
-    console.log(`bazz 1--->`)
+    console.log(`Phase 1 done`)
 
 
     await sendTokensAndConfirm(le, tDomain, jDomain, token, receiver.toAddress(), [
@@ -132,7 +132,7 @@ import { NomadDomain } from "../src/domain";
       amount3,
     ]);
 
-    console.log(`bazz 2--->`)
+    console.log(`Phase 2 done`)
 
 
     const tokenContract = await sendTokensAndConfirm(
@@ -144,13 +144,13 @@ import { NomadDomain } from "../src/domain";
       [amount3, amount2, amount1]
     );
 
-    console.log(`bazz 3--->`)
+    console.log(`Phase 3 done`)
 
     if (
       tokenContract.address.toLowerCase() !== token.id.toString().toLowerCase()
     ) {
       throw new Error(
-        `Resolved asset at destination Jerry is not the same as the token`
+        `Resolved asset at destination Jerry is not the same as the token. ${tokenContract.address.toLowerCase()} != ${token.id.toString().toLowerCase()}`
       );
     }
 

@@ -6,6 +6,7 @@ import {
   BridgeConfiguration,
   NetworkSpecs,
   ContractConfig,
+  ProcessorConfig,
 } from "@nomad-xyz/configuration";
 import { Key } from "./keys/key";
 import { HardhatNetwork, Network } from "./network";
@@ -173,13 +174,14 @@ export class NomadDomain {
     };
   }
 
-  get processorConfig(): BaseAgentConfig {
+  get processorConfig(): ProcessorConfig {
     return {
       interval: 5,
-      // subsidizedRemotes: [
-      //   "tom",
-      //   "jerry"
-      // ]
+      subsidizedRemotes: [
+        // TODO: fix this
+        "tom",
+        "jerry"
+      ]
     };
   }
 
