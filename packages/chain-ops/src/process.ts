@@ -38,12 +38,8 @@ async function processTx(
 ): Promise<void> {
   console.log(`processing ${txHash}`);
   const messages: NomadMessage<NomadContext>[] =
-    await NomadMessage.baseFromTransactionHash(
-      nomadContext,
-      origin,
-      txHash,
-    );
-  for (let i = 0; i += 1; i < messages.length) {
+    await NomadMessage.baseFromTransactionHash(nomadContext, origin, txHash);
+  for (let i = 0; i++; i < messages.length) {
     const m = messages[i];
     const processTx = await m.getProcess();
     if (!processTx) {
