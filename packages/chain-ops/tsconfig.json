@@ -20,5 +20,9 @@
   ],
   "include": [
     "src/*.ts"
+  ],
+  "references": [
+    { "path": "../sdk" },
+    { "path": "../sdk-bridge" }
   ]
 }
