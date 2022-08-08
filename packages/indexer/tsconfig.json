@@ -21,5 +21,6 @@
     "./src/*/*/*.ts"
   ],
   "references": [
+    { "path": "../sdk-bridge" }
   ]
 }
