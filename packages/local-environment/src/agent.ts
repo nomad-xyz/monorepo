@@ -30,8 +30,8 @@ export class Agents {
     if (kathyOn) this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort + 4);
   }
 
-  async upAll() {
-    return await Promise.all([
+  async upAll(agentType?: AgentType) {
+    await Promise.all([
       this.relayer.connect().then(() => this.relayer.start()),
       this.updater.connect().then(() => this.updater.start()),
       this.processor.connect().then(() => this.processor.start()),
@@ -40,6 +40,12 @@ export class Agents {
         watcher.connect().then(() => watcher.start())
       ),
     ]);
+    switch (agentType!.toLowerCase()) {
+      case "watcher":
+        return this.watchers.map((w) => w.stop());
+      case "kathy":
+        return this.kathy!.stop();
+    }
   }
 
   async downAll() {
