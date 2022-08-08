@@ -34,7 +34,6 @@ export class NomadEnv {
 
   refreshSDK(config: NomadConfig) {
     this.bridgeSDK = new BridgeContext(config);
-    this.bridgeSDK = new BridgeContext(config);
   }
 
   // Adds a network to the array of networks if it's not already there.
@@ -216,6 +215,7 @@ export class NomadEnv {
     };
   }
 
+  //Input arguments to d.up to disable a specific agent.
   async upAgents() {
     let metrics = 9000;
     await Promise.all(this.domains.map((d, i) => d.up(metrics + i * 10)));
