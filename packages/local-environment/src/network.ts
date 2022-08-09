@@ -92,7 +92,8 @@ export class DockerizedNetworkActor extends DockerizedActor {
   addKeys(...keys: Key[]) {
     // TODO: add a check that network hasn't started yet.
     // Keep in mind! That if the network is like a Test network which already exists,
-    // we should adjust this method to create keys and fund them during the call to this method
+    // we should adjust this method to create keys and fund them during the call to this method. 
+    // This is ofc for the TestNet implementation
     this.keys.push(...keys);
   }
   // docker run --name net --env RUN_ENV=main --network="host" --env BLOCK_TIME=5 hardhat
