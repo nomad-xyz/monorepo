@@ -14,6 +14,7 @@ import { Domain } from "@nomad-xyz/configuration";
 import { Agents, AgentType } from "./agent";
 import { ethers } from "ethers";
 import { AgentKeys } from "./keys/index";
+import { NomadEnv } from "./nomadenv";
 
 // NomadDomain as a concept refers to settings, configs, and actors (agents, SDK) that are auxiliary to each arbitrary Network.
 
@@ -22,13 +23,16 @@ export class NomadDomain {
   keys: AgentKeys;
   network: Network;
   metricsPort?: number;
+  nomadEnv?: NomadEnv;
 
   connectedNetworks: NomadDomain[];
 
-  constructor(network: Network, extraKeys?: Key[]) {
+  constructor(network: Network, nomadEnv?: NomadEnv) {
     this.connectedNetworks = [];
     this.keys = new AgentKeys();
     this.network = network;
+
+    this.nomadEnv = nomadEnv;
 
     const signer = this.keys.getAgentKey("signer");
 
@@ -37,6 +41,10 @@ export class NomadDomain {
       watcher: signer,
       recoveryManager: signer,
     });
+  }
+
+  addNomadEnv(e: NomadEnv) {
+    this.nomadEnv = e;
   }
 
   get name(): string {
@@ -121,7 +129,10 @@ export class NomadDomain {
   }
 
   async down() {
-    return await this.agents?.downAll();
+    return await Promise.all([
+      this.agents?.downAll(),
+      this.network.down(),
+    ]);
   }
 
   get domain(): Domain {
@@ -143,7 +154,7 @@ export class NomadDomain {
       logging: this.logConfig,
       updater: this.updaterConfig,
       relayer: this.relayerConfig,
-      processor: this.processorConfig,
+      processor: this.processorConfig(),
       watcher: this.watcherConfig,
       kathy: this.kathyConfig,
     };
@@ -174,14 +185,17 @@ export class NomadDomain {
     };
   }
 
-  get processorConfig(): ProcessorConfig {
+  processorConfig(subsidizedRemotes?: string[]): ProcessorConfig {
+    if (subsidizedRemotes || this.nomadEnv) {
+      subsidizedRemotes = subsidizedRemotes || this.nomadEnv?.getDomains().map(d => d.name)
+    }
+    else {
+      throw new Error(`No arg 'subsidizedRemotes' passed or no nomadEnv set`);
+    }
+
     return {
       interval: 5,
-      subsidizedRemotes: [
-        // TODO: fix this
-        "tom",
-        "jerry"
-      ]
+      subsidizedRemotes: subsidizedRemotes!
     };
   }
 
