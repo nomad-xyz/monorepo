@@ -10,7 +10,6 @@ import bunyan from 'bunyan';
 import { NomadDomain } from "../src/domain";
 import { expect, assert } from "chai";
 
-/*
 describe("Token test", () => {
     let success:boolean = false
     // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
@@ -91,8 +90,8 @@ describe("Token test", () => {
     
         // Default multiprovider comes with signer (`o.setSigner(jerry, signer);`) assigned
         // to each domain, but we change it to allow sending from different signer
-        expect(ctx.registerWalletSigner(t.name, sender.toString())).not.throw(Error);
-        expect(ctx.registerWalletSigner(j.name, receiver.toString())).not.throw(Error);
+        ctx.registerWalletSigner(t.name, sender.toString());
+        ctx.registerWalletSigner(j.name, receiver.toString());
         console.log(`registered wallet signers for tom and jerry`)
     
         // get 3 random amounts which will be bridged
@@ -108,7 +107,7 @@ describe("Token test", () => {
           amount1,
           amount2,
           amount3,
-        ])).not.throw(Error);
+        ], log));
     
         console.log(`Phase 2 done`)
     
@@ -118,7 +117,7 @@ describe("Token test", () => {
           tDomain,
           token,
           new Key().toAddress(),
-          [amount3, amount2, amount1]
+          [amount3, amount2, amount1], log
         );
 
         if (tokenContract.address.toLowerCase() !== token.id.toString().toLowerCase()) {
@@ -127,4 +126,3 @@ describe("Token test", () => {
         expect(success);
     }) 
 })
-*/
