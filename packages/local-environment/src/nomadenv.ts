@@ -27,7 +27,7 @@ export class NomadEnv {
   constructor(governor: NomadLocator) {
     this.domains = [];
     this.governor = governor;
-    console.log(`Going to init NomadEnv with domains`, this.domains);
+    this.log.info(`Going to init NomadEnv with domains`, this.domains);
     this.bridgeSDK = new BridgeContext(this.nomadConfig());
     this.coreSDK = new NomadContext(this.nomadConfig());
   }
@@ -39,6 +39,7 @@ export class NomadEnv {
   // Adds a network to the array of networks if it's not already there.
   addDomain(d: NomadDomain) {
     if (!this.domains.includes(d)) this.domains.push(d);
+    d.addNomadEnv(this);
   }
 
   // Gets governing network
@@ -68,16 +69,16 @@ export class NomadEnv {
   }
 
   async deployFresh(): Promise<DeployContext> {
-    console.log(`Deploying!`, JSON.stringify(this.nomadConfig(), null, 4));
+    this.log.info(`Deploying!`);
 
     const deployContext = this.setDeployContext();
 
     const outputDir = "./output";
     const governanceBatch = await deployContext.deployAndRelinquish();
-    console.log(`Deployed! gov batch:`, governanceBatch);
+    this.log.info(`Deployed! gov batch:`, governanceBatch);
 
     await deployContext.checkDeployment();
-    console.log(`Checked deployment`);
+    this.log.info(`Checked deployment`);
 
     await this.outputConfigAndVerification(outputDir, deployContext);
     await this.outputCallBatch(outputDir, deployContext);
@@ -138,7 +139,6 @@ export class NomadEnv {
 
   async check(): Promise<void> {
     await this.deployContext.checkDeployment();
-    console.log(`CHECKS PASS!`);
   }
 
   //@TODO Feature: switches after contracts exist

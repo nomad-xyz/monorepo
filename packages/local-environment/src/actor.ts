@@ -48,12 +48,35 @@ export abstract class DockerizedActor {
 
   async stop(): Promise<void> {
     if (!this.isConnected()) throw new Error(`Not connected`);
-    if (!(await this.isRunning())) return;
-
-    await this.container?.stop();
+    if (!(await this.isRunning())) {
+      console.log(`Attempting to stop container that is NOT running`)
+    } else {
+      console.log(`Attempting to stop container that IS running`)
+      await this.container?.stop();
+    }
 
     return;
   }
+
+  async down(): Promise<void> {
+    try {
+      await this.stop();
+    } catch(e) {
+      console.warn(`xxxx1. Error:`, e);
+    }
+
+    try {
+      await this.removeContainer();
+    } catch(e) {
+      console.warn(`xxxx2. Error:`, e);
+    }
+  }
+
+  async removeContainer() {
+    await this.container?.remove();
+
+    delete this.container;
+   }
 
   async connect(): Promise<boolean> {
     const containerId = await this.findContainerIdByName(this.containerName());
@@ -154,7 +177,9 @@ export abstract class DockerizedActor {
 
   async disconnect(): Promise<void> {
     await this.container?.remove();
+    console.log(`Unsubing ->`, this.name)
     this.unsubscribe(); // Want to unsub later because want to see event of container removal
+    console.log(`Unsubbed ->`, this.name)
     delete this.container;
   }
 
