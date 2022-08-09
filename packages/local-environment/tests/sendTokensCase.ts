@@ -108,35 +108,32 @@ import { NomadDomain } from "../src/domain";
       id: tokenOnTom.address,
     };
 
-    console.log(`Tokenfactory, token deployed:`, tokenOnTom.address)
+    log.info(`Tokenfactory, token deployed:`, tokenOnTom.address)
 
     const ctx = le.getBridgeSDK();
-    console.log(`Initialized Bridge SDK context`)
+    log.info(`Initialized Bridge SDK context`)
 
     // Default multiprovider comes with signer (`o.setSigner(jerry, signer);`) assigned
     // to each domain, but we change it to allow sending from different signer
     ctx.registerWalletSigner(t.name, sender.toString());
     ctx.registerWalletSigner(j.name, receiver.toString());
-    console.log(`registered wallet signers for tom and jerry`)
+    log.info(`registered wallet signers for tom and jerry`)
 
     // get 3 random amounts which will be bridged
     const amount1 = getRandomTokenAmount();
     const amount2 = getRandomTokenAmount();
     const amount3 = getRandomTokenAmount();
 
-    console.log(`Phase 1 done`)
+    log.info(`Preparation done!`);
 
 
     await sendTokensAndConfirm(le, tDomain, jDomain, token, receiver.toAddress(), [
       amount1,
       amount2,
       amount3,
-    ]);
+    ], log);
 
-    console.log(`Phase 2 done`)
-
-
-
+    log.info(`Send tokens A->B done`);
 
     const tokenContract = await sendTokensAndConfirm(
       le,
@@ -144,12 +141,10 @@ import { NomadDomain } from "../src/domain";
       tDomain,
       token,
       new Key().toAddress(),
-      [amount3, amount2, amount1]
+      [amount3, amount2, amount1], log
     );
 
-      
-
-    console.log(`Phase 3 done`)
+    log.info(`Send tokens B->A done`);
 
     if (
       tokenContract.address.toLowerCase() !== token.id.toString().toLowerCase()
@@ -158,19 +153,19 @@ import { NomadDomain } from "../src/domain";
         `Resolved asset at destination Jerry is not the same as the token. ${tokenContract.address.toLowerCase()} != ${token.id.toString().toLowerCase()}`
       );
     } else {
-      console.log(`All cool!`)
+      log.info(`All cool!`)
     }
 
     success = true;
   } catch (e) {
-    console.error(`Test failed:`, e);
+    log.error(`Test failed:`, e);
   }
 
   // Teardown
-  // await le.down();
+  await le.down();
 
-  // await Promise.all([t.down(), j.down()]);
-
+  // TODO: something is blocking from exit - find it.
   if (!success) process.exit(1);
+  else process.exit(0);
 
 })();

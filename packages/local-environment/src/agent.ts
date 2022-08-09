@@ -52,11 +52,11 @@ export class Agents {
 
   async downAll() {
     await Promise.all([
-      this.relayer.stop(),
-      this.updater.stop(),
-      this.processor.stop(),
-      ...(kathyOn ? [this.kathy!.stop()] : []),
-      ...this.watchers.map((w) => w.stop()),
+      this.relayer.down(),
+      this.updater.down(),
+      this.processor.down(),
+      ...(kathyOn ? [this.kathy!.down()] : []),
+      ...this.watchers.map((w) => w.down()),
     ]);
   }
 }
@@ -68,6 +68,7 @@ export interface Agent {
   connect(): Promise<boolean>;
   start(): Promise<void>;
   stop(): Promise<void>;
+  down(): Promise<void>;
   disconnect(): Promise<void>;
   getEvents(): Promise<EventEmitter>;
   unsubscribe(): void;

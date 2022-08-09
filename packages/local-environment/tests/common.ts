@@ -10,6 +10,7 @@ import { NomadDomain } from "../src/domain";
 
 import fs from 'fs';
 import { TransferMessage } from "@nomad-xyz/sdk-bridge";
+import Logger from "bunyan";
 
 //
 /**
@@ -31,11 +32,9 @@ export async function sendTokensAndConfirm(
   token: TokenIdentifier,
   recipient: string,
   amounts: ethers.BigNumberish[],
-  fastLiquidity = false
+  log: Logger
 ) {
-  console.log(`===  Start! amounts:`, amounts.map(m => m.toString()));
   const ctx = n.getBridgeSDK();
-  console.log(`===  got sdk`, ctx.domainNames,ctx.domainNumbers);
 
   fs.writeFileSync('./ctx.json', JSON.stringify(ctx.conf));
 
@@ -45,8 +44,7 @@ export async function sendTokensAndConfirm(
 
   for (const a of amounts) {
     const amount = ethers.BigNumber.from(a);
-
-    console.log(`Going to send token ${token.domain}:${token.id}\n`,from.name,to.name);
+    log.info(`Going to send token ${token.domain}:${token.id}\n`,from.name,to.name);
 
     const tx = await ctx.send(
       from.name,
@@ -54,7 +52,7 @@ export async function sendTokensAndConfirm(
       token,
       amount,
       recipient,
-      fastLiquidity,
+      false,
       {
         gasLimit: 10000000,
       }
@@ -68,65 +66,39 @@ export async function sendTokensAndConfirm(
 
     const tokenAtDest = await tx.assetAtDestination()
 
-    console.log(`===  Dispatched send transaction!`, from.name, to.name, tx.committedRoot, tx.bodyHash);
-    console.log(`=== Token address at dest:`, tokenAtDest?.address);
+    log.info(`Dispatched send transaction!`, from.name, to.name, tx.committedRoot, tx.bodyHash);
+    log.info(`Token address at dest:`, tokenAtDest?.address);
 
     amountTotal = amountTotal.add(amount);
     
-    // console.log(await tx.getUpdate())
-    // console.log(`===  Got UPDATE!`);
-    // console.log(await tx.getRelay())
-    // console.log(`===  Got RELAY!`);
-    // console.log(await tx.getProcess())
-    // console.log(`===  Got PROCESS!`);
-
     // Wait until on tom's replica on jerry 
     const replica = ctx.mustGetCore(to.domain.domain).getReplica(from.domain.domain);
     if (replica) {
-      console.log(`Waiting for update and process events...`);
+      log.info(`Waiting for update and process events...`);
       await new Promise((resolve, reject) => {
         replica.once(replica.filters.Update(null, null, null, null), (homeDomain, oldRoot, newRoot, _signature) => {
-          console.log(`New Update event\n    homeDomain: ${homeDomain},\n    oldRoot: ${oldRoot},\n    newRoot: ${newRoot}`)
+          log.info(`New Update event\n    homeDomain: ${homeDomain},\n    oldRoot: ${oldRoot},\n    newRoot: ${newRoot}`)
         })
   
         replica.once(replica.filters.Process(null, null, null), (messageHash, success, _returnData) => {
-          console.log(`New Process event\n    messageHash: ${messageHash},\n    success:`, success)
+          log.info(`New Process event\n    messageHash: ${messageHash},\n    success:`, success)
           resolve(null)
         })
       })
-      console.log(`Awaited process event!`);
+      log.info(`Awaited process event!`);
     } else {
-      console.log(`No replica`);
+      log.error(`No replica`);
       throw new Error(`No replica!`);
     }
 
-    console.log(
+    log.info(
       `Sent from ${from.name} to ${to.name} ${amount.toString()} tokens`
     );
   }
 
-  // rr
-
-  // await Promise.all(amounts.map(async (a) => {
-  //   const amount = ethers.BigNumber.from(a);
-  //   console.log(`===  Dispatching send transaction!`);
-
-  //   const x = await ctx.send(
-  //     from.name,
-  //     to.name,
-  //     token,
-  //     amount,
-  //     recipient,
-  //     fastLiquidity,
-  //     {
-  //       gasLimit: 10000000,
-  //     }
-  //   );
-    
-  // }))
 
   const batch = `${new Date().valueOf()}`.substring(-3)
-  console.log(`Waiting for all assets to be delivered at from: ${from.name}, to: ${to.name} . Batch:${batch}!`);
+  log.info(`Waiting for all assets to be delivered at from: ${from.name}, to: ${to.name} . Batch:${batch}!`);
 
   const tokens = await Promise.all(rr.map(r => {
     const waiter = new Waiter(async () => {
@@ -135,7 +107,7 @@ export async function sendTokensAndConfirm(
       if (
         tokenContract?.address !== "0x0000000000000000000000000000000000000000"
       ) {
-        console.log(
+        log.info(
           `${batch} = Hurray! Asset at destination's token's address `,
           tokenContract!.address,
           `\nFrom: ${from.name}, to: ${to.name}, recipient: ${recipient}`
@@ -146,30 +118,6 @@ export async function sendTokensAndConfirm(
     return waiter.wait()
   }));
 
-  // if (!tokens.every(t => t.))
-
-
-  // console.log(`Waiting for asset to be created at destination!`);
-
-  // // Waiting until the token contract is created at destination network tom
-  // let waiter = new Waiter(
-  //   async () => {
-  //     const tokenContract = await rr[rr.length - 1]!.assetAtDestination();
-
-  //     if (
-  //       tokenContract?.address !== "0x0000000000000000000000000000000000000000"
-  //     ) {
-  //       console.log(
-  //         `Hurray! Asset at destination:`,
-  //         tokenContract!.address,
-  //         `\nFrom: ${from.name}, to: ${to.name}`
-  //       );
-  //       return tokenContract;
-  //     }
-  //   },
-  //   3 * 60_000,
-  //   2_000
-  // );
 
   const tokenContract = tokens[1];
   if (tokenContract === null) throw new Error(`Timedout token creation at destination`);
@@ -185,7 +133,7 @@ export async function sendTokensAndConfirm(
         return true;
       } else {
         newBalance = await tokenContract!.balanceOf(recipient);
-        console.log(
+        log.info(
           `New balance:`,
           parseInt(newBalance.toString()),
           "must be:",
@@ -199,12 +147,12 @@ export async function sendTokensAndConfirm(
 
   const success = await waiter2.wait();
 
-  console.log(`Recipient's balance on recipient (${recipient}) domain ${to.name} is`, (await tokenContract.balanceOf(recipient)).toString());
+  log.info(`Recipient's balance on recipient (${recipient}) domain ${to.name} is`, (await tokenContract.balanceOf(recipient)).toString());
 
   if (success === null)
     throw new Error(`Tokens transfer from ${from.name} to ${to.name} failed`)
   if (success === true) 
-    console.log(`Received tokens from ${from.name} to ${to.name}`)
+    log.info(`Received tokens from ${from.name} to ${to.name}`)
 
   return tokenContract!;
 }
