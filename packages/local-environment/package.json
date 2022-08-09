@@ -19,7 +19,7 @@
     "bootup": "chmod ug+x ./bootup.sh && ./bootup.sh",
     "cleanup": "npm run hardhat_stop && npm run agents_stop && npm run agents_clean",
     "hardhat_stop": "docker ps --filter name=_net -aq | xargs docker rm --force",
-    "jest": "jest",
+    "test": "jest",
     "start": "npx ts-node tests/start.ts",
     "test-agents-die": "npx ts-node tests/agentsDieOnImproperUpdate.ts",
     "test-double-update": "npx ts-node tests/watcherDoubleUpdate.ts",
@@ -42,15 +42,20 @@
     "dockerode": "^3.3.1",
     "ethers": "^5.5.1",
     "hardhat": "^2.6.8",
-    "jest": "^28.1.3",
     "keccak": "^3.0.2",
     "secp256k1": "^4.0.2",
     "solc": "^0.8.10",
     "ts-node": "^10.4.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.18.10",
+    "@babel/preset-env": "^7.18.10",
+    "@babel/preset-typescript": "^7.18.6",
     "@types/chai": "^4.3.0",
+    "@types/jest": "^28.1.6",
+    "babel-jest": "^28.1.3",
     "dotenv": "^10.0.0",
+    "ts-jest": "^28.0.7",
     "typescript": "^4.4.3"
   }
 }
