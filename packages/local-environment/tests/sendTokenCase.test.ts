@@ -10,7 +10,7 @@ import bunyan from 'bunyan';
 import { NomadDomain } from "../src/domain";
 import { expect, assert } from "chai";
 
-
+/*
 describe("Token test", () => {
     let success:boolean = false
     // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
@@ -60,11 +60,11 @@ describe("Token test", () => {
         log.info(`Agents up`);
     }
 
-    before(async () => {
+    beforeAll(async () => {
         await setUp();
     })
 
-    it("should handle token creation, transfer logic", async () => {
+    it("should handle token creation, transfer logic", async function () {
         const tokenFactory = getCustomToken();
         const tokenOnTom = await t.deployToken(
           tokenFactory,
@@ -126,8 +126,5 @@ describe("Token test", () => {
         }
         expect(success);
     }) 
-
-    after(async() => {
-        if (!success) process.exit(1);
-    })
 })
+*/
