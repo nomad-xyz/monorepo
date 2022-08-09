@@ -1,90 +1,81 @@
-import { LocalNetwork, Nomad, utils } from "../src";
-import fs from "fs";
-
-function stringifyDefaultishKeys(k: any) {
-  return {
-    updater: k.updater.toString(),
-    watcher: k.watcher.toString(),
-    deployer: k.deployer.toString(),
-    signer: {
-      base: k.signer.base.toString(),
-      updater: k.signer.updater.toString(),
-      watcher: k.signer.watcher.toString(),
-      relayer: k.signer.relayer.toString(),
-      processor: k.signer.processor.toString(),
-    },
-  };
-}
+import { HardhatNetwork } from "../src/network";
+import { NomadEnv } from "../src/nomadenv";
+import { Key } from "../src/keys/key";
+import bunyan from 'bunyan';
+import { NomadDomain } from "../src/domain";
 
 (async () => {
-  const tom = new LocalNetwork("tom", 1000, "http://localhost:9545");
-  const jerry = new LocalNetwork("jerry", 2000, "http://localhost:9546");
 
-  const j = utils.generateDefaultKeys();
-  const t = utils.generateDefaultKeys();
+    // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
+    const log = bunyan.createLogger({name: 'localenv'});
 
-  jerry.addKeys(
-    j.updater,
-    j.watcher,
-    j.deployer,
-    j.signer.base,
-    j.signer.updater,
-    j.signer.watcher,
-    j.signer.relayer,
-    j.signer.processor
-  );
-  tom.addKeys(
-    t.updater,
-    t.watcher,
-    t.deployer,
-    t.signer.base,
-    t.signer.updater,
-    t.signer.watcher,
-    t.signer.relayer,
-    t.signer.processor
-  );
+    // Instantiate HardhatNetworks
+    const t = new HardhatNetwork('tom', 1);
+    const j = new HardhatNetwork('jerry', 2);
 
-  fs.writeFileSync(
-    "./tomKeys.json",
-    JSON.stringify(stringifyDefaultishKeys(t))
-  );
-  fs.writeFileSync(
-    "./jerryKeys.json",
-    JSON.stringify(stringifyDefaultishKeys(j))
-  );
+    const sender = new Key();
+    const receiver = new Key();
 
-  console.log(
-    `Tom:\ndeployerKey: ${t.deployer.toString()}\naddress: ${t.deployer.toAddress()}`
-  );
-  console.log(
-    `Jerry:\ndeployerKey: ${j.deployer.toString()}\naddress: ${j.deployer.toAddress()}`
-  );
+    t.addKeys(sender);
+    j.addKeys(receiver);
 
-  await Promise.all([tom.up(), jerry.up()]);
+    // Instantiate Nomad domains
+    const tDomain = new NomadDomain(t);
+    const jDomain = new NomadDomain(j);
 
-  const n = new Nomad(tom);
-  n.addNetwork(jerry);
 
-  n.setUpdater(jerry, j.updater); // Need for an update like updater
-  n.setWatcher(jerry, j.watcher); // Need for the watcher
-  n.setDeployer(jerry, j.deployer); // Need to deploy all
-  n.setSigner(jerry, j.signer.base); // Need for home.dispatch
-  n.setSigner(jerry, j.signer.updater, "updater"); // Need for home.dispatch
-  n.setSigner(jerry, j.signer.relayer, "relayer"); // Need for home.dispatch
-  n.setSigner(jerry, j.signer.watcher, "watcher"); // Need for home.dispatch
-  n.setSigner(jerry, j.signer.processor, "processor"); // Need for home.dispatch
 
-  n.setUpdater(tom, t.updater); // Need for an update like updater
-  n.setWatcher(tom, t.watcher); // Need for the watcher
-  n.setDeployer(tom, t.deployer); // Need to deploy all
-  n.setSigner(tom, t.signer.base); // Need for home.dispatch
-  n.setSigner(tom, t.signer.updater, "updater"); // Need for home.dispatch
-  n.setSigner(tom, t.signer.relayer, "relayer"); // Need for home.dispatch
-  n.setSigner(tom, t.signer.watcher, "watcher"); // Need for home.dispatch
-  n.setSigner(tom, t.signer.processor, "processor"); // Need for home.dispatch
+    log.info(`Upped Tom and Jerry`);
 
-  await n.deploy({ injectSigners: true });
-  await n.startAllAgents();
+    log.info(`Upped Tom and Jerry`);
 
-  fs.writeFileSync("/tmp/nomad.json", JSON.stringify(n.toObject()));
+    const le = new NomadEnv({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
+
+    le.addDomain(tDomain);
+    le.addDomain(jDomain);
+    log.info(`Added Tom and Jerry`);
+
+    // Set keys
+    // le.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+    // le.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
+    // le.setRelayer(new Key(`` + process.env.PRIVATE_KEY_3 + ``));
+    // le.setKathy(new Key(`` + process.env.PRIVATE_KEY_4 + ``));
+    // le.setProcessor(new Key(`` + process.env.PRIVATE_KEY_5 + ``));
+    // le.setSigner(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+
+    // t.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``)); // setGovernanceKeys should have the same PK as the signer keys
+    // j.setGovernanceAddresses(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
+
+    // log.info(`Added Keys`)
+    
+    tDomain.connectNetwork(jDomain);
+    jDomain.connectNetwork(tDomain);
+    log.info(`Connected Tom and Jerry`);
+
+    await le.upNetworks();
+    log.info(`Upped Tom and Jerry`);
+
+    // Notes, check governance router deployment on Jerry and see if that's actually even passing
+    // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
+
+    await Promise.all([
+        t.setWETH(t.deployWETH()),
+        j.setWETH(j.deployWETH())
+    ])
+
+    log.info(await le.deploy());
+
+    // // let myContracts = le.deploymyproject();
+    // await Promise.all([
+    //   tDomain.upAllAgents(9080),
+    //   jDomain.upAllAgents(9090),
+    // ]);
+
+    
+    await le.upAgents()
+    // await le.upAgents({kathy:false, watcher: false}) // warning: nokathy.
+    
+
+    log.info(`Agents up`);
+
 })();
