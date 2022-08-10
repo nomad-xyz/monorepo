@@ -1,5 +1,5 @@
 require("@nomiclabs/hardhat-waffle");
-require("@foundry-rs/hardhat-anvil");
+// require("@foundry-rs/hardhat-anvil");
 require("dotenv").config();
 
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
