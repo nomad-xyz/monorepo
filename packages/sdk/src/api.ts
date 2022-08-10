@@ -58,7 +58,7 @@ function getGqlUrl(environment: string): string {
   return `https://bridge-indexer.${env}.madlads.tools/graphql`;
 }
 
-export async function getEvents(
+export async function getIndexerEvents(
   env: string,
   dispatchTx: string,
 ): Promise<IndexerTx> {

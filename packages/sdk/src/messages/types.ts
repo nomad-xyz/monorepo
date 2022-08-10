@@ -12,6 +12,7 @@ export type Dispatch = {
   };
   transactionHash: string;
   receipt: TransactionReceipt;
+  blockHeight: number;
 };
 
 export type ParsedMessage = {

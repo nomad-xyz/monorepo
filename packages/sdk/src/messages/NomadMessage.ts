@@ -10,7 +10,8 @@ import * as core from '@nomad-xyz/contracts-core';
 import { utils } from '@nomad-xyz/multi-provider';
 
 import { NomadContext } from '..';
-import { getEvents, IndexerTx } from '../api';
+import { getIndexerEvents, IndexerTx } from '../api';
+import { queryAnnotatedEvent, UpdateTypes, UpdateArgs } from '../events';
 import { MessageProof } from '../NomadContext';
 import {
   Dispatch,
@@ -59,6 +60,10 @@ export class NomadMessage<T extends NomadContext> {
       this.message.destination,
     );
     this.eventCache = {};
+    if (dispatch.transactionHash) {
+      this.eventCache.sent = true;
+      this.eventCache.dispatchTx = dispatch.transactionHash;
+    }
   }
 
   /**
@@ -103,6 +108,7 @@ export class NomadMessage<T extends NomadContext> {
             },
             transactionHash: receipt.transactionHash,
             receipt,
+            blockHeight: receipt.blockNumber,
           };
           messages.push(new NomadMessage(context, dispatch));
         }
@@ -212,6 +218,97 @@ export class NomadMessage<T extends NomadContext> {
     return this.eventCache.updateTx;
   }
 
+  async getUpdateFallback(): Promise<string | undefined> {
+    // if we have already gotten the event,
+    // return it without re-querying
+    if (this.eventCache.updated) {
+      return this.eventCache.updateTx;
+    }
+
+    // if not, attempt to query the event
+    const updateFilter = this.home.filters.Update(
+      undefined,
+      this.committedRoot,
+    );
+
+    const update = await queryAnnotatedEvent<
+      UpdateTypes,
+      UpdateArgs
+    >(this.context, this.origin, this.home, updateFilter, this.dispatch.blockHeight);
+
+    if (!update) return;
+    this.eventCache.updated = true;
+    this.eventCache.updateTx = update.transactionHash;
+
+    return this.eventCache.updateTx;
+  }
+
+  // /**
+  //  * Get the Replica `Update` event associated with this message (if any)
+  //  *
+  //  * @returns An {@link AnnotatedUpdate} (if any)
+  //  */
+  //  async getReplicaUpdate(): Promise<AnnotatedUpdate | undefined> {
+  //   // if we have already gotten the event,
+  //   // return it without re-querying
+  //   if (this.cache.replicaUpdate) {
+  //     return this.cache.replicaUpdate;
+  //   }
+  //   // if not, attempt to query the event
+  //   const updateFilter = this.replica.filters.Update(
+  //     undefined,
+  //     this.committedRoot,
+  //   );
+  //   const updateLogs: AnnotatedUpdate[] = await queryAnnotatedEvents<
+  //     UpdateTypes,
+  //     UpdateArgs
+  //   >(this.context, this.destination, this.replica, updateFilter);
+
+  //   if (updateLogs.length === 1) {
+  //     this.cache.replicaUpdate = updateLogs[0];
+  //   } else if (updateLogs.length > 1) {
+  //     // check for distinct (fraudulent) updates
+  //     const validUpdates = checkDistinctUpdates(updateLogs);
+  //     if (validUpdates) {
+  //       // if event is returned and valid, store it to the object
+  //       this.cache.replicaUpdate = updateLogs[0];
+  //     } else {
+  //       throw new Error('multiple replica updates for same root');
+  //     }
+  //   }
+  //   // return the event or undefined if it wasn't found
+  //   return this.cache.replicaUpdate;
+  // }
+
+  // /**
+  //  * Get the Replica `Process` event associated with this message (if any)
+  //  *
+  //  * @returns An {@link AnnotatedProcess} (if any)
+  //  */
+  // async getProcess(): Promise<AnnotatedProcess | undefined> {
+  //   // if we have already gotten the event,
+  //   // return it without re-querying
+  //   if (this.cache.process) {
+  //     return this.cache.process;
+  //   }
+  //   // if not, attempt to query the event
+  //   const processFilter = this.replica.filters.Process(this.leaf);
+  //   const processLogs = await queryAnnotatedEvents<ProcessTypes, ProcessArgs>(
+  //     this.context,
+  //     this.destination,
+  //     this.replica,
+  //     processFilter,
+  //   );
+  //   if (processLogs.length === 1) {
+  //     // if event is returned, store it to the object
+  //     this.cache.process = processLogs[0];
+  //   } else if (processLogs.length > 1) {
+  //     throw new Error('multiple replica process for same message');
+  //   }
+  //   // return the update or undefined if it doesn't exist
+  //   return this.cache.process;
+  // }
+
   /**
    * Get the Replica `Process` event associated with this message (if any)
    *
@@ -231,7 +328,7 @@ export class NomadMessage<T extends NomadContext> {
    */
   private async _events(): Promise<IndexerTx> {
     if (this.eventCache.processed) return this.eventCache;
-    this.eventCache = await getEvents(
+    this.eventCache = await getIndexerEvents(
       this.context.conf.environment,
       this.transactionHash,
     );
