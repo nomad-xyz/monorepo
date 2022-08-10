@@ -3,45 +3,42 @@ import fs from "fs";
 import { getCustomToken } from "./utils/token/deployERC20";
 import { getRandomTokenAmount, sleep } from "../src/utils";
 import { sendTokensAndConfirm, setupTwo } from "./common";
+import { NomadEnv } from "../src/nomadenv";
+import { createLogger } from "bunyan";
+import { HardhatNetwork } from "../src/network";
+import { NomadDomain } from "../src/domain";
 
-async function setupDaffy(n: Nomad) {
-  const daffy = new LocalNetwork("daffy", 3000, "http://localhost:9547");
+async function setupDaffy(le: NomadEnv) {
+  const daffy = new HardhatNetwork('daffy', 3);
+  const dDomain = new NomadDomain(daffy);
+  le.addDomain(dDomain);
 
-  const d = utils.generateDefaultKeys();
 
   const daffyActor = new Key();
 
   daffy.addKeys(
     daffyActor,
-    d.updater,
-    d.watcher,
-    d.deployer,
-    d.signer.base,
-    d.signer.updater,
-    d.signer.watcher,
-    d.signer.relayer,
-    d.signer.processor
   );
 
   await daffy.up();
 
-  n.addNetwork(daffy);
+  // n.addNetwork(daffy);
 
-  n.setUpdater(daffy, d.updater); // Need for an update like updater
-  n.setWatcher(daffy, d.watcher); // Need for the watcher
-  n.setDeployer(daffy, d.deployer); // Need to deploy all
-  n.setSigner(daffy, d.signer.base); // Need for home.dispatch
-  n.setSigner(daffy, d.signer.updater, "updater"); // Need for home.dispatch
-  n.setSigner(daffy, d.signer.relayer, "relayer"); // Need for home.dispatch
-  n.setSigner(daffy, d.signer.watcher, "watcher"); // Need for home.dispatch
-  n.setSigner(daffy, d.signer.processor, "processor"); // Need for home.dispatch
+  // n.setUpdater(daffy, d.updater); // Need for an update like updater
+  // n.setWatcher(daffy, d.watcher); // Need for the watcher
+  // n.setDeployer(daffy, d.deployer); // Need to deploy all
+  // n.setSigner(daffy, d.signer.base); // Need for home.dispatch
+  // n.setSigner(daffy, d.signer.updater, "updater"); // Need for home.dispatch
+  // n.setSigner(daffy, d.signer.relayer, "relayer"); // Need for home.dispatch
+  // n.setSigner(daffy, d.signer.watcher, "watcher"); // Need for home.dispatch
+  // n.setSigner(daffy, d.signer.processor, "processor"); // Need for home.dispatch
 
   // Another deploy here will automatically determine whether
   // there are new chains to be deployed. Here it will
   // incrementally deploy the "daffy" chain
-  await n.deploy({ injectSigners: true });
+  await le.deploy();
 
-  fs.writeFileSync("/tmp/nomad.json", JSON.stringify(n.toObject()));
+  // fs.writeFileSync("/tmp/nomad.json", JSON.stringify(n.toObject()));
 
   return {
     daffy,
@@ -120,7 +117,7 @@ async function sendTokensHubAndSpoke(
   aActor: Key,
   bActor: Key,
   cActor: Key,
-  n: Nomad
+  n: NomadEnv
 ) {
   const tokenFactory = getCustomToken();
   const tokenOnA = await a.deployToken(
@@ -151,13 +148,15 @@ async function sendTokensHubAndSpoke(
     amount2,
     amount3,
     amount1,
-  ]);
+  ],
+  log);
 
   // send tokens A to B
   await sendTokensAndConfirm(n, a, b, token, bActor.toAddress(), [
     amount1,
     amount2,
-  ]);
+  ],
+  log);
 
   // send tokens B to A
   const tokenContract1 = await sendTokensAndConfirm(
@@ -166,7 +165,8 @@ async function sendTokensHubAndSpoke(
     a,
     token,
     new Key().toAddress(),
-    [amount1, amount2]
+    [amount1, amount2],
+    log
   );
 
   // send tokens C to A
@@ -213,8 +213,11 @@ async function teardown(n: Nomad) {
 
 (async () => {
   // Normally setup and deploy 2 local networks
-  const { tom, jerry, tomActor, jerryActor, n } = await setupTwo();
-  await n.startAgents(["updater", "relayer", "processor"]);
+  const log = createLogger({name: 'localenv'});
+
+
+  const { le } = await setupTwo(log);
+  await le.upAgents(); // ["updater", "relayer", "processor"]
 
   console.log(`Tom and Jerry setup complete`);
 
@@ -222,7 +225,7 @@ async function teardown(n: Nomad) {
   try {
     // Perform incremental deploy of new network daffy
     const { daffy, daffyActor } = await setupDaffy(n);
-    await n.stopAllAgents(true);
+    await le.downAgents();
     await n.startAgents(["updater", "relayer", "processor"]);
 
     console.log(`Daffy setup complete`);

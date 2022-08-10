@@ -1,5 +1,5 @@
-import { defaultStart } from "../src/nomadenv";
-import { expect } from "chai";
+// import { defaultStart } from "../src/nomadenv";
+// import { expect } from "chai";
 
 /*
 describe("Startup test", () => {

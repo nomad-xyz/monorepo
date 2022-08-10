@@ -74,14 +74,25 @@ export class NomadEnv {
     const deployContext = this.setDeployContext();
 
     const outputDir = "./output";
-    const governanceBatch = await deployContext.deployAndRelinquish();
-    this.log.info(`Deployed! gov batch:`, governanceBatch);
+    try {
+      const governanceBatch = await deployContext.deployAndRelinquish();
+      this.log.info(`Deployed! gov batch:`, governanceBatch);
+      await this.outputConfigAndVerification(outputDir, deployContext);
+    }
+    catch (e) {
+      // if the deploy script fails,
+      // ensure the updated config & verification are outputted
+      // then re-run the script to pick up where it left off
+      await this.outputConfigAndVerification(outputDir, deployContext);
+      
+      throw e;
+    }
 
     await deployContext.checkDeployment();
     this.log.info(`Checked deployment`);
 
-    await this.outputConfigAndVerification(outputDir, deployContext);
-    await this.outputCallBatch(outputDir, deployContext);
+    // await this.outputConfigAndVerification(outputDir, deployContext);
+    // await this.outputCallBatch(outputDir, deployContext);
 
     return deployContext
   }
@@ -89,7 +100,6 @@ export class NomadEnv {
   async deploy(): Promise<DeployContext> {
     let context;
     if (this.deployedOnce()) {
-      //TODO: INPUT RESUME DEPLOYMENT LOGIC HERE
       throw new Error(`LOOK AT ME!`)
     } else {
       context = await this.deployFresh();
@@ -222,6 +232,10 @@ export class NomadEnv {
   }
 
   async down() {
+    await Promise.all(this.domains.map((d) => d.down()));
+  }
+
+  async downAgents() {
     await Promise.all(this.domains.map((d) => d.down()));
   }
 

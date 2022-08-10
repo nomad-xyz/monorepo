@@ -130,9 +130,17 @@ export class NomadDomain {
 
   async down() {
     return await Promise.all([
-      this.agents?.downAll(),
-      this.network.down(),
+      this.downAgents(),
+      this.downNetwork(),
     ]);
+  }
+
+  async downAgents() {
+    return await this.agents?.downAll();
+  }
+
+  async downNetwork() {
+    return await this.agents?.downAll();
   }
 
   get domain(): Domain {
