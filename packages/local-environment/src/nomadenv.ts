@@ -225,6 +225,10 @@ export class NomadEnv {
     await Promise.all(this.domains.map((d) => d.down()));
   }
 
+  async downAgents() {
+    await Promise.all(this.domains.map((d) => d.down()));
+  }
+
   async upNetworks() {
     // Await domains to up networks.
     await Promise.all(this.domains.map((d) => d.networkUp()));
