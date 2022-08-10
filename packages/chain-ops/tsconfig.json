@@ -6,13 +6,15 @@
     "composite": true
   },
   "exclude": [
-    "node_modules",
-    "dist"
+    "./node_modules",
+    "./dist",
+    "./src/tmp.ts"
   ],
   "include": [
     "src/*.ts"
   ],
   "references": [
+    { "path": "../sdk" },
     { "path": "../sdk-bridge" }
   ]
 }
