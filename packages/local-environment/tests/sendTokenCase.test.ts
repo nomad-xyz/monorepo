@@ -82,11 +82,11 @@ describe("Token test", () => {
         assert.exists(tokenOnTom);
         assert.exists(token);
 
-        console.log(`Tokenfactory, token deployed:`, tokenOnTom.address)
+        log.info(`Tokenfactory, token deployed:`, tokenOnTom.address)
 
         const ctx = le.getBridgeSDK();
         assert.exists(ctx);
-        console.log(`Initialized Bridge SDK context`)
+        log.info(`Initialized Bridge SDK context`)
     
         // Default multiprovider comes with signer (`o.setSigner(jerry, signer);`) assigned
         // to each domain, but we change it to allow sending from different signer
@@ -101,7 +101,7 @@ describe("Token test", () => {
         assert.exists(amount1);
         assert.exists(amount2);
         assert.exists(amount3);
-        console.log(`Phase 1 done`)
+        log.info(`Preparation done`)
 
         expect(await sendTokensAndConfirm(le, tDomain, jDomain, token, receiver.toAddress(), [
           amount1,
@@ -109,8 +109,8 @@ describe("Token test", () => {
           amount3,
         ], log));
     
-        console.log(`Phase 2 done`)
-    
+        log.info(`Sent tokens A->B done`);
+
         const tokenContract = await sendTokensAndConfirm(
           le,
           jDomain,
@@ -120,9 +120,17 @@ describe("Token test", () => {
           [amount3, amount2, amount1], log
         );
 
+        log.info(`Sent tokens B->A done`);
+
         if (tokenContract.address.toLowerCase() !== token.id.toString().toLowerCase()) {
             success = true;
         }
         expect(success);
     }) 
+
+    after(async() => {
+      await le.down();
+
+        if (!success) process.exit(1);
+    })
 })

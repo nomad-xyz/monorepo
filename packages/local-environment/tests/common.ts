@@ -11,6 +11,8 @@ import { NomadDomain } from "../src/domain";
 import fs from 'fs';
 import { TransferMessage } from "@nomad-xyz/sdk-bridge";
 import Logger from "bunyan";
+import { HardhatNetwork } from "../src/network";
+import { Key } from "../src/keys/key";
 
 //
 /**
@@ -155,6 +157,54 @@ export async function sendTokensAndConfirm(
     log.info(`Received tokens from ${from.name} to ${to.name}`)
 
   return tokenContract!;
+}
+
+export async function setupTwo(log: Logger) {
+  // Instantiate HardhatNetworks
+  const t = new HardhatNetwork('tom', 1);
+  const j = new HardhatNetwork('jerry', 2);
+
+  const sender = new Key();
+  const receiver = new Key();
+
+  t.addKeys(sender);
+  j.addKeys(receiver);
+
+  // Instantiate Nomad domains
+  const tDomain = new NomadDomain(t);
+  const jDomain = new NomadDomain(j);
+
+
+
+  log.info(`Upped Tom and Jerry`);
+
+  log.info(`Upped Tom and Jerry`);
+
+  const le = new NomadEnv({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
+
+  le.addDomain(tDomain);
+  le.addDomain(jDomain);
+  log.info(`Added Tom and Jerry`);
+
+  tDomain.connectNetwork(jDomain);
+  jDomain.connectNetwork(tDomain);
+  log.info(`Connected Tom and Jerry`);
+
+  await le.upNetworks();
+  log.info(`Upped Tom and Jerry`);
+
+  // Notes, check governance router deployment on Jerry and see if that's actually even passing
+  // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
+
+  await Promise.all([
+      t.setWETH(t.deployWETH()),
+      j.setWETH(j.deployWETH())
+  ])
+
+  log.info(await le.deploy());
+  return {
+    le
+  }
 }
 
 /*

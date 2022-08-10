@@ -8,6 +8,24 @@ import { getRandomTokenAmount } from "../src/utils";
 import { sendTokensAndConfirm } from "./common";
 import bunyan from 'bunyan';
 import { NomadDomain } from "../src/domain";
+import { arrayify, hexlify } from "ethers/lib/utils";
+import { ParsedMessage } from "@nomad-xyz/sdk";
+
+
+export function parseMessage(message: string): ParsedMessage {
+  const buf = Buffer.from(arrayify(message));
+  const from = buf.readUInt32BE(0);
+  const sender = hexlify(buf.slice(4, 36));
+  const nonce = buf.readUInt32BE(36);
+  const destination = buf.readUInt32BE(40);
+  const recipient = hexlify(buf.slice(44, 76));
+  const body = hexlify(buf.slice(76));
+  return { from, sender, nonce, destination, recipient, body };
+}
+
+export function prepMessage(m: ParsedMessage) {
+  let s = '';
+}
 
 (async () => {
 
@@ -75,6 +93,12 @@ import { NomadDomain } from "../src/domain";
     //   tDomain.upAllAgents(9080),
     //   jDomain.upAllAgents(9090),
     // ]);
+
+    
+
+    const sdk = le.bridgeSDK;
+
+    
 
     
     await le.upAgents()
