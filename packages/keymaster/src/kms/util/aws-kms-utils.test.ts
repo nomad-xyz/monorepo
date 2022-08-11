@@ -4,7 +4,7 @@ import {
   determineCorrectV,
   findEthereumSig,
 } from "./aws-kms-utils";
-import { describe, test } from "mocha";
+// import { describe, test } from "mocha";
 import { expect } from "chai";
 
 describe("getEthereumAddress", () => {
