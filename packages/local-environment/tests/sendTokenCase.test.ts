@@ -128,7 +128,7 @@ describe("Token test", () => {
         expect(success);
     }) 
 
-    after(async() => {
+    afterAll(async() => {
       await le.down();
 
         if (!success) process.exit(1);
