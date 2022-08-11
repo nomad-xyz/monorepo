@@ -1,3 +1,4 @@
 .env
-output/
+output/*
 coverage
+!output/.gitkeep
