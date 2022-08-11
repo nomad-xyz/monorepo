@@ -2997,7 +2997,7 @@ __metadata:
     eslint: ^7.20.0
     ethereum-waffle: ^3.2.2
     ethers: ^5.4.4
-    hardhat: ^2.6.0
+    hardhat: ^2.9.0
     hardhat-gas-reporter: ^1.0.4
     hardhat-packager: ~1.2.1
     prettier: ^2.2.1
@@ -12259,7 +12259,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hardhat@npm:^2.6.0, hardhat@npm:^2.6.4, hardhat@npm:^2.6.8, hardhat@npm:^2.8.3":
+"hardhat@npm:^2.6.0, hardhat@npm:^2.6.4, hardhat@npm:^2.6.8, hardhat@npm:^2.8.3, hardhat@npm:^2.9.0":
   version: 2.10.1
   resolution: "hardhat@npm:2.10.1"
   dependencies:

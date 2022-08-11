@@ -43,7 +43,7 @@
     "eslint": "^7.20.0",
     "ethereum-waffle": "^3.2.2",
     "ethers": "^5.4.4",
-    "hardhat": "^2.6.0",
+    "hardhat": "^2.9.0",
     "hardhat-gas-reporter": "^1.0.4",
     "hardhat-packager": "~1.2.1",
     "prettier": "^2.2.1",
