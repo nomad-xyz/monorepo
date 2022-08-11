@@ -3032,7 +3032,6 @@ __metadata:
     eslint-config-prettier: ^8.3.0
     ethers: ^5.5.1
     prettier: ^2.3.1
-    ts-mocha: ^9.0.2
     ts-node: ^10.1.0
     typechain: ^5.0.0
     typescript: ^4.5.5
@@ -3196,7 +3195,6 @@ __metadata:
     "@nomad-xyz/contracts-bridge": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"
     "@types/chai": ^4.2.21
-    "@types/mocha": ^9.1.0
     "@types/node": ^16.9.1
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
@@ -3205,10 +3203,8 @@ __metadata:
     eslint-config-prettier: ^8.3.0
     ethers: ^5.0.0
     fs: 0.0.1-security
-    mocha: ^9.2.1
     nyc: ^15.1.0
     prettier: ^2.4.1
-    ts-mocha: ^9.0.2
     typescript: ^4.4.3
     web3: ^1.6.1
   languageName: unknown
@@ -3224,7 +3220,6 @@ __metadata:
     "@nomad-xyz/configuration": ^0.1.0
     "@nomad-xyz/sdk": "workspace:^"
     "@types/chai": ^4.2.21
-    "@types/mocha": ^9.1.0
     "@types/node": ^16.9.1
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
@@ -3233,10 +3228,8 @@ __metadata:
     eslint-config-prettier: ^8.3.0
     ethers: ^5.4.6
     fs: 0.0.1-security
-    mocha: ^9.2.1
     nyc: ^15.1.0
     prettier: ^2.4.1
-    ts-mocha: ^9.0.2
     ts-node: ^10.1.0
     typescript: ^4.4.3
     web3: ^1.6.1
@@ -3252,7 +3245,6 @@ __metadata:
     "@nomad-xyz/local-environment": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
     "@types/chai": ^4.2.21
-    "@types/mocha": ^9.1.0
     "@types/node": ^16.9.1
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
@@ -3264,10 +3256,8 @@ __metadata:
     fs: 0.0.1-security
     graphql: ^16.5.0
     graphql-request: ^4.3.0
-    mocha: ^9.2.1
     nyc: ^15.1.0
     prettier: ^2.4.1
-    ts-mocha: ^9.0.2
     ts-node: ^10.7.0
     typescript: ^4.4.3
   languageName: unknown
@@ -4439,13 +4429,6 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: 21e6681ee18cee6314dbe0f57ada48981912b76de8266f438ba2573770d60aaa8dd376baad3f20e2346696a7cca84b0aadd1737222341553a0091831a46e6ad1
-  languageName: node
-  linkType: hard
-
-"@types/mocha@npm:^9.1.0":
-  version: 9.1.1
-  resolution: "@types/mocha@npm:9.1.1"
-  checksum: 516077c0acd9806dc78317f88aaac0df5aaf0bdc2f63dfdadeabdf0b0137953b6ca65472e6ff7c30bc93ce4e0ae76eae70e8d46764b9a8eae4877a928b6ef49a
   languageName: node
   linkType: hard
 
