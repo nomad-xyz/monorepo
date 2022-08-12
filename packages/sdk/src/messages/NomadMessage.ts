@@ -315,7 +315,7 @@ export class NomadMessage<T extends NomadContext> {
    * @param opts Polling options.
    */
   async wait(opts?: { pollTime?: number }): Promise<void> {
-    const interval = opts?.pollTime ?? 5000;
+    const interval = opts?.pollTime ?? 50;
 
     // sad spider face
     for (;;) {

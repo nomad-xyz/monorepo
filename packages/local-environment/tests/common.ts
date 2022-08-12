@@ -1,10 +1,18 @@
-import { Nomad, utils, Network, LocalNetwork, Key } from "../src";
-import type { TokenIdentifier } from "@nomad-xyz/sdk/nomad/tokens";
+// import { Nomad, utils, Network, LocalNetwork, Key } from "../src";
+import type { TokenIdentifier } from "@nomad-xyz/sdk-bridge/src";
 import { ethers } from "ethers";
-import { TransferMessage } from "@nomad-xyz/sdk/nomad";
-import fs from "fs";
+// import { TransferMessage } from "@nomad-xyz/sdk/nomad";
+
 import { Waiter } from "../src/utils";
-import { LocalAgent } from "../src/agent";
+
+import { NomadEnv } from "../src/nomadenv";
+import { NomadDomain } from "../src/domain";
+
+import fs from 'fs';
+import { TransferMessage } from "@nomad-xyz/sdk-bridge";
+import Logger from "bunyan";
+import { HardhatNetwork } from "../src/network";
+import { Key } from "../src/keys/key";
 
 //
 /**
@@ -15,94 +23,123 @@ import { LocalAgent } from "../src/agent";
  * @param from - instance of Network *from* which the tokens will be sent
  * @param to - instance of Network *to* which the tokens will be sent
  * @param token - token identifier according to Nomad
- * @param receiver - receiver address as string at network *to*
+ * @param recipient - recipient address as string at network *to*
  * @param amounts - array of amounts to be sent in bulk
  * @returns a promise of pair [`success`, `tokenContract` ERC20 if it was created]
  */
 export async function sendTokensAndConfirm(
-  n: Nomad,
-  from: Network,
-  to: Network,
+  n: NomadEnv,
+  from: NomadDomain,
+  to: NomadDomain,
   token: TokenIdentifier,
-  receiver: string,
+  recipient: string,
   amounts: ethers.BigNumberish[],
-  fastLiquidity = false
+  log: Logger
 ) {
-  const ctx = n.getMultiprovider();
+  const ctx = n.getBridgeSDK();
+
+  fs.writeFileSync('./ctx.json', JSON.stringify(ctx.conf));
 
   let amountTotal = ethers.BigNumber.from(0);
 
-  let result: TransferMessage | undefined = undefined;
-  for (const amountish of amounts) {
-    const amount = ethers.BigNumber.from(amountish);
+  const rr: TransferMessage[] = [];
 
-    result = await ctx.send(
+  for (const a of amounts) {
+    const amount = ethers.BigNumber.from(a);
+    log.info(`Going to send token ${token.domain}:${token.id}\n`,from.name,to.name);
+
+    const tx = await ctx.send(
       from.name,
       to.name,
       token,
       amount,
-      receiver,
-      fastLiquidity,
+      recipient,
+      false,
       {
         gasLimit: 10000000,
       }
     );
 
-    amountTotal = amountTotal.add(amount);
+    rr.push(tx);
 
-    console.log(
+    await tx.wait();
+
+    // tx.committedRoot
+
+    const tokenAtDest = await tx.assetAtDestination()
+
+    log.info(`Dispatched send transaction!`, from.name, to.name, tx.committedRoot, tx.bodyHash);
+    log.info(`Token address at dest:`, tokenAtDest?.address);
+
+    amountTotal = amountTotal.add(amount);
+    
+    // Wait until on tom's replica on jerry 
+    const replica = ctx.mustGetCore(to.domain.domain).getReplica(from.domain.domain);
+    if (replica) {
+      log.info(`Waiting for update and process events...`);
+      await new Promise((resolve, reject) => {
+        replica.once(replica.filters.Update(null, null, null, null), (homeDomain, oldRoot, newRoot, _signature) => {
+          log.info(`New Update event\n    homeDomain: ${homeDomain},\n    oldRoot: ${oldRoot},\n    newRoot: ${newRoot}`)
+        })
+  
+        replica.once(replica.filters.Process(null, null, null), (messageHash, success, _returnData) => {
+          log.info(`New Process event\n    messageHash: ${messageHash},\n    success:`, success)
+          resolve(null)
+        })
+      })
+      log.info(`Awaited process event!`);
+    } else {
+      log.error(`No replica`);
+      throw new Error(`No replica!`);
+    }
+
+    log.info(
       `Sent from ${from.name} to ${to.name} ${amount.toString()} tokens`
     );
   }
 
-  if (!result) throw new Error(`Didn't get the result from transactions`);
 
-  console.log(
-    `Waiting for the last transactions of ${amounts.length} to be delivered:`
-  );
+  const batch = `${new Date().valueOf()}`.substring(-3)
+  log.info(`Waiting for all assets to be delivered at from: ${from.name}, to: ${to.name} . Batch:${batch}!`);
 
-  await result.wait();
-
-  console.log(`Waiting for asset to be created at destination!`);
-
-  // Waiting until the token contract is created at destination network tom
-  let waiter = new utils.Waiter(
-    async () => {
-      const tokenContract = await result!.assetAtDestination();
+  const tokens = await Promise.all(rr.map(r => {
+    const waiter = new Waiter(async () => {
+      const tokenContract = await r.assetAtDestination();
 
       if (
         tokenContract?.address !== "0x0000000000000000000000000000000000000000"
       ) {
-        console.log(
-          `Hurray! Asset was created at destination:`,
-          tokenContract!.address
+        log.info(
+          `${batch} = Hurray! Asset at destination's token's address `,
+          tokenContract!.address,
+          `\nFrom: ${from.name}, to: ${to.name}, recipient: ${recipient}`
         );
         return tokenContract;
       }
-    },
-    3 * 60_000,
-    2_000
-  );
+    }, 3*60_000, 2_000);
+    return waiter.wait()
+  }));
 
-  const tokenContract = await waiter.wait();
+
+  const tokenContract = tokens[1];
   if (tokenContract === null) throw new Error(`Timedout token creation at destination`);
 
   if (!tokenContract) throw new Error(`no token contract`);
 
-  let newBalance = await tokenContract!.balanceOf(receiver);
+  let newBalance = await tokenContract!.balanceOf(recipient);
 
   // Waiting until all 3 transactions will land at tom
-  let waiter2 = new utils.Waiter(
+  let waiter2 = new Waiter(
     async () => {
       if (newBalance.eq(amountTotal)) {
         return true;
       } else {
-        newBalance = await tokenContract!.balanceOf(receiver);
-        console.log(
+        newBalance = await tokenContract!.balanceOf(recipient);
+        log.info(
           `New balance:`,
           parseInt(newBalance.toString()),
           "must be:",
-          parseInt(tokenContract.toString())
+          parseInt(amountTotal.toString())
         );
       }
     },
@@ -112,11 +149,69 @@ export async function sendTokensAndConfirm(
 
   const success = await waiter2.wait();
 
+  log.info(`Recipient's balance on recipient (${recipient}) domain ${to.name} is`, (await tokenContract.balanceOf(recipient)).toString());
+
   if (success === null)
-    throw new Error(`Tokens transfer from ${from.name} to ${to.name} failed`);
+    throw new Error(`Tokens transfer from ${from.name} to ${to.name} failed`)
+  if (success === true) 
+    log.info(`Received tokens from ${from.name} to ${to.name}`)
 
   return tokenContract!;
 }
+
+export async function setupTwo(log: Logger) {
+  // Instantiate HardhatNetworks
+  const t = new HardhatNetwork('tom', 1);
+  const j = new HardhatNetwork('jerry', 2);
+
+  const sender = new Key();
+  const receiver = new Key();
+
+  t.addKeys(sender);
+  j.addKeys(receiver);
+
+  // Instantiate Nomad domains
+  const tDomain = new NomadDomain(t);
+  const jDomain = new NomadDomain(j);
+
+
+
+  log.info(`Upped Tom and Jerry`);
+
+  log.info(`Upped Tom and Jerry`);
+
+  const le = new NomadEnv({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
+
+  le.addDomain(tDomain);
+  le.addDomain(jDomain);
+  log.info(`Added Tom and Jerry`);
+
+  tDomain.connectNetwork(jDomain);
+  jDomain.connectNetwork(tDomain);
+  log.info(`Connected Tom and Jerry`);
+
+  await le.upNetworks();
+  log.info(`Upped Tom and Jerry`);
+
+  // Notes, check governance router deployment on Jerry and see if that's actually even passing
+  // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
+
+  await Promise.all([
+      t.setWETH(t.deployWETH()),
+      j.setWETH(j.deployWETH())
+  ])
+
+  log.info(await le.deploy());
+  return {
+    le
+  }
+}
+
+/*
+Shut for now, so doesnt bother from sentTokentsCase.ts
+
+// import fs from "fs";
+// import { LocalAgent } from "../src/agent";
 
 export async function setupTwo() {
   const tom = new LocalNetwork("tom", 1000, "http://localhost:9545");
@@ -236,3 +331,6 @@ export async function waitAgentFailure(
     2_000
   );
 }
+
+
+*/

@@ -1,6 +1,5 @@
 import * as Stream from "stream";
 import { ethers } from "ethers";
-import { Key } from "./key";
 
 export function sleep(ms: number) {
   return new Promise((res) => setTimeout(res, ms));
@@ -204,21 +203,6 @@ function getMessage(
       return ethers.utils.arrayify(x);
     })
   );
-}
-
-export function generateDefaultKeys() {
-  return {
-    updater: new Key(),
-    watcher: new Key(),
-    deployer: new Key(),
-    signer: {
-      base: new Key(),
-      updater: new Key(),
-      watcher: new Key(),
-      relayer: new Key(),
-      processor: new Key(),
-    },
-  };
 }
 
 /**
