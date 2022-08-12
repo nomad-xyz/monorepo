@@ -243,21 +243,54 @@ export class NomadContext extends MultiProvider<config.Domain> {
   ): Promise<ContractTransaction> {
     const data = await message.getProof();
     if (!data) throw new Error('Unable to fetch proof');
+    return this.processProof(message.origin, message.destination, data);
+  }
 
+  async processProof(
+    origin: string | number,
+    destination: string | number,
+    proof: MessageProof,
+  ): Promise<ContractTransaction> {
     // get replica contract
-    const replica = this.mustGetReplicaFor(message.origin, message.destination);
+    const replica = this.mustGetReplicaFor(origin, destination);
 
     await replica.callStatic.proveAndProcess(
-      data.message,
-      data.proof.path,
-      data.proof.index,
+      proof.message,
+      proof.proof.path,
+      proof.proof.index,
     );
 
     return replica.proveAndProcess(
-      data.message,
-      data.proof.path,
-      data.proof.index,
+      proof.message,
+      proof.proof.path,
+      proof.proof.index,
     );
+  }
+
+  async fetchProof(
+    origin: string | number,
+    leafIndex: number,
+  ): Promise<MessageProof> {
+    const s3 = this.conf.s3;
+    if (!s3) throw new Error('s3 data not configured');
+    const { bucket, region } = s3;
+    const originName = this.resolveDomainName(origin);
+
+    const uri = `https://${bucket}.s3.${region}.amazonaws.com/${originName}_${leafIndex}`;
+    const response = await fetch(uri);
+    if (!response) throw new Error('Unable to fetch proof');
+    const data = await response.json();
+    if (data.proof && data.message) return data;
+    throw new Error('Server returned invalid proof');
+  }
+
+  async processByOriginDestinationAndLeaf(
+    origin: string | number,
+    destination: string | number,
+    leafIndex: number,
+  ): Promise<ContractTransaction> {
+    const proof = await this.fetchProof(origin, leafIndex);
+    return await this.processProof(origin, destination, proof);
   }
 
   blacklist(): Set<number> {

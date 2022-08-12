@@ -39,6 +39,9 @@
       "path": "./local-environment"
     },
     {
+      "path": "./chain-ops"
+    },
+    {
       "path": "./multi-provider"
     },
     {
