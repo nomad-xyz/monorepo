@@ -25,7 +25,7 @@
     "check": "tsc --noEmit",
     "prettier": "prettier --write ./src ./tests",
     "lint": "eslint --fix ./src ./tests",
-    "test": "yarn build && echo TODO: Fix tests",
+    "test:unit": "yarn build && echo TODO: Fix tests",
     "coverage": "echo TODO: Fix tests"
   },
   "dependencies": {

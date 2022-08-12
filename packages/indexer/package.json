@@ -24,7 +24,7 @@
     "start:api": "yarn prisma:all && yarn run:api",
     "start:core": "yarn prisma:all && yarn run:core",
     "start:legacy": "yarn prisma:all && yarn start:any",
-    "test": "echo TODO",
+    "test:unit": "echo TODO",
     "test:load": "element run ./load-tests/get-events.ts --mu"
   },
   "dependencies": {
