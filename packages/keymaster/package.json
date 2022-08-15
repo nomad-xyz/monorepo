@@ -25,6 +25,6 @@
   },
   "scripts": {
     "start": "ts-node ./src/index.ts",
-    "test": "echo TODO: Fix tests"
+    "test:unit": "echo TODO: Fix tests"
   }
 }

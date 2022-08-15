@@ -18,7 +18,7 @@
     "coverage": "echo TODO: Fix tests",
     "lint": "eslint --fix ./src",
     "prettier": "prettier --write ./src",
-    "test": "echo TODO: Fix tests"
+    "test:unit": "echo TODO: Fix tests"
   },
   "dependencies": {
     "@nomad-xyz/configuration": "^0.1.0",

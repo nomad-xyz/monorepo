@@ -25,7 +25,7 @@
     "lint:fix": "solhint --fix contracts/*.sol",
     "prettier": "prettier --write './contracts'",
     "prepublish": "yarn bootstrap && yarn build",
-    "test": "yarn snapshot && FOUNDRY_PROFILE=core forge test",
+    "test:unit": "yarn snapshot && FOUNDRY_PROFILE=core forge test",
     "test:ci": "yarn snapshot && FOUNDRY_PROFILE=core-ci forge test",
     "test:static-analyze": "rm -rf node_modules && yarn link:node_modules && slither .",
     "link:node_modules": "ln -s ../../node_modules",
