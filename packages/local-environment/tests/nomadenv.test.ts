@@ -39,6 +39,9 @@ describe("NomadDomain test", () => {
         le.upNetworks();
         assert.isTrue(t.isConnected());
         assert.isTrue(j.isConnected());
+        le.down();
+        assert.isFalse(t.isConnected());
+        assert.isFalse(j.isConnected());
     })
 
 })
