@@ -20,4 +20,6 @@ yarn build;
 # yarn deploy build;
 cd packages/local-environment/
 
+yarn bootup
+
 echo '\033[0;32m' ====== You are good to go sir! '\033[0m'
