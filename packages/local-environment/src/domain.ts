@@ -64,11 +64,13 @@ export class NomadDomain {
     return !!this.agents;
   }
 
+  /*
   networkJsonRpcSigner(
     addressOrIndex: string | number
   ): ethers.providers.JsonRpcSigner {
     return this.network.getJsonRpcSigner(addressOrIndex);
   }
+  */
 
   networkJsonRpcProvider(): ethers.providers.JsonRpcProvider {
     return this.network.getJsonRpcProvider();
@@ -87,8 +89,7 @@ export class NomadDomain {
     return this.keys.getAgentAddress(type, watcherNumber);
   }
 
-  getAgentSigner(type?: AgentType, watcherNumber = 0): Key {
-    if (type) return this.keys.getAgentKey(type, watcherNumber);
+  getAgentSigner(type: AgentType, watcherNumber = 0): Key {
     return this.keys.getAgentKey(type, watcherNumber);
   }
 
