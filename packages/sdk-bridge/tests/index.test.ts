@@ -1,6 +1,3 @@
-// import { before, describe, it } from 'mocha';
-import { expect } from 'chai';
-
 import { BridgeContext } from '@nomad-xyz/sdk-bridge';
 import * as config from '@nomad-xyz/configuration';
 
@@ -8,9 +5,9 @@ import { NomadContext } from '@nomad-xyz/sdk';
 
 const ENVIRONMENTS = ['test', 'development', 'staging', 'production'];
 
-describe('sdk-bridge', async () => {
+describe('sdk-bridge', () => {
   describe('BridgeContext', () => {
-    it('Is properly instantiated from a NomadConfig and then NomadContext', async () => {
+    it('Is properly instantiated from a NomadConfig and then NomadContext', () => {
       for (const env of ENVIRONMENTS) {
         const conf = config.getBuiltin(env);
         const nomadContext = new NomadContext(conf);
@@ -24,23 +21,27 @@ describe('sdk-bridge', async () => {
           const bridge = context.getBridge(domain);
           const confBridge = conf.bridge[domain];
 
-          expect(bridge.bridgeRouter.address).to.equal(
+          expect(bridge).toBeDefined;
+
+          expect(bridge?.bridgeRouter.address).toEqual(
             confBridge.bridgeRouter.proxy,
           );
-          expect(bridge.tokenRegistry.address).to.equal(
+          expect(bridge?.tokenRegistry.address).toEqual(
             confBridge.tokenRegistry.proxy,
           );
-          expect(bridge.ethHelper.address).to.equal(confBridge.ethHelper);
+
+          expect(bridge?.ethHelper).toBeDefined;
+          expect(bridge?.ethHelper?.address).toEqual(confBridge.ethHelper);
         }
       }
     });
   });
 
-  describe('Nomad events', async () => {
+  describe('Nomad events', () => {
     let conf;
     let context;
 
-    before(() => {
+    beforeAll(() => {
       conf = config.getBuiltin('development');
       context = new BridgeContext(conf);
 
@@ -52,7 +53,7 @@ describe('sdk-bridge', async () => {
     });
 
     // TODO:
-    it.skip('sends bridge transaction', async () => {
+    it.skip('sends bridge transaction', () => {
       // const [bridgor] = await ethers.getSigners();
       // const bridgorAddress = await bridgor.getAddress();
       // const bridgorId = utils.hexlify(canonizeId(bridgorAddress));

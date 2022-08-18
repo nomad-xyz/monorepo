@@ -40,7 +40,6 @@
     "graphql-request": "^4.3.0"
   },
   "devDependencies": {
-    "@babel/preset-typescript": "^7.18.6",
     "@nomad-xyz/local-environment": "workspace:^",
     "@types/chai": "^4.2.21",
     "@types/jest": "^28.1.7",
