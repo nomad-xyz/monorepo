@@ -24,13 +24,21 @@ describe("NomadDomain test", () => {
         // Can add domains
         le.addDomain(tDomain);
         le.addDomain(jDomain);
+        assert.isTrue(tDomain.network.isConnected)
+        assert.isTrue(jDomain.network.isConnected)
         assert.isTrue(le.domains.includes(tDomain));
         assert.isTrue(le.domains.includes(jDomain));
 
         // Can up agents
         le.upAgents();
         assert.isTrue(tDomain.isAgentUp);
+        assert.isTrue(tDomain.agents?.updater.status);
+        assert.isTrue(tDomain.agents?.relayer.status);
+        assert.isTrue(tDomain.agents?.processor.status);
         assert.isTrue(jDomain.isAgentUp);
+        assert.isTrue(jDomain.agents?.updater.status);
+        assert.isTrue(jDomain.agents?.relayer.status);
+        assert.isTrue(jDomain.agents?.processor.status);
         le.downAgents();
         assert.isFalse(tDomain.isAgentUp);
         assert.isFalse(jDomain.isAgentUp); 

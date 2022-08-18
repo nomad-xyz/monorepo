@@ -72,7 +72,7 @@ export interface Agent {
   disconnect(): Promise<void>;
   getEvents(): Promise<EventEmitter>;
   unsubscribe(): void;
-  status(): void;
+  status(): Promise<boolean>;
 }
 
 export enum AgentType {
@@ -211,7 +211,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
             .toString()}` //Gets the key after LE assigns off of domainNumber.
         );
         envs.push(
-          `ATTESTATION_SIGNER_KEY=0x${this.domain.getAgentSigner().toString()}`
+          `ATTESTATION_SIGNER_KEY=0x${this.domain.getAgentSigner(AgentType.Updater).toString()}`
         ); //Important that all agents have unique TXSIGNER keys, but not attestation. Updater uses this key to sign merkle-root transitions.
         break;
       }
@@ -222,7 +222,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
             .toString()}`
         );
         envs.push(
-          `ATTESTATION_SIGNER_KEY=0x${this.domain.getAgentSigner().toString()}`
+          `ATTESTATION_SIGNER_KEY=0x${this.domain.getAgentSigner(AgentType.Watcher).toString()}`
         ); //Watchers use this key to sign attestations of fraudulent roots.
         break;
       }
@@ -299,5 +299,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
     });
   }
 
-  status() {}
+  async status(): Promise<boolean> {
+    return this.isConnected();
+  }
 }
