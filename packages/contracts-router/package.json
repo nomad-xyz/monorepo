@@ -24,7 +24,7 @@
     "lint:fix": "solhint --fix contracts/*.sol",
     "prettier": "prettier --write './contracts'",
     "prepublish": "yarn bootstrap && yarn build",
-    "test": "hardhat test"
+    "test:unit": "hardhat test"
   },
   "dependencies": {
     "@nomad-xyz/contracts-core": "workspace:^",

@@ -83,7 +83,7 @@ packages.
 ```
 $ yarn prettier
 $ yarn lint
-$ yarn test
+$ yarn test:unit
 $ yarn build
 ```
 
@@ -122,7 +122,7 @@ Before publishing any package to `npm` perform the following steps:
 
 1. Run `yarn` to ensure the lockfile is up to date
 2. Run `yarn lint` to ensure all packages are linted
-3. Run `yarn test` to ensure all tests are passing
+3. Run `yarn test:unit` to ensure all unit tests are passing
 4. Run `yarn build` to build all the packages
 5. Ensure that your package has a sensible `.npmignore`
 6. Ensure that the `main` and `types` keys in your package are set correctly
