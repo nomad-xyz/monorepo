@@ -125,12 +125,11 @@ describe("Token test", () => {
         if (tokenContract.address.toLowerCase() !== token.id.toString().toLowerCase()) {
             success = true;
         }
-        expect(success);
+        expect(success).to.equal(true);
     }) 
     
     afterAll(async() => {
       await le.down();
-
-        if (!success) process.exit(1);
+      process.exit(0);
     })
 })
