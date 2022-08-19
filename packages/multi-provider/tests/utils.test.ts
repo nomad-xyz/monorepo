@@ -35,7 +35,7 @@ describe('multi-provider utils', () => {
     );
   });
 
-  it('converts Nomad Id to emv address', () => {
+  it('converts Nomad Id to evm address', () => {
     expect(() => utils.evmId(badLen)).toThrow(
       'Invalid id length. expected 20 or 32. Got 15',
     );
