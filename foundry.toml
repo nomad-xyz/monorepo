@@ -57,7 +57,8 @@ test = 'packages/contracts-fork-tests/'
 
 
 [rpc_endpoints]
-ethereum = "https://main-light.eth.linkpool.io/"
+# Public endpoints
+ethereum = "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
 milkomeda = "https://rpc.c1.milkomeda.com:8545"
 evmos = "https://eth.bd.evmos.org:8545"
 xdai = "https://rpc.gnosischain.com"

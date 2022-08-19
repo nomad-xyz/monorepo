@@ -4,7 +4,9 @@ pragma solidity 0.7.6;
 import "forge-std/Test.sol";
 import "forge-std/console2.sol";
 import { Replica } from "@nomad-xyz/contracts-core/contracts/Replica.sol";
+import { Message } from "@nomad-xyz/contracts-core/contracts/libs/Message.sol";
 import { TypeCasts } from "@nomad-xyz/contracts-core/contracts/libs/TypeCasts.sol";
+import { GoodXappSimple } from "@nomad-xyz/contracts-core/contracts/test/utils/GoodXapps.sol";
 
 abstract contract ReplicaForkTest is Test {
   uint256 ethereumFork;
@@ -20,18 +22,20 @@ abstract contract ReplicaForkTest is Test {
   Replica xdaiReplica;
   Replica evmosReplica;
 
+  GoodXappSimple goodXappSimple;
   uint32 remoteDomain;
   Replica replica;
 
   function setUp() public virtual {
     // Create forks for every network where Nomad is deployed
     // in production.
-    ethereumFork = vm.createFork(vm.rpcUrl("ethereum"));
     // milkomedaFork = vm.createFork(vm.rpcUrl("milkomeda"));
     // evmosFork = vm.createFork(vm.rpcUrl("evmos"));
     // moonbeamFork = vm.createFork(vm.rpcUrl("moonbeam"));
     // avalancheFork = vm.createFork(vm.rpcUrl("avalanche"));
     // xdaiFork = vm.createFork(vm.rpcUrl("xdai"));
+
+    goodXappSimple = new GoodXappSimple();
   }
 
   /*//////////////////////////////////////////////////////////////
@@ -124,6 +128,7 @@ abstract contract ReplicaForkTest is Test {
 abstract contract ReplicaEthereumTest is ReplicaForkTest {
   function setUp() public virtual override {
     super.setUp();
+    ethereumFork = vm.createFork(vm.rpcUrl("ethereum"));
     vm.selectFork(ethereumFork);
   }
 }
@@ -131,7 +136,8 @@ abstract contract ReplicaEthereumTest is ReplicaForkTest {
 contract evmosReplicaOnEthereum is ReplicaEthereumTest {
   function setUp() public override {
     super.setUp();
-    replica = Replica(0x5BAe47bF29F4E9B1E275C0b427B84C4DaA30033A);
+    address replicaAddress = 0x5BAe47bF29F4E9B1E275C0b427B84C4DaA30033A;
+    replica = Replica(replicaAddress);
     remoteDomain = replica.remoteDomain();
   }
 }
