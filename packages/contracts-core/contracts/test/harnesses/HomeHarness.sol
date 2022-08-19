@@ -5,4 +5,11 @@ import {Home} from "../../Home.sol";
 
 contract HomeHarness is Home {
     constructor(uint32 _localDomain) Home(_localDomain) {}
+
+    function exposed_destinationAndNonce(uint32 _destination, uint32 _nonce)
+        public
+        returns (uint64)
+    {
+        return _destinationAndNonce(_destination, _nonce);
+    }
 }

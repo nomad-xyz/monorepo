@@ -18,13 +18,6 @@ contract HomeTest is NomadTestWithUpdaterManager {
         vm.prank(address(updaterManager));
     }
 
-    function test_homeDomain() public {
-        assertEq(
-            keccak256(abi.encodePacked(homeDomain, "NOMAD")),
-            home.homeDomainHash()
-        );
-    }
-
     function test_onlyUpdaterManagerSetUpdater() public {
         vm.prank(address(updaterManager));
         home.setUpdater(vm.addr(420));
@@ -101,6 +94,13 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home.dispatch(remoteDomain, recipient, messageBody);
     }
 
+    event Update(
+        uint32 indexed homeDomain,
+        bytes32 indexed oldRoot,
+        bytes32 indexed newRoot,
+        bytes signature
+    );
+
     function test_updateSuccess() public {
         bytes memory messageBody = "";
         uint32 destinationDomain = remoteDomain;
@@ -173,10 +173,19 @@ contract HomeTest is NomadTestWithUpdaterManager {
         assertEq(uint256(home.state()), uint256(NomadBase.States.Failed));
     }
 
-    event Update(
-        uint32 indexed homeDomain,
-        bytes32 indexed oldRoot,
-        bytes32 indexed newRoot,
-        bytes signature
-    );
+    function test_homeDomainHash() public{
+        assertEq(
+            home.homeDomainHash(),
+            keccak256(abi.encodePacked(homeDomain, "NOMAD"))
+        );
+    }
+
+    function test_destinationAndNonce() public {
+        uint32 destination = 10;
+        uint32 nonce = 14;
+        assertEq(
+            uint256((uint64(destination) << 32) | nonce),
+            uint256(home.exposed_destinationAndNonce(destination, nonce))
+        );
+    }
 }
