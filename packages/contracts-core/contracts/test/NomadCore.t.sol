@@ -28,7 +28,9 @@ contract NomadCoreLocalTest is NomadCore {
         console2.log("Nomad Core is deployed!");
     }
 
-    function test_home() public {
+    /// @notice Example test to showcase NomadCore fixture
+    /// Remove `example` for it to run automatically with forge test
+    function example_test_home() public {
         assertEq(home.updater(), updater);
     }
 }
@@ -73,7 +75,9 @@ contract NomadCoreForkTest is NomadCore {
         console2.log("Nomad Core is deployed to Ethereum and Polygon forks!");
     }
 
-    function test_eth_home() public {
+    /// @notice Example test to showcase forking in NomadCore fixture
+    /// Remove `example` for it to run automatically with forge test
+    function example_test_eth_home() public {
         vm.selectFork(ethFork);
         home = homes[domainToIndex[ethDomain]];
         assertEq(home.updater(), updater);
