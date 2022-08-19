@@ -89,7 +89,7 @@ export class NomadDomain {
     return this.keys.getAgentAddress(type, watcherNumber);
   }
 
-  getAgentSigner(type: AgentType, watcherNumber = 0): Key {
+  getAgentSigner(type?: AgentType, watcherNumber = 0): Key {
     return this.keys.getAgentKey(type, watcherNumber);
   }
 

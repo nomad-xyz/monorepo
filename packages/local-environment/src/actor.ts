@@ -54,7 +54,6 @@ export abstract class DockerizedActor {
       console.log(`Attempting to stop container that IS running`)
       await this.container?.stop();
     }
-
     return;
   }
 

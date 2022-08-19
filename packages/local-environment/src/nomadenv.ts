@@ -27,7 +27,6 @@ export class NomadEnv {
   constructor(governor: NomadLocator) {
     this.domains = [];
     this.governor = governor;
-    this.log.info(`Going to init NomadEnv with domains`, this.domains);
     this.bridgeSDK = new BridgeContext(this.nomadConfig());
     this.coreSDK = new NomadContext(this.nomadConfig());
   }
@@ -80,7 +79,7 @@ export class NomadEnv {
     await deployContext.checkDeployment();
     this.log.info(`Checked deployment`);
 
-    await this.outputConfigAndVerification(outputDir, deployContext);
+    this.outputConfigAndVerification(outputDir, deployContext);
     await this.outputCallBatch(outputDir, deployContext);
 
     return deployContext
@@ -259,7 +258,7 @@ export async function defaultStart() {
 
   le.addDomain(tDomain);
   le.addDomain(jDomain);
-  log.info(`Added Tom and Jerry`);
+  log.info(`Going to init NomadEnv with domains`, le.domains);
 
   tDomain.connectNetwork(jDomain);
   jDomain.connectNetwork(tDomain);
