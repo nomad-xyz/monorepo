@@ -44,20 +44,20 @@ describe("NomadDomain test", () => {
         expect(j.recoveryManager).to.equal(jDomain.keys.getAgentKey("signer"));
 
         // Domain agents
-        assert.isFalse(tDomain.isAgentUp);
-        assert.isFalse(jDomain.isAgentUp);
+        assert.isFalse(tDomain.isAgentsUp);
+        assert.isFalse(jDomain.isAgentsUp);
 
         tDomain.agentsUp(9000);
         jDomain.agentsUp(9010);
-        assert.isTrue(tDomain.isAgentUp);
-        assert.isTrue(jDomain.isAgentUp);
+        assert.isTrue(tDomain.isAgentsUp);
+        assert.isTrue(jDomain.isAgentsUp);
         assert.isArray(tDomain.watcherKeys());
         assert.isArray(tDomain.watcherKeys());
 
         tDomain.downAgents();
         jDomain.downAgents();
-        assert.isFalse(tDomain.isAgentUp);
-        assert.isFalse(jDomain.isAgentUp);
+        assert.isFalse(tDomain.isAgentsUp);
+        assert.isFalse(jDomain.isAgentsUp);
 
         // Add domains
         const le = new NomadEnv({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
