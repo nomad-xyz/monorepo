@@ -13,8 +13,9 @@ import * as config from '@nomad-xyz/configuration';
 
 import Contracts from '../Contracts';
 import { DeployContext } from '../DeployContext';
-import { log, CheckList } from '../utils';
+import { log } from '../utils';
 import { Call, CallBatch } from '@nomad-xyz/sdk-govern';
+import { CheckList } from '../Checklist';
 
 export abstract class AbstractBridgeDeploy<T> extends Contracts<T> {
   // Placeholder for future multi-VM abstraction
@@ -553,22 +554,16 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
   async checkDeploy(remoteDomains: string[]): Promise<CheckList> {
     const checklist = new CheckList(`${this.domain.toUpperCase()}`, 'BRIDGE');
     checklist.addCheck({
-      msg: `BridgeToken is deployed`,
-      check: async () => {
-        checklist.assertBeaconProxy(this.data.bridgeToken);
-      },
+      msg: `BridgeToken is in config`,
+      check: () => checklist.assertBeaconProxy(this.data.bridgeToken),
     });
     checklist.addCheck({
-      msg: `BridgeRouter is deployed`,
-      check: async () => {
-        checklist.assertBeaconProxy(this.data.bridgeRouter);
-      },
+      msg: `BridgeRouter is in config`,
+      check: () => checklist.assertBeaconProxy(this.data.bridgeRouter),
     });
     checklist.addCheck({
-      msg: `TokenRegistry is deployed`,
-      check: async () => {
-        checklist.assertBeaconProxy(this.data.tokenRegistry);
-      },
+      msg: `TokenRegistry is in config`,
+      check: () => checklist.assertBeaconProxy(this.data.tokenRegistry),
     });
 
     /*
@@ -601,11 +596,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       msg: 'BridgeRouter has correct TokenRegistry configured',
       check: async () => {
         const tokenRegistry = await this.bridgeRouterContract.tokenRegistry();
-        checklist.equalIds(
-          tokenRegistry,
-          // @ts-ignore: Object is possibly 'null'.
-          this.data.tokenRegistry.proxy,
-        );
+        checklist.equalIds(tokenRegistry, this.data.tokenRegistry?.proxy);
       },
     });
 
@@ -621,7 +612,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     for (const domain of remoteDomains) {
       const remoteDomainNumber = this.context.mustGetDomain(domain).domain;
       checklist.addCheck({
-        msg: `BridgeRouter is enrolled for ${checklist.colorNetwork(domain)}`,
+        msg: `BridgeRouter is enrolled for ${CheckList.colorDomain(domain)}`,
         check: async () => {
           const remoteRouter = await this.bridgeRouterContract.remotes(
             remoteDomainNumber,
@@ -638,7 +629,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     // TokenRegistry upgrade setup contracts are defined
     // owner
     checklist.addCheck({
-      msg: `TokenRegistry is owned by Governance`,
+      msg: `TokenRegistry is owned by the BridgeRouter`,
       check: async () => {
         const tokenRegistryOwner = await this.tokenRegistryContract.owner();
         checklist.equalIds(
@@ -662,62 +653,46 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
       msg: 'TokenRegistry has correct TokenBeacon configured',
       check: async () => {
         const tokenBeacon = await this.tokenRegistryContract.tokenBeacon();
-        checklist.equalIds(
-          tokenBeacon,
-          // @ts-ignore: Object is possibly 'null'.
-          this.data.bridgeToken.beacon,
-        );
+        checklist.equalIds(tokenBeacon, this.data.bridgeToken?.beacon);
       },
     });
 
     //  ========= eth helper =========
-    checklist.addCheck({
-      msg: 'ethHelper exists',
-      check: async () => {
-        const weth = this.context.mustGetDomainConfig(this.domain)
-          .bridgeConfiguration.weth;
-        if (weth) {
-          checklist.exists(this.data.ethHelper);
-        }
-      },
-    });
-
+    const weth = this.context.mustGetDomainConfig(this.domain)
+      .bridgeConfiguration.weth;
+    if (weth) {
+      checklist.addCheck({
+        msg: 'EthHelper is in config',
+        check: () => checklist.exists(this.data.ethHelper),
+      });
+    }
     //  ========= custom tokens =========
 
     if (this.data.customs) {
       for (const custom of this.data.customs) {
         const { name, symbol, addresses } = custom;
         checklist.addCheck({
-          msg: `Custom Token is deployed for ${name} (${symbol})`,
-          check: async () => {
-            checklist.assertBeaconProxy(addresses);
-          },
+          msg: `Custom Token is in config for ${name} (${symbol})`,
+          check: () => checklist.assertBeaconProxy(addresses),
         });
-        if (this.data.bridgeToken) {
-          checklist.addCheck({
-            msg: '\\__ Custom Token uses the BridgeToken.sol implementation',
-            check: async () => {
-              checklist.equalIds(
-                addresses.implementation,
-                // @ts-ignore: Object is possibly 'null'.
-                this.data.bridgeToken.implementation,
-              );
-            },
-          });
-          checklist.addCheck({
-            msg: '\\__ Custom Token uses *custom* BridgeToken beacon',
-            check: async () => {
-              checklist.notEqualIds(
-                // @ts-ignore: Object is possibly 'null'.
-                this.data.bridgeToken.beacon,
-                // @ts-ignore: Object is possibly 'null'.
-                this.data.bridgeToken.implementation,
-              );
-            },
-          });
-        }
         checklist.addCheck({
-          msg: '\\__ Get Custom Token name',
+          msg: '\\__ Custom Token uses the BridgeToken.sol implementation',
+          check: () =>
+            checklist.equalIds(
+              addresses.implementation,
+              this.data.bridgeToken?.implementation,
+            ),
+        });
+        checklist.addCheck({
+          msg: '\\__ Custom Token does *not* use BridgeToken beacon',
+          check: () =>
+            checklist.notEqualIds(
+              addresses.beacon,
+              this.data.bridgeToken?.beacon,
+            ),
+        });
+        checklist.addCheck({
+          msg: '\\__ Custom Token has right name',
           check: async () => {
             const tokenContract = await contracts.BridgeToken__factory.connect(
               utils.evmId(addresses.proxy),
@@ -729,7 +704,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
         });
 
         checklist.addCheck({
-          msg: '\\__ Get Custom Token symbol',
+          msg: '\\__ Custom Token has right symbol',
           check: async () => {
             const tokenContract = await contracts.BridgeToken__factory.connect(
               utils.evmId(addresses.proxy),
@@ -741,7 +716,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
         });
 
         checklist.addCheck({
-          msg: '\\__ Get Custom Token decimals',
+          msg: '\\__ Custom Token has right decimals',
           check: async () => {
             const tokenContract = await contracts.BridgeToken__factory.connect(
               utils.evmId(addresses.proxy),
@@ -752,7 +727,7 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
           },
         });
         checklist.addCheck({
-          msg: '\\__ Get Custom Token decimals',
+          msg: '\\__ Custom Token is owned by BridgeRouter',
           check: async () => {
             const tokenContract = await contracts.BridgeToken__factory.connect(
               utils.evmId(addresses.proxy),
@@ -762,7 +737,6 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
             checklist.equals(owner, this.bridgeRouterContract.address);
           },
         });
-
         checklist.addCheck({
           msg: '\\__ Custom Token domain is configured on TokenRegistry',
           check: async () => {

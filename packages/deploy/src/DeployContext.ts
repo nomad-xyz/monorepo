@@ -4,12 +4,11 @@ import { NomadContext } from '@nomad-xyz/sdk';
 import { CallBatch } from '@nomad-xyz/sdk-govern';
 import { expect } from 'chai';
 import ethers from 'ethers';
-import chalk from 'chalk';
 
 import BridgeContracts from './bridge/BridgeContracts';
 import CoreContracts from './core/CoreContracts';
 import fs from 'fs';
-import { CheckList } from './utils';
+import { CheckList } from './Checklist';
 
 export interface Verification {
   name: string;
@@ -27,7 +26,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
   protected _outputDir: string;
   protected _instantiatedAt: number;
 
-  constructor(data: config.NomadConfig, outputDir = "./output") {
+  constructor(data: config.NomadConfig, outputDir = './output') {
     super();
 
     this._data = data;
@@ -357,13 +356,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
   // perform validation checks on core and bridges
   async checkDeployment(): Promise<void> {
-    console.log();
-    console.log(chalk.bold.black.bgWhiteBright(`NOMAD DEPLOYMENT CHECK`));
-    console.log(
-      `Environment: ${chalk.green(this.data.environment.toUpperCase())}`,
-    );
-    console.log(``);
-    console.log();
+    CheckList.printStart(this.data.environment);
     const [core, bridge] = await Promise.all([
       this.checkCores(),
       this.checkBridges(),
@@ -371,18 +364,10 @@ export class DeployContext extends MultiProvider<config.Domain> {
     // combine core and bridge checks
     const list = CheckList.combine([core, bridge]);
     // print the results of all checks
-    list.output();
+    list.report();
   }
 
   async checkCores(): Promise<CheckList> {
-    const out = `  ${chalk.bold('STATUS')} | ${chalk.bold(
-      'NETWORK',
-    )}${' '.repeat(15 - 'NETWORK'.length)} | ${chalk.bold('PART')}${' '.repeat(
-      10 - 'PART'.length,
-    )} | ${chalk.bold('PROTOCOL CHECK')}`;
-    console.log(out);
-    const out2 = `         | ${' '.repeat(15)} | ${' '.repeat(10)} |`;
-    console.log(out2);
     const checklists = await Promise.all(
       this.networks.map(async (net) => {
         const coreConfig = this.data.core[net];
