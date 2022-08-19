@@ -6,6 +6,7 @@ import "forge-std/console2.sol";
 import "../../UpdaterManager.sol";
 import "./BadXapps.sol";
 import "./GoodXapps.sol";
+import {MerkleTest} from "./MerkleTest.sol";
 
 contract NomadTest is Test {
     uint256 updaterPK = 1;
@@ -18,11 +19,15 @@ contract NomadTest is Test {
     uint32 homeDomain = 1500;
     uint32 remoteDomain = 1000;
 
+    MerkleTest merkleTest;
+
     function setUp() public virtual {
         vm.label(updater, "updater");
         vm.label(fakeUpdater, "fake updater");
         vm.label(signer, "signer");
         vm.label(fakeSigner, "fake signer");
+
+        merkleTest = new MerkleTest();
     }
 
     function getMessage(
