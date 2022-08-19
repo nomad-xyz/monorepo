@@ -21,6 +21,7 @@
     "hardhat_stop": "docker ps --filter name=_net -aq | xargs docker rm --force",
     "test:unit": "echo 'TODO: unit tests'",
     "test:integration": "jest --runInBand",
+    "test:particular": "jest --detectOpenHandles -t 'nomadenv'",
     "start": "npx ts-node tests/start.ts",
     "test-agents-die": "npx ts-node tests/agentsDieOnImproperUpdate.ts",
     "test-double-update": "npx ts-node tests/watcherDoubleUpdate.ts",
