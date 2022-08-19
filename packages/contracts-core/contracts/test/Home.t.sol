@@ -2,6 +2,7 @@
 pragma solidity 0.7.6;
 
 import {Home} from "../Home.sol";
+import {NomadBase} from "../NomadBase.sol";
 import {NomadTestWithUpdaterManager} from "./utils/NomadTest.sol";
 import {IUpdaterManager} from "../interfaces/IUpdaterManager.sol";
 import {Message} from "../libs/Message.sol";
@@ -63,9 +64,11 @@ contract HomeTest is NomadTestWithUpdaterManager {
         );
         bytes32 messageHash = keccak256(message);
         vm.expectEmit(true, true, true, true);
+        // first message that is sent on this home
+        uint256 leafIndex = 0;
         emit Dispatch(
             messageHash,
-            0,
+            leafIndex,
             (uint64(remoteDomain) << 32) | nonce,
             home.committedRoot(),
             message
@@ -84,25 +87,7 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home.dispatch(remoteDomain, recipient, messageBody);
     }
 
-    event ImproperUpdate(bytes32 oldRoot, bytes32 newRoot, bytes signature);
-
-    function test_improperUpdate() public {
-        bytes32 newRoot = "new root";
-        bytes32 oldRoot = home.committedRoot();
-        bytes memory sig = signHomeUpdate(updaterPK, oldRoot, newRoot);
-        vm.expectEmit(false, false, false, true);
-        emit ImproperUpdate(oldRoot, newRoot, sig);
-        home.improperUpdate(oldRoot, newRoot, sig);
-    }
-
-    event Update(
-        uint32 indexed homeDomain,
-        bytes32 indexed oldRoot,
-        bytes32 indexed newRoot,
-        bytes signature
-    );
-
-    function test_successfulDispatchAndUpdate() public {
+    function test_dispatchAndUpdate() public {
         bytes memory messageBody = "";
         uint32 destinationDomain = remoteDomain;
         bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
@@ -115,4 +100,35 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home.update(oldRoot, newRoot, sig);
         assertEq(newRoot, home.committedRoot());
     }
+
+    function test_dispatchRejectFailedState() public {
+        bytes32 newRoot = "new root";
+        bytes32 oldRoot = home.committedRoot();
+        bytes memory sig = signHomeUpdate(updaterPK, oldRoot, newRoot);
+        // improper update
+        home.improperUpdate(oldRoot, newRoot, sig);
+        vm.expectRevert("failed state");
+        bytes memory messageBody = hex"b00b";
+        bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
+        home.dispatch(remoteDomain, recipient, messageBody);
+    }
+
+    event ImproperUpdate(bytes32 oldRoot, bytes32 newRoot, bytes signature);
+
+    function test_improperUpdate() public {
+        bytes32 newRoot = "new root";
+        bytes32 oldRoot = home.committedRoot();
+        bytes memory sig = signHomeUpdate(updaterPK, oldRoot, newRoot);
+        vm.expectEmit(false, false, false, true);
+        emit ImproperUpdate(oldRoot, newRoot, sig);
+        home.improperUpdate(oldRoot, newRoot, sig);
+        assertEq(uint256(home.state()), uint256(NomadBase.States.Failed));
+    }
+
+    event Update(
+        uint32 indexed homeDomain,
+        bytes32 indexed oldRoot,
+        bytes32 indexed newRoot,
+        bytes signature
+    );
 }
