@@ -10,7 +10,7 @@ describe('deploy', () => {
       ctx.registerRpcProvider('rinkeby', 'http://dummyurl.com');
 
       const nomadCtx = ctx.asNomadContext;
-      expect(nomadCtx.getConnection('rinkeby')).toBeDefined;
+      expect(nomadCtx.getConnection('rinkeby')).toBeDefined();
     });
   });
 });

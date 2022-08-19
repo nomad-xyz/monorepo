@@ -21,7 +21,7 @@ describe('sdk-bridge', () => {
           const bridge = context.getBridge(domain);
           const confBridge = conf.bridge[domain];
 
-          expect(bridge).toBeDefined;
+          expect(bridge).toBeDefined();
 
           expect(bridge?.bridgeRouter.address).toEqual(
             confBridge.bridgeRouter.proxy,
@@ -30,7 +30,7 @@ describe('sdk-bridge', () => {
             confBridge.tokenRegistry.proxy,
           );
 
-          expect(bridge?.ethHelper).toBeDefined;
+          expect(bridge?.ethHelper).toBeDefined();
           expect(bridge?.ethHelper?.address).toEqual(confBridge.ethHelper);
         }
       }

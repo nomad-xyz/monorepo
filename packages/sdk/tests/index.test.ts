@@ -10,7 +10,7 @@ describe('NomadContext', () => {
   it('fetches from hosted configs', async () => {
     for (const env of ENVIRONMENTS) {
       const context = await NomadContext.fetch(env, false);
-      expect(context).toBeDefined;
+      expect(context).toBeDefined();
     }
   });
 
@@ -79,9 +79,9 @@ describe('NomadContext', () => {
     context.registerRpcProvider(domainB, 'http://dummy-rpc-url');
     const core = context.mustGetCore(domainA);
     const replica = core.getReplica(domainB);
-    expect(replica).toBeDefined;
+    expect(replica).toBeDefined();
     const replicaFor = context.getReplicaFor(domainA, domainB);
-    expect(replicaFor).toBeDefined;
+    expect(replicaFor).toBeDefined();
   });
 
   it('maintains connection when registering and unregistering signers', () => {
@@ -95,10 +95,10 @@ describe('NomadContext', () => {
     context.registerSigner(domainA, signer);
     context.registerSigner(domainB, signer);
     context.unregisterSigner(domainA);
-    expect(context.getConnection(domainA)).toBeDefined;
+    expect(context.getConnection(domainA)).toBeDefined();
     context.clearSigners();
-    expect(context.getConnection(domainA)).toBeDefined;
-    expect(context.getConnection(domainB)).toBeDefined;
+    expect(context.getConnection(domainA)).toBeDefined();
+    expect(context.getConnection(domainB)).toBeDefined();
   });
 });
 
