@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity 0.7.6;
 
-import {Home} from "../Home.sol";
+import {HomeHarness} from "./harnesses/HomeHarness.sol";
 import {NomadBase} from "../NomadBase.sol";
 import {NomadTestWithUpdaterManager} from "./utils/NomadTest.sol";
 import {IUpdaterManager} from "../interfaces/IUpdaterManager.sol";
 import {Message} from "../libs/Message.sol";
 
 contract HomeTest is NomadTestWithUpdaterManager {
-    Home home;
+    HomeHarness home;
 
     function setUp() public override {
         super.setUp();
-        home = new Home(homeDomain);
+        home = new HomeHarness(homeDomain);
         home.initialize(IUpdaterManager(address(updaterManager)));
         updaterManager.setHome(address(home));
         vm.prank(address(updaterManager));
@@ -49,7 +49,7 @@ contract HomeTest is NomadTestWithUpdaterManager {
         bytes message
     );
 
-    function test_succesfulDispatch() public {
+    function test_dispatchSuccess() public {
         bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
         address sender = vm.addr(1555);
         bytes memory messageBody = bytes("hey buddy");
@@ -75,7 +75,13 @@ contract HomeTest is NomadTestWithUpdaterManager {
         );
         vm.prank(sender);
         home.dispatch(remoteDomain, recipient, messageBody);
-        assert(home.queueContains(home.root()));
+
+        (bytes32 root, , uint256 index, ) = merkleTest.getProof(message);
+
+        assertEq(root, home.root());
+        assert(home.queueContains(root));
+        assertEq(index, leafIndex);
+        assert(root != home.committedRoot());
     }
 
     function test_dispatchRejectBigMessage() public {
@@ -87,7 +93,15 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home.dispatch(remoteDomain, recipient, messageBody);
     }
 
-    function test_dispatchAndUpdate() public {
+    function test_dispatchRejectFailedState() public {
+        test_improperUpdate();
+        vm.expectRevert("failed state");
+        bytes memory messageBody = hex"b00b";
+        bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
+        home.dispatch(remoteDomain, recipient, messageBody);
+    }
+
+    function test_updateSuccess() public {
         bytes memory messageBody = "";
         uint32 destinationDomain = remoteDomain;
         bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
@@ -101,16 +115,50 @@ contract HomeTest is NomadTestWithUpdaterManager {
         assertEq(newRoot, home.committedRoot());
     }
 
-    function test_dispatchRejectFailedState() public {
-        bytes32 newRoot = "new root";
+    function test_updateRejectFailedState() public {
+        bytes memory messageBody = "";
+        uint32 destinationDomain = remoteDomain;
+        bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
+        home.dispatch(destinationDomain, recipient, messageBody);
+        test_improperUpdate();
+        bytes32 newRoot = home.root();
         bytes32 oldRoot = home.committedRoot();
         bytes memory sig = signHomeUpdate(updaterPK, oldRoot, newRoot);
-        // improper update
-        home.improperUpdate(oldRoot, newRoot, sig);
         vm.expectRevert("failed state");
-        bytes memory messageBody = hex"b00b";
+        home.update(oldRoot, newRoot, sig);
+    }
+
+    function test_suggestUpdate() public {
+        bytes32 committedRoot = home.committedRoot();
         bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
+        address sender = vm.addr(1555);
+        bytes memory messageBody = bytes("hey buddy");
+        uint32 nonce = home.nonces(remoteDomain);
+        bytes memory message = Message.formatMessage(
+            homeDomain,
+            bytes32(uint256(uint160(sender))),
+            nonce,
+            remoteDomain,
+            recipient,
+            messageBody
+        );
+        bytes32 messageHash = keccak256(message);
+        vm.expectEmit(true, true, true, true);
+        // first message that is sent on this home
+        uint256 leafIndex = 0;
+        emit Dispatch(
+            messageHash,
+            leafIndex,
+            (uint64(remoteDomain) << 32) | nonce,
+            home.committedRoot(),
+            message
+        );
+        vm.prank(sender);
         home.dispatch(remoteDomain, recipient, messageBody);
+        (bytes32 root, , , ) = merkleTest.getProof(message);
+        (bytes32 oldRoot, bytes32 newRoot) = home.suggestUpdate();
+        assertEq(committedRoot, oldRoot);
+        assertEq(root, newRoot);
     }
 
     event ImproperUpdate(bytes32 oldRoot, bytes32 newRoot, bytes signature);
