@@ -2,7 +2,6 @@ import * as config from '@nomad-xyz/configuration';
 import { MultiProvider, utils } from '@nomad-xyz/multi-provider';
 import { NomadContext } from '@nomad-xyz/sdk';
 import { CallBatch } from '@nomad-xyz/sdk-govern';
-import { expect } from 'chai';
 import ethers from 'ethers';
 
 import BridgeContracts from './bridge/BridgeContracts';
