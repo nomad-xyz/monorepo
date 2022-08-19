@@ -60,8 +60,8 @@ export class NomadDomain {
       this.connectedNetworks.push(d);
   }
 
-  get isAgentUp(): boolean {
-    return !!this.agents;
+  async isAgentsUp(): Promise<boolean> {
+    return await this.agents!.isAllUp();
   }
 
   /*
@@ -141,7 +141,7 @@ export class NomadDomain {
   }
 
   async downNetwork() {
-    return await this.agents?.downAll();
+    return await this.network.down();
   }
 
   get domain(): Domain {

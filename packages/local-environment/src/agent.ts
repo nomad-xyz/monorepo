@@ -59,6 +59,17 @@ export class Agents {
       ...this.watchers.map((w) => w.down()),
     ]);
   }
+
+  async isAllUp() {
+    const ups = await Promise.all([
+      this.relayer.status(),
+      this.updater.status(),
+      this.processor.status(),
+      ...(kathyOn ? [this.kathy!.status()] : []),
+      ...this.watchers.map((w) => w.status()),
+    ]);
+    return ups.every(a => a);
+  }
 }
 
 export interface Agent {
@@ -126,7 +137,6 @@ export class LocalAgent extends DockerizedActor implements Agent {
   agentType: AgentType;
   domain: NomadDomain;
   metricsPort: number;
-  key: Key;
 
   constructor(agentType: AgentType, domain: NomadDomain, metricsPort: number) {
     agentType = parseAgentType(agentType);
@@ -136,10 +146,6 @@ export class LocalAgent extends DockerizedActor implements Agent {
     this.domain = domain;
 
     this.metricsPort = metricsPort;
-
-    this.key = new Key(
-      "1000000000000000000000000000000000000000000000000000000000000005"
-    );
   }
 
   containerName(): string {
@@ -300,6 +306,6 @@ export class LocalAgent extends DockerizedActor implements Agent {
   }
 
   async status(): Promise<boolean> {
-    return this.isConnected();
+    return this.isRunning();
   }
 }

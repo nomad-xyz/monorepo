@@ -2,6 +2,8 @@ import { HardhatNetwork } from "../src/network";
 import { NomadDomain } from "../src/domain";
 import { expect, assert } from "chai";
 import { NomadEnv } from "../src/nomadenv";
+import Docker from "dockerode";
+import { LocalAgent } from "../src/agent";
 
 describe("NomadDomain test", () => {
     //TODO: We should implement any-network connection logic and test accordingly.
@@ -16,40 +18,76 @@ describe("NomadDomain test", () => {
             id: "0x" + "20".repeat(20),
         });
         expect(le).to.exist;
+        
+
+        // Can add domains
+        le.addDomain(tDomain);
+        le.addDomain(jDomain);
+        assert.isTrue(le.domains.includes(tDomain));
+        assert.isTrue(le.domains.includes(jDomain));
+
         expect(le.govNetwork).to.equal(tDomain);
         // SDK
         expect(le.bridgeSDK).to.exist;
         expect(le.coreSDK).to.exist;
 
-        // Can add domains
-        le.addDomain(tDomain);
-        le.addDomain(jDomain);
-        assert.isTrue(tDomain.network.isConnected)
-        assert.isTrue(jDomain.network.isConnected)
-        assert.isTrue(le.domains.includes(tDomain));
-        assert.isTrue(le.domains.includes(jDomain));
-
         // Can up agents
-        le.upAgents();
-        assert.isTrue(tDomain.isAgentUp);
-        assert.isTrue(tDomain.agents?.updater.status);
-        assert.isTrue(tDomain.agents?.relayer.status);
-        assert.isTrue(tDomain.agents?.processor.status);
-        assert.isTrue(jDomain.isAgentUp);
-        assert.isTrue(jDomain.agents?.updater.status);
-        assert.isTrue(jDomain.agents?.relayer.status);
-        assert.isTrue(jDomain.agents?.processor.status);
-        le.downAgents();
-        assert.isFalse(tDomain.isAgentUp);
-        assert.isFalse(jDomain.isAgentUp); 
+        await le.upAgents();
+
+
+        expect(tDomain.agents).to.exist;
+        expect(jDomain.agents).to.exist;
+
+        assert.isTrue(await tDomain.isAgentsUp());
+        assert.isTrue(await tDomain.agents!.updater.status());
+        assert.isTrue(await tDomain.agents!.relayer.status());
+        assert.isTrue(await tDomain.agents!.processor.status());
+        assert.isTrue(await jDomain.isAgentsUp());
+        assert.isTrue(await jDomain.agents!.updater.status());
+        assert.isTrue(await jDomain.agents!.relayer.status());
+        assert.isTrue(await jDomain.agents!.processor.status());
+
+        const docker = new Docker();
+
+        const tUpdater = (tDomain.agents!.updater as LocalAgent).containerName();
+        const tRelayer = (tDomain.agents!.relayer as LocalAgent).containerName();
+        const tProcessor = (tDomain.agents!.processor as LocalAgent).containerName();
+
+        const jUpdater = (jDomain.agents!.updater as LocalAgent).containerName();
+        const jRelayer = (jDomain.agents!.relayer as LocalAgent).containerName();
+        const jProcessor = (jDomain.agents!.processor as LocalAgent).containerName();
+
+        assert.isTrue((await docker.getContainer(tUpdater).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer(tRelayer).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer(tProcessor).inspect()).State.Running)
+
+        assert.isTrue((await docker.getContainer(jUpdater).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer(jRelayer).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer(jProcessor).inspect()).State.Running)
+
+        await le.downAgents();
+        assert.isFalse(await tDomain.isAgentsUp());
+        assert.isFalse(await jDomain.isAgentsUp()); 
+
+        assert.isTrue((await docker.getContainer(tUpdater).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer(tRelayer).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer(tProcessor).inspect()).State.Running)
+
+        assert.isTrue((await docker.getContainer(jUpdater).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer(jRelayer).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer(jProcessor).inspect()).State.Running)
         
         // Can up networks
         le.upNetworks();
-        assert.isTrue(t.isConnected());
-        assert.isTrue(j.isConnected());
+        assert.isTrue(await t.isConnected());
+        assert.isTrue(await j.isConnected());
+
+        assert.isTrue(await tDomain.network.isConnected())
+        assert.isTrue(await jDomain.network.isConnected())
+
         le.down();
-        assert.isFalse(t.isConnected());
-        assert.isFalse(j.isConnected());
+        assert.isFalse(await t.isConnected());
+        assert.isFalse(await j.isConnected());
     })
 
 })

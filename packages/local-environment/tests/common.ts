@@ -38,8 +38,6 @@ export async function sendTokensAndConfirm(
 ) {
   const ctx = n.getBridgeSDK();
 
-  fs.writeFileSync('./ctx.json', JSON.stringify(ctx.conf));
-
   let amountTotal = ethers.BigNumber.from(0);
 
   const rr: TransferMessage[] = [];
