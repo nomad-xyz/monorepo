@@ -12,7 +12,7 @@ export interface Check {
 export interface CheckError {
   domain: string;
   message: string;
-  error: any;
+  error: string | unknown;
 }
 
 export class CheckList {
@@ -44,8 +44,8 @@ export class CheckList {
   }
 
   static printStart(environment: string): void {
-    console.log('\n', chalk.bold.black.bgWhiteBright(`NOMAD DEPLOYMENT CHECK`));
-    console.log(`ENV: ${chalk.green(environment.toUpperCase())}\n\n`);
+    console.log('\n ' + chalk.bold.black.bgWhiteBright(`NOMAD DEPLOYMENT CHECK`));
+    console.log(` ENV: ${chalk.green(environment.toUpperCase())}\n\n`);
     console.log(
       CheckList.formatColumn('STATUS', 'NETWORK', 'PART', 'PROTOCOL CHECK'),
     );
