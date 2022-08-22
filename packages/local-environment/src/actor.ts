@@ -49,25 +49,37 @@ export abstract class DockerizedActor {
   async stop(): Promise<void> {
     if (!this.isConnected()) throw new Error(`Not connected`);
     if (!(await this.isRunning())) {
-      console.log(`Attempting to stop container that is NOT running`)
+      console.log(`Attempted to stop container that is NOT running, proceeding without action`)
     } else {
-      console.log(`Attempting to stop container that IS running`)
-      await this.container?.stop();
+      if (this.container) {
+        const containerId = this.container.id;
+        const x = await this.container.inspect();
+        console.log(`Attempting to stop container that IS running, container id:`, containerId, x.Name)
+        try {
+          await this.container.stop();
+          console.log(`Successfully stopped container with id '${containerId}'`)
+        } catch(e) {
+          console.log(`Failed stopping container with id '${containerId}'! Error:`, e);
+          throw e;
+        }
+      }
     }
     return;
   }
 
   async down(): Promise<void> {
-    try {
-      await this.stop();
-    } catch(e) {
-      console.warn(`xxxx1. Error:`, e);
-    }
+    if (this.isConnected()) {
+      try {
+        await this.stop();
+      } catch(e) {
+        console.warn(`Stopping actor error:`, e);
+      }
 
-    try {
-      await this.removeContainer();
-    } catch(e) {
-      console.warn(`xxxx2. Error:`, e);
+      try {
+        await this.removeContainer();
+      } catch(e) {
+        console.warn(`Removing container error:`, e);
+      }
     }
   }
 

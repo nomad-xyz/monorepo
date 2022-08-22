@@ -1,9 +1,12 @@
 import { HardhatNetwork } from "../src/network";
 import { NomadDomain } from "../src/domain";
-import { expect, assert } from "chai";
+import { expect, assert, use as chaiUse } from "chai";
 import { NomadEnv } from "../src/nomadenv";
 import Docker from "dockerode";
 import { LocalAgent } from "../src/agent";
+import chaiAsPromised from "chai-as-promised";
+ 
+chaiUse(chaiAsPromised);
 
 describe("NomadDomain test", () => {
     //TODO: We should implement any-network connection logic and test accordingly.
@@ -69,23 +72,23 @@ describe("NomadDomain test", () => {
         assert.isFalse(await tDomain.isAgentsUp());
         assert.isFalse(await jDomain.isAgentsUp()); 
 
-        assert.isTrue((await docker.getContainer(tUpdater).inspect()).State.Running)
-        assert.isTrue((await docker.getContainer(tRelayer).inspect()).State.Running)
-        assert.isTrue((await docker.getContainer(tProcessor).inspect()).State.Running)
+        await assert.isRejected(docker.getContainer(tUpdater).inspect(), "no such container");
+        await assert.isRejected(docker.getContainer(tRelayer).inspect(), "no such container");
+        await assert.isRejected(docker.getContainer(tProcessor).inspect(), "no such container");
+        await assert.isRejected(docker.getContainer(jUpdater).inspect(), "no such container");
+        await assert.isRejected(docker.getContainer(jRelayer).inspect(), "no such container");
+        await assert.isRejected(docker.getContainer(jProcessor).inspect(), "no such container");
 
-        assert.isTrue((await docker.getContainer(jUpdater).inspect()).State.Running)
-        assert.isTrue((await docker.getContainer(jRelayer).inspect()).State.Running)
-        assert.isTrue((await docker.getContainer(jProcessor).inspect()).State.Running)
-        
         // Can up networks
-        le.upNetworks();
+        await le.upNetworks();
+
         assert.isTrue(await t.isConnected());
         assert.isTrue(await j.isConnected());
 
         assert.isTrue(await tDomain.network.isConnected())
         assert.isTrue(await jDomain.network.isConnected())
 
-        le.down();
+        await le.down();
         assert.isFalse(await t.isConnected());
         assert.isFalse(await j.isConnected());
     })
