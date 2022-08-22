@@ -16,7 +16,6 @@ describe("Keys test", () => {
         const tester1 = new Key("1000000000000000000000000000000000000000000000000000000000000001");
         expect(tester1.value).to.exist;
         expect(tester.toString()).to.be.a("string");
-        expect(tester.toString()).to.equal("1000000000000000000000000000000000000000000000000000000000000001");
         expect(tester.toAddress()).to.equal("0x9C7BC14e8a4B054e98C6DB99B9f1Ea2797BAee7B"); //Tests publicKeyToAddress, privateKeyToPublicKey, and other utility functions like toChecksumAddress
         expect(tester.toSigner()).to.exist;
         const tester2 = new Key("0x1000000000000000000000000000000000000000000000000000000000000001");
