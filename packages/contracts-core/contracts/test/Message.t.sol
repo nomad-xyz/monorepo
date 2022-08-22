@@ -40,7 +40,6 @@ contract MessageTest is Test {
             body
         );
         messageHash = keccak256(message);
-        messageView = message.ref(0);
     }
 
     function test_prefixIs76() public {
@@ -76,31 +75,37 @@ contract MessageTest is Test {
     }
 
     function test_origin() public {
-        console2.logBytes(messageView.clone());
+        messageView = message.ref(0);
         assertEq(uint256(Message.origin(messageView)), uint256(originDomain));
     }
 
     function test_sender() public {
+        messageView = message.ref(0);
         assertEq(Message.sender(messageView), sender);
     }
 
     function test_nonce() public {
+        messageView = message.ref(0);
         assertEq(uint256(Message.nonce(messageView)), uint256(nonce));
     }
 
     function test_destination() public {
+        messageView = message.ref(0);
         assertEq(uint256(Message.nonce(messageView)), uint256(nonce));
     }
 
     function test_recipient() public {
+        messageView = message.ref(0);
         assertEq(Message.recipient(messageView), recipient);
     }
 
     function test_body() public {
+        messageView = message.ref(0);
         assertEq(Message.body(messageView).keccak(), body.ref(0).keccak());
     }
 
     function test_leaf() public {
+        messageView = message.ref(0);
         assertEq(Message.leaf(messageView), messageHash);
     }
 }
