@@ -1,17 +1,36 @@
-#name: Integration Tests
-#on: [push]
-#jobs:
-#  test:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Install Foundry
-#        uses: foundry-rs/foundry-toolchain@v1 
-#        with:
-#         version: nightly
-#      - run: |
-#          yarn install --immutable-cache
-#      - run: |
-#          yarn lint
-#      - run: |
-#          yarn test:integration
+name: Local Environment Integration Tests
+on:
+  push:
+    paths:
+      - "packages/local-environment/**"
+
+
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Install Foundry
+      uses: foundry-rs/foundry-toolchain@v1
+      with:
+        version: nightly
+
+    - name: Yarn Install
+      run: |
+        yarn install --immutable-cache
+
+    - name: Yarn Lint
+      run: |
+        yarn lint
+
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    steps: 
+      - name: Run Integration Tests
+        run: |
+          yarn test:integration
+        timeout-minutes: 60
