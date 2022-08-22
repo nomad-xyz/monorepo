@@ -34,7 +34,6 @@ jobs:
       timeout-minutes: 20
   unit-tests:
     runs-on: ubuntu-latest
-    needs: dependency-review
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
