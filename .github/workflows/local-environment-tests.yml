@@ -1,4 +1,4 @@
-name: Local Environment Integration Tests
+name: Local Environment Tests
 on:
   push:
     paths:
