@@ -18,8 +18,6 @@ describe("NomadDomain test", () => {
         expect(jDomain).to.exist;
         expect(tDomain.networkJsonRpcProvider).to.exist;
         expect(jDomain.networkJsonRpcProvider).to.exist;
-        expect(tDomain.networkRpcs).to.equal("https://localhost:8080");
-        expect(tDomain.networkRpcs).to.equal("https://localhost:9080");
         // Name
         expect(tDomain.domain.name).to.equal(t.name).to.equal(tDomain.name);
         expect(jDomain.domain.name).to.equal(j.name).to.equal(jDomain.name);
@@ -27,10 +25,10 @@ describe("NomadDomain test", () => {
         expect(tDomain.domain.domain).to.equal(t.domainNumber);
         expect(jDomain.domain.domain).to.equal(j.domainNumber);
         // Connections
-        tDomain.connectNetwork(jDomain);
-        jDomain.connectNetwork(tDomain);
-        expect(tDomain.connections).to.equal([j.name]);
-        expect(tDomain.connections).to.equal([t.name]);
+        await tDomain.connectNetwork(jDomain);
+        await jDomain.connectNetwork(tDomain);
+        expect(await tDomain.connections).to.equal([j.name]);
+        expect(await tDomain.connections).to.equal([t.name]);
         // Specs
         expect(tDomain.specs).to.equal(t.specs);
         expect(jDomain.specs).to.equal(j.specs);
@@ -47,8 +45,8 @@ describe("NomadDomain test", () => {
         assert.isFalse(tDomain.isAgentsUp);
         assert.isFalse(jDomain.isAgentsUp);
 
-        tDomain.agentsUp(9000);
-        jDomain.agentsUp(9010);
+        tDomain.upAgents(9000);
+        jDomain.upAgents(9010);
         assert.isTrue(tDomain.isAgentsUp);
         assert.isTrue(jDomain.isAgentsUp);
         assert.isArray(tDomain.watcherKeys());
