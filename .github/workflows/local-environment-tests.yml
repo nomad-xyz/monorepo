@@ -1,0 +1,52 @@
+name: Local Environment Tests
+on:
+  push:
+    paths:
+      - "packages/local-environment/**"
+      - ".github/workflows/local-environment-tests.yml"
+
+
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps: 
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Install Foundry
+      uses: foundry-rs/foundry-toolchain@v1
+      with:
+        version: nightly
+
+    - name: Yarn Install
+      run: |
+        yarn install --immutable-cache
+
+    - name: Yarn Lint
+      run: |
+        yarn lint
+
+    - name: Run Integration Tests
+      run: |
+        yarn test:integration
+      timeout-minutes: 20
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Yarn Install
+        run: |
+          yarn install --immutable-cache
+
+      - name: Yarn Lint
+        run: |
+          yarn lint
+
+      - name: Run Integration Tests
+        run: |
+          yarn local-environment test:unit
+        timeout-minutes: 5
