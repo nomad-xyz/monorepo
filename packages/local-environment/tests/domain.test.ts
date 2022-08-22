@@ -2,6 +2,7 @@ import { HardhatNetwork } from "../src/network";
 import { NomadDomain } from "../src/domain";
 import { expect, assert } from "chai";
 import { NomadEnv } from "../src/nomadenv";
+import { Agents } from "../src/agent";
 
 describe("NomadDomain test", () => {
     //TODO: We should implement any-network connection logic and test accordingly.
@@ -25,37 +26,39 @@ describe("NomadDomain test", () => {
         expect(tDomain.domain.domain).to.equal(t.domainNumber);
         expect(jDomain.domain.domain).to.equal(j.domainNumber);
         // Connections
-        await tDomain.connectNetwork(jDomain);
-        await jDomain.connectNetwork(tDomain);
-        expect(tDomain.connections).to.equal([j.name]);
-        expect(jDomain.connections).to.equal([t.name]);
-        // Specs
-        expect(tDomain.specs).to.equal(t.specs);
-        expect(jDomain.specs).to.equal(j.specs);
+        tDomain.connectNetwork(jDomain);
+        jDomain.connectNetwork(tDomain);
+        assert.isTrue(tDomain.connectedNetworks.includes(jDomain));
+        assert.isTrue(jDomain.connectedNetworks.includes(tDomain));
 
         // Addresses set
-        expect(t.updater).to.equal(tDomain.keys.getAgentKey("signer"));
-        expect(t.watcher).to.equal(tDomain.keys.getAgentKey("signer"));
-        expect(t.recoveryManager).to.equal(tDomain.keys.getAgentKey("signer"));
-        expect(j.updater).to.equal(jDomain.keys.getAgentKey("signer"));
-        expect(j.watcher).to.equal(jDomain.keys.getAgentKey("signer"));
-        expect(j.recoveryManager).to.equal(jDomain.keys.getAgentKey("signer"));
+        expect(t.updater).to.equal(tDomain.keys.getAgentAddress("signer"));
+        expect(t.watcher).to.equal(tDomain.keys.getAgentAddress("signer"));
+        expect(t.recoveryManager).to.equal(tDomain.keys.getAgentAddress("signer"));
+        expect(j.updater).to.equal(jDomain.keys.getAgentAddress("signer"));
+        expect(j.watcher).to.equal(jDomain.keys.getAgentAddress("signer"));
+        expect(j.recoveryManager).to.equal(jDomain.keys.getAgentAddress("signer"));
 
         // Domain agents
-        assert.isFalse(tDomain.isAgentsUp);
-        assert.isFalse(jDomain.isAgentsUp);
+        await tDomain.upAgents(9000);
+        await jDomain.upAgents(9010);
+        expect(tDomain.agents).to.exist;
+        expect(jDomain.agents).to.exist;
 
-        tDomain.upAgents(9000);
-        jDomain.upAgents(9010);
-        assert.isTrue(tDomain.isAgentsUp);
-        assert.isTrue(jDomain.isAgentsUp);
-        assert.isArray(tDomain.watcherKeys());
-        assert.isArray(tDomain.watcherKeys());
+        assert.isTrue(await tDomain.isAgentsUp());
+        assert.isTrue(await tDomain.agents!.updater.status());
+        assert.isTrue(await tDomain.agents!.relayer.status());
+        assert.isTrue(await tDomain.agents!.processor.status());
+        assert.isTrue(await jDomain.isAgentsUp());
+        assert.isTrue(await jDomain.agents!.updater.status());
+        assert.isTrue(await jDomain.agents!.relayer.status());
+        assert.isTrue(await jDomain.agents!.processor.status());
 
-        tDomain.downAgents();
-        jDomain.downAgents();
-        assert.isFalse(tDomain.isAgentsUp);
-        assert.isFalse(jDomain.isAgentsUp);
+        await tDomain.downAgents();
+        await jDomain.downAgents();
+
+        assert.isFalse(await tDomain.isAgentsUp());
+        assert.isFalse(await jDomain.isAgentsUp());
 
         // Add domains
         const le = new NomadEnv({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
@@ -63,8 +66,8 @@ describe("NomadDomain test", () => {
         expect(tDomain.nomadEnv).to.equal(le);
 
         // Down / cleanup
-        expect(tDomain.downNetwork());
-        expect(jDomain.downNetwork());
+        expect(await tDomain.downNetwork());
+        expect(await jDomain.downNetwork());
     })
 
 })

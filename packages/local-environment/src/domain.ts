@@ -7,10 +7,10 @@ import {
   NetworkSpecs,
   ContractConfig,
   ProcessorConfig,
+  Domain,
 } from "@nomad-xyz/configuration";
 import { Key } from "./keys/key";
 import { HardhatNetwork, Network } from "./network";
-import { Domain } from "@nomad-xyz/configuration";
 import { Agents, AgentType } from "./agent";
 import { ethers } from "ethers";
 import { AgentKeys } from "./keys/index";

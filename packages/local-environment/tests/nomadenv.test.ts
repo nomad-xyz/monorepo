@@ -37,7 +37,6 @@ describe("NomadDomain test", () => {
         // Can up agents
         await le.upAgents();
 
-
         expect(tDomain.agents).to.exist;
         expect(jDomain.agents).to.exist;
 
