@@ -51,16 +51,5 @@ jobs:
         run: |
           yarn local-environment test:unit
         timeout-minutes: 5
-  dependency-review: 
-    runs-on: ubuntu-latest
-    steps:
-      - name: 'Checkout Repository'
-        uses: actions/checkout@v3
-      - name: Dependency Review
-        uses: actions/dependency-review-action@v2
-        with:
-          fail-on-severity: high
-          base-ref: ${{ github.event.push.base.ref }}
-          head-ref: ${{ github.event.push.head.ref }}
 
     
