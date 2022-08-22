@@ -60,7 +60,7 @@ jobs:
         uses: actions/dependency-review-action@v2
         with:
           fail-on-severity: high
-          base-ref: ${{ github.event.pull_request.base.ref }}
-          head-ref: ${{ github.event.pull_request.head.ref }}
+          base-ref: ${{ github.event.push.base.ref }}
+          head-ref: ${{ github.event.push.head.ref }}
 
     
