@@ -64,7 +64,7 @@ describe('NomadContext', () => {
         }
 
         // returns undefined if no replica exists
-        expect(() => core.getReplica('none')).toThrow;
+        expect(() => core.getReplica('none')).toThrow();
       }
     }
   });
