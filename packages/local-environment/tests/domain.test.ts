@@ -27,8 +27,8 @@ describe("NomadDomain test", () => {
         // Connections
         await tDomain.connectNetwork(jDomain);
         await jDomain.connectNetwork(tDomain);
-        expect(await tDomain.connections).to.equal([j.name]);
-        expect(await tDomain.connections).to.equal([t.name]);
+        expect(tDomain.connections).to.equal([j.name]);
+        expect(jDomain.connections).to.equal([t.name]);
         // Specs
         expect(tDomain.specs).to.equal(t.specs);
         expect(jDomain.specs).to.equal(j.specs);

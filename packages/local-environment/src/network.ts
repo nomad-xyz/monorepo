@@ -11,7 +11,6 @@ import Dockerode from "dockerode";
 import { sleep } from "./utils";
 import { ethers } from "ethers";
 import { Key } from "./keys/key";
-import {} from "@nomad-xyz/configuration";
 //import { getContractAddress } from "ethers/lib/utils";
 
 // A Network is any arbitrary blockchain, local or testnet.

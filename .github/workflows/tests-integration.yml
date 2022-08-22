@@ -1,17 +1,17 @@
-name: Build and Test Packages
-on: [push]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1 
-        with:
-          version: nightly
-      - run: |
-          yarn install --immutable-cache
-      - run: |
-          yarn lint
-      - run: |
-          yarn test:integration
+#name: Integration Tests
+#on: [push]
+#jobs:
+#  test:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Install Foundry
+#        uses: foundry-rs/foundry-toolchain@v1 
+#        with:
+#         version: nightly
+#      - run: |
+#          yarn install --immutable-cache
+#      - run: |
+#          yarn lint
+#      - run: |
+#          yarn test:integration
