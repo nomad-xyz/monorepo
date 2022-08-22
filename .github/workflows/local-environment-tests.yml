@@ -3,7 +3,7 @@ on:
   push:
     paths:
       - "packages/local-environment/**"
-      - ".github/workflows/tests-integration.yml"
+      - ".github/workflows/local-environment-tests.yml"
 
 
 
