@@ -1,6 +1,3 @@
-// import { before, describe, it } from 'mocha';
-
-import { expect } from 'chai';
 import { MultiProvider, Contracts } from '@nomad-xyz/multi-provider';
 import { ethers } from 'ethers';
 
@@ -9,7 +6,7 @@ interface Domain {
   domain: number;
 }
 
-describe('multi-provider', async () => {
+describe('multi-provider', () => {
   let mp;
   const chainADomain: Domain = {
     name: 'a',
@@ -25,7 +22,7 @@ describe('multi-provider', async () => {
   const testSigner = testProvider.getSigner();
 
   // register A and B domains
-  before('registers domains', () => {
+  beforeAll(() => {
     mp = new MultiProvider<Domain>();
     mp.registerDomain(chainADomain);
     mp.registerDomain(chainBDomain);
@@ -33,70 +30,74 @@ describe('multi-provider', async () => {
 
   it('returns an array of domains', () => {
     const values = mp.registeredDomains;
-    expect(values).to.include(chainADomain);
-    expect(values).to.include(chainBDomain);
+    expect(values).toContainEqual(chainADomain);
+    expect(values).toContainEqual(chainBDomain);
   });
 
   it('returns array of domain numbers', () => {
     const numbers = mp.domainNumbers;
-    expect(numbers).to.include(chainADomain.domain);
-    expect(numbers).to.include(chainBDomain.domain);
+    expect(numbers).toContain(chainADomain.domain);
+    expect(numbers).toContain(chainBDomain.domain);
   });
 
   it('returns an array of domain names', () => {
     const names = mp.domainNames;
-    expect(names).to.include(chainADomain.name);
-    expect(names).to.include(chainBDomain.name);
+    expect(names).toContain(chainADomain.name);
+    expect(names).toContain(chainBDomain.name);
   });
 
   it('returns an array of missing providers', () => {
     const missing = mp.missingProviders;
     const aRegistered = mp.providers.has('a');
     const bRegistered = mp.providers.has('b');
-    expect(aRegistered).to.be.false;
-    expect(bRegistered).to.be.false;
-    expect(missing).to.include(chainADomain.name);
-    expect(missing).to.include(chainBDomain.name);
+    expect(aRegistered).toEqual(false);
+    expect(bRegistered).toEqual(false);
+    expect(missing).toContain(chainADomain.name);
+    expect(missing).toContain(chainBDomain.name);
   });
 
   it('returns domain for given nameOrDomain', () => {
     const domainFromName = mp.resolveDomain(chainADomain.name);
     const domainFromDomain = mp.resolveDomain(chainADomain.domain);
-    expect(domainFromName).to.equal(domainFromDomain).to.equal(1000);
+    expect(domainFromName).toEqual(domainFromDomain);
+    expect(domainFromName).toEqual(1000);
+    expect(domainFromDomain).toEqual(1000);
   });
 
   it('returns name for given nameOrDomain', () => {
     const nameFromName = mp.resolveDomainName(chainADomain.name);
     const nameFromDomain = mp.resolveDomainName(chainADomain.domain);
-    expect(nameFromName).to.equal(nameFromDomain).to.equal('a');
+    expect(nameFromName).toEqual(nameFromDomain);
+    expect(nameFromName).toEqual('a');
+    expect(nameFromDomain).toEqual('a');
   });
 
   it('resolveDomainName errors if domain is not found', () => {
-    expect(() => mp.resolveDomainName(4000)).to.throw();
-    expect(() => mp.resolveDomainName('hi')).to.throw();
+    expect(() => mp.resolveDomainName(4000)).toThrow();
+    expect(() => mp.resolveDomainName('hi')).toThrow();
   });
 
   it('returns whether a given domain is registered', () => {
     const known = mp.knownDomain('a');
     const unknown = mp.knownDomain('c');
-    expect(known).to.be.true;
-    expect(unknown).to.be.false;
+    expect(known).toEqual(true);
+    expect(unknown).toEqual(false);
   });
 
   it('fetches a domain, given a name or domain ID', () => {
     const domainA = mp.getDomain('a');
     const domainB = mp.getDomain(2000);
-    expect(domainA).to.equal(chainADomain);
-    expect(domainB).to.equal(chainBDomain);
+    expect(domainA).toEqual(chainADomain);
+    expect(domainB).toEqual(chainBDomain);
   });
 
   it('mustGetDomain errors if a given domain is not registered', () => {
     const domainA = mp.mustGetDomain('a');
-    expect(domainA).to.equal(chainADomain);
+    expect(domainA).toEqual(chainADomain);
     const domainB = mp.mustGetDomain(2000);
-    expect(domainB).to.equal(chainBDomain);
+    expect(domainB).toEqual(chainBDomain);
 
-    expect(() => mp.mustGetDomain('c')).to.throw();
+    expect(() => mp.mustGetDomain('c')).toThrow();
   });
 
   it.skip('registerSigner errors if no provider', () => {
@@ -107,84 +108,92 @@ describe('multi-provider', async () => {
   // register A and B providers
   it('registers provider', async () => {
     // provider
-    expect(mp.providers.has('a')).to.be.false;
+    expect(mp.providers.has('a')).toEqual(false);
     const provider = await ethers.getDefaultProvider();
     mp.registerProvider('a', provider);
-    expect(mp.providers.has('a')).to.be.true;
+    expect(mp.providers.has('a')).toEqual(true);
     // rpc provider
-    expect(mp.providers.has('b')).to.be.false;
+    expect(mp.providers.has('b')).toEqual(false);
     const rpcProvider = 'http://someProvider';
     mp.registerRpcProvider('b', rpcProvider);
-    expect(mp.providers.has('b')).to.be.true;
+    expect(mp.providers.has('b')).toEqual(true);
   });
 
   it('gets registered provider', () => {
     const providerA = mp.getProvider('a');
     const providerB = mp.getProvider(2000);
-    expect(providerA).to.not.be.undefined;
-    expect(providerB).to.not.be.undefined;
+    expect(providerA).toBeDefined();
+    expect(providerB).toBeDefined();
     try {
-      mp.getProvider('c');
-      expect(false, 'Error expected').to.be.true;
-    } catch (_) {
-      _;
+      expect(mp.getProvider('c'));
+    } catch (e) {
+      expect(e.message).toBe(
+        'Attempted to access an unknown domain: c.\nHint: have you called `context.registerDomain(...)` yet?',
+      );
     }
   });
 
   it('mustGetProvider errors if provider is not registered for given nameOrDomain', () => {
     const providerA = mp.mustGetProvider('a');
     const providerB = mp.mustGetProvider(2000);
-    expect(providerA).to.not.be.undefined;
-    expect(providerB).to.not.be.undefined;
-    expect(() => mp.mustGetProvider('c')).to.throw();
+    expect(providerA).toBeDefined();
+    expect(providerB).toBeDefined();
+    try {
+      expect(mp.getProvider('c'));
+    } catch (e) {
+      expect(e.message).toBe(
+        'Attempted to access an unknown domain: c.\nHint: have you called `context.registerDomain(...)` yet?',
+      );
+    }
   });
 
   // register A and B signers
   it('registers signer', () => {
-    expect(mp.signers.has('a')).to.be.false;
+    expect(mp.signers.has('a')).toEqual(false);
     mp.registerSigner('a', testSigner);
-    expect(mp.signers.has('a')).to.be.true;
+    expect(mp.signers.has('a')).toEqual(true);
 
-    expect(mp.signers.has('b')).to.be.false;
+    expect(mp.signers.has('b')).toEqual(false);
     mp.registerSigner('b', testSigner);
-    expect(mp.signers.has('b')).to.be.true;
+    expect(mp.signers.has('b')).toEqual(true);
   });
 
   it('gets signers', () => {
     const signerA = mp.getSigner('a');
     const signerB = mp.getSigner(2000);
-    expect(signerA).to.not.be.undefined;
-    expect(signerB).to.not.be.undefined;
+    expect(signerA).toBeDefined();
+    expect(signerB).toBeDefined();
     try {
-      mp.getSigner('c');
-      expect(false, 'Error expected').to.be.true;
-    } catch (_) {
-      _;
+      expect(mp.getProvider('c'));
+    } catch (e) {
+      expect(e.message).toBe(
+        'Attempted to access an unknown domain: c.\nHint: have you called `context.registerDomain(...)` yet?',
+      );
     }
   });
 
   it('gets connection', () => {
     const connectionA = mp.getConnection('a');
-    expect(connectionA).to.equal(testSigner);
+    expect(connectionA).toEqual(testSigner);
   });
 
   // unregisters B signer
   it('unregisters signer', () => {
-    expect(mp.signers.has('b')).to.be.true;
+    expect(mp.signers.has('b')).toEqual(true);
     mp.unregisterSigner('b');
-    expect(mp.signers.has('b')).to.be.false;
+    expect(mp.signers.has('b')).toEqual(false);
   });
 
   it.skip('gets connection', () => {
     const connectionA = mp.getConnection('a');
-    expect(connectionA).to.equal(testSigner);
+    expect(connectionA).toEqual(testSigner);
 
     // TODO: should return provider?
     // const connectionB = mp.getConnection('b');
     // expect(connectionB).to.equal(testSigner);
   });
 
-  it.skip('gets signer address', async () => {
+  it.skip('gets signer address', () => {
     // TODO:
     // const addressA = await mp.getAddress('a');
     // const actualAddress = await testSigner.getAddress();
@@ -193,15 +202,15 @@ describe('multi-provider', async () => {
 
   it('mustGetSigner errors if signer is not registered for given nameOrDomain', () => {
     const signerA = mp.mustGetSigner('a');
-    expect(signerA).to.not.be.undefined;
+    expect(signerA).toBeDefined();
 
-    expect(() => mp.mustGetSigner('b')).to.throw();
+    expect(() => mp.mustGetSigner('b')).toThrow();
   });
 
   it('clears all signers', () => {
-    expect(mp.signers.size).to.be.greaterThan(0);
+    expect(mp.signers.size).toBeGreaterThan(0);
     mp.clearSigners();
-    expect(mp.signers.size).to.equal(0);
+    expect(mp.signers.size).toEqual(0);
   });
 
   it.skip('registers Wallet Signer', () => {
@@ -221,10 +230,12 @@ describe('multi-provider', async () => {
       }
     }
     const newContracts = new SomeContracts('someChain', 2000);
-    expect(newContracts.domain).to.equal('someChain');
-    expect(newContracts.domainNumber).to.equal(2000);
-    expect(newContracts.args[0]).to.equal(2000);
+    expect(newContracts.domain).toEqual('someChain');
+    expect(newContracts.domainNumber).toEqual(2000);
+    expect(newContracts.args[0]).toEqual(2000);
   });
 
-  it.skip('TODO: resolveDomainName errors');
+  it.skip('TODO: resolveDomainName errors', () => {
+    // TODO
+  });
 });
