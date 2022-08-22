@@ -48,5 +48,5 @@ jobs:
 
       - name: Run Integration Tests
         run: |
-          yarn test:unit
+          yarn local-environment test:unit
         timeout-minutes: 5
