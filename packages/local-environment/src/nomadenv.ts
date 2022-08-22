@@ -214,14 +214,22 @@ export class NomadEnv {
     };
   }
 
+  
+
   //Input arguments to d.up to disable a specific agent.
-  async upAgents() {
+  async up() {
     let metrics = 9000;
     await Promise.all(this.domains.map((d, i) => d.up(metrics + i * 10)));
   }
 
   async down() {
     await Promise.all(this.domains.map((d) => d.down()));
+  }
+
+  //Input arguments to d.up to disable a specific agent.
+  async upAgents() {
+    let metrics = 9000;
+    await Promise.all(this.domains.map((d, i) => d.upAgents(metrics + i * 10)));
   }
 
   async downAgents() {

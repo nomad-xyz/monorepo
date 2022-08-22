@@ -119,14 +119,14 @@ export class NomadDomain {
     await this.network.up();
   }
 
-  async agentsUp(metricsPort?: number, agentType?: string) {
+  async upAgents(metricsPort?: number, agentType?: string) {
     await this.ensureAgents(metricsPort);
     await this.agents!.upAll(agentType);
   }
 
   async up(metricsPort?: number, agentType?: string) {
     await this.networkUp();
-    await this.agentsUp(metricsPort, agentType);
+    await this.upAgents(metricsPort, agentType);
   }
 
   async down() {

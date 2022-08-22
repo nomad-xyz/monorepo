@@ -8,9 +8,21 @@ class DockerEmitter extends EventEmitter {
   }
 }
 
-export abstract class DockerizedActor {
+export abstract class Actor {
   name: string;
   actorType: string;
+
+  constructor(name: string, actorType: string) {
+    this.name = name;
+    this.actorType = actorType;
+  }
+
+  abstract up(): Promise<void>;
+  abstract down(): Promise<void>;
+}
+
+export abstract class DockerizedActor extends Actor {
+  
   docker: Docker;
   container?: Docker.Container;
   events: DockerEmitter;
@@ -18,8 +30,7 @@ export abstract class DockerizedActor {
   logMatcher?: StreamMatcher;
 
   constructor(name: string, actorType: string) {
-    this.name = name;
-    this.actorType = actorType;
+    super(name, actorType)
     this.docker = new Docker();
     this.events = new DockerEmitter();
   }
@@ -65,6 +76,12 @@ export abstract class DockerizedActor {
       }
     }
     return;
+  }
+
+
+  async up(): Promise<void> {
+    await this.connect();
+    await this.start(); 
   }
 
   async down(): Promise<void> {

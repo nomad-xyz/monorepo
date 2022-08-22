@@ -32,13 +32,11 @@ export class Agents {
 
   async upAll(agentType?: string) {
     await Promise.all([
-      this.relayer.connect().then(() => this.relayer.start()),
-      this.updater.connect().then(() => this.updater.start()),
-      this.processor.connect().then(() => this.processor.start()),
-      ...(kathyOn ? [this.kathy!.connect().then(() => this.kathy!.start())] : []),
-      ...this.watchers.map((watcher) =>
-        watcher.connect().then(() => watcher.start())
-      ),
+      this.relayer.up(),
+      this.updater.up(),
+      this.processor.up(),
+      ...(kathyOn ? [this.kathy!.up()] : []),
+      ...this.watchers.map((watcher) => watcher.up()),
     ]);
     if (agentType) {
       switch (agentType!.toLowerCase()) {
@@ -79,6 +77,7 @@ export interface Agent {
   connect(): Promise<boolean>;
   start(): Promise<void>;
   stop(): Promise<void>;
+  up(): Promise<void>;
   down(): Promise<void>;
   disconnect(): Promise<void>;
   getEvents(): Promise<EventEmitter>;
