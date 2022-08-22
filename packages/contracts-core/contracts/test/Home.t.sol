@@ -89,7 +89,7 @@ contract HomeTest is NomadTestWithUpdaterManager {
     function test_dispatchRejectFailedState() public {
         test_improperUpdate();
         vm.expectRevert("failed state");
-        bytes memory messageBody = hex"b00b";
+        bytes memory messageBody = hex"3432bb02";
         bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
         home.dispatch(remoteDomain, recipient, messageBody);
     }
@@ -173,7 +173,7 @@ contract HomeTest is NomadTestWithUpdaterManager {
         assertEq(uint256(home.state()), uint256(NomadBase.States.Failed));
     }
 
-    function test_homeDomainHash() public{
+    function test_homeDomainHash() public {
         assertEq(
             home.homeDomainHash(),
             keccak256(abi.encodePacked(homeDomain, "NOMAD"))
