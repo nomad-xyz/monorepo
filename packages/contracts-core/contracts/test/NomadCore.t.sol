@@ -26,7 +26,6 @@ contract NomadCoreLocalTest is NomadCore {
             printDomainContracts(domain1);
         }
         // Set domain 1 as the Governor domain
-        setGovernor(domains[0]);
         console2.log("Nomad Core is deployed!");
     }
 
@@ -57,8 +56,10 @@ contract NomadCoreForkTest is NomadCore {
         );
         polFork = vm.createFork("https://polygon-rpc.com");
         // Use default domains
-        ethDomain = localDomain;
-        polDomain = remoteDomain;
+        // locaDomain
+        ethDomain = domains[0];
+        // remoteDomain
+        polDomain = domains[1];
 
         // localDomain = domains[0];
         // remoteDomain = domains[1];
@@ -75,7 +76,6 @@ contract NomadCoreForkTest is NomadCore {
         printDomainContracts(polDomain);
 
         // Set Ethereum as the Governor domain
-        setGovernor(ethDomain);
         console2.log("Nomad Core is deployed to Ethereum and Polygon forks!");
     }
 

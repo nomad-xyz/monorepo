@@ -80,16 +80,19 @@ abstract contract NomadCore is Test {
     address processor;
     uint256 recoveryManagerKey;
     address recoveryManager;
+    uint256 governorKey;
+    address governor;
 
     /*//////////////////////////////////////////////////////////////
                                 CONSTANTS
     //////////////////////////////////////////////////////////////*/
 
-    uint32 localDomain;
-    uint32 remoteDomain;
-    bytes32 committedRoot;
-    uint256 optimisticSeconds;
-    uint256 recoveryTimelock;
+    uint32 defaultLocalDomain;
+    uint32 defaultRemoteDomain;
+    uint32 defaultGovernorDomain;
+    bytes32 defaultCommittedRoot;
+    uint256 defaultOptimisticSeconds;
+    uint256 defaultRecoveryTimelock;
 
     mapping(uint32 => uint256) domainToIndex;
     uint32[] domains;
@@ -97,8 +100,9 @@ abstract contract NomadCore is Test {
     function setUp() public virtual {
         xapp = new GoodXappSimple();
         getEnv();
-        domains.push(localDomain);
-        domains.push(remoteDomain);
+        domains.push(defaultLocalDomain);
+        domains.push(defaultRemoteDomain);
+        defaultGovernorDomain = domains[0];
         setUpActors();
         printProtocolAttributes();
     }
@@ -106,14 +110,16 @@ abstract contract NomadCore is Test {
     /// @notice Get user defined protocol attributes via env variables or set sane defaults
     function getEnv() public {
         try vm.envUint("NOMAD_CORE_HOME_DOMAIN") {
-            localDomain = uint32(vm.envUint("NOMAD_CORE_HOME_DOMAIN"));
+            defaultLocalDomain = uint32(vm.envUint("NOMAD_CORE_HOME_DOMAIN"));
         } catch {
-            localDomain = 1500;
+            defaultLocalDomain = 1500;
         }
         try vm.envUint("NOMAD_CORE_REMOTE_DOMAIN") {
-            remoteDomain = uint32(vm.envUint("NOMAD_CORE_REMOTE_DOMAIN"));
+            defaultRemoteDomain = uint32(
+                vm.envUint("NOMAD_CORE_REMOTE_DOMAIN")
+            );
         } catch {
-            remoteDomain = 3000;
+            defaultRemoteDomain = 3000;
         }
         try vm.envAddress("NOMAD_CORE_UPDATER") {
             updater = vm.envAddress("NOMAD_CORE_UPDATER");
@@ -122,19 +128,23 @@ abstract contract NomadCore is Test {
             updater = vm.addr(updaterKey);
         }
         try vm.envBytes32("NOMAD_CORE_COMMITTED_ROOT") {
-            committedRoot = vm.envBytes32("NOMAD_CORE_COMMITTED_ROOT");
+            defaultCommittedRoot = vm.envBytes32("NOMAD_CORE_COMMITTED_ROOT");
         } catch {
-            committedRoot = "committedRoot";
+            defaultCommittedRoot = "committedRoot";
         }
         try vm.envUint("NOMAD_CORE_OPTIMISTIC_SECONDS") {
-            optimisticSeconds = vm.envUint("NOMAD_CORE_OPTIMISTIC_SECONDS");
+            defaultOptimisticSeconds = vm.envUint(
+                "NOMAD_CORE_OPTIMISTIC_SECONDS"
+            );
         } catch {
-            optimisticSeconds = 1800;
+            defaultOptimisticSeconds = 1800;
         }
         try vm.envUint("NOMAD_CORE_RECOVERY_TIMELOCK") {
-            recoveryTimelock = vm.envUint("NOMAD_CORE_RECOVERY_TIMELOCK");
+            defaultRecoveryTimelock = vm.envUint(
+                "NOMAD_CORE_RECOVERY_TIMELOCK"
+            );
         } catch {
-            recoveryTimelock = 180;
+            defaultRecoveryTimelock = 180;
         }
     }
 
@@ -147,12 +157,15 @@ abstract contract NomadCore is Test {
         processor = vm.addr(processorKey);
         recoveryManagerKey = 5;
         recoveryManager = vm.addr(recoveryManagerKey);
+        governorKey = 6;
+        governor = vm.addr(governorKey);
 
         vm.label(updater, "Updater");
         vm.label(watcher, "Watcher");
         vm.label(processor, "Processor");
         vm.label(relayer, "Relayer");
         vm.label(recoveryManager, "Recovery Manager");
+        vm.label(governor, "Governor");
     }
 
     function printProtocolAttributes() public {
@@ -163,13 +176,15 @@ abstract contract NomadCore is Test {
         console2.log("Relayer          Address:", relayer);
         console2.log("Processor        Address:", processor);
         console2.log("Recovery Manager Address:", recoveryManager);
+        console2.log("Governor         Address:", governor);
         console2.log(" ");
         console2.log("====DEFAULT ATTRIBUTES====");
         console2.log(" ");
-        console2.log("localDomain:", localDomain);
-        console2.log("remoteDomain:", remoteDomain);
-        console2.log("optimisticSeconds:", optimisticSeconds);
-        console2.log("recoveryTimelock:", recoveryTimelock);
+        console2.log("localDomain:", defaultLocalDomain);
+        console2.log("remoteDomain:", defaultRemoteDomain);
+        console2.log("governorDomain:", defaultGovernorDomain);
+        console2.log("optimisticSeconds:", defaultOptimisticSeconds);
+        console2.log("recoveryTimelock:", defaultRecoveryTimelock);
     }
 
     function printDomainContracts(uint32 domain) public {
@@ -251,7 +266,7 @@ abstract contract NomadCore is Test {
 
         governanceRouterImplementation = new GovernanceRouter(
             localDomain,
-            recoveryTimelock
+            defaultRecoveryTimelock
         );
         governanceRouterBeacon = new UpgradeBeacon(
             address(governanceRouterImplementation),
@@ -276,6 +291,10 @@ abstract contract NomadCore is Test {
         governanceRouterBeacons.push(governanceRouterBeacon);
 
         domainToIndex[localDomain] = homes.length - 1;
+        // Set the first domain as the default Governor domain
+        if (homes.length == 1) {
+            setGovernor(localDomain, defaultGovernorDomain, governor);
+        }
     }
 
     function createLocalReplicaForRemoteDomain(
@@ -295,8 +314,8 @@ abstract contract NomadCore is Test {
             "initialize(uint32,address,bytes32,uint256)",
             remoteDomain,
             updater,
-            committedRoot,
-            optimisticSeconds
+            defaultCommittedRoot,
+            defaultOptimisticSeconds
         );
         replicaProxy = new UpgradeBeaconProxy(address(replicaBeacon), data);
         replica = Replica(address(replicaProxy));
@@ -314,6 +333,7 @@ abstract contract NomadCore is Test {
             remoteDomain,
             true
         );
+        vm.prank(governanceRouters[index].governor());
         governanceRouters[index].setRouterLocal(
             remoteDomain,
             TypeCasts.addressToBytes32(address(governanceRouters[remoteIndex]))
@@ -337,29 +357,30 @@ abstract contract NomadCore is Test {
         address indexed newGovernor
     );
 
-    function setGovernor(uint32 domain) public {
+    function setGovernor(
+        uint32 domain,
+        uint32 governorDomain,
+        address newGovernor
+    ) public {
         uint256 index = domainToIndex[domain];
-        address governor = address(governanceRouters[index]);
-        vm.startPrank(governor);
-        for (uint256 i; i < governanceRouters.length; i++) {
-            address previousGovernor = governanceRouters[index].governor();
-            uint32 previousGovernorDomain = governanceRouters[index]
-                .governorDomain();
-            vm.expectEmit(true, true, false, true);
-            emit TransferGovernor(
-                previousGovernorDomain,
-                domain,
-                previousGovernor,
-                governor
-            );
-            governanceRouters[index].transferGovernor(domain, governor);
-        }
+        address previousGovernor = governanceRouters[index].governor();
+        vm.startPrank(previousGovernor);
+        uint32 previousGovernorDomain = governanceRouters[index]
+            .governorDomain();
+        vm.expectEmit(true, true, false, true);
+        emit TransferGovernor(
+            previousGovernorDomain,
+            domain,
+            previousGovernor,
+            newGovernor
+        );
+        governanceRouters[index].transferGovernor(governorDomain, newGovernor);
         vm.stopPrank();
         console2.log("");
         console2.log("======");
-        console2.log("Governor was transfered");
-        console2.log("Domain: ", domain);
-        console2.log("Address: ", governor);
+        console2.log("Governor changed on domain:", domain);
+        console2.log("Governor Domain: ", governorDomain);
+        console2.log("Governor Address: ", newGovernor);
         console2.log("======");
         console2.log("");
     }
