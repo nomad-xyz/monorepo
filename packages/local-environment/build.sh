@@ -1,7 +1,8 @@
 echo '\033[0;32m' ====== Hello $USER, please wait until I build your images ☕ '\033[0m'
 
 foundryup;
-yarn install;
+yarn install --immutable-cache;
+yarn lint;
 
 for d in packages/contracts-*; do
  echo '\033[0;33m' ====== Building $d '\033[0m';
@@ -13,9 +14,6 @@ for d in packages/contracts-*; do
     }
 #  popd;
 done
-
-yarn install;
-yarn build;
 
 # yarn deploy build;
 cd packages/local-environment/
