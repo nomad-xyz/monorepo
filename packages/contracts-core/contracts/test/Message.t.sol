@@ -106,6 +106,6 @@ contract MessageTest is Test {
 
     function test_leaf() public {
         messageView = message.ref(0);
-        assertEq(Message.leaf(messageView), messageHash);
+        assertEq(messageView.leaf(), messageHash);
     }
 }
