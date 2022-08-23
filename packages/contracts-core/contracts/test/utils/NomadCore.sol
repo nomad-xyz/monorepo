@@ -291,10 +291,9 @@ abstract contract NomadCore is Test {
         governanceRouterBeacons.push(governanceRouterBeacon);
 
         domainToIndex[localDomain] = homes.length - 1;
-        // Set the first domain as the default Governor domain
-        if (homes.length == 1) {
-            setGovernor(localDomain, defaultGovernorDomain, governor);
-        }
+        // Set the default governor domain and governor address
+
+        setGovernor(localDomain, defaultGovernorDomain, governor);
     }
 
     function createLocalReplicaForRemoteDomain(
@@ -333,11 +332,6 @@ abstract contract NomadCore is Test {
             remoteDomain,
             true
         );
-        vm.prank(governanceRouters[index].governor());
-        governanceRouters[index].setRouterLocal(
-            remoteDomain,
-            TypeCasts.addressToBytes32(address(governanceRouters[remoteIndex]))
-        );
     }
 
     function relinquishCoreControl(uint32 localDomain) public {
@@ -363,6 +357,25 @@ abstract contract NomadCore is Test {
         address newGovernor
     ) public {
         uint256 index = domainToIndex[domain];
+        address newGovernorAddress;
+        if (
+            domain != governorDomain &&
+            governanceRouters[index].routers(governorDomain) == bytes32(0)
+        ) {
+            vm.startPrank(governanceRouters[index].governor());
+            governanceRouters[index].setRouterLocal(
+                governorDomain,
+                TypeCasts.addressToBytes32(
+                    address(governanceRouters[domainToIndex[governorDomain]])
+                )
+            );
+            vm.stopPrank();
+        }
+        // The `TransferGovernor` event emits the new Governor Address only if the domain of the Governance Router
+        // is the Governor domain. Else, it emits address(0).
+        if (domain == governorDomain) {
+            newGovernorAddress = newGovernor;
+        }
         address previousGovernor = governanceRouters[index].governor();
         vm.startPrank(previousGovernor);
         uint32 previousGovernorDomain = governanceRouters[index]
@@ -370,9 +383,9 @@ abstract contract NomadCore is Test {
         vm.expectEmit(true, true, false, true);
         emit TransferGovernor(
             previousGovernorDomain,
-            domain,
+            governorDomain,
             previousGovernor,
-            newGovernor
+            newGovernorAddress
         );
         governanceRouters[index].transferGovernor(governorDomain, newGovernor);
         vm.stopPrank();
