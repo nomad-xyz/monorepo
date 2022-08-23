@@ -15,23 +15,6 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home = new HomeHarness(homeDomain);
         home.initialize(IUpdaterManager(address(updaterManager)));
         updaterManager.setHome(address(home));
-        vm.prank(address(updaterManager));
-    }
-
-    function test_onlyUpdaterManagerSetUpdater() public {
-        vm.prank(address(updaterManager));
-        home.setUpdater(vm.addr(420));
-    }
-
-    function test_nonUpdaterManagerCannotSetUpdater() public {
-        vm.prank(vm.addr(40123));
-        vm.expectRevert("!updaterManager");
-        home.setUpdater(vm.addr(420));
-    }
-
-    function test_committedRoot() public {
-        bytes32 emptyRoot;
-        assertEq(abi.encode(home.committedRoot()), abi.encode(emptyRoot));
     }
 
     event Dispatch(
@@ -42,7 +25,7 @@ contract HomeTest is NomadTestWithUpdaterManager {
         bytes message
     );
 
-    function test_dispatchSuccess() public {
+    function dispatchTestMessage() public returns (bytes memory, uint256) {
         bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
         address sender = vm.addr(1555);
         bytes memory messageBody = bytes("hey buddy");
@@ -68,13 +51,40 @@ contract HomeTest is NomadTestWithUpdaterManager {
         );
         vm.prank(sender);
         home.dispatch(remoteDomain, recipient, messageBody);
+        return (message, leafIndex);
+    }
 
+    event NewUpdater(address oldUpdater, address newUpdater);
+
+    function test_onlyUpdaterManagerSetUpdater() public {
+        vm.prank(address(updaterManager));
+        address newUpdater = vm.addr(420);
+        address oldUpdater = updater;
+        vm.expectEmit(false, false, false, true);
+        emit NewUpdater(oldUpdater, newUpdater);
+        home.setUpdater(newUpdater);
+    }
+
+    function test_nonUpdaterManagerCannotSetUpdater() public {
+        vm.prank(vm.addr(40123));
+        vm.expectRevert("!updaterManager");
+        home.setUpdater(vm.addr(420));
+    }
+
+    function test_committedRoot() public {
+        bytes32 emptyRoot;
+        assertEq(abi.encode(home.committedRoot()), abi.encode(emptyRoot));
+    }
+
+    function test_dispatchSuccess() public {
+        (bytes memory message, uint256 leafIndex) = dispatchTestMessage();
+        uint256 nonce = home.nonces(remoteDomain);
         (bytes32 root, , uint256 index, ) = merkleTest.getProof(message);
-
         assertEq(root, home.root());
         assert(home.queueContains(root));
         assertEq(index, leafIndex);
         assert(root != home.committedRoot());
+        assertEq(uint256(home.nonces(remoteDomain)), nonce);
     }
 
     function test_dispatchRejectBigMessage() public {
@@ -102,10 +112,7 @@ contract HomeTest is NomadTestWithUpdaterManager {
     );
 
     function test_updateSuccess() public {
-        bytes memory messageBody = "";
-        uint32 destinationDomain = remoteDomain;
-        bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
-        home.dispatch(destinationDomain, recipient, messageBody);
+        (bytes memory message, ) = dispatchTestMessage();
         bytes32 newRoot = home.root();
         bytes32 oldRoot = home.committedRoot();
         bytes memory sig = signHomeUpdate(updaterPK, oldRoot, newRoot);
@@ -113,13 +120,11 @@ contract HomeTest is NomadTestWithUpdaterManager {
         emit Update(homeDomain, oldRoot, newRoot, sig);
         home.update(oldRoot, newRoot, sig);
         assertEq(newRoot, home.committedRoot());
+        assertEq(home.queueLength(), 0);
+        assert(!home.queueContains(newRoot));
     }
 
     function test_updateRejectFailedState() public {
-        bytes memory messageBody = "";
-        uint32 destinationDomain = remoteDomain;
-        bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
-        home.dispatch(destinationDomain, recipient, messageBody);
         test_improperUpdate();
         bytes32 newRoot = home.root();
         bytes32 oldRoot = home.committedRoot();
@@ -129,35 +134,10 @@ contract HomeTest is NomadTestWithUpdaterManager {
     }
 
     function test_suggestUpdate() public {
-        bytes32 committedRoot = home.committedRoot();
-        bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
-        address sender = vm.addr(1555);
-        bytes memory messageBody = bytes("hey buddy");
-        uint32 nonce = home.nonces(remoteDomain);
-        bytes memory message = Message.formatMessage(
-            homeDomain,
-            bytes32(uint256(uint160(sender))),
-            nonce,
-            remoteDomain,
-            recipient,
-            messageBody
-        );
-        bytes32 messageHash = keccak256(message);
-        vm.expectEmit(true, true, true, true);
-        // first message that is sent on this home
-        uint256 leafIndex = 0;
-        emit Dispatch(
-            messageHash,
-            leafIndex,
-            (uint64(remoteDomain) << 32) | nonce,
-            home.committedRoot(),
-            message
-        );
-        vm.prank(sender);
-        home.dispatch(remoteDomain, recipient, messageBody);
+        (bytes memory message, ) = dispatchTestMessage();
         (bytes32 root, , , ) = merkleTest.getProof(message);
         (bytes32 oldRoot, bytes32 newRoot) = home.suggestUpdate();
-        assertEq(committedRoot, oldRoot);
+        assertEq(home.committedRoot(), oldRoot);
         assertEq(root, newRoot);
     }
 
