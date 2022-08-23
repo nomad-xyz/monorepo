@@ -3,7 +3,6 @@ import Docker from "dockerode";
 import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
 import { NomadDomain } from "./domain";
-import { Key } from "./keys/key";
 
 const kathyOn = false;
 
@@ -39,7 +38,7 @@ export class Agents {
       ...this.watchers.map((watcher) => watcher.up()),
     ]);
     if (agentType) {
-      switch (agentType!.toLowerCase()) {
+      switch (agentType.toLowerCase()) {
         case "watcher":
           return this.watchers.map((w) => w.stop());
         case "kathy":
@@ -112,25 +111,6 @@ function parseAgentType(t: string | AgentType): AgentType {
     return t;
   }
 }
-
-// export function agentTypeToString(t: string | AgentType): string {
-//   if (typeof t === "string") {
-//     return t.toLowerCase();
-//   } else {
-//     switch (t) {
-//       case AgentType.Updater:
-//         return "updater";
-//       case AgentType.Relayer:
-//         return "relayer";
-//       case AgentType.Processor:
-//         return "processor";
-//       case AgentType.Watcher:
-//         return "watcher";
-//       case AgentType.Kathy:
-//         return "kathy";
-//     }
-//   }
-// }
 
 export class LocalAgent extends DockerizedActor implements Agent {
   agentType: AgentType;
@@ -266,8 +246,6 @@ export class LocalAgent extends DockerizedActor implements Agent {
     const agentConfigPath = "" + process.cwd() + "/output/test_config.json";
 
     const additionalEnvs = this.getAdditionalEnvs();
-
-    // const additionalEnvs = this.getAdditionalEnvs();
 
     // docker run --name $1_$2_agent --env RUN_ENV=main --restart=always --network="host" --env BASE_CONFIG=$1_config.json -v $(pwd)/../../rust/config:/app/config -d gcr.io/nomad-xyz/nomad-agent ./$2
     return this.docker.createContainer({
