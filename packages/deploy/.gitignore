@@ -5,3 +5,4 @@ dist/
 lib/
 output/
 config/config.json
+coverage/

@@ -2,12 +2,12 @@ import * as config from '@nomad-xyz/configuration';
 import { MultiProvider, utils } from '@nomad-xyz/multi-provider';
 import { NomadContext } from '@nomad-xyz/sdk';
 import { CallBatch } from '@nomad-xyz/sdk-govern';
-import { expect } from 'chai';
 import ethers from 'ethers';
 
 import BridgeContracts from './bridge/BridgeContracts';
 import CoreContracts from './core/CoreContracts';
 import fs from 'fs';
+import { CheckList } from './Checklist';
 
 export interface Verification {
   name: string;
@@ -25,7 +25,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
   protected _outputDir: string;
   protected _instantiatedAt: number;
 
-  constructor(data: config.NomadConfig, outputDir = "./output") {
+  constructor(data: config.NomadConfig, outputDir = './output') {
     super();
 
     this._data = data;
@@ -355,12 +355,19 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
   // perform validation checks on core and bridges
   async checkDeployment(): Promise<void> {
-    await this.checkCores();
-    await this.checkBridges();
+    CheckList.printStart(this.data.environment);
+    const [core, bridge] = await Promise.all([
+      this.checkCores(),
+      this.checkBridges(),
+    ]);
+    // combine core and bridge checks
+    const list = CheckList.combine([core, bridge]);
+    // print the results of all checks
+    list.report();
   }
 
-  async checkCores(): Promise<void> {
-    await Promise.all(
+  async checkCores(): Promise<CheckList> {
+    const checklists = await Promise.all(
       this.networks.map(async (net) => {
         const coreConfig = this.data.core[net];
         if (!coreConfig)
@@ -369,24 +376,32 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
         const domainConfig = this.mustGetDomainConfig(net);
 
-        await core.checkDeploy(
+        const checklist = await core.checkDeploy(
           domainConfig.connections,
           this.data.protocol.governor.domain,
         );
+        return checklist;
       }),
     );
+    const checklist = CheckList.combine(checklists);
+    return checklist;
   }
 
-  async checkBridges(): Promise<void> {
-    await Promise.all(
+  async checkBridges(): Promise<CheckList> {
+    const checklists = await Promise.all(
       this.networks.map(async (net) => {
         const bridgeConfig = this.data.bridge[net];
         if (!bridgeConfig)
           throw new Error(`network ${net} is missing bridge config`);
         const bridge = new BridgeContracts(this, net, bridgeConfig);
-        await bridge.checkDeploy(this.data.protocol.networks[net].connections);
+        const checklist = await bridge.checkDeploy(
+          this.data.protocol.networks[net].connections,
+        );
+        return checklist;
       }),
     );
+    const checklist = CheckList.combine(checklists);
+    return checklist;
   }
 
   checkVerificationInput(

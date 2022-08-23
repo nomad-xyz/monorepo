@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- run all deploy checks & print useful error messages
 - feature: deploy script doesn't throw, but collect errors
 - chore: bump configuration to rc.23
 - fix: add goerli overrides to overrides.json
