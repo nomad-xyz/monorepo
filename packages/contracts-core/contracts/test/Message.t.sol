@@ -76,32 +76,35 @@ contract MessageTest is Test {
 
     function test_origin() public {
         messageView = message.ref(0);
-        assertEq(uint256(Message.origin(messageView)), uint256(originDomain));
+        assertEq(uint256(messageView.origin()), uint256(originDomain));
     }
 
     function test_sender() public {
         messageView = message.ref(0);
-        assertEq(Message.sender(messageView), sender);
+        assertEq(messageView.sender(), sender);
     }
 
     function test_nonce() public {
         messageView = message.ref(0);
-        assertEq(uint256(Message.nonce(messageView)), uint256(nonce));
+        assertEq(uint256(messageView.nonce()), uint256(nonce));
     }
 
     function test_destination() public {
         messageView = message.ref(0);
-        assertEq(uint256(Message.nonce(messageView)), uint256(nonce));
+        assertEq(
+            uint256(messageView.destination()),
+            uint256(destinationDomain)
+        );
     }
 
     function test_recipient() public {
         messageView = message.ref(0);
-        assertEq(Message.recipient(messageView), recipient);
+        assertEq(messageView.recipient(), recipient);
     }
 
     function test_body() public {
         messageView = message.ref(0);
-        assertEq(Message.body(messageView).keccak(), body.ref(0).keccak());
+        assertEq(messageView.body().keccak(), body.ref(0).keccak());
     }
 
     function test_leaf() public {
