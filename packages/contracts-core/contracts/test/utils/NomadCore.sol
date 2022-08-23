@@ -358,6 +358,10 @@ abstract contract NomadCore is Test {
     ) public {
         uint256 index = domainToIndex[domain];
         address newGovernorAddress;
+        // if domain is governorDomain, we don't need to enroll a remote router
+        // if domain is not governorDomain, but we have enrolled already a remote router, we don't need to do it again
+        // if domain is not governorDomain and we haven't enrolled a remote router, we need to do that,
+        // before we set the remote domain as the governor domain
         if (
             domain != governorDomain &&
             governanceRouters[index].routers(governorDomain) == bytes32(0)
