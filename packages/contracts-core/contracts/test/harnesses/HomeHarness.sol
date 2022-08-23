@@ -8,6 +8,7 @@ contract HomeHarness is Home {
 
     function exposed_destinationAndNonce(uint32 _destination, uint32 _nonce)
         public
+        pure
         returns (uint64)
     {
         return _destinationAndNonce(_destination, _nonce);
