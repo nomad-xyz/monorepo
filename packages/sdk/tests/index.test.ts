@@ -1,5 +1,3 @@
-// import { describe, it } from 'mocha';
-import { expect } from 'chai';
 import { constants, getDefaultProvider, VoidSigner } from 'ethers';
 import { NomadContext } from '@nomad-xyz/sdk';
 import * as config from '@nomad-xyz/configuration';
@@ -12,9 +10,10 @@ describe('NomadContext', () => {
   it('fetches from hosted configs', async () => {
     for (const env of ENVIRONMENTS) {
       const context = await NomadContext.fetch(env, false);
-      expect(context).to.not.be.undefined;
+      expect(context).toBeDefined();
     }
   });
+
   it('Is properly instantiated from a NomadConfig', async () => {
     for (const env of ENVIRONMENTS) {
       const conf = await NomadContext.fetchConfig(env);
@@ -28,11 +27,11 @@ describe('NomadContext', () => {
 
       // Gets governor
       const governor = context.governor;
-      expect(governor).to.equal(conf.protocol.governor);
+      expect(governor).toEqual(conf.protocol.governor);
 
       // Gets governor core
       const govCore = await context.governorCore();
-      expect(context.resolveDomain(govCore.domain)).to.equal(
+      expect(context.resolveDomain(govCore.domain)).toEqual(
         conf.protocol.governor.domain,
       );
 
@@ -43,15 +42,15 @@ describe('NomadContext', () => {
         const core = context.mustGetCore(homeDomain);
 
         // Gets home
-        expect(core.home.address).to.equal(homeConfCore.home.proxy);
+        expect(core.home.address).toEqual(homeConfCore.home.proxy);
 
         // Gets governance router
-        expect(core.governanceRouter.address).to.equal(
+        expect(core.governanceRouter.address).toEqual(
           homeConfCore.governanceRouter.proxy,
         );
 
         // Gets xapp connection manager
-        expect(core.xAppConnectionManager.address).to.equal(
+        expect(core.xAppConnectionManager.address).toEqual(
           homeConfCore.xAppConnectionManager,
         );
 
@@ -59,19 +58,20 @@ describe('NomadContext', () => {
         for (const remoteDomain of confNetwork.connections) {
           const remoteConfCore = conf.core[remoteDomain];
           const replica = context.mustGetReplicaFor(homeDomain, remoteDomain);
-          expect(replica.address).to.equal(
+          expect(replica.address).toEqual(
             remoteConfCore.replicas[homeDomain].proxy,
           );
         }
 
         // returns undefined if no replica exists
-        expect(() => core.getReplica('none')).to.throw;
+        expect(() => core.getReplica('none')).toThrow();
       }
     }
   });
 
-  // TODO:
-  it.skip('fails if given bad rpc provider string');
+  it.skip('fails if given bad rpc provider string', () => {
+    // TODO
+  });
 
   it('gets replica by name or domain', () => {
     const context = new NomadContext('development');
@@ -79,9 +79,9 @@ describe('NomadContext', () => {
     context.registerRpcProvider(domainB, 'http://dummy-rpc-url');
     const core = context.mustGetCore(domainA);
     const replica = core.getReplica(domainB);
-    expect(replica).to.not.be.undefined;
+    expect(replica).toBeDefined();
     const replicaFor = context.getReplicaFor(domainA, domainB);
-    expect(replicaFor).to.not.be.undefined;
+    expect(replicaFor).toBeDefined();
   });
 
   it('maintains connection when registering and unregistering signers', () => {
@@ -95,10 +95,10 @@ describe('NomadContext', () => {
     context.registerSigner(domainA, signer);
     context.registerSigner(domainB, signer);
     context.unregisterSigner(domainA);
-    expect(context.getConnection(domainA)).to.not.be.undefined;
+    expect(context.getConnection(domainA)).toBeDefined();
     context.clearSigners();
-    expect(context.getConnection(domainA)).to.not.be.undefined;
-    expect(context.getConnection(domainB)).to.not.be.undefined;
+    expect(context.getConnection(domainA)).toBeDefined();
+    expect(context.getConnection(domainB)).toBeDefined();
   });
 });
 

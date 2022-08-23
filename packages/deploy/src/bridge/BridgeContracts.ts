@@ -13,8 +13,9 @@ import * as config from '@nomad-xyz/configuration';
 
 import Contracts from '../Contracts';
 import { DeployContext } from '../DeployContext';
-import { log, CheckList } from '../utils';
+import { log } from '../utils';
 import { Call, CallBatch } from '@nomad-xyz/sdk-govern';
+import { CheckList } from '../Checklist';
 
 export abstract class AbstractBridgeDeploy<T> extends Contracts<T> {
   // Placeholder for future multi-VM abstraction
@@ -360,7 +361,10 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     const enrolledRemote = await this.bridgeRouterContract.remotes(
       remoteConfig.domain,
     );
-    if (utils.equalIds(enrolledRemote, remoteBridge.bridgeRouterContract.address)) return;
+    if (
+      utils.equalIds(enrolledRemote, remoteBridge.bridgeRouterContract.address)
+    )
+      return;
     log(`enroll BridgeRouter for ${remoteName} on ${local}`);
 
     // Check that this key has permissions to set this
@@ -548,24 +552,19 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
   }
 
   async checkDeploy(remoteDomains: string[]): Promise<CheckList> {
-    const checklist = new CheckList();
-
-    checklist.exists(
-      this.data.bridgeToken,
-      `bridgeToken for domain ${this.domain}`,
-    );
-    checklist.exists(
-      this.data.bridgeRouter,
-      `bridgeRouter for domain ${this.domain}`,
-    );
-    checklist.exists(
-      this.data.tokenRegistry,
-      `tokenRegistry for domain ${this.domain}`,
-    );
-
-    checklist.assertBeaconProxy(this.data.bridgeToken, 'bridgeToken proxy');
-    checklist.assertBeaconProxy(this.data.bridgeRouter, 'bridgeRouter proxy');
-    checklist.assertBeaconProxy(this.data.tokenRegistry, 'TokenRegistry');
+    const checklist = new CheckList(`${this.domain.toUpperCase()}`, 'BRIDGE');
+    checklist.addCheck({
+      msg: `BridgeToken is in config`,
+      check: () => checklist.assertBeaconProxy(this.data.bridgeToken),
+    });
+    checklist.addCheck({
+      msg: `BridgeRouter is in config`,
+      check: () => checklist.assertBeaconProxy(this.data.bridgeRouter),
+    });
+    checklist.addCheck({
+      msg: `TokenRegistry is in config`,
+      check: () => checklist.assertBeaconProxy(this.data.tokenRegistry),
+    });
 
     /*
     # BridgeRouter
@@ -585,147 +584,183 @@ export default class BridgeContracts extends AbstractBridgeDeploy<config.EvmBrid
     //  ========= BridgeRouter =========
     // BridgeRouter upgrade setup contracts are defined
     // owner
-    const bridgeRouterOwner = await this.bridgeRouterContract.owner();
-    checklist.equalIds(
-      core.governanceRouter.address,
-      bridgeRouterOwner,
-      'GovernanceRouter',
-    );
+    checklist.addCheck({
+      msg: 'BridgeRouter is owned by the GovernanceRouter',
+      check: async () => {
+        const bridgeRouterOwner = await this.bridgeRouterContract.owner();
+        checklist.equalIds(core.governanceRouter.address, bridgeRouterOwner);
+      },
+    });
     // tokenRegistry
-
-    if (this.data.tokenRegistry) {
-      const tokenRegistry = await this.bridgeRouterContract.tokenRegistry();
-      checklist.equalIds(
-        this.data.tokenRegistry.proxy,
-        tokenRegistry,
-        'TokenRegistry',
-      );
-    }
+    checklist.addCheck({
+      msg: 'BridgeRouter has correct TokenRegistry configured',
+      check: async () => {
+        const tokenRegistry = await this.bridgeRouterContract.tokenRegistry();
+        checklist.equalIds(tokenRegistry, this.data.tokenRegistry?.proxy);
+      },
+    });
 
     // xAppConnectionManager
-    const xApp = await this.bridgeRouterContract.xAppConnectionManager();
-    checklist.equalIds(
-      xApp,
-      core.xAppConnectionManager.address,
-      'xAppConnectionManager',
-    );
+    checklist.addCheck({
+      msg: 'BridgeRouter has correct xAppConnectionManager configured',
+      check: async () => {
+        const xApp = await this.bridgeRouterContract.xAppConnectionManager();
+        checklist.equalIds(xApp, core.xAppConnectionManager.address);
+      },
+    });
     // remotes
     for (const domain of remoteDomains) {
       const remoteDomainNumber = this.context.mustGetDomain(domain).domain;
-      const remoteRouter = await this.bridgeRouterContract.remotes(
-        remoteDomainNumber,
-      );
-      checklist.equalIds(
-        this.context.mustGetBridge(domain).bridgeRouterContract.address,
-        remoteRouter,
-        'BridgeRouter',
-      );
+      checklist.addCheck({
+        msg: `BridgeRouter is enrolled for ${CheckList.colorDomain(domain)}`,
+        check: async () => {
+          const remoteRouter = await this.bridgeRouterContract.remotes(
+            remoteDomainNumber,
+          );
+          checklist.equalIds(
+            this.context.mustGetBridge(domain).bridgeRouterContract.address,
+            remoteRouter,
+          );
+        },
+      });
     }
 
     //  ========= tokenRegistry =========
     // TokenRegistry upgrade setup contracts are defined
     // owner
-    const tokenRegistryOwner = await this.tokenRegistryContract.owner();
-    checklist.equalIds(
-      tokenRegistryOwner,
-      this.bridgeRouterContract.address,
-      'TokenRegistry',
-    );
+    checklist.addCheck({
+      msg: `TokenRegistry is owned by the BridgeRouter`,
+      check: async () => {
+        const tokenRegistryOwner = await this.tokenRegistryContract.owner();
+        checklist.equalIds(
+          tokenRegistryOwner,
+          this.bridgeRouterContract.address,
+        );
+      },
+    });
 
     // xAppConnectionManager
-    const xAppAddress =
-      await this.tokenRegistryContract.xAppConnectionManager();
-    checklist.equalIds(
-      xAppAddress,
-      core.xAppConnectionManager.address,
-      'xApp Address',
-    );
+    checklist.addCheck({
+      msg: 'TokenRegistry has correct xAppConnectionManager configured',
+      check: async () => {
+        const xAppAddress =
+          await this.tokenRegistryContract.xAppConnectionManager();
+        checklist.equalIds(xAppAddress, core.xAppConnectionManager.address);
+      },
+    });
     // tokenBeacon
-    if (this.data.bridgeToken) {
-      const tokenBeacon = await this.tokenRegistryContract.tokenBeacon();
-      checklist.equalIds(
-        tokenBeacon,
-        this.data.bridgeToken.beacon,
-        'BridgeToken',
-      );
-    }
+    checklist.addCheck({
+      msg: 'TokenRegistry has correct TokenBeacon configured',
+      check: async () => {
+        const tokenBeacon = await this.tokenRegistryContract.tokenBeacon();
+        checklist.equalIds(tokenBeacon, this.data.bridgeToken?.beacon);
+      },
+    });
 
     //  ========= eth helper =========
     const weth = this.context.mustGetDomainConfig(this.domain)
       .bridgeConfiguration.weth;
     if (weth) {
-      checklist.exists(this.data.ethHelper, 'ethHelper exists');
-    } else {
-      checklist.equals(
-        undefined,
-        this.data.ethHelper,
-        "ethHelper shouldn't exist",
-      );
+      checklist.addCheck({
+        msg: 'EthHelper is in config',
+        check: () => checklist.exists(this.data.ethHelper),
+      });
     }
-
     //  ========= custom tokens =========
 
     if (this.data.customs) {
       for (const custom of this.data.customs) {
-        const addresses = custom.addresses;
-        checklist.assertBeaconProxy(addresses, 'Custom Token');
+        const { name, symbol, addresses } = custom;
+        checklist.addCheck({
+          msg: `Custom Token is in config for ${name} (${symbol})`,
+          check: () => checklist.assertBeaconProxy(addresses),
+        });
+        checklist.addCheck({
+          msg: '\\__ Custom Token uses the BridgeToken.sol implementation',
+          check: () =>
+            checklist.equalIds(
+              addresses.implementation,
+              this.data.bridgeToken?.implementation,
+            ),
+        });
+        checklist.addCheck({
+          msg: '\\__ Custom Token does *not* use BridgeToken beacon',
+          check: () =>
+            checklist.notEqualIds(
+              addresses.beacon,
+              this.data.bridgeToken?.beacon,
+            ),
+        });
+        checklist.addCheck({
+          msg: '\\__ Custom Token has right name',
+          check: async () => {
+            const tokenContract = await contracts.BridgeToken__factory.connect(
+              utils.evmId(addresses.proxy),
+              this.connection,
+            );
+            const chainName = await tokenContract.name();
+            checklist.equals(chainName, name);
+          },
+        });
 
-        if (this.data.bridgeToken) {
-          checklist.equalIds(
-            addresses.implementation,
-            this.data.bridgeToken.implementation,
-            'BirdgeToken implementation',
-          );
-          checklist.notEqualIds(
-            addresses.beacon,
-            this.data.bridgeToken.beacon,
-            'BirdgeToken beacon',
-          );
-        }
+        checklist.addCheck({
+          msg: '\\__ Custom Token has right symbol',
+          check: async () => {
+            const tokenContract = await contracts.BridgeToken__factory.connect(
+              utils.evmId(addresses.proxy),
+              this.connection,
+            );
+            const chainSymbol = await tokenContract.symbol();
+            checklist.equals(chainSymbol, symbol);
+          },
+        });
 
-        checklist.notEqualIds(
-          custom.controller,
-          core.upgradeBeaconController.address,
-          'upgradeBeaconController',
-        );
+        checklist.addCheck({
+          msg: '\\__ Custom Token has right decimals',
+          check: async () => {
+            const tokenContract = await contracts.BridgeToken__factory.connect(
+              utils.evmId(addresses.proxy),
+              this.connection,
+            );
+            const decimals = await tokenContract.decimals();
+            checklist.equals(decimals, decimals);
+          },
+        });
+        checklist.addCheck({
+          msg: '\\__ Custom Token is owned by BridgeRouter',
+          check: async () => {
+            const tokenContract = await contracts.BridgeToken__factory.connect(
+              utils.evmId(addresses.proxy),
+              this.connection,
+            );
+            const owner = await tokenContract.owner();
+            checklist.equals(owner, this.bridgeRouterContract.address);
+          },
+        });
+        checklist.addCheck({
+          msg: '\\__ Custom Token domain is configured on TokenRegistry',
+          check: async () => {
+            const tokenId =
+              await this.tokenRegistryContract.representationToCanonical(
+                addresses.proxy,
+              );
+            checklist.equals(tokenId.domain, custom.token.domain);
+          },
+        });
 
-        const tokenContract = await contracts.BridgeToken__factory.connect(
-          utils.evmId(addresses.proxy),
-          this.connection,
-        );
-
-        const name = await tokenContract.name();
-        const symbol = await tokenContract.symbol();
-        const decimals = await tokenContract.decimals();
-        const owner = await tokenContract.owner();
-
-        checklist.equalIds(
-          owner,
-          this.bridgeRouterContract.address,
-          'bridgeRouterContract',
-        );
-
-        checklist.equals(name, custom.name, 'Custom token name');
-        checklist.equals(symbol, custom.symbol, 'Custom token symbol');
-        checklist.equals(decimals, custom.decimals, 'Custom token decimals');
-
-        const tokenId =
-          await this.tokenRegistryContract.representationToCanonical(
-            addresses.proxy,
-          );
-        checklist.equals(
-          tokenId.domain,
-          custom.token.domain,
-          'Custom token domain',
-        );
-
-        checklist.equalIds(tokenId.id, custom.token.id, 'Custom token address');
+        checklist.addCheck({
+          msg: '\\__ Custom Token address is configured on TokenRegistry',
+          check: async () => {
+            const tokenId =
+              await this.tokenRegistryContract.representationToCanonical(
+                addresses.proxy,
+              );
+            checklist.equalIds(tokenId.id, custom.token.id);
+          },
+        });
       }
     }
-
-    if (checklist.hasErrors()) {
-      throw checklist;
-    }
+    await checklist.executeChecks();
     return checklist;
   }
 
