@@ -4,16 +4,17 @@ pragma solidity 0.7.6;
 import "forge-std/Test.sol";
 import "forge-std/console2.sol";
 
-import {UpdaterManager} from "../../UpdaterManager.sol";
 import {Home} from "../../Home.sol";
 import {Replica} from "../../Replica.sol";
 import {XAppConnectionManager} from "../../XAppConnectionManager.sol";
+import {UpdaterManager} from "../../UpdaterManager.sol";
 
 import {UpgradeBeacon} from "../../upgrade/UpgradeBeacon.sol";
 import {UpgradeBeaconController} from "../../upgrade/UpgradeBeaconController.sol";
 import {UpgradeBeaconProxy} from "../../upgrade/UpgradeBeaconProxy.sol";
-
 import {GovernanceRouter} from "../../governance/GovernanceRouter.sol";
+
+import {TypeCasts} from "../../libs/TypeCasts.sol";
 
 import "./GoodXapps.sol";
 
@@ -23,11 +24,9 @@ abstract contract NomadCore is Test {
     //////////////////////////////////////////////////////////////*/
 
     GoodXappSimple xapp;
-    UpdaterManager updaterManagerImplementation;
     Home homeImplementation;
     Replica replicaImplementation;
     GovernanceRouter governanceRouterImplementation;
-    XAppConnectionManager xAppConnectionManagerImplementation;
 
     UpgradeBeaconProxy homeProxy;
     UpgradeBeaconProxy replicaProxy;
@@ -43,9 +42,7 @@ abstract contract NomadCore is Test {
     UpgradeBeacon replicaBeacon;
     UpgradeBeacon governanceRouterBeacon;
 
-    UpgradeBeaconController homeController;
-    UpgradeBeaconController replicaController;
-    UpgradeBeaconController governanceRouterController;
+    UpgradeBeaconController controller;
 
     Home[] homes;
     mapping(uint32 => mapping(uint32 => Replica)) replicas;
@@ -53,12 +50,10 @@ abstract contract NomadCore is Test {
     XAppConnectionManager[] xAppConnectionManagers;
     UpdaterManager[] updaterManagers;
 
-    UpgradeBeaconController[] homeControllers;
-    mapping(uint32 => mapping(uint32 => UpgradeBeaconController)) replicaControllers;
-    UpgradeBeaconController[] governanceRouterControllers;
+    UpgradeBeaconController[] controllers;
 
     UpgradeBeacon[] homeBeacons;
-    mapping(uint32 => mapping(uint32 => UpgradeBeacon)) replicaBeacons;
+    mapping(uint256 => UpgradeBeacon) replicaBeacons;
     UpgradeBeacon[] governanceRouterBeacons;
 
     UpgradeBeaconProxy[] homeProxies;
@@ -66,7 +61,7 @@ abstract contract NomadCore is Test {
     UpgradeBeaconProxy[] governanceRouterProxies;
 
     Home[] homeImplementations;
-    mapping(uint32 => mapping(uint32 => Replica)) replicaImplementations;
+    mapping(uint256 => Replica) replicaImplementations;
     GovernanceRouter[] governanceRouterImplementations;
 
     GoodXappSimple[] xapps;
@@ -185,7 +180,7 @@ abstract contract NomadCore is Test {
         console2.log("DOMAIN:", domain);
         console2.log("");
         console2.log("homeBeacon", address(homeBeacons[index]));
-        console2.log("homeController", address(homeControllers[index]));
+        console2.log("homeController", address(controllers[index]));
         console2.log(
             "homeImplementations",
             address(homeImplementations[index])
@@ -211,10 +206,7 @@ abstract contract NomadCore is Test {
             "governanceRouterImplementation",
             address(governanceRouterImplementations[index])
         );
-        console2.log(
-            "governanceRouterController",
-            address(governanceRouterControllers[index])
-        );
+        console2.log("governanceRouterController", address(controllers[index]));
         console2.log(
             "governanceRouterBeacon",
             address(governanceRouterBeacons[index])
@@ -231,11 +223,13 @@ abstract contract NomadCore is Test {
         updaterManagers.push(updaterManager);
         assertEq(updaterManager.updater(), updater);
 
+        controller = new UpgradeBeaconController();
+        controllers.push(controller);
+
         homeImplementation = new Home(localDomain);
-        homeController = new UpgradeBeaconController();
         homeBeacon = new UpgradeBeacon(
             address(homeImplementation),
-            address(homeController)
+            address(controller)
         );
         data = abi.encodeWithSignature(
             "initialize(address)",
@@ -250,7 +244,6 @@ abstract contract NomadCore is Test {
         homeProxies.push(homeProxy);
         homeImplementations.push(homeImplementation);
         homeBeacons.push(homeBeacon);
-        homeControllers.push(homeController);
 
         xAppConnectionManager = new XAppConnectionManager();
         xAppConnectionManager.setHome(address(home));
@@ -260,10 +253,9 @@ abstract contract NomadCore is Test {
             localDomain,
             recoveryTimelock
         );
-        governanceRouterController = new UpgradeBeaconController();
         governanceRouterBeacon = new UpgradeBeacon(
             address(governanceRouterImplementation),
-            address(governanceRouterController)
+            address(controller)
         );
         data = abi.encodeWithSignature(
             "initialize(address,address)",
@@ -282,7 +274,6 @@ abstract contract NomadCore is Test {
         governanceRouterProxies.push(governanceRouterProxy);
         governanceRouterImplementations.push(governanceRouterImplementation);
         governanceRouterBeacons.push(governanceRouterBeacon);
-        governanceRouterControllers.push(governanceRouterController);
 
         domainToIndex[localDomain] = homes.length - 1;
     }
@@ -292,11 +283,13 @@ abstract contract NomadCore is Test {
         uint32 remoteDomain
     ) public {
         bytes memory data;
+        uint256 index = domainToIndex[localDomain];
+        uint256 remoteIndex = domainToIndex[remoteDomain];
+
         replicaImplementation = new Replica(localDomain);
-        replicaController = new UpgradeBeaconController();
         replicaBeacon = new UpgradeBeacon(
             address(replicaImplementation),
-            address(replicaController)
+            address(controllers[index])
         );
         data = abi.encodeWithSignature(
             "initialize(uint32,address,bytes32,uint256)",
@@ -310,31 +303,64 @@ abstract contract NomadCore is Test {
 
         replicas[localDomain][remoteDomain] = replica;
         replicaProxies[localDomain][remoteDomain] = replicaProxy;
-        replicaImplementations[localDomain][
-            remoteDomain
-        ] = replicaImplementation;
-        replicaBeacons[localDomain][remoteDomain] = replicaBeacon;
-        replicaControllers[localDomain][remoteDomain] = replicaController;
-        uint256 index = domainToIndex[localDomain];
+        replicaImplementations[localDomain] = replicaImplementation;
+        replicaBeacons[localDomain] = replicaBeacon;
         xAppConnectionManagers[index].ownerEnrollReplica(
             address(replica),
             remoteDomain
         );
-        replicaControllers[localDomain][remoteDomain].transferOwnership(
-            address(governanceRouters[domainToIndex[localDomain]])
+        xAppConnectionManagers[index].setWatcherPermission(
+            address(watcher),
+            remoteDomain,
+            true
+        );
+        governanceRouters[index].setRouterLocal(
+            remoteDomain,
+            TypeCasts.addressToBytes32(address(governanceRouters[remoteIndex]))
         );
     }
 
     function relinquishCoreControl(uint32 localDomain) public {
         uint256 index = domainToIndex[localDomain];
         governanceRouter = governanceRouters[index];
-        governanceRouterControllers[index].transferOwnership(
-            address(governanceRouter)
-        );
+        controllers[index].transferOwnership(address(governanceRouter));
         xAppConnectionManagers[index].transferOwnership(
             address(governanceRouter)
         );
         updaterManagers[index].transferOwnership(address(governanceRouter));
-        homeControllers[index].transferOwnership(address(governanceRouter));
+    }
+
+    event TransferGovernor(
+        uint32 previousGovernorDomain,
+        uint32 newGovernorDomain,
+        address indexed previousGovernor,
+        address indexed newGovernor
+    );
+
+    function setGovernor(uint32 domain) public {
+        uint256 index = domainToIndex[domain];
+        address governor = address(governanceRouters[index]);
+        vm.startPrank(governor);
+        for (uint256 i; i < governanceRouters.length; i++) {
+            address previousGovernor = governanceRouters[index].governor();
+            uint32 previousGovernorDomain = governanceRouters[index]
+                .governorDomain();
+            vm.expectEmit(true, true, false, true);
+            emit TransferGovernor(
+                previousGovernorDomain,
+                domain,
+                previousGovernor,
+                governor
+            );
+            governanceRouters[index].transferGovernor(domain, governor);
+        }
+        vm.stopPrank();
+        console2.log("");
+        console2.log("======");
+        console2.log("Governor was transfered");
+        console2.log("Domain: ", domain);
+        console2.log("Address: ", governor);
+        console2.log("======");
+        console2.log("");
     }
 }

@@ -25,6 +25,8 @@ contract NomadCoreLocalTest is NomadCore {
             relinquishCoreControl(domain1);
             printDomainContracts(domain1);
         }
+        // Set domain 1 as the Governor domain
+        setGovernor(domains[0]);
         console2.log("Nomad Core is deployed!");
     }
 
@@ -72,6 +74,8 @@ contract NomadCoreForkTest is NomadCore {
         relinquishCoreControl(polDomain);
         printDomainContracts(polDomain);
 
+        // Set Ethereum as the Governor domain
+        setGovernor(ethDomain);
         console2.log("Nomad Core is deployed to Ethereum and Polygon forks!");
     }
 
