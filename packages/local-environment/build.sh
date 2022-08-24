@@ -4,7 +4,7 @@ echo '\033[0;32m' ====== Hello $USER, please wait until I build your images ☕ 
 yarn install --immutable-cache;
 yarn lint;
 
-for d in packages/contracts-*; do
+for d in packages/*; do
  echo '\033[0;33m' ====== Building $d '\033[0m';
  pushd $d;
  {
