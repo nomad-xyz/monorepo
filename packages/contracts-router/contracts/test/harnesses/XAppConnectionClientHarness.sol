@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity 0.7.6;
 
-import "../XAppConnectionClient.sol";
-import {Home} from "../Home.sol";
-import {XAppConnectionManager} from "../XAppConnectionManager.sol";
+import {XAppConnectionClient} from "../../XAppConnectionClient.sol";
+import {Home} from "@nomad-xyz/contracts-core/contracts/Home.sol";
+import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 
 contract XAppConnectionClientHarness is XAppConnectionClient {
     function exposed_home() external view returns (Home) {
@@ -15,10 +15,14 @@ contract XAppConnectionClientHarness is XAppConnectionClient {
         view
         returns (bool)
     {
-        return isReplica(potentialReplica);
+        return _isReplica(potentialReplica);
     }
 
-    function exposed_localDomain() external returns (uint32) {
-        return xAppConnectionManager.localDomain();
+    function exposed_localDomain() external view returns (uint32) {
+        return _localDomain();
+    }
+
+    function exposed_initialize(address xAppCnMngr) external {
+        __XAppConnectionClient_initialize(xAppCnMngr);
     }
 }
