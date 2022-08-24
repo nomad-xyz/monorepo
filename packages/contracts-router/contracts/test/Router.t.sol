@@ -7,10 +7,16 @@ import {RouterHarness} from "./harnesses/RouterHarness.sol";
 contract RouterTest is Test {
     RouterHarness router;
 
+    uint32 testDomain;
+    bytes32 testRouter;
+
     function setUp() public {
+        testDomain = 123213;
+        testRouter = "router address";
         router = new RouterHarness();
         address xAppConnectionManager = vm.addr(1321);
         router.exposed__XAppConnectionClient_initialize(xAppConnectionManager);
+        router.enrollRemoteRouter(testDomain, testRouter);
     }
 
     function test_handle() public {
@@ -32,22 +38,32 @@ contract RouterTest is Test {
     }
 
     function test_enrollRemoteRouter() public {
-        uint32 domain = 123;
-        bytes32 routerAddress = "router address";
-        vm.startPrank(router.owner());
-        router.enrollRemoteRouter(domain, routerAddress);
-        bytes32 storedRouter = router.remotes(domain);
-        assertEq(storedRouter, routerAddress);
+        bytes32 storedRouter = router.remotes(testDomain);
+        assertEq(storedRouter, testRouter);
         vm.stopPrank();
     }
 
     function test_enrollRemoteRouterOnlyOwner() public {
-        uint32 domain = 123;
-        bytes32 routerAddress = "router address";
         vm.startPrank(vm.addr(1231231231));
         vm.expectRevert("Ownable: caller is not the owner");
-        router.enrollRemoteRouter(domain, routerAddress);
-        bytes32 storedRouter = router.remotes(domain);
+        router.enrollRemoteRouter(testDomain, testRouter);
         vm.stopPrank();
+    }
+
+    function test_isRemoteRouter() public {
+        assert(router.exposed_isRemoteRouter(testDomain, testRouter));
+        assert(!router.exposed_isRemoteRouter(343, bytes32(0)));
+        assert(!router.exposed_isRemoteRouter(343, testRouter));
+        assert(!router.exposed_isRemoteRouter(testDomain, "not a router"));
+        assert(!router.exposed_isRemoteRouter(343, "not a router"));
+    }
+
+    function test_mustHaveRemote() public {
+        vm.expectRevert("!remote");
+        router.exposed_mustHaveRemote(343);
+        vm.expectRevert("!remote");
+        router.exposed_mustHaveRemote(0);
+        vm.expectRevert("!remote");
+        router.exposed_mustHaveRemote(type(uint32).max);
     }
 }
