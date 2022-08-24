@@ -1,3 +1,4 @@
+#!/bin/bash
 echo '\033[0;32m' ====== Hello $USER, please wait until I build your images ☕ '\033[0m'
 
 yarn install --immutable-cache;
