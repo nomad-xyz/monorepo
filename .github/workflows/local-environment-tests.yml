@@ -21,7 +21,7 @@ jobs:
     - name: Run Integration Tests
       run: |
         yarn test:integration
-      timeout-minutes: 30
+      timeout-minutes: 50
 
   unit-tests:
     runs-on: ubuntu-latest
