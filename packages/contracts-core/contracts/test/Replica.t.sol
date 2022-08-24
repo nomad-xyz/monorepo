@@ -4,7 +4,6 @@ pragma solidity 0.7.6;
 import {ReplicaHarness} from "./harnesses/ReplicaHarness.sol";
 import {Replica} from "../Replica.sol";
 import {ReplicaHandlers} from "./utils/NomadTest.sol";
-import {MerkleTest} from "./utils/MerkleTest.sol";
 import {Message} from "../libs/Message.sol";
 
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
@@ -16,7 +15,6 @@ contract ReplicaTest is ReplicaHandlers {
     using Message for bytes29;
 
     ReplicaHarness replica;
-    MerkleTest merkleTest;
 
     uint256 optimisticSeconds;
     bytes32 committedRoot;
@@ -34,8 +32,6 @@ contract ReplicaTest is ReplicaHandlers {
 
         setUpExampleProof();
         initializeReplica();
-
-        merkleTest = new MerkleTest();
     }
 
     function setUpExampleProof() public {
