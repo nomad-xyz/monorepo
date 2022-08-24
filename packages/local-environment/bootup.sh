@@ -1,3 +1,4 @@
+#!/bin/bash
 pushd hardhat 
 docker build -t hardhat:latest . 
 popd

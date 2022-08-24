@@ -19,7 +19,6 @@ jobs:
         version: nightly
 
     - name: Run Integration Tests
-      shell: bash
       run: |
         yarn test:integration
       timeout-minutes: 30
