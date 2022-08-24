@@ -14,6 +14,12 @@ contract RouterHarness is Router {
 
     HandledMessage[] public handledMessages;
 
+    function exposed__XAppConnectionClient_initialize(
+        address _xAppConnectionManager
+    ) external {
+        __XAppConnectionClient_initialize(_xAppConnectionManager);
+    }
+
     function exposed_mustHaveRemote(uint32 domain)
         external
         view
