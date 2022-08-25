@@ -13,11 +13,6 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Install Foundry
-      uses: foundry-rs/foundry-toolchain@v1
-      with:
-        version: nightly
-
     - name: Run Integration Tests
       run: |
         yarn test:integration
@@ -40,6 +35,6 @@ jobs:
       - name: Run Unit Tests
         run: |
           yarn local-environment test:unit
-        timeout-minutes: 5
+        timeout-minutes: 30
 
     

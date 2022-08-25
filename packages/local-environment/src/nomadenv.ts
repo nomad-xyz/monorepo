@@ -1,6 +1,6 @@
 import { NomadLocator, NomadConfig } from "@nomad-xyz/configuration";
 import * as dotenv from "dotenv";
-import { DeployContext } from "../../deploy/src/DeployContext";
+import { DeployContext } from "@nomad-xyz/deploy/src/DeployContext";
 import * as ethers from "ethers";
 import { NonceManager } from "@ethersproject/experimental";
 import fs from "fs";
