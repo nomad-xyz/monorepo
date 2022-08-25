@@ -13,6 +13,10 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
+    - name: Yarn Bootup
+      run: |
+        yarn bootup
+
     - name: Run Integration Tests
       run: |
         yarn test:integration
@@ -24,13 +28,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Yarn Install
+      - name: Yarn Bootup
         run: |
-          yarn install --immutable-cache
-
-      - name: Yarn Lint
-        run: |
-          yarn lint
+          yarn bootup
 
       - name: Run Unit Tests
         run: |
