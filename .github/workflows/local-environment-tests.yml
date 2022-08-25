@@ -15,7 +15,7 @@ jobs:
 
     - name: Yarn Bootup
       run: |
-        yarn bootup
+        yarn local-environment bootup
 
     - name: Run Integration Tests
       run: |
@@ -30,7 +30,7 @@ jobs:
 
       - name: Yarn Bootup
         run: |
-          yarn bootup
+          yarn local-environment bootup
 
       - name: Run Unit Tests
         run: |
