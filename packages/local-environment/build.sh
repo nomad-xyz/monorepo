@@ -1,8 +1,6 @@
 #!/bin/bash
 echo '\033[0;32m' ====== Hello $USER, please wait until I build your images ☕ '\033[0m'
 
-yarn install --immutable-cache;
-
 for d in packages/*; do
  echo '\033[0;33m' ====== Building $d '\033[0m';
  pushd $d;
