@@ -1,0 +1,313 @@
+{
+  "version": 0,
+  "environment": "local",
+  "networks": [
+    "jerry",
+    "tom"
+  ],
+  "rpcs": {
+    "jerry": [
+      "http://localhost:1338"
+    ],
+    "tom": [
+      "http://localhost:1337"
+    ]
+  },
+  "protocol": {
+    "governor": {
+      "domain": 1,
+      "id": "0x2020202020202020202020202020202020202020"
+    },
+    "networks": {
+      "tom": {
+        "name": "tom",
+        "domain": 1,
+        "connections": [
+          "jerry"
+        ],
+        "configuration": {
+          "optimisticSeconds": 18,
+          "updater": "0x67ea657d2275fd8cc3840fd2474cedb5d1454db2",
+          "watchers": [
+            "0x67ea657d2275fd8cc3840fd2474cedb5d1454db2"
+          ],
+          "governance": {
+            "recoveryManager": "0x67ea657d2275fd8cc3840fd2474cedb5d1454db2",
+            "recoveryTimelock": 86400
+          }
+        },
+        "specs": {
+          "chainId": 1,
+          "blockTime": 5,
+          "finalizationBlocks": 2,
+          "supports1559": true,
+          "confirmations": 2,
+          "blockExplorer": "",
+          "indexPageSize": 2000
+        },
+        "bridgeConfiguration": {
+          "weth": "0xb5f685e49595187d13d853a49d272dc5c1beaa8e",
+          "customs": []
+        }
+      },
+      "jerry": {
+        "name": "jerry",
+        "domain": 2,
+        "connections": [
+          "tom"
+        ],
+        "configuration": {
+          "optimisticSeconds": 18,
+          "updater": "0x67ea657d2275fd8cc3840fd2474cedb5d1454db2",
+          "watchers": [
+            "0x67ea657d2275fd8cc3840fd2474cedb5d1454db2"
+          ],
+          "governance": {
+            "recoveryManager": "0x67ea657d2275fd8cc3840fd2474cedb5d1454db2",
+            "recoveryTimelock": 86400
+          }
+        },
+        "specs": {
+          "chainId": 2,
+          "blockTime": 5,
+          "finalizationBlocks": 2,
+          "supports1559": true,
+          "confirmations": 2,
+          "blockExplorer": "",
+          "indexPageSize": 2000
+        },
+        "bridgeConfiguration": {
+          "weth": "0xb5f685e49595187d13d853a49d272dc5c1beaa8e",
+          "customs": []
+        }
+      }
+    }
+  },
+  "core": {
+    "tom": {
+      "deployHeight": 256,
+      "upgradeBeaconController": "0xc2395bcc4680384cd343a46e3d20f32dea75df1b",
+      "xAppConnectionManager": "0x39395333a34b80d5cf08d5b0cf7b3d914ef4c59d",
+      "updaterManager": "0xb7f497a5f66215df59c78d45457b2d5acfce6067",
+      "governanceRouter": {
+        "implementation": "0xab8d4cffee3ef32d5605b6f48a3b19f1addb2713",
+        "proxy": "0x472e3a7f0dec306ec2efc29dc20145d91098ba91",
+        "beacon": "0x644fa167175ba8e7d7983de82ae8958bff768b3c"
+      },
+      "home": {
+        "implementation": "0xaa0588eac57e64d16953b396cd9e2865697eb207",
+        "proxy": "0xd114fc2f351d33558745bf13266a1e2d524347d1",
+        "beacon": "0x94d50afdb60b187bc3eaaa93642c94d713c5a514"
+      },
+      "replicas": {
+        "jerry": {
+          "implementation": "0x6166cd9404e8a529b574ab9cba287db1feabc10a",
+          "proxy": "0x9956c0406cefacd90a4c8a21d0b18f3c214ad712",
+          "beacon": "0xdab4f9fc67bb47a21b49847320fdf100bfd001ab"
+        }
+      }
+    },
+    "jerry": {
+      "deployHeight": 256,
+      "upgradeBeaconController": "0xc2395bcc4680384cd343a46e3d20f32dea75df1b",
+      "xAppConnectionManager": "0x39395333a34b80d5cf08d5b0cf7b3d914ef4c59d",
+      "updaterManager": "0xb7f497a5f66215df59c78d45457b2d5acfce6067",
+      "governanceRouter": {
+        "implementation": "0xab8d4cffee3ef32d5605b6f48a3b19f1addb2713",
+        "proxy": "0x472e3a7f0dec306ec2efc29dc20145d91098ba91",
+        "beacon": "0x644fa167175ba8e7d7983de82ae8958bff768b3c"
+      },
+      "home": {
+        "implementation": "0xaa0588eac57e64d16953b396cd9e2865697eb207",
+        "proxy": "0xd114fc2f351d33558745bf13266a1e2d524347d1",
+        "beacon": "0x94d50afdb60b187bc3eaaa93642c94d713c5a514"
+      },
+      "replicas": {
+        "tom": {
+          "implementation": "0x6166cd9404e8a529b574ab9cba287db1feabc10a",
+          "proxy": "0x9956c0406cefacd90a4c8a21d0b18f3c214ad712",
+          "beacon": "0xdab4f9fc67bb47a21b49847320fdf100bfd001ab"
+        }
+      }
+    }
+  },
+  "bridge": {
+    "tom": {
+      "deployHeight": 309,
+      "bridgeRouter": {
+        "implementation": "0xab3a6ab4051960af380dc6f11f84364eec16c11c",
+        "proxy": "0xe6c36e6014898a83cda0bedcf9e2c5f87ad89987",
+        "beacon": "0x225551ec11d842f9ceeb35357196e60efa44043b"
+      },
+      "tokenRegistry": {
+        "implementation": "0xb7c4470426aa2a812b5c6d2f3270d6a02c40842b",
+        "proxy": "0x0e69746782fde73da65ce55eb2ebc44882514deb",
+        "beacon": "0x5dab2083bb2a3b91b314ec3c7051623af7e0be24"
+      },
+      "bridgeToken": {
+        "implementation": "0x84bd5c7f59899ee0b28d450b69d049014eeb9e1b",
+        "proxy": "0x0000000000000000000000000000000000000000",
+        "beacon": "0x9c82f21e232fb5cc8f76cf7d76f2c4f5a853f14b"
+      },
+      "ethHelper": "0x0b373bbb0f05b5dbbf8d5cfd1765d23e84a6c3d5",
+      "customs": []
+    },
+    "jerry": {
+      "deployHeight": 309,
+      "bridgeRouter": {
+        "implementation": "0xab3a6ab4051960af380dc6f11f84364eec16c11c",
+        "proxy": "0xe6c36e6014898a83cda0bedcf9e2c5f87ad89987",
+        "beacon": "0x225551ec11d842f9ceeb35357196e60efa44043b"
+      },
+      "tokenRegistry": {
+        "implementation": "0xb7c4470426aa2a812b5c6d2f3270d6a02c40842b",
+        "proxy": "0x0e69746782fde73da65ce55eb2ebc44882514deb",
+        "beacon": "0x5dab2083bb2a3b91b314ec3c7051623af7e0be24"
+      },
+      "bridgeToken": {
+        "implementation": "0x84bd5c7f59899ee0b28d450b69d049014eeb9e1b",
+        "proxy": "0x0000000000000000000000000000000000000000",
+        "beacon": "0x9c82f21e232fb5cc8f76cf7d76f2c4f5a853f14b"
+      },
+      "ethHelper": "0x0b373bbb0f05b5dbbf8d5cfd1765d23e84a6c3d5",
+      "customs": []
+    }
+  },
+  "agent": {
+    "jerry": {
+      "rpcStyle": "ethereum",
+      "db": "/app",
+      "metrics": 9090,
+      "logging": {
+        "fmt": "json",
+        "level": "info"
+      },
+      "updater": {
+        "interval": 5
+      },
+      "relayer": {
+        "interval": 10
+      },
+      "processor": {
+        "subsidizedRemotes": [
+          "tom",
+          "jerry"
+        ],
+        "interval": 5
+      },
+      "watcher": {
+        "interval": 5
+      },
+      "kathy": {
+        "chat": {
+          "type": "default"
+        },
+        "interval": 500
+      }
+    },
+    "tom": {
+      "rpcStyle": "ethereum",
+      "db": "/app",
+      "metrics": 9090,
+      "logging": {
+        "fmt": "json",
+        "level": "info"
+      },
+      "updater": {
+        "interval": 5
+      },
+      "relayer": {
+        "interval": 10
+      },
+      "processor": {
+        "subsidizedRemotes": [
+          "tom",
+          "jerry"
+        ],
+        "interval": 5
+      },
+      "watcher": {
+        "interval": 5
+      },
+      "kathy": {
+        "chat": {
+          "type": "default"
+        },
+        "interval": 500
+      }
+    }
+  },
+  "gas": {
+    "jerry": {
+      "core": {
+        "home": {
+          "update": {
+            "perMessage": 10000,
+            "base": 100000
+          },
+          "improperUpdate": {
+            "perMessage": 10000,
+            "base": 100000
+          },
+          "doubleUpdate": 200000
+        },
+        "replica": {
+          "update": 140000,
+          "prove": 200000,
+          "process": 1700000,
+          "proveAndProcess": 1900000,
+          "doubleUpdate": 200000
+        },
+        "connectionManager": {
+          "ownerUnenrollReplica": 120000,
+          "unenrollReplica": 120000
+        }
+      },
+      "bridge": {
+        "bridgeRouter": {
+          "send": 500000
+        },
+        "ethHelper": {
+          "send": 800000,
+          "sendToEvmLike": 800000
+        }
+      }
+    },
+    "tom": {
+      "core": {
+        "home": {
+          "update": {
+            "perMessage": 10000,
+            "base": 100000
+          },
+          "improperUpdate": {
+            "perMessage": 10000,
+            "base": 100000
+          },
+          "doubleUpdate": 200000
+        },
+        "replica": {
+          "update": 140000,
+          "prove": 200000,
+          "process": 1700000,
+          "proveAndProcess": 1900000,
+          "doubleUpdate": 200000
+        },
+        "connectionManager": {
+          "ownerUnenrollReplica": 120000,
+          "unenrollReplica": 120000
+        }
+      },
+      "bridge": {
+        "bridgeRouter": {
+          "send": 500000
+        },
+        "ethHelper": {
+          "send": 800000,
+          "sendToEvmLike": 800000
+        }
+      }
+    }
+  },
+  "bridgeGui": {}
+}
