@@ -13,6 +13,14 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
+    - name: Yarn Install
+      run: |
+        yarn install --immutable-cache;
+        
+    - name: Yarn Install
+      run: |  
+        yarn lint;
+
     - name: Yarn Bootup
       run: |
         yarn local-environment bootup
@@ -27,6 +35,14 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+
+    - name: Yarn Install
+      run: |
+        yarn install --immutable-cache;
+
+    - name: Yarn Install
+      run: |  
+        yarn lint;
 
       - name: Yarn Bootup
         run: |
