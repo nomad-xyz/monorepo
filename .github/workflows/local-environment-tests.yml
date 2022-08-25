@@ -15,11 +15,11 @@ jobs:
 
       - name: Yarn Install
         run: |
-          yarn install --immutable-cache;
+          yarn install --immutable-cache
 
       - name: Yarn Install
         run: |  
-          yarn lint;
+          yarn lint
 
       - name: Yarn Bootup
         run: |
@@ -38,11 +38,11 @@ jobs:
 
       - name: Yarn Install
         run: |
-          yarn install --immutable-cache;
+          yarn install --immutable-cache
 
       - name: Yarn Install
         run: |  
-          yarn lint;
+          yarn lint
 
       - name: Yarn Bootup
         run: |
