@@ -1,15 +1,13 @@
 #!/bin/bash
-echo '\033[0;32m' ====== Hello $USER, please wait until I build your images ☕ '\033[0m'
+echo Please wait, building packages ☕
 
 for d in packages/*; do
- echo '\033[0;33m' ====== Building $d '\033[0m';
+ echo Building $d;
  pushd $d;
  {
-    yarn build && echo '\032[0;31m' ====== Built $d '\033[0m'
+    yarn build && echo Built $d
  } || {
-        echo '\033[0;31m' ====== FAILED $d '\033[0m'
+        echo Skipped $d
     }
  popd;
 done
-
-echo '\033[0;32m' ====== You are good to go sir! '\033[0m'
