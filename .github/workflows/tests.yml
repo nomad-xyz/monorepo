@@ -69,6 +69,8 @@ jobs:
       - run: |
           yarn build
       - run: |
+          yarn bootup
+      - run: |
           yarn test:unit
       - name: "Check Gas snapshot"
         continue-on-error: true
