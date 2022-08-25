@@ -17,7 +17,7 @@ jobs:
         run: |
           yarn install --immutable-cache
 
-      - name: Yarn Install
+      - name: Yarn Lint
         run: |  
           yarn lint
 
@@ -40,7 +40,7 @@ jobs:
         run: |
           yarn install --immutable-cache
 
-      - name: Yarn Install
+      - name: Yarn Lint
         run: |  
           yarn lint
 
