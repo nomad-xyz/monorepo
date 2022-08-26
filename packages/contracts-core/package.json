@@ -17,7 +17,7 @@
   "scripts": {
     "bootstrap": "yarn clean && yarn build",
     "build:deps": "../../scripts/install-deps.sh",
-    "build": "yarn build:deps && yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=core forge build",
+    "build": "time yarn build:deps && yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=core forge build",
     "clean": "hardhat clean && rm -rf dist && rm -rf src",
     "compile": "hardhat compile",
     "copy-definitions": "cp src/*.d.ts dist/src",
