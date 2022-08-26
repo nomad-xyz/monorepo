@@ -3272,9 +3272,6 @@ __metadata:
     ts-jest: ^28.0.8
     ts-node: ^10.7.0
     typescript: ^4.4.3
-  dependenciesMeta:
-    "@swc/core-linux-x64-gnu":
-      optional: true
   languageName: unknown
   linkType: soft
 
@@ -3998,6 +3995,7 @@ __metadata:
 "@swc/core-linux-x64-gnu@npm:1.2.245, @swc/core-linux-x64-gnu@npm:^1.2.244":
   version: 1.2.245
   resolution: "@swc/core-linux-x64-gnu@npm:1.2.245"
+  checksum: 7c48acbca31c85d55589ef8e32462faf540b59af413d3c75b8a1117af417c3854798cdc3e495868ffe64f3381da1556863adf8e734f40bfd926e9f55647a34a2
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
