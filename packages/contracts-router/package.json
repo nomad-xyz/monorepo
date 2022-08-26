@@ -24,7 +24,8 @@
     "lint:fix": "solhint --fix contracts/*.sol",
     "prettier": "prettier --write './contracts'",
     "prepublish": "yarn bootstrap && yarn build",
-    "test:unit": "hardhat test"
+    "test:unit": "FOUNDRY_PROFILE=router-ci forge test",
+    "test:unit-local": "FOUNDRY_PROFILE=router forge test"
   },
   "dependencies": {
     "@nomad-xyz/contracts-core": "workspace:^",
