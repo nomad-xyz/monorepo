@@ -3251,6 +3251,7 @@ __metadata:
     "@nomad-xyz/local-environment": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"
     "@swc/core": ^1.2.244
+    "@swc/core-linux-x64-gnu": ^1.2.244
     "@swc/helpers": ^0.4.11
     "@types/jest": ^28.1.7
     "@types/node": ^16.9.1
@@ -3271,6 +3272,9 @@ __metadata:
     ts-jest: ^28.0.8
     ts-node: ^10.7.0
     typescript: ^4.4.3
+  dependenciesMeta:
+    "@swc/core-linux-x64-gnu":
+      optional: true
   languageName: unknown
   linkType: soft
 
@@ -3991,7 +3995,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-linux-x64-gnu@npm:1.2.245":
+"@swc/core-linux-x64-gnu@npm:1.2.245, @swc/core-linux-x64-gnu@npm:^1.2.244":
   version: 1.2.245
   resolution: "@swc/core-linux-x64-gnu@npm:1.2.245"
   conditions: os=linux & cpu=x64 & libc=glibc
