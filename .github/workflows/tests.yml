@@ -4,6 +4,8 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
+      -run: |
+        node -v
       - uses: actions/checkout@v2
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1 
