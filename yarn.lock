@@ -3253,6 +3253,7 @@ __metadata:
     "@swc/core": ^1.2.244
     "@swc/core-linux-x64-gnu": ^1.2.244
     "@swc/helpers": ^0.4.11
+    "@swc/wasm": ^1.2.244
     "@types/jest": ^28.1.7
     "@types/node": ^16.9.1
     "@typescript-eslint/eslint-plugin": ^5.20.0
@@ -4102,6 +4103,13 @@ __metadata:
   version: 1.2.130
   resolution: "@swc/wasm@npm:1.2.130"
   checksum: 02203bfef3e382c64cbbd63c138c8fdf61865e74d923b317e9d9e9f33f5a3f0a9533b5fdbc9505e76d78e864be04a82fc847eb987a1e47ccac5850146c858292
+  languageName: node
+  linkType: hard
+
+"@swc/wasm@npm:^1.2.244":
+  version: 1.2.245
+  resolution: "@swc/wasm@npm:1.2.245"
+  checksum: 576cf268f74c3bcb825a715ab7940a8d0fee91fb5e7bb4243c2dba079fc14da194c13ff0e76bb2c2856cf03eea731e7a17ed48662de9f55a77ac94a892e2a444
   languageName: node
   linkType: hard
 
