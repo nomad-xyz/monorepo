@@ -1,4 +1,5 @@
 import Docker from "dockerode";
+import bunyan from "bunyan";
 import { EventEmitter } from "events";
 import { StreamMatcher } from "./utils";
 
@@ -28,6 +29,8 @@ export abstract class DockerizedActor extends Actor {
   events: DockerEmitter;
   private eventsStream?: NodeJS.ReadableStream;
   logMatcher?: StreamMatcher;
+
+  log = bunyan.createLogger({ name: "localenv" });
 
   constructor(name: string, actorType: string) {
     super(name, actorType)
@@ -60,17 +63,17 @@ export abstract class DockerizedActor extends Actor {
   async stop(): Promise<void> {
     if (!this.isConnected()) throw new Error(`Not connected`);
     if (!(await this.isRunning())) {
-      console.log(`Attempted to stop container that is NOT running, proceeding without action`)
+      this.log.info(`Attempted to stop container that is NOT running, proceeding without action`)
     } else {
       if (this.container) {
         const containerId = this.container.id;
         const x = await this.container.inspect();
-        console.log(`Attempting to stop container that IS running, container id:`, containerId, x.Name)
+        this.log.info(`Attempting to stop container that IS running, container id:`, containerId, x.Name)
         try {
           await this.container.stop();
-          console.log(`Successfully stopped container with id '${containerId}'`)
+          this.log.info(`Successfully stopped container with id '${containerId}'`)
         } catch(e) {
-          console.log(`Failed stopping container with id '${containerId}'! Error:`, e);
+          this.log.info(`Failed stopping container with id '${containerId}'! Error:`, e);
           throw e;
         }
       }
@@ -205,9 +208,9 @@ export abstract class DockerizedActor extends Actor {
 
   async disconnect(): Promise<void> {
     await this.container?.remove();
-    console.log(`Unsubing ->`, this.name)
+    this.log.info(`Unsubing ->`, this.name)
     this.unsubscribe(); // Want to unsub later because want to see event of container removal
-    console.log(`Unsubbed ->`, this.name)
+    this.log.info(`Unsubbed ->`, this.name)
     delete this.container;
   }
 
