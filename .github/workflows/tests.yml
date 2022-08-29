@@ -18,7 +18,7 @@ jobs:
         with:
           version: nightly
       - run: |
-          yarn install --immutable-cache
+          yarn install --immutable --immutable-cache --check-cache
       - run: |
           yarn lint
       - name: Get latest accumulator-cli version
