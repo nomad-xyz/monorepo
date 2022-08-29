@@ -193,7 +193,7 @@ export function signUpdate(
   return signer.signMessage(msgHash);
 }
 
-function getMessage(
+export function getMessage(
   domain: number,
   oldRoot: string,
   newRoot: string
