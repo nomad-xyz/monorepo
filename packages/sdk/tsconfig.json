@@ -1,23 +1,16 @@
 {
   "extends": "../tsconfig.package.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "composite": true
+    "outDir": "dist",
+    "rootDir": "src",
   },
   "exclude": [
-    "./node_modules",
-    "./dist",
-    "./src/tmp.ts"
+    "node_modules",
+    "dist",
+    "src/tmp.ts"
   ],
   "include": [
-    "./src/*.ts",
-    "src/contracts/*.ts",
-    "src/domains/*.ts",
-    "src/events/*.ts",
-    "src/messages/*.ts",
-    "src/tokens/*.ts",
-    "src/govern/*.ts"
+    "src/**/*.ts",
   ],
   "references": [
     { "path": "../contracts-core" },
