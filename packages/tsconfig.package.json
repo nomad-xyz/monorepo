@@ -1,5 +1,11 @@
 {
-  "exclude": ["**/dist/**", "**/node_modules/**", "**/tests/**"],
+  "exclude": [
+    "./dist",
+    "./node_modules",
+    "./tests",
+    "./coverage"
+  ],
+  "include": ["./src/**/*.ts"],
   "compilerOptions": {
     "composite": true,
     "declaration": true,
