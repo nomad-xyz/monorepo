@@ -6,7 +6,7 @@
     "declarationMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["es2015", "es5", "dom"],
+    "lib": ["es2021"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noEmitOnError": true,
