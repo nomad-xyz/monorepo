@@ -10,5 +10,8 @@
     "./dist",
     "./src/tmp.ts"
   ],
-  "include": ["./src/*.ts"]
+  "include": ["./src/*.ts"],
+  "ts-node": {
+    "swc": true
+  }
 }
