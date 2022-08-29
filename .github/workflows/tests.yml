@@ -71,10 +71,6 @@ jobs:
             packages/contracts-router/foundry_artifacts
           key: ${{ hashFiles('packages/contracts-router/contracts/**') }}
       - run: |
-          yarn multi-provider build
-      - run: |
-          yarn multi-provider build
-      - run: |
           yarn build
       - run: |
           yarn bootup

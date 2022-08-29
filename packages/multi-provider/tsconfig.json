@@ -9,7 +9,8 @@
     "./node_modules",
     "./dist",
     "./src/tmp.ts",
-    "./tests"
+    "./tests",
+    "./coverage"
   ],
   "include": ["./src/*.ts"],
   "ts-node": {
