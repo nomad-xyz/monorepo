@@ -1,10 +1,12 @@
 import { filterUndefined, zip, getMessage, signUpdate, StreamMatcher, sleep, Waiter } from "../src/utils";
-import { defaultStart } from "../src/nomadenv";
-import { expect } from "chai";
 import { Wallet } from "ethers";
-import { Writable, Readable } from 'stream';
 import * as Stream from "stream";
+import { expect, assert, use as chaiUse } from "chai";
 
+
+import chaiAsPromised from "chai-as-promised";
+
+chaiUse(chaiAsPromised);
 
 
 describe("utils.filterUndefined test", () => {
@@ -148,5 +150,16 @@ describe("utils.Waiter test", () => {
         const result = await w.wait();
 
         expect(result).to.equal(null);
+    })
+
+    it('can fail', async () => {
+
+        const w = new Waiter<string>(async () => {
+            return await new Promise((resolve, reject) => {
+                reject('no real reason')
+            });
+        }, 20, 10);
+
+        await assert.isRejected(w.wait(), "no real reason");
     })
 })

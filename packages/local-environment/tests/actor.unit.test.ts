@@ -1,7 +1,6 @@
 import { HardhatNetwork } from "../src/network";
 import { NomadDomain } from "../src/domain";
 import { expect, assert, use as chaiUse } from "chai";
-import Docker from "dockerode";
 import { LocalAgent, AgentType, Agents } from "../src/agent";
 import chaiAsPromised from "chai-as-promised";
 
