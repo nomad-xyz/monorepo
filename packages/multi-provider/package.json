@@ -33,9 +33,6 @@
     "web3": "^1.6.1"
   },
   "devDependencies": {
-    "@swc/core": "^1.2.244",
-    "@swc/core-linux-x64-gnu": "^1.2.244",
-    "@swc/helpers": "^0.4.11",
     "@types/jest": "^28.1.7",
     "@types/node": "^16.9.1",
     "@typescript-eslint/eslint-plugin": "^5.20.0",

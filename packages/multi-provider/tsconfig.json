@@ -11,8 +11,5 @@
     "tests",
     "coverage"
   ],
-  "include": ["src/**/*.ts"],
-  "ts-node": {
-    "swc": false
-  }
+  "include": ["src/**/*.ts"]
 }

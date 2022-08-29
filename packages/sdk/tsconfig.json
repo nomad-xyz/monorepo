@@ -16,8 +16,5 @@
     { "path": "../contracts-core" },
     { "path": "../contracts-bridge" },
     { "path": "../multi-provider" }
-  ],
-  "ts-node": {
-    "swc": false
-  }
+  ]
 }
