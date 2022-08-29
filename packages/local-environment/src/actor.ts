@@ -86,17 +86,9 @@ export abstract class DockerizedActor extends Actor {
 
   async down(): Promise<void> {
     if (this.isConnected()) {
-      try {
-        await this.stop();
-      } catch(e) {
-        console.warn(`Stopping actor error:`, e);
-      }
-
-      try {
-        await this.removeContainer();
-      } catch(e) {
-        console.warn(`Removing container error:`, e);
-      }
+      await this.stop();
+      this.unsubscribe();
+      await this.removeContainer();
     }
   }
 
@@ -171,6 +163,7 @@ export abstract class DockerizedActor extends Actor {
   }
 
   async subscribeToContainerEvents(): Promise<void> {
+    if (!this.isConnected()) throw new Error('Container is not connected')
     if (this.isSubscribed()) return;
 
     const events = await this.docker.getEvents({
@@ -205,9 +198,7 @@ export abstract class DockerizedActor extends Actor {
 
   async disconnect(): Promise<void> {
     await this.container?.remove();
-    console.log(`Unsubing ->`, this.name)
     this.unsubscribe(); // Want to unsub later because want to see event of container removal
-    console.log(`Unsubbed ->`, this.name)
     delete this.container;
   }
 
