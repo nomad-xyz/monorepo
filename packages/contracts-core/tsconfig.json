@@ -16,7 +16,7 @@
   ],
   "include": [
     "index.ts",
-    "src/**/.ts",
+    "src/**/*.ts",
     "package.json"
   ]
 }
