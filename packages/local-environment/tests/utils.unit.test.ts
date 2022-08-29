@@ -101,9 +101,56 @@ describe("utils.StreamMatcher test", () => {
         });
 
         s.push('secret_12345, secret_321');
-        await sleep(100);
+        await sleep(50);
 
         expect(secrets).to.deep.equal(['12345', '321']);
+    })
+
+    it('can find strings and unregister them', async () => {
+
+        const sm = new StreamMatcher();
+        const s = new ReadWriteStream()
+
+        let foundStringTimes = 0;
+        
+        s.pipe(sm);
+
+        sm.register('somestring', () => {
+            foundStringTimes += 1;
+        });
+
+        s.push('somestring');
+        await sleep(50);
+
+        expect(foundStringTimes).to.equal(1);
+
+        sm.unregister('somestring');
+
+        s.push('somestring');
+        await sleep(50);
+
+        expect(foundStringTimes).to.equal(1);        
+    })
+
+    it('can use strings to pass them to events', async () => {
+
+        const sm = new StreamMatcher();
+        const s = new ReadWriteStream()
+
+        let foundString = false;
+        
+        s.pipe(sm);
+
+        sm.register('somestring', 'string_found');
+
+        sm.on('string_found', () => {
+            foundString = true;
+        })
+
+        s.push('somestring');
+        await sleep(50);
+
+        expect(foundString).to.be.true;
     })
 })
 

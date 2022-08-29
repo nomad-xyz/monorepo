@@ -162,15 +162,16 @@ export class StreamMatcher extends Stream.Transform {
   }
 
   register(
-    pattern: RegExp,
+    pattern: RegExp | string,
     executor:
       | string
       | ((match: RegExpMatchArray) => Promise<void>)
       | ((match: RegExpMatchArray) => void)
   ): void {
+    const p = typeof pattern === 'string' ? new RegExp(pattern): pattern;
     this.pattern2executor.set(
       pattern.toString(),
-      new Matcher(pattern, executor)
+      new Matcher(p, executor)
     );
   }
 }
