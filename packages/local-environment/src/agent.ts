@@ -5,7 +5,7 @@ import { EventEmitter } from "events";
 import { NomadDomain } from "./domain";
 
 const kathyOn = false;
-const agentsImage = process.env.AGENT_IMAGE || "gcr.io/nomad-xyz/nomad-agent:prestwich-remove-deploy-gas";
+const agentsImage = process.env.AGENTS_IMAGE || "gcr.io/nomad-xyz/nomad-agent:prestwich-remove-deploy-gas";
 
 export class Agents {
   updater: Agent;
