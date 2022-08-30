@@ -19,35 +19,15 @@ contract RouterTest is Test {
         router.enrollRemoteRouter(testDomain, testRouter);
     }
 
-    function test_handle() public {
-        uint32 domain = 123;
-        uint32 nonce = 1;
-        bytes32 sender = "sender";
-        bytes memory message = hex"0e34";
-        router.handle(domain, nonce, sender, message);
-        (
-            uint32 handledDomain,
-            uint32 handledNonce,
-            bytes32 handledSender,
-            bytes memory handledMessage
-        ) = router.handledMessages(0);
-        assertEq(uint256(handledDomain), uint256(domain));
-        assertEq(uint256(handledNonce), uint256(nonce));
-        assertEq(handledSender, sender);
-        assertEq(handledMessage, message);
-    }
-
     function test_enrollRemoteRouter() public {
         bytes32 storedRouter = router.remotes(testDomain);
         assertEq(storedRouter, testRouter);
-        vm.stopPrank();
     }
 
     function test_enrollRemoteRouterOnlyOwner() public {
         vm.startPrank(vm.addr(1231231231));
         vm.expectRevert("Ownable: caller is not the owner");
         router.enrollRemoteRouter(testDomain, testRouter);
-        vm.stopPrank();
     }
 
     function test_isRemoteRouter() public {
@@ -65,5 +45,6 @@ contract RouterTest is Test {
         router.exposed_mustHaveRemote(0);
         vm.expectRevert("!remote");
         router.exposed_mustHaveRemote(type(uint32).max);
+        assertEq(router.exposed_mustHaveRemote(testDomain), testRouter);
     }
 }

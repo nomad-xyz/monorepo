@@ -41,15 +41,5 @@ contract RouterHarness is Router {
         uint32 nonce,
         bytes32 sender,
         bytes memory message
-    ) external override {
-        console2.log("====Router Received Message====");
-        console2.log("origin:", origin);
-        console2.log("nonce:", nonce);
-        console2.log("sender");
-        console2.logBytes32(sender);
-        console2.log("message");
-        console2.logBytes(message);
-        console2.log("");
-        handledMessages.push(HandledMessage(origin, nonce, sender, message));
-    }
+    ) external override {}
 }
