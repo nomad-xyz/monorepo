@@ -41,7 +41,8 @@
     "@nomad-xyz/contracts-router": "workspace:^",
     "@openzeppelin/contracts": "~3.4.2",
     "@openzeppelin/contracts-upgradeable": "~3.4.2",
-    "@summa-tx/memview-sol": "^2.0.0"
+    "@summa-tx/memview-sol": "^2.0.0",
+    "solmate": "^6.5.0"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.1",
