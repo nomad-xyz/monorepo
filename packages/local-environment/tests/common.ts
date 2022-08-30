@@ -14,7 +14,6 @@ import Logger from "bunyan";
 import { HardhatNetwork } from "../src/network";
 import { Key } from "../src/keys/key";
 
-//
 /**
  * Sends several amounts of tokens from network "From" to "To"
  * to particular reciver and then test that they are received
@@ -38,15 +37,13 @@ export async function sendTokensAndConfirm(
 ) {
   const ctx = n.getBridgeSDK();
 
-  fs.writeFileSync('./ctx.json', JSON.stringify(ctx.conf));
-
   let amountTotal = ethers.BigNumber.from(0);
 
   const rr: TransferMessage[] = [];
 
   for (const a of amounts) {
     const amount = ethers.BigNumber.from(a);
-    log.info(`Going to send token ${token.domain}:${token.id}\n`,from.name,to.name);
+    log.info(`Going to send token ${token.domain}:${token.id}`,from.name,to.name);
 
     const tx = await ctx.send(
       from.name,
@@ -79,11 +76,11 @@ export async function sendTokensAndConfirm(
       log.info(`Waiting for update and process events...`);
       await new Promise((resolve, reject) => {
         replica.once(replica.filters.Update(null, null, null, null), (homeDomain, oldRoot, newRoot, _signature) => {
-          log.info(`New Update event\n    homeDomain: ${homeDomain},\n    oldRoot: ${oldRoot},\n    newRoot: ${newRoot}`)
+          log.info(`New Update event | homeDomain: ${homeDomain} | oldRoot: ${oldRoot} | newRoot: ${newRoot}`)
         })
   
         replica.once(replica.filters.Process(null, null, null), (messageHash, success, _returnData) => {
-          log.info(`New Process event\n    messageHash: ${messageHash},\n    success:`, success)
+          log.info(`New Process event | messageHash: ${messageHash} | success:`, success)
           resolve(null)
         })
       })
@@ -110,9 +107,9 @@ export async function sendTokensAndConfirm(
         tokenContract?.address !== "0x0000000000000000000000000000000000000000"
       ) {
         log.info(
-          `${batch} = Hurray! Asset at destination's token's address `,
+          `${batch} = Success! Asset at destination's token's address `,
           tokenContract!.address,
-          `\nFrom: ${from.name}, to: ${to.name}, recipient: ${recipient}`
+          `From: ${from.name}, to: ${to.name}, recipient: ${recipient}`
         );
         return tokenContract;
       }

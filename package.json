@@ -18,6 +18,7 @@
   "scripts": {
     "compile": "yarn workspaces foreach -Apvt --exclude @nomad-xyz/deploy run compile",
     "bootstrap": "yarn build:accumulator-cli && yarn workspaces foreach -Apvt --exclude @nomad-xyz/deploy run bootstrap",
+    "bootup": "./packages/local-environment/bootup.sh",
     "build": "yarn build:accumulator-cli && yarn workspaces foreach -Apvt --exclude @nomad-xyz/deploy run build",
     "build:accumulator-cli": "cd scripts && ./build-acli.sh",
     "contracts-bridge": "yarn workspace @nomad-xyz/contracts-bridge",
@@ -34,7 +35,7 @@
     "sdk-bridge": "yarn workspace @nomad-xyz/sdk-bridge",
     "sdk-govern": "yarn workspace @nomad-xyz/sdk-govern",
     "test:unit": "yarn workspaces foreach -Apvt --exclude @nomad-xyz/deploy run test:unit",
-    "test:integration": "echo 'TODO: integration tests'",
+    "test:integration": "yarn local-environment test:integration",
     "gen-proof": "scripts/accumulator-cli",
     "snapshot": "yarn workspaces foreach -Apvt --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run snapshot",
     "snapshot:check": "yarn workspaces foreach -Apvt --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run snapshot:check",

@@ -1,23 +1,13 @@
-echo '\033[0;32m' ====== Hello $USER, please wait until I build your images ☕ '\033[0m'
+#!/bin/bash
+echo Please wait, building packages ☕
 
-foundryup;
-yarn install;
-
-for d in packages/contracts-*; do
- echo '\033[0;33m' ====== Building $d '\033[0m';
+for d in packages/*; do
+ echo Building $d;
  pushd $d;
  {
-    yarn build && echo '\032[0;31m' ====== Built $d '\033[0m'
+    yarn build && echo Built $d
  } || {
-        echo '\033[0;31m' ====== FAILED $d '\033[0m'
+        echo Skipped $d
     }
-#  popd;
+ popd;
 done
-
-yarn install;
-yarn build;
-
-# yarn deploy build;
-cd packages/local-environment/
-
-echo '\033[0;32m' ====== You are good to go sir! '\033[0m'

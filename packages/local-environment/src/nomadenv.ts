@@ -1,13 +1,11 @@
 import { NomadLocator, NomadConfig } from "@nomad-xyz/configuration";
 import * as dotenv from "dotenv";
-import { DeployContext } from "../../deploy/src/DeployContext";
+import { DeployContext } from "@nomad-xyz/deploy/src/DeployContext";
 import * as ethers from "ethers";
 import { NonceManager } from "@ethersproject/experimental";
 import fs from "fs";
 import bunyan from "bunyan";
-// import { Key } from './key';
 import { NomadDomain } from "./domain";
-// import { Agents } from "./agent";
 import { HardhatNetwork } from "./network";
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import { NomadContext } from "@nomad-xyz/sdk";
@@ -27,7 +25,6 @@ export class NomadEnv {
   constructor(governor: NomadLocator) {
     this.domains = [];
     this.governor = governor;
-    this.log.info(`Going to init NomadEnv with domains`, this.domains);
     this.bridgeSDK = new BridgeContext(this.nomadConfig());
     this.coreSDK = new NomadContext(this.nomadConfig());
   }
@@ -80,7 +77,7 @@ export class NomadEnv {
     await deployContext.checkDeployment();
     this.log.info(`Checked deployment`);
 
-    await this.outputConfigAndVerification(outputDir, deployContext);
+    this.outputConfigAndVerification(outputDir, deployContext);
     await this.outputCallBatch(outputDir, deployContext);
 
     return deployContext
@@ -215,14 +212,22 @@ export class NomadEnv {
     };
   }
 
+  
+
   //Input arguments to d.up to disable a specific agent.
-  async upAgents() {
+  async up() {
     let metrics = 9000;
     await Promise.all(this.domains.map((d, i) => d.up(metrics + i * 10)));
   }
 
   async down() {
     await Promise.all(this.domains.map((d) => d.down()));
+  }
+
+  //Input arguments to d.up to disable a specific agent.
+  async upAgents() {
+    let metrics = 9000;
+    await Promise.all(this.domains.map((d, i) => d.upAgents(metrics + i * 10)));
   }
 
   async downAgents() {
@@ -259,7 +264,7 @@ export async function defaultStart() {
 
   le.addDomain(tDomain);
   le.addDomain(jDomain);
-  log.info(`Added Tom and Jerry`);
+  log.info(`Going to init NomadEnv with domains`, le.domains);
 
   tDomain.connectNetwork(jDomain);
   jDomain.connectNetwork(tDomain);

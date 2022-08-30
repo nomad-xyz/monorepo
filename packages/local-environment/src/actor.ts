@@ -1,4 +1,5 @@
 import Docker from "dockerode";
+import bunyan from "bunyan";
 import { EventEmitter } from "events";
 import { StreamMatcher } from "./utils";
 
@@ -8,18 +9,31 @@ class DockerEmitter extends EventEmitter {
   }
 }
 
-export abstract class DockerizedActor {
+export abstract class Actor {
   name: string;
   actorType: string;
+
+  constructor(name: string, actorType: string) {
+    this.name = name;
+    this.actorType = actorType;
+  }
+
+  abstract up(): Promise<void>;
+  abstract down(): Promise<void>;
+}
+
+export abstract class DockerizedActor extends Actor {
+  
   docker: Docker;
   container?: Docker.Container;
   events: DockerEmitter;
   private eventsStream?: NodeJS.ReadableStream;
   logMatcher?: StreamMatcher;
 
+  log = bunyan.createLogger({ name: "localenv" });
+
   constructor(name: string, actorType: string) {
-    this.name = name;
-    this.actorType = actorType;
+    super(name, actorType)
     this.docker = new Docker();
     this.events = new DockerEmitter();
   }
@@ -49,26 +63,35 @@ export abstract class DockerizedActor {
   async stop(): Promise<void> {
     if (!this.isConnected()) throw new Error(`Not connected`);
     if (!(await this.isRunning())) {
-      console.log(`Attempting to stop container that is NOT running`)
+      this.log.info(`Attempted to stop container that is NOT running, proceeding without action`)
     } else {
-      console.log(`Attempting to stop container that IS running`)
-      await this.container?.stop();
+      if (this.container) {
+        const containerId = this.container.id;
+        const containerInfo = await this.container.inspect();
+        this.log.info(`Attempting to stop container that IS running, container id:`, containerId, containerInfo.Name)
+        try {
+          await this.container.stop();
+          this.log.info(`Successfully stopped container with id '${containerId}'`)
+        } catch(e) {
+          this.log.info(`Failed stopping container with id '${containerId}'! Error:`, e);
+          throw e;
+        }
+      }
     }
-
     return;
   }
 
-  async down(): Promise<void> {
-    try {
-      await this.stop();
-    } catch(e) {
-      console.warn(`xxxx1. Error:`, e);
-    }
 
-    try {
+  async up(): Promise<void> {
+    await this.connect();
+    await this.start(); 
+  }
+
+  async down(): Promise<void> {
+    if (this.isConnected()) {
+      await this.stop();
+      this.unsubscribe();
       await this.removeContainer();
-    } catch(e) {
-      console.warn(`xxxx2. Error:`, e);
     }
   }
 
@@ -143,6 +166,7 @@ export abstract class DockerizedActor {
   }
 
   async subscribeToContainerEvents(): Promise<void> {
+    if (!this.isConnected()) throw new Error('Container is not connected')
     if (this.isSubscribed()) return;
 
     const events = await this.docker.getEvents({
