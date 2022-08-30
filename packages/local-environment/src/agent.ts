@@ -5,6 +5,7 @@ import { EventEmitter } from "events";
 import { NomadDomain } from "./domain";
 
 const kathyOn = false;
+const agentsImage = process.env.AGENT_IMAGE || "gcr.io/nomad-xyz/nomad-agent:prestwich-remove-deploy-gas";
 
 export class Agents {
   updater: Agent;
@@ -249,7 +250,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
 
     // docker run --name $1_$2_agent --env RUN_ENV=main --restart=always --network="host" --env BASE_CONFIG=$1_config.json -v $(pwd)/../../rust/config:/app/config -d gcr.io/nomad-xyz/nomad-agent ./$2
     return this.docker.createContainer({
-      Image: process.env.AGENT_IMAGE || "gcr.io/nomad-xyz/nomad-agent:prestwich-remove-deploy-gas",
+      Image: agentsImage,
       name,
       Cmd: ["./" + this.agentType],
       Env: [
