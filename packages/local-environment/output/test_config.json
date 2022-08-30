@@ -46,7 +46,7 @@
           "indexPageSize": 2000
         },
         "bridgeConfiguration": {
-          "weth": "0xb5f685e49595187d13d853a49d272dc5c1beaa8e",
+          "weth": "0x2fd79405e108b80d297b6a95b715258806cb2537",
           "customs": []
         }
       },
@@ -77,7 +77,7 @@
           "indexPageSize": 2000
         },
         "bridgeConfiguration": {
-          "weth": "0xb5f685e49595187d13d853a49d272dc5c1beaa8e",
+          "weth": "0x2fd79405e108b80d297b6a95b715258806cb2537",
           "customs": []
         }
       }
@@ -85,91 +85,91 @@
   },
   "core": {
     "tom": {
-      "deployHeight": 256,
-      "upgradeBeaconController": "0xc2395bcc4680384cd343a46e3d20f32dea75df1b",
-      "xAppConnectionManager": "0x39395333a34b80d5cf08d5b0cf7b3d914ef4c59d",
-      "updaterManager": "0xb7f497a5f66215df59c78d45457b2d5acfce6067",
+      "deployHeight": 19,
+      "upgradeBeaconController": "0xb8f76913b146701aaa977521787cac3efa647ac4",
+      "xAppConnectionManager": "0x1d910c11207263544f6c4b9e33d6eceed59648d6",
+      "updaterManager": "0xa026c1a957d19f5a364f690414837ebf7e87b6c4",
       "governanceRouter": {
-        "implementation": "0xab8d4cffee3ef32d5605b6f48a3b19f1addb2713",
-        "proxy": "0x472e3a7f0dec306ec2efc29dc20145d91098ba91",
-        "beacon": "0x644fa167175ba8e7d7983de82ae8958bff768b3c"
+        "implementation": "0x565534809b3b72fc04c250e04c445ac298acb005",
+        "proxy": "0x56158f6ebe6cae347cac6b68de3a6a2fff8e050e",
+        "beacon": "0xb5db257c0e3bacc278827dc6e06e2e13a1507713"
       },
       "home": {
-        "implementation": "0xaa0588eac57e64d16953b396cd9e2865697eb207",
-        "proxy": "0xd114fc2f351d33558745bf13266a1e2d524347d1",
-        "beacon": "0x94d50afdb60b187bc3eaaa93642c94d713c5a514"
+        "implementation": "0x03bda7644fad6ac823e55d32b5e31b2e221dfed2",
+        "proxy": "0xdaefe73ee4405b27e684cf1e963326d2bb59bc32",
+        "beacon": "0x567f1b416388a3bddf7af7e390de930bbb21dafb"
       },
       "replicas": {
         "jerry": {
-          "implementation": "0x6166cd9404e8a529b574ab9cba287db1feabc10a",
-          "proxy": "0x9956c0406cefacd90a4c8a21d0b18f3c214ad712",
-          "beacon": "0xdab4f9fc67bb47a21b49847320fdf100bfd001ab"
+          "implementation": "0xfcffc5c9134c8d0302635fcf15f7dca9f1db7adf",
+          "proxy": "0x4e5771ae6bcfccdc042ba869181e7c8f37c5de3a",
+          "beacon": "0xa7b7bef9700387b224d34b44e6a18c44c4ea331a"
         }
       }
     },
     "jerry": {
-      "deployHeight": 256,
-      "upgradeBeaconController": "0xc2395bcc4680384cd343a46e3d20f32dea75df1b",
-      "xAppConnectionManager": "0x39395333a34b80d5cf08d5b0cf7b3d914ef4c59d",
-      "updaterManager": "0xb7f497a5f66215df59c78d45457b2d5acfce6067",
+      "deployHeight": 19,
+      "upgradeBeaconController": "0xb8f76913b146701aaa977521787cac3efa647ac4",
+      "xAppConnectionManager": "0x1d910c11207263544f6c4b9e33d6eceed59648d6",
+      "updaterManager": "0xa026c1a957d19f5a364f690414837ebf7e87b6c4",
       "governanceRouter": {
-        "implementation": "0xab8d4cffee3ef32d5605b6f48a3b19f1addb2713",
-        "proxy": "0x472e3a7f0dec306ec2efc29dc20145d91098ba91",
-        "beacon": "0x644fa167175ba8e7d7983de82ae8958bff768b3c"
+        "implementation": "0x565534809b3b72fc04c250e04c445ac298acb005",
+        "proxy": "0x56158f6ebe6cae347cac6b68de3a6a2fff8e050e",
+        "beacon": "0xb5db257c0e3bacc278827dc6e06e2e13a1507713"
       },
       "home": {
-        "implementation": "0xaa0588eac57e64d16953b396cd9e2865697eb207",
-        "proxy": "0xd114fc2f351d33558745bf13266a1e2d524347d1",
-        "beacon": "0x94d50afdb60b187bc3eaaa93642c94d713c5a514"
+        "implementation": "0x03bda7644fad6ac823e55d32b5e31b2e221dfed2",
+        "proxy": "0xdaefe73ee4405b27e684cf1e963326d2bb59bc32",
+        "beacon": "0x567f1b416388a3bddf7af7e390de930bbb21dafb"
       },
       "replicas": {
         "tom": {
-          "implementation": "0x6166cd9404e8a529b574ab9cba287db1feabc10a",
-          "proxy": "0x9956c0406cefacd90a4c8a21d0b18f3c214ad712",
-          "beacon": "0xdab4f9fc67bb47a21b49847320fdf100bfd001ab"
+          "implementation": "0xfcffc5c9134c8d0302635fcf15f7dca9f1db7adf",
+          "proxy": "0x4e5771ae6bcfccdc042ba869181e7c8f37c5de3a",
+          "beacon": "0xa7b7bef9700387b224d34b44e6a18c44c4ea331a"
         }
       }
     }
   },
   "bridge": {
     "tom": {
-      "deployHeight": 309,
+      "deployHeight": 72,
       "bridgeRouter": {
-        "implementation": "0xab3a6ab4051960af380dc6f11f84364eec16c11c",
-        "proxy": "0xe6c36e6014898a83cda0bedcf9e2c5f87ad89987",
-        "beacon": "0x225551ec11d842f9ceeb35357196e60efa44043b"
+        "implementation": "0xf00852596cd325618a901d29173fd7e547f836a0",
+        "proxy": "0xcc53a0548185ee64c30164c98b2a132a719b60cf",
+        "beacon": "0xb1013ba46fe74ff774c99b00a4539249fbc57ea3"
       },
       "tokenRegistry": {
-        "implementation": "0xb7c4470426aa2a812b5c6d2f3270d6a02c40842b",
-        "proxy": "0x0e69746782fde73da65ce55eb2ebc44882514deb",
-        "beacon": "0x5dab2083bb2a3b91b314ec3c7051623af7e0be24"
+        "implementation": "0xc1d9a827a7ea9a6bd293fd4a890c1125f64524bc",
+        "proxy": "0x2f20b75efc10ebcda2b950c26f0ebf132960eb89",
+        "beacon": "0xb8cedb86d4b14b461a352959212ea12a97a851c8"
       },
       "bridgeToken": {
-        "implementation": "0x84bd5c7f59899ee0b28d450b69d049014eeb9e1b",
+        "implementation": "0xee15502f5800961dc1774f4c34b66b745aa13a9b",
         "proxy": "0x0000000000000000000000000000000000000000",
-        "beacon": "0x9c82f21e232fb5cc8f76cf7d76f2c4f5a853f14b"
+        "beacon": "0x5d72f4bffd961fa90c56712184647d88bcf7b0ae"
       },
-      "ethHelper": "0x0b373bbb0f05b5dbbf8d5cfd1765d23e84a6c3d5",
+      "ethHelper": "0x3a2daba637e797d5471d9e6accaca733505afc59",
       "customs": []
     },
     "jerry": {
-      "deployHeight": 309,
+      "deployHeight": 72,
       "bridgeRouter": {
-        "implementation": "0xab3a6ab4051960af380dc6f11f84364eec16c11c",
-        "proxy": "0xe6c36e6014898a83cda0bedcf9e2c5f87ad89987",
-        "beacon": "0x225551ec11d842f9ceeb35357196e60efa44043b"
+        "implementation": "0xf00852596cd325618a901d29173fd7e547f836a0",
+        "proxy": "0xcc53a0548185ee64c30164c98b2a132a719b60cf",
+        "beacon": "0xb1013ba46fe74ff774c99b00a4539249fbc57ea3"
       },
       "tokenRegistry": {
-        "implementation": "0xb7c4470426aa2a812b5c6d2f3270d6a02c40842b",
-        "proxy": "0x0e69746782fde73da65ce55eb2ebc44882514deb",
-        "beacon": "0x5dab2083bb2a3b91b314ec3c7051623af7e0be24"
+        "implementation": "0xc1d9a827a7ea9a6bd293fd4a890c1125f64524bc",
+        "proxy": "0x2f20b75efc10ebcda2b950c26f0ebf132960eb89",
+        "beacon": "0xb8cedb86d4b14b461a352959212ea12a97a851c8"
       },
       "bridgeToken": {
-        "implementation": "0x84bd5c7f59899ee0b28d450b69d049014eeb9e1b",
+        "implementation": "0xee15502f5800961dc1774f4c34b66b745aa13a9b",
         "proxy": "0x0000000000000000000000000000000000000000",
-        "beacon": "0x9c82f21e232fb5cc8f76cf7d76f2c4f5a853f14b"
+        "beacon": "0x5d72f4bffd961fa90c56712184647d88bcf7b0ae"
       },
-      "ethHelper": "0x0b373bbb0f05b5dbbf8d5cfd1765d23e84a6c3d5",
+      "ethHelper": "0x3a2daba637e797d5471d9e6accaca733505afc59",
       "customs": []
     }
   },

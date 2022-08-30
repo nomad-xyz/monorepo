@@ -67,8 +67,8 @@ export abstract class DockerizedActor extends Actor {
     } else {
       if (this.container) {
         const containerId = this.container.id;
-        const x = await this.container.inspect();
-        this.log.info(`Attempting to stop container that IS running, container id:`, containerId, x.Name)
+        const containerInfo = await this.container.inspect();
+        this.log.info(`Attempting to stop container that IS running, container id:`, containerId, containerInfo.Name)
         try {
           await this.container.stop();
           this.log.info(`Successfully stopped container with id '${containerId}'`)

@@ -14,7 +14,6 @@ import Logger from "bunyan";
 import { HardhatNetwork } from "../src/network";
 import { Key } from "../src/keys/key";
 
-//
 /**
  * Sends several amounts of tokens from network "From" to "To"
  * to particular reciver and then test that they are received
@@ -44,7 +43,7 @@ export async function sendTokensAndConfirm(
 
   for (const a of amounts) {
     const amount = ethers.BigNumber.from(a);
-    log.info(`Going to send token ${token.domain}:${token.id}\n`,from.name,to.name);
+    log.info(`Going to send token ${token.domain}:${token.id}`,from.name,to.name);
 
     const tx = await ctx.send(
       from.name,
