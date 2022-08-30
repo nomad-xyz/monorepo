@@ -22,19 +22,27 @@ libs = ["node_modules", "lib"]
 
 [profile.core]
 src = 'packages/contracts-core/contracts'
-test = 'packages/contracts-core/contracts/foundry-tests'
+test = 'packages/contracts-core/contracts/test'
 out = 'packages/contracts-core/foundry_artifacts'
 ffi = true
 
 [profile.core-ci]
 src = 'packages/contracts-core/contracts'
-test = 'packages/contracts-core/contracts/foundry-tests'
+test = 'packages/contracts-core/contracts/test'
 out = 'packages/contracts-core/foundry_artifacts'
 fuzz-runs = 10_000
+ffi = true
 
 [profile.router]
 src = 'packages/contracts-router/contracts'
+test = 'packages/contracts-router/contracts/test'
 out = 'packages/contracts-router/foundry_artifacts'
+
+[profile.router-ci]
+src = 'packages/contracts-router/contracts'
+test = 'packages/contracts-router/contracts/test'
+out = 'packages/contracts-router/foundry_artifacts'
+fuzz-runs = 10_000
 
 [profile.bridge]
 src = 'packages/contracts-bridge/contracts'
