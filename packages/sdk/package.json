@@ -23,7 +23,7 @@
     "src/**/*"
   ],
   "scripts": {
-    "build": "time tsc --build",
+    "build": "tsc --build",
     "check": "tsc --noEmit",
     "coverage": "echo TODO: Fix tests",
     "lint": "eslint --fix ./src ./tests",
