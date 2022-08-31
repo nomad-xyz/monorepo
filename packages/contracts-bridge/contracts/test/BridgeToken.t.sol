@@ -533,6 +533,9 @@ contract BridgeTokenTest is Test {
         uint256 nonce
     ) public {
         vm.assume(deadline > block.timestamp);
+        // Private key must be less than
+        // 115792089237316195423570985008687907852837564279074904382605163141518161494337
+        // (the secp256k1 curve order)
         vm.assume(
             privateKey != 0 &&
                 privateKey <
