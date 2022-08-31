@@ -21,19 +21,19 @@ contract BridgeTokenTest is Test {
         token.initialize();
     }
 
-    function test_Mint() public {
+    function test_mint() public {
         token.mint(address(0xBEEF), 1e18);
 
         assertEq(token.totalSupply(), 1e18);
         assertEq(token.balanceOf(address(0xBEEF)), 1e18);
     }
 
-    function test_Burn() public {
+    function test_burn() public {
         token.mint(address(0xBEEF), 1e18);
         token.burn(address(0xBEEF), 0.9e18);
 
         assertEq(token.totalSupply(), 1e18 - 0.9e18);
-        assertEq(token.balanceOf(address(0xBEEF)), 0.1e18);
+        assertEq(token.balanceOf(address(0xBEEF)), 1e18 - 0.9e18);
     }
 
     function test_Approve() public {
@@ -42,7 +42,7 @@ contract BridgeTokenTest is Test {
         assertEq(token.allowance(address(this), address(0xBEEF)), 1e18);
     }
 
-    function test_Transfer() public {
+    function test_transfer() public {
         token.mint(address(this), 1e18);
 
         assertTrue(token.transfer(address(0xBEEF), 1e18));
@@ -52,7 +52,7 @@ contract BridgeTokenTest is Test {
         assertEq(token.balanceOf(address(0xBEEF)), 1e18);
     }
 
-    function test_TransferFrom() public {
+    function test_transferFrom() public {
         address from = address(0xABCD);
 
         token.mint(from, 1e18);
@@ -69,7 +69,7 @@ contract BridgeTokenTest is Test {
         assertEq(token.balanceOf(address(0xBEEF)), 1e18);
     }
 
-    function test_InfiniteApproveTransferFrom() public {
+    function test_infiniteApproveTransferFrom() public {
         address from = address(0xABCD);
 
         token.mint(from, 1e18);
@@ -80,13 +80,16 @@ contract BridgeTokenTest is Test {
         assertTrue(token.transferFrom(from, address(0xBEEF), 1e18));
         assertEq(token.totalSupply(), 1e18);
 
-        assertEq(token.allowance(from, address(this)), type(uint256).max);
+        assertEq(
+            token.allowance(from, address(this)),
+            type(uint256).max - 1e18
+        );
 
         assertEq(token.balanceOf(from), 0);
         assertEq(token.balanceOf(address(0xBEEF)), 1e18);
     }
 
-    function test_Permit() public {
+    function test_permit() public {
         uint256 privateKey = 0xBEEF;
         address owner = vm.addr(privateKey);
 
@@ -144,7 +147,7 @@ contract BridgeTokenTest is Test {
         token.transferFrom(from, address(0xBEEF), 1e18);
     }
 
-    function test_permitBadNonce() public {
+    function test_notPermitBadNonce() public {
         uint256 privateKey = 0xBEEF;
         address owner = vm.addr(privateKey);
 
@@ -167,11 +170,11 @@ contract BridgeTokenTest is Test {
                 )
             )
         );
-
+        vm.expectRevert("ERC20Permit: invalid signature");
         token.permit(owner, address(0xCAFE), 1e18, block.timestamp, v, r, s);
     }
 
-    function test_permitBadDeadline() public {
+    function test_notPermitBadDeadline() public {
         uint256 privateKey = 0xBEEF;
         address owner = vm.addr(privateKey);
 
@@ -194,7 +197,7 @@ contract BridgeTokenTest is Test {
                 )
             )
         );
-
+        vm.expectRevert("ERC20Permit: invalid signature");
         token.permit(
             owner,
             address(0xCAFE),
@@ -206,7 +209,7 @@ contract BridgeTokenTest is Test {
         );
     }
 
-    function test_permitPastDeadline() public {
+    function test_notPermitPastDeadline() public {
         uint256 privateKey = 0xBEEF;
         address owner = vm.addr(privateKey);
 
@@ -229,7 +232,7 @@ contract BridgeTokenTest is Test {
                 )
             )
         );
-
+        vm.expectRevert("ERC20Permit: expired deadline");
         token.permit(
             owner,
             address(0xCAFE),
@@ -282,34 +285,36 @@ contract BridgeTokenTest is Test {
         assertEq(uint256(tkn.decimals()), uint256(decimals));
     }
 
-    function test_Mint(address from, uint256 amount) public {
+    function test_mint(address from, uint256 amount) public {
+        vm.assume(from != address(0));
         token.mint(from, amount);
 
         assertEq(token.totalSupply(), amount);
         assertEq(token.balanceOf(from), amount);
     }
 
-    function test_Burn(
+    function test_notBurn(
         address from,
         uint256 mintAmount,
         uint256 burnAmount
     ) public {
-        burnAmount = bound(burnAmount, 0, mintAmount);
+        vm.assume(from != address(0));
+        vm.assume(burnAmount > mintAmount);
 
         token.mint(from, mintAmount);
+        vm.expectRevert("ERC20: burn amount exceeds balance");
         token.burn(from, burnAmount);
-
-        assertEq(token.totalSupply(), mintAmount - burnAmount);
-        assertEq(token.balanceOf(from), mintAmount - burnAmount);
     }
 
-    function test_Approve(address to, uint256 amount) public {
+    function test_approve(address to, uint256 amount) public {
+        vm.assume(to != address(0));
         assertTrue(token.approve(to, amount));
 
         assertEq(token.allowance(address(this), to), amount);
     }
 
-    function test_Transfer(address from, uint256 amount) public {
+    function test_transfer(address from, uint256 amount) public {
+        vm.assume(from != address(0));
         token.mint(address(this), amount);
 
         assertTrue(token.transfer(from, amount));
@@ -323,12 +328,13 @@ contract BridgeTokenTest is Test {
         }
     }
 
-    function test_TransferFrom(
+    function test_transferFrom(
         address to,
         uint256 approval,
         uint256 amount
     ) public {
-        amount = bound(amount, 0, approval);
+        vm.assume(to != address(0));
+        vm.assume(approval > amount);
 
         address from = address(0xABCD);
 
@@ -336,14 +342,10 @@ contract BridgeTokenTest is Test {
 
         vm.prank(from);
         token.approve(address(this), approval);
-
         assertTrue(token.transferFrom(from, to, amount));
         assertEq(token.totalSupply(), amount);
 
-        uint256 app = from == address(this) || approval == type(uint256).max
-            ? approval
-            : approval - amount;
-        assertEq(token.allowance(from, address(this)), app);
+        assertEq(token.allowance(from, address(this)), approval - amount);
 
         if (from == to) {
             assertEq(token.balanceOf(from), amount);
@@ -353,15 +355,16 @@ contract BridgeTokenTest is Test {
         }
     }
 
-    function test_Permit(
+    function test_permit(
         uint248 privKey,
         address to,
         uint256 amount,
         uint256 deadline
     ) public {
+        vm.assume(to != address(0));
+        vm.assume(deadline > block.timestamp);
+        vm.assume(privKey > 0);
         uint256 privateKey = privKey;
-        if (deadline < block.timestamp) deadline = block.timestamp;
-        if (privateKey == 0) privateKey = 1;
 
         address owner = vm.addr(privateKey);
 
@@ -396,9 +399,10 @@ contract BridgeTokenTest is Test {
         uint256 mintAmount,
         uint256 burnAmount
     ) public {
-        burnAmount = bound(burnAmount, mintAmount + 1, type(uint256).max);
-
+        vm.assume(to != address(0));
+        vm.assume(burnAmount > mintAmount);
         token.mint(to, mintAmount);
+        vm.expectRevert("ERC20: burn amount exceeds balance");
         token.burn(to, burnAmount);
     }
 
@@ -407,7 +411,8 @@ contract BridgeTokenTest is Test {
         uint256 mintAmount,
         uint256 sendAmount
     ) public {
-        sendAmount = bound(sendAmount, mintAmount + 1, type(uint256).max);
+        vm.assume(to != address(0));
+        vm.assume(sendAmount > mintAmount);
 
         token.mint(address(this), mintAmount);
         vm.expectRevert("ERC20: transfer amount exceeds balance");
@@ -420,7 +425,7 @@ contract BridgeTokenTest is Test {
         uint256 amount
     ) public {
         vm.assume(to != address(0));
-        amount = bound(amount, approval + 1, type(uint256).max);
+        vm.assume(amount > approval);
 
         address from = address(0xABCD);
 
@@ -439,7 +444,7 @@ contract BridgeTokenTest is Test {
         uint256 sendAmount
     ) public {
         vm.assume(to != address(0));
-        sendAmount = bound(sendAmount, mintAmount + 1, type(uint256).max);
+        vm.assume(sendAmount > mintAmount);
 
         address from = address(0xABCD);
 
@@ -451,16 +456,20 @@ contract BridgeTokenTest is Test {
         token.transferFrom(from, to, sendAmount);
     }
 
-    function test_permitBadNonce(
+    function test_notPermitBadNonce(
         uint256 privateKey,
         address to,
         uint256 amount,
         uint256 deadline,
         uint256 nonce
     ) public {
-        if (deadline < block.timestamp) deadline = block.timestamp;
-        if (privateKey == 0) privateKey = 1;
-        if (nonce == 0) nonce = 1;
+        vm.assume(deadline > block.timestamp);
+        vm.assume(
+            privateKey != 0 &&
+                privateKey <
+                115792089237316195423570985008687907852837564279074904382605163141518161494337
+        );
+        vm.assume(nonce != 0);
 
         address owner = vm.addr(privateKey);
 
@@ -483,19 +492,23 @@ contract BridgeTokenTest is Test {
                 )
             )
         );
-
+        vm.expectRevert("ERC20Permit: invalid signature");
         token.permit(owner, to, amount, deadline, v, r, s);
     }
 
-    function test_permitBadDeadline(
+    function test_notPermitBadDeadline(
         uint256 privateKey,
         address to,
         uint256 amount,
         uint256 deadline
     ) public {
-        if (deadline < block.timestamp) deadline = block.timestamp;
-        if (privateKey == 0) privateKey = 1;
-
+        vm.assume(deadline > block.timestamp && deadline < type(uint256).max);
+        vm.assume(
+            privateKey != 0 &&
+                privateKey <
+                115792089237316195423570985008687907852837564279074904382605163141518161494337
+        );
+        vm.assume(to != address(0));
         address owner = vm.addr(privateKey);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
@@ -517,19 +530,23 @@ contract BridgeTokenTest is Test {
                 )
             )
         );
-
+        vm.expectRevert("ERC20Permit: invalid signature");
         token.permit(owner, to, amount, deadline + 1, v, r, s);
     }
 
-    function test_permitPastDeadline(
+    function test_notPermitPastDeadline(
         uint256 privateKey,
         address to,
         uint256 amount,
         uint256 deadline
     ) public {
-        deadline = bound(deadline, 0, block.timestamp - 1);
-        if (privateKey == 0) privateKey = 1;
-
+        vm.assume(deadline < block.timestamp);
+        vm.assume(
+            privateKey != 0 &&
+                privateKey <
+                115792089237316195423570985008687907852837564279074904382605163141518161494337
+        );
+        vm.assume(to != address(0));
         address owner = vm.addr(privateKey);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
@@ -551,7 +568,7 @@ contract BridgeTokenTest is Test {
                 )
             )
         );
-
+        vm.expectRevert("ERC20Permit: expired deadline");
         token.permit(owner, to, amount, deadline, v, r, s);
     }
 
@@ -561,8 +578,13 @@ contract BridgeTokenTest is Test {
         uint256 amount,
         uint256 deadline
     ) public {
-        if (deadline < block.timestamp) deadline = block.timestamp;
-        if (privateKey == 0) privateKey = 1;
+        vm.assume(to != address(0));
+        vm.assume(deadline > block.timestamp);
+        vm.assume(
+            privateKey != 0 &&
+                privateKey <
+                115792089237316195423570985008687907852837564279074904382605163141518161494337
+        );
 
         address owner = vm.addr(privateKey);
 
@@ -587,6 +609,7 @@ contract BridgeTokenTest is Test {
         );
 
         token.permit(owner, to, amount, deadline, v, r, s);
+        vm.expectRevert("ERC20Permit: invalid signature");
         token.permit(owner, to, amount, deadline, v, r, s);
     }
 }
