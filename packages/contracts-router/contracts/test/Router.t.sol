@@ -11,17 +11,23 @@ contract RouterTest is Test {
     bytes32 testRouter;
 
     function setUp() public {
-        testDomain = 123213;
-        testRouter = "router address";
+        // deploy and initialize router
         router = new RouterHarness();
         address xAppConnectionManager = vm.addr(1321);
         router.exposed__XAppConnectionClient_initialize(xAppConnectionManager);
-        router.enrollRemoteRouter(testDomain, testRouter);
+        testDomain = 123213;
+        testRouter = "router address";
+        // Make sure that Router is not enrolled yet
+        assertEq(router.remotes(testDomain), bytes32(0));
+        assertFalse(router.exposed_isRemoteRouter(testDomain, testRouter));
+        vm.expectRevert("!remote");
+        router.exposed_mustHaveRemote(testDomain);
     }
 
     function test_enrollRemoteRouter() public {
-        bytes32 storedRouter = router.remotes(testDomain);
-        assertEq(storedRouter, testRouter);
+        assertEq(router.remotes(testDomain), bytes32(0));
+        router.enrollRemoteRouter(testDomain, testRouter);
+        assertEq(router.remotes(testDomain), testRouter);
     }
 
     function test_enrollRemoteRouterOnlyOwner() public {
@@ -31,6 +37,7 @@ contract RouterTest is Test {
     }
 
     function test_isRemoteRouter() public {
+        router.enrollRemoteRouter(testDomain, testRouter);
         assert(router.exposed_isRemoteRouter(testDomain, testRouter));
         assert(!router.exposed_isRemoteRouter(343, bytes32(0)));
         assert(!router.exposed_isRemoteRouter(343, testRouter));
@@ -38,13 +45,25 @@ contract RouterTest is Test {
         assert(!router.exposed_isRemoteRouter(343, "not a router"));
     }
 
+    function test_isRemoteRouterFuzzed(uint32 domain, bytes32 routerAddress)
+        public
+    {
+        assertFalse(router.exposed_isRemoteRouter(domain, routerAddress));
+    }
+
     function test_mustHaveRemote() public {
+        router.enrollRemoteRouter(testDomain, testRouter);
+        assertEq(router.exposed_mustHaveRemote(testDomain), testRouter);
         vm.expectRevert("!remote");
         router.exposed_mustHaveRemote(343);
         vm.expectRevert("!remote");
         router.exposed_mustHaveRemote(0);
         vm.expectRevert("!remote");
         router.exposed_mustHaveRemote(type(uint32).max);
-        assertEq(router.exposed_mustHaveRemote(testDomain), testRouter);
+    }
+
+    function test_mustHaveRemoteFuzzed(uint32 domain) public {
+        vm.expectRevert("!remote");
+        router.exposed_mustHaveRemote(domain);
     }
 }
