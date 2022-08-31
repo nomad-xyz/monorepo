@@ -9,6 +9,10 @@ import "forge-std/Test.sol";
 
 contract BridgeTokenTest is Test {
     MockWeth token;
+    // TODO:
+    // - test owner functions
+    // - test details functions
+    // - test transfer/relinquish ownership functions
 
     bytes32 constant PERMIT_TYPEHASH =
         keccak256(
@@ -28,6 +32,14 @@ contract BridgeTokenTest is Test {
         assertEq(token.balanceOf(address(0xBEEF)), 1e18);
     }
 
+    function test_mintOnlyOwner() public {
+        token.mint(address(0xBEEF), 1e18);
+        vm.startPrank(address(0xBEEF));
+        vm.expectRevert("Ownable: caller is not the owner");
+        token.mint(address(0xBEEF), 1e18);
+        vm.stopPrank();
+    }
+
     function test_burn() public {
         token.mint(address(0xBEEF), 1e18);
         token.burn(address(0xBEEF), 0.9e18);
@@ -36,9 +48,70 @@ contract BridgeTokenTest is Test {
         assertEq(token.balanceOf(address(0xBEEF)), 1e18 - 0.9e18);
     }
 
-    function test_Approve() public {
-        assertTrue(token.approve(address(0xBEEF), 1e18));
+    function test_burnOnlyOwner() public {
+        token.mint(address(0xBEEF), 1e18);
+        vm.startPrank(address(0xBEEF));
+        vm.expectRevert("Ownable: caller is not the owner");
+        token.burn(address(0xBEEF), 0.9e18);
+        vm.stopPrank();
+    }
 
+    event UpdateDetails(
+        string indexed name,
+        string indexed symbol,
+        uint8 indexed decimals
+    );
+
+    function test_setDetailsHash(
+        string memory name,
+        string memory symbol,
+        uint8 decimals
+    ) public {
+        bytes32 hash = keccak256(
+            abi.encodePacked(
+                bytes(name).length,
+                name,
+                bytes(symbol).length,
+                symbol,
+                decimals
+            )
+        );
+        token.setDetailsHash(hash);
+        vm.expectEmit(true, true, true, false);
+        emit UpdateDetails(name, symbol, decimals);
+        token.setDetails(name, symbol, decimals);
+    }
+
+    function test_setDetailsHashOwner() public {
+        bytes32 hash = "hash";
+        vm.prank(address(0xBEEF));
+        vm.expectRevert("Ownable: caller is not the owner");
+        token.setDetailsHash(hash);
+    }
+
+    function test_transferOwnership() public {
+        address newOwner = address(0xBEEF);
+        token.transferOwnership(newOwner);
+        assertEq(token.owner(), newOwner);
+    }
+
+    function test_transferOwnershipOnlyOwner() public {
+        address newOwner = address(0xBEEF);
+        vm.startPrank(newOwner);
+        vm.expectRevert("Ownable: caller is not the owner");
+        token.transferOwnership(newOwner);
+        vm.stopPrank();
+    }
+
+    function test_renounceOwnershipNoOp() public {
+        token.renounceOwnership();
+        uint256 gasAfter = gasleft();
+        // hardcoded gas for noop after testing
+        assertEq(gasAfter, 9223372036854747154);
+    }
+
+    function test_approve() public {
+        assertTrue(token.approve(address(0xBEEF), 1e18));
         assertEq(token.allowance(address(this), address(0xBEEF)), 1e18);
     }
 
@@ -273,7 +346,7 @@ contract BridgeTokenTest is Test {
         token.permit(owner, address(0xCAFE), 1e18, block.timestamp, v, r, s);
     }
 
-    function test_Metadata(
+    function test_metadata(
         string calldata name,
         string calldata symbol,
         uint8 decimals
