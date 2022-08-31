@@ -9,10 +9,6 @@ import "forge-std/Test.sol";
 
 contract BridgeTokenTest is Test {
     MockWeth token;
-    // TODO:
-    // - test owner functions
-    // - test details functions
-    // - test transfer/relinquish ownership functions
 
     bytes32 constant PERMIT_TYPEHASH =
         keccak256(
