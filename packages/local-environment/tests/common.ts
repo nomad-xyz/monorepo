@@ -8,7 +8,6 @@ import { Waiter } from "../src/utils";
 import { NomadEnv } from "../src/nomadenv";
 import { NomadDomain } from "../src/domain";
 
-import fs from 'fs';
 import { TransferMessage } from "@nomad-xyz/sdk-bridge";
 import Logger from "bunyan";
 import { HardhatNetwork } from "../src/network";
