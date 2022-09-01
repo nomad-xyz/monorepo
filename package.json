@@ -18,7 +18,7 @@
   "scripts": {
     "compile": "yarn workspaces foreach -Apvt --exclude @nomad-xyz/deploy run compile",
     "bootstrap": "yarn build:accumulator-cli && yarn workspaces foreach -Apvt --exclude @nomad-xyz/deploy run bootstrap",
-    "bootup": "./packages/local-environment/bootup.sh",
+    "bootup": "yarn local-environment run bootup",
     "build": "yarn build:accumulator-cli && yarn workspaces foreach -Apvt --exclude @nomad-xyz/deploy run build",
     "build:accumulator-cli": "cd scripts && ./build-acli.sh",
     "contracts-bridge": "yarn workspace @nomad-xyz/contracts-bridge",
