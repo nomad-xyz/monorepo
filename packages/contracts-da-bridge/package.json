@@ -1,0 +1,67 @@
+{
+  "name": "@nomad-xyz/contracts-da-bridge",
+  "version": "1.0.0",
+  "description": "Nomad bridge with Polygon Avil",
+  "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/contracts-da-bridge#readme",
+  "bugs": {
+    "url": "https://github.com/nomad-xyz/monorepo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nomad-xyz/monorepo.git"
+  },
+  "license": "MIT OR Apache-2.0",
+  "author": "Daniel Gretzke",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "bootstrap": "yarn clean && yarn build",
+    "build": "yarn build:deps && yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=da-bridge forge build",
+    "build:deps": "../../scripts/install-deps.sh",
+    "clean": "hardhat clean && rm -rf dist && rm -rf src",
+    "compile": "hardhat compile",
+    "copy-definitions": "cp src/*.d.ts dist/src",
+    "lint": "solhint contracts/*.sol",
+    "lint:fix": "solhint --fix contracts/*.sol",
+    "prettier": "prettier --write './contracts'",
+    "prepublish": "yarn bootstrap && yarn build",
+    "test:unit": "FOUNDRY_PROFILE=da-bridge-ci forge test",
+    "test:unit:local": "FOUNDRY_PROFILE=da-bridge forge test",
+    "test:static-analyze": "rm -rf node_modules && yarn link:node_modules && slither .",
+    "link:node_modules": "ln -s ../../node_modules",
+    "snapshot": "forge clean && FOUNDRY_PROFILE=da-bridge forge snapshot",
+    "snapshot:check": "forge clean && FOUNDRY_PROFILE=da-bridge forge snapshot --check",
+    "gen-proof": "../../scripts/accumulator-cli",
+    "storage-inspect:check": "../../scripts/storage-inspect.sh check DABridgeRouter",
+    "storage-inspect:generate": "../../scripts/storage-inspect.sh generate DABridgeRouter"
+  },
+  "dependencies": {
+    "@nomad-xyz/contracts-core": "workspace:^",
+    "@nomad-xyz/contracts-router": "workspace:^",
+    "@openzeppelin/contracts": "~3.4.2",
+    "@openzeppelin/contracts-upgradeable": "~3.4.2",
+    "@summa-tx/memview-sol": "^2.0.0"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.1",
+    "@nomiclabs/hardhat-etherscan": "^2.1.2",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@typechain/ethers-v5": "7.2.0",
+    "@typechain/hardhat": "^2.0.1",
+    "@types/node": "^17.0.14",
+    "dotenv": "^10.0.0",
+    "eslint": "^7.20.0",
+    "ethereum-waffle": "^3.2.2",
+    "ethers": "^5.4.4",
+    "hardhat": "^2.6.0",
+    "hardhat-gas-reporter": "^1.0.4",
+    "hardhat-packager": "~1.2.1",
+    "prettier": "^2.2.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.5",
+    "solhint": "^3.3.2",
+    "solhint-plugin-prettier": "^0.0.5",
+    "ts-node": "^10.1.0",
+    "typechain": "^5.0.0",
+    "typescript": "^4.5.5"
+  }
+}
