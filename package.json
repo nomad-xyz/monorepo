@@ -13,7 +13,8 @@
     "packages/sdk-bridge",
     "packages/sdk-govern",
     "packages/indexer",
-    "packages/keymaster"
+    "packages/keymaster",
+    "packages/contracts-da-bridge"
   ],
   "scripts": {
     "compile": "yarn workspaces foreach -Apvt --exclude @nomad-xyz/deploy run compile",
