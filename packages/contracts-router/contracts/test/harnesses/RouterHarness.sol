@@ -5,15 +5,6 @@ import {Router} from "../../Router.sol";
 import "forge-std/console2.sol";
 
 contract RouterHarness is Router {
-    struct HandledMessage {
-        uint32 origin;
-        uint32 nonce;
-        bytes32 sender;
-        bytes message;
-    }
-
-    HandledMessage[] public handledMessages;
-
     function exposed__XAppConnectionClient_initialize(
         address _xAppConnectionManager
     ) external {

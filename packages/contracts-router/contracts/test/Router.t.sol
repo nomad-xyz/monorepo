@@ -19,19 +19,33 @@ contract RouterTest is Test {
         testRouter = "router address";
         // Make sure that Router is not enrolled yet
         assertEq(router.remotes(testDomain), bytes32(0));
-        assertFalse(router.exposed_isRemoteRouter(testDomain, testRouter));
-        vm.expectRevert("!remote");
-        router.exposed_mustHaveRemote(testDomain);
     }
 
     function test_enrollRemoteRouter() public {
-        assertEq(router.remotes(testDomain), bytes32(0));
-        router.enrollRemoteRouter(testDomain, testRouter);
-        assertEq(router.remotes(testDomain), testRouter);
+        uint32 newDomain = 12;
+        bytes32 newRouter = "0xBEEF";
+        assertEq(router.remotes(newDomain), bytes32(0));
+        assertFalse(router.exposed_isRemoteRouter(newDomain, newRouter));
+        router.enrollRemoteRouter(newDomain, newRouter);
+    }
+
+    function test_enrollRemoteRouterFuzzed(uint32 newDomain, bytes32 newRouter)
+        public
+    {
+        assertEq(router.remotes(newDomain), bytes32(0));
+        assertFalse(router.exposed_isRemoteRouter(newDomain, newRouter));
+        router.enrollRemoteRouter(newDomain, newRouter);
     }
 
     function test_enrollRemoteRouterOnlyOwner() public {
         vm.startPrank(vm.addr(1231231231));
+        vm.expectRevert("Ownable: caller is not the owner");
+        router.enrollRemoteRouter(testDomain, testRouter);
+    }
+
+    function test_enrollRemoteRouterOnlyOwnerFuzzed(address user) public {
+        vm.assume(user != address(router.owner()));
+        vm.startPrank(user);
         vm.expectRevert("Ownable: caller is not the owner");
         router.enrollRemoteRouter(testDomain, testRouter);
     }
