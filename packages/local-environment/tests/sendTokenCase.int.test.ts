@@ -11,7 +11,6 @@ import { NomadDomain } from "../src/domain";
 import { expect, assert } from "chai";
 
 describe("Token test", () => {
-    let success:boolean = false
     // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
     const log = bunyan.createLogger({name: 'localenv'});
 
@@ -122,15 +121,10 @@ describe("Token test", () => {
 
         log.info(`Sent tokens B->A done`);
 
-        if (tokenContract.address.toLowerCase() !== token.id.toString().toLowerCase()) {
-            success = true;
-        }
-        expect(success);
-    }) 
-
+        expect(tokenContract.address.toLowerCase()).equal(token.id.toString().toLowerCase());
+    })
+    
     afterAll(async() => {
       await le.down();
-
-        if (!success) process.exit(1);
     })
 })

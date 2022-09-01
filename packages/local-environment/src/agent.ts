@@ -3,9 +3,9 @@ import Docker from "dockerode";
 import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
 import { NomadDomain } from "./domain";
-import { Key } from "./keys/key";
 
 const kathyOn = false;
+const agentsImage = process.env.AGENTS_IMAGE || "gcr.io/nomad-xyz/nomad-agent:prestwich-remove-deploy-gas";
 
 export class Agents {
   updater: Agent;
@@ -32,16 +32,14 @@ export class Agents {
 
   async upAll(agentType?: string) {
     await Promise.all([
-      this.relayer.connect().then(() => this.relayer.start()),
-      this.updater.connect().then(() => this.updater.start()),
-      this.processor.connect().then(() => this.processor.start()),
-      ...(kathyOn ? [this.kathy!.connect().then(() => this.kathy!.start())] : []),
-      ...this.watchers.map((watcher) =>
-        watcher.connect().then(() => watcher.start())
-      ),
+      this.relayer.up(),
+      this.updater.up(),
+      this.processor.up(),
+      ...(kathyOn ? [this.kathy!.up()] : []),
+      ...this.watchers.map((watcher) => watcher.up()),
     ]);
     if (agentType) {
-      switch (agentType!.toLowerCase()) {
+      switch (agentType.toLowerCase()) {
         case "watcher":
           return this.watchers.map((w) => w.stop());
         case "kathy":
@@ -59,6 +57,17 @@ export class Agents {
       ...this.watchers.map((w) => w.down()),
     ]);
   }
+
+  async isAllUp() {
+    const ups = await Promise.all([
+      this.relayer.status(),
+      this.updater.status(),
+      this.processor.status(),
+      ...(kathyOn ? [this.kathy!.status()] : []),
+      ...this.watchers.map((w) => w.status()),
+    ]);
+    return ups.every(a => a);
+  }
 }
 
 export interface Agent {
@@ -68,11 +77,12 @@ export interface Agent {
   connect(): Promise<boolean>;
   start(): Promise<void>;
   stop(): Promise<void>;
+  up(): Promise<void>;
   down(): Promise<void>;
   disconnect(): Promise<void>;
   getEvents(): Promise<EventEmitter>;
   unsubscribe(): void;
-  status(): void;
+  status(): Promise<boolean>;
 }
 
 export enum AgentType {
@@ -103,30 +113,10 @@ function parseAgentType(t: string | AgentType): AgentType {
   }
 }
 
-// export function agentTypeToString(t: string | AgentType): string {
-//   if (typeof t === "string") {
-//     return t.toLowerCase();
-//   } else {
-//     switch (t) {
-//       case AgentType.Updater:
-//         return "updater";
-//       case AgentType.Relayer:
-//         return "relayer";
-//       case AgentType.Processor:
-//         return "processor";
-//       case AgentType.Watcher:
-//         return "watcher";
-//       case AgentType.Kathy:
-//         return "kathy";
-//     }
-//   }
-// }
-
 export class LocalAgent extends DockerizedActor implements Agent {
   agentType: AgentType;
   domain: NomadDomain;
   metricsPort: number;
-  key: Key;
 
   constructor(agentType: AgentType, domain: NomadDomain, metricsPort: number) {
     agentType = parseAgentType(agentType);
@@ -136,10 +126,6 @@ export class LocalAgent extends DockerizedActor implements Agent {
     this.domain = domain;
 
     this.metricsPort = metricsPort;
-
-    this.key = new Key(
-      "1000000000000000000000000000000000000000000000000000000000000005"
-    );
   }
 
   containerName(): string {
@@ -262,11 +248,9 @@ export class LocalAgent extends DockerizedActor implements Agent {
 
     const additionalEnvs = this.getAdditionalEnvs();
 
-    // const additionalEnvs = this.getAdditionalEnvs();
-
     // docker run --name $1_$2_agent --env RUN_ENV=main --restart=always --network="host" --env BASE_CONFIG=$1_config.json -v $(pwd)/../../rust/config:/app/config -d gcr.io/nomad-xyz/nomad-agent ./$2
     return this.docker.createContainer({
-      Image: "gcr.io/nomad-xyz/nomad-agent:prestwich-remove-deploy-gas",
+      Image: agentsImage,
       name,
       Cmd: ["./" + this.agentType],
       Env: [
@@ -299,5 +283,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
     });
   }
 
-  status() {}
+  async status(): Promise<boolean> {
+    return this.isRunning();
+  }
 }

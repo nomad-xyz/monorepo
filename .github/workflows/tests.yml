@@ -6,7 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install Foundry
-        uses: onbjerg/foundry-toolchain@v1
+        uses: foundry-rs/foundry-toolchain@v1 
         with:
           version: nightly
       - run: |
@@ -68,6 +68,8 @@ jobs:
           key: ${{ hashFiles('packages/contracts-router/contracts/**') }}
       - run: |
           yarn build
+      - run: |
+          yarn bootup
       - run: |
           yarn test:unit
       - name: "Check Gas snapshot"

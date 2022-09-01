@@ -7,10 +7,10 @@ import {
   NetworkSpecs,
   ContractConfig,
   ProcessorConfig,
+  Domain,
 } from "@nomad-xyz/configuration";
 import { Key } from "./keys/key";
 import { HardhatNetwork, Network } from "./network";
-import { Domain } from "@nomad-xyz/configuration";
 import { Agents, AgentType } from "./agent";
 import { ethers } from "ethers";
 import { AgentKeys } from "./keys/index";
@@ -60,15 +60,17 @@ export class NomadDomain {
       this.connectedNetworks.push(d);
   }
 
-  get isAgentUp(): boolean {
-    return !!this.agents;
+  async isAgentsUp(): Promise<boolean> {
+    return await this.agents!.isAllUp();
   }
 
+  /*
   networkJsonRpcSigner(
     addressOrIndex: string | number
   ): ethers.providers.JsonRpcSigner {
     return this.network.getJsonRpcSigner(addressOrIndex);
   }
+  */
 
   networkJsonRpcProvider(): ethers.providers.JsonRpcProvider {
     return this.network.getJsonRpcProvider();
@@ -88,7 +90,6 @@ export class NomadDomain {
   }
 
   getAgentSigner(type?: AgentType, watcherNumber = 0): Key {
-    if (type) return this.keys.getAgentKey(type, watcherNumber);
     return this.keys.getAgentKey(type, watcherNumber);
   }
 
@@ -118,14 +119,14 @@ export class NomadDomain {
     await this.network.up();
   }
 
-  async agentsUp(metricsPort?: number, agentType?: string) {
+  async upAgents(metricsPort?: number, agentType?: string) {
     await this.ensureAgents(metricsPort);
     await this.agents!.upAll(agentType);
   }
 
   async up(metricsPort?: number, agentType?: string) {
     await this.networkUp();
-    await this.agentsUp(metricsPort, agentType);
+    await this.upAgents(metricsPort, agentType);
   }
 
   async down() {
@@ -140,7 +141,7 @@ export class NomadDomain {
   }
 
   async downNetwork() {
-    return await this.agents?.downAll();
+    return await this.network.down();
   }
 
   get domain(): Domain {

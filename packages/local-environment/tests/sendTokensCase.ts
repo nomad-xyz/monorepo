@@ -23,10 +23,6 @@ export function parseMessage(message: string): ParsedMessage {
   return { from, sender, nonce, destination, recipient, body };
 }
 
-export function prepMessage(m: ParsedMessage) {
-  let s = '';
-}
-
 (async () => {
 
     // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
@@ -93,13 +89,6 @@ export function prepMessage(m: ParsedMessage) {
     //   tDomain.upAllAgents(9080),
     //   jDomain.upAllAgents(9090),
     // ]);
-
-    
-
-    const sdk = le.bridgeSDK;
-
-    
-
     
     await le.upAgents()
     // await le.upAgents({kathy:false, watcher: false}) // warning: nokathy.

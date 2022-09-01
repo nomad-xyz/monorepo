@@ -40,6 +40,8 @@ if [[ $(pwd) == *"bridge"* ]]; then
   profile=bridge
 elif [[ $(pwd) == *"core"* ]]; then
   profile=core
+elif [[ $(pwd) == *"router"* ]]; then
+  profile=router
 else
   echo "Can't find a Foundry profile for the directory $(pwd)"
   echo "Aborting.."
