@@ -5,6 +5,7 @@ import {BridgeTest} from "./utils/BridgeTest.sol";
 import {BridgeMessage} from "../BridgeMessage.sol";
 import {RevertingToHook} from "./utils/RevertingToHook.sol";
 import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/libs/TypeCasts.sol";
+import {BridgeToken} from "../BridgeToken.sol";
 import "forge-std/console2.sol";
 
 contract BridgeRouterTest is BridgeTest {
@@ -15,6 +16,7 @@ contract BridgeRouterTest is BridgeTest {
     uint32 senderDomain;
 
     bool fastLiquidityEnabled;
+    BridgeToken remoteToken;
 
     RevertingToHook revertingToHook;
 
@@ -25,10 +27,11 @@ contract BridgeRouterTest is BridgeTest {
     function setUp() public override {
         super.setUp();
         tokenSender = bridgeUser;
-        tokenReceiver = addressToBytes32(vm.addr(3040));
+        tokenReceiver = TypeCasts.addressToBytes32(vm.addr(3040));
         senderDomain = localDomain;
         receiverDomain = remoteDomain;
         revertingToHook = new RevertingToHook();
+        remoteToken = BridgeToken(remoteTokenLocalAddress);
     }
 
     function test_dustAmmountIs006() public {

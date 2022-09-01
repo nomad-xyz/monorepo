@@ -4,7 +4,7 @@ pragma solidity 0.7.6;
 import {TokenRegistry} from "../../TokenRegistry.sol";
 
 contract TokenRegistryHarness is TokenRegistry {
-    function deployToken(uint32 domain, bytes32 id)
+    function exposed_deployToken(uint32 domain, bytes32 id)
         external
         returns (address _token)
     {
