@@ -1,0 +1,14 @@
+contracts/test/
+artifacts/
+src/
+cache/
+node_modules/
+hardhat.config.ts
+index.ts
+tsconfig.json
+.env.example
+**/tsconfig.tsbuildinfo
+.eslintrc.json
+.prettierrc
+.solcover.js
+.solhint.json

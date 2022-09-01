@@ -57,4 +57,17 @@ out = 'packages/contracts-bridge/foundry_artifacts'
 ffi = true
 fuzz-runs = 10_000
 
+[profile.da-bridge]
+src = 'packages/contracts-da-bridge/contracts'
+test = 'packages/contracts-da-bridge/contracts/test'
+out = 'packages/contracts-da-bridge/foundry_artifacts'
+ffi = true
+
+[profile.da-bridge-ci]
+src = 'packages/contracts-da-bridge/contracts'
+test = 'packages/contracts-da-bridge/contracts/test'
+out = 'packages/contracts-da-bridge/foundry_artifacts'
+ffi = true
+fuzz-runs = 10_000
+
 
