@@ -3294,8 +3294,10 @@ __metadata:
     eslint: ^7.32.0
     eslint-config-oclif: ^4
     eslint-config-oclif-typescript: ^1.0.2
+    eslint-config-prettier: ^8.3.0
     globby: ^11
     oclif: ^3
+    prettier: ^2.4.1
     shx: ^0.3.3
     ts-node: ^10.2.1
     tslib: ^2.3.1
