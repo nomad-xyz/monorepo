@@ -1,5 +1,5 @@
 {
-  "name": "nomad-cli",
+  "name": "@nomad-xyz/nomad-cli",
   "version": "0.0.0",
   "description": "oclif example Hello World CLI",
   "keywords": [
