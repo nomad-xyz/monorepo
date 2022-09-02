@@ -167,6 +167,32 @@ contract TokenRegistryTest is BridgeTest {
         assertEq(storedAddress, addr);
     }
 
+    function test_oldReprToCurrentRepr() public {
+        uint32 domain = 24;
+        bytes32 id = "yaw";
+        address oldAddress = address(0xBEEF);
+        vm.prank(tokenRegistry.owner());
+        tokenRegistry.enrollCustom(domain, id, oldAddress);
+        address newAddress = address(0xBEEFBEEF);
+        vm.prank(tokenRegistry.owner());
+        tokenRegistry.enrollCustom(domain, id, newAddress);
+        assertEq(tokenRegistry.oldReprToCurrentRepr(oldAddress), newAddress);
+    }
+
+    function test_oldReprToCurrentReprFuzzed(
+        address oldAddress,
+        address newAddress,
+        uint32 domain,
+        bytes32 id
+    ) public {
+        vm.assume(domain != 0);
+        vm.prank(tokenRegistry.owner());
+        tokenRegistry.enrollCustom(domain, id, oldAddress);
+        vm.prank(tokenRegistry.owner());
+        tokenRegistry.enrollCustom(domain, id, newAddress);
+        assertEq(tokenRegistry.oldReprToCurrentRepr(oldAddress), newAddress);
+    }
+
     function test_getTokenIdCanonical() public {
         (uint32 domain, bytes32 id) = tokenRegistry.getTokenId(
             address(localToken)
