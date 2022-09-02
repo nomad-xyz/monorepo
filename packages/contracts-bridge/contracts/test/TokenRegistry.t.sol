@@ -126,4 +126,44 @@ contract TokenRegistryTest is BridgeTest {
             remoteTokenRemoteAddress
         );
     }
+
+    function test_enrollCustom() public {
+        uint32 newDomain = 24;
+        bytes32 newId = "yaw";
+        address customAddress = address(0xBEEF);
+        vm.prank(tokenRegistry.owner());
+        tokenRegistry.enrollCustom(newDomain, newId, customAddress);
+        (uint32 storedDomain, bytes32 storedId) = tokenRegistry
+            .getCanonicalTokenId(customAddress);
+        address storedAddress = tokenRegistry.getRepresentationAddress(
+            newDomain,
+            newId
+        );
+        assertEq(uint256(storedDomain), uint256(newDomain));
+        assertEq(storedId, newId);
+        assertEq(storedAddress, customAddress);
+    }
+
+    function test_enrollCustomOnlyOwner() public {
+        uint32 newDomain = 24;
+        bytes32 newId = "yaw";
+        address customAddress = address(0xBEEF);
+        vm.expectRevert("Ownable: caller is not the owner");
+        tokenRegistry.enrollCustom(newDomain, newId, customAddress);
+    }
+
+    function test_enrollCustomFuzzed(
+        uint32 dom,
+        bytes32 id,
+        address addr
+    ) public {
+        vm.prank(tokenRegistry.owner());
+        tokenRegistry.enrollCustom(dom, id, addr);
+        (uint32 storedDomain, bytes32 storedId) = tokenRegistry
+            .getCanonicalTokenId(addr);
+        address storedAddress = tokenRegistry.getRepresentationAddress(dom, id);
+        assertEq(uint256(storedDomain), uint256(dom));
+        assertEq(storedId, id);
+        assertEq(storedAddress, addr);
+    }
 }
