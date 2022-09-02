@@ -21,12 +21,13 @@
   ],
   "scripts": {
     "build": "shx rm -rf dist && tsc -b",
+    "cli": "./bin/run",
+    "generate:command": "oclif generate:command",
     "lint": "eslint . --ext .ts --config .eslintrc",
     "prepack": "yarn build && oclif manifest && oclif readme",
     "postpack": "shx rm -f oclif.manifest.json",
     "test": "echo 'Need to update nomad-cli tests to use jest instead of mocha'",
     "posttest": "yarn lint",
-    "cli": "./bin/run",
     "version": "oclif readme && git add README.md"
   },
   "dependencies": {
