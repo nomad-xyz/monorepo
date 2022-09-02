@@ -1,14 +1,16 @@
 {
+  "extends": "../tsconfig.package.json",
   "compilerOptions": {
-    "declaration": true,
-    "importHelpers": true,
-    "module": "commonjs",
     "outDir": "dist",
     "rootDir": "src",
-    "strict": true,
-    "target": "es2019"
   },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/tmp.ts"
+  ],
   "include": [
-    "src/**/*"
-  ]
+    "src/**/*.ts",
+  ],
+  "references": []
 }
