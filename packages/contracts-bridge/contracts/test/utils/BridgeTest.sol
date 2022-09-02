@@ -105,6 +105,10 @@ contract BridgeTest is Test {
         bridgeRouter.enrollRemoteRouter(remoteDomain, remoteBridgeRouter);
     }
 
+    /// @notice Create the representation of a remote token
+    /// @param remoteDomain The remote domain
+    /// @param remoteAddress The id of the remote token, which also happens
+    /// to be the address of the token on that domain
     function createRemoteToken(uint32 domain, bytes32 remoteAddress)
         public
         returns (address)

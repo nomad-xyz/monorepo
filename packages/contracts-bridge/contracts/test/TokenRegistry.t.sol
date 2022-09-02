@@ -166,4 +166,30 @@ contract TokenRegistryTest is BridgeTest {
         assertEq(storedId, id);
         assertEq(storedAddress, addr);
     }
+
+    function test_getTokenIdCanonical() public {
+        (uint32 domain, bytes32 id) = tokenRegistry.getTokenId(
+            address(localToken)
+        );
+        assertEq(uint256(domain), localDomain);
+        assertEq(id, TypeCasts.addressToBytes32(address(localToken)));
+    }
+
+    function test_getTokenIdRepr() public {
+        (uint32 domain, bytes32 id) = tokenRegistry.getTokenId(
+            address(remoteTokenLocalAddress)
+        );
+        assertEq(uint256(domain), remoteDomain);
+        assertEq(id, remoteTokenRemoteAddress);
+    }
+
+    function test_getTokenIdRerprFuzzed(uint32 dom, bytes32 id) public {
+        // Domain can be 0?
+        vm.assume(dom != localDomain && dom != 0);
+        vm.assume(id != remoteTokenRemoteAddress && id != bytes32(0));
+        address loc = createRemoteToken(dom, id);
+        (uint32 storedDomain, bytes32 storedId) = tokenRegistry.getTokenId(loc);
+        assertEq(uint256(storedDomain), dom);
+        assertEq(storedId, id);
+    }
 }
