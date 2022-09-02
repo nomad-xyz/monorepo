@@ -1,17 +1,17 @@
 {
   "extends": "../tsconfig.package.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "composite": true
+    "outDir": "dist",
+    "rootDir": "src",
+    "lib": ["es2021", "dom"]
   },
   "exclude": [
-    "./node_modules",
-    "./dist",
-    "./src/tmp.ts"
+    "node_modules",
+    "dist",
+    "src/tmp.ts"
   ],
   "include": [
-    "src/*.ts"
+    "src/**/*.ts"
   ],
   "references": [
     { "path": "../sdk" },

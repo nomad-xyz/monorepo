@@ -1,22 +1,18 @@
 {
   "extends": "../tsconfig.package.json",
   "compilerOptions": {
-    "outDir": "./dist/",
-    "rootDir": "./src/"
+    "outDir": "dist",
+    "rootDir": "src"
   },
   "exclude": [
-    "./node_modules/",
-    "./dist/",
-    "./config/",
-    "./scripts/",
-    "./tmp.ts"
+    "node_modules/",
+    "dist",
+    "config",
+    "scripts",
+    "tmp.ts"
   ],
   "include": [
-    "./src/*.ts",
-    "./src/core/*.ts",
-    "./src/bridge/*.ts",
-    "./src/verification/*.ts",
-    "./src/incremental/*.ts"
+    "src/**/*.ts",
   ],
   "references": [
     { "path": "../contracts-core" },

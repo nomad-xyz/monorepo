@@ -4,13 +4,17 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.13.2"
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1 
         with:
           version: nightly
       - run: |
-          yarn install --immutable-cache
+          yarn install --immutable --immutable-cache
       - run: |
           yarn lint
       - name: Get latest accumulator-cli version
