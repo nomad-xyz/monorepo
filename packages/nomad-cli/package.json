@@ -1,0 +1,69 @@
+{
+  "name": "@nomad-xyz/nomad-cli",
+  "version": "0.0.0",
+  "description": "oclif example Hello World CLI",
+  "keywords": [
+    "oclif"
+  ],
+  "homepage": "https://github.com/nomad-xyz/monorepo",
+  "bugs": "https://github.com/nomad-xyz/monorepo/issues",
+  "repository": "nomad-xyz/monorepo",
+  "license": "MIT",
+  "author": "Imti Majeed @Imti",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": "./bin/run",
+  "files": [
+    "/bin",
+    "/dist",
+    "/npm-shrinkwrap.json",
+    "/oclif.manifest.json"
+  ],
+  "scripts": {
+    "build": "shx rm -rf dist && tsc -b",
+    "cli": "./bin/run",
+    "generate:command": "oclif generate:command",
+    "lint": "eslint . --ext .ts --config .eslintrc",
+    "prepack": "yarn build && oclif manifest && oclif readme",
+    "postpack": "shx rm -f oclif.manifest.json",
+    "test": "echo 'Need to update nomad-cli tests to use jest instead of mocha'",
+    "posttest": "yarn lint",
+    "version": "oclif readme && git add README.md"
+  },
+  "dependencies": {
+    "@oclif/core": "^1.13.10",
+    "@oclif/plugin-help": "^5",
+    "@oclif/plugin-plugins": "^2.0.1",
+    "@oclif/test": "^2.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^16.9.4",
+    "eslint": "^7.32.0",
+    "eslint-config-oclif": "^4",
+    "eslint-config-oclif-typescript": "^1.0.2",
+    "globby": "^11",
+    "oclif": "^3",
+    "shx": "^0.3.3",
+    "ts-node": "^10.2.1",
+    "tslib": "^2.3.1",
+    "typescript": "^4.4.3"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "oclif": {
+    "bin": "nomad-cli",
+    "dirname": "nomad-cli",
+    "commands": "./dist/commands",
+    "plugins": [
+      "@oclif/plugin-help",
+      "@oclif/plugin-plugins"
+    ],
+    "topicSeparator": " ",
+    "topics": {
+      "hello": {
+        "description": "Say hello to the world and others"
+      }
+    }
+  }
+}
