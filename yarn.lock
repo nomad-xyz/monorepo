@@ -2068,7 +2068,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ethersproject/providers@npm:5.6.8, @ethersproject/providers@npm:^5.6.8":
+"@ethersproject/providers@npm:5.6.8":
   version: 5.6.8
   resolution: "@ethersproject/providers@npm:5.6.8"
   dependencies:
@@ -3181,31 +3181,6 @@ __metadata:
     type-graphql: ^1.1.1
     typegraphql-prisma: ^0.20.3
     typescript: ^4.4.3
-  languageName: unknown
-  linkType: soft
-
-"@nomad-xyz/keymaster@workspace:packages/keymaster":
-  version: 0.0.0-use.local
-  resolution: "@nomad-xyz/keymaster@workspace:packages/keymaster"
-  dependencies:
-    "@ethersproject/providers": ^5.6.8
-    "@types/asn1": ^0.2.0
-    "@types/bn.js": ^5.1.0
-    "@types/bunyan": ^1.8.8
-    "@types/express": ^4.17.13
-    asn1.js: ^5.4.1
-    asn1js: ^3.0.5
-    aws-sdk: ^2.1148.0
-    bunyan: ^1.8.15
-    decimal.js: ^10.3.1
-    dotenv: ^16.0.1
-    ethers: ^5.6.9
-    express: ^4.18.1
-    keccak: ^3.0.2
-    prom-client: ^14.0.1
-    secp256k1: ^4.0.3
-    ts-node: ^10.8.0
-    typescript: ^4.7.2
   languageName: unknown
   linkType: soft
 
@@ -4608,15 +4583,6 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: 590b7580570534a640510c071e09074cf63b5958b237a728f94322567350aea4d239f8a9d897a12b15c856b992ee4d7907e9812bb079886af2c00714e7fb3f60
-  languageName: node
-  linkType: hard
-
-"@types/asn1@npm:^0.2.0":
-  version: 0.2.0
-  resolution: "@types/asn1@npm:0.2.0"
-  dependencies:
-    "@types/node": "*"
-  checksum: aeaa4f6871009a00db75e2a93c10d86407aab4d1e07c57ed0a1c8f721a9a20eeace4f67f6d1ae14351a5653fde2cadddef14e8645fb4bb57a8726330717b8d74
   languageName: node
   linkType: hard
 
@@ -6558,7 +6524,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"asn1.js@npm:^5.2.0, asn1.js@npm:^5.4.1":
+"asn1.js@npm:^5.2.0":
   version: 5.4.1
   resolution: "asn1.js@npm:5.4.1"
   dependencies:
@@ -6576,17 +6542,6 @@ __metadata:
   dependencies:
     safer-buffer: ~2.1.0
   checksum: 39f2ae343b03c15ad4f238ba561e626602a3de8d94ae536c46a4a93e69578826305366dc09fbb9b56aec39b4982a463682f259c38e59f6fa380cd72cd61e493d
-  languageName: node
-  linkType: hard
-
-"asn1js@npm:^3.0.5":
-  version: 3.0.5
-  resolution: "asn1js@npm:3.0.5"
-  dependencies:
-    pvtsutils: ^1.3.2
-    pvutils: ^1.1.3
-    tslib: ^2.4.0
-  checksum: 3b6af1bbadd5762ef8ead5daf2f6bda1bc9e23bc825c4dcc996aa1f9521ad7390a64028565d95d98090d69c8431f004c71cccb866004759169d7c203cf9075eb
   languageName: node
   linkType: hard
 
@@ -6770,24 +6725,6 @@ __metadata:
     uuid: 8.0.0
     xml2js: 0.4.19
   checksum: da4cae7da28b218dfa67398e5a63acb894b1636337e2842f6e0800bad6eb5fc692d0b703dc84f67fdc9f1d59ee9f82f4ccc9d71fe8fb6a49a8292697ab77b92c
-  languageName: node
-  linkType: hard
-
-"aws-sdk@npm:^2.1148.0":
-  version: 2.1186.0
-  resolution: "aws-sdk@npm:2.1186.0"
-  dependencies:
-    buffer: 4.9.2
-    events: 1.1.1
-    ieee754: 1.1.13
-    jmespath: 0.16.0
-    querystring: 0.2.0
-    sax: 1.2.1
-    url: 0.10.3
-    util: ^0.12.4
-    uuid: 8.0.0
-    xml2js: 0.4.19
-  checksum: cce75b22e1d526b595d37df7902f276d23d76f11bf0d7554a39b7a96af763ad607cbe4ca5921657c60536670208b2104367fecf9c38be523ef0235e49c9a4e34
   languageName: node
   linkType: hard
 
@@ -9838,13 +9775,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"decimal.js@npm:^10.3.1":
-  version: 10.3.1
-  resolution: "decimal.js@npm:10.3.1"
-  checksum: 0351ac9f05fe050f23227aa6a4573bee2d58fa7378fcf28d969a8c789525032effb488a90320fd3fe86a66e17b4bc507d811b15eada5b7f0e7ec5d2af4c24a59
-  languageName: node
-  linkType: hard
-
 "decode-uri-component@npm:^0.2.0":
   version: 0.2.0
   resolution: "decode-uri-component@npm:0.2.0"
@@ -10254,7 +10184,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dotenv@npm:16.0.1, dotenv@npm:^16.0.1":
+"dotenv@npm:16.0.1":
   version: 16.0.1
   resolution: "dotenv@npm:16.0.1"
   checksum: f459ffce07b977b7f15d8cc4ee69cdff77d4dd8c5dc8c85d2d485ee84655352c2415f9dd09d42b5b5985ced3be186130871b34e2f3e2569ebc72fbc2e8096792
@@ -11626,7 +11556,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethers@npm:^5.0.0, ethers@npm:^5.0.1, ethers@npm:^5.0.2, ethers@npm:^5.4.4, ethers@npm:^5.4.6, ethers@npm:^5.5.1, ethers@npm:^5.5.2, ethers@npm:^5.6.8, ethers@npm:^5.6.9":
+"ethers@npm:^5.0.0, ethers@npm:^5.0.1, ethers@npm:^5.0.2, ethers@npm:^5.4.4, ethers@npm:^5.4.6, ethers@npm:^5.5.1, ethers@npm:^5.5.2, ethers@npm:^5.6.8":
   version: 5.6.9
   resolution: "ethers@npm:5.6.9"
   dependencies:
@@ -11855,7 +11785,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express@npm:^4.14.0, express@npm:^4.17.1, express@npm:^4.17.2, express@npm:^4.18.1":
+"express@npm:^4.14.0, express@npm:^4.17.1, express@npm:^4.17.2":
   version: 4.18.1
   resolution: "express@npm:4.18.1"
   dependencies:
@@ -19662,7 +19592,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prom-client@npm:^14.0.0, prom-client@npm:^14.0.1":
+"prom-client@npm:^14.0.0":
   version: 14.0.1
   resolution: "prom-client@npm:14.0.1"
   dependencies:
@@ -19912,22 +19842,6 @@ __metadata:
   version: 2.1.1
   resolution: "punycode@npm:2.1.1"
   checksum: 823bf443c6dd14f669984dea25757b37993f67e8d94698996064035edd43bed8a5a17a9f12e439c2b35df1078c6bec05a6c86e336209eb1061e8025c481168e8
-  languageName: node
-  linkType: hard
-
-"pvtsutils@npm:^1.3.2":
-  version: 1.3.2
-  resolution: "pvtsutils@npm:1.3.2"
-  dependencies:
-    tslib: ^2.4.0
-  checksum: 9b8155611363e2f40276879f2454e60204b45be0cd0482f9373f369308a2e9c76d5d74cdf661a3f5aae8022d75ea159eb0ba38ee78fc782ee3051e4722db98d0
-  languageName: node
-  linkType: hard
-
-"pvutils@npm:^1.1.3":
-  version: 1.1.3
-  resolution: "pvutils@npm:1.1.3"
-  checksum: 2ee26a9e5176c348977d6ec00d8ee80bff62f51743b1c5fe8abeeb4c5d29d9959cdfe0ce146707a9e6801bce88190fed3002d720b072dc87d031c692820b44c9
   languageName: node
   linkType: hard
 
@@ -21206,7 +21120,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"secp256k1@npm:^4.0.1, secp256k1@npm:^4.0.2, secp256k1@npm:^4.0.3":
+"secp256k1@npm:^4.0.1, secp256k1@npm:^4.0.2":
   version: 4.0.3
   resolution: "secp256k1@npm:4.0.3"
   dependencies:
@@ -23273,7 +23187,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-node@npm:^10.1.0, ts-node@npm:^10.2.1, ts-node@npm:^10.4.0, ts-node@npm:^10.7.0, ts-node@npm:^10.8.0, ts-node@npm:^10.9.1":
+"ts-node@npm:^10.1.0, ts-node@npm:^10.2.1, ts-node@npm:^10.4.0, ts-node@npm:^10.7.0, ts-node@npm:^10.9.1":
   version: 10.9.1
   resolution: "ts-node@npm:10.9.1"
   dependencies:
@@ -23660,7 +23574,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^4.4.3, typescript@npm:^4.5.5, typescript@npm:^4.7.2, typescript@npm:^4.7.4":
+"typescript@npm:^4.4.3, typescript@npm:^4.5.5, typescript@npm:^4.7.4":
   version: 4.7.4
   resolution: "typescript@npm:4.7.4"
   bin:
@@ -23690,7 +23604,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^4.4.3#~builtin<compat/typescript>, typescript@patch:typescript@^4.5.5#~builtin<compat/typescript>, typescript@patch:typescript@^4.7.2#~builtin<compat/typescript>, typescript@patch:typescript@^4.7.4#~builtin<compat/typescript>":
+"typescript@patch:typescript@^4.4.3#~builtin<compat/typescript>, typescript@patch:typescript@^4.5.5#~builtin<compat/typescript>, typescript@patch:typescript@^4.7.4#~builtin<compat/typescript>":
   version: 4.7.4
   resolution: "typescript@patch:typescript@npm%3A4.7.4#~builtin<compat/typescript>::version=4.7.4&hash=bda367"
   bin:
