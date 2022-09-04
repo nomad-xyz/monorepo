@@ -19,7 +19,6 @@ body:
         - contracts-router
         - deploy
         - indexer
-        - keymaster
         - local-environment
         - multi-provider
         - sdk-bridge

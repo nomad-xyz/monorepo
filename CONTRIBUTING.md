@@ -38,7 +38,6 @@ Published packages:
 
 Tooling and other unpublished packages:
 
-- `keymaster`
 - `local-enviroment`
 - `deploy`
 - `indexer`
