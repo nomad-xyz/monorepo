@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity 0.7.6;
 
+// Local imports
 import {BridgeTest} from "./utils/BridgeTest.sol";
+import {BridgeMessage} from "../BridgeMessage.sol";
 
+// External imports
 import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -10,6 +13,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract TokenRegistryTest is BridgeTest {
     using TypedMemView for bytes;
     using TypedMemView for bytes29;
+    using BridgeMessage for bytes29;
 
     function setUp() public override {
         super.setUp();
@@ -361,5 +365,81 @@ contract TokenRegistryTest is BridgeTest {
         );
         address local = createRemoteToken(newRemoteDomain, newRemoteToken);
         assertFalse(tokenRegistry.isLocalOrigin(local));
+    }
+
+    function test_setRepresentationToCanonical() public {
+        uint32 domain = 1;
+        bytes32 id = "id";
+        address repr = address(0xBEEF);
+        (uint32 storedDomain, bytes32 storedId) = tokenRegistry
+            .representationToCanonical(repr);
+        assertEq(uint256(storedDomain), 0);
+        assertEq(storedId, bytes32(0));
+        tokenRegistry.exposed_setRepresentationToCanonical(domain, id, repr);
+        (storedDomain, storedId) = tokenRegistry.representationToCanonical(
+            repr
+        );
+        assertEq(uint256(storedDomain), domain);
+        assertEq(storedId, id);
+    }
+
+    function test_setRepresentationToCanonicalFuzzed(
+        uint32 domain,
+        bytes32 id,
+        address repr
+    ) public {
+        vm.assume(
+            domain != remoteDomain && domain != localDomain && domain != 0
+        );
+        vm.assume(
+            repr != address(localToken) && repr != remoteTokenLocalAddress
+        );
+        (uint32 storedDomain, bytes32 storedId) = tokenRegistry
+            .representationToCanonical(repr);
+        assertEq(uint256(storedDomain), 0);
+        assertEq(storedId, bytes32(0));
+        tokenRegistry.exposed_setRepresentationToCanonical(domain, id, repr);
+        (storedDomain, storedId) = tokenRegistry.representationToCanonical(
+            repr
+        );
+        assertEq(uint256(storedDomain), domain);
+        assertEq(storedId, id);
+    }
+
+    function test_setCanonicalToRepresentation() public {
+        uint32 domain = 1;
+        bytes32 id = "id";
+        address repr = address(0xBEEF);
+        bytes29 tokenId = BridgeMessage.formatTokenId(domain, id);
+        bytes32 tokenIdHash = tokenId.keccak();
+        address storedRepr = tokenRegistry.canonicalToRepresentation(
+            tokenIdHash
+        );
+        assertEq(storedRepr, address(0));
+        tokenRegistry.exposed_setCanonicalToRepresentation(domain, id, repr);
+        storedRepr = tokenRegistry.canonicalToRepresentation(tokenIdHash);
+        assertEq(storedRepr, repr);
+    }
+
+    function test_setCanonicalToRepresentationFuzzed(
+        uint32 domain,
+        bytes32 id,
+        address repr
+    ) public {
+        vm.assume(
+            domain != remoteDomain && domain != localDomain && domain != 0
+        );
+        vm.assume(
+            repr != address(localToken) && repr != remoteTokenLocalAddress
+        );
+        bytes29 tokenId = BridgeMessage.formatTokenId(domain, id);
+        bytes32 tokenIdHash = tokenId.keccak();
+        address storedRepr = tokenRegistry.canonicalToRepresentation(
+            tokenIdHash
+        );
+        assertEq(storedRepr, address(0));
+        tokenRegistry.exposed_setCanonicalToRepresentation(domain, id, repr);
+        storedRepr = tokenRegistry.canonicalToRepresentation(tokenIdHash);
+        assertEq(storedRepr, repr);
     }
 }
