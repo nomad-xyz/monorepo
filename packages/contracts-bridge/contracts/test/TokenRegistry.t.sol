@@ -336,7 +336,7 @@ contract TokenRegistryTest is BridgeTest {
         tokenRegistry.mustHaveLocalToken(newRemoteDomain, newRemoteToken);
     }
 
-    function test_isLocalOriginLocaltoken() public {
+    function test_isLocalOriginLocaltoken() public view {
         assert(tokenRegistry.isLocalOrigin(address(localToken)));
     }
 
@@ -510,6 +510,8 @@ contract TokenRegistryTest is BridgeTest {
         }
         (string memory storedName, string memory storedSymbol) = tokenRegistry
             .exposed_defaultDetails(domain, id);
+        assertEq(storedName, name);
+        assertEq(storedSymbol, symbol);
     }
 
     function test_defaultDetailsFuzzed(uint32 domain, bytes32 id) public {
@@ -528,6 +530,8 @@ contract TokenRegistryTest is BridgeTest {
         }
         (string memory storedName, string memory storedSymbol) = tokenRegistry
             .exposed_defaultDetails(domain, id);
+        assertEq(storedName, name);
+        assertEq(storedSymbol, symbol);
     }
 
     function test_localDomain() public {
@@ -537,11 +541,10 @@ contract TokenRegistryTest is BridgeTest {
     // Test that renounceOwnership is a noop
     function test_renounceOwnership() public {
         vm.startPrank(tokenRegistry.owner());
-        uint256 gasBefore = gasleft();
         tokenRegistry.renounceOwnership();
         uint256 gasAfter = gasleft();
         // hardcode the gas that is consumed from calling an empty function
         // any change to the function will cause this test to fail
-        assertEq(gasAfter, 9223372036854743384);
+        assertEq(gasAfter, 9223372036854743394);
     }
 }
