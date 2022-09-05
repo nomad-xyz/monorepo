@@ -5,6 +5,7 @@ import {BridgeTest} from "./utils/BridgeTest.sol";
 
 import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract TokenRegistryTest is BridgeTest {
     using TypedMemView for bytes;
@@ -90,10 +91,7 @@ contract TokenRegistryTest is BridgeTest {
         // It's the second contract that is been deployed by tokenRegistry
         // It deploys a bridgeToken during setUp() of BridgeTest
         vm.expectRevert("Ownable: caller is not the owner");
-        address addr = tokenRegistry.ensureLocalToken(
-            remoteDomain,
-            remoteTokenRemoteAddress
-        );
+        tokenRegistry.ensureLocalToken(remoteDomain, remoteTokenRemoteAddress);
     }
 
     uint256 iterations;
@@ -101,6 +99,14 @@ contract TokenRegistryTest is BridgeTest {
     function test_ensureLocalTokenDeployFuzzed(uint32 domain, bytes32 id)
         public
     {
+        if (domain == localDomain) {
+            vm.prank(tokenRegistry.owner());
+            assertEq(
+                tokenRegistry.ensureLocalToken(domain, id),
+                TypeCasts.bytes32ToAddress(id)
+            );
+            return;
+        }
         // It's the second contract that is been deployed by tokenRegistry
         // It deploys a bridgeToken during setUp() of BridgeTest
         address calculated = computeCreateAddress(
@@ -121,10 +127,7 @@ contract TokenRegistryTest is BridgeTest {
         vm.assume(user != tokenRegistry.owner());
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(user);
-        address addr = tokenRegistry.ensureLocalToken(
-            remoteDomain,
-            remoteTokenRemoteAddress
-        );
+        tokenRegistry.ensureLocalToken(remoteDomain, remoteTokenRemoteAddress);
     }
 
     function test_enrollCustom() public {
@@ -172,10 +175,15 @@ contract TokenRegistryTest is BridgeTest {
         bytes32 id = "yaw";
         address oldAddress = address(0xBEEF);
         vm.prank(tokenRegistry.owner());
+        // Enroll first local custom token of a remote asset
         tokenRegistry.enrollCustom(domain, id, oldAddress);
         address newAddress = address(0xBEEFBEEF);
         vm.prank(tokenRegistry.owner());
+        // After some time, the owner wants to enroll a  new implementation of the local custom token
+        // for the same remote asset
         tokenRegistry.enrollCustom(domain, id, newAddress);
+        // We make sure that a user can retrieve the new implementation of the remote asset, using the old
+        // implementation as a key
         assertEq(tokenRegistry.oldReprToCurrentRepr(oldAddress), newAddress);
     }
 
@@ -217,5 +225,141 @@ contract TokenRegistryTest is BridgeTest {
         (uint32 storedDomain, bytes32 storedId) = tokenRegistry.getTokenId(loc);
         assertEq(uint256(storedDomain), dom);
         assertEq(storedId, id);
+    }
+
+    function test_getLocalAddressLocalAsset() public {
+        assertEq(
+            tokenRegistry.getLocalAddress(localDomain, address(localToken)),
+            address(localToken)
+        );
+    }
+
+    function test_getLocalAddressRemoteAssetRegistered() public {
+        assertEq(
+            tokenRegistry.getLocalAddress(
+                remoteDomain,
+                remoteTokenRemoteAddress
+            ),
+            remoteTokenLocalAddress
+        );
+    }
+
+    function test_getLocalAddressRemoteAssetRegisteredFuzzed(
+        uint32 newRemoteDomain,
+        bytes32 newRemoteToken
+    ) public {
+        vm.assume(
+            newRemoteDomain != remoteDomain &&
+                newRemoteDomain != localDomain &&
+                newRemoteDomain != 0
+        );
+        address local = createRemoteToken(newRemoteDomain, newRemoteToken);
+        assertEq(
+            tokenRegistry.getLocalAddress(newRemoteDomain, newRemoteToken),
+            local
+        );
+    }
+
+    function test_getLocalAddressRemoteAssetUnregistered() public {
+        uint32 newRemoteDomain = 123;
+        bytes32 newRemoteToken = "lol no";
+        assertEq(
+            tokenRegistry.getLocalAddress(newRemoteDomain, newRemoteToken),
+            address(0)
+        );
+    }
+
+    function test_getLocalAddressRemoteAssetUnregisteredFuzzed(
+        uint32 newRemoteDomain,
+        bytes32 newRemoteToken
+    ) public {
+        // we don't want to test against a known REGISTERED remote domain
+        vm.assume(
+            newRemoteDomain != remoteDomain &&
+                newRemoteDomain != localDomain &&
+                newRemoteDomain != 0
+        );
+        assertEq(
+            tokenRegistry.getLocalAddress(newRemoteDomain, newRemoteToken),
+            address(0)
+        );
+    }
+
+    function test_getLocalAddressRemoteAssetRegisteredFail() public {
+        // It will search for a remote token for domain `remoteDomain` and id `remoteTokenLocalAddress`
+        // The correct id of the existing token is `remoteTokenRemoteAddress`
+        assertEq(
+            tokenRegistry.getLocalAddress(
+                remoteDomain,
+                remoteTokenLocalAddress
+            ),
+            address(0)
+        );
+    }
+
+    function test_mustHaveLocalTokenRemoteToken() public {
+        require(
+            tokenRegistry.mustHaveLocalToken(
+                remoteDomain,
+                remoteTokenRemoteAddress
+            ) == IERC20(remoteTokenLocalAddress)
+        );
+    }
+
+    function test_mustHaveLocalTokenRemoteTokenFuzzed(
+        uint32 newRemoteDomain,
+        bytes32 newRemoteToken
+    ) public {
+        vm.assume(
+            newRemoteDomain != remoteDomain &&
+                newRemoteDomain != localDomain &&
+                newRemoteDomain != 0
+        );
+        address local = createRemoteToken(newRemoteDomain, newRemoteToken);
+        require(
+            tokenRegistry.mustHaveLocalToken(newRemoteDomain, newRemoteToken) ==
+                IERC20(local)
+        );
+    }
+
+    function test_mustHaveLocalTokenRemoteAssetUnregistered() public {
+        uint32 newRemoteDomain = 123;
+        bytes32 newRemoteToken = "lol no";
+        vm.expectRevert("!token");
+        tokenRegistry.mustHaveLocalToken(newRemoteDomain, newRemoteToken);
+    }
+
+    function test_mustHaveLocalTokenRemoteAssetUnregisteredFuzzed(
+        uint32 newRemoteDomain,
+        bytes32 newRemoteToken
+    ) public {
+        vm.assume(
+            newRemoteDomain != remoteDomain &&
+                newRemoteDomain != localDomain &&
+                newRemoteDomain != 0
+        );
+        vm.expectRevert("!token");
+        tokenRegistry.mustHaveLocalToken(newRemoteDomain, newRemoteToken);
+    }
+
+    function test_isLocalOriginLocaltoken() public {
+        assert(tokenRegistry.isLocalOrigin(address(localToken)));
+    }
+
+    function test_isLocalOriginRemoteToken() public {
+        assertFalse(tokenRegistry.isLocalOrigin(remoteTokenLocalAddress));
+    }
+
+    function test_isLocalOriginRemoteTokenFuzzed(
+        uint32 newRemoteDomain,
+        bytes32 newRemoteToken
+    ) public {
+        vm.assume(
+            newRemoteDomain != remoteDomain &&
+                newRemoteDomain != localDomain &&
+                newRemoteDomain != 0
+        );
+        address local = createRemoteToken(newRemoteDomain, newRemoteToken);
+        assertFalse(tokenRegistry.isLocalOrigin(local));
     }
 }
