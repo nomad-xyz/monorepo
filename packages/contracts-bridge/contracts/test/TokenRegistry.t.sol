@@ -4,6 +4,8 @@ pragma solidity 0.7.6;
 // Local imports
 import {BridgeTest} from "./utils/BridgeTest.sol";
 import {BridgeMessage} from "../BridgeMessage.sol";
+import {BridgeToken} from "../BridgeToken.sol";
+import {Encoding} from "../Encoding.sol";
 
 // External imports
 import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
@@ -252,11 +254,7 @@ contract TokenRegistryTest is BridgeTest {
         uint32 newRemoteDomain,
         bytes32 newRemoteToken
     ) public {
-        vm.assume(
-            newRemoteDomain != remoteDomain &&
-                newRemoteDomain != localDomain &&
-                newRemoteDomain != 0
-        );
+        vm.assume(newRemoteDomain != localDomain && newRemoteDomain != 0);
         address local = createRemoteToken(newRemoteDomain, newRemoteToken);
         assertEq(
             tokenRegistry.getLocalAddress(newRemoteDomain, newRemoteToken),
@@ -278,11 +276,7 @@ contract TokenRegistryTest is BridgeTest {
         bytes32 newRemoteToken
     ) public {
         // we don't want to test against a known REGISTERED remote domain
-        vm.assume(
-            newRemoteDomain != remoteDomain &&
-                newRemoteDomain != localDomain &&
-                newRemoteDomain != 0
-        );
+        vm.assume(newRemoteDomain != localDomain && newRemoteDomain != 0);
         assertEq(
             tokenRegistry.getLocalAddress(newRemoteDomain, newRemoteToken),
             address(0)
@@ -301,7 +295,7 @@ contract TokenRegistryTest is BridgeTest {
         );
     }
 
-    function test_mustHaveLocalTokenRemoteToken() public {
+    function test_mustHaveLocalTokenRemoteToken() public view {
         require(
             tokenRegistry.mustHaveLocalToken(
                 remoteDomain,
@@ -337,11 +331,7 @@ contract TokenRegistryTest is BridgeTest {
         uint32 newRemoteDomain,
         bytes32 newRemoteToken
     ) public {
-        vm.assume(
-            newRemoteDomain != remoteDomain &&
-                newRemoteDomain != localDomain &&
-                newRemoteDomain != 0
-        );
+        vm.assume(newRemoteDomain != localDomain && newRemoteDomain != 0);
         vm.expectRevert("!token");
         tokenRegistry.mustHaveLocalToken(newRemoteDomain, newRemoteToken);
     }
@@ -388,9 +378,7 @@ contract TokenRegistryTest is BridgeTest {
         bytes32 id,
         address repr
     ) public {
-        vm.assume(
-            domain != remoteDomain && domain != localDomain && domain != 0
-        );
+        vm.assume(domain != localDomain && domain != 0);
         vm.assume(
             repr != address(localToken) && repr != remoteTokenLocalAddress
         );
@@ -426,9 +414,7 @@ contract TokenRegistryTest is BridgeTest {
         bytes32 id,
         address repr
     ) public {
-        vm.assume(
-            domain != remoteDomain && domain != localDomain && domain != 0
-        );
+        vm.assume(domain != localDomain && domain != 0);
         vm.assume(
             repr != address(localToken) && repr != remoteTokenLocalAddress
         );
@@ -441,5 +427,121 @@ contract TokenRegistryTest is BridgeTest {
         tokenRegistry.exposed_setCanonicalToRepresentation(domain, id, repr);
         storedRepr = tokenRegistry.canonicalToRepresentation(tokenIdHash);
         assertEq(storedRepr, repr);
+    }
+
+    // We can reuse the storage variable `iterations` because all tests run against the SAME state that is created
+    // by `setUp()`. Thus, the variable is set to 0 and then it's incremented in different states for every test, in
+    // isolation.
+    function test_exposedDeployToken() public {
+        uint32 domain = 99999;
+        bytes32 id = "It's over 9000";
+        address repr = tokenRegistry.getRepresentationAddress(domain, id);
+        assertEq(repr, address(0));
+        address calculated = computeCreateAddress(
+            address(tokenRegistry),
+            2 + iterations
+        );
+        // test event emmission
+        vm.expectEmit(true, true, true, false);
+        emit TokenDeployed(domain, id, calculated);
+        address tokenAddress = tokenRegistry.exposed_deployToken(domain, id);
+        BridgeToken token = BridgeToken(tokenAddress);
+        repr = tokenRegistry.getRepresentationAddress(domain, id);
+        (uint32 storedDomain, bytes32 storedId) = tokenRegistry
+            .getCanonicalTokenId(tokenAddress);
+        // test mappings
+        assertEq(repr, tokenAddress);
+        assertEq(uint256(storedDomain), domain);
+        assertEq(storedId, id);
+        // test is initialized
+        assertEq(token.owner(), address(bridgeRouter));
+        (string memory name, string memory symbol) = tokenRegistry
+            .exposed_defaultDetails(domain, id);
+        // test if default name and symbol is set
+        assertEq(token.name(), name);
+        assertEq(token.symbol(), symbol);
+        iterations++;
+    }
+
+    function test_deployTokenFuzzed(uint32 domain, bytes32 id) public {
+        vm.assume(domain != localDomain && domain != 0);
+        address repr = tokenRegistry.getRepresentationAddress(domain, id);
+        assertEq(repr, address(0));
+        address calculated = computeCreateAddress(
+            address(tokenRegistry),
+            2 + iterations
+        );
+        // test event emmission
+        vm.expectEmit(true, true, true, false);
+        emit TokenDeployed(domain, id, calculated);
+        address tokenAddress = tokenRegistry.exposed_deployToken(domain, id);
+        BridgeToken token = BridgeToken(tokenAddress);
+        repr = tokenRegistry.getRepresentationAddress(domain, id);
+        (uint32 storedDomain, bytes32 storedId) = tokenRegistry
+            .getCanonicalTokenId(tokenAddress);
+        // test mappings
+        assertEq(repr, tokenAddress);
+        assertEq(uint256(storedDomain), domain);
+        assertEq(storedId, id);
+        // test is initialized
+        assertEq(token.owner(), address(bridgeRouter));
+        (string memory name, string memory symbol) = tokenRegistry
+            .exposed_defaultDetails(domain, id);
+        // test if default name and symbol is set
+        assertEq(token.name(), name);
+        assertEq(token.symbol(), symbol);
+        iterations++;
+    }
+
+    function test_defaultDetails() public {
+        uint32 domain = 1;
+        bytes32 id = "test";
+        (, uint256 secondHalfId) = Encoding.encodeHex(uint256(id));
+        string memory name = string(
+            abi.encodePacked(
+                Encoding.decimalUint32(domain), // 10
+                ".", // 1
+                uint32(secondHalfId) // 4
+            )
+        );
+        string memory symbol = new string(10 + 1 + 4);
+        assembly {
+            mstore(add(symbol, 0x20), mload(add(name, 0x20)))
+        }
+        (string memory storedName, string memory storedSymbol) = tokenRegistry
+            .exposed_defaultDetails(domain, id);
+    }
+
+    function test_defaultDetailsFuzzed(uint32 domain, bytes32 id) public {
+        vm.assume(domain != localDomain && domain != 0);
+        (, uint256 secondHalfId) = Encoding.encodeHex(uint256(id));
+        string memory name = string(
+            abi.encodePacked(
+                Encoding.decimalUint32(domain), // 10
+                ".", // 1
+                uint32(secondHalfId) // 4
+            )
+        );
+        string memory symbol = new string(10 + 1 + 4);
+        assembly {
+            mstore(add(symbol, 0x20), mload(add(name, 0x20)))
+        }
+        (string memory storedName, string memory storedSymbol) = tokenRegistry
+            .exposed_defaultDetails(domain, id);
+    }
+
+    function test_localDomain() public {
+        assertEq(tokenRegistry.exposed_localDomain(), uint256(localDomain));
+    }
+
+    // Test that renounceOwnership is a noop
+    function test_renounceOwnership() public {
+        vm.startPrank(tokenRegistry.owner());
+        uint256 gasBefore = gasleft();
+        tokenRegistry.renounceOwnership();
+        uint256 gasAfter = gasleft();
+        // hardcode the gas that is consumed from calling an empty function
+        // any change to the function will cause this test to fail
+        assertEq(gasAfter, 9223372036854743384);
     }
 }

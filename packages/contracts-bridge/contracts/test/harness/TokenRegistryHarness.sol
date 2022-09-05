@@ -35,7 +35,7 @@ contract TokenRegistryHarness is TokenRegistry {
         return _defaultDetails(_domain, _id);
     }
 
-    function exposed_loacalDomain() external returns (uint32) {
+    function exposed_localDomain() external view returns (uint32) {
         return _localDomain();
     }
 }
