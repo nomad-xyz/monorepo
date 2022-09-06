@@ -24,7 +24,7 @@ library BridgeMessage {
     // the types of `data` we can have are defined in this enum and may belong to different taxonomies.
     // For example, a `Message` includes a `TokenId` and an Action, either a `Transfer` or a `TransferToHook`.
     // The Message is a different TYPE of data than a TokenId or Transfer, as TokenId and Transfer live inside
-    // the message. For that reason, we define them as different data types and we add them to the same enum 
+    // the message. For that reason, we define them as different data types and we add them to the same enum
     // for ease of use.
     enum Types {
         Invalid, // 0

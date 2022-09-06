@@ -1,12 +1,18 @@
 {
-  "exclude": ["**/dist/**", "**/node_modules/**", "**/tests/**"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "tests",
+    "coverage"
+  ],
+  "include": ["src/**/*.ts"],
   "compilerOptions": {
     "composite": true,
     "declaration": true,
     "declarationMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["es2015", "es5", "dom"],
+    "lib": ["es2021"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noEmitOnError": true,
@@ -19,7 +25,7 @@
     "pretty": false,
     "resolveJsonModule": true,
     "sourceMap": true,
-    "target": "es6",
+    "target": "es2021",
     "strict": true
   },
   "references": [
