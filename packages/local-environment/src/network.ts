@@ -56,7 +56,7 @@ export abstract class Network {
     name: string,
     domainNumber: number,
     chainId: number,
-    blockTime = 5000
+    blockTime = 10000
   ) {
     this.name = name;
     this.domainNumber = domainNumber;
@@ -84,7 +84,7 @@ export class DockerizedNetworkActor extends DockerizedActor {
   constructor(name: string) {
     super(name, "network");
     this.port = ports++;
-    this.blockTime = 1 * 1000;
+    this.blockTime = 2 * 1000;
     this.keys = [];
   }
 
@@ -176,7 +176,7 @@ export class HardhatNetwork extends Network {
   constructor(name: string, domain: number, options?: HardhatNetworkOptions) {
     super(name, domain, domain);
     this.handler = new DockerizedNetworkActor(this.name);
-    this.blockTime = 5;
+    this.blockTime = 10;
     this.firstStart = false;
     this.keys = options?.keys || [];
   }
