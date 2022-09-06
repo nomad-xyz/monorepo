@@ -14,13 +14,11 @@ contract BridgeTokenTest is Test {
 
     function setUp() public {
         token = new MockWeth();
-        token.setDetails("FAKE", "FK", 18);
         token.initialize();
     }
 
     function test_mint() public {
         token.mint(address(0xBEEF), 1e18);
-
         assertEq(token.totalSupply(), 1e18);
         assertEq(token.balanceOf(address(0xBEEF)), 1e18);
     }
@@ -60,7 +58,12 @@ contract BridgeTokenTest is Test {
         string memory symbol,
         uint8 decimals
     ) public {
-        bytes32 hash = keccak256(
+        vm.assume(
+            decimals != 0 ||
+                bytes(symbol).length != 0 ||
+                bytes(name).length != 0
+        );
+        bytes32 h = keccak256(
             abi.encodePacked(
                 bytes(name).length,
                 name,
@@ -69,16 +72,23 @@ contract BridgeTokenTest is Test {
                 decimals
             )
         );
-        token.setDetailsHash(hash);
+        // set initial details
+        token.setDetails("a", "b", 33);
+        require(keccak256(bytes(token.name())) == keccak256(bytes("a")));
+        require(keccak256(bytes(token.symbol())) == keccak256(bytes("b")));
+        require(token.decimals() == 33);
+        // test event emission on second details
+        token.setDetailsHash(h);
         vm.expectEmit(true, true, true, false);
         emit UpdateDetails(name, symbol, decimals);
         token.setDetails(name, symbol, decimals);
-        assertEq(token.name(), name);
-        assertEq(token.symbol(), symbol);
-        assertEq(token.decimals(), uint256(decimals));
+        require(keccak256(bytes(token.name())) == keccak256(bytes(name)));
+        require(keccak256(bytes(token.symbol())) == keccak256(bytes(symbol)));
+        require(token.decimals() == decimals);
     }
 
     function test_setDailtsFailSecondTime() public {
+        token.setDetails("", "", 1);
         string memory name = "Numenor";
         string memory symbol = "NM";
         uint8 decimals = 19;
@@ -87,10 +97,10 @@ contract BridgeTokenTest is Test {
     }
 
     function test_setDetailsHashOwner() public {
-        bytes32 hash = "hash";
+        bytes32 h = "hash";
         vm.prank(address(0xBEEF));
         vm.expectRevert("Ownable: caller is not the owner");
-        token.setDetailsHash(hash);
+        token.setDetailsHash(h);
     }
 
     function test_domainSeperator() public {

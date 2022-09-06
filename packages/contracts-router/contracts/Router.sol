@@ -35,6 +35,7 @@ abstract contract Router is XAppConnectionClient, IMessageRecipient {
         external
         onlyOwner
     {
+        require(_domain != _localDomain() && _domain != 0, "!domain");
         remotes[_domain] = _router;
     }
 

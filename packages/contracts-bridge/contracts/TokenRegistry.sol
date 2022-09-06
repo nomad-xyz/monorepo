@@ -314,6 +314,7 @@ contract TokenRegistry is Initializable, XAppConnectionClient, ITokenRegistry {
         bytes32 _id,
         address _representation
     ) internal {
+        require(_domain != 0, "!null domain");
         representationToCanonical[_representation].domain = _domain;
         representationToCanonical[_representation].id = _id;
     }
@@ -329,6 +330,7 @@ contract TokenRegistry is Initializable, XAppConnectionClient, ITokenRegistry {
         bytes32 _id,
         address _representation
     ) internal {
+        require(_representation != address(0), "!null repr");
         bytes29 _tokenId = BridgeMessage.formatTokenId(_domain, _id);
         bytes32 _idHash = _tokenId.keccak();
         canonicalToRepresentation[_idHash] = _representation;

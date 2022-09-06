@@ -39,17 +39,16 @@ contract ETHHelper {
      * @dev As with all bridges, improper use may result in loss of funds.
      * @param _domain The domain to send funds to.
      * @param _to The 32-byte identifier of the recipient
-     * @param _enableFast True to enable fast liquidity
      */
     function sendTo(
         uint32 _domain,
         bytes32 _to,
-        bool _enableFast
+        bool /*_enableFast - deprecated field, left argument for backwards compatibility */
     ) public payable {
         // wrap ETH to WETH
         weth.deposit{value: msg.value}();
         // send WETH via bridge
-        bridge.send(address(weth), msg.value, _domain, _to, _enableFast);
+        bridge.send(address(weth), msg.value, _domain, _to, false);
         // emit event indicating the original sender of tokens
         emit Send(msg.sender);
     }
@@ -61,10 +60,12 @@ contract ETHHelper {
      * EVM-like domain. As with all bridges, improper use may result in loss of
      * funds.
      * @param _domain The domain to send funds to
-     * @param _enableFast True to enable fast liquidity
      */
-    function send(uint32 _domain, bool _enableFast) external payable {
-        sendTo(_domain, TypeCasts.addressToBytes32(msg.sender), _enableFast);
+    function send(
+        uint32 _domain,
+        bool /*_enableFast - deprecated field, left argument for backwards compatibility */
+    ) external payable {
+        sendTo(_domain, TypeCasts.addressToBytes32(msg.sender), false);
     }
 
     /**
@@ -74,13 +75,12 @@ contract ETHHelper {
      * domain. As with all bridges, improper use may result in loss of funds
      * @param _domain The domain to send funds to.
      * @param _to The EVM address of the recipient
-     * @param _enableFast True to enable fast liquidity
      */
     function sendToEVMLike(
         uint32 _domain,
         address _to,
-        bool _enableFast
+        bool /*_enableFast - deprecated field, left argument for backwards compatibility */
     ) external payable {
-        sendTo(_domain, TypeCasts.addressToBytes32(_to), _enableFast);
+        sendTo(_domain, TypeCasts.addressToBytes32(_to), false);
     }
 }

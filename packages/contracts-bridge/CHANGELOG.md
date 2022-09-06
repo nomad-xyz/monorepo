@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- (minor): differentiate EthereumBridgeRouter
+- (minor): add NFT accountant
 - remove ability to handle fast liquidity messages
 - (refactor, patch): token transfer path with readable helper functions
 - (feat, minor): add generic protocol for sending tokens with hooks

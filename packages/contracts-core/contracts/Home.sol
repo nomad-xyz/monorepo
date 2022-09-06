@@ -160,6 +160,7 @@ contract Home is Version0, QueueManager, MerkleTreeManager, NomadBase {
      */
     function setUpdaterManager(address _updaterManager) external onlyOwner {
         _setUpdaterManager(IUpdaterManager(_updaterManager));
+        _setUpdater(IUpdaterManager(_updaterManager).updater());
     }
 
     // ============ External Functions  ============

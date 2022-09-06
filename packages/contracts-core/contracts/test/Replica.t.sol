@@ -479,7 +479,7 @@ contract ReplicaTest is ReplicaHandlers {
         uint256 newConfirmAt
     );
 
-    function test_setConfirmationOnlyOwner() public {
+    function test_setConfirmationOnlyOwnerNotZeroRoot() public {
         bytes32 newRoot = "new root";
         uint256 newConfirmAt = 100;
         uint256 previousConfirmAt = 0;
@@ -487,8 +487,24 @@ contract ReplicaTest is ReplicaHandlers {
         emit SetConfirmation(newRoot, previousConfirmAt, newConfirmAt);
         vm.prank(replica.owner());
         replica.setConfirmation(newRoot, newConfirmAt);
+        assertEq(replica.confirmAt(newRoot), newConfirmAt);
         vm.prank(vm.addr(1453));
         vm.expectRevert("Ownable: caller is not the owner");
+        replica.setConfirmation(newRoot, newConfirmAt);
+    }
+
+    function test_setConfirmationZeroRootOnlyRemove() public {
+        bytes32 newRoot = bytes32(0);
+        uint256 newConfirmAt = 0;
+        uint256 previousConfirmAt = 0;
+        vm.expectEmit(true, false, false, true);
+        emit SetConfirmation(newRoot, previousConfirmAt, newConfirmAt);
+        vm.prank(replica.owner());
+        replica.setConfirmation(newRoot, newConfirmAt);
+        assertEq(replica.confirmAt(newRoot), newConfirmAt);
+        vm.prank(replica.owner());
+        newConfirmAt = 100;
+        vm.expectRevert("can't set zero root");
         replica.setConfirmation(newRoot, newConfirmAt);
     }
 

@@ -3,6 +3,7 @@ pragma solidity 0.7.6;
 
 import {HomeHarness} from "./harnesses/HomeHarness.sol";
 import {NomadBase} from "../NomadBase.sol";
+import {UpdaterManager} from "../UpdaterManager.sol";
 import {NomadTestWithUpdaterManager} from "./utils/NomadTest.sol";
 import {IUpdaterManager} from "../interfaces/IUpdaterManager.sol";
 import {Message} from "../libs/Message.sol";
@@ -74,6 +75,22 @@ contract HomeTest is NomadTestWithUpdaterManager {
         vm.prank(vm.addr(40123));
         vm.expectRevert("!updaterManager");
         home.setUpdater(vm.addr(420));
+    }
+
+    function test_setUpdaterManagerSuccess() public {
+        address newUpdater = address(0xBEEF);
+        UpdaterManager newUpdaterManager = new UpdaterManager(newUpdater);
+        home.setUpdaterManager(address(newUpdaterManager));
+        assertEq(address(home.updaterManager()), address(newUpdaterManager));
+        assertEq(home.updater(), newUpdater);
+    }
+
+    function test_setUpdaterManagerOnlyOwner() public {
+        address newUpdater = address(0xBEEF);
+        UpdaterManager newUpdaterManager = new UpdaterManager(newUpdater);
+        vm.prank(newUpdater);
+        vm.expectRevert("Ownable: caller is not the owner");
+        home.setUpdaterManager(address(newUpdaterManager));
     }
 
     function test_committedRoot() public {

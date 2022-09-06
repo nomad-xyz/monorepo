@@ -4,9 +4,10 @@ pragma solidity 0.7.6;
 // Test Contracts
 
 import {MockHome} from "./MockHome.sol";
+import {MockAccountant} from "./MockAccountant.sol";
 
 // Bridge Contracts
-import {BridgeRouterHarness} from "../harness/BridgeRouterHarness.sol";
+import {EthereumBridgeRouterHarness} from "../harness/BridgeRouterHarness.sol";
 import {TokenRegistryHarness} from "../harness/TokenRegistryHarness.sol";
 import {TokenRegistry} from "../../TokenRegistry.sol";
 import {BridgeToken} from "../../BridgeToken.sol";
@@ -20,7 +21,6 @@ import {UpgradeBeaconController} from "@nomad-xyz/contracts-core/contracts/upgra
 import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 
 import "forge-std/Test.sol";
-import "forge-std/console2.sol";
 
 contract BridgeTest is Test {
     // Local variables
@@ -34,8 +34,9 @@ contract BridgeTest is Test {
     bytes32 remoteBridgeRouter;
     uint32 remoteDomain;
 
+    MockAccountant mockAccountant;
     MockHome mockHome;
-    BridgeRouterHarness bridgeRouter;
+    EthereumBridgeRouterHarness bridgeRouter;
     XAppConnectionManager xAppConnectionManager;
     UpgradeBeaconController upgradeBeaconController;
     UpgradeBeacon tokenBeacon;
@@ -56,6 +57,7 @@ contract BridgeTest is Test {
         bridgeUser = vm.addr(9305);
         remoteBridgeRouter = addressToBytes32(vm.addr(99123));
         bridgeUserTokenAmount = 10000;
+        mockAccountant = new MockAccountant();
 
         localToken = new ERC20Mock(
             "Fake",
@@ -68,7 +70,7 @@ contract BridgeTest is Test {
         mockHome = new MockHome(localDomain);
 
         // Create implementations
-        bridgeRouter = new BridgeRouterHarness();
+        bridgeRouter = new EthereumBridgeRouterHarness(address(mockAccountant));
         tokenRegistry = new TokenRegistryHarness();
         xAppConnectionManager = new XAppConnectionManager();
         upgradeBeaconController = new UpgradeBeaconController();

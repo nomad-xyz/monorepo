@@ -4,16 +4,28 @@ pragma solidity 0.7.6;
 import "forge-std/Test.sol";
 import {RouterHarness} from "./harnesses/RouterHarness.sol";
 
+contract MockXcm {
+    uint32 immutable domain;
+    constructor (uint32 d) {
+        domain = d;
+    }
+    function localDomain() external view returns (uint32) {
+        return domain;
+    }
+}
+
 contract RouterTest is Test {
     RouterHarness router;
 
     uint32 testDomain;
     bytes32 testRouter;
 
+    uint32 constant localDomain = 111;
+
     function setUp() public {
         // deploy and initialize router
         router = new RouterHarness();
-        address xAppConnectionManager = vm.addr(1321);
+        address xAppConnectionManager = address(new MockXcm(localDomain));
         router.exposed__XAppConnectionClient_initialize(xAppConnectionManager);
         testDomain = 123213;
         testRouter = "router address";
@@ -32,8 +44,13 @@ contract RouterTest is Test {
     function test_enrollRemoteRouterFuzzed(uint32 newDomain, bytes32 newRouter)
         public
     {
-        assertEq(router.remotes(newDomain), bytes32(0));
-        assertFalse(router.exposed_isRemoteRouter(newDomain, newRouter));
+        if (newDomain == localDomain || newDomain == 0) {
+            vm.expectRevert("!domain");
+        } else {
+
+            assertEq(router.remotes(newDomain), bytes32(0));
+            assertFalse(router.exposed_isRemoteRouter(newDomain, newRouter));
+        }
         router.enrollRemoteRouter(newDomain, newRouter);
     }
 
