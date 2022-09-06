@@ -3,13 +3,13 @@
 set -e
 
 if [[ $(which genhtml) == "" ]]; then
-  echo "You need to install lcov to generage code coverage"
+  echo "To generate code coverage, you need to install lcov"
   echo "See: https://command-not-found.com/genhtml"
   exit 1
 fi
 
 if [[ $(which forge) == "" ]]; then
-  echo "You need to install Foundry to generage code coverage"
+  echo "To generate code coverage, you need to install Foundry"
   echo "See: https://getfoundry.sh/"
   exit 1
 fi
