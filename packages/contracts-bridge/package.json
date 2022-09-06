@@ -33,7 +33,8 @@
     "snapshot:check": "forge clean && FOUNDRY_PROFILE=bridge forge snapshot --check",
     "gen-proof": "../../scripts/accumulator-cli",
     "storage-inspect:check": "../../scripts/storage-inspect.sh check BridgeRouter BridgeToken ETHHelper TokenRegistry",
-    "storage-inspect:generate": "../../scripts/storage-inspect.sh generate BridgeRouter BridgeToken ETHHelper TokenRegistry"
+    "storage-inspect:generate": "../../scripts/storage-inspect.sh generate BridgeRouter BridgeToken ETHHelper TokenRegistry",
+    "coverage": "cd ../.. && scripts/coverage-report.sh bridge"
   },
   "dependencies": {
     "@nomad-xyz/contracts-core": "workspace:^",

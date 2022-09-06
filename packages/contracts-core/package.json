@@ -33,7 +33,8 @@
     "snapshot:check": "forge clean && FOUNDRY_PROFILE=core forge snapshot --check",
     "gen-proof": "../../scripts/accumulator-cli",
     "storage-inspect:check": "../../scripts/storage-inspect.sh check Home Replica UpdaterManager XAppConnectionManager GovernanceRouter",
-    "storage-inspect:generate": "../../scripts/storage-inspect.sh generate Home Replica UpdaterManager XAppConnectionManager GovernanceRouter"
+    "storage-inspect:generate": "../../scripts/storage-inspect.sh generate Home Replica UpdaterManager XAppConnectionManager GovernanceRouter",
+    "coverage": "cd ../.. && scripts/coverage-report.sh core"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.2",
