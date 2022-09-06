@@ -13,7 +13,7 @@ contract DABridgeRouterTest is Test {
     event Receive(
         uint64 indexed originAndNonce,
         uint64 indexed blockNumber,
-        bytes32 root
+        bytes32 dataRoot
     );
 
     uint32 domain = uint32(1);
