@@ -66,20 +66,20 @@ library DABridgeMessage {
     /**
      * @notice Checks that the message is of the specified type
      * @param _type the type to check for
-     * @param _action The message
+     * @param _view The message
      * @return True if the message is of the specified type
      */
-    function isType(bytes29 _action, Types _type) internal pure returns (bool) {
-        return messageType(_action) == _type;
+    function isType(bytes29 _view, Types _type) internal pure returns (bool) {
+        return messageType(_view) == _type;
     }
 
     /**
      * @notice Checks that the message is of type DataRoot
-     * @param _action The message
+     * @param _view The message
      * @return True if the message is of type DataRoot
      */
-    function isDataRoot(bytes29 _action) internal pure returns (bool) {
-        return isType(_action, Types.DataRoot);
+    function isDataRoot(bytes29 _view) internal pure returns (bool) {
+        return isType(_view, Types.DataRoot);
     }
 
     /**
