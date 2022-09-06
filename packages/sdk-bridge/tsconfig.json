@@ -1,22 +1,18 @@
 {
   "extends": "../tsconfig.package.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "composite": true
+    "outDir": "dist",
+    "rootDir": "src",
   },
   "exclude": [
-    "./node_modules",
-    "./dist",
-    "./src/tmp.ts",
-    "./src/sendCoins.ts"
+    "node_modules",
+    "dist",
+    "src/tmp.ts",
   ],
   "include": [
-    "./src/*.ts",
-    "./src/tokens/*.ts"
+    "src/**/*.ts",
   ],
   "references": [
-    { "path": "../contracts-core" },
     { "path": "../contracts-bridge" },
     { "path": "../multi-provider" },
     { "path": "../sdk" }

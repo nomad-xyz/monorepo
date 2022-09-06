@@ -112,7 +112,7 @@ contract Replica is Version0, NomadBase {
         remoteDomain = _remoteDomain;
         committedRoot = _committedRoot;
         // pre-approve the committed root.
-        confirmAt[_committedRoot] = 1;
+        if (_committedRoot != bytes32(0)) confirmAt[_committedRoot] = 1;
         _setOptimisticTimeout(_optimisticSeconds);
     }
 
@@ -263,7 +263,8 @@ contract Replica is Version0, NomadBase {
         // this is backwards-compatibility for messages proven/processed
         // under previous versions
         if (_root == LEGACY_STATUS_PROVEN) return true;
-        if (_root == LEGACY_STATUS_PROCESSED) return false;
+        if (_root == LEGACY_STATUS_PROCESSED || _root == LEGACY_STATUS_NONE)
+            return false;
 
         uint256 _time = confirmAt[_root];
         if (_time == 0) {
