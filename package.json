@@ -29,6 +29,7 @@
     "snapshot:check": "yarn workspaces foreach -Apvt --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge run snapshot:check",
     "storage-inspect:check": "yarn workspaces foreach -Apvi --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge --include @nomad-xyz/contracts-router run storage-inspect:check",
     "storage-inspect:generate": "yarn workspaces foreach -Apvi --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge --include @nomad-xyz/contracts-router run storage-inspect:generate",
+    "coverage:contracts": "scripts/coverage-report.sh core && scripts/coverage-report.sh bridge && scripts/coverage-report.sh router",
     "test:integration": "yarn local-environment test:integration",
     "test:unit": "yarn workspaces foreach -Apvt --exclude @nomad-xyz/deploy run test:unit"
   },
