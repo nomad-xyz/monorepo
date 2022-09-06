@@ -27,7 +27,8 @@
     "test:unit": "FOUNDRY_PROFILE=router-ci forge test",
     "test:unit-local": "FOUNDRY_PROFILE=router forge test",
     "storage-inspect:check": "../../scripts/storage-inspect.sh check Router XAppConnectionClient",
-    "storage-inspect:generate": "../../scripts/storage-inspect.sh generate Router XAppConnectionClient"
+    "storage-inspect:generate": "../../scripts/storage-inspect.sh generate Router XAppConnectionClient",
+    "coverage": "cd../.. && scripts/coverage-report.sh router"
   },
   "dependencies": {
     "@nomad-xyz/contracts-core": "workspace:^",
