@@ -43,14 +43,4 @@ contract MerkleTest is Test {
         (uint256 a, uint256 b) = uint256(input).encodeHex();
         return string(abi.encodePacked("0x", a, b));
     }
-
-    function toUint256(bytes memory _bytes)
-        internal
-        pure
-        returns (uint256 value)
-    {
-        assembly {
-            value := mload(add(_bytes, 0x20))
-        }
-    }
 }
