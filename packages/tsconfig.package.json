@@ -61,9 +61,6 @@
     },
     {
       "path": "./indexer"
-    },
-    {
-      "path": "./keymaster"
     }
   ]
 }

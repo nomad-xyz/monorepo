@@ -12,6 +12,3 @@ packages/contracts-router/ @nomad-xyz/experience @nomad-xyz/protocol
 packages/sdk/ @nomad-xyz/experience @nomad-xyz/protocol 
 packages/sdk-govern/ @nomad-xyz/experience @nomad-xyz/protocol
 packages/sdk-bridge/ @nomad-xyz/experience @nomad-xyz/protocol
-
-# Other Packages and Services
-packages/keymaster/ @yourbuddyconner @arnaud036 
