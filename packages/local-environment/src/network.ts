@@ -2,8 +2,8 @@ import {
   NetworkSpecs,
   ContractConfig,
   BridgeConfiguration,
-  CoreContracts,
-  BridgeContracts,
+  EthereumCoreDeploymentInfo,
+  EthereumBridgeDeploymentInfo,
   AppConfig,
 } from "@nomad-xyz/configuration";
 import { DockerizedActor } from "./actor";
@@ -27,9 +27,10 @@ export abstract class Network {
   name: string;
   chainId: number;
   deployOverrides: ethers.Overrides;
+  
 
-  coreContracts?: CoreContracts;
-  bridgeContracts?: BridgeContracts;
+  EthereumCoreDeploymentInfo?: EthereumCoreDeploymentInfo;
+  EthereumBridgeDeploymentInfo?: EthereumBridgeDeploymentInfo;
   bridgeGui?: AppConfig;
 
   blockTime: number;
@@ -40,6 +41,7 @@ export abstract class Network {
   weth: string;
 
   abstract get specs(): NetworkSpecs;
+  abstract get rpcStyle(): string;
   abstract get rpcs(): string[];
   abstract get config(): ContractConfig;
   abstract get bridgeConfig(): BridgeConfiguration;
@@ -70,7 +72,7 @@ export abstract class Network {
   }
 
   get isDeployed(): boolean {
-    return !!this.coreContracts && !!this.bridgeContracts;
+    return !!this.EthereumCoreDeploymentInfo && !!this.EthereumBridgeDeploymentInfo;
   }
 }
 
@@ -181,6 +183,10 @@ export class HardhatNetwork extends Network {
     this.keys = options?.keys || [];
   }
 
+  get rpcStyle(): string {
+    return 'ethereum';
+  }
+
   /* TODO: reimplement abstractions for MULTIPLE hardhat networks (i.e. any Nomad domain).
     //   static fromObject(o: Object): Network {
     //     const name = Object(o)["name"];
@@ -241,8 +247,8 @@ export class HardhatNetwork extends Network {
     };
   }
 
-  async setWETH(wethAddy: Promise<string>): Promise<void> {
-    this.weth = await wethAddy;
+  setWETH(wethAddy: string): void {
+    this.weth = wethAddy;
   }
 
   get bridgeConfig(): BridgeConfiguration {
@@ -341,5 +347,16 @@ export class HardhatNetwork extends Network {
 
     await this.stop();
     await this.disconnect();
+  }
+}
+
+
+export class AvailHardhat extends HardhatNetwork {
+  constructor(name: string, domain: number, options?: HardhatNetworkOptions) {
+    super(name, domain, options);
+  }
+
+  get rpcStyle(): string {
+    return 'substrate';
   }
 }

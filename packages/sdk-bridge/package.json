@@ -32,7 +32,7 @@
     "test:unit": "jest"
   },
   "dependencies": {
-    "@nomad-xyz/configuration": "^0.1.0",
+    "@nomad-xyz/configuration": "/tmp/nomad-xyz-configuration-1.0.0-rc.9.tgz",
     "@nomad-xyz/contracts-bridge": "workspace:^",
     "@nomad-xyz/sdk": "workspace:^",
     "ethers": "^5.0.0",

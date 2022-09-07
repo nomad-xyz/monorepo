@@ -68,13 +68,58 @@ export class NomadEnv {
   async deployFresh(): Promise<DeployContext> {
     this.log.info(`Deploying!`);
 
-    const deployContext = this.setDeployContext();
+    const deployContext = await this.setDeployContext();
 
     const outputDir = "./output";
     const governanceBatch = await deployContext.deployAndRelinquish();
     this.log.info(`Deployed! gov batch:`, governanceBatch);
 
     await deployContext.checkDeployment();
+    this.log.info(`Checked deployment`);
+
+    this.outputConfigAndVerification(outputDir, deployContext);
+    await this.outputCallBatch(outputDir, deployContext);
+
+    return deployContext
+  }
+
+  async deployCores(): Promise<DeployContext> {
+    this.log.info(`Deploying!`);
+
+    const deployContext = await this.setDeployContext();
+
+    const outputDir = "./output";
+    // validate the config input
+    deployContext.validate();
+
+    // Checks for connections that are present in the config,
+    // but lack the on-chain state to be connected,
+    // such as missing deployed contracts or
+    // missing on-chain configuration transactions.
+    // Deploys all missing contracts.
+    // Attempts to submit any missing configuration transactions;
+    // if unable to submit the transaction, adds them to callBatch as governance actions.
+    await deployContext.ensureCoreConnections();
+    // await this.ensureBridgeConnections();
+
+    // relinquish control of all other contracts from deployer to governance
+    await deployContext.relinquishCoreOwnership();
+
+    // appoint governor on all networks
+    await Promise.all(
+      deployContext.networks.filter(net => deployContext.isNetEvm(net)).map((network) =>
+      deployContext.mustGetCore(network).appointGovernor(),
+      ),
+    );
+
+    // output governance transactions
+    // once all actions have completed
+    await deployContext.outputGovernance();
+
+    // const governanceBatch = await deployContext.deployAndRelinquish();
+    this.log.info(`Deployed! gov batch:`);
+
+    await deployContext.checkCores();
     this.log.info(`Checked deployment`);
 
     this.outputConfigAndVerification(outputDir, deployContext);
@@ -155,11 +200,11 @@ export class NomadEnv {
     return Array.from(this.domains.values());
   }
 
-  setDeployContext(): DeployContext {
+  async setDeployContext(): Promise<DeployContext> {
     //@TODO remove re-initialization.
     const deployContext = new DeployContext(this.nomadConfig());
     // add deploy signer and overrides for each network
-    for (const domain of this.domains) {
+    for (const domain of this.domains.filter(d => deployContext.isNetEvm(d.name))) {
       const name = domain.network.name;
       const provider = deployContext.mustGetProvider(name);
       const wallet = new ethers.Wallet(this.deployerKey, provider);
@@ -194,12 +239,12 @@ export class NomadEnv {
       core: Object.fromEntries(
         this.domains
           .filter((d) => d.network.isDeployed)
-          .map((d) => [d.network.name, d.network.coreContracts!])
+          .map((d) => [d.network.name, d.network.EthereumCoreDeploymentInfo!])
       ),
       bridge: Object.fromEntries(
         this.domains
           .filter((d) => d.network.isDeployed)
-          .map((d) => [d.network.name, d.network.bridgeContracts!])
+          .map((d) => [d.network.name, d.network.EthereumBridgeDeploymentInfo!])
       ),
       bridgeGui: Object.fromEntries(
         this.domains

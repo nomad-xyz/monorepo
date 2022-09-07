@@ -4,10 +4,13 @@ import { NomadContext } from '@nomad-xyz/sdk';
 import { CallBatch } from '@nomad-xyz/sdk-govern';
 import ethers from 'ethers';
 
-import BridgeContracts from './bridge/BridgeContracts';
-import CoreContracts from './core/CoreContracts';
+import {EthereumBridgeDeploy, } from './bridge/BridgeContracts';
+import {EvmCoreDeploy, } from './core/CoreContracts';
 import fs from 'fs';
 import { CheckList } from './Checklist';
+
+const defaultRoot = '0x0000000000000000000000000000000000000000000000000000000000000000'
+
 
 export interface Verification {
   name: string;
@@ -36,7 +39,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
     for (const network of this.data.networks) {
       this.registerDomain(this.data.protocol.networks[network]);
-      if (this.data.rpcs[network] && this.data.rpcs[network].length > 0) {
+      if (this.data.rpcs[network] && this.data.rpcs[network].length > 0 && this.isNetEvm(network)) {
         this.registerRpcProvider(network, this.data.rpcs[network][0]);
       }
     }
@@ -61,11 +64,11 @@ export class DeployContext extends MultiProvider<config.Domain> {
     return this.data.networks;
   }
 
-  get cores(): Readonly<Record<string, config.EvmCoreContracts>> {
+  get cores(): Readonly<Record<string, config.CoreDeploymentInfo>> {
     return this.data.core;
   }
 
-  get bridges(): Readonly<Record<string, config.EvmBridgeContracts>> {
+  get bridges(): Readonly<Record<string, config.BridgeDeploymentInfo>> {
     return this.data.bridge;
   }
 
@@ -109,25 +112,35 @@ export class DeployContext extends MultiProvider<config.Domain> {
     return protocol;
   }
 
-  getCore(nameOrDomain: string | number): CoreContracts | undefined {
+  getCore(nameOrDomain: string | number): EvmCoreDeploy | undefined {
     const name = this.resolveDomainName(nameOrDomain);
-    if (!this.data.core[name]) return undefined;
-    return new CoreContracts(this, name, this.data.core[name]);
+    const coreConfig = this.data.core[name];
+
+    if (!coreConfig) {
+      console.log(`No core actually for ${nameOrDomain}`, this.data);
+      return undefined;
+    }
+    if (!isEvmCoreConfig(coreConfig)) {
+      console.log(`Core is not evm!`, coreConfig);
+      return undefined;
+    }
+    return new EvmCoreDeploy(this, name, coreConfig as config.EthereumCoreDeploymentInfo);
   }
 
-  mustGetCore(nameOrDomain: string | number): CoreContracts {
+  mustGetCore(nameOrDomain: string | number): EvmCoreDeploy {
     const core = this.getCore(nameOrDomain);
     if (!core) throw new Error(`No core contracts for domain ${nameOrDomain}`);
     return core;
   }
 
-  getBridge(nameOrDomain: string | number): BridgeContracts | undefined {
+  getBridge(nameOrDomain: string | number): EthereumBridgeDeploy | undefined {
     const name = this.resolveDomainName(nameOrDomain);
     if (!this.data.bridge[name]) return undefined;
-    return new BridgeContracts(this, name, this.data.bridge[name]);
+    if (!isEvmBridgeConfig(this.data.bridge[name])) return undefined
+    return new EthereumBridgeDeploy(this, name, this.data.bridge[name] as config.EthereumBridgeDeploymentInfo);
   }
 
-  mustGetBridge(nameOrDomain: string | number): BridgeContracts {
+  mustGetBridge(nameOrDomain: string | number): EthereumBridgeDeploy {
     const bridge = this.getBridge(nameOrDomain);
     if (!bridge)
       throw new Error(`No bridge contracts for domain ${nameOrDomain}`);
@@ -138,12 +151,12 @@ export class DeployContext extends MultiProvider<config.Domain> {
     this._data = config.addNetwork(this.data, domain);
   }
 
-  protected addCore(name: string, core: config.EvmCoreContracts): void {
+  protected addCore(name: string, core: config.EthereumCoreDeploymentInfo): void {
     this._data = config.addCore(this.data, name, core);
     this.output();
   }
 
-  protected addBridge(name: string, bridge: config.EvmBridgeContracts): void {
+  protected addBridge(name: string, bridge: config.EthereumBridgeDeploymentInfo): void {
     this._data = config.addBridge(this.data, name, bridge);
     this.output();
   }
@@ -205,7 +218,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
   protected async deployCore(domain: config.Domain): Promise<void> {
     this.addDomain(domain);
 
-    const core = new CoreContracts(this, domain.name);
+    const core = new EvmCoreDeploy(this, domain.name);
     await core.recordStartBlock();
 
     await Promise.all([
@@ -225,7 +238,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
   protected async deployBridge(name: string): Promise<void> {
     this.mustGetCore(name).complete(); // assert that the core is totally deployed
 
-    const bridge = new BridgeContracts(this, name);
+    const bridge = new EthereumBridgeDeploy(this, name);
     await bridge.recordStartBlock();
 
     await bridge.deployTokenUpgradeBeacon();
@@ -238,12 +251,19 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
   /// Deploys all configured Cores
   async ensureCores(): Promise<void> {
-    const networksToDeploy = this.networks.filter((net) => !this.cores[net]);
+    const networksToDeploy = this.networks.filter((net) => !this.cores[net]).filter(net => this.isNetEvm(net));
+
     await Promise.all(
       networksToDeploy.map((net) =>
-        this.deployCore(this.mustGetDomainConfig(net)),
+        this.deployCore(this.mustGetDomainConfig(net))
       ),
     );
+  }
+
+  isNetEvm(nameOrDomain: string | number): boolean {
+    const domain = this.getDomain(nameOrDomain);
+    if (!domain) throw new Error(`Domain ${nameOrDomain} is not found`);
+    return domain.rpcStyle === 'ethereum';
   }
 
   // Deploys all configured connections and enrolls them if possible.
@@ -254,7 +274,8 @@ export class DeployContext extends MultiProvider<config.Domain> {
     await this.ensureCores();
     // ensure all core contracts are enrolled in each other
     await Promise.all(
-      this.networks.map(async (network): Promise<void> => {
+      this.networks.filter(net => this.isNetEvm(net)).map(async (network): Promise<void> => {
+          
         const core = this.mustGetCore(network);
         const name = this.resolveDomainName(network);
         const remoteDomains = this.data.protocol.networks[name]?.connections;
@@ -265,14 +286,14 @@ export class DeployContext extends MultiProvider<config.Domain> {
         const [firstDomain, ...restDomains] = remoteDomains;
 
         // wait on the first replica deploy to ensure that the implementation and beacon are deployed
-        const firstReplicaTxns = await core.enrollRemote(firstDomain);
+        let firstReplicaTxns: CallBatch = await core.enrollRemote(firstDomain, !this.isNetEvm(firstDomain));
         this.output();
         this._callBatch.append(firstReplicaTxns);
 
         // perform subsequent replica deploys concurrently (will use same implementation and beacon)
         await Promise.all(
           restDomains.map(async (remote) => {
-            const batch = await core.enrollRemote(remote);
+            let batch: CallBatch = await core.enrollRemote(remote, !this.isNetEvm(remote));
             this.output();
             if (batch) this._callBatch.append(batch);
           }),
@@ -283,7 +304,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
   /// Deploys all configured bridges.
   async ensureBridges(): Promise<void> {
-    const toDeploy = this.networks.filter((net) => !this.bridges[net]);
+    const toDeploy = this.networks.filter((net) => !this.bridges[net]).filter((net) => this.isNetEvm(net));
     await Promise.all(toDeploy.map((net) => this.deployBridge(net)));
   }
 
@@ -293,10 +314,10 @@ export class DeployContext extends MultiProvider<config.Domain> {
     // next, ensure all bridge contracts are enrolled in each other
     // and all custom tokens are also enrolled
     await Promise.all(
-      this.networks.map(async (network): Promise<void> => {
+      this.networks.filter((net) => this.isNetEvm(net)).map(async (network): Promise<void> => {
         const bridge = this.mustGetBridge(network);
         const name = this.resolveDomainName(network);
-        const remoteDomains = this.data.protocol.networks[name]?.connections;
+        const remoteDomains = this.data.protocol.networks[name]?.connections.filter((net) => this.isNetEvm(net));
         // the following "unreachable" error performs type-narrowing for the compiler
         if (!remoteDomains) throw new utils.UnreachableError();
         await Promise.all(
@@ -314,13 +335,20 @@ export class DeployContext extends MultiProvider<config.Domain> {
   }
 
   async relinquishOwnership(): Promise<void> {
+    const networks = this.networks.filter((net) => this.isNetEvm(net));
     // relinquish deployer control
     await Promise.all([
-      ...this.networks.map((network) => this.mustGetCore(network).relinquish()),
-      ...this.networks.map((network) =>
+      ...networks.map((network) => this.mustGetCore(network).relinquish()),
+      ...networks.map((network) =>
         this.mustGetBridge(network).relinquish(),
       ),
     ]);
+  }
+
+  async relinquishCoreOwnership(): Promise<void> {
+    const networks = this.networks.filter((net) => this.isNetEvm(net));
+    // relinquish deployer control
+    await Promise.all(networks.map((network) => this.mustGetCore(network).relinquish()));
   }
 
   // Intended entrypoint.
@@ -343,7 +371,7 @@ export class DeployContext extends MultiProvider<config.Domain> {
 
     // appoint governor on all networks
     await Promise.all(
-      this.networks.map((network) =>
+      this.networks.filter(net => this.isNetEvm(net)).map((network) =>
         this.mustGetCore(network).appointGovernor(),
       ),
     );
@@ -367,20 +395,27 @@ export class DeployContext extends MultiProvider<config.Domain> {
   }
 
   async checkCores(): Promise<CheckList> {
-    const checklists = await Promise.all(
+    const checklists: CheckList[] = [];
+    await Promise.all(
       this.networks.map(async (net) => {
         const coreConfig = this.data.core[net];
-        if (!coreConfig)
-          throw new Error(`network ${net} is missing core config`);
-        const core = new CoreContracts(this, net, coreConfig);
+        if (this.isNetEvm(net)) {
+          if (!coreConfig)
+            throw new Error(`network ${net} is missing core config`);
 
-        const domainConfig = this.mustGetDomainConfig(net);
+          if (!isEvmCoreConfig(this.data.core[net]))
+            throw new Error(`not an core config - deal with it somehow TODO`);
 
-        const checklist = await core.checkDeploy(
-          domainConfig.connections,
-          this.data.protocol.governor.domain,
-        );
-        return checklist;
+          const core = new EvmCoreDeploy(this, net, coreConfig as config.EthereumCoreDeploymentInfo);
+
+          const domainConfig = this.mustGetDomainConfig(net);
+
+          const checklist = await core.checkDeploy(
+            domainConfig.connections.filter(net => this.isNetEvm(net)),
+            this.data.protocol.governor.domain,
+          );
+          checklists.push(checklist);
+        }
       }),
     );
     const checklist = CheckList.combine(checklists);
@@ -388,18 +423,22 @@ export class DeployContext extends MultiProvider<config.Domain> {
   }
 
   async checkBridges(): Promise<CheckList> {
-    const checklists = await Promise.all(
-      this.networks.map(async (net) => {
-        const bridgeConfig = this.data.bridge[net];
+    const checklists: CheckList[] = [];
+    await Promise.all(this.networks.map(async (net) => {
+      const bridgeConfig = this.data.bridge[net];
+      if (this.isNetEvm(net)) {
         if (!bridgeConfig)
-          throw new Error(`network ${net} is missing bridge config`);
-        const bridge = new BridgeContracts(this, net, bridgeConfig);
+        throw new Error(`network ${net} is missing bridge config`);
+      
+        if (!isEvmBridgeConfig(bridgeConfig))
+          throw new Error(`not an core config - deal with it somehow TODO`);
+        const bridge = new EthereumBridgeDeploy(this, net, bridgeConfig as config.EthereumBridgeDeploymentInfo);
         const checklist = await bridge.checkDeploy(
           this.data.protocol.networks[net].connections,
         );
-        return checklist;
-      }),
-    );
+        checklists.push(checklist);
+      }
+    }));
     const checklist = CheckList.combine(checklists);
     return checklist;
   }
@@ -419,5 +458,24 @@ export class DeployContext extends MultiProvider<config.Domain> {
       (contract) => contract.name == name,
     )[0].address;
     expect(utils.equalIds(inputAddr, addr));
+  }
+}
+
+
+function isEvmCoreConfig(config: config.CoreDeploymentInfo ): boolean {
+  console.log(`Checking if config evm:`, config);
+  try {
+    return !!(config as config.EthereumCoreDeploymentInfo).home
+  } catch(e) {
+    console.log(`NOOOO`);
+    return false
+  }
+}
+
+function isEvmBridgeConfig(config: config.BridgeDeploymentInfo ): boolean {
+  try {
+    return !!(config as config.EthereumBridgeDeploymentInfo).bridgeRouter
+  } catch(e) {
+    return false
   }
 }

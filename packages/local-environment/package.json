@@ -19,6 +19,8 @@
     "cleanup": "npm run hardhat_stop && npm run agents_stop && npm run agents_clean",
     "hardhat_stop": "docker ps --filter name=_net -aq | xargs docker rm --force",
     "test:unit": "jest unit --detectOpenHandles --ci --forceExit",
+    "test:tokens": "jest -t 'Token'",
+    "test:avail": "jest -t 'AVAIL'",
     "test:integration": "jest int --detectOpenHandles --ci --forceExit",
     "test:nomadenv": "jest --detectOpenHandles -t 'nomadenv'",
     "start": "npx ts-node tests/start.ts",
@@ -30,7 +32,7 @@
   },
   "dependencies": {
     "@ethersproject/experimental": "^5.5.0",
-    "@nomad-xyz/configuration": "0.1.0",
+    "@nomad-xyz/configuration": "/tmp/nomad-xyz-configuration-1.0.0-rc.9.tgz",
     "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/deploy": "workspace:^",
     "@nomad-xyz/sdk": "workspace:^",

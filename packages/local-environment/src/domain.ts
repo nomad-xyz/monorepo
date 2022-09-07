@@ -152,12 +152,12 @@ export class NomadDomain {
       specs: this.specs,
       configuration: this.config,
       bridgeConfiguration: this.bridgeConfig,
+      rpcStyle: this.network.rpcStyle,
     };
   }
 
   get agentConfig(): AgentConfig {
     return {
-      rpcStyle: "ethereum",
       metrics: 9090,
       db: "/app",
       logging: this.logConfig,

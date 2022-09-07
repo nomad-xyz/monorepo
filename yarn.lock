@@ -2898,7 +2898,35 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/configuration@npm:0.1.0, @nomad-xyz/configuration@npm:^0.1.0":
+"@nomad-xyz/configuration@file:/tmp/nomad-xyz-configuration-1.0.0-rc.9.tgz::locator=%40nomad-xyz%2Fdeploy%40workspace%3Apackages%2Fdeploy":
+  version: 1.0.0-rc.9
+  resolution: "@nomad-xyz/configuration@file:/tmp/nomad-xyz-configuration-1.0.0-rc.9.tgz::locator=%40nomad-xyz%2Fdeploy%40workspace%3Apackages%2Fdeploy"
+  checksum: b7a6c1c2d8cbe535b7185fb67a521a645b239ba1e3e5a6bbb520da71394278fdc5863a9140c7a702d3a878eef93164ccba62b39228099789b563fb41d9a02bfa
+  languageName: node
+  linkType: hard
+
+"@nomad-xyz/configuration@file:/tmp/nomad-xyz-configuration-1.0.0-rc.9.tgz::locator=%40nomad-xyz%2Flocal-environment%40workspace%3Apackages%2Flocal-environment":
+  version: 1.0.0-rc.9
+  resolution: "@nomad-xyz/configuration@file:/tmp/nomad-xyz-configuration-1.0.0-rc.9.tgz::locator=%40nomad-xyz%2Flocal-environment%40workspace%3Apackages%2Flocal-environment"
+  checksum: b7a6c1c2d8cbe535b7185fb67a521a645b239ba1e3e5a6bbb520da71394278fdc5863a9140c7a702d3a878eef93164ccba62b39228099789b563fb41d9a02bfa
+  languageName: node
+  linkType: hard
+
+"@nomad-xyz/configuration@file:/tmp/nomad-xyz-configuration-1.0.0-rc.9.tgz::locator=%40nomad-xyz%2Fsdk%40workspace%3Apackages%2Fsdk":
+  version: 1.0.0-rc.9
+  resolution: "@nomad-xyz/configuration@file:/tmp/nomad-xyz-configuration-1.0.0-rc.9.tgz::locator=%40nomad-xyz%2Fsdk%40workspace%3Apackages%2Fsdk"
+  checksum: b7a6c1c2d8cbe535b7185fb67a521a645b239ba1e3e5a6bbb520da71394278fdc5863a9140c7a702d3a878eef93164ccba62b39228099789b563fb41d9a02bfa
+  languageName: node
+  linkType: hard
+
+"@nomad-xyz/configuration@file:/tmp/nomad-xyz-configuration-1.0.0-rc.9.tgz::locator=%40nomad-xyz%2Fsdk-bridge%40workspace%3Apackages%2Fsdk-bridge":
+  version: 1.0.0-rc.9
+  resolution: "@nomad-xyz/configuration@file:/tmp/nomad-xyz-configuration-1.0.0-rc.9.tgz::locator=%40nomad-xyz%2Fsdk-bridge%40workspace%3Apackages%2Fsdk-bridge"
+  checksum: b7a6c1c2d8cbe535b7185fb67a521a645b239ba1e3e5a6bbb520da71394278fdc5863a9140c7a702d3a878eef93164ccba62b39228099789b563fb41d9a02bfa
+  languageName: node
+  linkType: hard
+
+"@nomad-xyz/configuration@npm:^0.1.0":
   version: 0.1.0
   resolution: "@nomad-xyz/configuration@npm:0.1.0"
   checksum: b75f717e130e42b4fcae7924db99b1ef72c11dab2ce12bd81f41f73500b82da7d43b4a21adcb6481a351ca92754f8ed166cff88e9bd4bbffde7678dcf02b913d
@@ -3014,7 +3042,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/deploy@workspace:packages/deploy"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0
+    "@nomad-xyz/configuration": /tmp/nomad-xyz-configuration-1.0.0-rc.9.tgz
     "@nomad-xyz/contracts-bridge": ^1.1.0
     "@nomad-xyz/contracts-core": ^1.1.0
     "@nomad-xyz/contracts-router": ^1.1.0
@@ -3124,7 +3152,7 @@ __metadata:
     "@babel/preset-env": ^7.18.10
     "@babel/preset-typescript": ^7.18.6
     "@ethersproject/experimental": ^5.5.0
-    "@nomad-xyz/configuration": 0.1.0
+    "@nomad-xyz/configuration": /tmp/nomad-xyz-configuration-1.0.0-rc.9.tgz
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/deploy": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"
@@ -3193,7 +3221,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0
+    "@nomad-xyz/configuration": /tmp/nomad-xyz-configuration-1.0.0-rc.9.tgz
     "@nomad-xyz/contracts-bridge": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"
     "@types/jest": ^28.1.7
@@ -3246,7 +3274,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0
+    "@nomad-xyz/configuration": /tmp/nomad-xyz-configuration-1.0.0-rc.9.tgz
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/local-environment": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"

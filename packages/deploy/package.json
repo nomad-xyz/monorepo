@@ -18,10 +18,11 @@
     "coverage": "echo TODO: Fix tests",
     "lint": "eslint --fix ./src",
     "prettier": "prettier --write ./src",
-    "test:unit": "jest"
+    "test:unit": "jest",
+    "avail": "ts-node ./src/avail.ts"
   },
   "dependencies": {
-    "@nomad-xyz/configuration": "^0.1.0",
+    "@nomad-xyz/configuration": "/tmp/nomad-xyz-configuration-1.0.0-rc.9.tgz",
     "@nomad-xyz/contracts-bridge": "^1.1.0",
     "@nomad-xyz/contracts-core": "^1.1.0",
     "@nomad-xyz/contracts-router": "^1.1.0",
