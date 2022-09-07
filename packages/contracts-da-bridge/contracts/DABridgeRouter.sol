@@ -22,6 +22,7 @@ contract DABridgeRouter is Version0, Router {
     // ============ Public Storage ============
 
     mapping(uint64 => bytes32) public roots;
+    uint32 private _availDomain;
 
     // ============ Upgrade Gap ============
 
@@ -46,8 +47,12 @@ contract DABridgeRouter is Version0, Router {
 
     // ============ Initializer ============
 
-    function initialize(address _xAppConnectionManager) public initializer {
+    function initialize(address _xAppConnectionManager, uint32 availDomain)
+        public
+        initializer
+    {
         __XAppConnectionClient_initialize(_xAppConnectionManager);
+        _availDomain = availDomain;
     }
 
     // ============ Handle message functions ============
@@ -67,6 +72,7 @@ contract DABridgeRouter is Version0, Router {
         bytes32 _sender,
         bytes memory _message
     ) external override onlyReplica onlyRemoteRouter(_origin, _sender) {
+        require(_origin == _availDomain, "!valid domain");
         bytes29 _view = _message.ref(0).getTypedView();
         if (_view.isValidDataRoot()) {
             _handleDataRoot(_origin, _nonce, _view);
