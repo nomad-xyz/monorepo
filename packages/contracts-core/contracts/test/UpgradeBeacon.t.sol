@@ -45,6 +45,60 @@ contract UpgradeBeaconTest is Test {
         );
     }
 
+    function test_fallbackNotController() public {
+        (bool success, bytes memory ret) = address(beacon).call("");
+        assert(success);
+        assertEq(implementation, abi.decode(ret, (address)));
+    }
+
+    function test_fallbackNotControllerFuzzed(bytes memory data) public {
+        (bool success, bytes memory ret) = address(beacon).call(data);
+        assert(success);
+        assertEq(implementation, abi.decode(ret, (address)));
+    }
+
+    function test_fallbackControllerSuccess() public {
+        // any address that is not a EOA
+        address newImpl = address(vm);
+        vm.startPrank(controller);
+        vm.expectEmit(true, false, false, false);
+        emit Upgrade(newImpl);
+        address(beacon).call(abi.encode(newImpl));
+        address storedImplementation = TypeCasts.bytes32ToAddress(
+            vm.load(address(beacon), bytes32(0))
+        );
+        assertEq(storedImplementation, newImpl);
+        vm.stopPrank();
+    }
+
+    function test_fallbackControllerFailNotContract() public {
+        // any address that is not a EOA
+        address newImpl = address(0xBEEFEEF);
+        vm.startPrank(controller);
+        (bool success, bytes memory ret) = address(beacon).call(
+            abi.encode(newImpl)
+        );
+        assertFalse(success);
+        assertEq(
+            ret.ref(0).slice(4, ret.length - 4, 0).keccak(),
+            keccak256(abi.encode("implementation !contract"))
+        );
+    }
+
+    function test_fallbackControllerFailSameImpl() public {
+        // any address that is not a EOA
+        address newImpl = implementation;
+        vm.startPrank(controller);
+        (bool success, bytes memory ret) = address(beacon).call(
+            abi.encode(newImpl)
+        );
+        assertFalse(success);
+        assertEq(
+            ret.ref(0).slice(4, ret.length - 4, 0).keccak(),
+            keccak256(abi.encode("!upgrade"))
+        );
+    }
+
     // Taken from: https://ethereum.stackexchange.com/questions/66554/is-it-possible-to-get-the-bytecode-of-an-already-deployed-contract-in-solidity
     function at(address _addr) public view returns (bytes memory o_code) {
         assembly {
