@@ -17,6 +17,7 @@ contract DABridgeRouterTest is Test {
     );
 
     uint32 domain = uint32(1);
+    uint32 invalidDomain = uint32(2);
     bytes32 remoteRouter = bytes32(uint256(1));
 
     uint64 _blockNumber = type(uint64).max;
@@ -27,9 +28,10 @@ contract DABridgeRouterTest is Test {
         XAppConnectionManager m = new XAppConnectionManager();
         m.ownerEnrollReplica(address(this), uint32(1));
         router = new DABridgeRouter();
-        router.initialize(address(m));
+        router.initialize(address(m), domain);
         // mock remote router
         router.enrollRemoteRouter(domain, remoteRouter);
+        router.enrollRemoteRouter(invalidDomain, remoteRouter);
     }
 
     function test_failsInvalidMessageType() public {
@@ -42,6 +44,15 @@ contract DABridgeRouterTest is Test {
         bytes memory message = abi.encodePacked(uint8(1), uint256(1));
         vm.expectRevert("!valid message");
         router.handle(domain, uint32(0), remoteRouter, message);
+    }
+
+    function test_failsInvalidDomain() public {
+        bytes memory message = DABridgeMessage.formatDataRoot(
+            _blockNumber,
+            _dataRoot
+        );
+        vm.expectRevert("!valid domain");
+        router.handle(invalidDomain, uint32(0), remoteRouter, message);
     }
 
     function test_handleSuccess() public {
