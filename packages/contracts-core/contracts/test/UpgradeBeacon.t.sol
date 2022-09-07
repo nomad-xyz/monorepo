@@ -85,6 +85,23 @@ contract UpgradeBeaconTest is Test {
         );
     }
 
+    function test_fallbackControllerFailNotContractFuzzed(address newImpl)
+        public
+    {
+        vm.assume(!Address.isContract(newImpl));
+        // any address that is not a EOA
+        address newImpl = address(0xBEEFEEF);
+        vm.startPrank(controller);
+        (bool success, bytes memory ret) = address(beacon).call(
+            abi.encode(newImpl)
+        );
+        assertFalse(success);
+        assertEq(
+            ret.ref(0).slice(4, ret.length - 4, 0).keccak(),
+            keccak256(abi.encode("implementation !contract"))
+        );
+    }
+
     function test_fallbackControllerFailSameImpl() public {
         // any address that is not a EOA
         address newImpl = implementation;
