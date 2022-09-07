@@ -1,5 +1,6 @@
 import * as utils from '../src/utils';
 import { hexlify } from '@ethersproject/bytes';
+import { MultiProvider } from '../src/provider';
 
 describe('multi-provider utils', () => {
   const tooLong = new Uint8Array(Array(33).fill(1));
@@ -50,7 +51,69 @@ describe('multi-provider utils', () => {
     expect(evmId.length).toEqual(42);
   });
 
-  it.skip('delays x milliseconds', () => {
-    // TODO:
+  it('parses integer from decimal, string or hex', () => {
+    const decimal = 5;
+    const str = '5';
+    const hex = '0x05';
+    expect(utils.parseInt(decimal)).toEqual(5);
+    expect(utils.parseInt(str)).toEqual(5);
+    expect(utils.parseInt(hex)).toEqual(5);
   });
+
+  it('throws Unreachable error', () => {
+    function throwUnreachable() {
+      throw new utils.UnreachableError('some error');
+    }
+    try {
+      throwUnreachable();
+    } catch(e) {
+      expect(e.message).toContain('some error');
+    }
+  });
+
+  it('throws NoProvider error', () => {
+    const context = new MultiProvider();
+    const name = 'rinkeby';
+    const domain = 1000;
+    context.registerDomain({ name, domain });
+    function throwNoProvider(domain: string | number) {
+      throw new utils.NoProviderError(context, domain);
+    }
+    try {
+      throwNoProvider(name);
+    } catch(e) {
+      expect(e.message).toContain('Missing provider');
+      expect(e.message).toContain(`${domain}`);
+      expect(e.message).toContain(`${name}`);
+    }
+    try {
+      throwNoProvider(domain);
+    } catch(e) {
+      expect(e.message).toContain('Missing provider');
+      expect(e.message).toContain(`${domain}`);
+      expect(e.message).toContain(`${name}`);
+    }
+  });
+
+  it('compares ids accurately', () => {
+    const padded = '0x' + '00'.repeat(12) + '11'.repeat(20);
+    const non = '0x' + '11'.repeat(20);
+    const notEqual = '0x' + '11'.repeat(19) + '01';
+    expect(utils.equalIds(padded, non)).toBe(true);
+    expect(utils.equalIds(padded, padded)).toBe(true);
+    expect(utils.equalIds(non, non)).toBe(true);
+    expect(utils.equalIds(non, notEqual)).toBe(false);
+  });
+
+  it('delays x milliseconds', async () => {
+    const ms = 10;
+    let task = false;
+    utils.delay(ms).then(() => {
+      task = true;
+    });
+    expect(task).toBe(false);
+    setTimeout(() => {
+      expect(task).toBe(true);
+    }, ms);
+  })
 });
