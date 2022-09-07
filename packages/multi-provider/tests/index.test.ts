@@ -1,4 +1,4 @@
-import { MultiProvider, Contracts } from '@nomad-xyz/multi-provider';
+import { MultiProvider, Contracts } from '../src';
 import { ethers } from 'ethers';
 
 interface Domain {
@@ -34,16 +34,12 @@ describe('multi-provider', () => {
     expect(values).toContainEqual(chainBDomain);
   });
 
-  it('returns array of domain numbers', () => {
-    const numbers = mp.domainNumbers;
-    expect(numbers).toContain(chainADomain.domain);
-    expect(numbers).toContain(chainBDomain.domain);
-  });
-
-  it('returns an array of domain names', () => {
-    const names = mp.domainNames;
-    expect(names).toContain(chainADomain.name);
-    expect(names).toContain(chainBDomain.name);
+  it('returns an array of domain numbers or names', () => {
+    const domains = [chainADomain, chainBDomain];
+    domains.forEach(d => {
+      expect(mp.domainNumbers).toContainEqual(d.domain);
+      expect(mp.domainNames).toContainEqual(d.name);
+    });
   });
 
   it('returns an array of missing providers', () => {
@@ -52,8 +48,8 @@ describe('multi-provider', () => {
     const bRegistered = mp.providers.has('b');
     expect(aRegistered).toEqual(false);
     expect(bRegistered).toEqual(false);
-    expect(missing).toContain(chainADomain.name);
-    expect(missing).toContain(chainBDomain.name);
+    expect(missing).toContainEqual(chainADomain.name);
+    expect(missing).toContainEqual(chainBDomain.name);
   });
 
   it('returns domain for given nameOrDomain', () => {

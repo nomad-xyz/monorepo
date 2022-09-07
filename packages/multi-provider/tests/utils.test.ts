@@ -115,5 +115,5 @@ describe('multi-provider utils', () => {
     setTimeout(() => {
       expect(task).toBe(true);
     }, ms);
-  })
+  });
 });
