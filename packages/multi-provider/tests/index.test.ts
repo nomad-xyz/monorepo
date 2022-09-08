@@ -19,7 +19,8 @@ describe('multi-provider', () => {
   const testProvider = new ethers.providers.JsonRpcProvider(
     'http://localhost:8545',
   );
-  const testSigner = testProvider.getSigner();
+  const signerAddr = '0x0123456789012345678901234567890123456789';
+  const testSigner = new ethers.VoidSigner(signerAddr);
 
   // register A and B domains
   beforeAll(() => {
@@ -40,6 +41,25 @@ describe('multi-provider', () => {
       expect(mp.domainNumbers).toContainEqual(d.domain);
       expect(mp.domainNames).toContainEqual(d.name);
     });
+  });
+
+  it('mustGetProvider throws if no provider', () => {
+    expect(() => mp.mustGetProvider()).toThrow();
+  });
+
+  it('getConnection returns undefined if no connection', () => {
+    expect(mp.getConnection(1000)).toBeUndefined();
+  });
+
+  it('mustGetConnection throws if no signer or provider', () => {
+    expect(() => mp.mustGetConnection(1000)).toThrow();
+
+    const context = new MultiProvider<Domain>();
+    context.registerDomain(chainADomain);
+    const { domain } = chainADomain;
+    context.registerRpcProvider(domain, 'https://test');
+    const provider = context.mustGetConnection(domain);
+    expect(provider).toBeDefined();
   });
 
   it('returns an array of missing providers', () => {
@@ -96,9 +116,13 @@ describe('multi-provider', () => {
     expect(() => mp.mustGetDomain('c')).toThrow();
   });
 
-  it.skip('registerSigner errors if no provider', () => {
-    // const err = 'Must have a provider before registering signer';
-    // expect(() => mp.registerSigner('a', new ethers.Signer)).to.throw(err);
+  it('registerSigner errors if no provider', () => {
+    expect(() => mp.registerSigner('a', testSigner)).toThrow();
+    try {
+      mp.registerSigner('a', testSigner);
+    } catch(e) {
+      expect(e.message).toContain('Missing provider')
+    }
   });
 
   // register A and B providers
@@ -168,11 +192,6 @@ describe('multi-provider', () => {
     }
   });
 
-  it('gets connection', () => {
-    const connectionA = mp.getConnection('a');
-    expect(connectionA).toEqual(testSigner);
-  });
-
   // unregisters B signer
   it('unregisters signer', () => {
     expect(mp.signers.has('b')).toEqual(true);
@@ -180,20 +199,25 @@ describe('multi-provider', () => {
     expect(mp.signers.has('b')).toEqual(false);
   });
 
-  it.skip('gets connection', () => {
+  it('gets connection', () => {
+    // get signer if provider and signer are registered
+    expect(mp.signers.has('a')).toEqual(true);
     const connectionA = mp.getConnection('a');
-    expect(connectionA).toEqual(testSigner);
+    expect(connectionA).toBeDefined();
+    expect(connectionA.address).toEqual(signerAddr);
 
-    // TODO: should return provider?
-    // const connectionB = mp.getConnection('b');
-    // expect(connectionB).to.equal(testSigner);
+    // gets provider if only provider is registered
+    const connectionB = mp.getConnection('b');
+    console.log('b', connectionB);
+    expect(connectionB).toBeDefined();
+    expect(connectionB._isProvider).toBe(true);
   });
 
-  it.skip('gets signer address', () => {
-    // TODO:
-    // const addressA = await mp.getAddress('a');
-    // const actualAddress = await testSigner.getAddress();
-    // expect(addressA).to.equal(actualAddress);
+  it('gets signer address', async () => {
+    const addressA = await mp.getAddress('a');
+    const actualAddress = await testSigner.getAddress();
+    expect(actualAddress).toEqual(addressA);
+    expect(actualAddress).toEqual(signerAddr);
   });
 
   it('mustGetSigner errors if signer is not registered for given nameOrDomain', () => {
@@ -209,8 +233,10 @@ describe('multi-provider', () => {
     expect(mp.signers.size).toEqual(0);
   });
 
-  it.skip('registers Wallet Signer', () => {
-    // TODO:
+  it('registers Wallet Signer', () => {
+    const privKey = '0x' + '11'.repeat(32);
+    mp.registerWalletSigner(1000, privKey);
+    expect(mp.getSigner(1000)).toBeDefined();
   });
 
   it('instantiates Contracts class with appropriate args', () => {
@@ -231,7 +257,7 @@ describe('multi-provider', () => {
     expect(newContracts.args[0]).toEqual(2000);
   });
 
-  it.skip('TODO: resolveDomainName errors', () => {
-    // TODO
+  it('resolveDomainName errors', () => {
+    expect(() => mp.resolveDomainName(5000)).toThrow();
   });
 });
