@@ -1,4 +1,5 @@
 import { Command, Flags } from '@oclif/core';
+import { execa } from 'execa';
 
 export default class Killswitch extends Command {
   static description = 'describe the command here';
@@ -15,14 +16,9 @@ export default class Killswitch extends Command {
   static args = [{ name: 'file' }];
 
   public async run(): Promise<void> {
-    const { args, flags } = await this.parse(Killswitch);
+    // TODO: type this object below correctly
+    // const { args, flags } = await this.parse(Killswitch);
 
-    const name = flags.name ?? 'world';
-    this.log(
-      `hello ${name} from /Users/imti/Nomad/monorepo/packages/nomad-cli/src/commands/killswitch.ts`,
-    );
-    if (args.file && flags.force) {
-      this.log(`you input --force and --file: ${args.file}`);
-    }
+    execa('echo', ['killswitch']).stdout?.pipe(process.stdout);
   }
 }

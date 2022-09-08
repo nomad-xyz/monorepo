@@ -10,6 +10,7 @@
   "repository": "nomad-xyz/monorepo",
   "license": "MIT",
   "author": "Imti Majeed @Imti",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": "./bin/run",
@@ -22,6 +23,7 @@
   "scripts": {
     "build": "shx rm -rf dist && tsc -b",
     "cli": "./bin/run",
+    "cli:dev": "./bin/dev",
     "generate:command": "oclif generate:command",
     "lint": "eslint --fix ./src ./tests",
     "prepack": "yarn build && oclif manifest && oclif readme",
@@ -35,7 +37,8 @@
     "@oclif/core": "^1.13.10",
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-plugins": "^2.0.1",
-    "@oclif/test": "^2.1.1"
+    "@oclif/test": "^2.1.1",
+    "execa": "^6.1.0"
   },
   "devDependencies": {
     "@types/jest": "^28.1.7",

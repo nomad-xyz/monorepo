@@ -3,6 +3,9 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
+    // See issue for why we need these compiler options: https://github.com/oclif/core/issues/421#issuecomment-1133125992
+    "module": "ES2020",
+    "moduleResolution": "node"
   },
   "exclude": [
     "node_modules",
@@ -12,5 +15,9 @@
   "include": [
     "src/**/*.ts",
   ],
-  "references": []
+  "references": [],
+  // See issue for why we need this ts-node option: https://github.com/oclif/core/issues/421#issuecomment-1133125992
+  "ts-node": {
+    "esm": true
+  }
 }
