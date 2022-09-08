@@ -11,15 +11,19 @@ contract DeployDABridgeRouter is Script {
     uint256 remoteDomain;
     address remoteUpdater;
     uint256 optimisticSeconds;
+    bytes32 daBridgePalletId;
 
     function loadEnvVars() public {
         localDomain = vm.envUint("LOCAL_DOMAIN");
         remoteDomain = vm.envUint("REMOTE_DOMAIN");
         remoteUpdater = vm.envAddress("REMOTE_UPDATER");
         optimisticSeconds = vm.envUint("OPTIMISTIC_SECONDS");
+        daBridgePalletId = vm.envBytes32("DA_BRIDGE_PALLET_ID");
     }
 
     function run() external {
+        loadEnvVars();
+
         vm.startBroadcast();
 
         Replica replica = new Replica(uint32(localDomain));
@@ -35,6 +39,7 @@ contract DeployDABridgeRouter is Script {
 
         DABridgeRouter router = new DABridgeRouter();
         router.initialize(address(manager));
+        router.enrollRemoteRouter(uint32(remoteDomain), daBridgePalletId);
 
         vm.stopBroadcast();
     }
