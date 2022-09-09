@@ -1,5 +1,5 @@
 import { Command, Flags } from '@oclif/core';
-import { execa } from 'execa';
+import execa from 'execa';
 
 export default class Killswitch extends Command {
   static description = 'describe the command here';
@@ -16,9 +16,7 @@ export default class Killswitch extends Command {
   static args = [{ name: 'file' }];
 
   public async run(): Promise<void> {
-    // TODO: type this object below correctly
-    // const { args, flags } = await this.parse(Killswitch);
-
-    execa('echo', ['killswitch']).stdout?.pipe(process.stdout);
+    await execa('echo', ['killswitch']).stdout?.pipe(process.stdout);
+    this.log('killswitch called');
   }
 }

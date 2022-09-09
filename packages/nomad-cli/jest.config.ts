@@ -1,6 +1,6 @@
-module.exports = {
+export default {
   preset: 'ts-jest',
-  testEnvironment: 'ts-node',
+  testEnvironment: 'node',
   collectCoverage: true,
   coverageDirectory: 'coverage',
   verbose: true,
@@ -9,5 +9,4 @@ module.exports = {
       isolatedModules: true,
     },
   },
-  transform: {},
 };

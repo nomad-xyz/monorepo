@@ -5,7 +5,7 @@
     "rootDir": "src",
     // See issue for why we need these compiler options: https://github.com/oclif/core/issues/421#issuecomment-1133125992
     "module": "ES2020",
-    "moduleResolution": "node"
+    "moduleResolution": "node16"
   },
   "exclude": [
     "node_modules",
@@ -13,7 +13,7 @@
     "src/tmp.ts"
   ],
   "include": [
-    "src/**/*.ts",
+    "src/**/*.ts"
   ],
   "references": [],
   // See issue for why we need this ts-node option: https://github.com/oclif/core/issues/421#issuecomment-1133125992
