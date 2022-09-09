@@ -1,7 +1,7 @@
 import { expect } from '@oclif/test';
 import Killswitch from '../../../src/commands/killswitch';
 
-describe.skip('killswitch', () => {
+describe('killswitch', () => {
   let result;
 
   beforeEach(() => {
