@@ -12,7 +12,7 @@ contract DABridgeRouterTest is Test {
 
     event Receive(
         uint64 indexed originAndNonce,
-        uint64 indexed blockNumber,
+        uint32 indexed blockNumber,
         bytes32 dataRoot
     );
 
@@ -20,7 +20,7 @@ contract DABridgeRouterTest is Test {
     uint32 invalidDomain = uint32(2);
     bytes32 remoteRouter = bytes32(uint256(1));
 
-    uint64 _blockNumber = type(uint64).max;
+    uint32 _blockNumber = type(uint32).max;
     bytes32 _dataRoot = keccak256("dataRoot");
 
     function setUp() public {

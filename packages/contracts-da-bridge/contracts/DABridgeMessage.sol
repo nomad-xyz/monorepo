@@ -30,7 +30,7 @@ library DABridgeMessage {
     // ============ Constants ============
 
     uint256 private constant IDENTIFIER_LEN = 1;
-    uint256 private constant BLOCK_NUMBER_LEN = 8;
+    uint256 private constant BLOCK_NUMBER_LEN = 4;
     uint256 private constant DATA_ROOT_LEN = 32;
 
     // ============ Internal Functions ============
@@ -88,7 +88,7 @@ library DABridgeMessage {
      * @param _root The root
      * @return The formatted data root
      */
-    function formatDataRoot(uint64 _blockNumber, bytes32 _root)
+    function formatDataRoot(uint32 _blockNumber, bytes32 _root)
         internal
         pure
         returns (bytes memory)
@@ -101,9 +101,9 @@ library DABridgeMessage {
      * @param _message The message
      * @return The block number
      */
-    function blockNumber(bytes29 _message) internal pure returns (uint64) {
+    function blockNumber(bytes29 _message) internal pure returns (uint32) {
         return
-            uint64(_message.indexUint(IDENTIFIER_LEN, uint8(BLOCK_NUMBER_LEN)));
+            uint32(_message.indexUint(IDENTIFIER_LEN, uint8(BLOCK_NUMBER_LEN)));
     }
 
     /**

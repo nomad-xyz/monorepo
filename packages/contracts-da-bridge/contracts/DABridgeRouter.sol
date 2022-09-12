@@ -21,7 +21,7 @@ contract DABridgeRouter is Version0, Router {
 
     // ============ Public Storage ============
 
-    mapping(uint64 => bytes32) public roots;
+    mapping(uint32 => bytes32) public roots;
     uint32 private _availDomain;
 
     // ============ Upgrade Gap ============
@@ -41,7 +41,7 @@ contract DABridgeRouter is Version0, Router {
      */
     event Receive(
         uint64 indexed originAndNonce,
-        uint64 indexed blockNumber,
+        uint32 indexed blockNumber,
         bytes32 root
     );
 
@@ -94,7 +94,7 @@ contract DABridgeRouter is Version0, Router {
         uint32 _nonce,
         bytes29 _message
     ) internal {
-        (uint64 blockNumber, bytes32 dataRoot) = _parse(_message);
+        (uint32 blockNumber, bytes32 dataRoot) = _parse(_message);
         assert(roots[blockNumber] == 0);
         roots[blockNumber] = dataRoot;
         emit Receive(_originAndNonce(_origin, _nonce), blockNumber, dataRoot);
@@ -107,7 +107,7 @@ contract DABridgeRouter is Version0, Router {
     function _parse(bytes29 _message)
         internal
         pure
-        returns (uint64 blockNumber, bytes32 dataRoot)
+        returns (uint32 blockNumber, bytes32 dataRoot)
     {
         blockNumber = _message.blockNumber();
         dataRoot = _message.dataRoot();
