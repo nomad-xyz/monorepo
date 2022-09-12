@@ -13,8 +13,7 @@ contract MockImpl {
 
     function roahan() public {
         if (fires) {
-            emit Quote("The beacons are lit. Gondor calls for aid....
-                       \n And Rohan will answer. Master the Rohirim");
+            emit Quote("The beacons are lit. Gondor calls for aid....\n And Rohan will answer. Master the Rohirim");
         }
     }
 
