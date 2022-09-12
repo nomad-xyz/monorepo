@@ -26,7 +26,7 @@ contract UpgradeTest is Test {
         implAddr = address(impl);
     }
 
-    function isContract(address adr) internal returns (bool) {
+    function isContract(address adr) internal view returns (bool) {
         return Address.isContract(adr);
     }
 

@@ -5,6 +5,8 @@ pragma solidity 0.7.6;
 
 import {UpgradeTest} from "./utils/UpgradeTest.sol";
 import {MockBeacon} from "./utils/MockBeacon.sol";
+import {MockBeaconRevert} from "./utils/MockBeaconRevert.sol";
+import {MockBeaconNotAddr} from "./utils/MockBeaconNotAddr.sol";
 import {UpgradeBeaconProxy} from "../upgrade/UpgradeBeaconProxy.sol";
 
 contract UpgradeProxyTest is UpgradeTest {
@@ -19,7 +21,7 @@ contract UpgradeProxyTest is UpgradeTest {
         mockBeacon = new MockBeacon(implAddr, controllerAddr);
         beaconAddr = address(mockBeacon);
         vm.expectEmit(false, false, false, true);
-        emit Quote("The fires are lit! The fires of Amon din are lit");
+        emit Quote("The fires are lit! The fires of Amon Din are lit");
         proxy = new UpgradeBeaconProxy(
             beaconAddr,
             abi.encodeWithSignature("gondor()")
@@ -33,5 +35,89 @@ contract UpgradeProxyTest is UpgradeTest {
         );
         assert(success);
         assert(abi.decode(data, (bool)));
+    }
+
+    function test_constructorBeaconNotContract() public {
+        beaconAddr = address(0xBEEF);
+        vm.expectRevert("beacon !contract");
+        proxy = new UpgradeBeaconProxy(
+            beaconAddr,
+            abi.encodeWithSignature("gondor()")
+        );
+    }
+
+    function test_constructorBeaconNotContractFuzzed(address beaconAddr)
+        public
+    {
+        vm.assume(!isContract(beaconAddr));
+        vm.expectRevert("beacon !contract");
+        proxy = new UpgradeBeaconProxy(
+            beaconAddr,
+            abi.encodeWithSignature("gondor()")
+        );
+    }
+
+    function test_constructorImplNotcontract() public {
+        implAddr = address(0xBEEF);
+        mockBeacon = new MockBeacon(implAddr, controllerAddr);
+        beaconAddr = address(mockBeacon);
+        vm.expectRevert("beacon implementation !contract");
+        proxy = new UpgradeBeaconProxy(
+            beaconAddr,
+            abi.encodeWithSignature("gondor()")
+        );
+    }
+
+    function test_constructorImplNotcontractFuzzed(address implAddr) public {
+        vm.assume(!isContract(implAddr));
+        mockBeacon = new MockBeacon(implAddr, controllerAddr);
+        beaconAddr = address(mockBeacon);
+        vm.expectRevert("beacon implementation !contract");
+        proxy = new UpgradeBeaconProxy(
+            beaconAddr,
+            abi.encodeWithSignature("gondor()")
+        );
+    }
+
+    function test_fallback() public {
+        vm.expectEmit(false, false, false, true);
+        emit Quote("I am no man");
+        proxyAddr.call(abi.encodeWithSignature("witchKing(bool)", true));
+    }
+
+    function test_fallbackRevert() public {
+        vm.expectRevert("no man can kill me");
+        proxyAddr.call(abi.encodeWithSignature("witchKing(bool)", false));
+    }
+
+    function test_receive() public {
+        // Give 10 ether
+        vm.deal(address(this), 10);
+        // Empty calldata + value invokes the receive() function
+        emit Quote(
+            "Nine were given to the kings of men whose heart above all desire Power"
+        );
+        proxyAddr.call{value: 1}("");
+    }
+
+    // Test that if beacon reverts during `_getImplementation`, proxy will return the
+    // revert error
+    function test_getImplementationRevert() public {
+        MockBeaconRevert mockBeaconRevert = new MockBeaconRevert(
+            implAddr,
+            controllerAddr
+        );
+        vm.expectRevert(abi.encodeWithSignature("Error(string)", "lol no"));
+        proxy = new UpgradeBeaconProxy(address(mockBeaconRevert), "");
+    }
+
+    // Test that if beacon returns raw bytes that aren't an address
+    function test_getImplementationNotAddress() public {
+        MockBeaconNotAddr mockBeaconNotAddr = new MockBeaconNotAddr(
+            implAddr,
+            controllerAddr
+        );
+        vm.expectRevert("beacon implementation !contract");
+        proxy = new UpgradeBeaconProxy(address(mockBeaconNotAddr), "");
     }
 }
