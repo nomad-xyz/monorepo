@@ -22,10 +22,10 @@ contract DABridgeMessageTest is Test {
     using DABridgeMessage for bytes29;
 
     uint256 private constant IDENTIFIER_LEN = 1;
-    uint256 private constant BLOCK_NUMBER_LEN = 8;
+    uint256 private constant BLOCK_NUMBER_LEN = 4;
     uint256 private constant DATA_ROOT_LEN = 32;
 
-    uint64 _blockNumber = type(uint64).max;
+    uint32 _blockNumber = type(uint32).max;
     bytes32 _dataRoot = keccak256("dataRoot");
 
     function setUp() public {}
@@ -39,9 +39,9 @@ contract DABridgeMessageTest is Test {
     /// @notice A DABridgeMessage must be IDENTIFIER_LEN + BLOCK_NUMBER_LEN + DATA_ROOT_LEN
     /// so that it can contain all the required information needed by the Bridge.
     function test_isValidMessageLength() public {
-        bytes memory longMessage = new bytes(42);
-        bytes memory correctMessage = new bytes(41);
-        bytes memory shortMessage = new bytes(40);
+        bytes memory longMessage = new bytes(38);
+        bytes memory correctMessage = new bytes(37);
+        bytes memory shortMessage = new bytes(36);
         bytes29 longView = longMessage.ref(0);
         bytes29 correctView = correctMessage.ref(0);
         bytes29 shortView = shortMessage.ref(0);
