@@ -11,12 +11,6 @@ contract MockImpl {
         emit Quote("The fires are lit! The fires of Amon Din are lit");
     }
 
-    function roahan() public {
-        if (fires) {
-            emit Quote("The beacons are lit. Gondor calls for aid....\n And Rohan will answer. Master the Rohirim");
-        }
-    }
-
     function witchKing(bool female) public {
         require(female, "No man can kill me");
         emit Quote("I am no man");
