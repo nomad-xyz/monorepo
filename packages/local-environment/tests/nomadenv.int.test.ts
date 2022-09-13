@@ -5,7 +5,7 @@ import { NomadEnv } from "../src/nomadenv";
 import Docker from "dockerode";
 import { LocalAgent } from "../src/agent";
 import chaiAsPromised from "chai-as-promised";
- 
+
 chaiUse(chaiAsPromised);
 
 describe("NomadDomain test", () => {
