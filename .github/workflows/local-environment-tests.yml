@@ -29,9 +29,9 @@ jobs:
         run: |
           yarn build
 
-      - name: Yarn Bootup
+      - name: Yarn Prepare
         run: |
-          yarn bootup
+          yarn prepare
           
       - name: Run Integration Tests
         run: |
@@ -60,10 +60,6 @@ jobs:
       - name: Yarn Build
         run: |
           yarn build
-
-      - name: Yarn Bootup
-        run: |
-          yarn bootup
 
       - name: Run Unit Tests
         run: |

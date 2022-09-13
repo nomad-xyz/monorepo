@@ -1,9 +1,9 @@
 {
   "name": "@nomad-xyz/local-environment",
   "version": "1.0.0",
-  "description": "",
+  "description": "Nomad Local Environment",
   "license": "ISC",
-  "author": "",
+  "author": "Illusory Systems Inc.",
   "main": "dist/index.ts",
   "types": "dist/index.d.ts",
   "files": [
@@ -16,9 +16,9 @@
     "agents_stop": "docker ps --filter name=_agent -aq | xargs docker rm --force",
     "agents_stop_running": "docker ps --filter name=_agent --filter status=running -aq | xargs docker stop",
     "build": "tsc --build",
-    "bootup": "./bootup.sh",
     "cleanup": "npm run hardhat_stop && npm run agents_stop && npm run agents_clean",
     "hardhat_stop": "docker ps --filter name=_net -aq | xargs docker rm --force",
+    "prepare": "./prepare.sh",
     "test:unit": "jest unit --detectOpenHandles --ci --forceExit",
     "test:integration": "jest int --detectOpenHandles --ci --forceExit",
     "test:nomadenv": "jest --detectOpenHandles -t 'nomadenv'",
