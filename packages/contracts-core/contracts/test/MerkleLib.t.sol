@@ -3,10 +3,13 @@ pragma solidity 0.7.6;
 
 import "forge-std/Test.sol";
 import "../libs/Merkle.sol";
+import {MerkleTest} from "./utils/MerkleTest.sol";
 
 contract MerkleLibTest is Test {
     using MerkleLib for MerkleLib.Tree;
     MerkleLib.Tree tree;
+    MerkleLib.Tree otherTree;
+    MerkleTest merkleTest;
 
     bytes32 firstItem;
     bytes32 secondItem;
@@ -20,6 +23,8 @@ contract MerkleLibTest is Test {
         tree.insert(firstItem);
         tree.insert(secondItem);
         assertEq(tree.count, 2);
+
+        merkleTest = new MerkleTest();
     }
 
     function test_depthIs32() public {
@@ -34,6 +39,42 @@ contract MerkleLibTest is Test {
         tree.count = MerkleLib.MAX_LEAVES;
         vm.expectRevert("merkle tree full");
         tree.insert(firstItem);
+    }
+
+    function test_insert() public {
+        tree.insert(thirdItem);
+        assertEq(tree.count, 3);
+        assertEq(
+            tree.branch[0],
+            hex"4477617276657300000000000000000000000000000000000000000000000000"
+        );
+        assertEq(
+            tree.branch[1],
+            hex"ef9e5bd449a24d67e3b7bfb742ee07d151d2999f134b78cb1f6b16f5c963be76"
+        );
+        assertEq(
+            tree.branch[2],
+            hex"0000000000000000000000000000000000000000000000000000000000000000"
+        );
+    }
+
+    function test_rootDifferential() public {
+        bytes memory item = "hey";
+        otherTree.insert(keccak256(item));
+        (bytes32 root, , , bytes32[32] memory proof) = merkleTest.getProof(
+            item
+        );
+        assertEq(otherTree.root(), root);
+    }
+
+    function test_root() public {
+        // root of the tree with a state as defined in the setUp() function
+        assertEq(
+            tree.root(),
+            bytes32(
+                hex"a1abd8796700ac5e2bb7be26424ba7c2a8181d81f54e8c5ac51afae62d10b5e9"
+            )
+        );
     }
 
     function test_zeroHashes() public {
