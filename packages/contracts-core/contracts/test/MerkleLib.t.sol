@@ -22,8 +22,6 @@ contract MerkleLibTest is Test {
         assertEq(tree.count, 0);
         tree.insert(firstItem);
         tree.insert(secondItem);
-        assertEq(tree.count, 2);
-
         merkleTest = new MerkleTest();
     }
 
@@ -42,20 +40,31 @@ contract MerkleLibTest is Test {
     }
 
     function test_insert() public {
+        // state of the tree before inserting a third element
+        assertEq(tree.branch[0], firstItem);
+        assertEq(
+            tree.branch[1],
+            keccak256(abi.encodePacked(tree.branch[0], secondItem))
+        );
+        assertEq(tree.count, 2);
         tree.insert(thirdItem);
+        // state of the tree after inserting a third element
         assertEq(tree.count, 3);
         assertEq(
             tree.branch[0],
             hex"4477617276657300000000000000000000000000000000000000000000000000"
         );
+        assertEq(tree.branch[0], thirdItem);
         assertEq(
             tree.branch[1],
             hex"ef9e5bd449a24d67e3b7bfb742ee07d151d2999f134b78cb1f6b16f5c963be76"
         );
-        assertEq(
-            tree.branch[2],
-            hex"0000000000000000000000000000000000000000000000000000000000000000"
-        );
+        for (uint256 i = 2; i < 32; i++) {
+            assertEq(
+                tree.branch[i],
+                hex"0000000000000000000000000000000000000000000000000000000000000000"
+            );
+        }
     }
 
     function test_rootDifferential() public {
@@ -65,6 +74,17 @@ contract MerkleLibTest is Test {
             item
         );
         assertEq(otherTree.root(), root);
+    }
+
+    function test_branchRootDifferentialFuzzed(bytes memory item) public {
+        (
+            bytes32 root,
+            bytes32 leaf,
+            uint256 index,
+            bytes32[32] memory proof
+        ) = merkleTest.getProof(item);
+        bytes32 calcRoot = MerkleLib.branchRoot(keccak256(item), proof, index);
+        assertEq(calcRoot, root);
     }
 
     function test_root() public {
