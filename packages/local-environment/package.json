@@ -22,6 +22,8 @@
     "test:unit": "jest unit --detectOpenHandles --ci --forceExit",
     "test:integration": "jest int --detectOpenHandles --ci --forceExit",
     "test:nomadenv": "jest --detectOpenHandles -t 'nomadenv'",
+    "test:sendTokens": "jest --detectOpenHandles -t 'Token'",
+    "test:sameNet": "jest --detectOpenHandles -t 'Same net'",
     "start": "npx ts-node tests/start.ts",
     "test-agents-die": "npx ts-node tests/agentsDieOnImproperUpdate.ts",
     "test-double-update": "npx ts-node tests/watcherDoubleUpdate.ts",

@@ -147,6 +147,8 @@ interface AnyNetworkOptions {
 interface HardhatNetworkOptions extends AnyNetworkOptions {
   notFirstStart?: boolean;
   keys?: Key[];
+  handler?: DockerizedNetworkActor;
+  chainId?: number;
 }
 
 // TODO: Some idea to abstract test net
@@ -174,8 +176,8 @@ export class HardhatNetwork extends Network {
   handler: DockerizedNetworkActor;
 
   constructor(name: string, domain: number, options?: HardhatNetworkOptions) {
-    super(name, domain, domain);
-    this.handler = new DockerizedNetworkActor(this.name);
+    super(name, domain, options?.chainId || domain);
+    this.handler = options?.handler || new DockerizedNetworkActor(this.name);
     this.blockTime = 10;
     this.firstStart = false;
     this.keys = options?.keys || [];
@@ -213,6 +215,13 @@ export class HardhatNetwork extends Network {
     this.keys.push(...ks);
   }
 
+  clone(name: string, domain: number, options?: HardhatNetworkOptions): HardhatNetwork {
+    if (!options) options = {};
+    options.handler = this.handler;
+    options.chainId = this.chainId;
+    return new HardhatNetwork(name, domain, options)
+  }
+
   get rpcs(): string[] {
     return [`http://localhost:${this.handler.port}`];
   }
@@ -241,8 +250,8 @@ export class HardhatNetwork extends Network {
     };
   }
 
-  async setWETH(wethAddy: Promise<string>): Promise<void> {
-    this.weth = await wethAddy;
+  async setWETH(wethAddy: string) {
+    this.weth = wethAddy;
   }
 
   get bridgeConfig(): BridgeConfiguration {

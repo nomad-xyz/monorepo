@@ -10,13 +10,13 @@ import bunyan from 'bunyan';
 import { NomadDomain } from "../src/domain";
 import { expect, assert } from "chai";
 
-describe("Token test", () => {
+describe("Same net token test", () => {
     // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
     const log = bunyan.createLogger({name: 'localenv'});
 
     // Instantiate HardhatNetworks
     const t = new HardhatNetwork('tom', 1);
-    const j = new HardhatNetwork('jerry', 2);
+    const j = t.clone('jerry', 2);
 
     const sender = new Key();
     const receiver = new Key();
@@ -39,21 +39,16 @@ describe("Token test", () => {
     log.info(`Connected Tom and Jerry`);
 
     async function setUp() {
-        await le.upNetworks();
+        await le.upNetworks(true);
         log.info(`Upped Tom and Jerry`);
     
         // Notes, check governance router deployment on Jerry and see if that's actually even passing
         // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
+        const weth = await t.deployWETH();
+        t.setWETH(weth);
+        j.setWETH(weth);
     
-        const [teth, jeth] = await Promise.all([
-          t.deployWETH(),
-          j.deployWETH()
-        ])
-      
-        t.setWETH(teth);
-        j.setWETH(jeth);
-    
-        log.info(await le.deploy());
+        log.info(await le.deploy({sameDeployer: true}));
         
         await le.upAgents()
         // warning: nokathy. 

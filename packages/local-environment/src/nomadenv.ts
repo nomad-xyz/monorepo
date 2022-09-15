@@ -10,6 +10,10 @@ import { HardhatNetwork } from "./network";
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import { NomadContext } from "@nomad-xyz/sdk";
 
+export interface DeployOptions {
+  sameDeployer?: boolean
+}
+
 if (!fs.existsSync("../../.env"))
   dotenv.config({ path: __dirname + "/../.env.example" });
 else dotenv.config();
@@ -65,10 +69,10 @@ export class NomadEnv {
     return this.bridgeSDK;
   }
 
-  async deployFresh(): Promise<DeployContext> {
+  async deployFresh(opts?: DeployOptions): Promise<DeployContext> {
     this.log.info(`Deploying!`);
 
-    const deployContext = this.setDeployContext();
+    const deployContext = this.setDeployContext(opts);
 
     const outputDir = "./output";
     const governanceBatch = await deployContext.deployAndRelinquish();
@@ -83,13 +87,13 @@ export class NomadEnv {
     return deployContext
   }
 
-  async deploy(): Promise<DeployContext> {
+  async deploy(opts?: DeployOptions): Promise<DeployContext> {
     let context;
     if (this.deployedOnce()) {
       //TODO: INPUT RESUME DEPLOYMENT LOGIC HERE
       throw new Error(`LOOK AT ME!`)
     } else {
-      context = await this.deployFresh();
+      context = await this.deployFresh(opts);
     }
     this.refreshSDK(context.data);
 
@@ -155,16 +159,20 @@ export class NomadEnv {
     return Array.from(this.domains.values());
   }
 
-  setDeployContext(): DeployContext {
+  setDeployContext(opts?: DeployOptions): DeployContext {
     //@TODO remove re-initialization.
     const deployContext = new DeployContext(this.nomadConfig());
+    const wallet = new ethers.Wallet(this.deployerKey);
+    const firstProvider = deployContext.mustGetProvider(this.domains[0]!.network.name);
+    const signer = opts?.sameDeployer ? new NonceManager(wallet).connect(firstProvider) : undefined;
+
     // add deploy signer and overrides for each network
     for (const domain of this.domains) {
+      if (opts?.sameDeployer) deployContext.unregisterProvider(domain.network.name);
+
       const name = domain.network.name;
-      const provider = deployContext.mustGetProvider(name);
-      const wallet = new ethers.Wallet(this.deployerKey, provider);
-      const signer = new NonceManager(wallet);
-      deployContext.registerSigner(name, signer);
+      const domainSigner = signer || new NonceManager(wallet).connect(deployContext.mustGetProvider(name));
+      deployContext.registerSigner(name, domainSigner);
       deployContext.overrides.set(name, domain.network.deployOverrides);
     }
     return deployContext;
@@ -234,9 +242,15 @@ export class NomadEnv {
     await Promise.all(this.domains.map((d) => d.down()));
   }
 
-  async upNetworks() {
+  async upNetworks(sequential=false) {
     // Await domains to up networks.
-    await Promise.all(this.domains.map((d) => d.networkUp()));
+    if (sequential) {
+      for (const domain of this.domains) {
+        await domain.networkUp();
+      }
+    } else {
+      await Promise.all(this.domains.map((d) => d.networkUp()));
+    }
   }
 }
 
@@ -273,7 +287,13 @@ export async function defaultStart() {
   // Notes, check governance router deployment on Jerry and see if that's actually even passing
   // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
-  await Promise.all([t.setWETH(t.deployWETH()), j.setWETH(j.deployWETH())]);
+  const [teth, jeth] = await Promise.all([
+    t.deployWETH(),
+    j.deployWETH()
+  ])
+
+  t.setWETH(teth);
+  j.setWETH(jeth);
 
   log.info(await le.deploy());
 

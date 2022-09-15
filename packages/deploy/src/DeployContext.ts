@@ -45,6 +45,11 @@ export class DeployContext extends MultiProvider<config.Domain> {
     this._callBatch = CallBatch.fromContext(this.asNomadContext);
   }
 
+  unregisterProvider(nameOrDomain: string | number): void {
+    const name = this.resolveDomainName(nameOrDomain);
+    this.providers.delete(name);
+  }
+
   get asNomadContext(): NomadContext {
     const ctx = new NomadContext(this.data);
     for (const [domain, provider] of this.providers.entries()) {
