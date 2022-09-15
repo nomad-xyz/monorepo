@@ -6,9 +6,7 @@ import chaiAsPromised from "chai-as-promised";
 
 chaiUse(chaiAsPromised);
 
-jest.mock("../src/agent");
-jest.mock("../src/domain");
-jest.mock("../src/network");
+jest.enableAutomock();
 
 const network = new HardhatNetwork('local', 1337);
 
@@ -18,7 +16,6 @@ test("successfully calls LocalAgent functions", () => {
     const testAgents = new Agents(domain, 1337);
     const testLocalAgent = new LocalAgent(AgentType.Kathy, domain, 1337);
 
-    jest.spyOn(testAgents, "upAll");
     testAgents.upAll();
     expect(testAgents.upAll).toHaveBeenCalled();
 
