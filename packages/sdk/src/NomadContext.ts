@@ -7,6 +7,7 @@ import fetch from 'cross-fetch';
 
 import { CoreContracts } from './CoreContracts';
 import { NomadMessage } from './messages/NomadMessage';
+import EventBackend from './eventBackend/backend';
 
 export type Address = string;
 
@@ -54,6 +55,37 @@ export type MessageProof = {
   };
 };
 
+export type EventFilter = {
+  committedRoot: string, 
+  messageHash: string,
+};
+
+export interface Update {
+  tag: "update",
+  homeDomain: number;
+  oldRoot: string;
+  newRoot: string;
+  signature: string;
+  transactionHash: string;
+  timestamp: string;
+}
+
+export interface Process {
+  tag: "process",
+  messageHash: string;
+  success: boolean;
+  returnData: string;
+  transactionHash: string;
+  timestamp: string;
+}
+
+export type EventResult = {
+  update?: Update, 
+  relay?: Update,
+  process?: Process,
+}
+
+
 /**
  * The NomadContext manages connections to Nomad core and Bridge contracts.
  * It inherits from the {@link MultiProvider}, and ensures that its contracts
@@ -69,9 +101,10 @@ export type MessageProof = {
 export class NomadContext extends MultiProvider<config.Domain> {
   protected _cores: Map<string, CoreContracts<this>>;
   protected _blacklist: Set<number>;
+  protected _backend: EventBackend<EventFilter, EventResult>;
   readonly conf: config.NomadConfig;
 
-  constructor(environment: string | config.NomadConfig = 'development') {
+  constructor(environment: string | config.NomadConfig = 'development', backend: EventBackend<EventFilter, EventResult>) {
     super();
 
     const conf: config.NomadConfig =
@@ -83,6 +116,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
     this.conf = conf;
     this._cores = new Map();
     this._blacklist = new Set();
+    this._backend = backend;
 
     for (const network of this.conf.networks) {
       // register domain
@@ -372,5 +406,9 @@ export class NomadContext extends MultiProvider<config.Domain> {
       }
       throw e;
     }
+  }
+
+  async _events(f: EventFilter): Promise<EventResult> {
+    return await this._backend.getEvents(f);
   }
 }
