@@ -1,11 +1,11 @@
 {
   "name": "@nomad-xyz/local-environment",
-  "version": "1.0.0",
   "description": "",
   "license": "ISC",
   "author": "",
   "main": "dist/index.ts",
   "types": "dist/index.d.ts",
+  "version": "0.0.1-rc.0",
   "files": [
     "dist/**/*",
     "src/**/*"
