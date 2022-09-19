@@ -40,5 +40,6 @@ jobs:
 
       - name: Publish to NPM
         run: npm publish
+        working-directory: ./packages/local-environment
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
