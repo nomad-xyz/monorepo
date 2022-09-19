@@ -19,28 +19,22 @@ export default {
   clearMocks: true,
 
   // Indicates whether the coverage information should be collected while executing the test
-  collectCoverage: true,
+  // collectCoverage: true,
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   // collectCoverageFrom: undefined,
 
   // The directory where Jest should output its coverage files
-  coverageDirectory: "coverage",
+  coverageDirectory: ".coverage",
 
   // An array of regexp pattern strings used to skip coverage collection
-  coveragePathIgnorePatterns: [
-    "/node_modules/"
-  ],
+  coveragePathIgnorePatterns: ["/node_modules/"],
 
   // Indicates which provider should be used to instrument code for coverage
   // coverageProvider: "babel",
 
   // A list of reporter names that Jest uses when writing coverage reports
-  coverageReporters: [
-    "json",
-    "text",
-    "html",
-  ],
+  coverageReporters: ["json", "text", "html"],
 
   // An object that configures minimum threshold enforcement for coverage results
   // coverageThreshold: undefined,
@@ -136,7 +130,7 @@ export default {
   // setupFiles: [],
 
   //A list of paths to modules that run some code to configure or set up the testing framework before each test
-  setupFilesAfterEnv: ['./jest.setup.ts'],
+  setupFilesAfterEnv: ["./jest.setup.ts"],
 
   // The number of seconds after which a test is considered as slow and reported as such in the results.
   // slowTestThreshold: 5,
@@ -193,5 +187,4 @@ export default {
 
   // Whether to use watchman for file crawling
   // watchman: true,
-  
 };

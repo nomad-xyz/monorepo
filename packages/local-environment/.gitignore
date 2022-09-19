@@ -1,5 +1,5 @@
 .env
 output/verification-*
 output/config.json
-coverage
+.coverage
 !output/.gitkeep

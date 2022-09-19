@@ -23,7 +23,7 @@
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
-    "coverage": "echo TODO: Fix tests",
+    "coverage": "jest --collectCoverage",
     "lint": "eslint --fix ./src ./tests",
     "prettier": "prettier --write ./src ./tests",
     "test:unit": "jest"
