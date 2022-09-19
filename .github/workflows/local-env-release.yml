@@ -1,0 +1,44 @@
+name: Local Environment Release
+on: workflow_dispatch
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1 
+        with:
+          version: nightly
+
+      - name: Yarn Install
+        run: |
+          yarn install
+
+      - name: Yarn Lint
+        run: |
+          yarn lint
+
+      - name: Yarn Build
+        run: |
+          yarn build
+
+      - name: Yarn Bootup
+        run: |
+          yarn bootup
+
+      - name: Run Unit Tests
+        run: |
+          yarn local-environment test:unit
+        timeout-minutes: 30
+
+      - name: Yarn version
+        run: |
+          yarn version 
+
+      - name: Publish to NPM
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.MY_SECRET }}
