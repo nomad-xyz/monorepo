@@ -161,4 +161,151 @@ contract GovernanceMessageTest is Test {
             delete diffCalls;
         }
     }
+
+    function test_isValidBatchDetectBatch() public {
+        // batch type in the form of a uint8
+        bytes memory data = hex"01";
+        // Append an empty bytes array of 32 bytes
+        data = abi.encodePacked(data, new bytes(32));
+        assert(GovernanceMessage.isValidBatch(data.ref(0)));
+    }
+
+    function test_isValidBatchDetectBatchFuzzed(bytes memory data) public {
+        vm.assume(data.length == 32);
+        data = abi.encodePacked(hex"01", data);
+        assert(GovernanceMessage.isValidBatch(data.ref(0)));
+    }
+
+    function test_isValidBatchWrongIdentifier() public {
+        // batch type in the form of a uint8
+        bytes memory data = hex"02";
+        // Append an empty bytes array of 32 bytes
+        data = abi.encodePacked(data, new bytes(32));
+        assertFalse(GovernanceMessage.isValidBatch(data.ref(0)));
+    }
+
+    function test_isValidBatchWrongIdentifierFuzzed(uint8 viewType) public {
+        // batch type in the form of a uint8
+        // Append an empty bytes array of 32 bytes
+        bytes memory data = abi.encodePacked(
+            abi.encodePacked(viewType),
+            new bytes(32)
+        );
+        if (viewType == 1) {
+            assert(GovernanceMessage.isValidBatch(data.ref(0)));
+        } else {
+            assertFalse(GovernanceMessage.isValidBatch(data.ref(0)));
+        }
+    }
+
+    function test_isValidBatchWrongIdentifierFuzzed(
+        uint8 viewType,
+        bytes memory data
+    ) public {
+        vm.assume(data.length == 32 && viewType != 1);
+        data = abi.encodePacked(abi.encodePacked(viewType), data);
+        assertFalse(GovernanceMessage.isValidBatch(data.ref(0)));
+    }
+
+    function test_isValidBatchWrongLength() public {
+        // batch type in the form of a uint8
+        bytes memory data = hex"01";
+        // Append an empty bytes array of 32 bytes
+        data = abi.encodePacked(data, new bytes(23));
+        assertFalse(GovernanceMessage.isValidBatch(data.ref(0)));
+    }
+
+    function test_isValidBatchWrongLengthFuzzed(bytes memory data) public {
+        vm.assume(data.length != 32);
+        data = abi.encodePacked(hex"01", data);
+        assertFalse(GovernanceMessage.isValidBatch(data.ref(0)));
+    }
+
+    function test_isBatchDetectsViewType() public {
+        bytes memory data = hex"01";
+        // Append an empty bytes array of 32 bytes
+        data = abi.encodePacked(data, new bytes(32));
+        assert(GovernanceMessage.isBatch(data.ref(1)));
+        assertFalse(GovernanceMessage.isBatch(data.ref(2)));
+    }
+
+    function test_isBatchDetectsViewTypeFuzzed(
+        uint8 viewType,
+        bytes memory data
+    ) public {
+        vm.assume(data.length == 32);
+        bytes memory prefix = abi.encodePacked(viewType);
+        // Append an empty bytes array of 32 bytes
+        data = abi.encodePacked(prefix, data);
+        if (viewType == 1) {
+            assert(GovernanceMessage.isBatch(data.ref(viewType)));
+        } else {
+            assertFalse(GovernanceMessage.isBatch(data.ref(viewType)));
+        }
+    }
+
+    function test_isBatchDifferentViewTypeToPrefixFuzzed(
+        uint8 viewType,
+        bytes memory data
+    ) public {
+        vm.assume(data.length == 32 && viewType < 3);
+        // the prefix is different to the type of the view
+        bytes memory prefix = hex"01";
+        // Append an empty bytes array of 32 bytes
+        data = abi.encodePacked(prefix, data);
+        if (viewType == 1) {
+            assert(GovernanceMessage.isBatch(data.ref(viewType)));
+        } else {
+            assertFalse(GovernanceMessage.isBatch(data.ref(viewType)));
+        }
+    }
+
+    function test_tryAsBatchForBatchReturnsBatch() public {
+        bytes memory data = hex"01";
+        // Appnend an empty bytes array of 32 bytes
+        data = abi.encodePacked(data, new bytes(32));
+        bytes29 dataView = data.ref(1);
+        // We compare both the type of the view and the contents of the memory location
+        // to where the view points
+        assertEq(uint256(dataView.tryAsBatch().typeOf()), 1);
+        assertEq(dataView.tryAsBatch().keccak(), dataView.keccak());
+        dataView = data.ref(34);
+        // even if instantiate the view with a differerent type, it can still
+        // be cast to a Batch type (1)
+        assertEq(uint256(dataView.tryAsBatch().typeOf()), 1);
+        assertEq(dataView.tryAsBatch().keccak(), dataView.keccak());
+    }
+
+    function test_tryAsBatchForBatchReturnsBatchFuzzed(uint40 viewType) public {
+        bytes memory data = hex"01";
+        // Append an empty bytes array of 32 bytes
+        data = abi.encodePacked(data, new bytes(32));
+        bytes29 dataView = data.ref(viewType);
+        // We compare both the type of the view and the contents of the memory location
+        // to where the view points
+        assertEq(uint256(dataView.tryAsBatch().typeOf()), 1);
+        assertEq(dataView.tryAsBatch().keccak(), dataView.keccak());
+    }
+
+    function test_tryAsBatchForNonBatchReturnsNull() public {
+        // not a batch
+        bytes memory data = hex"03";
+        // Append an empty bytes array of 32 bytes
+        data = abi.encodePacked(data, new bytes(32));
+        bytes29 dataView = data.ref(1);
+        assertEq(dataView.tryAsBatch(), TypedMemView.nullView());
+    }
+
+    function test_batchHashSingleCall() public {
+        bytes32 to = "0xBEEF";
+        bytes memory data = "random data";
+        GovernanceMessage.Call[] memory calls = new GovernanceMessage.Call[](1);
+        calls[0] = GovernanceMessage.Call(to, data);
+        assertEq(
+            // format Batch, instantiate view, get batchHash of that view
+            GovernanceMessage.formatBatch(calls).ref(0).batchHash(),
+            // get batch hash of the calls
+            GovernanceMessage.getBatchHash(calls)
+        );
+    }
 }
