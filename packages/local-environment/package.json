@@ -18,6 +18,7 @@
     "build": "tsc --build",
     "bootup": "./bootup.sh",
     "cleanup": "npm run hardhat_stop && npm run agents_stop && npm run agents_clean",
+    "coverage": "jest --collectCoverage",
     "hardhat_stop": "docker ps --filter name=_net -aq | xargs docker rm --force",
     "test:unit": "jest unit --detectOpenHandles --ci --forceExit",
     "test:integration": "jest int --detectOpenHandles --ci --forceExit",
