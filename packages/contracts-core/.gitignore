@@ -1,7 +1,6 @@
 /node_modules
 cache/
 artifacts/
-.coverage/
 coverage.json
 .env
 src.ts/
@@ -9,4 +8,3 @@ src/
 dist/
 foundry_artifacts/
 scripts/accumulator-cli
-.coverage
