@@ -15,7 +15,7 @@ packages/sdk-govern/ @nomad-xyz/experience
 packages/sdk-bridge/ @nomad-xyz/experience
 
 # DevOps Packages
-packages/keymaster/ @devops
+packages/keymaster/ @nomad-xyz/devops
 
 # Other Packages
 packages/indexer/ @kekonen @Imti
