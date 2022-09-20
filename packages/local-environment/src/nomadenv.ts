@@ -80,14 +80,14 @@ export class NomadEnv {
     this.outputConfigAndVerification(outputDir, deployContext);
     await this.outputCallBatch(outputDir, deployContext);
 
-    return deployContext
+    return deployContext;
   }
 
   async deploy(): Promise<DeployContext> {
     let context;
     if (this.deployedOnce()) {
       //TODO: INPUT RESUME DEPLOYMENT LOGIC HERE
-      throw new Error(`LOOK AT ME!`)
+      throw new Error(`LOOK AT ME!`);
     } else {
       context = await this.deployFresh();
     }
@@ -216,7 +216,7 @@ export class NomadEnv {
 
   //Input arguments to d.up to disable a specific agent.
   async up() {
-    let metrics = 9000;
+    const metrics = 9000;
     await Promise.all(this.domains.map((d, i) => d.up(metrics + i * 10)));
   }
 
@@ -226,7 +226,7 @@ export class NomadEnv {
 
   //Input arguments to d.up to disable a specific agent.
   async upAgents() {
-    let metrics = 9000;
+    const metrics = 9000;
     await Promise.all(this.domains.map((d, i) => d.upAgents(metrics + i * 10)));
   }
 

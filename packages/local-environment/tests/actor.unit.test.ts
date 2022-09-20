@@ -22,5 +22,5 @@ describe("Actor test", () => {
         expect(events).to.exist;
 
         await kathy.down();
-    })
-})
+    });
+});

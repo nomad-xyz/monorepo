@@ -62,7 +62,7 @@ export async function sendTokensAndConfirm(
 
     // tx.committedRoot
 
-    const tokenAtDest = await tx.assetAtDestination()
+    const tokenAtDest = await tx.assetAtDestination();
 
     log.info(`Dispatched send transaction!`, from.name, to.name, tx.committedRoot, tx.bodyHash);
     log.info(`Token address at dest:`, tokenAtDest?.address);
@@ -75,14 +75,14 @@ export async function sendTokensAndConfirm(
       log.info(`Waiting for update and process events...`);
       await new Promise((resolve, reject) => {
         replica.once(replica.filters.Update(null, null, null, null), (homeDomain, oldRoot, newRoot, _signature) => {
-          log.info(`New Update event | homeDomain: ${homeDomain} | oldRoot: ${oldRoot} | newRoot: ${newRoot}`)
-        })
+          log.info(`New Update event | homeDomain: ${homeDomain} | oldRoot: ${oldRoot} | newRoot: ${newRoot}`);
+        });
   
         replica.once(replica.filters.Process(null, null, null), (messageHash, success, _returnData) => {
-          log.info(`New Process event | messageHash: ${messageHash} | success:`, success)
-          resolve(null)
-        })
-      })
+          log.info(`New Process event | messageHash: ${messageHash} | success:`, success);
+          resolve(null);
+        });
+      });
       log.info(`Awaited process event!`);
     } else {
       log.error(`No replica`);
@@ -95,7 +95,7 @@ export async function sendTokensAndConfirm(
   }
 
 
-  const batch = `${new Date().valueOf()}`.substring(-3)
+  const batch = `${new Date().valueOf()}`.substring(-3);
   log.info(`Waiting for all assets to be delivered at from: ${from.name}, to: ${to.name} . Batch:${batch}!`);
 
   const tokens = await Promise.all(rr.map(r => {
@@ -113,7 +113,7 @@ export async function sendTokensAndConfirm(
         return tokenContract;
       }
     }, 3*60_000, 2_000);
-    return waiter.wait()
+    return waiter.wait();
   }));
 
 
@@ -125,7 +125,7 @@ export async function sendTokensAndConfirm(
   let newBalance = await tokenContract!.balanceOf(recipient);
 
   // Waiting until all 3 transactions will land at tom
-  let waiter2 = new Waiter(
+  const waiter2 = new Waiter(
     async () => {
       if (newBalance.eq(amountTotal)) {
         return true;
@@ -148,9 +148,9 @@ export async function sendTokensAndConfirm(
   log.info(`Recipient's balance on recipient (${recipient}) domain ${to.name} is`, (await tokenContract.balanceOf(recipient)).toString());
 
   if (success === null)
-    throw new Error(`Tokens transfer from ${from.name} to ${to.name} failed`)
+    throw new Error(`Tokens transfer from ${from.name} to ${to.name} failed`);
   if (success === true) 
-    log.info(`Received tokens from ${from.name} to ${to.name}`)
+    log.info(`Received tokens from ${from.name} to ${to.name}`);
 
   return tokenContract!;
 }
@@ -194,13 +194,13 @@ export async function setupTwo(log: Logger) {
 
   await Promise.all([
       t.setWETH(t.deployWETH()),
-      j.setWETH(j.deployWETH())
-  ])
+      j.setWETH(j.deployWETH()),
+  ]);
 
   log.info(await le.deploy());
   return {
-    le
-  }
+    le,
+  };
 }
 
 /*

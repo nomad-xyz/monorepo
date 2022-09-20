@@ -176,7 +176,7 @@ export class StreamMatcher extends Stream.Transform {
   }
 }
 
-function domainHash(domain: Number): string {
+function domainHash(domain: number): string {
   return ethers.utils.solidityKeccak256(
     ["uint32", "string"],
     [domain, "NOMAD"]
@@ -189,8 +189,8 @@ export function signUpdate(
   oldRoot: string,
   newRoot: string
 ): Promise<string> {
-  let message = getMessage(domain, oldRoot, newRoot);
-  let msgHash = ethers.utils.arrayify(ethers.utils.keccak256(message));
+  const message = getMessage(domain, oldRoot, newRoot);
+  const msgHash = ethers.utils.arrayify(ethers.utils.keccak256(message));
   return signer.signMessage(msgHash);
 }
 

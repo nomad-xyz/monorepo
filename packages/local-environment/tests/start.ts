@@ -60,8 +60,8 @@ import { NomadDomain } from "../src/domain";
 
     await Promise.all([
         t.setWETH(t.deployWETH()),
-        j.setWETH(j.deployWETH())
-    ])
+        j.setWETH(j.deployWETH()),
+    ]);
 
     log.info(await le.deploy());
 
@@ -72,7 +72,7 @@ import { NomadDomain } from "../src/domain";
     // ]);
 
     
-    await le.upAgents()
+    await le.upAgents();
     // await le.upAgents({kathy:false, watcher: false}) // warning: nokathy.
     
 

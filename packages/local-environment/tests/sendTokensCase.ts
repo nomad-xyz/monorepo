@@ -79,8 +79,8 @@ export function parseMessage(message: string): ParsedMessage {
 
     await Promise.all([
         t.setWETH(t.deployWETH()),
-        j.setWETH(j.deployWETH())
-    ])
+        j.setWETH(j.deployWETH()),
+    ]);
 
     log.info(await le.deploy());
 
@@ -90,7 +90,7 @@ export function parseMessage(message: string): ParsedMessage {
     //   jDomain.upAllAgents(9090),
     // ]);
     
-    await le.upAgents()
+    await le.upAgents();
     // await le.upAgents({kathy:false, watcher: false}) // warning: nokathy.
     
 
@@ -121,16 +121,16 @@ export function parseMessage(message: string): ParsedMessage {
       id: tokenOnTom.address,
     };
 
-    log.info(`Tokenfactory, token deployed:`, tokenOnTom.address)
+    log.info(`Tokenfactory, token deployed:`, tokenOnTom.address);
 
     const ctx = le.getBridgeSDK();
-    log.info(`Initialized Bridge SDK context`)
+    log.info(`Initialized Bridge SDK context`);
 
     // Default multiprovider comes with signer (`o.setSigner(jerry, signer);`) assigned
     // to each domain, but we change it to allow sending from different signer
     ctx.registerWalletSigner(t.name, sender.toString());
     ctx.registerWalletSigner(j.name, receiver.toString());
-    log.info(`registered wallet signers for tom and jerry`)
+    log.info(`registered wallet signers for tom and jerry`);
 
     // get 3 random amounts which will be bridged
     const amount1 = getRandomTokenAmount();
@@ -166,7 +166,7 @@ export function parseMessage(message: string): ParsedMessage {
         `Resolved asset at destination Jerry is not the same as the token. ${tokenContract.address.toLowerCase()} != ${token.id.toString().toLowerCase()}`
       );
     } else {
-      log.info(`All cool!`)
+      log.info(`All cool!`);
     }
 
     success = true;

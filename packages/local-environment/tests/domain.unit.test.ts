@@ -68,6 +68,6 @@ describe("NomadDomain test", () => {
         // Down / cleanup
         expect(await tDomain.downNetwork());
         expect(await jDomain.downNetwork());
-    })
+    });
 
-})
+});

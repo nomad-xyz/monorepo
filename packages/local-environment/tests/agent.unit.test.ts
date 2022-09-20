@@ -72,7 +72,7 @@ describe("Agent test", () => {
 
         expect(await kathy.isRunning()).to.be.equal(false);
 
-    })
+    });
 
     it('can up and down an agent', async () => {
         const kathy = new LocalAgent(AgentType.Kathy, domain, 1337);
@@ -82,14 +82,14 @@ describe("Agent test", () => {
         await kathy.up();
         expect(await kathy.status()).to.be.equal(true);
         expect(await kathy.isConnected()).to.be.equal(true);
-        assert.isTrue((await docker.getContainer(kathy.containerName()).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer(kathy.containerName()).inspect()).State.Running);
 
         await kathy.down();
         expect(await kathy.status()).to.be.equal(false);
         expect(await kathy.isConnected()).to.be.equal(false);
         await assert.isRejected(docker.getContainer(kathy.containerName()).inspect(), "no such container");
-    })
-})
+    });
+});
 
 describe("AgentS test", () => {
     it('can create Agents, up and down them', async () => {
@@ -105,16 +105,16 @@ describe("AgentS test", () => {
         const docker = new Docker();
 
         expect(await agents.updater.status()).to.be.equal(true);
-        assert.isTrue((await docker.getContainer((agents.updater as LocalAgent).containerName()).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer((agents.updater as LocalAgent).containerName()).inspect()).State.Running);
 
         expect(await agents.relayer.status()).to.be.equal(true);
-        assert.isTrue((await docker.getContainer((agents.relayer as LocalAgent).containerName()).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer((agents.relayer as LocalAgent).containerName()).inspect()).State.Running);
 
         expect(await agents.processor.status()).to.be.equal(true);
-        assert.isTrue((await docker.getContainer((agents.processor as LocalAgent).containerName()).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer((agents.processor as LocalAgent).containerName()).inspect()).State.Running);
 
         expect(await agents.watchers[0].status()).to.be.equal(true);
-        assert.isTrue((await docker.getContainer((agents.watchers[0] as LocalAgent).containerName()).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer((agents.watchers[0] as LocalAgent).containerName()).inspect()).State.Running);
 
         await agents.downAll();
 
@@ -129,6 +129,6 @@ describe("AgentS test", () => {
 
         expect(await agents.watchers[0].status()).to.be.equal(false);
         await assert.isRejected(docker.getContainer((agents.watchers[0] as LocalAgent).containerName()).inspect(), "no such container");
-    })
-})
+    });
+});
 

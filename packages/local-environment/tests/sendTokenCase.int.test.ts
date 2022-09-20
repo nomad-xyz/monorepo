@@ -47,12 +47,12 @@ describe("Token test", () => {
     
         await Promise.all([
             t.setWETH(t.deployWETH()),
-            j.setWETH(j.deployWETH())
-        ])
+            j.setWETH(j.deployWETH()),
+        ]);
     
         log.info(await le.deploy());
         
-        await le.upAgents()
+        await le.upAgents();
         // warning: nokathy. 
     
         log.info(`Agents up`);
@@ -60,7 +60,7 @@ describe("Token test", () => {
 
     beforeAll(async () => {
         await setUp();
-    })
+    });
 
     it("should handle token creation, transfer logic", async function () {
         const tokenFactory = getCustomToken();
@@ -81,17 +81,17 @@ describe("Token test", () => {
         assert.exists(tokenOnTom);
         assert.exists(token);
 
-        log.info(`Tokenfactory, token deployed:`, tokenOnTom.address)
+        log.info(`Tokenfactory, token deployed:`, tokenOnTom.address);
 
         const ctx = le.getBridgeSDK();
         assert.exists(ctx);
-        log.info(`Initialized Bridge SDK context`)
+        log.info(`Initialized Bridge SDK context`);
     
         // Default multiprovider comes with signer (`o.setSigner(jerry, signer);`) assigned
         // to each domain, but we change it to allow sending from different signer
         ctx.registerWalletSigner(t.name, sender.toString());
         ctx.registerWalletSigner(j.name, receiver.toString());
-        console.log(`registered wallet signers for tom and jerry`)
+        console.log(`registered wallet signers for tom and jerry`);
     
         // get 3 random amounts which will be bridged
         const amount1 = getRandomTokenAmount();
@@ -100,7 +100,7 @@ describe("Token test", () => {
         assert.exists(amount1);
         assert.exists(amount2);
         assert.exists(amount3);
-        log.info(`Preparation done`)
+        log.info(`Preparation done`);
 
         expect(await sendTokensAndConfirm(le, tDomain, jDomain, token, receiver.toAddress(), [
           amount1,
@@ -122,9 +122,9 @@ describe("Token test", () => {
         log.info(`Sent tokens B->A done`);
 
         expect(tokenContract.address.toLowerCase()).equal(token.id.toString().toLowerCase());
-    })
+    });
     
     afterAll(async() => {
       await le.down();
-    })
-})
+    });
+});

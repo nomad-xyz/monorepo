@@ -196,7 +196,7 @@ export class NomadDomain {
 
   processorConfig(subsidizedRemotes?: string[]): ProcessorConfig {
     if (subsidizedRemotes || this.nomadEnv) {
-      subsidizedRemotes = subsidizedRemotes || this.nomadEnv?.getDomains().map(d => d.name)
+      subsidizedRemotes = subsidizedRemotes || this.nomadEnv?.getDomains().map(d => d.name);
     }
     else {
       throw new Error(`No arg 'subsidizedRemotes' passed or no nomadEnv set`);
@@ -204,7 +204,7 @@ export class NomadDomain {
 
     return {
       interval: 5,
-      subsidizedRemotes: subsidizedRemotes!
+      subsidizedRemotes: subsidizedRemotes!,
     };
   }
 

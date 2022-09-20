@@ -59,13 +59,13 @@ describe("NomadDomain test", () => {
         const jRelayer = (jDomain.agents!.relayer as LocalAgent).containerName();
         const jProcessor = (jDomain.agents!.processor as LocalAgent).containerName();
 
-        assert.isTrue((await docker.getContainer(tUpdater).inspect()).State.Running)
-        assert.isTrue((await docker.getContainer(tRelayer).inspect()).State.Running)
-        assert.isTrue((await docker.getContainer(tProcessor).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer(tUpdater).inspect()).State.Running);
+        assert.isTrue((await docker.getContainer(tRelayer).inspect()).State.Running);
+        assert.isTrue((await docker.getContainer(tProcessor).inspect()).State.Running);
 
-        assert.isTrue((await docker.getContainer(jUpdater).inspect()).State.Running)
-        assert.isTrue((await docker.getContainer(jRelayer).inspect()).State.Running)
-        assert.isTrue((await docker.getContainer(jProcessor).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer(jUpdater).inspect()).State.Running);
+        assert.isTrue((await docker.getContainer(jRelayer).inspect()).State.Running);
+        assert.isTrue((await docker.getContainer(jProcessor).inspect()).State.Running);
 
         await le.downAgents();
         assert.isFalse(await tDomain.isAgentsUp());
@@ -84,12 +84,12 @@ describe("NomadDomain test", () => {
         assert.isTrue(await t.isConnected());
         assert.isTrue(await j.isConnected());
 
-        assert.isTrue(await tDomain.network.isConnected())
-        assert.isTrue(await jDomain.network.isConnected())
+        assert.isTrue(await tDomain.network.isConnected());
+        assert.isTrue(await jDomain.network.isConnected());
 
         await le.down();
         assert.isFalse(await t.isConnected());
         assert.isFalse(await j.isConnected());
-    })
+    });
 
-})
+});
