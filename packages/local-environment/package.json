@@ -27,7 +27,8 @@
     "test-double-update": "npx ts-node tests/watcherDoubleUpdate.ts",
     "test-improper-update": "npx ts-node tests/watcherImproperUpdate.ts",
     "test-sdk-failed-home": "npx ts-node tests/sdkFailedHome.ts",
-    "test-tokens": "npx ts-node tests/sendTokensCase.ts"
+    "test-tokens": "npx ts-node tests/sendTokensCase.ts",
+    "lint": "eslint --fix ./src ./tests"
   },
   "dependencies": {
     "@ethersproject/experimental": "^5.5.0",
