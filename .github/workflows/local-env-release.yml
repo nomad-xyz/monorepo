@@ -15,28 +15,24 @@ jobs:
 
       - name: Yarn Install
         run: |
-          yarn install
+          yarn local-environment install
 
       - name: Yarn Lint
         run: |
-          yarn lint
+          yarn local-environment lint
 
       - name: Yarn Build
         run: |
-          yarn build
+          yarn local-environment build
 
       - name: Yarn Bootup
         run: |
-          yarn bootup
+          yarn local-environment bootup
 
       - name: Run Unit Tests
         run: |
           yarn local-environment test:unit
         timeout-minutes: 30
-
-      - name: Yarn version
-        run: |
-          yarn version 
 
       - name: Publish to NPM
         run: yarn local-environment npm publish
