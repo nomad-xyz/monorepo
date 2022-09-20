@@ -162,7 +162,7 @@ contract GovernanceMessageTest is Test {
         }
     }
 
-    function test_isValidBatchDetectBatch() public {
+    function test_isValidBatchDetectBatch() public pure {
         // batch type in the form of a uint8
         bytes memory data = hex"01";
         // Append an empty bytes array of 32 bytes
@@ -307,5 +307,187 @@ contract GovernanceMessageTest is Test {
             // get batch hash of the calls
             GovernanceMessage.getBatchHash(calls)
         );
+    }
+
+    function test_formatTransferGovernor() public {
+        uint32 domain = 123;
+        bytes32 governor = "all hail to the new governor";
+        bytes memory data = abi.encodePacked(uint8(2), domain, governor);
+        assertEq(
+            data,
+            GovernanceMessage.formatTransferGovernor(domain, governor)
+        );
+    }
+
+    function test_formatTransferGovernorFuzzed(uint32 domain, bytes32 governor)
+        public
+    {
+        bytes memory data = abi.encodePacked(uint8(2), domain, governor);
+        assertEq(
+            data,
+            GovernanceMessage.formatTransferGovernor(domain, governor)
+        );
+    }
+
+    function test_isValidTransferGovernorSuccess() public {
+        uint32 domain = 123;
+        bytes32 governor = "all hail to the new governor";
+        bytes memory data = abi.encodePacked(uint8(2), domain, governor);
+        // it doesn't check the type of the view
+        assert(GovernanceMessage.isValidTransferGovernor(data.ref(0)));
+    }
+
+    function test_isValidTrasnferGovernorWrongType() public {
+        uint32 domain = 123;
+        bytes32 governor = "all hail to the new governor";
+        bytes memory data = abi.encodePacked(uint8(0), domain, governor);
+        // it doesn't check the type of the view
+        assertFalse(GovernanceMessage.isValidTransferGovernor(data.ref(0)));
+        data = abi.encodePacked(uint8(1), domain, governor);
+        // it doesn't check the type of the view
+        assertFalse(GovernanceMessage.isValidTransferGovernor(data.ref(0)));
+    }
+
+    function test_isValidTrasnferGovernorWrongLength() public {
+        uint96 domain = 123;
+        bytes32 governor = "all hail to the new governor";
+        bytes memory data = abi.encodePacked(uint8(0), domain, governor);
+        // it doesn't check the type of the view
+        assertFalse(GovernanceMessage.isValidTransferGovernor(data.ref(0)));
+    }
+
+    function test_isValidTransferGovernorFuzzed(
+        uint8 messageType,
+        uint32 domain,
+        bytes32 governor
+    ) public {
+        bytes memory data = abi.encodePacked(messageType, domain, governor);
+        // it doesn't check the type of the view
+        if (messageType == 2) {
+            assert(GovernanceMessage.isValidTransferGovernor(data.ref(0)));
+        } else {
+            assertFalse(GovernanceMessage.isValidTransferGovernor(data.ref(0)));
+        }
+    }
+
+    function test_isTransferGovernorVerifyCorrectTypeAndForm() public {
+        uint32 domain = 123;
+        bytes32 governor = "all hail to the new governor";
+        bytes memory data = abi.encodePacked(uint8(2), domain, governor);
+        // it doesn't check the type of the view
+        assert(GovernanceMessage.isTransferGovernor(data.ref(2)));
+        assertFalse(GovernanceMessage.isTransferGovernor(data.ref(0)));
+    }
+
+    function test_isTransferGovernorVerifyCorrectTypeAndFormFuzzed(
+        uint32 domain,
+        bytes32 governor,
+        uint8 viewType
+    ) public {
+        bytes memory data = abi.encodePacked(viewType, domain, governor);
+        // it doesn't check the type of the view
+        if (viewType == 2) {
+            assert(GovernanceMessage.isTransferGovernor(data.ref(viewType)));
+        } else {
+            assertFalse(
+                GovernanceMessage.isTransferGovernor(data.ref(viewType))
+            );
+        }
+    }
+
+    function test_tryAsTransferGovernorCorrectPrefix() public {
+        uint32 domain = 123;
+        bytes32 governor = "all hail to the new governor";
+        bytes memory data = abi.encodePacked(uint8(2), domain, governor);
+        assertEq(
+            uint256(
+                GovernanceMessage.tryAsTransferGovernor(data.ref(0)).typeOf()
+            ),
+            2
+        );
+    }
+
+    function test_tryAsTransferGovernorWrongPrefix() public {
+        uint32 domain = 123;
+        bytes32 governor = "all hail to the new governor";
+        bytes memory data = abi.encodePacked(uint8(1), domain, governor);
+        assertEq(
+            GovernanceMessage.tryAsTransferGovernor(data.ref(0)),
+            TypedMemView.nullView()
+        );
+    }
+
+    function test_tryAsTransferGovernorCorrectPrefixFuzzed(
+        uint32 domain,
+        bytes32 governor,
+        uint40 viewType
+    ) public {
+        bytes memory data = abi.encodePacked(uint8(2), domain, governor);
+        assertEq(
+            uint256(
+                GovernanceMessage
+                    .tryAsTransferGovernor(data.ref(viewType))
+                    .typeOf()
+            ),
+            2
+        );
+    }
+
+    function test_mustBeTransferGovernorSuccess() public {
+        uint32 domain = 123;
+        bytes32 governor = "all hail to the new governor";
+        bytes memory data = abi.encodePacked(uint8(2), domain, governor);
+        assertEq(
+            GovernanceMessage.mustBeTransferGovernor(data.ref(0)),
+            data.ref(2)
+        );
+    }
+
+    function test_mustBeTransferGovernorSuccessFuzzed(
+        uint32 domain,
+        bytes32 governor
+    ) public {
+        bytes memory data = abi.encodePacked(uint8(2), domain, governor);
+        assertEq(
+            GovernanceMessage.mustBeTransferGovernor(data.ref(0)),
+            data.ref(2)
+        );
+    }
+
+    function test_mustBeTransferGovernorRevert() public {
+        uint32 domain = 123;
+        bytes32 governor = "all hail to the new governor";
+        bytes memory data = abi.encodePacked(uint8(234), domain, governor);
+        vm.expectRevert("Validity assertion failed");
+        GovernanceMessage.mustBeTransferGovernor(data.ref(0));
+    }
+
+    function test_mustBeTransferGovernorRevertFuzzed(
+        uint32 domain,
+        bytes32 governor,
+        uint8 viewType
+    ) public {
+        vm.assume(viewType != 2);
+        bytes memory data = abi.encodePacked(viewType, domain, governor);
+        vm.expectRevert("Validity assertion failed");
+        GovernanceMessage.mustBeTransferGovernor(data.ref(0));
+    }
+
+    function test_extractGovernorMessageDetails() public {
+        uint32 domain = 123;
+        bytes32 governor = "all hail to the new governor";
+        bytes memory data = abi.encodePacked(uint8(234), domain, governor);
+        assertEq(uint256(data.ref(0).domain()), domain);
+        assertEq(data.ref(0).governor(), governor);
+    }
+
+    function test_extractGovernorMessageDetailsFuzzed(
+        bytes32 governor,
+        uint32 domain,
+        uint8 viewType
+    ) public {
+        bytes memory data = abi.encodePacked(viewType, domain, governor);
+        assertEq(uint256(data.ref(0).domain()), domain);
+        assertEq(data.ref(0).governor(), governor);
     }
 }
