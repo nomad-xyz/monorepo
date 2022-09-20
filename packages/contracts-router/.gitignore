@@ -8,3 +8,4 @@ src.ts/
 src/
 dist/
 foundry_artifacts/
+.coverage

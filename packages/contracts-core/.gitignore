@@ -9,3 +9,4 @@ src/
 dist/
 foundry_artifacts/
 scripts/accumulator-cli
+.coverage

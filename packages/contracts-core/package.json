@@ -28,13 +28,13 @@
     "test:unit": "FOUNDRY_PROFILE=core-ci forge test",
     "test:unit:local": "FOUNDRY_PROFILE=core forge test",
     "test:static-analyze": "rm -rf node_modules && yarn link:node_modules && slither .",
+    "test:coverage": "cd ../.. && scripts/coverage-report.sh core",
     "link:node_modules": "ln -s ../../node_modules",
     "snapshot": "forge clean && FOUNDRY_PROFILE=core forge snapshot",
     "snapshot:check": "forge clean && FOUNDRY_PROFILE=core forge snapshot --check",
     "gen-proof": "../../scripts/accumulator-cli",
     "storage-inspect:check": "../../scripts/storage-inspect.sh check Home Replica UpdaterManager XAppConnectionManager GovernanceRouter",
-    "storage-inspect:generate": "../../scripts/storage-inspect.sh generate Home Replica UpdaterManager XAppConnectionManager GovernanceRouter",
-    "coverage": "cd ../.. && scripts/coverage-report.sh core"
+    "storage-inspect:generate": "../../scripts/storage-inspect.sh generate Home Replica UpdaterManager XAppConnectionManager GovernanceRouter"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.2",

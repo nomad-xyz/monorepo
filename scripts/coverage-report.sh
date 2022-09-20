@@ -17,7 +17,7 @@ fi
 if [[ $1 == *"core"* ]]; then
   # Need to be to top-level directory of the monorepo
   cd $(git rev-parse --show-toplevel)
-  path="coverage/contracts-core"
+  path="packages/contracts-core/.coverage"
   FOUNDRY_PROFILE=core forge coverage --report lcov
   genhtml -o "$path" lcov.info
   echo "Report generated at $path"
@@ -26,7 +26,7 @@ if [[ $1 == *"core"* ]]; then
 elif [[ $1 == *"bridge"* ]]; then
   # Need to be to top-level directory of the monorepo
   cd $(git rev-parse --show-toplevel)
-  path="coverage/contracts-bridge"
+  path="packages/contracts-bridge/.coverage"
   FOUNDRY_PROFILE=bridge forge coverage --report lcov
   genhtml -o "$path" lcov.info
   echo "Report generated at $path"
@@ -35,7 +35,7 @@ elif [[ $1 == *"bridge"* ]]; then
 elif [[ $1 == *"router"* ]]; then
   # Need to be to top-level directory of the monorepo
   cd $(git rev-parse --show-toplevel)
-  path="coverage/contracts-router"
+  path="packages/contracts-router/.coverage"
   FOUNDRY_PROFILE=router forge coverage --report lcov
   genhtml -o "$path" lcov.info
   echo "Report generated at $path"

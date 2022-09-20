@@ -26,9 +26,9 @@
     "prepublish": "yarn bootstrap && yarn build",
     "test:unit": "FOUNDRY_PROFILE=router-ci forge test",
     "test:unit-local": "FOUNDRY_PROFILE=router forge test",
+    "test:coverage": "cd ../.. && scripts/coverage-report.sh router",
     "storage-inspect:check": "../../scripts/storage-inspect.sh check Router XAppConnectionClient",
-    "storage-inspect:generate": "../../scripts/storage-inspect.sh generate Router XAppConnectionClient",
-    "coverage": "cd../.. && scripts/coverage-report.sh router"
+    "storage-inspect:generate": "../../scripts/storage-inspect.sh generate Router XAppConnectionClient"
   },
   "dependencies": {
     "@nomad-xyz/contracts-core": "workspace:^",
