@@ -58,10 +58,9 @@ import { NomadDomain } from "../src/domain";
     // Notes, check governance router deployment on Jerry and see if that's actually even passing
     // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
-    await Promise.all([
-        t.setWETH(t.deployWETH()),
-        j.setWETH(j.deployWETH())
-    ])
+    const [tweth, jweth] = await Promise.all([t.deployWETH(), j.deployWETH()]);
+    t.setWETH(tweth);
+    j.setWETH(jweth);
 
     log.info(await le.deploy());
 

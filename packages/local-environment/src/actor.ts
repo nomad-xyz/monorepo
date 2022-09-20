@@ -200,10 +200,13 @@ export abstract class DockerizedActor extends Actor {
   }
 
   async disconnect(): Promise<void> {
-    await this.container?.remove();
-    console.log(`Unsubing ->`, this.name)
+    try {
+      await this.container?.remove()
+    } catch(_) {
+      // do nothing
+    }
+    
     this.unsubscribe(); // Want to unsub later because want to see event of container removal
-    console.log(`Unsubbed ->`, this.name)
     delete this.container;
   }
 

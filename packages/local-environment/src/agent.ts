@@ -3,6 +3,7 @@ import Docker from "dockerode";
 import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
 import { NomadDomain } from "./domain";
+import { NomadEnv } from "./nomadenv";
 
 const kathyOn = false;
 const agentsImage = process.env.AGENTS_IMAGE || "gcr.io/nomad-xyz/nomad-agent:prestwich-remove-deploy-gas";
@@ -15,19 +16,20 @@ export class Agents {
   kathy?: Agent;
   metricsPort: number;
 
-  constructor(domain: NomadDomain, metricsPort: number) {
+  constructor(domain: NomadDomain, metricsPort: number, nomadEnv?: NomadEnv) {
     this.metricsPort = metricsPort; // metricsPort4 - 4 ports for a single argument.
-    this.updater = new LocalAgent(AgentType.Updater, domain, metricsPort); // metricsPort4 - 4 ports for a single argument.
-    this.relayer = new LocalAgent(AgentType.Relayer, domain, metricsPort + 1); // metricsPort4 - 4 ports for a single argument.
+    this.updater = new LocalAgent(AgentType.Updater, domain, metricsPort, nomadEnv); // metricsPort4 - 4 ports for a single argument.
+    this.relayer = new LocalAgent(AgentType.Relayer, domain, metricsPort + 1, nomadEnv); // metricsPort4 - 4 ports for a single argument.
     this.processor = new LocalAgent(
       AgentType.Processor,
       domain,
-      metricsPort + 2
+      metricsPort + 2,
+      nomadEnv
     ); // metricsPort4 - 4 ports for a single argument.
     this.watchers = [
-      new LocalAgent(AgentType.Watcher, domain, metricsPort + 3),
+      new LocalAgent(AgentType.Watcher, domain, metricsPort + 3, nomadEnv),
     ]; // metricsPort4 - 4 ports for a single argument.
-    if (kathyOn) this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort + 4);
+    if (kathyOn) this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort + 4, nomadEnv);
   }
 
   async upAll(agentType?: string) {
@@ -117,8 +119,9 @@ export class LocalAgent extends DockerizedActor implements Agent {
   agentType: AgentType;
   domain: NomadDomain;
   metricsPort: number;
+  nomadEnv?: NomadEnv;
 
-  constructor(agentType: AgentType, domain: NomadDomain, metricsPort: number) {
+  constructor(agentType: AgentType, domain: NomadDomain, metricsPort: number, nomadEnv?: NomadEnv) {
     agentType = parseAgentType(agentType);
     super(`${agentType}_${domain.network.name}`, "agent");
     this.agentType = agentType;
@@ -126,6 +129,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
     this.domain = domain;
 
     this.metricsPort = metricsPort;
+    this.nomadEnv = nomadEnv;
   }
 
   containerName(): string {
@@ -248,6 +252,8 @@ export class LocalAgent extends DockerizedActor implements Agent {
 
     const additionalEnvs = this.getAdditionalEnvs();
 
+    const connectionUrls = this.nomadEnv?.domains.map(d => `${d.domain.name.toUpperCase()}_CONNECTION_URL=${d.rpcs[0]}`) || [];
+
     // docker run --name $1_$2_agent --env RUN_ENV=main --restart=always --network="host" --env BASE_CONFIG=$1_config.json -v $(pwd)/../../rust/config:/app/config -d gcr.io/nomad-xyz/nomad-agent ./$2
     return this.docker.createContainer({
       Image: agentsImage,
@@ -255,8 +261,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
       Cmd: ["./" + this.agentType],
       Env: [
         `AGENT_HOME_NAME=${this.domain.network.name}`,
-        `TOM_CONNECTION_URL=http://localhost:1337`,
-        `JERRY_CONNECTION_URL=http://localhost:1338`,
+        ...connectionUrls,
         `METRICS_PORT=${this.metricsPort}`,
         `CONFIG_PATH=/app/config/test_config.json`,
         `RUST_BACKTRACE=FULL`,
