@@ -26,7 +26,7 @@
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
-    "coverage": "jest --collectCoverage",
+    "test:coverage": "jest --collectCoverage",
     "lint": "eslint --fix ./src ./tests",
     "prettier": "prettier --write ./src ./tests",
     "test:unit": "jest"
