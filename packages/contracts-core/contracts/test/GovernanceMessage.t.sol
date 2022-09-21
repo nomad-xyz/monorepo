@@ -137,29 +137,24 @@ contract GovernanceMessageTest is Test {
     GovernanceMessage.Call[] diffCalls;
 
     function test_getBatchHashFuzzedDifferentCalls(
-        bytes memory data,
-        bytes32 to
+        bytes[255] memory data,
+        bytes32[255] memory to
     ) public {
-        bytes memory serializedCall = abi.encodePacked(
-            to,
-            uint32(data.length),
-            data
-        );
-        diffCalls.push(GovernanceMessage.Call(to, data));
-        // The maximum size of a batch is 64 Calls
-        // After that, we reset the state and we fuzz the next batch with 64 new calls
-        // We reset the state by `delete`ing the storage array and using the same data
-        // structure to store the next 64 fuzzed Calls
-        if (diffCalls.length == type(uint8).max) {
-            bytes memory prefix = abi.encodePacked(uint8(diffCalls.length));
-            bytes memory batch = prefix;
-            for (uint256 i = 0; i < type(uint8).max; i++) {
-                batch = abi.encodePacked(batch, serializedCall);
-            }
-            bytes32 batchHash = keccak256(batch);
-            assertEq(GovernanceMessage.getBatchHash(diffCalls), batchHash);
-            delete diffCalls;
+        // types(uint8).max = 255
+        bytes memory serializedCall;
+        bytes memory prefix = abi.encodePacked(uint8(255));
+        bytes memory batch = prefix;
+        for (uint256 i; i < data.length; i++) {
+            diffCalls.push(GovernanceMessage.Call(to[i], data[i]));
+            serializedCall = abi.encodePacked(
+                to[i],
+                uint32(data[i].length),
+                data[i]
+            );
+            batch = abi.encodePacked(batch, serializedCall);
         }
+        bytes32 batchHash = keccak256(batch);
+        assertEq(GovernanceMessage.getBatchHash(diffCalls), batchHash);
     }
 
     function test_isValidBatchDetectBatch() public pure {
