@@ -81,10 +81,9 @@ contract UpdaterManagerTest is Test {
         updaterManager.slashUpdater(reporter);
     }
 
-    function test_renounceOwnership() public {
+    function test_renounceOwnershipNotChangeOwnership() public {
+        address ownerBefore = updaterManager.owner();
         updaterManager.renounceOwnership();
-        // Gas metered how much gas is the no-op
-        // if we change it from no-op, the gas consumption will change
-        assertEq(gasleft(), 9223372036854747223);
+        assertEq(updaterManager.owner(), ownerBefore);
     }
 }
