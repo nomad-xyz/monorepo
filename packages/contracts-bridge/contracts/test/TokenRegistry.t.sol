@@ -29,6 +29,17 @@ contract TokenRegistryTest is BridgeTest {
         assertEq(id, remoteTokenRemoteAddress);
     }
 
+    function test_getCanonicalTokenIdNotTokenAddressReturnsZeroFuzzed(
+        address noToken
+    ) public {
+        vm.assume(noToken != remoteTokenLocalAddress);
+        (uint32 domain, bytes32 id) = tokenRegistry.getCanonicalTokenId(
+            noToken
+        );
+        assertEq(uint256(domain), 0);
+        assertEq(id, bytes32(0));
+    }
+
     function test_getCanonicalTokenIdFuzzed(
         uint32 fuzzedDomain,
         bytes32 fuzzedId
@@ -48,6 +59,20 @@ contract TokenRegistryTest is BridgeTest {
             remoteTokenRemoteAddress
         );
         assertEq(repr, remoteTokenLocalAddress);
+    }
+
+    function test_getRepresentationAddressWrongDetailsReturnZeroFuzzed(
+        uint32 domain,
+        bytes32 randomAddress
+    ) public {
+        vm.assume(
+            randomAddress != remoteTokenRemoteAddress || domain != remoteDomain
+        );
+        address repr = tokenRegistry.getRepresentationAddress(
+            domain,
+            randomAddress
+        );
+        assertEq(repr, address(0));
     }
 
     function test_getRepresentationAddressFuzzed(
