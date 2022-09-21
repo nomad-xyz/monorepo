@@ -565,11 +565,9 @@ contract TokenRegistryTest is BridgeTest {
 
     // Test that renounceOwnership is a noop
     function test_renounceOwnership() public {
-        vm.startPrank(tokenRegistry.owner());
+        address ownerBefore = tokenRegistry.owner();
+        vm.prank(ownerBefore);
         tokenRegistry.renounceOwnership();
-        uint256 gasAfter = gasleft();
-        // hardcode the gas that is consumed from calling an empty function
-        // any change to the function will cause this test to fail
-        assertEq(gasAfter, 9223372036854743394);
+        assertEq(tokenRegistry.owner(), ownerBefore);
     }
 }
