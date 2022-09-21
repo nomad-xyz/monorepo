@@ -109,8 +109,6 @@ contract TokenRegistryTest is BridgeTest {
     }
 
     function test_ensureLocalTokenExisting() public {
-        // It's the second contract that is been deployed by tokenRegistry
-        // It deploys a bridgeToken during setUp() of BridgeTest
         vm.prank(tokenRegistry.owner());
         address addr = tokenRegistry.ensureLocalToken(
             remoteDomain,
@@ -160,7 +158,7 @@ contract TokenRegistryTest is BridgeTest {
         uint32 newDomain = 24;
         bytes32 newId = "yaw";
         address customAddress = address(0xBEEF);
-        vm.prank(tokenRegistry.owner());
+        vm.startPrank(tokenRegistry.owner());
         tokenRegistry.enrollCustom(newDomain, newId, customAddress);
         (uint32 storedDomain, bytes32 storedId) = tokenRegistry
             .getCanonicalTokenId(customAddress);
@@ -171,6 +169,11 @@ contract TokenRegistryTest is BridgeTest {
         assertEq(uint256(storedDomain), uint256(newDomain));
         assertEq(storedId, newId);
         assertEq(storedAddress, customAddress);
+        assertEq(
+            tokenRegistry.ensureLocalToken(newDomain, newId),
+            customAddress
+        );
+        vm.stopPrank();
     }
 
     function test_enrollCustomOnlyOwner() public {
