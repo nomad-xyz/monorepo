@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity 0.7.6;
 
+import "forge-std/console2.sol";
 // Local imports
 import {BridgeTest} from "./utils/BridgeTest.sol";
 import {BridgeMessage} from "../BridgeMessage.sol";
@@ -125,13 +126,11 @@ contract TokenRegistryTest is BridgeTest {
         tokenRegistry.ensureLocalToken(remoteDomain, remoteTokenRemoteAddress);
     }
 
-    uint256 iterations;
-
     function test_ensureLocalTokenDeployFuzzed(uint32 domain, bytes32 id)
         public
     {
+        vm.startPrank(tokenRegistry.owner());
         if (domain == localDomain) {
-            vm.prank(tokenRegistry.owner());
             assertEq(
                 tokenRegistry.ensureLocalToken(domain, id),
                 TypeCasts.bytes32ToAddress(id)
@@ -140,16 +139,12 @@ contract TokenRegistryTest is BridgeTest {
         }
         // It's the second contract that is been deployed by tokenRegistry
         // It deploys a bridgeToken during setUp() of BridgeTest
-        address calculated = computeCreateAddress(
-            address(tokenRegistry),
-            2 + iterations
-        );
+        address calculated = computeCreateAddress(address(tokenRegistry), 2);
         vm.expectEmit(true, true, true, false);
         emit TokenDeployed(domain, id, calculated);
-        vm.prank(tokenRegistry.owner());
         address deployed = tokenRegistry.ensureLocalToken(domain, id);
         assertEq(deployed, calculated);
-        iterations++;
+        vm.stopPrank();
     }
 
     function test_ensureLocalTokenOnlyOwnerFuzzed(address user) public {
@@ -454,18 +449,12 @@ contract TokenRegistryTest is BridgeTest {
         assertEq(storedRepr, repr);
     }
 
-    // We can reuse the storage variable `iterations` because all tests run against the SAME state that is created
-    // by `setUp()`. Thus, the variable is set to 0 and then it's incremented in different states for every test, in
-    // isolation.
     function test_exposedDeployToken() public {
         uint32 domain = 99999;
         bytes32 id = "It's over 9000";
         address repr = tokenRegistry.getRepresentationAddress(domain, id);
         assertEq(repr, address(0));
-        address calculated = computeCreateAddress(
-            address(tokenRegistry),
-            2 + iterations
-        );
+        address calculated = computeCreateAddress(address(tokenRegistry), 2);
         // test event emmission
         vm.expectEmit(true, true, true, false);
         emit TokenDeployed(domain, id, calculated);
@@ -485,17 +474,13 @@ contract TokenRegistryTest is BridgeTest {
         // test if default name and symbol is set
         assertEq(token.name(), name);
         assertEq(token.symbol(), symbol);
-        iterations++;
     }
 
     function test_deployTokenFuzzed(uint32 domain, bytes32 id) public {
         vm.assume(domain != localDomain && domain != 0);
         address repr = tokenRegistry.getRepresentationAddress(domain, id);
         assertEq(repr, address(0));
-        address calculated = computeCreateAddress(
-            address(tokenRegistry),
-            2 + iterations
-        );
+        address calculated = computeCreateAddress(address(tokenRegistry), 2);
         // test event emmission
         vm.expectEmit(true, true, true, false);
         emit TokenDeployed(domain, id, calculated);
@@ -515,7 +500,6 @@ contract TokenRegistryTest is BridgeTest {
         // test if default name and symbol is set
         assertEq(token.name(), name);
         assertEq(token.symbol(), symbol);
-        iterations++;
     }
 
     function test_defaultDetails() public {
