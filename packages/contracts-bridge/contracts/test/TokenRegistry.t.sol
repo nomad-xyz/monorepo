@@ -495,9 +495,9 @@ contract TokenRegistryTest is BridgeTest {
         assertEq(storedId, id);
         // test is initialized
         assertEq(token.owner(), address(bridgeRouter));
+        // test if default name and symbol is set
         (string memory name, string memory symbol) = tokenRegistry
             .exposed_defaultDetails(domain, id);
-        // test if default name and symbol is set
         assertEq(token.name(), name);
         assertEq(token.symbol(), symbol);
     }
