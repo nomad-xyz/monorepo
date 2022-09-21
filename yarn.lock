@@ -3024,7 +3024,6 @@ __metadata:
     prettier-plugin-solidity: ^1.0.0-beta.5
     solhint: ^3.3.2
     solhint-plugin-prettier: ^0.0.5
-    solmate: ^6.5.0
     ts-node: ^10.1.0
     typechain: ^5.0.0
     typescript: ^4.5.5
@@ -21757,13 +21756,6 @@ __metadata:
   version: 0.0.7
   resolution: "solidity-comments-extractor@npm:0.0.7"
   checksum: a5cedf2310709969bc1783a6c336171478536f2f0ea96ad88437e0ef1e8844c0b37dd75591b0a824ec9c30640ea7e31b5f03128e871e6235bef3426617ce96c4
-  languageName: node
-  linkType: hard
-
-"solmate@npm:^6.5.0":
-  version: 6.6.1
-  resolution: "solmate@npm:6.6.1"
-  checksum: 8984eeabcc5e4b47bf37e3bc0c7fa9d358bf6cb0eb874be87572b841c9d61e8523be1e7221bdd36e87a84017ed5e08ca835728393e22ea5b7cd7be925904bf12
   languageName: node
   linkType: hard
 
