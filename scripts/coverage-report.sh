@@ -18,32 +18,25 @@ if [[ $1 == *"core"* ]]; then
   # Need to be to top-level directory of the monorepo
   cd $(git rev-parse --show-toplevel)
   path="packages/contracts-core/.coverage"
-  FOUNDRY_PROFILE=core forge coverage --report lcov
-  genhtml -o "$path" lcov.info
-  echo "Report generated at $path"
-  echo "Open $(readlink -f $path)/index.html"
-  rm lcov.info
+  profile=core
 elif [[ $1 == *"bridge"* ]]; then
   # Need to be to top-level directory of the monorepo
   cd $(git rev-parse --show-toplevel)
   path="packages/contracts-bridge/.coverage"
-  FOUNDRY_PROFILE=bridge forge coverage --report lcov
-  genhtml -o "$path" lcov.info
-  echo "Report generated at $path"
-  echo "Open $(readlink -f $path)/index.html"
-  rm lcov.info
+  profile=bridge
 elif [[ $1 == *"router"* ]]; then
   # Need to be to top-level directory of the monorepo
   cd $(git rev-parse --show-toplevel)
   path="packages/contracts-router/.coverage"
-  FOUNDRY_PROFILE=router forge coverage --report lcov
-  genhtml -o "$path" lcov.info
-  echo "Report generated at $path"
-  echo "Open $(readlink -f $path)/index.html"
-  rm lcov.info
+  profile=router
 else
   echo "Argument not recognised: '$1'"
   echo "Supported packages: core, bridge, router"
   echo "Example: sh coverage-report.sh core"
   exit 1
 fi
+FOUNDRY_PROFILE=$profile forge coverage --report lcov
+genhtml -o "$path" lcov.info
+echo "Report generated at $path"
+echo "Open $(readlink -f $path)/index.html"
+rm lcov.info
