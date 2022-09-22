@@ -13,11 +13,11 @@ contract MockXAppConnectionManager {
         mockIsReplica = true;
     }
 
-    function isReplica(address replica) public returns (bool) {
+    function isReplica(address) public view returns (bool) {
         return mockIsReplica;
     }
 
-    function setReplicaMock(bool mock) public {
+    function setIsReplica(bool mock) public {
         mockIsReplica = mock;
     }
 

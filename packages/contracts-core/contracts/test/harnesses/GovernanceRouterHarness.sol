@@ -23,4 +23,11 @@ contract GovernanceRouterHarness is GovernanceRouter {
     {
         return _callLocal(_call);
     }
+
+    function exposed_setRemoteGovernor(uint32 domain, bytes32 router) public {
+        // non-local governor
+        governor = address(0);
+        governorDomain = domain;
+        _setRouter(domain, router);
+    }
 }

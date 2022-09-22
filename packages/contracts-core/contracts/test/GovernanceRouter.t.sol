@@ -5,11 +5,14 @@ pragma experimental ABIEncoderV2;
 // test imports
 import {GovernanceRouterHarness} from "./harnesses/GovernanceRouterHarness.sol";
 import {NomadTest} from "./utils/NomadTest.sol";
+import {GoodXappSimple} from "./utils/GoodXapps.sol";
 
 // external imports
 import {GovernanceMessage} from "../governance/GovernanceMessage.sol";
 import {MockXAppConnectionManager} from "./utils/MockXAppConnectionManager.sol";
 import {MockHome} from "@nomad-xyz/contracts-bridge/contracts/test/utils/MockHome.sol";
+import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
+import {TypeCasts} from "../libs/TypeCasts.sol";
 
 /**
 // _callRemote
@@ -52,17 +55,33 @@ import {MockHome} from "@nomad-xyz/contracts-bridge/contracts/test/utils/MockHom
 */
 
 contract GovernanceRouterTest is NomadTest {
+    using GovernanceMessage for bytes29;
+    using TypedMemView for bytes;
+    using TypedMemView for bytes29;
+    using TypeCasts for address;
+    using TypeCasts for bytes32;
+
     GovernanceRouterHarness governanceRouter;
     MockHome home;
     MockXAppConnectionManager xAppConnectionManager;
+    GoodXappSimple goodXapp;
 
     uint256 constant timelock = 24 * 60 * 60;
     address recoveryManager;
-    GovernanceMessage.Call _call;
+
+    GovernanceMessage.Call[] calls;
+    bytes32 callsBatchHash;
+
+    uint32 handleOrigin;
+    bytes32 handleSender;
+    bytes handleMessage;
+
+    bytes32 remoteGovernanceRouter;
+    uint32 remoteGovernanceDomain;
 
     function setUp() public override {
         super.setUp();
-        // configure system addresses
+
         recoveryManager = vm.addr(42);
 
         home = new MockHome(homeDomain);
@@ -73,6 +92,9 @@ contract GovernanceRouterTest is NomadTest {
             address(xAppConnectionManager),
             recoveryManager
         );
+        // Set a remote governor router
+        remoteGovernanceRouter = vm.addr(420).addressToBytes32();
+        remoteGovernanceDomain = remoteDomain;
     }
 
     event TransferGovernor(
@@ -108,6 +130,126 @@ contract GovernanceRouterTest is NomadTest {
             address(xAppConnectionManager),
             recoveryManager
         );
+    }
+
+    function test_handleOnlyReplica() public {
+        // Create test handle
+        handleOrigin = remoteDomain;
+        handleSender = remoteGovernanceRouter;
+        handleMessage = "data";
+        governanceRouter.exposed_setRemoteGovernor(
+            remoteGovernanceDomain,
+            remoteGovernanceRouter
+        );
+        xAppConnectionManager.setIsReplica(false);
+        vm.expectRevert("!replica");
+        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
+        xAppConnectionManager.setIsReplica(true);
+        // We expect to revert cause the handleMessage is rubbish, but it
+        // passed the onlyReplica modifier, which is what we test here
+        vm.expectRevert("!valid message type");
+        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
+    }
+
+    function test_handleOnlyGovernorRouter() public {
+        handleOrigin = remoteDomain;
+        handleSender = remoteGovernanceRouter;
+        handleMessage = "data";
+        xAppConnectionManager.setIsReplica(true);
+        vm.expectRevert("!governorRouter");
+        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
+        governanceRouter.exposed_setRemoteGovernor(
+            remoteGovernanceDomain,
+            remoteGovernanceRouter
+        );
+        // We expect to revert cause the handleMessage is rubbish, but it
+        // passed the onlyReplica modifier, which is what we test here
+        vm.expectRevert("!valid message type");
+        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
+    }
+
+    event BatchReceived(bytes32 indexed batchHash);
+
+    function test_handleBatchCorrectForm() public {
+        // Create test batch for tests
+        address to = address(0xBEEF);
+        bytes memory data = "";
+        calls.push(GovernanceMessage.Call(to.addressToBytes32(), data));
+        callsBatchHash = GovernanceMessage.getBatchHash(calls);
+        // Create test handle
+        handleOrigin = remoteDomain;
+        handleSender = remoteGovernanceRouter;
+        handleMessage = GovernanceMessage.formatBatch(calls);
+        governanceRouter.exposed_setRemoteGovernor(
+            remoteGovernanceDomain,
+            remoteGovernanceRouter
+        );
+        vm.expectEmit(true, false, false, false);
+        emit BatchReceived(callsBatchHash);
+        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
+    }
+
+    function test_handleBatchCorrectFormFuzzed(
+        uint32 origin,
+        bytes32 sender,
+        bytes memory data
+    ) public {
+        // Create test batch for tests
+        address to = address(0xBEEF);
+        calls.push(GovernanceMessage.Call(to.addressToBytes32(), data));
+        callsBatchHash = GovernanceMessage.getBatchHash(calls);
+        // Create test handle
+        handleOrigin = origin;
+        handleSender = sender;
+        handleMessage = GovernanceMessage.formatBatch(calls);
+        governanceRouter.exposed_setRemoteGovernor(origin, sender);
+        vm.expectEmit(true, false, false, false);
+        emit BatchReceived(callsBatchHash);
+        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
+    }
+
+    function test_handleTransferGovernorCorrectForm() public {
+        // Create test handle
+        handleOrigin = remoteDomain;
+        handleSender = remoteGovernanceRouter;
+        handleMessage = GovernanceMessage.formatTransferGovernor(
+            homeDomain,
+            address(this).addressToBytes32()
+        );
+        governanceRouter.exposed_setRemoteGovernor(
+            remoteGovernanceDomain,
+            remoteGovernanceRouter
+        );
+        vm.expectEmit(true, false, false, false);
+        emit TransferGovernor(
+            remoteDomain,
+            homeDomain,
+            address(0),
+            address(this)
+        );
+        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
+    }
+
+    function test_handleTransferGovernorCorrectFormFuzzed(
+        uint32 origin,
+        bytes32 sender
+    ) public {
+        // Create test handle
+        handleOrigin = origin;
+        handleSender = sender;
+        handleMessage = GovernanceMessage.formatTransferGovernor(
+            homeDomain,
+            address(this).addressToBytes32()
+        );
+        governanceRouter.exposed_setRemoteGovernor(origin, sender);
+        vm.expectEmit(true, false, false, false);
+        emit TransferGovernor(
+            remoteDomain,
+            homeDomain,
+            address(0),
+            address(this)
+        );
+        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
     }
 
     // uint32 _destination, GovernanceMessage.Call[] calldata _calls
