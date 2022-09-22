@@ -1,8 +1,15 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity 0.7.6;
+pragma experimental ABIEncoderV2;
 
+// test imports
 import {GovernanceRouterHarness} from "./harnesses/GovernanceRouterHarness.sol";
 import {NomadTest} from "./utils/NomadTest.sol";
+
+// external imports
+import {GovernanceMessage} from "../governance/GovernanceMessage.sol";
+import {MockXAppConnectionManager} from "./utils/MockXAppConnectionManager.sol";
+import {MockHome} from "@nomad-xyz/contracts-bridge/contracts/test/utils/MockHome.sol";
 
 /**
 // _callRemote
@@ -45,72 +52,54 @@ import {NomadTest} from "./utils/NomadTest.sol";
 */
 
 contract GovernanceRouterTest is NomadTest {
-    GovernanceRouterHarness gov;
+    GovernanceRouterHarness governanceRouter;
+    MockHome home;
+    MockXAppConnectionManager xAppConnectionManager;
 
     uint256 constant timelock = 24 * 60 * 60;
     address recoveryManager;
-    address xAppConnectionManager;
     GovernanceMessage.Call _call;
 
     function setUp() public override {
         super.setUp();
         // configure system addresses
         recoveryManager = vm.addr(42);
-        xAppConnectionManager = vvm.addr(123);
+
+        home = new MockHome(homeDomain);
+        xAppConnectionManager = new MockXAppConnectionManager(address(home));
         // setup governance router
-        gov = new GovernanceRouterHarness(homeDomain, timelock);
-        gov.initialize(xAppConnectionManager, recoveryManager);
-        assertEq(router.remotes(newDomain), bytes32(0));
+        governanceRouter = new GovernanceRouterHarness(homeDomain, timelock);
+        governanceRouter.initialize(
+            address(xAppConnectionManager),
+            recoveryManager
+        );
+        assertEq(governanceRouter.recoveryManager(), recoveryManager);
+        assertEq(
+            address(governanceRouter.xAppConnectionManager()),
+            address(xAppConnectionManager)
+        );
     }
 
     // uint32 _destination, GovernanceMessage.Call[] calldata _calls
 
     // reverts if no remote router enrolled
-    function test_callRemoteNoRouter() public {
-    }
+    function test_callRemoteNoRouter() public {}
 
     // emits a single dispatch event for 1 call
-    function test_callRemoteOneCall() public {
-    }
+    function test_callRemoteOneCall() public {}
 
     // emits a single dispatch event for multiple calls
-    function test_callRemoteMultiCalls() public {
-    }
+    function test_callRemoteMultiCalls() public {}
 
     // reverts if _call.to is zero
-    function test_callLocalZeroAddress() public {
-        _call.to = bytes32(0);
-        // TODO: add real data
-        _call.data = bytes(0);
-        vm.expectRevert("call failed");
-        gov.exposed_callLocal(_call);
-    }
+    function test_callLocalZeroAddress() public {}
 
     // reverts if _call.to is not a contract
-    function test_callLocalNotContract() public {
-        _call.to = bytes32(address(54321));
-        // TODO: add real data
-        _call.data = bytes(0);
-        vm.expectRevert("call failed");
-        gov.exposed_callLocal(_call);
-    }
+    function test_callLocalNotContract() public {}
 
     // reverts if (_call.to).call(_call.data) reverts
-    function test_callLocalRevert() public {
-        // TODO: add real app
-        _call.to = bytes32(address(54321));
-        // TODO: add real data for call that reverts
-        _call.data = bytes(0);
-        vm.expectRevert("call failed");
-        gov.exposed_callLocal(_call);
-    }
+    function test_callLocalRevert() public {}
 
     // test when call succeeds & takes the effect of the call
-    function test_callLocalSuccess() public {
-        // TODO: add real app
-        _call.to = bytes32(address(54321));
-        // TODO: add real data for call that succeeds
-        _call.data = bytes(0);
-        gov.exposed_callLocal(_call);
-    }
+    function test_callLocalSuccess() public {}
 }
