@@ -21,7 +21,7 @@ contract MockXAppConnectionManager {
         mockIsReplica = mock;
     }
 
-    function localDomain() external view returns (uint32) {
+    function localDomain() public view returns (uint32) {
         return home.localDomain();
     }
 }

@@ -67,8 +67,26 @@ contract GovernanceRouterTest is NomadTest {
 
         home = new MockHome(homeDomain);
         xAppConnectionManager = new MockXAppConnectionManager(address(home));
-        // setup governance router
         governanceRouter = new GovernanceRouterHarness(homeDomain, timelock);
+        // setup governance router
+        governanceRouter.initialize(
+            address(xAppConnectionManager),
+            recoveryManager
+        );
+    }
+
+    event TransferGovernor(
+        uint32 previousGovernorDomain,
+        uint32 newGovernorDomain,
+        address indexed previousGovernor,
+        address indexed newGovernor
+    );
+
+    function test_initializeCorrectSet() public {
+        governanceRouter = new GovernanceRouterHarness(homeDomain, timelock);
+        // Test Initialize function
+        vm.expectEmit(true, true, false, true);
+        emit TransferGovernor(0, homeDomain, address(0), address(this));
         governanceRouter.initialize(
             address(xAppConnectionManager),
             recoveryManager
@@ -77,6 +95,18 @@ contract GovernanceRouterTest is NomadTest {
         assertEq(
             address(governanceRouter.xAppConnectionManager()),
             address(xAppConnectionManager)
+        );
+        assertEq(governanceRouter.governor(), address(this));
+        assertEq(uint256(governanceRouter.governorDomain()), homeDomain);
+    }
+
+    function test_initializeRevertBadDomain() public {
+        //  XAppConnectionManager has been setup with domain = homeDomain
+        governanceRouter = new GovernanceRouterHarness(remoteDomain, timelock);
+        vm.expectRevert("XAppConnectionManager bad domain");
+        governanceRouter.initialize(
+            address(xAppConnectionManager),
+            recoveryManager
         );
     }
 
