@@ -13,14 +13,3 @@ jest.mock("../src/domain");
 jest.mock("../src/network");
 jest.mock("../src/nomadenv");
 
-test("successfully calls LocalAgent functions", () => {
-    const t = new HardhatNetwork('tom', 1);
-    const j = new HardhatNetwork('jerry', 2);
-    const tDomain = new NomadDomain(t);
-    const jDomain = new NomadDomain(j);
-    const le = new NomadEnv({
-        domain: tDomain.network.domainNumber,
-        id: "0x" + "20".repeat(20),
-    });
-
-});

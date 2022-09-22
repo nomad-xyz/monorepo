@@ -1,4 +1,3 @@
-import { HardhatNetwork } from "../src/network";
 import { NomadEnv } from "../src/nomadenv";
 import { Key } from "../src/keys/key";
 import type { TokenIdentifier } from "@nomad-xyz/sdk-bridge";
@@ -14,21 +13,17 @@ describe("Token test", () => {
     // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
     const log = bunyan.createLogger({name: 'localenv'});
 
-    // Instantiate HardhatNetworks
-    const t = new HardhatNetwork('tom', 1);
-    const j = new HardhatNetwork('jerry', 2);
-
     const sender = new Key();
     const receiver = new Key();
 
     // Instantiate Nomad domains
-    const tDomain = new NomadDomain(t);
-    const jDomain = new NomadDomain(j);
+    const tDomain = new NomadDomain('tom', 1);
+    const jDomain = new NomadDomain('jerry', 2);
 
-    const le = new NomadEnv({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
+    const le = new NomadEnv({domain: tDomain.network.domainNumber, id: '0x'+'20'.repeat(20)});
 
-    t.addKeys(sender);
-    j.addKeys(receiver);
+    tDomain.network.addKeys(sender);
+    jDomain.network.addKeys(receiver);
 
     le.addDomain(tDomain);
     le.addDomain(jDomain);
@@ -46,13 +41,13 @@ describe("Token test", () => {
         // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
     
         await Promise.all([
-            t.setWETH(t.deployWETH()),
-            j.setWETH(j.deployWETH())
-        ])
+            tDomain.network.setWETH(tDomain.network.deployWETH()),
+            tDomain.network.setWETH(tDomain.network.deployWETH()),
+        ]);
     
         log.info(await le.deploy());
         
-        await le.upAgents()
+        await le.upAgents();
         // warning: nokathy. 
     
         log.info(`Agents up`);
@@ -60,11 +55,11 @@ describe("Token test", () => {
 
     beforeAll(async () => {
         await setUp();
-    })
+    });
 
     it("should handle token creation, transfer logic", async function () {
         const tokenFactory = getCustomToken();
-        const tokenOnTom = await t.deployToken(
+        const tokenOnTom = await tDomain.network.deployToken(
           tokenFactory,
           sender.toAddress(),
           "MyToken",
@@ -81,17 +76,17 @@ describe("Token test", () => {
         assert.exists(tokenOnTom);
         assert.exists(token);
 
-        log.info(`Tokenfactory, token deployed:`, tokenOnTom.address)
+        log.info(`Tokenfactory, token deployed:`, tokenOnTom.address);
 
         const ctx = le.getBridgeSDK();
         assert.exists(ctx);
-        log.info(`Initialized Bridge SDK context`)
+        log.info(`Initialized Bridge SDK context`);
     
         // Default multiprovider comes with signer (`o.setSigner(jerry, signer);`) assigned
         // to each domain, but we change it to allow sending from different signer
-        ctx.registerWalletSigner(t.name, sender.toString());
-        ctx.registerWalletSigner(j.name, receiver.toString());
-        console.log(`registered wallet signers for tom and jerry`)
+        ctx.registerWalletSigner(tDomain.name, sender.toString());
+        ctx.registerWalletSigner(jDomain.name, receiver.toString());
+        console.log(`registered wallet signers for tom and jerry`);
     
         // get 3 random amounts which will be bridged
         const amount1 = getRandomTokenAmount();
@@ -100,7 +95,7 @@ describe("Token test", () => {
         assert.exists(amount1);
         assert.exists(amount2);
         assert.exists(amount3);
-        log.info(`Preparation done`)
+        log.info(`Preparation done`);
 
         expect(await sendTokensAndConfirm(le, tDomain, jDomain, token, receiver.toAddress(), [
           amount1,
@@ -122,9 +117,9 @@ describe("Token test", () => {
         log.info(`Sent tokens B->A done`);
 
         expect(tokenContract.address.toLowerCase()).equal(token.id.toString().toLowerCase());
-    })
+    });
     
     afterAll(async() => {
       await le.down();
-    })
-})
+    });
+});

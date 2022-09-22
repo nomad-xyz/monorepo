@@ -1,115 +1,120 @@
-import { HardhatNetwork } from "../src/network";
 import { NomadDomain } from "../src/domain";
 import { assert, use as chaiUse } from "chai";
 import chaiAsPromised from "chai-as-promised";
+import Dockerode from 'dockerode';
 import { NomadEnv } from "../src/nomadenv";
+import { AgentType } from "../src/agent";
 
-const t = new HardhatNetwork('tom', 1);
-const j = new HardhatNetwork('jerry', 2);
+chaiUse(chaiAsPromised);
 
-const n = new NomadEnv({domain: 1, id: '0x'+'20'.repeat(20)});
+beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-jest.mock("../src/network")
-jest.mock("../src/domain")
+test("Domains should be initalizable (without nomadEnv)", async () => {
 
-test("successfully calls Domain functions", () => {
-    const tDomain = new NomadDomain(t);
-    const jDomain = new NomadDomain(j);
+    const dockerode = new Dockerode();
+    const domain = new NomadDomain('local', 1337, dockerode);
 
-    tDomain.networkUp();
-    jDomain.networkUp();
-
-    expect(tDomain.networkUp).toHaveBeenCalled();
-    expect(jDomain.networkUp).toHaveBeenCalled();
-
-    tDomain.addNomadEnv(n);
-    jDomain.addNomadEnv(n);
-
-    expect(tDomain.addNomadEnv).toHaveBeenCalled();
-    expect(jDomain.addNomadEnv).toHaveBeenCalled();
+    expect(domain).toBeTruthy();
+    expect(domain.network).toBeDefined();
+    expect(domain.network.updater).toBeDefined();
+    expect(domain.network.watcher).toBeDefined();
+    expect(domain.network.recoveryManager).toBeDefined();
+    expect(domain.connections).toBeDefined();
+    expect(domain.nomadEnv).toBeUndefined();
+    expect(domain.name).toEqual('local');
+    expect(domain.networkRpcs).toBeDefined();
+    expect(domain.rpcs).toBeDefined();
+    expect(domain.watcherKeys).toBeDefined();
+    expect(domain.docker).toBeDefined();
+    expect(domain.network.docker).toBe(domain.docker);
     
-    tDomain.ensureAgents();
-    jDomain.ensureAgents();
+});
 
-    expect(tDomain.ensureAgents).toHaveBeenCalled();
-    expect(jDomain.ensureAgents).toHaveBeenCalled();
+test("Domains can add NomadEnv", async () => {
 
-    tDomain.connectNetwork(jDomain);
-    jDomain.connectNetwork(tDomain);
+    const dockerode = new Dockerode();
+    const domain = new NomadDomain('local', 1337, dockerode);
 
-    expect(tDomain.connectNetwork).toHaveBeenCalled();
-    expect(jDomain.connectNetwork).toHaveBeenCalled();
+    const le = new NomadEnv({domain: domain.network.domainNumber, id: '0x'+'20'.repeat(20)});
+    expect(le).toBeTruthy();
+    domain.addNomadEnv(le);
+    expect(domain.nomadEnv).toBeDefined();
+    expect(domain.nomadEnv).toEqual(le);
+    
+});
 
-    tDomain.networkJsonRpcProvider();
-    jDomain.networkJsonRpcProvider();
+test("Domains can't connect to domains with identical names", async () => {
 
-    expect(tDomain.networkJsonRpcProvider).toHaveBeenCalled();
-    expect(jDomain.networkJsonRpcProvider).toHaveBeenCalled();
+    const dockerode = new Dockerode();
+    const domainfoo = new NomadDomain('local', 1337, dockerode);
+    const domainbar = new NomadDomain('local', 1338, dockerode);
 
-    tDomain.networkRpcs();
-    jDomain.networkRpcs();
+    expect(domainfoo.connections.length).toBe(0);
+    expect(domainbar.connections.length).toBe(0);
+    expect(domainfoo.name).toEqual('local');
+    expect(domainbar.name).toEqual('local');
+    domainfoo.connectNetwork(domainbar);
+    expect(domainfoo.connections.length).toBe(0);
+    
+});
 
-    expect(tDomain.networkRpcs).toHaveBeenCalled();
-    expect(jDomain.networkRpcs).toHaveBeenCalled();
+test("Domains can connect to general domains", async () => {
 
-    tDomain.watcherKeys();
-    jDomain.watcherKeys();
+    const dockerode = new Dockerode();
+    const domainfoo = new NomadDomain('localfoo', 1337, dockerode);
+    const domainbar = new NomadDomain('localbar', 1338, dockerode);
 
-    expect(tDomain.watcherKeys).toHaveBeenCalled();
-    expect(jDomain.watcherKeys).toHaveBeenCalled();
+    expect(domainfoo.connections.length).toBe(0);
+    expect(domainbar.connections.length).toBe(0);
+    expect(domainfoo.name).toEqual('localfoo');
+    expect(domainbar.name).toEqual('localbar');
+    domainfoo.connectNetwork(domainbar);
+    expect(domainfoo.connections()).toEqual(['localbar']);
+    expect(domainbar.connections.length).toBe(0);
+    domainbar.connectNetwork(domainfoo);
+    expect(domainbar.connections()).toEqual(['localfoo']);
+});
 
-    tDomain.getAgentSigner();
-    jDomain.getAgentSigner();
+test("Domains can create agents if none present", async () => {
 
-    expect(tDomain.getAgentSigner).toHaveBeenCalled();
-    expect(jDomain.getAgentSigner).toHaveBeenCalled();
+    const dockerode = new Dockerode();
+    const domain = new NomadDomain('local', 1337, dockerode);
 
-    tDomain.connections();
-    jDomain.connections();
+    expect(domain.agents).toBeUndefined();
+    expect(await domain.isAgentsUp()).toBe(undefined);
+    domain.ensureAgents();
+    expect(domain.agents).toBeDefined();
+    expect(await domain.isAgentsUp()).toBe(false);
+    expect(await domain.agents?.isAllUp()).toBeFalsy();
+    
+});
 
-    expect(tDomain.connections).toHaveBeenCalled();
-    expect(jDomain.connections).toHaveBeenCalled();
+test("Domains can get agent keys and addresses", async () => {
 
-    tDomain.localNetEnsureKeys();
-    jDomain.localNetEnsureKeys();
+    const dockerode = new Dockerode();
+    const domain = new NomadDomain('local', 1337, dockerode);
 
-    expect(tDomain.localNetEnsureKeys).toHaveBeenCalled();
-    expect(jDomain.localNetEnsureKeys).toHaveBeenCalled();
+    expect(domain.agents).toBeUndefined();
+    expect(await domain.isAgentsUp()).toBe(undefined);
+    domain.ensureAgents();
+    expect(domain.agents).toBeDefined();
+    expect(await domain.isAgentsUp()).toBe(false);
+    expect(await domain.agents?.isAllUp()).toBeFalsy();
 
-    tDomain.networkUp();
-    jDomain.networkUp();
+    expect(domain.getAgentAddress(AgentType.Updater)).toStrictEqual('0x9C7BC14e8a4B054e98C6DB99B9f1Ea2797BAee7B');
+    expect(domain.getAgentSigner(AgentType.Updater).toAddress()).toStrictEqual('0x9C7BC14e8a4B054e98C6DB99B9f1Ea2797BAee7B');
+    
+});
 
-    expect(tDomain.networkUp).toHaveBeenCalled();
-    expect(jDomain.networkUp).toHaveBeenCalled();
+test("Can call to docker to create containers", async () => {
 
-    tDomain.upAgents();
-    jDomain.upAgents();
+    const dockerode = new Dockerode();
+    const dockerSpy = jest.spyOn(dockerode, 'createContainer');
+    const domain = new NomadDomain("local", 1337, dockerode);
 
-    expect(tDomain.upAgents).toHaveBeenCalled();
-    expect(jDomain.upAgents).toHaveBeenCalled();
-
-    tDomain.up();
-    jDomain.up();
-
-    expect(tDomain.up).toHaveBeenCalled();
-    expect(jDomain.up).toHaveBeenCalled();
-
-    tDomain.downAgents();
-    jDomain.downAgents();
-
-    expect(tDomain.downAgents).toHaveBeenCalled();
-    expect(jDomain.downAgents).toHaveBeenCalled();
-
-    tDomain.down();
-    jDomain.down();
-
-    expect(tDomain.down).toHaveBeenCalled();
-    expect(jDomain.down).toHaveBeenCalled();
-
-    tDomain.downNetwork();
-    jDomain.downNetwork();
-
-    expect(tDomain.downNetwork).toHaveBeenCalled();
-    expect(jDomain.downNetwork).toHaveBeenCalled();
-
+    await domain.networkUp();
+    
+    expect(dockerSpy).toHaveBeenCalled();
 });

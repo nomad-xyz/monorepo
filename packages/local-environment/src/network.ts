@@ -32,6 +32,8 @@ export abstract class Network {
   bridgeContracts?: BridgeContracts;
   bridgeGui?: AppConfig;
 
+  docker: Dockerode;
+
   blockTime: number;
 
   updater: string;
@@ -51,12 +53,20 @@ export abstract class Network {
     addressOrIndex: string | number
   ): ethers.providers.JsonRpcSigner;
   abstract getJsonRpcProvider(): ethers.providers.JsonRpcProvider;
+  abstract setWETH(wethAddy: Promise<string>): Promise<void>;
+  abstract deployWETH(): Promise<string>;
+  abstract addKeys(...keys: Key[]): void;
+  abstract deployToken(
+    contractFactory: ethers.ContractFactory,
+    from: string | ethers.providers.JsonRpcSigner,
+    ...args: string[]
+  ): Promise<ethers.Contract>;
 
   constructor(
     name: string,
     domainNumber: number,
     chainId: number,
-    blockTime = 10000
+    docker: Dockerode
   ) {
     this.name = name;
     this.domainNumber = domainNumber;
@@ -66,7 +76,8 @@ export abstract class Network {
     this.watcher = "";
     this.recoveryManager = "";
     this.weth = "";
-    this.blockTime = blockTime;
+    this.blockTime = 10000;
+    this.docker = docker;
   }
 
   get isDeployed(): boolean {
@@ -81,14 +92,14 @@ export class DockerizedNetworkActor extends DockerizedActor {
   blockTime: number;
   keys: Key[];
 
-  constructor(name: string) {
-    super(name, "network");
+  constructor(name: string, docker: Dockerode) {
+    super(name, "network", docker);
     this.port = ports++;
     this.blockTime = 2 * 1000;
     this.keys = [];
   }
 
-  addKeys(...keys: Key[]) {
+  addKeys(...keys: Key[]): void {
     // TODO: add a check that network hasn't started yet.
     // Keep in mind! That if the network is like a Test network which already exists,
     // we should adjust this method to create keys and fund them during the call to this method. 
@@ -172,13 +183,15 @@ export class HardhatNetwork extends Network {
   blockTime: number;
   keys: Key[];
   handler: DockerizedNetworkActor;
+  docker: Dockerode;
 
-  constructor(name: string, domain: number, options?: HardhatNetworkOptions) {
-    super(name, domain, domain);
-    this.handler = new DockerizedNetworkActor(this.name);
+  constructor(name: string, domain: number, docker: Dockerode, options?: HardhatNetworkOptions) {
+    super(name, domain, domain, docker);
+    this.handler = new DockerizedNetworkActor(this.name, docker);
     this.blockTime = 10;
     this.firstStart = false;
     this.keys = options?.keys || [];
+    this.docker = docker;
   }
 
   /* TODO: reimplement abstractions for MULTIPLE hardhat networks (i.e. any Nomad domain).
@@ -208,7 +221,7 @@ export class HardhatNetwork extends Network {
         
     */
 
-  addKeys(...ks: Key[]) {
+  addKeys(...ks: Key[]): void {
     this.handler.addKeys(...ks);
     this.keys.push(...ks);
   }
@@ -331,12 +344,12 @@ export class HardhatNetwork extends Network {
     return this.handler.isConnected();
   }
 
-  async up() {
+  async up(): Promise<void> {
     await this.connect();
     await this.start();
   }
 
-  async down() {
+  async down(): Promise<void> {
     await this.connect();
 
     await this.stop();

@@ -7,7 +7,7 @@ export default {
   // moduleFileExtensions: ['ts', 'tsx'],
 
   // All imported modules in your tests should be mocked automatically
-  automock: true,
+  // automock: true,
 
   // Stop running tests after `n` failures
   // bail: 0,

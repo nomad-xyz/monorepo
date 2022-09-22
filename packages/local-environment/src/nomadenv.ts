@@ -6,7 +6,6 @@ import { NonceManager } from "@ethersproject/experimental";
 import fs from "fs";
 import bunyan from "bunyan";
 import { NomadDomain } from "./domain";
-import { HardhatNetwork } from "./network";
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import { NomadContext } from "@nomad-xyz/sdk";
 
@@ -29,12 +28,12 @@ export class NomadEnv {
     this.coreSDK = new NomadContext(this.nomadConfig());
   }
 
-  refreshSDK(config: NomadConfig) {
+  refreshSDK(config: NomadConfig): void {
     this.bridgeSDK = new BridgeContext(config);
   }
 
   // Adds a network to the array of networks if it's not already there.
-  addDomain(d: NomadDomain) {
+  addDomain(d: NomadDomain): void {
     if (!this.domains.includes(d)) this.domains.push(d);
     d.addNomadEnv(this);
   }
@@ -80,14 +79,14 @@ export class NomadEnv {
     this.outputConfigAndVerification(outputDir, deployContext);
     await this.outputCallBatch(outputDir, deployContext);
 
-    return deployContext
+    return deployContext;
   }
 
   async deploy(): Promise<DeployContext> {
     let context;
     if (this.deployedOnce()) {
       //TODO: INPUT RESUME DEPLOYMENT LOGIC HERE
-      throw new Error(`LOOK AT ME!`)
+      throw new Error(`LOOK AT ME!`);
     } else {
       context = await this.deployFresh();
     }
@@ -104,7 +103,7 @@ export class NomadEnv {
     return context;
   }
 
-  outputConfigAndVerification(outputDir: string, deployContext: DeployContext) {
+  outputConfigAndVerification(outputDir: string, deployContext: DeployContext): void {
     // output the config
     fs.mkdirSync(outputDir, { recursive: true });
     fs.writeFileSync(
@@ -122,7 +121,7 @@ export class NomadEnv {
     }
   }
 
-  async outputCallBatch(outputDir: string, deployContext: DeployContext) {
+  async outputCallBatch(outputDir: string, deployContext: DeployContext): Promise<void> {
     const governanceBatch = deployContext.callBatch;
     if (!governanceBatch.isEmpty()) {
       // build & write governance batch
@@ -215,42 +214,38 @@ export class NomadEnv {
   
 
   //Input arguments to d.up to disable a specific agent.
-  async up() {
-    let metrics = 9000;
+  async up(): Promise<void> {
+    const metrics = 9000;
     await Promise.all(this.domains.map((d, i) => d.up(metrics + i * 10)));
   }
 
-  async down() {
+  async down(): Promise<void> {
     await Promise.all(this.domains.map((d) => d.down()));
   }
 
   //Input arguments to d.up to disable a specific agent.
-  async upAgents() {
-    let metrics = 9000;
+  async upAgents(): Promise<void> {
+    const metrics = 9000;
     await Promise.all(this.domains.map((d, i) => d.upAgents(metrics + i * 10)));
   }
 
-  async downAgents() {
+  async downAgents(): Promise<void> {
     await Promise.all(this.domains.map((d) => d.down()));
   }
 
-  async upNetworks() {
+  async upNetworks(): Promise<void> {
     // Await domains to up networks.
     await Promise.all(this.domains.map((d) => d.networkUp()));
   }
 }
 
-export async function defaultStart() {
+export async function defaultStart(): Promise<void> {
   // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
   const log = bunyan.createLogger({ name: "localenv" });
 
-  // Instantiate HardhatNetworks
-  const t = new HardhatNetwork("tom", 1);
-  const j = new HardhatNetwork("jerry", 2);
-
   // Instantiate Nomad domains
-  const tDomain = new NomadDomain(t);
-  const jDomain = new NomadDomain(j);
+  const tDomain = new NomadDomain("tom", 1);
+  const jDomain = new NomadDomain("jerry", 2);
 
   // Await domains to up networks.
   await Promise.all([tDomain.network.up(), jDomain.network.up()]);
@@ -273,7 +268,7 @@ export async function defaultStart() {
   // Notes, check governance router deployment on Jerry and see if that's actually even passing
   // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
-  await Promise.all([t.setWETH(t.deployWETH()), j.setWETH(j.deployWETH())]);
+  await Promise.all([tDomain.network.setWETH(tDomain.network.deployWETH()), jDomain.network.setWETH(jDomain.network.deployWETH())]);
 
   log.info(await le.deploy());
 

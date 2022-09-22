@@ -1,4 +1,4 @@
-import Docker from "dockerode";
+import Dockerrode from "dockerode";
 
 import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
@@ -14,28 +14,31 @@ export class Agents {
   watchers: Agent[];
   kathy?: Agent;
   metricsPort: number;
+  docker: Dockerrode;
 
-  constructor(domain: NomadDomain, metricsPort: number) {
+  constructor(domain: NomadDomain, metricsPort: number, docker: Dockerrode) {
     this.metricsPort = metricsPort; // metricsPort4 - 4 ports for a single argument.
-    this.updater = new LocalAgent(AgentType.Updater, domain, metricsPort); // metricsPort4 - 4 ports for a single argument.
-    this.relayer = new LocalAgent(AgentType.Relayer, domain, metricsPort + 1); // metricsPort4 - 4 ports for a single argument.
+    this.docker = docker;
+    this.updater = new LocalAgent(AgentType.Updater, domain, metricsPort, docker); // metricsPort4 - 4 ports for a single argument.
+    this.relayer = new LocalAgent(AgentType.Relayer, domain, metricsPort + 1, docker); // metricsPort4 - 4 ports for a single argument.
     this.processor = new LocalAgent(
       AgentType.Processor,
       domain,
-      metricsPort + 2
+      metricsPort + 2,
+      docker
     ); // metricsPort4 - 4 ports for a single argument.
     this.watchers = [
-      new LocalAgent(AgentType.Watcher, domain, metricsPort + 3),
+      new LocalAgent(AgentType.Watcher, domain, metricsPort + 3, docker),
     ]; // metricsPort4 - 4 ports for a single argument.
-    if (kathyOn) this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort + 4);
+    if (kathyOn) this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort + 4, docker);
   }
 
-  async upAll(agentType?: string) {
+  async upAll(agentType?: string): Promise<void | Promise<void>[] > {
     await Promise.all([
       this.relayer.up(),
       this.updater.up(),
       this.processor.up(),
-      ...(kathyOn ? [this.kathy!.up()] : []),
+      ...(kathyOn ? [this.kathy?.up()] : []),
       ...this.watchers.map((watcher) => watcher.up()),
     ]);
     if (agentType) {
@@ -43,27 +46,27 @@ export class Agents {
         case "watcher":
           return this.watchers.map((w) => w.stop());
         case "kathy":
-          return this.kathy!.stop();
+          return this.kathy?.stop();
       }
     }
   }
 
-  async downAll() {
+  async downAll(): Promise<void> {
     await Promise.all([
       this.relayer.down(),
       this.updater.down(),
       this.processor.down(),
-      ...(kathyOn ? [this.kathy!.down()] : []),
+      ...(kathyOn ? [this.kathy?.down()] : []),
       ...this.watchers.map((w) => w.down()),
     ]);
   }
 
-  async isAllUp() {
+  async isAllUp(): Promise<boolean> {
     const ups = await Promise.all([
       this.relayer.status(),
       this.updater.status(),
       this.processor.status(),
-      ...(kathyOn ? [this.kathy!.status()] : []),
+      ...(kathyOn ? [this.kathy?.status()] : []),
       ...this.watchers.map((w) => w.status()),
     ]);
     return ups.every(a => a);
@@ -118,9 +121,9 @@ export class LocalAgent extends DockerizedActor implements Agent {
   domain: NomadDomain;
   metricsPort: number;
 
-  constructor(agentType: AgentType, domain: NomadDomain, metricsPort: number) {
+  constructor(agentType: AgentType, domain: NomadDomain, metricsPort: number, docker: Dockerrode) {
     agentType = parseAgentType(agentType);
-    super(`${agentType}_${domain.network.name}`, "agent");
+    super(`${agentType}_${domain.network.name}`, "agent", docker);
     this.agentType = agentType;
 
     this.domain = domain;
@@ -241,7 +244,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
     return envs;
   }
 
-  async createContainer(): Promise<Docker.Container> {
+  async createContainer(): Promise<Dockerrode.Container> {
     const name = this.containerName();
 
     const agentConfigPath = "" + process.cwd() + "/output/test_config.json";
