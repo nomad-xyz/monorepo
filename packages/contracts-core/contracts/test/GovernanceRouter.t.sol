@@ -418,6 +418,62 @@ contract GovernanceRouterTest is NomadTest {
         assertEq(goodXapp.number(), numbers[63]);
     }
 
+    function test_callRemoteOnlyGovernor() public {
+        uint32 dest = remoteDomain;
+        GovernanceMessage.Call[] memory calls = new GovernanceMessage.Call[](1);
+        bytes32 to = remoteGovernanceRouter;
+        bytes memory data = "Miami";
+        calls[0] = GovernanceMessage.Call(to, data);
+        vm.prank(address(0xBEEF));
+        vm.expectRevert("! called by governor");
+        governanceRouter.exposed_callRemote(dest, calls);
+        vm.expectEmit(true, true, true, true);
+        home.hack_expectDispatchEvent(
+            dest,
+            to,
+            GovernanceMessage.formatBatch(calls),
+            address(governanceRouter)
+        );
+        governanceRouter.exposed_callRemote(dest, calls);
+    }
+
+    function test_callRemoteOnlyGovernorNotInRecovery() public {
+        uint32 dest = remoteDomain;
+        GovernanceMessage.Call[] memory calls = new GovernanceMessage.Call[](1);
+        bytes32 to = remoteGovernanceRouter;
+        bytes memory data = "Miami";
+        calls[0] = GovernanceMessage.Call(to, data);
+        enterRecovery();
+        vm.expectRevert("in recovery");
+        governanceRouter.exposed_callRemote(dest, calls);
+    }
+
+    function test_callRemoteSuccessFuzzed(
+        uint32 dest,
+        bytes32 router,
+        bytes32[64] memory to,
+        bytes[64] memory data
+    ) public {
+        vm.assume(router != bytes32(0));
+        governanceRouter.setRouterLocal(dest, router);
+        GovernanceMessage.Call[] memory calls = new GovernanceMessage.Call[](
+            64
+        );
+        for (uint256 i; i < 64; i++) {
+            calls[i] = GovernanceMessage.Call(to[i], data[i]);
+        }
+        bytes32 to = remoteGovernanceRouter;
+        governanceRouter.exposed_callRemote(dest, calls);
+        vm.expectEmit(true, true, true, true);
+        home.hack_expectDispatchEvent(
+            dest,
+            router,
+            GovernanceMessage.formatBatch(calls),
+            address(governanceRouter)
+        );
+        governanceRouter.exposed_callRemote(dest, calls);
+    }
+
     // uint32 _destination, GovernanceMessage.Call[] calldata _calls
 
     // reverts if no remote router enrolled
