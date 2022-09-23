@@ -53,7 +53,7 @@ export abstract class Network {
     addressOrIndex: string | number
   ): ethers.providers.JsonRpcSigner;
   abstract getJsonRpcProvider(): ethers.providers.JsonRpcProvider;
-  abstract setWETH(wethAddy: Promise<string>): Promise<void>;
+  abstract setWETH(wethAddy: string): void;
   abstract deployWETH(): Promise<string>;
   abstract addKeys(...keys: Key[]): void;
   abstract deployToken(
@@ -254,8 +254,8 @@ export class HardhatNetwork extends Network {
     };
   }
 
-  async setWETH(wethAddy: Promise<string>): Promise<void> {
-    this.weth = await wethAddy;
+  setWETH(wethAddy: string): void {
+    this.weth = wethAddy;
   }
 
   get bridgeConfig(): BridgeConfiguration {

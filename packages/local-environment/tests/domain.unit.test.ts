@@ -29,6 +29,7 @@ test("Domains should be initalizable (without nomadEnv)", async () => {
     expect(domain.watcherKeys).toBeDefined();
     expect(domain.docker).toBeDefined();
     expect(domain.network.docker).toBe(domain.docker);
+    expect(domain.connectedNetworks).toBe([]);
     
 });
 
@@ -117,4 +118,5 @@ test("Can call to docker to create containers", async () => {
     await domain.networkUp();
     
     expect(dockerSpy).toHaveBeenCalled();
+    
 });

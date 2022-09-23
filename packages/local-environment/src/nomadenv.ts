@@ -268,7 +268,7 @@ export async function defaultStart(): Promise<void> {
   // Notes, check governance router deployment on Jerry and see if that's actually even passing
   // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
-  await Promise.all([tDomain.network.setWETH(tDomain.network.deployWETH()), jDomain.network.setWETH(jDomain.network.deployWETH())]);
+  await Promise.all([tDomain.network.setWETH(await tDomain.network.deployWETH()), jDomain.network.setWETH(await jDomain.network.deployWETH())]);
 
   log.info(await le.deploy());
 
