@@ -9,6 +9,7 @@ import {IMessageRecipient} from "../../interfaces/IMessageRecipient.sol";
 
 contract GoodXappSimple is IMessageRecipient {
     event Handler(string);
+    uint256 public number;
 
     function handle(
         uint32,
@@ -17,5 +18,9 @@ contract GoodXappSimple is IMessageRecipient {
         bytes memory
     ) external override {
         emit Handler("Handled");
+    }
+
+    function setNumber(uint256 _number) external {
+        number = _number;
     }
 }

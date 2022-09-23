@@ -38,11 +38,35 @@ contract MockHome {
             _recipientAddress,
             _messageBody
         );
-        // insert the hashed message into the Merkle tree
         bytes32 _messageHash = keccak256(_message);
         emit Dispatch(
             _messageHash,
             count() - 1,
+            _destinationAndNonce(_destinationDomain, _nonce),
+            committedRoot,
+            _message
+        );
+    }
+
+    function hack_expectDispatchEvent(
+        uint32 _destinationDomain,
+        bytes32 _recipientAddress,
+        bytes memory _messageBody,
+        address sender
+    ) external {
+        uint32 _nonce = nonces[_destinationDomain];
+        bytes memory _message = Message.formatMessage(
+            localDomain,
+            bytes32(uint256(uint160(sender))),
+            _nonce,
+            _destinationDomain,
+            _recipientAddress,
+            _messageBody
+        );
+        bytes32 _messageHash = keccak256(_message);
+        emit Dispatch(
+            _messageHash,
+            counter,
             _destinationAndNonce(_destinationDomain, _nonce),
             committedRoot,
             _message

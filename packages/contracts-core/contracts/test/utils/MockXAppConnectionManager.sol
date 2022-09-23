@@ -6,7 +6,7 @@ import "@nomad-xyz/contracts-core/contracts/Home.sol";
 contract MockXAppConnectionManager {
     bool public mockIsReplica;
 
-    Home home;
+    Home public home;
 
     constructor(address _home) {
         home = Home(_home);
