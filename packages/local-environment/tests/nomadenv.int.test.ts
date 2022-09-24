@@ -12,10 +12,8 @@ describe("NomadDomain test", () => {
     //TODO: We should implement any-network connection logic and test accordingly.
     it('can create a valid NomadEnvironment', async () => {
         // Creation
-        const t = new HardhatNetwork('tom', 1);
-        const j = new HardhatNetwork('jerry', 2);
-        const tDomain = new NomadDomain(t);
-        const jDomain = new NomadDomain(j);
+        const tDomain = new NomadDomain('tom', 1);
+        const jDomain = new NomadDomain('jerry', 2);
         const le = new NomadEnv({
             domain: tDomain.network.domainNumber,
             id: "0x" + "20".repeat(20),
@@ -59,13 +57,13 @@ describe("NomadDomain test", () => {
         const jRelayer = (jDomain.agents!.relayer as LocalAgent).containerName();
         const jProcessor = (jDomain.agents!.processor as LocalAgent).containerName();
 
-        assert.isTrue((await docker.getContainer(tUpdater).inspect()).State.Running)
-        assert.isTrue((await docker.getContainer(tRelayer).inspect()).State.Running)
-        assert.isTrue((await docker.getContainer(tProcessor).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer(tUpdater).inspect()).State.Running);
+        assert.isTrue((await docker.getContainer(tRelayer).inspect()).State.Running);
+        assert.isTrue((await docker.getContainer(tProcessor).inspect()).State.Running);
 
-        assert.isTrue((await docker.getContainer(jUpdater).inspect()).State.Running)
-        assert.isTrue((await docker.getContainer(jRelayer).inspect()).State.Running)
-        assert.isTrue((await docker.getContainer(jProcessor).inspect()).State.Running)
+        assert.isTrue((await docker.getContainer(jUpdater).inspect()).State.Running);
+        assert.isTrue((await docker.getContainer(jRelayer).inspect()).State.Running);
+        assert.isTrue((await docker.getContainer(jProcessor).inspect()).State.Running);
 
         await le.downAgents();
         assert.isFalse(await tDomain.isAgentsUp());
@@ -81,15 +79,15 @@ describe("NomadDomain test", () => {
         // Can up networks
         await le.upNetworks();
 
-        assert.isTrue(await t.isConnected());
-        assert.isTrue(await j.isConnected());
+        assert.isTrue(await tDomain.network.isConnected());
+        assert.isTrue(await jDomain.network.isConnected());
 
-        assert.isTrue(await tDomain.network.isConnected())
-        assert.isTrue(await jDomain.network.isConnected())
+        assert.isTrue(await tDomain.network.isConnected());
+        assert.isTrue(await jDomain.network.isConnected());
 
         await le.down();
-        assert.isFalse(await t.isConnected());
-        assert.isFalse(await j.isConnected());
-    })
+        assert.isFalse(await tDomain.network.isConnected());
+        assert.isFalse(await jDomain.network.isConnected());
+    });
 
-})
+});

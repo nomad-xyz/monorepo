@@ -29,7 +29,7 @@ test("Domains should be initalizable (without nomadEnv)", async () => {
     expect(domain.watcherKeys).toBeDefined();
     expect(domain.docker).toBeDefined();
     expect(domain.network.docker).toBe(domain.docker);
-    expect(domain.connectedNetworks).toBe([]);
+    expect(domain.connectedNetworks).toStrictEqual([]);
     
 });
 
@@ -109,14 +109,32 @@ test("Domains can get agent keys and addresses", async () => {
     
 });
 
+
+test("Configs are defined", async () => {
+
+    const dockerode = new Dockerode();
+    const domain = new NomadDomain("local", 1337, dockerode);
+
+    expect(domain.agentConfig).toBeDefined();
+    expect(domain.kathyConfig).toBeDefined();
+    expect(domain.updaterConfig).toBeDefined();
+    expect(domain.watcherConfig).toBeDefined();
+    expect(domain.processorConfig).toBeDefined();
+    expect(domain.domain).toBeDefined();
+    expect(domain.bridgeConfig).toBeDefined();
+    expect(domain.gasConfig).toBeDefined();
+    expect(domain.specs).toBeDefined();
+
+});
+
 test("Can call to docker to create containers", async () => {
 
     const dockerode = new Dockerode();
-    const dockerSpy = jest.spyOn(dockerode, 'createContainer');
+    const dockerSpy = jest.spyOn(dockerode, 'createContainer').mockImplementation(() => jest.fn());
     const domain = new NomadDomain("local", 1337, dockerode);
 
     await domain.networkUp();
     
     expect(dockerSpy).toHaveBeenCalled();
-    
+
 });

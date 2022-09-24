@@ -1,12 +1,6 @@
-import { NomadDomain } from "../src/domain";
-import { assert, use as chaiUse } from "chai";
-import chaiAsPromised from "chai-as-promised";
 import Dockerode from 'dockerode';
-import { NomadEnv } from "../src/nomadenv";
-import { Network, HardhatNetwork } from "../src/network";
+import { HardhatNetwork } from "../src/network";
 import { Key } from "../src/keys/key";
-
-chaiUse(chaiAsPromised);
 
 beforeEach(() => {
     jest.clearAllMocks();
@@ -29,9 +23,9 @@ beforeEach(() => {
     expect(network.recoveryManager).toBe("");
     expect(network.watcher).toBe("");
     expect(network.weth).toBe("");
-    expect(network.keys).toBe([]);
+    expect(network.keys).toStrictEqual([]);
     expect(await network.handler.status()).toBe(2);
-    expect(network.rpcs).toBe(["http://localhost:1337"]);
+    expect(network.rpcs).toStrictEqual(["http://localhost:1337"]);
     expect(network.config).toBeDefined();
     expect(network.specs).toBeDefined();
     expect(network.bridgeConfig).toBeDefined();

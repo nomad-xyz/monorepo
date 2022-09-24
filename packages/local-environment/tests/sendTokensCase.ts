@@ -28,27 +28,21 @@ export function parseMessage(message: string): ParsedMessage {
     // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
     const log = bunyan.createLogger({name: 'localenv'});
 
-    // Instantiate HardhatNetworks
-    const t = new HardhatNetwork('tom', 1);
-    const j = new HardhatNetwork('jerry', 2);
+    // Instantiate Nomad domains
+    const tDomain = new NomadDomain('tom', 1);
+    const jDomain = new NomadDomain('jerry', 2);
 
     const sender = new Key();
     const receiver = new Key();
 
-    t.addKeys(sender);
-    j.addKeys(receiver);
-
-    // Instantiate Nomad domains
-    const tDomain = new NomadDomain(t);
-    const jDomain = new NomadDomain(j);
-
-
+    tDomain.network.addKeys(sender);
+    jDomain.network.addKeys(receiver);
 
     log.info(`Upped Tom and Jerry`);
 
     log.info(`Upped Tom and Jerry`);
 
-    const le = new NomadEnv({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
+    const le = new NomadEnv({domain: tDomain.domain.domain, id: '0x'+'20'.repeat(20)});
 
     le.addDomain(tDomain);
     le.addDomain(jDomain);
@@ -78,9 +72,9 @@ export function parseMessage(message: string): ParsedMessage {
     // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
     await Promise.all([
-        t.setWETH(t.deployWETH()),
-        j.setWETH(j.deployWETH())
-    ])
+        tDomain.network.setWETH(await tDomain.network.deployWETH()),
+        jDomain.network.setWETH(await jDomain.network.deployWETH()),
+    ]);
 
     log.info(await le.deploy());
 
@@ -90,7 +84,7 @@ export function parseMessage(message: string): ParsedMessage {
     //   jDomain.upAllAgents(9090),
     // ]);
     
-    await le.upAgents()
+    await le.upAgents();
     // await le.upAgents({kathy:false, watcher: false}) // warning: nokathy.
     
 
@@ -107,7 +101,7 @@ export function parseMessage(message: string): ParsedMessage {
   try {
     // Deploying a custom ERC20 contract
     const tokenFactory = getCustomToken();
-    const tokenOnTom = await t.deployToken(
+    const tokenOnTom = await tDomain.network.deployToken(
       tokenFactory,
       sender.toAddress(),
       "MyToken",
@@ -121,16 +115,16 @@ export function parseMessage(message: string): ParsedMessage {
       id: tokenOnTom.address,
     };
 
-    log.info(`Tokenfactory, token deployed:`, tokenOnTom.address)
+    log.info(`Tokenfactory, token deployed:`, tokenOnTom.address);
 
     const ctx = le.getBridgeSDK();
-    log.info(`Initialized Bridge SDK context`)
+    log.info(`Initialized Bridge SDK context`);
 
     // Default multiprovider comes with signer (`o.setSigner(jerry, signer);`) assigned
     // to each domain, but we change it to allow sending from different signer
-    ctx.registerWalletSigner(t.name, sender.toString());
-    ctx.registerWalletSigner(j.name, receiver.toString());
-    log.info(`registered wallet signers for tom and jerry`)
+    ctx.registerWalletSigner(tDomain.network.name, sender.toString());
+    ctx.registerWalletSigner(jDomain.network.name, receiver.toString());
+    log.info(`registered wallet signers for tom and jerry`);
 
     // get 3 random amounts which will be bridged
     const amount1 = getRandomTokenAmount();
@@ -166,7 +160,7 @@ export function parseMessage(message: string): ParsedMessage {
         `Resolved asset at destination Jerry is not the same as the token. ${tokenContract.address.toLowerCase()} != ${token.id.toString().toLowerCase()}`
       );
     } else {
-      log.info(`All cool!`)
+      log.info(`All cool!`);
     }
 
     success = true;

@@ -1,4 +1,3 @@
-import { HardhatNetwork } from "../src/network";
 import { NomadDomain } from "../src/domain";
 import { expect, assert, use as chaiUse } from "chai";
 import Docker from "dockerode";
@@ -9,7 +8,7 @@ chaiUse(chaiAsPromised);
 
 const dockerode = new Docker();
 
-const domain = new NomadDomain("tom", 1);
+const domain = new NomadDomain("local", 1337);
 
 describe("Agent test", () => {
     //TODO: We should implement any-network connection logic and test accordingly.
