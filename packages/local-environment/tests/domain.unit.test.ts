@@ -5,6 +5,8 @@ import Dockerode from 'dockerode';
 import { NomadEnv } from "../src/nomadenv";
 import { AgentType } from "../src/agent";
 
+jest.mock('dockerode');
+
 chaiUse(chaiAsPromised);
 
 beforeEach(() => {
@@ -130,7 +132,7 @@ test("Configs are defined", async () => {
 test("Can call to docker to create containers", async () => {
 
     const dockerode = new Dockerode();
-    const dockerSpy = jest.spyOn(dockerode, 'createContainer').mockImplementation(() => jest.fn());
+    const dockerSpy = jest.spyOn(dockerode, 'createContainer');
     const domain = new NomadDomain("local", 1337, dockerode);
 
     await domain.networkUp();

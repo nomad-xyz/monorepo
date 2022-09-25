@@ -56,5 +56,8 @@ module.exports = {
       // url: "http://0.0.0.0:8545",
       accounts,
     },
+    localhost: {
+      url: "https://optimism-mainnet.infura.io/v3/5d185cf62cb04d9b8cf17805947505b1",
+    },
   },
 };

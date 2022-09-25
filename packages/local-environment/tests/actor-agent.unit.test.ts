@@ -4,7 +4,7 @@ import { LocalAgent, AgentType } from "../src/agent";
 import chaiAsPromised from "chai-as-promised";
 import Dockerode from 'dockerode';
 
-// jest.mock("../src/actor");
+// jest.mock("dockerode");
 
 chaiUse(chaiAsPromised);
 const domain = new NomadDomain('local', 1337);
