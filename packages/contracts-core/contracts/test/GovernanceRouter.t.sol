@@ -530,6 +530,10 @@ contract GovernanceRouterTest is NomadTest {
                 newDomain != homeDomain &&
                 newDomain != remoteDomain
         );
+        if (newGovernor == address(0)) {
+            vm.expectRevert("cannot renounce governor");
+            return;
+        }
         governanceRouter.setRouterLocal(newDomain, router);
         vm.expectEmit(true, true, true, true);
         emit TransferGovernor(homeDomain, newDomain, address(this), address(0));
@@ -570,11 +574,12 @@ contract GovernanceRouterTest is NomadTest {
     function test_transferGovernorLocalGovernorFuzzed(address newGovernor)
         public
     {
+        uint32 newDomain = homeDomain;
         if (newGovernor == address(0)) {
+            governanceRouter.transferGovernor(newDomain, newGovernor);
             vm.expectRevert("cannot renounce governor");
             return;
         }
-        uint32 newDomain = homeDomain;
         vm.expectEmit(true, true, true, true);
         emit TransferGovernor(
             homeDomain,
@@ -585,6 +590,35 @@ contract GovernanceRouterTest is NomadTest {
         governanceRouter.transferGovernor(newDomain, newGovernor);
         assertEq(governanceRouter.governor(), newGovernor);
         assertEq(uint256(governanceRouter.governorDomain()), newDomain);
+    }
+
+    function test_transferRecoveryManagerOnlyRecoveryManager() public {
+        address newRecoveryManager = address(0xBEEF);
+        vm.expectRevert("! called by recovery manager");
+        governanceRouter.transferRecoveryManager(newRecoveryManager);
+        vm.startPrank(recoveryManager);
+        vm.expectEmit(true, true, false, false);
+        emit TransferRecoveryManager(recoveryManager, newRecoveryManager);
+        governanceRouter.transferRecoveryManager(newRecoveryManager);
+        assertEq(governanceRouter.recoveryManager(), newRecoveryManager);
+    }
+
+    event TransferRecoveryManager(
+        address indexed previousRecoveryManager,
+        address indexed newRecoveryManager
+    );
+
+    function test_transferRecoveryManagerFuzzed(address newRecoveryManager)
+        public
+    {
+        vm.startPrank(recoveryManager);
+        vm.expectEmit(true, true, false, false);
+        emit TransferRecoveryManager(
+            governanceRouter.recoveryManager(),
+            newRecoveryManager
+        );
+        governanceRouter.transferRecoveryManager(newRecoveryManager);
+        assertEq(governanceRouter.recoveryManager(), newRecoveryManager);
     }
 
     // uint32 _destination, GovernanceMessage.Call[] calldata _calls
