@@ -6,6 +6,7 @@
   "author": "Illusory Systems Inc.",
   "main": "dist/index.ts",
   "types": "dist/index.d.ts",
+  "version": "0.0.1-rc.0",
   "files": [
     "dist/**/*",
     "src/**/*"
