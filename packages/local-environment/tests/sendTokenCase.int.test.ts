@@ -44,13 +44,13 @@ describe("Token test", () => {
             tDomain.network.setWETH(await tDomain.network.deployWETH()),
             tDomain.network.setWETH(await tDomain.network.deployWETH()),
         ]);
-    
-        log.info(await le.deploy());
         
         await le.upAgents();
         // warning: nokathy. 
     
         log.info(`Agents up`);
+
+        log.info(await le.deploy());
     }
 
     beforeAll(async () => {
