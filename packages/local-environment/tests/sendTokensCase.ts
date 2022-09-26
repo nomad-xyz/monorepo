@@ -38,15 +38,10 @@ export function parseMessage(message: string): ParsedMessage {
     tDomain.network.addKeys(sender);
     jDomain.network.addKeys(receiver);
 
-    log.info(`Upped Tom and Jerry`);
-
-    log.info(`Upped Tom and Jerry`);
-
-    const le = new NomadEnv({domain: tDomain.domain.domain, id: '0x'+'20'.repeat(20)});
+    const le = new NomadEnv({domain: tDomain.network.domainNumber, id: '0x'+'20'.repeat(20)});
 
     le.addDomain(tDomain);
     le.addDomain(jDomain);
-    log.info(`Added Tom and Jerry`);
 
     // Set keys
     // le.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));

@@ -10,26 +10,18 @@ import { NomadDomain } from "../src/domain";
     const log = bunyan.createLogger({name: 'localenv'});
 
     // Instantiate HardhatNetworks
-    const t = new HardhatNetwork('tom', 1);
-    const j = new HardhatNetwork('jerry', 2);
+
+    // Instantiate Nomad domains
+    const tDomain = new NomadDomain('tom',1);
+    const jDomain = new NomadDomain('jerry',1);
 
     const sender = new Key();
     const receiver = new Key();
 
-    t.addKeys(sender);
-    j.addKeys(receiver);
+    tDomain.network.addKeys(sender);
+    jDomain.network.addKeys(receiver);
 
-    // Instantiate Nomad domains
-    const tDomain = new NomadDomain(t);
-    const jDomain = new NomadDomain(j);
-
-
-
-    log.info(`Upped Tom and Jerry`);
-
-    log.info(`Upped Tom and Jerry`);
-
-    const le = new NomadEnv({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
+    const le = new NomadEnv({domain: tDomain.network.domainNumber, id: '0x'+'20'.repeat(20)});
 
     le.addDomain(tDomain);
     le.addDomain(jDomain);
@@ -59,9 +51,9 @@ import { NomadDomain } from "../src/domain";
     // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
     await Promise.all([
-        t.setWETH(t.deployWETH()),
-        j.setWETH(j.deployWETH())
-    ])
+        tDomain.network.setWETH(await tDomain.network.deployWETH()),
+        jDomain.network.setWETH(await jDomain.network.deployWETH()),
+    ]);
 
     log.info(await le.deploy());
 
@@ -72,7 +64,7 @@ import { NomadDomain } from "../src/domain";
     // ]);
 
     
-    await le.upAgents()
+    await le.upAgents();
     // await le.upAgents({kathy:false, watcher: false}) // warning: nokathy.
     
 

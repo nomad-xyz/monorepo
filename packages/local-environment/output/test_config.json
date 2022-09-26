@@ -46,7 +46,7 @@
           "indexPageSize": 2000
         },
         "bridgeConfiguration": {
-          "weth": "0x2fd79405e108b80d297b6a95b715258806cb2537",
+          "weth": "0xb5f685e49595187d13d853a49d272dc5c1beaa8e",
           "customs": []
         }
       },
@@ -77,7 +77,7 @@
           "indexPageSize": 2000
         },
         "bridgeConfiguration": {
-          "weth": "0x2fd79405e108b80d297b6a95b715258806cb2537",
+          "weth": "0xb5f685e49595187d13d853a49d272dc5c1beaa8e",
           "customs": []
         }
       }
@@ -85,7 +85,7 @@
   },
   "core": {
     "tom": {
-      "deployHeight": 8,
+      "deployHeight": 104,
       "upgradeBeaconController": "0xb8f76913b146701aaa977521787cac3efa647ac4",
       "xAppConnectionManager": "0x1d910c11207263544f6c4b9e33d6eceed59648d6",
       "updaterManager": "0xa026c1a957d19f5a364f690414837ebf7e87b6c4",
@@ -108,7 +108,7 @@
       }
     },
     "jerry": {
-      "deployHeight": 8,
+      "deployHeight": 104,
       "upgradeBeaconController": "0xb8f76913b146701aaa977521787cac3efa647ac4",
       "xAppConnectionManager": "0x1d910c11207263544f6c4b9e33d6eceed59648d6",
       "updaterManager": "0xa026c1a957d19f5a364f690414837ebf7e87b6c4",
@@ -133,7 +133,7 @@
   },
   "bridge": {
     "tom": {
-      "deployHeight": 41,
+      "deployHeight": 134,
       "bridgeRouter": {
         "implementation": "0xf00852596cd325618a901d29173fd7e547f836a0",
         "proxy": "0xcc53a0548185ee64c30164c98b2a132a719b60cf",
@@ -153,7 +153,7 @@
       "customs": []
     },
     "jerry": {
-      "deployHeight": 41,
+      "deployHeight": 134,
       "bridgeRouter": {
         "implementation": "0xf00852596cd325618a901d29173fd7e547f836a0",
         "proxy": "0xcc53a0548185ee64c30164c98b2a132a719b60cf",

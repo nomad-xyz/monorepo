@@ -33,7 +33,16 @@ export class NomadDomain {
     this.connectedNetworks = [];
     this.keys = new AgentKeys();
 
-    this.nomadEnv = nomadEnv;
+    if (!docker) {
+      this.docker = new Dockerrode();
+    }
+    else this.docker = docker;
+
+    this.network = new HardhatNetwork(name, domain, this.docker);
+
+    if (nomadEnv) {
+      this.nomadEnv = nomadEnv;
+    }
 
     const signer = this.keys.getAgentKey("signer");
 
@@ -45,13 +54,6 @@ export class NomadDomain {
       });
     }
 
-
-    if (!docker) {
-      this.docker = new Dockerrode();
-    }
-    else this.docker = docker;
-
-    this.network = new HardhatNetwork(name, domain, this.docker);
   }
 
   addNomadEnv(e: NomadEnv): void {

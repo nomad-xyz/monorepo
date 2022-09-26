@@ -24,8 +24,8 @@ export class NomadEnv {
   constructor(governor: NomadLocator) {
     this.domains = [];
     this.governor = governor;
-    this.bridgeSDK = new BridgeContext(this.nomadConfig());
-    this.coreSDK = new NomadContext(this.nomadConfig());
+    this.bridgeSDK = new BridgeContext(this.nomadConfig);
+    this.coreSDK = new NomadContext(this.nomadConfig);
   }
 
   refreshSDK(config: NomadConfig): void {
@@ -68,6 +68,8 @@ export class NomadEnv {
     this.log.info(`Deploying!`);
 
     const deployContext = this.setDeployContext();
+    
+    this.log.info("Deploycontext: " + deployContext);
 
     const outputDir = "./output";
     const governanceBatch = await deployContext.deployAndRelinquish();
@@ -156,7 +158,7 @@ export class NomadEnv {
 
   setDeployContext(): DeployContext {
     //@TODO remove re-initialization.
-    const deployContext = new DeployContext(this.nomadConfig());
+    const deployContext = new DeployContext(this.nomadConfig);
     // add deploy signer and overrides for each network
     for (const domain of this.domains) {
       const name = domain.network.name;
@@ -173,7 +175,7 @@ export class NomadEnv {
     return this.deployContext;
   }
 
-  nomadConfig(): NomadConfig {
+  get nomadConfig(): NomadConfig {
     return {
       version: 0,
       environment: "local",
@@ -211,8 +213,6 @@ export class NomadEnv {
     };
   }
 
-  
-
   //Input arguments to d.up to disable a specific agent.
   async up(): Promise<void> {
     const metrics = 9000;
@@ -239,16 +239,13 @@ export class NomadEnv {
   }
 }
 
-export async function defaultStart(): Promise<void> {
+export async function defaultStart(): Promise<NomadEnv> {
   // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
   const log = bunyan.createLogger({ name: "localenv" });
 
   // Instantiate Nomad domains
   const tDomain = new NomadDomain("tom", 1);
   const jDomain = new NomadDomain("jerry", 2);
-
-  // Await domains to up networks.
-  await Promise.all([tDomain.network.up(), jDomain.network.up()]);
 
   log.info(`Upped Tom and Jerry`);
 
@@ -259,7 +256,9 @@ export async function defaultStart(): Promise<void> {
 
   le.addDomain(tDomain);
   le.addDomain(jDomain);
-  log.info(`Going to init NomadEnv with domains`, le.domains);
+  log.info(`Going to init NomadEnv with domains`, le.domains[0].name + " " + le.domains[1].name);
+
+  await le.upNetworks();
 
   tDomain.connectNetwork(jDomain);
   jDomain.connectNetwork(tDomain);
@@ -270,6 +269,8 @@ export async function defaultStart(): Promise<void> {
 
   await Promise.all([tDomain.network.setWETH(await tDomain.network.deployWETH()), jDomain.network.setWETH(await jDomain.network.deployWETH())]);
 
+  log.info(`WETH Deployed at `, tDomain.network.weth);
+  
   log.info(await le.deploy());
 
   // let myContracts = le.deploymyproject();
@@ -277,4 +278,6 @@ export async function defaultStart(): Promise<void> {
   await le.upAgents();
 
   log.info(`Agents up`);
+
+  return le;
 }

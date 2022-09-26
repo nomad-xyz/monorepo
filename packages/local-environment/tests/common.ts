@@ -167,10 +167,6 @@ export async function setupTwo(log: Logger): Promise<{ le: NomadEnv }> {
   tDomain.network.addKeys(sender);
   jDomain.network.addKeys(receiver);
 
-  log.info(`Upped Tom and Jerry`);
-
-  log.info(`Upped Tom and Jerry`);
-
   const le = new NomadEnv({domain: tDomain.network.domainNumber, id: '0x'+'20'.repeat(20)});
 
   le.addDomain(tDomain);
@@ -193,6 +189,7 @@ export async function setupTwo(log: Logger): Promise<{ le: NomadEnv }> {
   ]);
 
   log.info(await le.deploy());
+  
   return {
     le,
   };
