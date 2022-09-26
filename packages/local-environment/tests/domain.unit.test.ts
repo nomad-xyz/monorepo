@@ -1,13 +1,9 @@
 import { NomadDomain } from "../src/domain";
-import { assert, use as chaiUse } from "chai";
-import chaiAsPromised from "chai-as-promised";
 import Dockerode from 'dockerode';
 import { NomadEnv } from "../src/nomadenv";
 import { AgentType } from "../src/agent";
 
 jest.mock('dockerode');
-
-chaiUse(chaiAsPromised);
 
 beforeEach(() => {
     jest.clearAllMocks();
@@ -116,6 +112,10 @@ test("Configs are defined", async () => {
 
     const dockerode = new Dockerode();
     const domain = new NomadDomain("local", 1337, dockerode);
+    const le = new NomadEnv({domain: domain.network.domainNumber, id: '0x'+'20'.repeat(20)});
+
+    domain.addNomadEnv(le);
+    expect(domain.nomadEnv).toBeDefined();
 
     expect(domain.agentConfig).toBeDefined();
     expect(domain.kathyConfig).toBeDefined();
@@ -126,17 +126,5 @@ test("Configs are defined", async () => {
     expect(domain.bridgeConfig).toBeDefined();
     expect(domain.gasConfig).toBeDefined();
     expect(domain.specs).toBeDefined();
-
-});
-
-test("Can call to docker to create containers", async () => {
-
-    const dockerode = new Dockerode();
-    const dockerSpy = jest.spyOn(dockerode, 'createContainer');
-    const domain = new NomadDomain("local", 1337, dockerode);
-
-    await domain.networkUp();
-    
-    expect(dockerSpy).toHaveBeenCalled();
 
 });

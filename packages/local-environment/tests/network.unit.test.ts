@@ -57,7 +57,7 @@ test("Should be able to add keys", async () => {
 test("Can call to docker to create containers", async () => {
 
   const dockerode = new Dockerode();
-  const dockerSpy = jest.spyOn(dockerode, 'createContainer');
+  const dockerSpy = jest.spyOn(dockerode, 'createContainer').mockImplementation(() => {return undefined as unknown as Promise<Dockerode.Container>;});
   const network = new HardhatNetwork("local", 1337, dockerode);
 
   await network.handler.createContainer();

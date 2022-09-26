@@ -1,12 +1,9 @@
 import { NomadDomain } from "../src/domain";
-import { assert, use as chaiUse } from "chai";
 import { LocalAgent, AgentType } from "../src/agent";
-import chaiAsPromised from "chai-as-promised";
 import Dockerode from 'dockerode';
 
 // jest.mock("dockerode");
 
-chaiUse(chaiAsPromised);
 const domain = new NomadDomain('local', 1337);
 
 beforeEach(() => {
@@ -79,7 +76,7 @@ test("Can initialize all other types of agents with correct configs", async () =
 test("Can call to docker to create containers", async () => {
 
     const dockerode = new Dockerode();
-    const dockerSpy = jest.spyOn(dockerode, 'createContainer');
+    const dockerSpy = jest.spyOn(dockerode, 'createContainer').mockImplementation(() => {return undefined as unknown as Promise<Dockerode.Container>;});
     const kathy = new LocalAgent(AgentType.Kathy, domain, 1337, dockerode);
 
     await kathy.createContainer();

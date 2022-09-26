@@ -1,4 +1,3 @@
-import { HardhatNetwork } from "../src/network";
 import { NomadDomain } from "../src/domain";
 import { expect, assert, use as chaiUse } from "chai";
 import { NomadEnv } from "../src/nomadenv";

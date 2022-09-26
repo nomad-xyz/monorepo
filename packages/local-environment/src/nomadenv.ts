@@ -28,8 +28,9 @@ export class NomadEnv {
     this.coreSDK = new NomadContext(this.nomadConfig);
   }
 
-  refreshSDK(config: NomadConfig): void {
+  refreshSDK(config: NomadConfig): BridgeContext {
     this.bridgeSDK = new BridgeContext(config);
+    return this.bridgeSDK;
   }
 
   // Adds a network to the array of networks if it's not already there.
@@ -88,7 +89,12 @@ export class NomadEnv {
       //TODO: INPUT RESUME DEPLOYMENT LOGIC HERE
       throw new Error(`LOOK AT ME!`);
     } else {
-      context = await this.deployFresh();
+      try {
+        context = await this.deployFresh();
+      } catch (e) {
+        console.error(e);
+        throw e;
+      }
     }
     this.refreshSDK(context.data);
 
