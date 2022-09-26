@@ -42,11 +42,17 @@ if (process.env.BLOCK_TIME) {
   } catch (_) {}
 }
 
-console.log(`Staring with accounts:`, accounts.map(a=>a.privateKey))
+console.log(`Staring with accounts:`, accounts.map(a=>a.privateKey));
+
+let defaultNetwork = "hardhat";
+
+if (process.env.INFURA_API_KEY) {
+  defaultNetwork = "localhost";
+}
 
 module.exports = {
   solidity: "0.8.4",
-  defaultNetwork: "hardhat",
+  defaultNetwork: defaultNetwork,
   networks: {
     hardhat: {
       mining: {

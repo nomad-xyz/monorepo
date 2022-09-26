@@ -10,7 +10,7 @@ import {
   Domain,
 } from "@nomad-xyz/configuration";
 import { Key } from "./keys/key";
-import { HardhatNetwork, Network } from "./network";
+import { ForkedNetwork, HardhatNetwork, Network } from "./network";
 import { Agents, AgentType } from "./agent";
 import { ethers } from "ethers";
 import { AgentKeys } from "./keys/index";
@@ -25,11 +25,13 @@ export class NomadDomain {
   network: Network;
   metricsPort?: number;
   nomadEnv?: NomadEnv;
+  forkUrl?: string;
+  forkBlockheight?: number;
   docker: Dockerrode;
 
   connectedNetworks: NomadDomain[];
 
-  constructor(name: string, domain: number, docker?: Dockerrode, nomadEnv?: NomadEnv) {
+  constructor(name: string, domain: number, docker?: Dockerrode, nomadEnv?: NomadEnv, forkUrl?: string) {
     this.connectedNetworks = [];
     this.keys = new AgentKeys();
 
@@ -38,7 +40,10 @@ export class NomadDomain {
     }
     else this.docker = docker;
 
-    this.network = new HardhatNetwork(name, domain, this.docker);
+    if (forkUrl) {
+      this.network = new ForkedNetwork(name, domain, this.docker, forkUrl);
+    }
+    else this.network = new HardhatNetwork(name, domain, this.docker);
 
     if (nomadEnv) {
       this.nomadEnv = nomadEnv;
