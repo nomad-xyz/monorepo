@@ -31,7 +31,7 @@ jobs:
 
       - name: Yarn Prepare
         run: |
-          yarn prepare
+          yarn local-environment prepare
           
       - name: Run Integration Tests
         run: |
