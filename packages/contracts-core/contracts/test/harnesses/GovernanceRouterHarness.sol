@@ -31,7 +31,7 @@ contract GovernanceRouterHarness is GovernanceRouter {
         _setRouter(domain, router);
     }
 
-    function hack_domainsLength() public returns (uint256) {
+    function hack_domainsLength() public view returns (uint256) {
         return domains.length;
     }
 }
