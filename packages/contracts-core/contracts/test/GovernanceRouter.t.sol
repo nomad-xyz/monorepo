@@ -455,7 +455,7 @@ contract GovernanceRouterTest is Test {
         governanceRouter.exposed_callRemote(dest, remoteCalls);
     }
 
-    function test_callRemoteSuccessFuzzed(
+    function test_callRemoteWithRouterSuccessFuzzed(
         uint32 dest,
         bytes32 router,
         bytes32[64] memory to,
@@ -475,6 +475,25 @@ contract GovernanceRouterTest is Test {
             GovernanceMessage.formatBatch(remoteCalls),
             address(governanceRouter)
         );
+        governanceRouter.exposed_callRemote(dest, remoteCalls);
+    }
+
+    // reverts if no remote router enrolled
+    function test_callRemoteNoRouterRevertsFuzzed(
+        uint32 dest,
+        bytes32 router,
+        bytes32[16] memory to,
+        bytes[16] memory data
+    ) public {
+        vm.assume(
+            router != bytes32(0) && dest != homeDomain && dest != remoteDomain
+        );
+        GovernanceMessage.Call[]
+            memory remoteCalls = new GovernanceMessage.Call[](16);
+        for (uint256 i; i < 16; i++) {
+            remoteCalls[i] = GovernanceMessage.Call(to[i], data[i]);
+        }
+        vm.expectRevert("!router");
         governanceRouter.exposed_callRemote(dest, remoteCalls);
     }
 
@@ -643,21 +662,120 @@ contract GovernanceRouterTest is Test {
         governanceRouter.setRouterGlobal(domain, router);
     }
 
-    function test_setRouterGlobal() public {
+    event SetRouter(
+        uint32 indexed domain,
+        bytes32 previousRouter,
+        bytes32 newRouter
+    );
+
+    function test_setRouterGlobalNewDomainr() public {
         uint32 domain = 123;
-        bytes32 router = "router";
+        bytes32 newRouter = "router";
+        bytes32 previousRouter = governanceRouter.routers(domain);
+        GovernanceMessage.Call[]
+            memory remoteCalls = new GovernanceMessage.Call[](1);
+        remoteCalls[0].data = abi.encodeWithSignature(
+            "setRouterLocal(uint32,bytes32)",
+            domain,
+            newRouter
+        );
+        uint256 length = governanceRouter.hack_domainsLength();
+        for (uint256 i; i < length; i++) {
+            uint32 dest = governanceRouter.domains(i);
+            assert(dest != 0);
+            bytes32 recipient = governanceRouter.routers(dest);
+            remoteCalls[0].to = recipient;
+            bytes memory message = GovernanceMessage.formatBatch(remoteCalls);
+            vm.expectEmit(true, true, true, true);
+            home.hack_expectDispatchEvent(
+                dest,
+                recipient,
+                message,
+                address(governanceRouter)
+            );
+        }
+        vm.expectEmit(true, false, false, true);
+        emit SetRouter(domain, previousRouter, newRouter);
+        governanceRouter.setRouterGlobal(domain, newRouter);
     }
 
-    // uint32 _destination, GovernanceMessage.Call[] calldata _calls
+    function test_setRouterGlobalNewDomainFuzzed(
+        uint32 domain,
+        bytes32 newRouter
+    ) public {
+        vm.assume(domain != homeDomain && domain != 0);
+        bytes32 previousRouter = governanceRouter.routers(domain);
+        GovernanceMessage.Call[]
+            memory remoteCalls = new GovernanceMessage.Call[](1);
+        remoteCalls[0].data = abi.encodeWithSignature(
+            "setRouterLocal(uint32,bytes32)",
+            domain,
+            newRouter
+        );
+        uint256 length = governanceRouter.hack_domainsLength();
+        for (uint256 i; i < length; i++) {
+            uint32 dest = governanceRouter.domains(i);
+            assert(dest != 0);
+            bytes32 recipient = governanceRouter.routers(dest);
+            remoteCalls[0].to = recipient;
+            bytes memory message = GovernanceMessage.formatBatch(remoteCalls);
+            vm.expectEmit(true, true, true, true);
+            home.hack_expectDispatchEvent(
+                dest,
+                recipient,
+                message,
+                address(governanceRouter)
+            );
+        }
+        vm.expectEmit(true, false, false, true);
+        emit SetRouter(domain, previousRouter, newRouter);
+        governanceRouter.setRouterGlobal(domain, newRouter);
+    }
 
-    // reverts if no remote router enrolled
-    function test_callRemoteNoRouter() public {}
+    function test_setRouterGlobaExistinglDomainHome() public {
+        uint32 domain = homeDomain;
+        bytes32 newRouter = "new router";
+        GovernanceMessage.Call[]
+            memory remoteCalls = new GovernanceMessage.Call[](1);
+        remoteCalls[0].data = abi.encodeWithSignature(
+            "setRouterLocal(uint32,bytes32)",
+            domain,
+            newRouter
+        );
+        vm.expectRevert("can't set local router");
+        governanceRouter.setRouterGlobal(domain, newRouter);
+    }
 
-    // emits a single dispatch event for 1 call
-    function test_callRemoteOneCall() public {}
-
-    // emits a single dispatch event for multiple calls
-    function test_callRemoteMultiCalls() public {}
+    function test_setRouterGlobaExistinglDomainRemote() public {
+        uint32 domain = remoteDomain;
+        bytes32 newRouter = "new router";
+        bytes32 previousRouter = governanceRouter.routers(domain);
+        GovernanceMessage.Call[]
+            memory remoteCalls = new GovernanceMessage.Call[](1);
+        remoteCalls[0].data = abi.encodeWithSignature(
+            "setRouterLocal(uint32,bytes32)",
+            domain,
+            newRouter
+        );
+        uint256 length = governanceRouter.hack_domainsLength();
+        for (uint256 i; i < length; i++) {
+            uint32 dest = governanceRouter.domains(i);
+            assert(dest != 0);
+            bytes32 recipient = governanceRouter.routers(dest);
+            remoteCalls[0].to = recipient;
+            bytes memory message = GovernanceMessage.formatBatch(remoteCalls);
+            vm.expectEmit(true, true, true, true);
+            home.hack_expectDispatchEvent(
+                dest,
+                recipient,
+                message,
+                address(governanceRouter)
+            );
+        }
+        vm.expectEmit(true, false, false, true);
+        emit SetRouter(domain, previousRouter, newRouter);
+        governanceRouter.setRouterGlobal(domain, newRouter);
+    }
 
     // reverts if _call.to is zero
     function test_callLocalZeroAddress() public {}
