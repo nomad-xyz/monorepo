@@ -4,8 +4,8 @@ pragma experimental ABIEncoderV2;
 
 // test imports
 import {GovernanceRouterHarness} from "./harnesses/GovernanceRouterHarness.sol";
-import {NomadTest} from "./utils/NomadTest.sol";
 import {GoodXappSimple} from "./utils/GoodXapps.sol";
+import "forge-std/Test.sol";
 
 // external imports
 import {GovernanceMessage} from "../governance/GovernanceMessage.sol";
@@ -14,7 +14,7 @@ import {MockHome} from "@nomad-xyz/contracts-bridge/contracts/test/utils/MockHom
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 import {TypeCasts} from "../libs/TypeCasts.sol";
 
-contract GovernanceRouterTest is NomadTest {
+contract GovernanceRouterTest is Test {
     using GovernanceMessage for bytes29;
     using TypedMemView for bytes;
     using TypedMemView for bytes29;
@@ -39,6 +39,9 @@ contract GovernanceRouterTest is NomadTest {
     bytes32 remoteGovernanceRouter;
     uint32 remoteGovernanceDomain;
 
+    uint32 homeDomain;
+    uint32 remoteDomain;
+
     event Dispatch(
         bytes32 indexed messageHash,
         uint256 indexed leafIndex,
@@ -54,10 +57,11 @@ contract GovernanceRouterTest is NomadTest {
         address indexed newGovernor
     );
 
-    function setUp() public override {
-        super.setUp();
-
+    function setUp() public {
         recoveryManager = vm.addr(42);
+
+        homeDomain = 1000;
+        remoteDomain = 1500;
 
         home = new MockHome(homeDomain);
         xAppConnectionManager = new MockXAppConnectionManager(address(home));
@@ -336,11 +340,11 @@ contract GovernanceRouterTest is NomadTest {
         domains[0] = remoteDomain;
         vm.expectEmit(true, true, true, true);
         emit Dispatch(
-            hex"a18f243f7082493adc45a68db56920b2589a4057301363c0b13ffe7756f6ac80",
+            hex"c1c967c7dda92cf93f914728abddd29f35d0233d615a73e40b109ae83d754596",
             0,
-            4294967296000,
+            6442450944000,
             hex"0000000000000000000000000000000000000000000000000000000000000000",
-            hex"000005dc000000000000000000000000f5a2fe45f4f1308502b1c136b9ef8af13614138200000000000003e8000000000000000000000000e2c4a295d6a0daa455a5d49f30b881e69165da8f016b9f965bbbc465cc219497bb8fecc464d76985a15aab0d52f7f20481705cd1dd"
+            hex"000003e8000000000000000000000000efc56627233b02ea95bae7e19f648d7dcd5bb13200000000000005dc000000000000000000000000e2c4a295d6a0daa455a5d49f30b881e69165da8f016b9f965bbbc465cc219497bb8fecc464d76985a15aab0d52f7f20481705cd1dd"
         );
         governanceRouter.executeGovernanceActions(
             localCalls,
@@ -457,7 +461,7 @@ contract GovernanceRouterTest is NomadTest {
         bytes32[64] memory to,
         bytes[64] memory data
     ) public {
-        vm.assume(router != bytes32(0));
+        vm.assume(router != bytes32(0) && dest != homeDomain);
         governanceRouter.setRouterLocal(dest, router);
         GovernanceMessage.Call[]
             memory remoteCalls = new GovernanceMessage.Call[](64);
@@ -501,7 +505,8 @@ contract GovernanceRouterTest is NomadTest {
         governanceRouter.setRouterLocal(newDomain, router);
         vm.expectEmit(true, true, true, true);
         emit TransferGovernor(homeDomain, newDomain, address(this), address(0));
-        for (uint256 i = 0; i < 2; i++) {
+        uint256 length = governanceRouter.hack_domainsLength();
+        for (uint256 i = 0; i < length; i++) {
             if (governanceRouter.domains(i) != uint32(0)) {
                 vm.expectEmit(true, true, true, true);
                 home.hack_expectDispatchEvent(
@@ -537,7 +542,8 @@ contract GovernanceRouterTest is NomadTest {
         governanceRouter.setRouterLocal(newDomain, router);
         vm.expectEmit(true, true, true, true);
         emit TransferGovernor(homeDomain, newDomain, address(this), address(0));
-        for (uint256 i = 0; i < 2; i++) {
+        uint256 length = governanceRouter.hack_domainsLength();
+        for (uint256 i = 0; i < length; i++) {
             if (governanceRouter.domains(i) != uint32(0)) {
                 vm.expectEmit(true, true, true, true);
                 home.hack_expectDispatchEvent(
@@ -619,6 +625,27 @@ contract GovernanceRouterTest is NomadTest {
         );
         governanceRouter.transferRecoveryManager(newRecoveryManager);
         assertEq(governanceRouter.recoveryManager(), newRecoveryManager);
+    }
+
+    function test_setRouterGlobalOnlyGovernor() public {
+        vm.prank(address(0xBEEF));
+        vm.expectRevert("! called by governor");
+        uint32 domain = 123;
+        bytes32 router = "router";
+        governanceRouter.setRouterGlobal(domain, router);
+    }
+
+    function test_setRouterGlobalNotInRecovery() public {
+        enterRecovery();
+        uint32 domain = 123;
+        bytes32 router = "router";
+        vm.expectRevert("in recovery");
+        governanceRouter.setRouterGlobal(domain, router);
+    }
+
+    function test_setRouterGlobal() public {
+        uint32 domain = 123;
+        bytes32 router = "router";
     }
 
     // uint32 _destination, GovernanceMessage.Call[] calldata _calls
