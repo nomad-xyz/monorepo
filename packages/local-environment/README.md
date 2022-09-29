@@ -3,7 +3,7 @@
 The following commands should be ran in monorepo root.
 
 ```sh
-./packages/local-environment/build.sh
+./packages/local-environment/prepare.sh
 ```
 
 The following should be done inside local-environment package root.
@@ -26,12 +26,6 @@ AGENTS_IMAGE=your_custom_image:some_tag
 ```
 
 Then, boot up docker.
-
-Run the following inside /packages/local-environment if this is your first time booting up.
-
-```sh
-yarn bootup
-```
 
 For any subsequent runs, do:
 

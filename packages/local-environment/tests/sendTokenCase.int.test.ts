@@ -6,7 +6,6 @@ import { getCustomToken } from "./utils/token/deployERC20";
 import { getRandomTokenAmount } from "../src/utils";
 import { sendTokensAndConfirm } from "./common";
 import bunyan from 'bunyan';
-import { NomadDomain } from "../src/domain";
 import { expect, assert } from "chai";
 
 describe("Token test", () => {
@@ -16,21 +15,17 @@ describe("Token test", () => {
     const sender = new Key();
     const receiver = new Key();
 
-    // Instantiate Nomad domains
-    const tDomain = new NomadDomain('tom', 1);
-    const jDomain = new NomadDomain('jerry', 2);
+    const le = new NomadEnv({domain: 1, id: '0x'+'20'.repeat(20)});
 
-    const le = new NomadEnv({domain: tDomain.network.domainNumber, id: '0x'+'20'.repeat(20)});
-
-    tDomain.network.addKeys(sender);
-    jDomain.network.addKeys(receiver);
-
-    le.addDomain(tDomain);
-    le.addDomain(jDomain);
+    le.addDomain('tom', 1, le.forkUrl());
+    le.addDomain('jerry', 2, le.forkUrl());
     log.info(`Added Tom and Jerry`);
+
+    le.tDomain?.network.addKeys(sender);
+    le.jDomain?.network.addKeys(receiver);
     
-    tDomain.connectNetwork(jDomain);
-    jDomain.connectNetwork(tDomain);
+    le.tDomain?.connectNetwork(le.jDomain!);
+    le.jDomain?.connectNetwork(le.tDomain!);
     log.info(`Connected Tom and Jerry`);
 
     async function setUp() {
@@ -41,8 +36,8 @@ describe("Token test", () => {
         // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
     
         await Promise.all([
-            tDomain.network.setWETH(await tDomain.network.deployWETH()),
-            tDomain.network.setWETH(await tDomain.network.deployWETH()),
+            le.tDomain?.network.setWETH(await le.tDomain.network.deployWETH()),
+            le.jDomain?.network.setWETH(await le.jDomain.network.deployWETH()),
         ]);
         
         await le.upAgents();
@@ -59,7 +54,7 @@ describe("Token test", () => {
 
     it("should handle token creation, transfer logic", async function () {
         const tokenFactory = getCustomToken();
-        const tokenOnTom = await tDomain.network.deployToken(
+        const tokenOnTom = await le.tDomain!.network.deployToken(
           tokenFactory,
           sender.toAddress(),
           "MyToken",
@@ -69,7 +64,7 @@ describe("Token test", () => {
         // const tDomain = le.domain(t).name;
         
         const token: TokenIdentifier = {
-          domain: tDomain.network.name,
+          domain: le.tDomain!.network.name,
           id: tokenOnTom.address,
         };
         assert.exists(tokenFactory);
@@ -84,8 +79,8 @@ describe("Token test", () => {
     
         // Default multiprovider comes with signer (`o.setSigner(jerry, signer);`) assigned
         // to each domain, but we change it to allow sending from different signer
-        ctx.registerWalletSigner(tDomain.name, sender.toString());
-        ctx.registerWalletSigner(jDomain.name, receiver.toString());
+        ctx.registerWalletSigner(le.tDomain!.name, sender.toString());
+        ctx.registerWalletSigner(le.jDomain!.name, receiver.toString());
         console.log(`registered wallet signers for tom and jerry`);
     
         // get 3 random amounts which will be bridged
@@ -97,7 +92,7 @@ describe("Token test", () => {
         assert.exists(amount3);
         log.info(`Preparation done`);
 
-        expect(await sendTokensAndConfirm(le, tDomain, jDomain, token, receiver.toAddress(), [
+        expect(await sendTokensAndConfirm(le, le.tDomain!, le.jDomain!, token, receiver.toAddress(), [
           amount1,
           amount2,
           amount3,
@@ -107,8 +102,8 @@ describe("Token test", () => {
 
         const tokenContract = await sendTokensAndConfirm(
           le,
-          jDomain,
-          tDomain,
+          le.jDomain!,
+          le.tDomain!,
           token,
           new Key().toAddress(),
           [amount3, amount2, amount1], log

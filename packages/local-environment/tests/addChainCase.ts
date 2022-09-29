@@ -1,4 +1,3 @@
-import { LocalNetwork, Nomad, Key, utils, Network } from "../src";
 import fs from "fs";
 import { getCustomToken } from "./utils/token/deployERC20";
 import { getRandomTokenAmount, sleep } from "../src/utils";
@@ -9,8 +8,7 @@ import { HardhatNetwork } from "../src/network";
 import { NomadDomain } from "../src/domain";
 
 async function setupDaffy(le: NomadEnv) {
-  const daffy = new HardhatNetwork('daffy', 3);
-  const dDomain = new NomadDomain(daffy);
+  const dDomain = new NomadDomain('daffy', 3);
   le.addDomain(dDomain);
 
 

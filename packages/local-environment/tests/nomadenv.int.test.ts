@@ -1,4 +1,3 @@
-import { NomadDomain } from "../src/domain";
 import { expect, assert, use as chaiUse } from "chai";
 import { NomadEnv } from "../src/nomadenv";
 import Docker from "dockerode";
@@ -11,22 +10,19 @@ describe("NomadDomain test", () => {
     //TODO: We should implement any-network connection logic and test accordingly.
     it('can create a valid NomadEnvironment', async () => {
         // Creation
-        const tDomain = new NomadDomain('tom', 1);
-        const jDomain = new NomadDomain('jerry', 2);
         const le = new NomadEnv({
-            domain: tDomain.network.domainNumber,
+            domain: 1,
             id: "0x" + "20".repeat(20),
         });
         expect(le).to.exist;
         
 
         // Can add domains
-        le.addDomain(tDomain);
-        le.addDomain(jDomain);
-        assert.isTrue(le.domains.includes(tDomain));
-        assert.isTrue(le.domains.includes(jDomain));
+        le.addDomain("tom", 1, le.forkUrl());
+        le.addDomain("jerry", 2, le.forkUrl());
+        assert.isTrue(le.domains.includes(le.domains[0]));
 
-        expect(le.govNetwork).to.equal(tDomain);
+        expect(le.govNetwork).to.equal(le.domains[0]);
         // SDK
         expect(le.bridgeSDK).to.exist;
         expect(le.coreSDK).to.exist;
@@ -34,27 +30,27 @@ describe("NomadDomain test", () => {
         // Can up agents
         await le.upAgents();
 
-        expect(tDomain.agents).to.exist;
-        expect(jDomain.agents).to.exist;
+        expect(le.domains[0].agents).to.exist;
+        expect(le.domains[0].agents).to.exist;
 
-        assert.isTrue(await tDomain.isAgentsUp());
-        assert.isTrue(await tDomain.agents!.updater.status());
-        assert.isTrue(await tDomain.agents!.relayer.status());
-        assert.isTrue(await tDomain.agents!.processor.status());
-        assert.isTrue(await jDomain.isAgentsUp());
-        assert.isTrue(await jDomain.agents!.updater.status());
-        assert.isTrue(await jDomain.agents!.relayer.status());
-        assert.isTrue(await jDomain.agents!.processor.status());
+        assert.isTrue(await le.tDomain?.isAgentsUp());
+        assert.isTrue(await le.tDomain?.agents!.updater.status());
+        assert.isTrue(await le.tDomain?.agents!.relayer.status());
+        assert.isTrue(await le.tDomain?.agents!.processor.status());
+        assert.isTrue(await le.jDomain?.isAgentsUp());
+        assert.isTrue(await le.jDomain?.agents!.updater.status());
+        assert.isTrue(await le.jDomain?.agents!.relayer.status());
+        assert.isTrue(await le.jDomain?.agents!.processor.status());
 
         const docker = new Docker();
 
-        const tUpdater = (tDomain.agents!.updater as LocalAgent).containerName();
-        const tRelayer = (tDomain.agents!.relayer as LocalAgent).containerName();
-        const tProcessor = (tDomain.agents!.processor as LocalAgent).containerName();
+        const tUpdater = (le.tDomain?.agents!.updater as LocalAgent).containerName();
+        const tRelayer = (le.tDomain?.agents!.relayer as LocalAgent).containerName();
+        const tProcessor = (le.tDomain?.agents!.processor as LocalAgent).containerName();
 
-        const jUpdater = (jDomain.agents!.updater as LocalAgent).containerName();
-        const jRelayer = (jDomain.agents!.relayer as LocalAgent).containerName();
-        const jProcessor = (jDomain.agents!.processor as LocalAgent).containerName();
+        const jUpdater = (le.jDomain?.agents!.updater as LocalAgent).containerName();
+        const jRelayer = (le.jDomain?.agents!.relayer as LocalAgent).containerName();
+        const jProcessor = (le.jDomain?.agents!.processor as LocalAgent).containerName();
 
         assert.isTrue((await docker.getContainer(tUpdater).inspect()).State.Running);
         assert.isTrue((await docker.getContainer(tRelayer).inspect()).State.Running);
@@ -65,8 +61,8 @@ describe("NomadDomain test", () => {
         assert.isTrue((await docker.getContainer(jProcessor).inspect()).State.Running);
 
         await le.downAgents();
-        assert.isFalse(await tDomain.isAgentsUp());
-        assert.isFalse(await jDomain.isAgentsUp()); 
+        assert.isFalse(await le.tDomain?.isAgentsUp());
+        assert.isFalse(await le.jDomain?.isAgentsUp()); 
 
         await assert.isRejected(docker.getContainer(tUpdater).inspect(), "no such container");
         await assert.isRejected(docker.getContainer(tRelayer).inspect(), "no such container");
@@ -78,15 +74,15 @@ describe("NomadDomain test", () => {
         // Can up networks
         await le.upNetworks();
 
-        assert.isTrue(await tDomain.network.isConnected());
-        assert.isTrue(await jDomain.network.isConnected());
+        assert.isTrue(await le.tDomain?.network.isConnected());
+        assert.isTrue(await le.jDomain?.network.isConnected());
 
-        assert.isTrue(await tDomain.network.isConnected());
-        assert.isTrue(await jDomain.network.isConnected());
+        assert.isTrue(await le.tDomain?.network.isConnected());
+        assert.isTrue(await le.jDomain?.network.isConnected());
 
         await le.down();
-        assert.isFalse(await tDomain.network.isConnected());
-        assert.isFalse(await jDomain.network.isConnected());
+        assert.isFalse(await le.tDomain?.network.isConnected());
+        assert.isFalse(await le.jDomain?.network.isConnected());
     });
 
 });

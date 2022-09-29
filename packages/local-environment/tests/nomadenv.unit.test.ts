@@ -6,20 +6,19 @@ chaiUse(chaiAsPromised);
 
 test("NomadEnv should be initalizable", async () => {
 
-    const tDomain = new NomadDomain('tom', 1);
     const le = new NomadEnv({
-        domain: tDomain.network.domainNumber,
+        domain: 1,
         id: "0x" + "20".repeat(20),
     });
     expect(le).toBeTruthy();
 
-    le.addDomain(tDomain);
-    assert.isTrue(le.domains.includes(tDomain));
-    expect(le.govNetwork).toBe(tDomain);
+    le.addDomain('tom', 1);
+    assert.isTrue(le.domains.includes(le.tDomain!));
+    expect(le.govNetwork).toBe(le.tDomain);
     // SDK
     expect(le.bridgeSDK).toBeDefined();
     expect(le.coreSDK).toBeDefined();
-    expect(le.getDomains()).toStrictEqual([tDomain]);
+    expect(le.getDomains()).toStrictEqual([le.tDomain]);
     expect(le.deployerKey).toEqual(process.env.PRIVATE_KEY);
     expect(le.deployedOnce()).toBe(false);
 

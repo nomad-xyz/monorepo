@@ -34,7 +34,8 @@ export class NomadEnv {
   }
 
   // Adds a network to the array of networks if it's not already there.
-  addDomain(d: NomadDomain): void {
+  addDomain(name: string, domainNumber: number, forkUrl?: string): void {
+    const d = new NomadDomain(name, domainNumber, forkUrl);
     if (!this.domains.includes(d)) this.domains.push(d);
     d.addNomadEnv(this);
   }
@@ -148,6 +149,19 @@ export class NomadEnv {
     return false;
   }
 
+  forkUrl(): string | undefined {
+    if (process.env.ALCHEMY_API_KEY)
+      return `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`;
+  }
+
+  get tDomain(): NomadDomain | undefined {
+    return this.domains[0];
+  }
+
+  get jDomain(): NomadDomain | undefined {
+    return this.domains[1];
+  }
+
   get deployerKey(): string {
     const DEPLOYERKEY = `` + process.env.PRIVATE_KEY + ``;
     if (!DEPLOYERKEY) {
@@ -248,33 +262,47 @@ export async function defaultStart(): Promise<NomadEnv> {
   // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
   const log = bunyan.createLogger({ name: "localenv" });
 
-  // Instantiate Nomad domains
-  const tDomain = new NomadDomain("tom", 1);
-  const jDomain = new NomadDomain("jerry", 2);
+  let tDomainNumber = 0;
+  let jDomainNumber = 1;
+
+  if (process.env.tDomainNumber) {
+    tDomainNumber = parseInt(process.env.tDomainNumber);
+  }
+  if (process.env.jDomainNumber) {
+    jDomainNumber = parseInt(process.env.jDomainNumber);
+  }
+
+  const le = new NomadEnv({
+    domain: tDomainNumber,
+    id: "0x" + "20".repeat(20),
+  });
+  
+  le.addDomain("tom", tDomainNumber, le.forkUrl());
+  le.addDomain("jerry", jDomainNumber, le.forkUrl());
 
   log.info(`Upped Tom and Jerry`);
 
-  const le = new NomadEnv({
-    domain: tDomain.network.domainNumber,
-    id: "0x" + "20".repeat(20),
-  });
-
-  le.addDomain(tDomain);
-  le.addDomain(jDomain);
-  log.info(`Going to init NomadEnv with domains`, le.domains[0].name + " " + le.domains[1].name);
+  log.info(`Initializing NomadEnv with domains`);
 
   await le.upNetworks();
 
-  tDomain.connectNetwork(jDomain);
-  jDomain.connectNetwork(tDomain);
-  log.info(`Connected Tom and Jerry`);
+  // Loop through to connect each network to each other
+  for (const domain of le.domains) {
+    for (const connection of le.domains) {
+      if (domain.name != connection.name) {
+        domain.connectNetwork(connection);
+      }
+    }
+  }
 
   // Notes, check governance router deployment on Jerry and see if that's actually even passing
   // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
-  await Promise.all([tDomain.network.setWETH(await tDomain.network.deployWETH()), jDomain.network.setWETH(await jDomain.network.deployWETH())]);
+  for (const domain of le.domains) {
+    await Promise.all([domain.network.setWETH(await domain.network.deployWETH())]);
+  }
 
-  log.info(`WETH Deployed at `, tDomain.network.weth);
+  log.info(`WETH Deployed at `, le.domains[0].network.weth);
   
   await le.upAgents();
 

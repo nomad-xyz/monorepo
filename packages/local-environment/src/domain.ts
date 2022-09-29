@@ -31,7 +31,7 @@ export class NomadDomain {
 
   connectedNetworks: NomadDomain[];
 
-  constructor(name: string, domain: number, docker?: Dockerrode, nomadEnv?: NomadEnv, forkUrl?: string) {
+  constructor(name: string, domain: number, forkUrl?: string, docker?: Dockerrode, nomadEnv?: NomadEnv) {
     this.connectedNetworks = [];
     this.keys = new AgentKeys();
 
@@ -39,7 +39,7 @@ export class NomadDomain {
       this.docker = new Dockerrode();
     }
     else this.docker = docker;
-
+    
     if (forkUrl) {
       this.network = new ForkedNetwork(name, domain, this.docker, forkUrl);
     }
@@ -51,13 +51,11 @@ export class NomadDomain {
 
     const signer = this.keys.getAgentKey("signer");
 
-    if (this.agents?.updater) {
-      this.setGovernanceAddresses({
-        updater: signer,
-        watcher: signer,
-        recoveryManager: signer,
-      });
-    }
+    this.setGovernanceAddresses({
+      updater: signer,
+      watcher: signer,
+      recoveryManager: signer,
+    });
 
   }
 

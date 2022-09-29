@@ -1,4 +1,4 @@
-import Dockerrode from "dockerode";
+import Dockerode from "dockerode";
 import bunyan from "bunyan";
 import { EventEmitter } from "events";
 import { StreamMatcher } from "./utils";
@@ -24,15 +24,15 @@ export abstract class Actor {
 
 export abstract class DockerizedActor extends Actor {
   
-  docker: Dockerrode;
-  container?: Dockerrode.Container;
+  docker: Dockerode;
+  container?: Dockerode.Container;
   events: DockerEmitter;
   private eventsStream?: NodeJS.ReadableStream;
   logMatcher?: StreamMatcher;
 
   log = bunyan.createLogger({ name: "localenv" });
 
-  constructor(name: string, actorType: string, docker: Dockerrode) {
+  constructor(name: string, actorType: string, docker: Dockerode) {
     super(name, actorType);
     this.docker = docker;
     this.events = new DockerEmitter();
@@ -225,7 +225,7 @@ export abstract class DockerizedActor extends Actor {
     return containers[0]?.Id;
   }
 
-  abstract createContainer(): Promise<Dockerrode.Container>;
+  abstract createContainer(): Promise<Dockerode.Container>;
 
   async getEvents(): Promise<EventEmitter> {
     await this.subscribeToContainerEvents();

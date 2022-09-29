@@ -46,7 +46,7 @@ console.log(`Staring with accounts:`, accounts.map(a=>a.privateKey));
 
 let defaultNetwork = "hardhat";
 
-if (process.env.INFURA_API_KEY) {
+if (process.env.ALCHEMY_API_KEY) {
   defaultNetwork = "localhost";
 }
 
@@ -63,7 +63,7 @@ module.exports = {
       accounts,
     },
     localhost: {
-      url: "https://optimism-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}",
+      url: "https://optimism-mainnet.infura.io/v3/${process.env.ALCHEMY_API_KEY}",
     },
   },
 };
