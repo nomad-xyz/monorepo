@@ -250,7 +250,7 @@ export class HardhatNetwork extends Network {
     };
   }
 
-  async setWETH(weth: string): void {
+  setWETH(weth: string): void {
     this.weth = weth;
   }
 
