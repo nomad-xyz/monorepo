@@ -23,4 +23,8 @@ contract GoodXappSimple is IMessageRecipient {
     function setNumber(uint256 _number) external {
         number = _number;
     }
+
+    function itReverts() public pure {
+        revert("i am revertiiiiing");
+    }
 }
