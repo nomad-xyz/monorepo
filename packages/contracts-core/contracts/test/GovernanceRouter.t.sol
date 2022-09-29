@@ -185,7 +185,7 @@ contract GovernanceRouterTest is Test {
         governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
     }
 
-    function test_handleTransferGovernorCorrectForm() public {
+    function test_handleTransferGovernorLocalDomainCorrectForm() public {
         // Create test handle
         handleOrigin = remoteDomain;
         handleSender = remoteGovernanceRouter;
@@ -207,7 +207,7 @@ contract GovernanceRouterTest is Test {
         governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
     }
 
-    function test_handleTransferGovernorCorrectFormFuzzed(
+    function test_handleTransferGovernorLocalDomainCorrectFormFuzzed(
         uint32 origin,
         bytes32 sender
     ) public {
@@ -545,6 +545,13 @@ contract GovernanceRouterTest is Test {
         assertEq(uint256(governanceRouter.governorDomain()), newDomain);
     }
 
+    function test_transferGovernorRemoteGovernorMustHaveRouter() public {
+        uint32 newDomain = 123;
+        address newGovernor = vm.addr(9998888999);
+        vm.expectRevert("!router");
+        governanceRouter.transferGovernor(newDomain, newGovernor);
+    }
+
     function test_transferGovernorRemoteGovernorFuzzed(
         uint32 newDomain,
         address newGovernor,
@@ -553,10 +560,12 @@ contract GovernanceRouterTest is Test {
         vm.assume(
             newDomain != 0 &&
                 newDomain != homeDomain &&
-                newDomain != remoteDomain
+                newDomain != remoteDomain &&
+                router != bytes32(0)
         );
         if (newGovernor == address(0)) {
             vm.expectRevert("cannot renounce governor");
+            governanceRouter.transferGovernor(newDomain, newGovernor);
             return;
         }
         governanceRouter.setRouterLocal(newDomain, router);
@@ -585,6 +594,10 @@ contract GovernanceRouterTest is Test {
     function test_transferGovernorLocalGovernor() public {
         uint32 newDomain = homeDomain;
         address newGovernor = vm.addr(9998888999);
+        // Lock the dispatch function. If it is called, it will revert.
+        // This is done so that we can verify that the function call will NOT
+        // dispatch any messages to Home.
+        home.hack_toggleLock();
         vm.expectEmit(true, true, true, true);
         emit TransferGovernor(
             homeDomain,
@@ -597,15 +610,27 @@ contract GovernanceRouterTest is Test {
         assertEq(uint256(governanceRouter.governorDomain()), newDomain);
     }
 
+    function test_transferGovernorLocalGovernorCANNOTRENOUNCE() public {
+        uint32 newDomain = homeDomain;
+        address newGovernor = address(0);
+        // Lock the dispatch function. If it is called, it will revert.
+        // This is done so that we can verify that the function call will NOT
+        // dispatch any messages to Home.
+        home.hack_toggleLock();
+        vm.expectRevert("cannot renounce governor");
+        governanceRouter.transferGovernor(newDomain, newGovernor);
+    }
+
     function test_transferGovernorLocalGovernorFuzzed(address newGovernor)
         public
     {
         uint32 newDomain = homeDomain;
         if (newGovernor == address(0)) {
-            governanceRouter.transferGovernor(newDomain, newGovernor);
             vm.expectRevert("cannot renounce governor");
+            governanceRouter.transferGovernor(newDomain, newGovernor);
             return;
         }
+        home.hack_toggleLock();
         vm.expectEmit(true, true, true, true);
         emit TransferGovernor(
             homeDomain,
@@ -669,7 +694,7 @@ contract GovernanceRouterTest is Test {
         bytes32 newRouter
     );
 
-    function test_setRouterGlobalNewDomainr() public {
+    function test_setRouterGlobalNewDomain() public {
         uint32 domain = 123;
         bytes32 newRouter = "router";
         bytes32 previousRouter = governanceRouter.routers(domain);
@@ -871,17 +896,127 @@ contract GovernanceRouterTest is Test {
         );
     }
 
-    // reverts if _call.to is zero
-    function test_callLocalZeroAddress() public {}
+    function test_handleBatchSuccessFuzzed(address to, bytes memory data)
+        public
+    {
+        calls.push(GovernanceMessage.Call(to.addressToBytes32(), data));
+        bytes memory message = GovernanceMessage.formatBatch(calls);
+        bytes32 hash = GovernanceMessage.getBatchHash(calls);
+        vm.expectEmit(true, false, false, false);
+        emit BatchReceived(hash);
+        governanceRouter.exposed_handleBatch(message, 1);
+        assertEq(
+            uint256(governanceRouter.inboundCallBatches(hash)),
+            uint256(GovernanceRouter.BatchStatus.Pending)
+        );
+    }
 
-    // reverts if _call.to is not a contract
-    function test_callLocalNotContract() public {}
+    function test_executeCallBatchRevertNotPending() public {
+        address to = address(0xBEEF);
+        bytes memory data = "";
+        calls.push(GovernanceMessage.Call(to.addressToBytes32(), data));
+        bytes32 hash = GovernanceMessage.getBatchHash(calls);
+        assertEq(
+            uint256(governanceRouter.inboundCallBatches(hash)),
+            uint256(GovernanceRouter.BatchStatus.Unknown)
+        );
+        vm.expectRevert("!batch pending");
+        governanceRouter.executeCallBatch(calls);
+    }
 
-    // reverts if (_call.to).call(_call.data) reverts
-    function test_callLocalRevert() public {}
+    function test_executeCallBatchRevertNotPendingFuzzed(
+        address to,
+        bytes memory data
+    ) public {
+        calls.push(GovernanceMessage.Call(to.addressToBytes32(), data));
+        bytes32 hash = GovernanceMessage.getBatchHash(calls);
+        assertEq(
+            uint256(governanceRouter.inboundCallBatches(hash)),
+            uint256(GovernanceRouter.BatchStatus.Unknown)
+        );
+        vm.expectRevert("!batch pending");
+        governanceRouter.executeCallBatch(calls);
+    }
 
-    // test when call succeeds & takes the effect of the call
-    function test_callLocalSuccess() public {}
+    event BatchExecuted(bytes32 indexed batchHash);
+
+    function test_executeCallBatchRandomTargetAndCalldataSuccess() public {
+        address to = vm.addr(9042332);
+        bytes memory data = "";
+        calls.push(GovernanceMessage.Call(to.addressToBytes32(), data));
+        bytes memory message = GovernanceMessage.formatBatch(calls);
+        bytes32 hash = GovernanceMessage.getBatchHash(calls);
+        // set batch to pending
+        assertEq(
+            uint256(governanceRouter.inboundCallBatches(hash)),
+            uint256(GovernanceRouter.BatchStatus.Unknown)
+        );
+        governanceRouter.exposed_handleBatch(message, 1);
+        assertEq(
+            uint256(governanceRouter.inboundCallBatches(hash)),
+            uint256(GovernanceRouter.BatchStatus.Pending)
+        );
+        vm.expectEmit(true, false, false, false);
+        emit BatchExecuted(hash);
+        governanceRouter.executeCallBatch(calls);
+        assertEq(
+            uint256(governanceRouter.inboundCallBatches(hash)),
+            uint256(GovernanceRouter.BatchStatus.Complete)
+        );
+    }
+
+    /// @notice It reverts because there is a very low propability that the target
+    /// will be a contract that exists in the testing suite AND that the calldata
+    /// will concern a function that eventually reverts.
+    function test_executeCallBatchSuccessRandomTargetAndCalldataFuzzed(
+        bytes memory data
+    ) public {
+        address to = address(0xBEEF);
+        calls.push(GovernanceMessage.Call(to.addressToBytes32(), data));
+        bytes memory message = GovernanceMessage.formatBatch(calls);
+        bytes32 hash = GovernanceMessage.getBatchHash(calls);
+        // set batch to pending
+        assertEq(
+            uint256(governanceRouter.inboundCallBatches(hash)),
+            uint256(GovernanceRouter.BatchStatus.Unknown)
+        );
+        governanceRouter.exposed_handleBatch(message, 1);
+        assertEq(
+            uint256(governanceRouter.inboundCallBatches(hash)),
+            uint256(GovernanceRouter.BatchStatus.Pending)
+        );
+        vm.expectEmit(true, false, false, false);
+        emit BatchExecuted(hash);
+        governanceRouter.executeCallBatch(calls);
+        assertEq(
+            uint256(governanceRouter.inboundCallBatches(hash)),
+            uint256(GovernanceRouter.BatchStatus.Complete)
+        );
+    }
+
+    function test_executeCallBatchSuccessTargetReverts() public {
+        address to = address(goodXapp);
+        bytes memory data = abi.encodeWithSignature("itReverts()");
+        calls.push(GovernanceMessage.Call(to.addressToBytes32(), data));
+        bytes memory message = GovernanceMessage.formatBatch(calls);
+        bytes32 hash = GovernanceMessage.getBatchHash(calls);
+        assertEq(
+            uint256(governanceRouter.inboundCallBatches(hash)),
+            uint256(GovernanceRouter.BatchStatus.Unknown)
+        );
+        governanceRouter.exposed_handleBatch(message, 1);
+        assertEq(
+            uint256(governanceRouter.inboundCallBatches(hash)),
+            uint256(GovernanceRouter.BatchStatus.Pending)
+        );
+        vm.expectRevert("call failed");
+        governanceRouter.executeCallBatch(calls);
+        // since the call failed, the batch should still be pending
+        assertEq(
+            uint256(governanceRouter.inboundCallBatches(hash)),
+            uint256(GovernanceRouter.BatchStatus.Pending)
+        );
+    }
 
     function enterRecovery() public {
         vm.prank(recoveryManager);
