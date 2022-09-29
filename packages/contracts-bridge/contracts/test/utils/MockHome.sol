@@ -12,8 +12,11 @@ contract MockHome {
     bytes32 public committedRoot;
     uint256 public constant MAX_MESSAGE_BODY_BYTES = 2 * 2**10;
 
+    bool public lock;
+
     constructor(uint32 domain) {
         localDomain = domain;
+        lock = false;
     }
 
     event Dispatch(
@@ -29,6 +32,7 @@ contract MockHome {
         bytes32 _recipientAddress,
         bytes memory _messageBody
     ) external {
+        require(!lock, "Home dispatched a message, but it shouldn't");
         require(_messageBody.length <= MAX_MESSAGE_BODY_BYTES, "msg too long");
         uint32 _nonce = nonces[_destinationDomain];
         nonces[_destinationDomain] = _nonce + 1;
@@ -48,6 +52,10 @@ contract MockHome {
             committedRoot,
             _message
         );
+    }
+
+    function hack_toggleLock() external {
+        lock = !lock;
     }
 
     function hack_expectDispatchEvent(
