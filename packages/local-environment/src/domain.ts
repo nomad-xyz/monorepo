@@ -52,7 +52,7 @@ export class NomadDomain {
   }
 
   ensureAgents(metricsPort = 9090) {
-    if (!this.agents) this.agents = new Agents(this, metricsPort);
+    if (!this.agents) this.agents = new Agents(this, metricsPort, this.nomadEnv);
   }
 
   connectNetwork(d: NomadDomain) {

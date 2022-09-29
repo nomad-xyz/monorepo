@@ -147,6 +147,8 @@ interface AnyNetworkOptions {
 interface HardhatNetworkOptions extends AnyNetworkOptions {
   notFirstStart?: boolean;
   keys?: Key[];
+  handler?: DockerizedNetworkActor;
+  chainId?: number;
 }
 
 // TODO: Some idea to abstract test net
@@ -174,11 +176,18 @@ export class HardhatNetwork extends Network {
   handler: DockerizedNetworkActor;
 
   constructor(name: string, domain: number, options?: HardhatNetworkOptions) {
-    super(name, domain, domain);
-    this.handler = new DockerizedNetworkActor(this.name);
+    super(name, domain, options?.chainId || domain);
+    this.handler = options?.handler || new DockerizedNetworkActor(this.name);
     this.blockTime = 10;
     this.firstStart = false;
     this.keys = options?.keys || [];
+  }
+
+  clone(name: string, domain: number, options?: HardhatNetworkOptions): HardhatNetwork {
+    if (!options) options = {};
+    options.handler = this.handler;
+    options.chainId = this.chainId;
+    return new HardhatNetwork(name, domain, options)
   }
 
   /* TODO: reimplement abstractions for MULTIPLE hardhat networks (i.e. any Nomad domain).
@@ -241,8 +250,8 @@ export class HardhatNetwork extends Network {
     };
   }
 
-  async setWETH(wethAddy: Promise<string>): Promise<void> {
-    this.weth = await wethAddy;
+  setWETH(weth: string): void {
+    this.weth = weth;
   }
 
   get bridgeConfig(): BridgeConfiguration {
