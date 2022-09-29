@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 
 // test imports
 import {GovernanceRouterHarness} from "./harnesses/GovernanceRouterHarness.sol";
+import {GovernanceRouter} from "../governance/GovernanceRouter.sol";
 import {GoodXappSimple} from "./utils/GoodXapps.sol";
 import "forge-std/Test.sol";
 
@@ -26,7 +27,7 @@ contract GovernanceRouterTest is Test {
     MockXAppConnectionManager xAppConnectionManager;
     GoodXappSimple goodXapp;
 
-    uint256 constant timelock = 24 * 60 * 60;
+    uint256 timelock = 24 * 60 * 60;
     address recoveryManager;
 
     GovernanceMessage.Call[] calls;
@@ -777,6 +778,99 @@ contract GovernanceRouterTest is Test {
         governanceRouter.setRouterGlobal(domain, newRouter);
     }
 
+    function test_setXAppConnectionManagerOnlyGovernor() public {
+        vm.startPrank(address(0xBEEEEEEEEEEEF));
+        address newMngr = vm.addr(151515);
+        vm.expectRevert("! called by governor");
+        governanceRouter.setXAppConnectionManager(newMngr);
+        vm.stopPrank();
+        governanceRouter.setXAppConnectionManager(newMngr);
+        assertEq(address(governanceRouter.xAppConnectionManager()), newMngr);
+    }
+
+    function test_setXAppConnectionManagerOnlyRecoveryManager() public {
+        enterRecovery();
+        vm.prank(address(0xBEEEEEEEEEEEF));
+        address newMngr = vm.addr(151515);
+        vm.expectRevert("! called by recovery manager");
+        governanceRouter.setXAppConnectionManager(newMngr);
+        vm.prank(governanceRouter.recoveryManager());
+        governanceRouter.setXAppConnectionManager(newMngr);
+        assertEq(address(governanceRouter.xAppConnectionManager()), newMngr);
+    }
+
+    function test_initiateRecoveryTimeLockOnlyNotInRecovery() public {
+        enterRecovery();
+        vm.prank(recoveryManager);
+        vm.expectRevert("in recovery");
+        governanceRouter.initiateRecoveryTimelock();
+    }
+
+    event InitiateRecovery(
+        address indexed recoveryManager,
+        uint256 recoveryActiveAt
+    );
+
+    function test_initiateRecoveryTimeLockOnlyRecoveryManager() public {
+        vm.expectRevert("! called by recovery manager");
+        governanceRouter.initiateRecoveryTimelock();
+        vm.expectEmit(true, false, false, true);
+        emit InitiateRecovery(recoveryManager, block.timestamp + timelock);
+        enterRecovery();
+    }
+
+    event ExitRecovery(address recoveryManager);
+
+    function test_exitRecoveryOnlyRecoveryManager() public {
+        vm.expectRevert("! called by recovery manager");
+        governanceRouter.exitRecovery();
+        enterRecovery();
+        vm.prank(recoveryManager);
+        vm.expectEmit(false, false, false, true);
+        emit ExitRecovery(recoveryManager);
+        governanceRouter.exitRecovery();
+        assertFalse(governanceRouter.inRecovery());
+    }
+
+    function test_exitRecoveryNotInitiatedRevert() public {
+        vm.prank(recoveryManager);
+        vm.expectRevert("recovery not initiated");
+        governanceRouter.exitRecovery();
+    }
+
+    function test_handleBatchNotBatchTypeRevert() public {
+        bytes memory batch = bytes("something");
+        vm.expectRevert(
+            "Type assertion failed. Got 0x0000000002. Expected 0x0000000001"
+        );
+        governanceRouter.exposed_handleBatch(batch, 2);
+    }
+
+    function test_handleBatchMalformedBatch() public {
+        // The view is of correct type, but the underlying bytes array
+        // is not correctly formatted
+        bytes memory batch = bytes("something");
+        vm.expectRevert(
+            "TypedMemView/index - Overran the view. Slice is at 0x0000a0 with length 0x000009. Attempted to index at offset 0x000001 with length 0x000020."
+        );
+        governanceRouter.exposed_handleBatch(batch, 1);
+    }
+
+    function test_handleBatchSuccess() public {
+        address to = address(0xBEEF);
+        bytes memory data = "";
+        calls.push(GovernanceMessage.Call(to.addressToBytes32(), data));
+        bytes memory message = GovernanceMessage.formatBatch(calls);
+        bytes32 hash = GovernanceMessage.getBatchHash(calls);
+        vm.expectEmit(true, false, false, false);
+        emit BatchReceived(hash);
+        governanceRouter.exposed_handleBatch(message, 1);
+        assertEq(
+            uint256(governanceRouter.inboundCallBatches(hash)),
+            uint256(GovernanceRouter.BatchStatus.Pending)
+        );
+    }
+
     // reverts if _call.to is zero
     function test_callLocalZeroAddress() public {}
 
@@ -794,5 +888,6 @@ contract GovernanceRouterTest is Test {
         governanceRouter.initiateRecoveryTimelock();
         vm.warp(block.timestamp + timelock);
         assert(governanceRouter.inRecovery());
+        assertEq(governanceRouter.recoveryActiveAt(), block.timestamp);
     }
 }

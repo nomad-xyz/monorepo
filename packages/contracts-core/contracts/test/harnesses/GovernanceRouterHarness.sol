@@ -4,8 +4,15 @@ pragma experimental ABIEncoderV2;
 
 import {GovernanceRouter} from "../../governance/GovernanceRouter.sol";
 import {GovernanceMessage} from "../../governance/GovernanceMessage.sol";
+import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
+
+import "forge-std/console2.sol";
 
 contract GovernanceRouterHarness is GovernanceRouter {
+    using GovernanceMessage for bytes29;
+    using TypedMemView for bytes;
+    using TypedMemView for bytes29;
+
     constructor(uint32 _localDomain, uint256 _recoveryTimelock)
         GovernanceRouter(_localDomain, _recoveryTimelock)
     {}
@@ -29,6 +36,17 @@ contract GovernanceRouterHarness is GovernanceRouter {
         governor = address(0);
         governorDomain = domain;
         _setRouter(domain, router);
+    }
+
+    /// @notice Exposed internal _handleBatch function to be tested
+    /// @dev We can't directly pass a bytes29 view because it's a pointer
+    /// to the memory and thus relevant only to the contract in which
+    /// it was defined. Thus, we define it here, instead inside the
+    /// test contract.
+    /// @param message in bytes
+    /// @param viewType the type to which the view will be casted
+    function exposed_handleBatch(bytes memory message, uint40 viewType) public {
+        _handleBatch(message.ref(viewType));
     }
 
     function hack_domainsLength() public view returns (uint256) {
