@@ -30,6 +30,7 @@ export class NomadEnv {
 
   refreshSDK(config: NomadConfig): BridgeContext {
     this.bridgeSDK = new BridgeContext(config);
+    this.coreSDK = new NomadContext(config);
     return this.bridgeSDK;
   }
 
@@ -149,7 +150,7 @@ export class NomadEnv {
     return false;
   }
 
-  forkUrl(): string | undefined {
+  get forkUrl(): string | undefined {
     if (process.env.ALCHEMY_API_KEY)
       return `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`;
   }
@@ -277,8 +278,8 @@ export async function defaultStart(): Promise<NomadEnv> {
     id: "0x" + "20".repeat(20),
   });
   
-  le.addDomain("tom", tDomainNumber, le.forkUrl());
-  le.addDomain("jerry", jDomainNumber, le.forkUrl());
+  le.addDomain("tom", tDomainNumber, le.forkUrl);
+  le.addDomain("jerry", jDomainNumber, le.forkUrl);
 
   log.info(`Upped Tom and Jerry`);
 

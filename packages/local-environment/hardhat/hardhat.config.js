@@ -47,7 +47,7 @@ console.log(`Staring with accounts:`, accounts.map(a=>a.privateKey));
 let defaultNetwork = "hardhat";
 
 if (process.env.ALCHEMY_API_KEY) {
-  defaultNetwork = "localhost";
+  defaultNetwork = "forking";
 }
 
 module.exports = {
@@ -62,8 +62,8 @@ module.exports = {
       // url: "http://0.0.0.0:8545",
       accounts,
     },
-    localhost: {
-      url: "https://optimism-mainnet.infura.io/v3/${process.env.ALCHEMY_API_KEY}",
+    forking: {
+      url: "https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}",
     },
   },
 };

@@ -18,8 +18,8 @@ describe("NomadDomain test", () => {
         
 
         // Can add domains
-        le.addDomain("tom", 1, le.forkUrl());
-        le.addDomain("jerry", 2, le.forkUrl());
+        le.addDomain("tom", 1, le.forkUrl);
+        le.addDomain("jerry", 2, le.forkUrl);
         assert.isTrue(le.domains.includes(le.domains[0]));
 
         expect(le.govNetwork).to.equal(le.domains[0]);

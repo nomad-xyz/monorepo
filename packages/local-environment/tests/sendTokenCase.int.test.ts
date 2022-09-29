@@ -17,8 +17,12 @@ describe("Token test", () => {
 
     const le = new NomadEnv({domain: 1, id: '0x'+'20'.repeat(20)});
 
-    le.addDomain('tom', 1, le.forkUrl());
-    le.addDomain('jerry', 2, le.forkUrl());
+    if (process.env.ALCHEMY_API_KEY) {
+      log.info(`Using Alchemy API key ` + process.env.ALCHEMY_API_KEY + ` to start a forked network`);
+    };
+    
+    le.addDomain('tom', 1, le.forkUrl);
+    le.addDomain('jerry', 2, le.forkUrl);
     log.info(`Added Tom and Jerry`);
 
     le.tDomain?.network.addKeys(sender);
