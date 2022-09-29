@@ -1018,6 +1018,123 @@ contract GovernanceRouterTest is Test {
         );
     }
 
+    // _transferGovernor() is tested via the public function transferGovernor()
+
+    function test_setRouterRevertLocalDomain() public {
+        vm.expectRevert("can't set local router");
+        governanceRouter.exposed_setRouter(homeDomain, bytes32("sfd"));
+    }
+
+    function test_setRouterNewDomain() public {
+        uint32 newDomain = 13;
+        bytes32 newRouter = "AFDDF";
+        bytes32 previousRouter = governanceRouter.routers(newDomain);
+        uint256 previousDomainsLength = governanceRouter.hack_domainsLength();
+        vm.expectEmit(true, true, true, false);
+        emit SetRouter(newDomain, previousRouter, newRouter);
+        governanceRouter.exposed_setRouter(newDomain, newRouter);
+        assertEq(governanceRouter.routers(newDomain), newRouter);
+        assertEq(
+            governanceRouter.hack_domainsLength(),
+            previousDomainsLength + 1
+        );
+        assertEq(
+            uint256(governanceRouter.domains(previousDomainsLength)),
+            newDomain
+        );
+    }
+
+    function test_setRouterExistingDomain() public {
+        uint32 newDomain = remoteDomain;
+        bytes32 newRouter = "AFDDF";
+        bytes32 previousRouter = governanceRouter.routers(newDomain);
+        uint256 previousDomainsLength = governanceRouter.hack_domainsLength();
+        vm.expectEmit(true, true, true, false);
+        emit SetRouter(newDomain, previousRouter, newRouter);
+        governanceRouter.exposed_setRouter(newDomain, newRouter);
+        assertEq(governanceRouter.routers(newDomain), newRouter);
+        // we shouldn't add a new domain, since we set the router of
+        // an existing domain
+        assertEq(governanceRouter.hack_domainsLength(), previousDomainsLength);
+        assertEq(
+            uint256(governanceRouter.domains(previousDomainsLength - 1)),
+            newDomain
+        );
+    }
+
+    function test_setRouterRemoveDomain() public {
+        // Add another domain so that we have 2 remote domains and the domains array
+        // is not empited when removing a remote domain. This is needed to test more
+        // concretely.
+        bytes32 existingRouter = "asdfasfasdf";
+        uint32 existingDomain = 23;
+        governanceRouter.exposed_setRouter(existingDomain, existingRouter);
+        uint32 newDomain = remoteDomain;
+        bytes32 newRouter = bytes32(0);
+        bytes32 previousRouter = governanceRouter.routers(newDomain);
+        uint256 previousDomainsLength = governanceRouter.hack_domainsLength();
+        vm.expectEmit(true, true, true, false);
+        emit SetRouter(newDomain, previousRouter, newRouter);
+        governanceRouter.exposed_setRouter(newDomain, newRouter);
+        assertEq(governanceRouter.routers(newDomain), newRouter);
+        // we remove the domain, since it's router now is bytes32(0)
+        // removing the domain means that we turn it into 0, but keep it in the array
+        // [1500, 23] --> [0, 23]
+        assertEq(governanceRouter.hack_domainsLength(), previousDomainsLength);
+        assertEq(
+            uint256(governanceRouter.domains(previousDomainsLength - 1)),
+            existingDomain
+        );
+        assertEq(
+            uint256(governanceRouter.domains(previousDomainsLength - 2)),
+            0
+        );
+    }
+
+    function test_isGovernorDomain() public {
+        governanceRouter.transferGovernor(
+            remoteDomain,
+            remoteGovernanceRouter.bytes32ToAddress()
+        );
+        assert(
+            governanceRouter.exposed_isGovernorRouter(
+                remoteDomain,
+                remoteGovernanceRouter
+            )
+        );
+        assertFalse(
+            governanceRouter.exposed_isGovernorRouter(
+                remoteDomain,
+                address(governanceRouter).addressToBytes32()
+            )
+        );
+        assertFalse(
+            governanceRouter.exposed_isGovernorRouter(
+                homeDomain,
+                address(governanceRouter).addressToBytes32()
+            )
+        );
+        assertFalse(
+            governanceRouter.exposed_isGovernorRouter(
+                homeDomain,
+                remoteGovernanceRouter
+            )
+        );
+    }
+
+    function test_mustHaveRouter() public {
+        assertEq(
+            governanceRouter.exposed_mustHaveRouter(remoteDomain),
+            remoteGovernanceRouter
+        );
+        vm.expectRevert("!router");
+        governanceRouter.exposed_mustHaveRouter(homeDomain);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                                UTILITIES
+    //////////////////////////////////////////////////////////////*/
+
     function enterRecovery() public {
         vm.prank(recoveryManager);
         governanceRouter.initiateRecoveryTimelock();

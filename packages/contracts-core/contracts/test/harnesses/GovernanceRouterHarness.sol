@@ -49,6 +49,26 @@ contract GovernanceRouterHarness is GovernanceRouter {
         _handleBatch(message.ref(viewType));
     }
 
+    function exposed_setRouter(uint32 domain, bytes32 newRouter) external {
+        _setRouter(domain, newRouter);
+    }
+
+    function exposed_isGovernorRouter(uint32 domain, bytes32 addr)
+        external
+        view
+        returns (bool)
+    {
+        return _isGovernorRouter(domain, addr);
+    }
+
+    function exposed_mustHaveRouter(uint32 domain)
+        external
+        view
+        returns (bytes32)
+    {
+        return _mustHaveRouter(domain);
+    }
+
     function hack_domainsLength() public view returns (uint256) {
         return domains.length;
     }
