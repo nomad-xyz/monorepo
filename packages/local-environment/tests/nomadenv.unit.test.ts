@@ -21,6 +21,10 @@ test("NomadEnv should be initalizable", async () => {
     expect(le.getDomains()).toStrictEqual([le.tDomain]);
     expect(le.deployerKey).toEqual(process.env.PRIVATE_KEY);
     expect(le.deployedOnce()).toBe(false);
+    expect(le.tDomain).toBeDefined();
+    if (process.env.ALCHEMY_API_KEY) {
+        expect(le.forkUrl).toBe(`https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`);
+    }
 
 });
 
