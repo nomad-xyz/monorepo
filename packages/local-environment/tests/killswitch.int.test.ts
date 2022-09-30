@@ -113,7 +113,7 @@ describe("killswitch", () => {
         // TODO: Make sure this output format matches the others
     })
 
-    it.only('should return missing rpc and signer errors', async () => {
+    it('should return missing rpc and signer errors', async () => {
 
         let killswitch = makeKillswitch(undefined, false);
         const cmd = ['./killswitch', '--app', 'token-bridge', '--all'];
