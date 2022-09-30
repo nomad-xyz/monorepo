@@ -17,7 +17,7 @@ describe("NomadDomain test", () => {
         expect(le).to.exist;
         
 
-        // Can add domains
+        // Can add domains with undefined forkURL
         le.addDomain("tom", 1, le.forkUrl);
         le.addDomain("jerry", 2, le.forkUrl);
         assert.isTrue(le.domains.includes(le.domains[0]));

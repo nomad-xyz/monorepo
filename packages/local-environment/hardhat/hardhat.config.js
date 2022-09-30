@@ -2,6 +2,8 @@ require("@nomiclabs/hardhat-waffle");
 // require("@foundry-rs/hardhat-anvil");
 require("dotenv").config();
 
+console.log("You are currently on " + defaultNetwork);
+
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   const accounts = await hre.ethers.getSigners();
 
@@ -64,6 +66,7 @@ module.exports = {
     },
     forking: {
       url: "https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}",
+      blockNumber: parseInt(process.env.BLOCK_NUMBER),
     },
   },
 };

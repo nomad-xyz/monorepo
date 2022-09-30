@@ -1,12 +1,17 @@
 import { NomadEnv } from "../src/nomadenv";
 import { Key } from "../src/keys/key";
 import type { TokenIdentifier } from "@nomad-xyz/sdk-bridge";
-// import fs from "fs";
+import fs from "fs";
 import { getCustomToken } from "./utils/token/deployERC20";
 import { getRandomTokenAmount } from "../src/utils";
 import { sendTokensAndConfirm } from "./common";
+import * as dotenv from "dotenv";
 import bunyan from 'bunyan';
 import { expect, assert } from "chai";
+
+if (!fs.existsSync("../../.env"))
+  dotenv.config({ path: __dirname + "/../.env.example" });
+else dotenv.config();
 
 describe("Token test", () => {
     // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
