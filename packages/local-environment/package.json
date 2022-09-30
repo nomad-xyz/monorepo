@@ -22,6 +22,7 @@
     "hardhat_stop": "docker ps --filter name=_net -aq | xargs docker rm --force",
     "test:unit": "jest unit --detectOpenHandles --ci --forceExit",
     "test:integration": "jest int --detectOpenHandles --ci --forceExit",
+    "test:killswitch": "jest --runInBand tests/killswitch.int.test.ts",
     "test:nomadenv": "jest --detectOpenHandles -t 'nomadenv'",
     "start": "npx ts-node tests/start.ts",
     "test-agents-die": "npx ts-node tests/agentsDieOnImproperUpdate.ts",
