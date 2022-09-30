@@ -1,5 +1,4 @@
 import {expect} from "chai";
-import bunyan from "bunyan";
 import {HardhatNetwork} from "../src/network";
 import {Key} from "../src/keys/key";
 import {NomadDomain} from "../src/domain";
@@ -10,7 +9,6 @@ import {AgentType} from "../src/agent";
 
 describe("killswitch", () => {
 
-    const log = bunyan.createLogger({name: 'localenv'});
     const agentConfigPath = "" + process.cwd() + "/output/test_config.json";
 
     let tom;
@@ -18,6 +16,8 @@ describe("killswitch", () => {
     let tomDomain;
     let jerryDomain;
     let env;
+    let senderKey;
+    let receiverKey;
     let bridgeCtx;
     let tomXcm;
     let jerryXcm;
@@ -33,7 +33,8 @@ describe("killswitch", () => {
     }
 
     const makeKillswitch = (
-        config_var: string = 'CONFIG_PATH=/app/config/test_config.json'
+        config_var: string = 'CONFIG_PATH=/app/config/test_config.json',
+        set_add_vars: boolean = true
     ): DockerizedBinary => {
         const additionalEnvVar = (env && env.domains.flatMap((d) => {
             let name = d.domain.name.toUpperCase();
@@ -51,7 +52,7 @@ describe("killswitch", () => {
                     config_var,
                     `DEFAULT_RPCSTYLE=ethereum`,
                     `DEFAULT_SUBMITTER_TYPE=local`,
-                    ...additionalEnvVar
+                    ...(set_add_vars ? additionalEnvVar : [])
                 ],
                 HostConfig: {
                     Mounts: [
@@ -75,8 +76,8 @@ describe("killswitch", () => {
         jerryDomain = new NomadDomain(jerry);
         env = new NomadEnv({domain: tom.domainNumber, id: '0x'+'20'.repeat(20)});
 
-        const senderKey = new Key();
-        const receiverKey = new Key();
+        senderKey = new Key();
+        receiverKey = new Key();
 
         tom.addKeys(senderKey);
         jerry.addKeys(receiverKey);
@@ -101,13 +102,28 @@ describe("killswitch", () => {
         jerryReplica = bridgeCtx.getReplicaFor(jerry.name, tom.name);
     }
 
-    it('should return a bad config error', async () => {
+    it('should return a bad config file error', async () => {
 
         let killswitch = makeKillswitch('CONFIG_PATH=/some/bad/config/path.json');
         const cmd = ['./killswitch', '--app', 'token-bridge', '--all'];
         let json = await killswitch.run(cmd).then(killswitchOutputToJson);
 
         expect(json[0].message).to.match(/^BadConfigVar:/);
+
+        // TODO: Make sure this output format matches the others
+    })
+
+    it.only('should return missing rpc and signer errors', async () => {
+
+        let killswitch = makeKillswitch(undefined, false);
+        const cmd = ['./killswitch', '--app', 'token-bridge', '--all'];
+        let json = await killswitch.run(cmd).then(killswitchOutputToJson);
+
+        // TODO: We're not getting expected output on failures here
+
+        let homes = json[0].message.homes;
+        expect(homes.tom.status).to.equal('error');
+        expect(homes.jerry.status).to.equal('error');
     })
 
     it('should unenroll all replicas', async () => {
