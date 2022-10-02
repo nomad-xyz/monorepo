@@ -10,7 +10,7 @@ import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppCon
 contract DABridgeRouterTest is Test {
     DABridgeRouter router;
 
-    event Receive(
+    event DataRootReceived(
         uint64 indexed originAndNonce,
         uint32 indexed blockNumber,
         bytes32 dataRoot
@@ -62,7 +62,7 @@ contract DABridgeRouterTest is Test {
         );
         uint64 originAndNonce = (uint64(domain) << 32) | 0;
         vm.expectEmit(true, true, false, true);
-        emit Receive(originAndNonce, _blockNumber, _dataRoot);
+        emit DataRootReceived(originAndNonce, _blockNumber, _dataRoot);
         router.handle(domain, uint32(0), remoteRouter, message);
         assertEq(uint256(router.roots(_blockNumber)), uint256(_dataRoot));
     }

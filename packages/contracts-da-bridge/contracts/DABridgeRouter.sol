@@ -39,7 +39,7 @@ contract DABridgeRouter is Version0, Router {
      * @param blockNumber for data root
      * @param root data root
      */
-    event Receive(
+    event DataRootReceived(
         uint64 indexed originAndNonce,
         uint32 indexed blockNumber,
         bytes32 root
@@ -97,7 +97,11 @@ contract DABridgeRouter is Version0, Router {
         (uint32 blockNumber, bytes32 dataRoot) = _parse(_message);
         assert(roots[blockNumber] == 0);
         roots[blockNumber] = dataRoot;
-        emit Receive(_originAndNonce(_origin, _nonce), blockNumber, dataRoot);
+        emit DataRootReceived(
+            _originAndNonce(_origin, _nonce),
+            blockNumber,
+            dataRoot
+        );
     }
 
     /**
