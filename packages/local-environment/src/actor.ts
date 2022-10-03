@@ -32,9 +32,9 @@ export abstract class DockerizedActor extends Actor {
 
   log = bunyan.createLogger({ name: "localenv" });
 
-  constructor(name: string, actorType: string, docker: Dockerode) {
+  constructor(name: string, actorType: string, docker?: Dockerode) {
     super(name, actorType);
-    this.docker = docker;
+    this.docker = docker || new Dockerode();
     this.events = new DockerEmitter();
   }
 
