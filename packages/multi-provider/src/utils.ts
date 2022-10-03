@@ -190,12 +190,12 @@ export class NoProviderError<
   domainName: string;
   domainNumber: number;
 
-  constructor(provider: T, domain: string | number) {
-    const domainName = provider.resolveDomainName(domain);
-    const domainNumber = provider.resolveDomain(domain);
+  constructor(context: T, domain: string | number) {
+    const domainName = context.resolveDomainName(domain);
+    const domainNumber = context.resolveDomain(domain);
 
     super(
-      provider,
+      context,
       `Missing provider for domain: ${domainNumber} : ${domainName}.\nHint: Have you called \`context.registerProvider(${domain}, provider)\` yet?`,
     );
     this.name = 'NoProviderError';

@@ -1,4 +1,4 @@
-import { NomadContext, parseMessage } from '@nomad-xyz/sdk';
+import { NomadContext, parseMessage } from '../src/index';
 import * as config from '@nomad-xyz/configuration';
 
 let conf: config.NomadConfig;

@@ -1,5 +1,5 @@
 import { constants, getDefaultProvider, VoidSigner } from 'ethers';
-import { NomadContext } from '@nomad-xyz/sdk';
+import { NomadContext } from '../src/index';
 import * as config from '@nomad-xyz/configuration';
 
 const ENVIRONMENTS = ['development', 'staging', 'production'];
