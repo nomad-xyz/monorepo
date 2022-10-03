@@ -17,6 +17,7 @@
     "agents_stop_running": "docker ps --filter name=_agent --filter status=running -aq | xargs docker stop",
     "build": "tsc --build",
     "cleanup": "npm run hardhat_stop && npm run agents_stop && npm run agents_clean",
+    "test:coverage": "jest --collectCoverage",
     "hardhat_stop": "docker ps --filter name=_net -aq | xargs docker rm --force",
     "prepare": "./prepare.sh",
     "test:unit": "jest unit --detectOpenHandles --ci --forceExit",

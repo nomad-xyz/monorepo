@@ -28,6 +28,7 @@
     "test:unit": "FOUNDRY_PROFILE=bridge-ci forge test",
     "test:unit:local": "FOUNDRY_PROFILE=bridge forge test",
     "test:static-analyze": "rm -rf node_modules && yarn link:node_modules && slither .",
+    "test:coverage": "../../scripts/coverage-report.sh bridge",
     "link:node_modules": "ln -s ../../node_modules",
     "snapshot": "forge clean && FOUNDRY_PROFILE=bridge forge snapshot",
     "snapshot:check": "forge clean && FOUNDRY_PROFILE=bridge forge snapshot --check",

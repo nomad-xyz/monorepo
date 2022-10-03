@@ -26,6 +26,7 @@
     "prepublish": "yarn bootstrap && yarn build",
     "test:unit": "FOUNDRY_PROFILE=router-ci forge test",
     "test:unit-local": "FOUNDRY_PROFILE=router forge test",
+    "test:coverage": "../../scripts/coverage-report.sh router",
     "storage-inspect:check": "../../scripts/storage-inspect.sh check Router XAppConnectionClient",
     "storage-inspect:generate": "../../scripts/storage-inspect.sh generate Router XAppConnectionClient"
   },

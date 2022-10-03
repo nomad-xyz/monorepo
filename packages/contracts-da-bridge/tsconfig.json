@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.package.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "composite": true
+  },
+  "exclude": [
+    "./node_modules",
+    "./dist",
+    "./config",
+    "./scripts",
+    "./tmp.ts",
+    "../../node_modules",
+    "./hardhat.config.ts"
+  ],
+  "include": ["index.ts", "./src/*.ts", "./src/factories/*.ts", "./package.json"]
+}

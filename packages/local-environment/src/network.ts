@@ -165,6 +165,8 @@ interface AnyNetworkOptions {
 interface HardhatNetworkOptions extends AnyNetworkOptions {
   notFirstStart?: boolean;
   keys?: Key[];
+  handler?: DockerizedNetworkActor;
+  chainId?: number;
 }
 
 // TODO: Some idea to abstract test net
@@ -194,12 +196,19 @@ export class HardhatNetwork extends Network {
 
   constructor(name: string, domain: number, docker: Dockerode, options?: HardhatNetworkOptions) {
     super(name, domain, domain, docker);
-    this.handler = new DockerizedNetworkActor(this.name, docker);
+    this.handler = options?.handler || new DockerizedNetworkActor(this.name, docker);
     this.blockTime = 10;
     this.firstStart = false;
     this.keys = options?.keys || [];
     this.docker = docker;
     this.rpc = [`http://localhost:${this.handler.port}`];
+  }
+
+  clone(name: string, domain: number, options?: HardhatNetworkOptions): HardhatNetwork {
+    if (!options) options = {};
+    options.handler = this.handler;
+    options.chainId = this.chainId;
+    return new HardhatNetwork(name, domain, options)
   }
 
   /* TODO: reimplement abstractions for MULTIPLE hardhat networks (i.e. any Nomad domain).
@@ -261,7 +270,7 @@ export class HardhatNetwork extends Network {
       watchers: [this.watcher],
     };
   }
-
+  
   setWETH(wethAddress: string): string {
     this.weth = wethAddress;
     return this.weth;

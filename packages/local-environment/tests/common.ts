@@ -183,10 +183,9 @@ export async function setupTwo(log: Logger): Promise<{ le: NomadEnv }> {
   // Notes, check governance router deployment on Jerry and see if that's actually even passing
   // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
-  await Promise.all([
-      tDomain.network.setWETH(await tDomain.network.deployWETH()),
-      jDomain.network.setWETH(await jDomain.network.deployWETH()),
-  ]);
+  const [tweth, jweth] = await Promise.all([tDomain.network.deployWETH(), jDomain.network.deployWETH()]);
+  tDomain.network.setWETH(tweth);
+  jDomain.network.setWETH(jweth);
 
   log.info(await le.deploy());
   

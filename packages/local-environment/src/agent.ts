@@ -3,6 +3,7 @@ import Dockerrode from "dockerode";
 import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
 import { NomadDomain } from "./domain";
+import { NomadEnv } from "./nomadenv";
 
 const kathyOn = false;
 const agentsImage = process.env.AGENTS_IMAGE || "gcr.io/nomad-xyz/nomad-agent:prestwich-remove-deploy-gas";
@@ -120,7 +121,8 @@ export class LocalAgent extends DockerizedActor implements Agent {
   agentType: AgentType;
   domain: NomadDomain;
   metricsPort: number;
-
+  nomadEnv?: NomadEnv;
+  
   constructor(agentType: AgentType, domain: NomadDomain, metricsPort: number, docker: Dockerrode) {
     agentType = parseAgentType(agentType);
     super(`${agentType}_${domain.network.name}`, "agent", docker);
@@ -129,6 +131,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
     this.domain = domain;
 
     this.metricsPort = metricsPort;
+    this.nomadEnv = nomadEnv;
   }
 
   containerName(): string {
@@ -251,6 +254,8 @@ export class LocalAgent extends DockerizedActor implements Agent {
 
     const additionalEnvs = this.getAdditionalEnvs();
 
+    const connectionUrls = this.nomadEnv?.domains.map(d => `${d.domain.name.toUpperCase()}_CONNECTION_URL=${d.rpcs[0]}`) || [];
+
     // docker run --name $1_$2_agent --env RUN_ENV=main --restart=always --network="host" --env BASE_CONFIG=$1_config.json -v $(pwd)/../../rust/config:/app/config -d gcr.io/nomad-xyz/nomad-agent ./$2
     return this.docker.createContainer({
       Image: agentsImage,
@@ -258,8 +263,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
       Cmd: ["./" + this.agentType],
       Env: [
         `AGENT_HOME_NAME=${this.domain.network.name}`,
-        `TOM_CONNECTION_URL=http://localhost:1337`,
-        `JERRY_CONNECTION_URL=http://localhost:1338`,
+        ...connectionUrls,
         `METRICS_PORT=${this.metricsPort}`,
         `CONFIG_PATH=/app/config/test_config.json`,
         `RUST_BACKTRACE=FULL`,
