@@ -5,6 +5,7 @@ yarn-error.log
 dist/
 cache/
 scripts/accumulator-cli
+**/.coverage
 
 .yarn/*
 !.yarn/cache

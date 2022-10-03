@@ -28,6 +28,7 @@
     "test:unit": "FOUNDRY_PROFILE=core-ci forge test",
     "test:unit:local": "FOUNDRY_PROFILE=core forge test",
     "test:static-analyze": "rm -rf node_modules && yarn link:node_modules && slither .",
+    "test:coverage": "../../scripts/coverage-report.sh core",
     "link:node_modules": "ln -s ../../node_modules",
     "snapshot": "forge clean && FOUNDRY_PROFILE=core forge snapshot",
     "snapshot:check": "forge clean && FOUNDRY_PROFILE=core forge snapshot --check",
