@@ -2,15 +2,15 @@
   "version": 0,
   "environment": "local",
   "networks": [
-    "tom",
-    "jerry"
+    "jerry",
+    "tom"
   ],
   "rpcs": {
     "jerry": [
-      "http://localhost:1340"
+      "http://localhost:1338"
     ],
     "tom": [
-      "http://localhost:1339"
+      "http://localhost:1337"
     ]
   },
   "protocol": {
@@ -19,37 +19,6 @@
       "id": "0x2020202020202020202020202020202020202020"
     },
     "networks": {
-      "jerry": {
-        "name": "jerry",
-        "domain": 2,
-        "connections": [
-          "tom"
-        ],
-        "configuration": {
-          "optimisticSeconds": 18,
-          "updater": "0x67ea657d2275fd8cc3840fd2474cedb5d1454db2",
-          "watchers": [
-            "0x67ea657d2275fd8cc3840fd2474cedb5d1454db2"
-          ],
-          "governance": {
-            "recoveryManager": "0x67ea657d2275fd8cc3840fd2474cedb5d1454db2",
-            "recoveryTimelock": 86400
-          }
-        },
-        "specs": {
-          "chainId": 2,
-          "blockTime": 10,
-          "finalizationBlocks": 2,
-          "supports1559": true,
-          "confirmations": 2,
-          "blockExplorer": "",
-          "indexPageSize": 2000
-        },
-        "bridgeConfiguration": {
-          "weth": "0x2fd79405e108b80d297b6a95b715258806cb2537",
-          "customs": []
-        }
-      },
       "tom": {
         "name": "tom",
         "domain": 1,
@@ -69,7 +38,38 @@
         },
         "specs": {
           "chainId": 1,
-          "blockTime": 10,
+          "blockTime": 5,
+          "finalizationBlocks": 2,
+          "supports1559": true,
+          "confirmations": 2,
+          "blockExplorer": "",
+          "indexPageSize": 2000
+        },
+        "bridgeConfiguration": {
+          "weth": "0x2fd79405e108b80d297b6a95b715258806cb2537",
+          "customs": []
+        }
+      },
+      "jerry": {
+        "name": "jerry",
+        "domain": 2,
+        "connections": [
+          "tom"
+        ],
+        "configuration": {
+          "optimisticSeconds": 18,
+          "updater": "0x67ea657d2275fd8cc3840fd2474cedb5d1454db2",
+          "watchers": [
+            "0x67ea657d2275fd8cc3840fd2474cedb5d1454db2"
+          ],
+          "governance": {
+            "recoveryManager": "0x67ea657d2275fd8cc3840fd2474cedb5d1454db2",
+            "recoveryTimelock": 86400
+          }
+        },
+        "specs": {
+          "chainId": 2,
+          "blockTime": 5,
           "finalizationBlocks": 2,
           "supports1559": true,
           "confirmations": 2,
@@ -84,31 +84,8 @@
     }
   },
   "core": {
-    "jerry": {
-      "deployHeight": 9,
-      "upgradeBeaconController": "0xb8f76913b146701aaa977521787cac3efa647ac4",
-      "xAppConnectionManager": "0x1d910c11207263544f6c4b9e33d6eceed59648d6",
-      "updaterManager": "0xa026c1a957d19f5a364f690414837ebf7e87b6c4",
-      "governanceRouter": {
-        "implementation": "0x565534809b3b72fc04c250e04c445ac298acb005",
-        "proxy": "0x56158f6ebe6cae347cac6b68de3a6a2fff8e050e",
-        "beacon": "0xb5db257c0e3bacc278827dc6e06e2e13a1507713"
-      },
-      "home": {
-        "implementation": "0x03bda7644fad6ac823e55d32b5e31b2e221dfed2",
-        "proxy": "0xdaefe73ee4405b27e684cf1e963326d2bb59bc32",
-        "beacon": "0x567f1b416388a3bddf7af7e390de930bbb21dafb"
-      },
-      "replicas": {
-        "tom": {
-          "implementation": "0xfcffc5c9134c8d0302635fcf15f7dca9f1db7adf",
-          "proxy": "0x4e5771ae6bcfccdc042ba869181e7c8f37c5de3a",
-          "beacon": "0xa7b7bef9700387b224d34b44e6a18c44c4ea331a"
-        }
-      }
-    },
     "tom": {
-      "deployHeight": 9,
+      "deployHeight": 19,
       "upgradeBeaconController": "0xb8f76913b146701aaa977521787cac3efa647ac4",
       "xAppConnectionManager": "0x1d910c11207263544f6c4b9e33d6eceed59648d6",
       "updaterManager": "0xa026c1a957d19f5a364f690414837ebf7e87b6c4",
@@ -129,11 +106,34 @@
           "beacon": "0xa7b7bef9700387b224d34b44e6a18c44c4ea331a"
         }
       }
+    },
+    "jerry": {
+      "deployHeight": 19,
+      "upgradeBeaconController": "0xb8f76913b146701aaa977521787cac3efa647ac4",
+      "xAppConnectionManager": "0x1d910c11207263544f6c4b9e33d6eceed59648d6",
+      "updaterManager": "0xa026c1a957d19f5a364f690414837ebf7e87b6c4",
+      "governanceRouter": {
+        "implementation": "0x565534809b3b72fc04c250e04c445ac298acb005",
+        "proxy": "0x56158f6ebe6cae347cac6b68de3a6a2fff8e050e",
+        "beacon": "0xb5db257c0e3bacc278827dc6e06e2e13a1507713"
+      },
+      "home": {
+        "implementation": "0x03bda7644fad6ac823e55d32b5e31b2e221dfed2",
+        "proxy": "0xdaefe73ee4405b27e684cf1e963326d2bb59bc32",
+        "beacon": "0x567f1b416388a3bddf7af7e390de930bbb21dafb"
+      },
+      "replicas": {
+        "tom": {
+          "implementation": "0xfcffc5c9134c8d0302635fcf15f7dca9f1db7adf",
+          "proxy": "0x4e5771ae6bcfccdc042ba869181e7c8f37c5de3a",
+          "beacon": "0xa7b7bef9700387b224d34b44e6a18c44c4ea331a"
+        }
+      }
     }
   },
   "bridge": {
     "tom": {
-      "deployHeight": 40,
+      "deployHeight": 74,
       "bridgeRouter": {
         "implementation": "0xf00852596cd325618a901d29173fd7e547f836a0",
         "proxy": "0xcc53a0548185ee64c30164c98b2a132a719b60cf",
@@ -153,7 +153,7 @@
       "customs": []
     },
     "jerry": {
-      "deployHeight": 40,
+      "deployHeight": 74,
       "bridgeRouter": {
         "implementation": "0xf00852596cd325618a901d29173fd7e547f836a0",
         "proxy": "0xcc53a0548185ee64c30164c98b2a132a719b60cf",
@@ -190,8 +190,8 @@
       },
       "processor": {
         "subsidizedRemotes": [
-          "jerry",
-          "tom"
+          "tom",
+          "jerry"
         ],
         "interval": 5
       },
