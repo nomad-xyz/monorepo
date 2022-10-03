@@ -30,5 +30,17 @@ Then, boot up docker.
 For any subsequent runs, do:
 
 ```sh
-yarn start
+yarn test:integration
+```
+
+or
+
+```sh
+yarn test:unit
+```
+
+If you want to test with mainnet forking, simply input your Alchemy API key into the `.env` file like so:
+
+```sh
+ALCHEMY_API_KEY=your_api_key
 ```
