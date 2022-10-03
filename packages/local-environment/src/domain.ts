@@ -31,7 +31,7 @@ export class NomadDomain {
 
   connectedNetworks: NomadDomain[];
 
-  constructor(name: string, domain: number, forkUrl?: string, docker?: Dockerrode, nomadEnv?: NomadEnv) {
+  constructor(name: string, domain: number, nomadEnv?: NomadEnv, forkUrl?: string, docker?: Dockerrode) {
     this.connectedNetworks = [];
     this.keys = new AgentKeys();
 
@@ -45,9 +45,7 @@ export class NomadDomain {
     }
     else this.network = new HardhatNetwork(name, domain, this.docker);
 
-    if (nomadEnv) {
-      this.nomadEnv = nomadEnv;
-    }
+    if (nomadEnv) this.nomadEnv = nomadEnv;
 
     const signer = this.keys.getAgentKey("signer");
 
@@ -68,7 +66,7 @@ export class NomadDomain {
   }
 
   ensureAgents(metricsPort = 9090): void {
-    if (!this.agents) this.agents = new Agents(this, metricsPort, this.docker);
+    if (!this.agents) this.agents = new Agents(this, metricsPort, this.docker, this.nomadEnv);
   }
 
   connectNetwork(d: NomadDomain): void {

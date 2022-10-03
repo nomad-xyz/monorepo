@@ -55,7 +55,7 @@ export abstract class Network {
     addressOrIndex: string | number
   ): ethers.providers.JsonRpcSigner;
   abstract getJsonRpcProvider(): ethers.providers.JsonRpcProvider;
-  abstract setWETH(wethAddress: string): string;
+  abstract setWETH(wethAddress: string | undefined): string | undefined;
   abstract deployWETH(): Promise<string>;
   abstract addKeys(...keys: Key[]): void;
   abstract deployToken(
@@ -204,11 +204,11 @@ export class HardhatNetwork extends Network {
     this.rpc = [`http://localhost:${this.handler.port}`];
   }
 
-  clone(name: string, domain: number, options?: HardhatNetworkOptions): HardhatNetwork {
+  clone(name: string, domain: number, docker: Dockerode, options?: HardhatNetworkOptions): HardhatNetwork {
     if (!options) options = {};
     options.handler = this.handler;
     options.chainId = this.chainId;
-    return new HardhatNetwork(name, domain, options)
+    return new HardhatNetwork(name, domain, docker, options);
   }
 
   /* TODO: reimplement abstractions for MULTIPLE hardhat networks (i.e. any Nomad domain).
@@ -271,9 +271,12 @@ export class HardhatNetwork extends Network {
     };
   }
   
-  setWETH(wethAddress: string): string {
-    this.weth = wethAddress;
-    return this.weth;
+  setWETH(wethAddress: string | undefined): string | undefined {
+    if (wethAddress) {
+      this.weth = wethAddress;
+      return this.weth;
+    }
+    return undefined;
   }
 
   get bridgeConfig(): BridgeConfiguration {

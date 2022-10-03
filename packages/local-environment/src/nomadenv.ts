@@ -5,6 +5,7 @@ import * as ethers from "ethers";
 import { NonceManager } from "@ethersproject/experimental";
 import fs from "fs";
 import bunyan from "bunyan";
+import Dockerode from "dockerode";
 import { NomadDomain } from "./domain";
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import { NomadContext } from "@nomad-xyz/sdk";
@@ -35,8 +36,8 @@ export class NomadEnv {
   }
 
   // Adds a network to the array of networks if it's not already there.
-  addDomain(name: string, domainNumber: number, forkUrl?: string): void {
-    const d = new NomadDomain(name, domainNumber, forkUrl);
+  addDomain(name: string, domainNumber: number, forkUrl?: string, dockerode?: Dockerode): void {
+    const d = new NomadDomain(name, domainNumber, this, forkUrl, dockerode);
     if (!this.domains.includes(d)) this.domains.push(d);
     d.addNomadEnv(this);
   }

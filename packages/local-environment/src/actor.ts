@@ -201,7 +201,7 @@ export abstract class DockerizedActor extends Actor {
 
   async disconnect(): Promise<void> {
     try {
-      await this.container?.remove()
+      await this.container?.remove();
     } catch(_) {
       // do nothing
     }
