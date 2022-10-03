@@ -17,22 +17,22 @@ export class Agents {
   metricsPort: number;
   docker: Dockerode;
 
-  constructor(domain: NomadDomain, metricsPort: number, docker: Dockerode, nomadEnv?: NomadEnv) {
+  constructor(domain: NomadDomain, metricsPort: number, docker?: Dockerode, nomadEnv?: NomadEnv) {
     this.metricsPort = metricsPort; // metricsPort4 - 4 ports for a single argument.
-    this.docker = docker;
-    this.updater = new LocalAgent(AgentType.Updater, domain, metricsPort, docker, nomadEnv); // metricsPort4 - 4 ports for a single argument.
-    this.relayer = new LocalAgent(AgentType.Relayer, domain, metricsPort + 1, docker, nomadEnv); // metricsPort4 - 4 ports for a single argument.
+    this.docker = docker || new Dockerode();
+    this.updater = new LocalAgent(AgentType.Updater, domain, metricsPort, this.docker, nomadEnv); // metricsPort4 - 4 ports for a single argument.
+    this.relayer = new LocalAgent(AgentType.Relayer, domain, metricsPort + 1, this.docker, nomadEnv); // metricsPort4 - 4 ports for a single argument.
     this.processor = new LocalAgent(
       AgentType.Processor,
       domain,
       metricsPort + 2,
-      docker,
+      this.docker,
       nomadEnv
     ); // metricsPort4 - 4 ports for a single argument.
     this.watchers = [
-      new LocalAgent(AgentType.Watcher, domain, metricsPort + 3, docker, nomadEnv),
+      new LocalAgent(AgentType.Watcher, domain, metricsPort + 3, this.docker, nomadEnv),
     ]; // metricsPort4 - 4 ports for a single argument.
-    if (kathyOn) this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort + 4, docker, nomadEnv);
+    if (kathyOn) this.kathy = new LocalAgent(AgentType.Kathy, domain, metricsPort + 4, this.docker, nomadEnv);
   }
 
   async upAll(agentType?: string): Promise<void | Promise<void>[] > {
@@ -124,7 +124,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
   metricsPort: number;
   nomadEnv?: NomadEnv;
   
-  constructor(agentType: AgentType, domain: NomadDomain, metricsPort: number, docker: Dockerode, nomadEnv?: NomadEnv) {
+  constructor(agentType: AgentType, domain: NomadDomain, metricsPort: number, docker?: Dockerode, nomadEnv?: NomadEnv) {
     agentType = parseAgentType(agentType);
     super(`${agentType}_${domain.network.name}`, "agent", docker);
     this.agentType = agentType;
