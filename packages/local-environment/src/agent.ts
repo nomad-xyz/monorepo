@@ -1,4 +1,4 @@
-import Dockerrode from "dockerode";
+import Dockerode from "dockerode";
 
 import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
@@ -15,9 +15,9 @@ export class Agents {
   watchers: Agent[];
   kathy?: Agent;
   metricsPort: number;
-  docker: Dockerrode;
+  docker: Dockerode;
 
-  constructor(domain: NomadDomain, metricsPort: number, docker: Dockerrode, nomadEnv?: NomadEnv) {
+  constructor(domain: NomadDomain, metricsPort: number, docker: Dockerode, nomadEnv?: NomadEnv) {
     this.metricsPort = metricsPort; // metricsPort4 - 4 ports for a single argument.
     this.docker = docker;
     this.updater = new LocalAgent(AgentType.Updater, domain, metricsPort, docker, nomadEnv); // metricsPort4 - 4 ports for a single argument.
@@ -124,7 +124,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
   metricsPort: number;
   nomadEnv?: NomadEnv;
   
-  constructor(agentType: AgentType, domain: NomadDomain, metricsPort: number, docker: Dockerrode, nomadEnv?: NomadEnv) {
+  constructor(agentType: AgentType, domain: NomadDomain, metricsPort: number, docker: Dockerode, nomadEnv?: NomadEnv) {
     agentType = parseAgentType(agentType);
     super(`${agentType}_${domain.network.name}`, "agent", docker);
     this.agentType = agentType;
@@ -248,7 +248,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
     return envs;
   }
 
-  async createContainer(): Promise<Dockerrode.Container> {
+  async createContainer(): Promise<Dockerode.Container> {
     const name = this.containerName();
 
     const agentConfigPath = "" + process.cwd() + "/output/test_config.json";
