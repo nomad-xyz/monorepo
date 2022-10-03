@@ -48,25 +48,27 @@ console.log(`Staring with accounts:`, accounts.map(a=>a.privateKey));
 
 let defaultNetwork = "hardhat";
 
+let hardhat = {
+  mining: {
+    auto: false,
+    interval: blockTime,
+  },
+  // url: "http://0.0.0.0:8545",
+  accounts,
+};
+
+// If a mainnet fork, then replace hardhat configurations with the following.
 if (process.env.ALCHEMY_API_KEY) {
-  defaultNetwork = "forking";
-}
+  hardhat = {
+    url: "https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}",
+    blockNumber: parseInt(process.env.BLOCK_NUMBER),
+  };
+};
 
 module.exports = {
   solidity: "0.8.4",
   defaultNetwork: defaultNetwork,
   networks: {
-    hardhat: {
-      mining: {
-        auto: false,
-        interval: blockTime,
-      },
-      // url: "http://0.0.0.0:8545",
-      accounts,
-    },
-    forking: {
-      url: "https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}",
-      blockNumber: parseInt(process.env.BLOCK_NUMBER),
-    },
+    hardhat: hardhat,
   },
 };

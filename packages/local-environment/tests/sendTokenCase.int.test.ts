@@ -44,7 +44,7 @@ describe("Token test", () => {
         // Notes, check governance router deployment on Jerry and see if that's actually even passing
         // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
     
-        const [tweth, jweth] = await Promise.all([le.tDomain.network.deployWETH(), le.jDomain.network.deployWETH()]);
+        const [tweth, jweth] = await Promise.all([le.tDomain?.network.deployWETH(), le.jDomain?.network.deployWETH()]);
         le.tDomain?.network.setWETH(tweth);
         le.jDomain?.network.setWETH(jweth);
     
