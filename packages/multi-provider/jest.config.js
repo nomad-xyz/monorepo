@@ -8,7 +8,4 @@ module.exports = {
       isolatedModules: true,
     },
   },
-  // collectCoverageFrom: [
-  //   '!dist/*.js'
-  // ],
 };

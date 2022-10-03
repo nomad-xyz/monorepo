@@ -16,9 +16,6 @@ describe('multi-provider', () => {
     name: 'b',
     domain: 2000,
   };
-  const testProvider = new ethers.providers.JsonRpcProvider(
-    'http://localhost:8545',
-  );
   const signerAddr = '0x0123456789012345678901234567890123456789';
   const testSigner = new ethers.VoidSigner(signerAddr);
 
@@ -121,7 +118,7 @@ describe('multi-provider', () => {
     try {
       mp.registerSigner('a', testSigner);
     } catch(e) {
-      expect(e.message).toContain('Missing provider')
+      expect(e.message).toContain('Missing provider');
     }
   });
 
@@ -208,7 +205,6 @@ describe('multi-provider', () => {
 
     // gets provider if only provider is registered
     const connectionB = mp.getConnection('b');
-    console.log('b', connectionB);
     expect(connectionB).toBeDefined();
     expect(connectionB._isProvider).toBe(true);
   });
