@@ -29,7 +29,7 @@
     "test:coverage": "jest --collectCoverage",
     "lint": "eslint --fix ./src ./tests",
     "prettier": "prettier --write ./src ./tests",
-    "test:unit": "jest"
+    "test:unit": "jest --coverage=false"
   },
   "dependencies": {
     "@nomad-xyz/configuration": "^0.1.0",
