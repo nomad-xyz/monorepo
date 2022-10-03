@@ -7,7 +7,7 @@ import {DockerizedBinary} from "../src/binary";
 import {AgentType} from "../src/agent";
 
 
-describe("killswitch", () => {
+describe("killswitch tests", () => {
 
     const agentConfigPath = "" + process.cwd() + "/output/test_config.json";
 
@@ -108,9 +108,8 @@ describe("killswitch", () => {
         const cmd = ['./killswitch', '--app', 'token-bridge', '--all'];
         let json = await killswitch.run(cmd).then(killswitchOutputToJson);
 
-        expect(json[0].message).to.match(/^BadConfigVar:/);
-
-        // TODO: Make sure this output format matches the others
+        expect(json[0].message.result.status).to.equal('error');
+        expect(json[0].message.result.message).to.match(/^BadConfigVar:/);
     })
 
     it('should return missing rpc and signer errors', async () => {
@@ -119,11 +118,17 @@ describe("killswitch", () => {
         const cmd = ['./killswitch', '--app', 'token-bridge', '--all'];
         let json = await killswitch.run(cmd).then(killswitchOutputToJson);
 
-        // TODO: We're not getting expected output on failures here
-
         let homes = json[0].message.homes;
         expect(homes.tom.status).to.equal('error');
         expect(homes.jerry.status).to.equal('error');
+        let tomJerryResult = homes.tom.message.replicas.jerry.result;
+        let jerryTomResult = homes.jerry.message.replicas.tom.result;
+        expect(tomJerryResult.status).to.equal('error');
+        expect(jerryTomResult.status).to.equal('error');
+        expect(tomJerryResult.message[0]).to.match(/^MissingRPC:/);
+        expect(jerryTomResult.message[0]).to.match(/^MissingRPC:/);
+        expect(tomJerryResult.message[2]).to.match(/^MissingAttestationSignerConf:/);
+        expect(jerryTomResult.message[2]).to.match(/^MissingAttestationSignerConf:/);
     })
 
     it('should unenroll all replicas', async () => {
