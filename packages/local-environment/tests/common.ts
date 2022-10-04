@@ -160,8 +160,21 @@ export async function setupTwo(log: Logger): Promise<{ le: NomadEnv }> {
   // Instantiate Nomad domains
   const le = new NomadEnv({domain: 1, id: '0x'+'20'.repeat(20)});
 
-  le.addDomain('tom', 1, le.forkUrl);
-  le.addDomain('jerry', 2, le.forkUrl);
+  let tDomainNumber = 1;
+  let jDomainNumber = 2;
+
+  if (process.env.tDomainNumber) {
+    tDomainNumber = parseInt(process.env.tDomainNumber);
+  }
+
+  if (process.env.jDomainNumber) {
+    jDomainNumber = parseInt(process.env.jDomainNumber);
+  }
+  
+  const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
+  const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
+  le.addDomain(tom.network);
+  le.addDomain(jerry.network);
   log.info(`Added Tom and Jerry`);
 
   const sender = new Key();

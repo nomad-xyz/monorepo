@@ -27,21 +27,20 @@ export function parseMessage(message: string): ParsedMessage {
     // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
     const log = bunyan.createLogger({name: 'localenv'});
 
+    const le = new NomadEnv({domain: 1, id: '0x'+'20'.repeat(20)});
+
     // Instantiate Nomad domains
-    const tDomain = new NomadDomain('tom', 1);
-    const jDomain = new NomadDomain('jerry', 2);
+    const tom = NomadDomain.newHardhatNetwork("tom", 1, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
+    const jerry = NomadDomain.newHardhatNetwork("jerry", 2, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
+    le.addDomain(tom.network);
+    le.addDomain(jerry.network);
 
     const sender = new Key();
     const receiver = new Key();
 
-    tDomain.network.addKeys(sender);
-    jDomain.network.addKeys(receiver);
-
-    const le = new NomadEnv({domain: tDomain.network.domainNumber, id: '0x'+'20'.repeat(20)});
-
-    le.addDomain('tom', 1, le.forkUrl);
-    le.addDomain('jerry', 2, le.forkUrl);
-    log.info(`Added Tom and Jerry`);
+    le.tDomain?.network.addKeys(sender);
+    le.jDomain?.network.addKeys(receiver);
+    log.info(`Added Tom and Jerry Keys`);
     // Set keys
     // le.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
     // le.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));
@@ -55,8 +54,8 @@ export function parseMessage(message: string): ParsedMessage {
 
     // log.info(`Added Keys`)
     
-    tDomain.connectNetwork(jDomain);
-    jDomain.connectNetwork(tDomain);
+    le.tDomain?.connectNetwork(le.jDomain!);
+    le.jDomain?.connectNetwork(le.tDomain!);
     log.info(`Connected Tom and Jerry`);
 
     await le.upNetworks();
@@ -65,9 +64,9 @@ export function parseMessage(message: string): ParsedMessage {
     // Notes, check governance router deployment on Jerry and see if that's actually even passing
     // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
-    const [tweth, jweth] = await Promise.all([tDomain.network.deployWETH(), jDomain.network.deployWETH()]);
-    tDomain.network.setWETH(tweth);
-    jDomain.network.setWETH(jweth);
+    const [tweth, jweth] = await Promise.all([le.tDomain?.network.deployWETH(), le.jDomain?.network.deployWETH()]);
+    le.tDomain?.network.setWETH(tweth);
+    le.jDomain?.network.setWETH(jweth);
 
     log.info(await le.deploy());
 
@@ -94,7 +93,7 @@ export function parseMessage(message: string): ParsedMessage {
   try {
     // Deploying a custom ERC20 contract
     const tokenFactory = getCustomToken();
-    const tokenOnTom = await tDomain.network.deployToken(
+    const tokenOnTom = await le.tDomain!.network.deployToken(
       tokenFactory,
       sender.toAddress(),
       "MyToken",
@@ -104,7 +103,7 @@ export function parseMessage(message: string): ParsedMessage {
     // const tDomain = le.domain(t).name;
     
     const token: TokenIdentifier = {
-      domain: tDomain.network.name,
+      domain: le.tDomain!.network.name,
       id: tokenOnTom.address,
     };
 
@@ -115,8 +114,8 @@ export function parseMessage(message: string): ParsedMessage {
 
     // Default multiprovider comes with signer (`o.setSigner(jerry, signer);`) assigned
     // to each domain, but we change it to allow sending from different signer
-    ctx.registerWalletSigner(tDomain.network.name, sender.toString());
-    ctx.registerWalletSigner(jDomain.network.name, receiver.toString());
+    ctx.registerWalletSigner(le.tDomain!.network.name, sender.toString());
+    ctx.registerWalletSigner(le.jDomain!.network.name, receiver.toString());
     log.info(`registered wallet signers for tom and jerry`);
 
     // get 3 random amounts which will be bridged
@@ -127,7 +126,7 @@ export function parseMessage(message: string): ParsedMessage {
     log.info(`Preparation done!`);
 
 
-    await sendTokensAndConfirm(le, tDomain, jDomain, token, receiver.toAddress(), [
+    await sendTokensAndConfirm(le, le.tDomain!, le.jDomain!, token, receiver.toAddress(), [
       amount1,
       amount2,
       amount3,
@@ -137,8 +136,8 @@ export function parseMessage(message: string): ParsedMessage {
 
     const tokenContract = await sendTokensAndConfirm(
       le,
-      jDomain,
-      tDomain,
+      le.jDomain!,
+      le.tDomain!,
       token,
       new Key().toAddress(),
       [amount3, amount2, amount1], log

@@ -5,10 +5,10 @@ import * as ethers from "ethers";
 import { NonceManager } from "@ethersproject/experimental";
 import fs from "fs";
 import bunyan from "bunyan";
-import Dockerode from "dockerode";
 import { NomadDomain } from "./domain";
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import { NomadContext } from "@nomad-xyz/sdk";
+import { Network } from "./network";
 
 if (!fs.existsSync("../../.env"))
   dotenv.config({ path: __dirname + "/../.env.example" });
@@ -36,8 +36,8 @@ export class NomadEnv {
   }
 
   // Adds a network to the array of networks if it's not already there.
-  addDomain(name: string, domainNumber: number, forkUrl?: string, wethAddress?: string, dockerode?: Dockerode): void {
-    const d = new NomadDomain(name, domainNumber, this, forkUrl, dockerode, wethAddress);
+  addDomain(network: Network): void {
+    const d = new NomadDomain(network, this);
     if (!this.domains.includes(d)) this.domains.push(d);
     d.addNomadEnv(this);
   }
@@ -285,8 +285,10 @@ export async function defaultStart(): Promise<NomadEnv> {
   });
 
   // Instantiates two mainnet forks.
-  le.addDomain("tom", tDomainNumber, le.forkUrl, le.wETHAddress);
-  le.addDomain("jerry", jDomainNumber, le.forkUrl, le.wETHAddress);
+  const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
+  const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
+  le.addDomain(tom.network);
+  le.addDomain(jerry.network);
 
   log.info(`Upped Tom and Jerry`);
 

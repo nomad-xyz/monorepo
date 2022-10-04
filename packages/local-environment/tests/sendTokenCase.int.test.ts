@@ -8,6 +8,7 @@ import { sendTokensAndConfirm } from "./common";
 import * as dotenv from "dotenv";
 import bunyan from 'bunyan';
 import { expect, assert } from "chai";
+import { NomadDomain } from "../src/domain";
 
 if (!fs.existsSync("../../.env"))
   dotenv.config({ path: __dirname + "/../.env.example" });
@@ -26,8 +27,21 @@ describe("Token test", () => {
       log.info(`Using Alchemy API key ` + process.env.ALCHEMY_API_KEY + ` to start a forked network`);
     };
     
-    le.addDomain('tom', 1, le.forkUrl);
-    le.addDomain('jerry', 2, le.forkUrl);
+    let tDomainNumber = 1;
+    let jDomainNumber = 2;
+  
+    if (process.env.tDomainNumber) {
+      tDomainNumber = parseInt(process.env.tDomainNumber);
+    }
+  
+    if (process.env.jDomainNumber) {
+      jDomainNumber = parseInt(process.env.jDomainNumber);
+    }
+    
+    const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
+    const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
+    le.addDomain(tom.network);
+    le.addDomain(jerry.network);
     log.info(`Added Tom and Jerry`);
 
     le.tDomain?.network.addKeys(sender);

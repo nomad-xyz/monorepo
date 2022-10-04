@@ -63,7 +63,7 @@ export class Agents {
     ]);
   }
 
-  async isAllUp(): Promise<boolean> {
+  async areAllUp(): Promise<boolean> {
     const ups = await Promise.all([
       this.relayer.status(),
       this.updater.status(),

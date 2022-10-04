@@ -3,6 +3,7 @@ import { NomadEnv } from "../src/nomadenv";
 import Docker from "dockerode";
 import { LocalAgent } from "../src/agent";
 import chaiAsPromised from "chai-as-promised";
+import { NomadDomain } from "../src/domain";
 
 chaiUse(chaiAsPromised);
 
@@ -16,10 +17,22 @@ describe("NomadDomain test", () => {
         });
         expect(le).to.exist;
         
+        let tDomainNumber = 1;
+        let jDomainNumber = 2;
+      
+        if (process.env.tDomainNumber) {
+          tDomainNumber = parseInt(process.env.tDomainNumber);
+        }
+      
+        if (process.env.jDomainNumber) {
+          jDomainNumber = parseInt(process.env.jDomainNumber);
+        }
 
         // Can add domains with undefined forkURL
-        le.addDomain("tom", 1, le.forkUrl);
-        le.addDomain("jerry", 2, le.forkUrl);
+        const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
+        const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
+        le.addDomain(tom.network);
+        le.addDomain(jerry.network);
         assert.isTrue(le.domains.includes(le.domains[0]));
 
         expect(le.govNetwork).to.equal(le.domains[0]);
@@ -33,11 +46,11 @@ describe("NomadDomain test", () => {
         expect(le.domains[0].agents).to.exist;
         expect(le.domains[1].agents).to.exist;
 
-        assert.isTrue(await le.tDomain?.isAgentsUp());
+        assert.isTrue(await le.tDomain?.areAgentsUp());
         assert.isTrue(await le.tDomain?.agents!.updater.status());
         assert.isTrue(await le.tDomain?.agents!.relayer.status());
         assert.isTrue(await le.tDomain?.agents!.processor.status());
-        assert.isTrue(await le.jDomain?.isAgentsUp());
+        assert.isTrue(await le.jDomain?.areAgentsUp());
         assert.isTrue(await le.jDomain?.agents!.updater.status());
         assert.isTrue(await le.jDomain?.agents!.relayer.status());
         assert.isTrue(await le.jDomain?.agents!.processor.status());
@@ -61,8 +74,8 @@ describe("NomadDomain test", () => {
         assert.isTrue((await docker.getContainer(jProcessor).inspect()).State.Running);
 
         await le.downAgents();
-        assert.isFalse(await le.tDomain?.isAgentsUp());
-        assert.isFalse(await le.jDomain?.isAgentsUp()); 
+        assert.isFalse(await le.tDomain?.areAgentsUp());
+        assert.isFalse(await le.jDomain?.areAgentsUp()); 
 
         await assert.isRejected(docker.getContainer(tUpdater).inspect(), "no such container");
         await assert.isRejected(docker.getContainer(tRelayer).inspect(), "no such container");

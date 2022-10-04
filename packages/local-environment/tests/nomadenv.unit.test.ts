@@ -12,7 +12,8 @@ test("NomadEnv should be initalizable", async () => {
     });
     expect(le).toBeTruthy();
 
-    le.addDomain('tom', 1);
+    const tom = NomadDomain.newHardhatNetwork("tom", 1, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
+    le.addDomain(tom.network);
     assert.isTrue(le.domains.includes(le.tDomain!));
     expect(le.govNetwork).toBe(le.tDomain);
     // SDK
@@ -30,7 +31,8 @@ test("NomadEnv should be initalizable", async () => {
 
 test("NomadEnv should be able to refresh SDK", async () => {
 
-    const tDomain = new NomadDomain('tom', 1);
+    const tom = NomadDomain.newHardhatNetwork("tom", 1);
+    const tDomain = new NomadDomain(tom.network);
     const le = new NomadEnv({
         domain: tDomain.network.domainNumber,
         id: "0x" + "20".repeat(20),
@@ -41,11 +43,12 @@ test("NomadEnv should be able to refresh SDK", async () => {
 
 test("Can create deployContext", async () => {
 
-    const tDomain = new NomadDomain('tom', 1);
     const le = new NomadEnv({
-        domain: tDomain.network.domainNumber,
+        domain: 1,
         id: "0x" + "20".repeat(20),
     });
+    const tom = NomadDomain.newHardhatNetwork("tom", 1, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
+    le.addDomain(tom.network);
     
     expect(le.setDeployContext).toBeDefined();
 });

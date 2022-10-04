@@ -2,9 +2,8 @@ import { NomadDomain } from "../src/domain";
 import { LocalAgent, AgentType } from "../src/agent";
 import Dockerode from 'dockerode';
 
-// jest.mock("dockerode");
-
-const domain = new NomadDomain('local', 1337);
+const local = NomadDomain.newHardhatNetwork('local', 1337);
+const domain = new NomadDomain(local.network);
 
 beforeEach(() => {
     jest.clearAllMocks();

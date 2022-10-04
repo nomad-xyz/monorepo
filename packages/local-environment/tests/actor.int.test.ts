@@ -8,7 +8,8 @@ chaiUse(chaiAsPromised);
 
 const dockerode = new Dockerode();
 
-const domain = new NomadDomain("tom", 1);
+const tom = NomadDomain.newHardhatNetwork("tom", 1);
+const domain = new NomadDomain(tom.network);
 
 describe("Actor test", () => {
 

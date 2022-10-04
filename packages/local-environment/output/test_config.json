@@ -85,7 +85,7 @@
   },
   "core": {
     "tom": {
-      "deployHeight": 6,
+      "deployHeight": 4,
       "upgradeBeaconController": "0xb8f76913b146701aaa977521787cac3efa647ac4",
       "xAppConnectionManager": "0x1d910c11207263544f6c4b9e33d6eceed59648d6",
       "updaterManager": "0xa026c1a957d19f5a364f690414837ebf7e87b6c4",
@@ -108,7 +108,7 @@
       }
     },
     "jerry": {
-      "deployHeight": 6,
+      "deployHeight": 4,
       "upgradeBeaconController": "0xb8f76913b146701aaa977521787cac3efa647ac4",
       "xAppConnectionManager": "0x1d910c11207263544f6c4b9e33d6eceed59648d6",
       "updaterManager": "0xa026c1a957d19f5a364f690414837ebf7e87b6c4",
@@ -133,7 +133,7 @@
   },
   "bridge": {
     "tom": {
-      "deployHeight": 49,
+      "deployHeight": 41,
       "bridgeRouter": {
         "implementation": "0xf00852596cd325618a901d29173fd7e547f836a0",
         "proxy": "0xcc53a0548185ee64c30164c98b2a132a719b60cf",
@@ -153,7 +153,7 @@
       "customs": []
     },
     "jerry": {
-      "deployHeight": 49,
+      "deployHeight": 41,
       "bridgeRouter": {
         "implementation": "0xf00852596cd325618a901d29173fd7e547f836a0",
         "proxy": "0xcc53a0548185ee64c30164c98b2a132a719b60cf",

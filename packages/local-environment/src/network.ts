@@ -32,8 +32,6 @@ export abstract class Network {
   bridgeContracts?: BridgeContracts;
   bridgeGui?: AppConfig;
 
-  docker: Dockerode;
-
   blockTime: number;
 
   updater: string;
@@ -68,7 +66,6 @@ export abstract class Network {
     name: string,
     domainNumber: number,
     chainId: number,
-    docker?: Dockerode,
   ) {
     this.name = name;
     this.domainNumber = domainNumber;
@@ -79,7 +76,6 @@ export abstract class Network {
     this.recoveryManager = "";
     this.weth = "";
     this.blockTime = 10000;
-    this.docker = docker || new Dockerode();
     this.rpc = [];
   }
 
@@ -188,21 +184,30 @@ export class HardhatNetwork extends Network {
   blockTime: number;
   keys: Key[];
   handler: DockerizedNetworkActor;
+  forkUrl?: string;
+  blockExplorer?: string;
+  docker: Dockerode;
 
-  constructor(name: string, domain: number, docker?: Dockerode, options?: HardhatNetworkOptions) {
-    super(name, domain, domain, docker);
+  constructor(name: string, domain: number, forkUrl?: string, wETHAddress?: string, docker?: Dockerode, options?: HardhatNetworkOptions, blockExplorer?: string) {
+    super(name, domain, options?.chainId || domain);
+    this.docker = docker || new Dockerode();
     this.handler = options?.handler || new DockerizedNetworkActor(this.name, this.docker);
     this.blockTime = 10;
     this.firstStart = false;
     this.keys = options?.keys || [];
     this.rpc = [`http://localhost:${this.handler.port}`];
+    if (forkUrl && wETHAddress) {
+      this.weth = wETHAddress;
+      this.forkUrl = forkUrl;
+    }
+    this.blockExplorer = blockExplorer;
   }
 
-  clone(name: string, domain: number, docker?: Dockerode, options?: HardhatNetworkOptions): HardhatNetwork {
+  clone(name: string, domain: number, forkUrl?: string, wETHAddress?: string, blockExplorer?: string, docker?: Dockerode, options?: HardhatNetworkOptions): HardhatNetwork {
     if (!options) options = {};
     options.handler = this.handler;
     options.chainId = this.chainId;
-    return new HardhatNetwork(name, domain, docker, options);
+    return new HardhatNetwork(name, domain, forkUrl, wETHAddress, docker, options, blockExplorer);
   }
 
   /* TODO: reimplement abstractions for MULTIPLE hardhat networks (i.e. any Nomad domain).
@@ -369,154 +374,5 @@ export class HardhatNetwork extends Network {
 
     await this.stop();
     await this.disconnect();
-  }
-}
-export class ForkedNetwork extends Network {
-  blockTime: number;
-  keys: Key[];
-  blockExplorer: string;
-  firstStart: boolean;
-  handler: DockerizedNetworkActor;
-  weth: string;
-  forkUrl: string;
-
-  constructor(name: string, domain: number, forkUrl: string, wETHAddress: string, docker?: Dockerode, blockExplorer?: string, blocktime?: number, options?: HardhatNetworkOptions) {
-    super(name, domain, domain, docker);
-    if (blocktime) {
-      this.blockTime = blocktime;
-    } 
-    else this.blockTime = 10;
-    this.handler = new DockerizedNetworkActor(this.name, this.docker);
-    if (blockExplorer) {
-      this.blockExplorer = blockExplorer;
-    } else {
-      this.blockExplorer = "https://etherscan.io";
-    }
-    this.weth = wETHAddress;
-    this.keys = options?.keys || [];
-    this.firstStart = false;
-    this.rpc = [`http://localhost:${this.handler.port}`];
-    this.forkUrl = forkUrl;
-  }
-
-  async deployWETH(): Promise<string> {
-    return this.weth;
-  };
-
-  setWETH(wethAddress: string): string {
-    this.weth = wethAddress;
-    return this.weth;
-  }
-
-  addKeys(...ks: Key[]): void {
-    this.keys.push(...ks);
-  }
-
-  get rpcs(): string[] {
-    return this.rpc;
-  }
-
-  get specs(): NetworkSpecs {
-    return {
-      chainId: this.chainId,
-      finalizationBlocks: 2,
-      blockTime: this.blockTime,
-      supports1559: true,
-      confirmations: 2,
-      blockExplorer: this.blockExplorer,
-      indexPageSize: 2000,
-    };
-  }
-
-  get config(): ContractConfig {
-    return {
-      optimisticSeconds: 18,
-      governance: {
-        recoveryManager: this.recoveryManager,
-        recoveryTimelock: 86400,
-      },
-      updater: this.updater,
-      watchers: [this.watcher],
-    };
-  }
-
-  get bridgeConfig(): BridgeConfiguration {
-    return {
-      weth: this.weth,
-      customs: [],
-      // mintGas: 200000,
-      // deployGas: 850000
-    };
-  }
-
-  async deployToken(
-    contractFactory: ethers.ContractFactory,
-    from: string | ethers.providers.JsonRpcSigner,
-    ...args: string[]
-  ): Promise<ethers.Contract> {
-    let signer: ethers.providers.JsonRpcSigner;
-    if (typeof from === "string") {
-      signer = this.getJsonRpcSigner(from);
-    } else {
-      signer = from;
-    }
-
-    contractFactory = contractFactory.connect(signer);
-
-    const contract = await contractFactory.deploy(...args);
-
-    await contract.deployed();
-    return contract;
-  }
-
-  getJsonRpcSigner(
-    addressOrIndex: string | number
-  ): ethers.providers.JsonRpcSigner {
-    const provider = this.getJsonRpcProvider();
-    return provider.getSigner(addressOrIndex);
-  }
-
-  getJsonRpcProvider(): ethers.providers.JsonRpcProvider {
-    return new ethers.providers.JsonRpcProvider(
-      this.rpc[0]
-    );
-  }
-
-  async isConnected(): Promise<boolean> {
-    return this.handler.isConnected();
-  }
-
-  async up(): Promise<void> {
-    await this.connect();
-    await this.start();
-  }
-
-  async down(): Promise<void> {
-    await this.connect();
-
-    await this.stop();
-    await this.disconnect();
-  }
-
-  private async connect() {
-    this.firstStart = await this.handler.connect();
-  }
-
-  private async disconnect() {
-    await this.handler.disconnect();
-  }
-
-  private async start() {
-    if ((await this.handler.status()) === DockerNetworkStatus.Running) return;
-    await this.handler.start();
-
-    if (this.firstStart) {
-      await sleep(20_000);
-      this.firstStart = false;
-    }
-  }
-
-  private async stop() {
-    await this.handler.stop();
   }
 }

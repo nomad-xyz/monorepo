@@ -10,14 +10,21 @@ import {
   Domain,
 } from "@nomad-xyz/configuration";
 import { Key } from "./keys/key";
-import { ForkedNetwork, HardhatNetwork, Network } from "./network";
+import { HardhatNetwork, Network } from "./network";
 import { Agents, AgentType } from "./agent";
 import { ethers } from "ethers";
 import { AgentKeys } from "./keys/index";
 import { NomadEnv } from "./nomadenv";
-import Dockerrode from "dockerode";
+import Dockerode from "dockerode";
 
 // NomadDomain as a concept refers to settings, configs, and actors (agents, SDK) that are auxiliary to each arbitrary Network.
+
+export interface DomainOptions {
+  nomadEnv?: NomadEnv;
+  forkurl?: string,
+  weth?: string,  
+  docker?: Dockerode,
+}
 
 export class NomadDomain {
   agents?: Agents;
@@ -25,25 +32,13 @@ export class NomadDomain {
   network: Network;
   metricsPort?: number;
   nomadEnv?: NomadEnv;
-  forkUrl?: string;
-  forkBlockheight?: number;
-  docker: Dockerrode;
 
   connectedNetworks: NomadDomain[];
 
-  constructor(name: string, domain: number, nomadEnv?: NomadEnv, forkUrl?: string, docker?: Dockerrode, wethAddress?: string) {
+  constructor(network: Network, nomadEnv?: NomadEnv) {
+    this.network = network;
     this.connectedNetworks = [];
     this.keys = new AgentKeys();
-
-    if (!docker) {
-      this.docker = new Dockerrode();
-    }
-    else this.docker = docker;
-    
-    if (forkUrl && wethAddress) {
-      this.network = new ForkedNetwork(name, domain, forkUrl, wethAddress, this.docker);
-    }
-    else this.network = new HardhatNetwork(name, domain, this.docker);
 
     if (nomadEnv) this.nomadEnv = nomadEnv;
 
@@ -57,6 +52,11 @@ export class NomadDomain {
 
   }
 
+  static newHardhatNetwork(name: string, domain: number, creationParams?: DomainOptions): NomadDomain {
+    const network = new HardhatNetwork(name, domain, creationParams?.forkurl, creationParams?.weth, creationParams?.docker);
+    return new NomadDomain(network, creationParams?.nomadEnv);
+  }
+
   addNomadEnv(e: NomadEnv): void {
     this.nomadEnv = e;
   }
@@ -65,8 +65,8 @@ export class NomadDomain {
     return this.network.name;
   }
 
-  ensureAgents(metricsPort = 9090): void {
-    if (!this.agents) this.agents = new Agents(this, metricsPort, this.docker, this.nomadEnv);
+  ensureAgents(metricsPort = 9090, docker?: Dockerode): void {
+    if (!this.agents) this.agents = new Agents(this, metricsPort, docker, this.nomadEnv);
   }
 
   connectNetwork(d: NomadDomain): void {
@@ -74,8 +74,8 @@ export class NomadDomain {
       this.connectedNetworks.push(d);
   }
 
-  async isAgentsUp(): Promise<boolean | undefined> {
-    return await this.agents?.isAllUp();
+  async areAgentsUp(): Promise<boolean | undefined> {
+    return await this.agents?.areAllUp();
   }
 
   /*

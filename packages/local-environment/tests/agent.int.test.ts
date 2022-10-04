@@ -8,7 +8,8 @@ chaiUse(chaiAsPromised);
 
 const dockerode = new Docker();
 
-const domain = new NomadDomain("local", 1337);
+const tom = NomadDomain.newHardhatNetwork("tom", 1);
+const domain = new NomadDomain(tom.network);
 
 describe("Agent test", () => {
     //TODO: We should implement any-network connection logic and test accordingly.
