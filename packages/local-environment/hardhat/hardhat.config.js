@@ -2,8 +2,6 @@ require("@nomiclabs/hardhat-waffle");
 // require("@foundry-rs/hardhat-anvil");
 require("dotenv").config();
 
-console.log("You are currently on " + defaultNetwork);
-
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   const accounts = await hre.ethers.getSigners();
 
@@ -60,7 +58,7 @@ let hardhat = {
 // If a mainnet fork, then replace hardhat configurations with the following.
 if (process.env.ALCHEMY_API_KEY) {
   hardhat = {
-    url: "https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}",
+    url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
     blockNumber: parseInt(process.env.BLOCK_NUMBER),
   };
 };

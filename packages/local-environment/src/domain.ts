@@ -31,7 +31,7 @@ export class NomadDomain {
 
   connectedNetworks: NomadDomain[];
 
-  constructor(name: string, domain: number, nomadEnv?: NomadEnv, forkUrl?: string, docker?: Dockerrode) {
+  constructor(name: string, domain: number, nomadEnv?: NomadEnv, forkUrl?: string, docker?: Dockerrode, wethAddress?: string) {
     this.connectedNetworks = [];
     this.keys = new AgentKeys();
 
@@ -40,8 +40,8 @@ export class NomadDomain {
     }
     else this.docker = docker;
     
-    if (forkUrl) {
-      this.network = new ForkedNetwork(name, domain, this.docker, forkUrl);
+    if (forkUrl && wethAddress) {
+      this.network = new ForkedNetwork(name, domain, forkUrl, wethAddress, this.docker);
     }
     else this.network = new HardhatNetwork(name, domain, this.docker);
 
@@ -306,6 +306,6 @@ export class NomadDomain {
   }
 
   get rpcs(): string[] {
-    return [this.network.rpcs[0]];
+    return this.network.rpcs;
   }
 }

@@ -6,6 +6,7 @@ export function sleep(ms: number): Promise<void> {
 }
 
 export function readLine(q: string): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const readline = require("readline");
 
   const rl = readline.createInterface({
@@ -70,6 +71,7 @@ export class Waiter<T> {
     this.timeout = setTimeout(this.doTimeout.bind(this), timeoutMs);
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   fail(e: any): void {
     if (this.reject) this.reject(e);
     this.stop();
@@ -122,6 +124,7 @@ export class StreamMatcher extends Stream.Transform {
     this.subscribe();
   }
 
+  // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/explicit-module-boundary-types
   _transform(chunk: any, encoding: string, callback: Function): void {
     this.push(chunk);
     callback();

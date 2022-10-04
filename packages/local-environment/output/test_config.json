@@ -133,7 +133,7 @@
   },
   "bridge": {
     "tom": {
-      "deployHeight": 45,
+      "deployHeight": 44,
       "bridgeRouter": {
         "implementation": "0xf00852596cd325618a901d29173fd7e547f836a0",
         "proxy": "0xcc53a0548185ee64c30164c98b2a132a719b60cf",
@@ -153,7 +153,7 @@
       "customs": []
     },
     "jerry": {
-      "deployHeight": 45,
+      "deployHeight": 44,
       "bridgeRouter": {
         "implementation": "0xf00852596cd325618a901d29173fd7e547f836a0",
         "proxy": "0xcc53a0548185ee64c30164c98b2a132a719b60cf",

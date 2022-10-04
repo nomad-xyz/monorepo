@@ -1,4 +1,3 @@
-import { HardhatNetwork } from "../src/network";
 import { NomadEnv } from "../src/nomadenv";
 import { Key } from "../src/keys/key";
 import type { TokenIdentifier } from "@nomad-xyz/sdk-bridge";
@@ -40,9 +39,9 @@ export function parseMessage(message: string): ParsedMessage {
 
     const le = new NomadEnv({domain: tDomain.network.domainNumber, id: '0x'+'20'.repeat(20)});
 
-    le.addDomain(tDomain);
-    le.addDomain(jDomain);
-
+    le.addDomain('tom', 1, le.forkUrl);
+    le.addDomain('jerry', 2, le.forkUrl);
+    log.info(`Added Tom and Jerry`);
     // Set keys
     // le.setUpdater(new Key(`` + process.env.PRIVATE_KEY_1 + ``));
     // le.setWatcher(new Key(`` + process.env.PRIVATE_KEY_2 + ``));

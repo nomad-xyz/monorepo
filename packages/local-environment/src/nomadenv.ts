@@ -36,8 +36,8 @@ export class NomadEnv {
   }
 
   // Adds a network to the array of networks if it's not already there.
-  addDomain(name: string, domainNumber: number, forkUrl?: string, dockerode?: Dockerode): void {
-    const d = new NomadDomain(name, domainNumber, this, forkUrl, dockerode);
+  addDomain(name: string, domainNumber: number, forkUrl?: string, wethAddress?: string, dockerode?: Dockerode): void {
+    const d = new NomadDomain(name, domainNumber, this, forkUrl, dockerode, wethAddress);
     if (!this.domains.includes(d)) this.domains.push(d);
     d.addNomadEnv(this);
   }
@@ -156,6 +156,10 @@ export class NomadEnv {
       return `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`;
   }
 
+  get wETHAddress(): string {
+    return `${process.env.WETH_ADDRESS}`;
+  }
+
   get tDomain(): NomadDomain | undefined {
     return this.domains[0];
   }
@@ -264,12 +268,13 @@ export async function defaultStart(): Promise<NomadEnv> {
   // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
   const log = bunyan.createLogger({ name: "localenv" });
 
-  let tDomainNumber = 0;
-  let jDomainNumber = 1;
+  let tDomainNumber = 1;
+  let jDomainNumber = 2;
 
   if (process.env.tDomainNumber) {
     tDomainNumber = parseInt(process.env.tDomainNumber);
   }
+
   if (process.env.jDomainNumber) {
     jDomainNumber = parseInt(process.env.jDomainNumber);
   }
@@ -278,9 +283,10 @@ export async function defaultStart(): Promise<NomadEnv> {
     domain: tDomainNumber,
     id: "0x" + "20".repeat(20),
   });
-  
-  le.addDomain("tom", tDomainNumber, le.forkUrl);
-  le.addDomain("jerry", jDomainNumber, le.forkUrl);
+
+  // Instantiates two mainnet forks.
+  le.addDomain("tom", tDomainNumber, le.forkUrl, le.wETHAddress);
+  le.addDomain("jerry", jDomainNumber, le.forkUrl, le.wETHAddress);
 
   log.info(`Upped Tom and Jerry`);
 
@@ -301,7 +307,9 @@ export async function defaultStart(): Promise<NomadEnv> {
   // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
   for (const domain of le.domains) {
-    await Promise.all([domain.network.setWETH(await domain.network.deployWETH())]);
+    if (!domain.network.weth) {
+      await Promise.all([domain.network.setWETH(await domain.network.deployWETH())]);
+    }
   }
 
   log.info(`WETH Deployed at `, le.domains[0].network.weth);

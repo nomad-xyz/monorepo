@@ -47,7 +47,7 @@ describe("Token test", () => {
         const [tweth, jweth] = await Promise.all([le.tDomain?.network.deployWETH(), le.jDomain?.network.deployWETH()]);
         le.tDomain?.network.setWETH(tweth);
         le.jDomain?.network.setWETH(jweth);
-    
+        
         log.info(await le.deploy());
         
         await le.upAgents();
@@ -55,7 +55,6 @@ describe("Token test", () => {
     
         log.info(`Agents up`);
 
-        log.info(await le.deploy());
     }
 
     beforeAll(async () => {
@@ -63,8 +62,11 @@ describe("Token test", () => {
     });
 
     it("should handle token creation, transfer logic", async function () {
+        expect(le.tDomain).to.not.be.undefined;
+        expect(le.jDomain).to.not.be.undefined;
+        
         const tokenFactory = getCustomToken();
-        const tokenOnTom = await le.tDomain!.network.deployToken(
+        const tokenOnTom = await le.tDomain?.network.deployToken(
           tokenFactory,
           sender.toAddress(),
           "MyToken",
@@ -75,13 +77,13 @@ describe("Token test", () => {
         
         const token: TokenIdentifier = {
           domain: le.tDomain!.network.name,
-          id: tokenOnTom.address,
+          id: tokenOnTom!.address,
         };
         assert.exists(tokenFactory);
         assert.exists(tokenOnTom);
         assert.exists(token);
 
-        log.info(`Tokenfactory, token deployed:`, tokenOnTom.address);
+        log.info(`Tokenfactory, token deployed:`, tokenOnTom!.address);
 
         const ctx = le.getBridgeSDK();
         assert.exists(ctx);

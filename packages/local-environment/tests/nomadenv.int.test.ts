@@ -31,7 +31,7 @@ describe("NomadDomain test", () => {
         await le.upAgents();
 
         expect(le.domains[0].agents).to.exist;
-        expect(le.domains[0].agents).to.exist;
+        expect(le.domains[1].agents).to.exist;
 
         assert.isTrue(await le.tDomain?.isAgentsUp());
         assert.isTrue(await le.tDomain?.agents!.updater.status());

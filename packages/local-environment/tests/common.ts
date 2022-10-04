@@ -42,7 +42,7 @@ export async function sendTokensAndConfirm(
 
   for (const a of amounts) {
     const amount = ethers.BigNumber.from(a);
-    log.info(`Going to send token ${token.domain}:${token.id}`,from.name,to.name);
+    log.info(`Going to send token ${token.domain}:${token.id}`, `from ${from.name}`, `to ${to.name}`);
 
     const tx = await ctx.send(
       from.name,
@@ -158,23 +158,20 @@ export async function sendTokensAndConfirm(
 export async function setupTwo(log: Logger): Promise<{ le: NomadEnv }> {
 
   // Instantiate Nomad domains
-  const tDomain = new NomadDomain('tom', 1);
-  const jDomain = new NomadDomain('jerry', 2);
+  const le = new NomadEnv({domain: 1, id: '0x'+'20'.repeat(20)});
+
+  le.addDomain('tom', 1, le.forkUrl);
+  le.addDomain('jerry', 2, le.forkUrl);
+  log.info(`Added Tom and Jerry`);
 
   const sender = new Key();
   const receiver = new Key();
 
-  tDomain.network.addKeys(sender);
-  jDomain.network.addKeys(receiver);
+  le.tDomain?.network.addKeys(sender);
+  le.jDomain?.network.addKeys(receiver);
 
-  const le = new NomadEnv({domain: tDomain.network.domainNumber, id: '0x'+'20'.repeat(20)});
-
-  le.addDomain(tDomain);
-  le.addDomain(jDomain);
-  log.info(`Added Tom and Jerry`);
-
-  tDomain.connectNetwork(jDomain);
-  jDomain.connectNetwork(tDomain);
+  le.tDomain?.connectNetwork(le.jDomain!);
+  le.jDomain?.connectNetwork(le.tDomain!);
   log.info(`Connected Tom and Jerry`);
 
   await le.upNetworks();
@@ -183,9 +180,9 @@ export async function setupTwo(log: Logger): Promise<{ le: NomadEnv }> {
   // Notes, check governance router deployment on Jerry and see if that's actually even passing
   // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
-  const [tweth, jweth] = await Promise.all([tDomain.network.deployWETH(), jDomain.network.deployWETH()]);
-  tDomain.network.setWETH(tweth);
-  jDomain.network.setWETH(jweth);
+  const [tweth, jweth] = await Promise.all([le.tDomain?.network.deployWETH(), le.jDomain?.network.deployWETH()]);
+  le.tDomain?.network.setWETH(tweth);
+  le.jDomain?.network.setWETH(jweth);
 
   log.info(await le.deploy());
   

@@ -132,6 +132,7 @@ export class LocalAgent extends DockerizedActor implements Agent {
     this.domain = domain;
 
     this.metricsPort = metricsPort;
+
     this.nomadEnv = nomadEnv;
   }
 
