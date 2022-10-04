@@ -392,7 +392,7 @@ export class ForkedNetwork extends Network {
     } else {
       this.blockExplorer = "https://etherscan.io";
     }
-    this.weth = this.setWETH(wETHAddress);
+    this.weth = wETHAddress;
     this.keys = options?.keys || [];
     this.firstStart = false;
     this.rpc = [`http://localhost:${this.handler.port}`];
@@ -402,6 +402,11 @@ export class ForkedNetwork extends Network {
   async deployWETH(): Promise<string> {
     return this.weth;
   };
+
+  setWETH(wethAddress: string): string {
+    this.weth = wethAddress;
+    return this.weth;
+  }
 
   addKeys(...ks: Key[]): void {
     this.keys.push(...ks);
@@ -433,11 +438,6 @@ export class ForkedNetwork extends Network {
       updater: this.updater,
       watchers: [this.watcher],
     };
-  }
-
-  setWETH(wethAddress: string): string {
-    this.weth = wethAddress;
-    return this.weth;
   }
 
   get bridgeConfig(): BridgeConfiguration {
