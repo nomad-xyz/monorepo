@@ -1,6 +1,14 @@
 ## Bootup instructions
 
-The following commands should be ran in monorepo root.
+If you want to test with mainnet forking, simply input your Alchemy API key into the `.env` file:
+
+```sh
+ALCHEMY_API_KEY=your_api_key
+```
+
+If you have no need for mainnet forking, proceed to the next step.
+
+Then the following commands should be ran in monorepo root.
 
 ```sh
 ./packages/local-environment/prepare.sh
@@ -37,10 +45,4 @@ or
 
 ```sh
 yarn test:unit
-```
-
-If you want to test with mainnet forking, simply input your Alchemy API key into the `.env` file like so:
-
-```sh
-ALCHEMY_API_KEY=your_api_key
 ```

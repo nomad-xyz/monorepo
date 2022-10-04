@@ -285,8 +285,8 @@ export async function defaultStart(): Promise<NomadEnv> {
   });
 
   // Instantiates two mainnet forks.
-  le.addDomain("tom", tDomainNumber, le.forkUrl, le.wETHAddress);
-  le.addDomain("jerry", jDomainNumber, le.forkUrl, le.wETHAddress);
+  le.addDomain("tom", tDomainNumber, le.forkUrl);
+  le.addDomain("jerry", jDomainNumber, le.forkUrl);
 
   log.info(`Upped Tom and Jerry`);
 

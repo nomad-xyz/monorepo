@@ -378,6 +378,7 @@ export class ForkedNetwork extends Network {
   firstStart: boolean;
   handler: DockerizedNetworkActor;
   weth: string;
+  forkUrl: string;
 
   constructor(name: string, domain: number, forkUrl: string, wETHAddress: string, docker?: Dockerode, blockExplorer?: string, blocktime?: number, options?: HardhatNetworkOptions) {
     super(name, domain, domain, docker);
@@ -394,7 +395,8 @@ export class ForkedNetwork extends Network {
     this.weth = this.setWETH(wETHAddress);
     this.keys = options?.keys || [];
     this.firstStart = false;
-    this.rpc = [forkUrl];
+    this.rpc = [`http://localhost:${this.handler.port}`];
+    this.forkUrl = forkUrl;
   }
 
   async deployWETH(): Promise<string> {
