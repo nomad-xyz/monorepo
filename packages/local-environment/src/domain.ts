@@ -40,7 +40,7 @@ export class NomadDomain {
     this.connectedNetworks = [];
     this.keys = new AgentKeys();
 
-    if (nomadEnv) this.nomadEnv = nomadEnv;
+    this.nomadEnv = nomadEnv;
 
     const signer = this.keys.getAgentKey("signer");
 
