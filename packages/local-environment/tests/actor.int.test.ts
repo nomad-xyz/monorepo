@@ -6,10 +6,16 @@ import Dockerode from 'dockerode';
 
 chaiUse(chaiAsPromised);
 
-const dockerode = new Dockerode();
+let dockerode;
+let tom;
+let domain;
 
-const tom = NomadDomain.newHardhatNetwork("tom", 1);
-const domain = new NomadDomain(tom.network);
+beforeEach(() => {
+    jest.clearAllMocks();
+    dockerode = new Dockerode();
+    tom = NomadDomain.newHardhatNetwork("tom", 1);
+    domain = new NomadDomain(tom.network);
+  });
 
 describe("Actor test", () => {
 

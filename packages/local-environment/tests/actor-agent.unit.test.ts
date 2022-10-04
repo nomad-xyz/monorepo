@@ -2,11 +2,13 @@ import { NomadDomain } from "../src/domain";
 import { LocalAgent, AgentType } from "../src/agent";
 import Dockerode from 'dockerode';
 
-const local = NomadDomain.newHardhatNetwork('local', 1337);
-const domain = new NomadDomain(local.network);
+let local;
+let domain;
 
 beforeEach(() => {
     jest.clearAllMocks();
+    local = NomadDomain.newHardhatNetwork('local', 1337);
+    domain = new NomadDomain(local.network);
   });
 
 test("Dockerized agents should be initalizable", async () => {
