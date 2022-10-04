@@ -106,7 +106,8 @@ test("Forked Network should be initialized correctly", async () => {
   expect(network.weth).toBe("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
   expect(network.keys).toStrictEqual([]);
   expect(await network.handler.status()).toBe(2);
-  expect(network.rpcs).toStrictEqual([`https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`]);
+  // Expect network to be a localhost network (specific port may change based on instantiation order)
+  expect(network.rpcs).toStrictEqual(["http://localhost:1343"]);
   expect(network.config).toBeDefined();
   expect(network.specs).toBeDefined();
   expect(network.bridgeConfig).toBeDefined();
