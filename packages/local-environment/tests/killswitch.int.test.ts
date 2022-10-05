@@ -9,6 +9,7 @@ import {AgentType} from "../src/agent";
 
 describe("killswitch tests", () => {
 
+    const agentsImage = process.env.AGENTS_IMAGE;
     const agentConfigPath = "" + process.cwd() + "/output/test_config.json";
 
     let tom;
@@ -45,7 +46,7 @@ describe("killswitch tests", () => {
             ]
         })) || [];
         return new DockerizedBinary(
-            process.env.AGENTS_IMAGE,
+            agentsImage,
             {
                 Env: [
                     `RUST_BACKTRACE=FULL`,
