@@ -25,7 +25,7 @@ Types of changes (Stanzas):
 "Improvements" for changes in existing functionality.
 "Deprecated" for soon-to-be removed features.
 "Bug Fixes" for any bug fixes.
-"Client Breaking" for breaking CLI commands and REST routes used by end-users.
+"Client Breaking" for breaking CLI commands agnd REST routes used by end-users.
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## Unreleased
 * Local environment integration tests for killswitch
 * Add a helper for dockerized binaries
+* Fix `.env` file handling
 * V1.0 of local environment
 
 ## Features
