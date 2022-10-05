@@ -31,8 +31,8 @@ describe("NomadDomain test", () => {
         // Can add domains with undefined forkURL
         const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
         const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
-        le.addDomain(tom.network);
-        le.addDomain(jerry.network);
+        le.addNetwork(tom.network);
+        le.addNetwork(jerry.network);
         assert.isTrue(le.domains.includes(le.domains[0]));
 
         expect(le.govNetwork).to.equal(le.domains[0]);

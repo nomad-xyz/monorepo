@@ -13,7 +13,7 @@ test("NomadEnv should be initalizable", async () => {
     expect(le).toBeTruthy();
 
     const tom = NomadDomain.newHardhatNetwork("tom", 1, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
-    le.addDomain(tom.network);
+    le.addNetwork(tom.network);
     assert.isTrue(le.domains.includes(le.tDomain!));
     expect(le.govNetwork).toBe(le.tDomain);
     // SDK
@@ -48,7 +48,7 @@ test("Can create deployContext", async () => {
         id: "0x" + "20".repeat(20),
     });
     const tom = NomadDomain.newHardhatNetwork("tom", 1, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
-    le.addDomain(tom.network);
+    le.addNetwork(tom.network);
     
     expect(le.setDeployContext).toBeDefined();
 });

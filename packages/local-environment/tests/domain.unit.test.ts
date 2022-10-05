@@ -52,7 +52,7 @@ test("Domains can't connect to domains with identical names", async () => {
     expect(domainbar.connections.length).toBe(0);
     expect(domainfoo.name).toEqual('local');
     expect(domainbar.name).toEqual('local');
-    domainfoo.connectNetwork(domainbar);
+    domainfoo.connectDomain(domainbar);
     expect(domainfoo.connections.length).toBe(0);
     
 });
@@ -68,10 +68,10 @@ test("Domains can connect to general domains", async () => {
     expect(domainbar.connections.length).toBe(0);
     expect(domainfoo.name).toEqual('localfoo');
     expect(domainbar.name).toEqual('localbar');
-    domainfoo.connectNetwork(domainbar);
+    domainfoo.connectDomain(domainbar);
     expect(domainfoo.connections()).toEqual(['localbar']);
     expect(domainbar.connections.length).toBe(0);
-    domainbar.connectNetwork(domainfoo);
+    domainbar.connectDomain(domainfoo);
     expect(domainbar.connections()).toEqual(['localfoo']);
 });
 

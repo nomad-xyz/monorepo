@@ -22,8 +22,8 @@ describe("NomadDomain test", () => {
         expect(tDomain.domain.domain).to.equal(1);
         expect(jDomain.domain.domain).to.equal(2);
         // Connections
-        tDomain.connectNetwork(jDomain);
-        jDomain.connectNetwork(tDomain);
+        tDomain.connectDomain(jDomain);
+        jDomain.connectDomain(tDomain);
         assert.isTrue(tDomain.connectedNetworks.includes(jDomain));
         assert.isTrue(jDomain.connectedNetworks.includes(tDomain));
 

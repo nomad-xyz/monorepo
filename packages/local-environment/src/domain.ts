@@ -69,7 +69,7 @@ export class NomadDomain {
     if (!this.agents) this.agents = new Agents(this, metricsPort, docker, this.nomadEnv);
   }
 
-  connectNetwork(d: NomadDomain): void {
+  connectDomain(d: NomadDomain): void {
     if (!this.connections().includes(d.network.name))
       this.connectedNetworks.push(d);
   }

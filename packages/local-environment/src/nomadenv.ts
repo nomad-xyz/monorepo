@@ -35,8 +35,8 @@ export class NomadEnv {
     return this.bridgeSDK;
   }
 
-  // Adds a network to the array of networks if it's not already there.
-  addDomain(network: Network): void {
+  // Adds a network to the array of NomadDomains if it's not already there.
+  addNetwork(network: Network): void {
     const d = new NomadDomain(network, this);
     if (!this.domains.includes(d)) this.domains.push(d);
     d.addNomadEnv(this);
@@ -287,8 +287,8 @@ export async function defaultStart(): Promise<NomadEnv> {
   // Instantiates two mainnet forks.
   const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
   const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
-  le.addDomain(tom.network);
-  le.addDomain(jerry.network);
+  le.addNetwork(tom.network);
+  le.addNetwork(jerry.network);
 
   log.info(`Upped Tom and Jerry`);
 
@@ -300,7 +300,7 @@ export async function defaultStart(): Promise<NomadEnv> {
   for (const domain of le.domains) {
     for (const connection of le.domains) {
       if (domain.name != connection.name) {
-        domain.connectNetwork(connection);
+        domain.connectDomain(connection);
       }
     }
   }

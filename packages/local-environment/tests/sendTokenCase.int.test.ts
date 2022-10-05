@@ -37,18 +37,18 @@ describe("Token test", () => {
     if (process.env.jDomainNumber) {
       jDomainNumber = parseInt(process.env.jDomainNumber);
     }
-    
+
     const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
     const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
-    le.addDomain(tom.network);
-    le.addDomain(jerry.network);
+    le.addNetwork(tom.network);
+    le.addNetwork(jerry.network);
     log.info(`Added Tom and Jerry`);
 
     le.tDomain?.network.addKeys(sender);
     le.jDomain?.network.addKeys(receiver);
     
-    le.tDomain?.connectNetwork(le.jDomain!);
-    le.jDomain?.connectNetwork(le.tDomain!);
+    le.tDomain?.connectDomain(le.jDomain!);
+    le.jDomain?.connectDomain(le.tDomain!);
     log.info(`Connected Tom and Jerry`);
 
     async function setUp() {

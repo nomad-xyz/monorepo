@@ -9,7 +9,7 @@ import { NomadDomain } from "../src/domain";
 
 async function setupDaffy(le: NomadEnv) {
   const dDomain = new NomadDomain('daffy', 3);
-  le.addDomain(dDomain);
+  le.addNetwork(dDomain);
 
 
   const daffyActor = new Key();

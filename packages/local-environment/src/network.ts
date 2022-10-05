@@ -39,8 +39,6 @@ export abstract class Network {
   recoveryManager: string;
   weth: string;
 
-  rpc: string[];
-
   abstract up(): Promise<void>;
   abstract down(): Promise<void>;
   abstract isConnected(): Promise<boolean>;
@@ -76,7 +74,6 @@ export abstract class Network {
     this.recoveryManager = "";
     this.weth = "";
     this.blockTime = 10000;
-    this.rpc = [];
   }
 
   get isDeployed(): boolean {
@@ -195,7 +192,6 @@ export class HardhatNetwork extends Network {
     this.blockTime = 10;
     this.firstStart = false;
     this.keys = options?.keys || [];
-    this.rpc = [`http://localhost:${this.handler.port}`];
     if (forkUrl && wETHAddress) {
       this.weth = wETHAddress;
       this.forkUrl = forkUrl;
@@ -243,7 +239,7 @@ export class HardhatNetwork extends Network {
   }
 
   get rpcs(): string[] {
-    return this.rpc;
+    return [`http://localhost:${this.handler.port}`];
   }
 
   get specs(): NetworkSpecs {

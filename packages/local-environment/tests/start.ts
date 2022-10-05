@@ -23,8 +23,8 @@ import { NomadDomain } from "../src/domain";
 
     const le = new NomadEnv({domain: tDomain.network.domainNumber, id: '0x'+'20'.repeat(20)});
 
-    le.addDomain(tDomain);
-    le.addDomain(jDomain);
+    le.addNetwork(tDomain);
+    le.addNetwork(jDomain);
     log.info(`Added Tom and Jerry`);
 
     // Set keys
@@ -40,8 +40,8 @@ import { NomadDomain } from "../src/domain";
 
     // log.info(`Added Keys`)
     
-    tDomain.connectNetwork(jDomain);
-    jDomain.connectNetwork(tDomain);
+    tDomain.connectDomain(jDomain);
+    jDomain.connectDomain(tDomain);
     log.info(`Connected Tom and Jerry`);
 
     await le.upNetworks();

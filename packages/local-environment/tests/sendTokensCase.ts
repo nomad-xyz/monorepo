@@ -32,8 +32,8 @@ export function parseMessage(message: string): ParsedMessage {
     // Instantiate Nomad domains
     const tom = NomadDomain.newHardhatNetwork("tom", 1, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
     const jerry = NomadDomain.newHardhatNetwork("jerry", 2, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
-    le.addDomain(tom.network);
-    le.addDomain(jerry.network);
+    le.addNetwork(tom.network);
+    le.addNetwork(jerry.network);
 
     const sender = new Key();
     const receiver = new Key();
@@ -54,8 +54,8 @@ export function parseMessage(message: string): ParsedMessage {
 
     // log.info(`Added Keys`)
     
-    le.tDomain?.connectNetwork(le.jDomain!);
-    le.jDomain?.connectNetwork(le.tDomain!);
+    le.tDomain?.connectDomain(le.jDomain!);
+    le.jDomain?.connectDomain(le.tDomain!);
     log.info(`Connected Tom and Jerry`);
 
     await le.upNetworks();
