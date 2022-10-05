@@ -10,9 +10,12 @@ import { HardhatNetwork } from "./network";
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import { NomadContext } from "@nomad-xyz/sdk";
 
-if (!fs.existsSync("../../.env"))
-  dotenv.config({ path: __dirname + "/../.env.example" });
-else dotenv.config();
+const envFile = fs.realpathSync(process.cwd() + "/.env");
+const envFileBackup = fs.realpathSync(process.cwd() + "/.env.example");
+if (fs.existsSync(envFile))
+  dotenv.config({ path: envFile });
+else
+  dotenv.config({ path: envFileBackup });
 
 export class NomadEnv {
   domains: NomadDomain[];
