@@ -27,4 +27,10 @@ contract EncodingTest is Test {
         }
         assertEq(abi.encodePacked(input.decimalUint32()), bytes(str));
     }
+
+    function testFuzz_encodeHex(bytes32 input) public {
+        (uint256 a, uint256 b) = uint256(input).encodeHex();
+        string memory output = string(abi.encodePacked("0x", a, b));
+        assertEq(output, vm.toString(input));
+    }
 }
