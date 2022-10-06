@@ -1,12 +1,14 @@
 import Dockerode from "dockerode";
-
 import { DockerizedActor } from "./actor";
 import { EventEmitter } from "events";
 import { NomadDomain } from "./domain";
 import { NomadEnv } from "./nomadenv";
+import { ensureEnvFileIsLoaded } from "./env";
+
+ensureEnvFileIsLoaded();
 
 const kathyOn = false;
-const agentsImage = process.env.AGENTS_IMAGE || "gcr.io/nomad-xyz/nomad-agent:prestwich-remove-deploy-gas";
+const agentsImage = process.env.AGENTS_IMAGE;
 
 export class Agents {
   updater: Agent;

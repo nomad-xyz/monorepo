@@ -1,3 +1,7 @@
+## Adding tests
+
+If you add tests that require a new docker image for agents, update the `AGENTS_IMAGE` env var in `local-environment/.env`
+
 ## Bootup instructions
 
 If you want to test with mainnet forking, simply input your Alchemy API key into the `.env` file:
