@@ -70,8 +70,27 @@ test("Domains can connect to general domains", async () => {
     expect(domainbar.name).toEqual('localbar');
     domainfoo.connectDomain(domainbar);
     expect(domainfoo.connections()).toEqual(['localbar']);
+    expect(domainbar.connections()).toEqual(['localfoo']);
+});
+
+test("Domains can't connect to already connected domains", async () => {
+
+    const localfoo = NomadDomain.newHardhatNetwork('localfoo', 1337);
+    const domainfoo = new NomadDomain(localfoo.network);
+    const localbar = NomadDomain.newHardhatNetwork('localbar', 1338);
+    const domainbar = new NomadDomain(localbar.network);
+
+    expect(domainfoo.connections.length).toBe(0);
     expect(domainbar.connections.length).toBe(0);
+    expect(domainfoo.name).toEqual('localfoo');
+    expect(domainbar.name).toEqual('localbar');
+    domainfoo.connectDomain(domainbar);
+    expect(domainfoo.connections()).toEqual(['localbar']);
+    expect(domainbar.connections()).toEqual(['localfoo']);
+
+    // Shouldn't create duplicaates of either networks
     domainbar.connectDomain(domainfoo);
+    expect(domainfoo.connections()).toEqual(['localbar']);
     expect(domainbar.connections()).toEqual(['localfoo']);
 });
 

@@ -55,7 +55,6 @@ export function parseMessage(message: string): ParsedMessage {
     // log.info(`Added Keys`)
     
     le.tDomain?.connectDomain(le.jDomain!);
-    le.jDomain?.connectDomain(le.tDomain!);
     log.info(`Connected Tom and Jerry`);
 
     await le.upNetworks();

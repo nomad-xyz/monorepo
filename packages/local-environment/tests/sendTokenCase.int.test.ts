@@ -48,7 +48,6 @@ describe("Token test", () => {
     le.jDomain?.network.addKeys(receiver);
     
     le.tDomain?.connectDomain(le.jDomain!);
-    le.jDomain?.connectDomain(le.tDomain!);
     log.info(`Connected Tom and Jerry`);
 
     async function setUp() {

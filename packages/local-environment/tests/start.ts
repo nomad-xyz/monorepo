@@ -41,7 +41,6 @@ import { NomadDomain } from "../src/domain";
     // log.info(`Added Keys`)
     
     tDomain.connectDomain(jDomain);
-    jDomain.connectDomain(tDomain);
     log.info(`Connected Tom and Jerry`);
 
     await le.upNetworks();

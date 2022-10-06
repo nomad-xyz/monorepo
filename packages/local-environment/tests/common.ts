@@ -184,7 +184,6 @@ export async function setupTwo(log: Logger): Promise<{ le: NomadEnv }> {
   le.jDomain?.network.addKeys(receiver);
 
   le.tDomain?.connectDomain(le.jDomain!);
-  le.jDomain?.connectDomain(le.tDomain!);
   log.info(`Connected Tom and Jerry`);
 
   await le.upNetworks();
