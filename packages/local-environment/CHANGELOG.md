@@ -36,6 +36,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Unreleased
+* Local environment integration tests for killswitch
+* Add a helper for dockerized binaries
+* Make `.env` file handling more robust
 * V1.0 of local environment
 
 ## Features

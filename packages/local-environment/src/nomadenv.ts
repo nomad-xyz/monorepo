@@ -1,5 +1,4 @@
 import { NomadLocator, NomadConfig } from "@nomad-xyz/configuration";
-import * as dotenv from "dotenv";
 import { DeployContext } from "@nomad-xyz/deploy/src/DeployContext";
 import * as ethers from "ethers";
 import { NonceManager } from "@ethersproject/experimental";
@@ -9,10 +8,9 @@ import { NomadDomain } from "./domain";
 import { HardhatNetwork } from "./network";
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import { NomadContext } from "@nomad-xyz/sdk";
+import { ensureEnvFileIsLoaded } from "./env";
 
-if (!fs.existsSync("../../.env"))
-  dotenv.config({ path: __dirname + "/../.env.example" });
-else dotenv.config();
+ensureEnvFileIsLoaded();
 
 export class NomadEnv {
   domains: NomadDomain[];
