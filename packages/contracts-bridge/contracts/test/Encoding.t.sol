@@ -2,7 +2,6 @@
 pragma solidity 0.7.6;
 
 import {Test} from "forge-std/Test.sol";
-import {console2} from "forge-std/Console2.sol";
 import {Encoding} from "packages/contracts-bridge/contracts/Encoding.sol";
 
 contract EncodingTest is Test {
