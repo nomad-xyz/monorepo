@@ -70,7 +70,7 @@ export class NomadDomain {
   }
 
   connectDomain(d: NomadDomain): void {
-    if (!this.connections().includes(d.network.name)) {
+    if (!this.connections().includes(d.network.name) && d.name != this.network.name) {
       this.connectedNetworks.push(d);
       if (d.connectInReturn(this)) {
          d.connectDomain(this);

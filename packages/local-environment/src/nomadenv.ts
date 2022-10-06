@@ -297,7 +297,13 @@ export async function defaultStart(): Promise<NomadEnv> {
   await le.upNetworks();
 
   // Loop through to connect each network to each other
-  le.domains.map((d) => d.connectDomain(d));
+  for (const domain of le.domains) {
+    for (const connection of le.domains) {
+      if (domain.name != connection.name) {
+        domain.connectDomain(connection);
+      }
+    }
+  }
 
   // Notes, check governance router deployment on Jerry and see if that's actually even passing
   // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
