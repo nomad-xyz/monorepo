@@ -38,9 +38,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## Unreleased
 * Local environment integration tests for killswitch
 * Add a helper for dockerized binaries
-* Fix `.env` file handling
+* Make `.env` file handling more robust
 * V1.0 of local environment
-
+g
 ## Features
 
 ## Improvements
