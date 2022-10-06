@@ -1,5 +1,5 @@
 import { BigNumber } from '@ethersproject/bignumber';
-import { TransactionReceipt } from '@ethersproject/abstract-provider';
+// import { TransactionReceipt } from '@ethersproject/abstract-provider';
 
 // copied from Home.d.ts
 export type Dispatch = {
@@ -11,7 +11,6 @@ export type Dispatch = {
     message: string;
   };
   transactionHash: string;
-  receipt: TransactionReceipt;
 };
 
 export type ParsedMessage = {

@@ -68,13 +68,6 @@ export class NomadMessage<T extends NomadContext> {
   }
 
   /**
-   * The receipt of the TX that dispatched this message
-   */
-  get receipt(): TransactionReceipt {
-    return this.dispatch.receipt;
-  }
-
-  /**
    * Instantiate one or more messages from a receipt.
    *
    * @param context the {@link NomadContext} object to use
@@ -108,7 +101,6 @@ export class NomadMessage<T extends NomadContext> {
               message,
             },
             transactionHash: receipt.transactionHash,
-            receipt,
           };
           messages.push(new NomadMessage(context, dispatch));
         }
@@ -192,6 +184,32 @@ export class NomadMessage<T extends NomadContext> {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
     return await NomadMessage.baseSingleFromReceipt(context, receipt);
+  }
+
+  static async baseFromTransactionHashUsingBackend<T extends NomadContext>(
+    context: T,
+    transactionHash: string,
+  ): Promise<NomadMessage<T>[]> {
+    const dispatches = await context._dispatch({
+      transactionHash,
+    });
+    if (!dispatches) throw new Error(`No dispatch`);
+    return await Promise.all(dispatches.map(async (dispatch) => {
+      const d: Dispatch = {
+        args: {
+          messageHash: dispatch.messageHash,
+          leafIndex: BigNumber.from(dispatch.leafIndex),
+          destinationAndNonce: BigNumber.from(dispatch.destinationAndNonce),
+          committedRoot: dispatch.committedRoot,
+          message: dispatch.message,
+        },
+        transactionHash: dispatch.transactionHash,
+      };
+      const m = new NomadMessage(context, d);
+      await m._events();
+      return m
+    }))
+    // const messageWithDispatch = await NomadMessage.baseFromCache(context, eventCache);
   }
 
   /**

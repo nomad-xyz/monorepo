@@ -58,7 +58,19 @@ export type MessageProof = {
 export type EventFilter = {
   committedRoot: string, 
   messageHash: string,
+  transactionHash: string;
 };
+
+export interface Dispatch {
+  tag: "dispatch",
+  leafIndex: number;
+  destinationAndNonce: number;
+  committedRoot: string;
+  message: string;
+  messageHash: string;
+  transactionHash: string;
+  timestamp: string;
+}
 
 export interface Update {
   tag: "update",
@@ -80,6 +92,7 @@ export interface Process {
 }
 
 export type EventResult = {
+  // dispatch: Dispatch, 
   update?: Update, 
   relay?: Update,
   process?: Process,
@@ -101,10 +114,10 @@ export type EventResult = {
 export class NomadContext extends MultiProvider<config.Domain> {
   protected _cores: Map<string, CoreContracts<this>>;
   protected _blacklist: Set<number>;
-  protected _backend: EventBackend<EventFilter, EventResult>;
+  protected _backend: EventBackend<Partial<EventFilter>, EventResult, Dispatch>;
   readonly conf: config.NomadConfig;
 
-  constructor(environment: string | config.NomadConfig = 'development', backend: EventBackend<EventFilter, EventResult>) {
+  constructor(environment: string | config.NomadConfig = 'development', backend: EventBackend<Partial<EventFilter>, EventResult, Dispatch>) {
     super();
 
     const conf: config.NomadConfig =
@@ -408,7 +421,10 @@ export class NomadContext extends MultiProvider<config.Domain> {
     }
   }
 
-  async _events(f: EventFilter): Promise<EventResult> {
+  async _events(f: Partial<EventFilter>): Promise<EventResult> {
     return await this._backend.getEvents(f);
+  }
+  async _dispatch(f: Partial<EventFilter>): Promise<Dispatch[]> {
+    return await this._backend.getDispatch(f);
   }
 }
