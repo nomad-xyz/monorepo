@@ -111,20 +111,20 @@ contract GovernanceMessageTest is Test {
     function test_getBatchHashFuzzedIdenticalCalls(
         bytes memory data,
         bytes32 to,
-        uint8 nbrOfCalls
+        uint8 numCalls
     ) public {
-        vm.assume(nbrOfCalls > 0);
+        vm.assume(numCalls > 0);
         GovernanceMessage.Call[] memory calls = new GovernanceMessage.Call[](
-            nbrOfCalls
+            numCalls
         );
         bytes memory serializedCall = abi.encodePacked(
             to,
             uint32(data.length),
             data
         );
-        bytes memory prefix = abi.encodePacked(nbrOfCalls);
+        bytes memory prefix = abi.encodePacked(numCalls);
         bytes memory batch = prefix;
-        for (uint256 i = 0; i < nbrOfCalls; i++) {
+        for (uint256 i = 0; i < numCalls; i++) {
             calls[i] = GovernanceMessage.Call(to, data);
             batch = abi.encodePacked(batch, serializedCall);
         }
@@ -165,10 +165,9 @@ contract GovernanceMessageTest is Test {
         assert(GovernanceMessage.isValidBatch(data.ref(0)));
     }
 
-    function test_isValidBatchDetectBatchFuzzed(bytes memory data) public {
-        vm.assume(data.length == 32);
-        data = abi.encodePacked(hex"01", data);
-        assert(GovernanceMessage.isValidBatch(data.ref(0)));
+    function test_isValidBatchDetectBatchFuzzed(bytes32 data) public pure {
+        bytes memory dataByte = abi.encodePacked(hex"01", data);
+        assert(GovernanceMessage.isValidBatch(dataByte.ref(0)));
     }
 
     function test_isValidBatchWrongIdentifier() public {
@@ -195,17 +194,20 @@ contract GovernanceMessageTest is Test {
 
     function test_isValidBatchWrongIdentifierFuzzed(
         uint8 viewType,
-        bytes memory data
+        bytes32 data
     ) public {
-        vm.assume(data.length == 32 && viewType != 1);
-        data = abi.encodePacked(abi.encodePacked(viewType), data);
-        assertFalse(GovernanceMessage.isValidBatch(data.ref(0)));
+        vm.assume(viewType != 1);
+        bytes memory dataByte = abi.encodePacked(
+            abi.encodePacked(viewType),
+            data
+        );
+        assertFalse(GovernanceMessage.isValidBatch(dataByte.ref(0)));
     }
 
     function test_isValidBatchWrongLength() public {
         // batch type in the form of a uint8
         bytes memory data = hex"01";
-        // Append an empty bytes array of 32 bytes
+        // Append an empty bytes array of 23 bytes
         data = abi.encodePacked(data, new bytes(23));
         assertFalse(GovernanceMessage.isValidBatch(data.ref(0)));
     }
@@ -224,34 +226,32 @@ contract GovernanceMessageTest is Test {
         assertFalse(GovernanceMessage.isBatch(data.ref(2)));
     }
 
-    function test_isBatchDetectsViewTypeFuzzed(
-        uint8 viewType,
-        bytes memory data
-    ) public {
-        vm.assume(data.length == 32);
+    function test_isBatchDetectsViewTypeFuzzed(uint8 viewType, bytes32 data)
+        public
+    {
         bytes memory prefix = abi.encodePacked(viewType);
         // Append an empty bytes array of 32 bytes
-        data = abi.encodePacked(prefix, data);
+        bytes memory dataByte = abi.encodePacked(prefix, data);
         if (viewType == 1) {
-            assert(GovernanceMessage.isBatch(data.ref(viewType)));
+            assert(GovernanceMessage.isBatch(dataByte.ref(viewType)));
         } else {
-            assertFalse(GovernanceMessage.isBatch(data.ref(viewType)));
+            assertFalse(GovernanceMessage.isBatch(dataByte.ref(viewType)));
         }
     }
 
     function test_isBatchDifferentViewTypeToPrefixFuzzed(
         uint8 viewType,
-        bytes memory data
+        bytes32 data
     ) public {
-        vm.assume(data.length == 32 && viewType < 3);
+        vm.assume(viewType < 3);
         // the prefix is different to the type of the view
         bytes memory prefix = hex"01";
         // Append an empty bytes array of 32 bytes
-        data = abi.encodePacked(prefix, data);
+        bytes memory dataByte = abi.encodePacked(prefix, data);
         if (viewType == 1) {
-            assert(GovernanceMessage.isBatch(data.ref(viewType)));
+            assert(GovernanceMessage.isBatch(dataByte.ref(viewType)));
         } else {
-            assertFalse(GovernanceMessage.isBatch(data.ref(viewType)));
+            assertFalse(GovernanceMessage.isBatch(dataByte.ref(viewType)));
         }
     }
 
@@ -324,7 +324,7 @@ contract GovernanceMessageTest is Test {
         );
     }
 
-    function test_isValidTransferGovernorSuccess() public {
+    function test_isValidTransferGovernorSuccess() public pure {
         uint32 domain = 123;
         bytes32 governor = "all hail to the new governor";
         bytes memory data = abi.encodePacked(uint8(2), domain, governor);
