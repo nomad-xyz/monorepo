@@ -69,22 +69,14 @@ export class NomadDomain {
     if (!this.agents) this.agents = new Agents(this, metricsPort, docker, this.nomadEnv);
   }
 
-  connectDomain(d: NomadDomain): void {
+  connectDomain(d: NomadDomain, connectInReturn=true): void {
     if (!this.connections().includes(d.network.name) && d.name != this.network.name) {
       this.connectedNetworks.push(d);
-      if (d.connectInReturn(this)) {
-         d.connectDomain(this);
-      }
+      if (connectInReturn) {
+        d.connectDomain(this, false);
+     }
     }
   }
-
-  connectInReturn(d: NomadDomain): boolean {
-    if(this.connections().includes(d.network.name)) {
-      return false;
-    }
-    else return true;
-  }
-
 
   async areAgentsUp(): Promise<boolean | undefined> {
     return await this.agents?.areAllUp();
@@ -141,12 +133,12 @@ export class NomadDomain {
   }
 
   async networkUp(): Promise<void> {
-    await this.localNetEnsureKeys();
+    this.localNetEnsureKeys();
     await this.network.up();
   }
 
   async upAgents(metricsPort?: number, agentType?: string): Promise<void> {
-    await this.ensureAgents(metricsPort);
+    this.ensureAgents(metricsPort);
     await this.agents?.upAll(agentType);
   }
 

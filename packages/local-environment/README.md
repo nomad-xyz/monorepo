@@ -7,7 +7,7 @@ If you add tests that require a new docker image for agents, update the `AGENTS_
 If you want to test with mainnet forking, simply input your Alchemy API key into the `.env` file:
 
 ```sh
-ALCHEMY_API_KEY=your_api_key
+ALCHEMY_FORK_URL=your_api_key
 ```
 
 If you have no need for mainnet forking, proceed to the next step.

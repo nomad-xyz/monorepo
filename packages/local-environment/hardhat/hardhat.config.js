@@ -56,9 +56,9 @@ let hardhat = {
 };
 
 // If a mainnet fork, then replace hardhat configurations with the following.
-if (process.env.ALCHEMY_API_KEY) {
+if (process.env.ALCHEMY_FORK_URL) {
   hardhat = {
-    url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+    url: `${process.env.ALCHEMY_FORK_URL}`,
     blockNumber: parseInt(process.env.BLOCK_NUMBER),
   };
 };

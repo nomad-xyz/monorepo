@@ -23,8 +23,8 @@ describe("Token test", () => {
 
     const le = new NomadEnv({domain: 1, id: '0x'+'20'.repeat(20)});
 
-    if (process.env.ALCHEMY_API_KEY) {
-      log.info(`Using Alchemy API key ` + process.env.ALCHEMY_API_KEY + ` to start a forked network`);
+    if (process.env.ALCHEMY_FORK_URL) {
+      log.info(`Using Alchemy API ` + process.env.ALCHEMY_FORK_URL + ` to start a forked network`);
     };
     
     let tDomainNumber = 1;
@@ -38,8 +38,8 @@ describe("Token test", () => {
       jDomainNumber = parseInt(process.env.jDomainNumber);
     }
 
-    const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
-    const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
+    const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: le });
+    const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: le });
     le.addNetwork(tom.network);
     le.addNetwork(jerry.network);
     log.info(`Added Tom and Jerry`);

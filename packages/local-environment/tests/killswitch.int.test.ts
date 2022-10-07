@@ -69,8 +69,8 @@ describe("killswitch tests", () => {
     const setupBridge = async () => {
 
         env = new NomadEnv({domain: 1, id: '0x'+'20'.repeat(20)});
-        tom = NomadDomain.newHardhatNetwork("tom", 1, { forkurl: env.forkUrl, weth: env.wETHAddress, nomadEnv: env });
-        jerry = NomadDomain.newHardhatNetwork("jerry", 2, { forkurl: env.forkUrl, weth: env.wETHAddress, nomadEnv: env });
+        tom = NomadDomain.newHardhatNetwork("tom", 1, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: env });
+        jerry = NomadDomain.newHardhatNetwork("jerry", 2, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: env });
         env.addNetwork(tom.network);
         env.addNetwork(jerry.network);
         

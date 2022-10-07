@@ -145,15 +145,6 @@ export class NomadEnv {
     return false;
   }
 
-  get forkUrl(): string | undefined {
-    if (process.env.ALCHEMY_API_KEY)
-      return `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`;
-  }
-
-  get wETHAddress(): string {
-    return `${process.env.WETH_ADDRESS}`;
-  }
-
   get tDomain(): NomadDomain | undefined {
     return this.domains[0];
   }
@@ -271,8 +262,8 @@ export async function defaultStart(): Promise<NomadEnv> {
   });
 
   // Instantiates two mainnet forks.
-  const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
-  const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
+  const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: le });
+  const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: le });
   le.addNetwork(tom.network);
   le.addNetwork(jerry.network);
 
