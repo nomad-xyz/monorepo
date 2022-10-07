@@ -262,16 +262,8 @@ export async function defaultStart(): Promise<NomadEnv> {
   // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
   const log = bunyan.createLogger({ name: "localenv" });
 
-  let tDomainNumber = 1;
-  let jDomainNumber = 2;
-
-  if (process.env.tDomainNumber) {
-    tDomainNumber = parseInt(process.env.tDomainNumber);
-  }
-
-  if (process.env.jDomainNumber) {
-    jDomainNumber = parseInt(process.env.jDomainNumber);
-  }
+  const tDomainNumber = 1;
+  const jDomainNumber = 2;
 
   const le = new NomadEnv({
     domain: tDomainNumber,
