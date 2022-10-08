@@ -100,9 +100,8 @@ contract BridgeTokenTest is Test {
     }
 
     function test_renounceOwnershipNoOp() public {
+        address userA = token.owner();
         token.renounceOwnership();
-        uint256 gasAfter = gasleft();
-        // hardcoded gas for noop after testing
-        assertEq(gasAfter, 9223372036854747154);
+        assertEq(token.owner(), userA);
     }
 }
