@@ -71,22 +71,22 @@ describe("killswitch tests", () => {
         env = new NomadEnv({domain: 1, id: '0x'+'20'.repeat(20)});
         tom = NomadDomain.newHardhatNetwork("tom", 1, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: env });
         jerry = NomadDomain.newHardhatNetwork("jerry", 2, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: env });
-        env.addNetwork(tom.network);
-        env.addNetwork(jerry.network);
+        const tDomain = env.addNetwork(tom.network);
+        const jDomain = env.addNetwork(jerry.network);
         
-        env.tDomain?.connectDomain(env.jDomain!);
+        tDomain.connectDomain(jDomain);
 
         senderKey = new Key();
         receiverKey = new Key();
 
-        env.tDomain?.network.addKeys(senderKey);
-        env.jDomain?.network.addKeys(receiverKey);
+        tDomain.network.addKeys(senderKey);
+        jDomain.network.addKeys(receiverKey);
 
         await env.upNetworks();
 
-        const [tweth, jweth] = await Promise.all([env.tDomain?.network.deployWETH(), env.jDomain?.network.deployWETH()]);
-        env.tDomain?.network.setWETH(tweth);
-        env.jDomain?.network.setWETH(jweth);
+        const [tweth, jweth] = await Promise.all([tDomain.network.deployWETH(), jDomain.network.deployWETH()]);
+        tDomain.network.setWETH(tweth);
+        jDomain.network.setWETH(jweth);
 
         await env.deploy();
         await env.upAgents();
