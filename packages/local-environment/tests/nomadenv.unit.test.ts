@@ -13,16 +13,16 @@ test("NomadEnv should be initalizable", async () => {
     expect(le).toBeTruthy();
 
     const tom = NomadDomain.newHardhatNetwork("tom", 1, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: le });
-    le.addNetwork(tom.network);
-    assert.isTrue(le.domains.includes(le.tDomain!));
-    expect(le.govNetwork).toBe(le.tDomain);
+    const tDomain = le.addNetwork(tom.network);
+    assert.isTrue(le.domains.includes(tDomain));
+    expect(le.govNetwork).toBe(tDomain);
     // SDK
     expect(le.bridgeSDK).toBeDefined();
     expect(le.coreSDK).toBeDefined();
-    expect(le.getDomains()).toStrictEqual([le.tDomain]);
+    expect(le.getDomains()).toStrictEqual([tDomain]);
     expect(le.deployerKey).toEqual(process.env.PRIVATE_KEY);
     expect(le.deployedOnce()).toBe(false);
-    expect(le.tDomain).toBeDefined();
+    expect(tDomain).toBeDefined();
 
 });
 
