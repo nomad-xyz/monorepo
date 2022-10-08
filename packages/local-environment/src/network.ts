@@ -11,7 +11,6 @@ import Dockerode from "dockerode";
 import { sleep } from "./utils";
 import { ethers } from "ethers";
 import { Key } from "./keys/key";
-//import { getContractAddress } from "ethers/lib/utils";
 
 // A Network is any arbitrary blockchain, local or testnet.
 
@@ -51,7 +50,7 @@ export abstract class Network {
     addressOrIndex: string | number
   ): ethers.providers.JsonRpcSigner;
   abstract getJsonRpcProvider(): ethers.providers.JsonRpcProvider;
-  abstract setWETH(wethAddress: string | undefined): string | undefined;
+  abstract setWETH(wethAddress: string): string;
   abstract deployWETH(): Promise<string>;
   abstract addKeys(...keys: Key[]): void;
   abstract deployToken(
@@ -266,12 +265,9 @@ export class HardhatNetwork extends Network {
     };
   }
   
-  setWETH(wethAddress: string | undefined): string | undefined {
-    if (wethAddress) {
-      this.weth = wethAddress;
-      return this.weth;
-    }
-    return undefined;
+  setWETH(wethAddress: string): string {
+    this.weth = wethAddress;
+    return this.weth;
   }
 
   get bridgeConfig(): BridgeConfiguration {
