@@ -31,8 +31,8 @@ describe("NomadDomain test", () => {
         // Can add domains with undefined forkURL
         const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: le });
         const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: le });
-        le.addNetwork(tom.network);
-        le.addNetwork(jerry.network);
+        const tDomain = le.addNetwork(tom.network);
+        const jDomain = le.addNetwork(jerry.network);
         assert.isTrue(le.domains.includes(le.domains[0]));
 
         expect(le.govNetwork).to.equal(le.domains[0]);
@@ -46,24 +46,24 @@ describe("NomadDomain test", () => {
         expect(le.domains[0].agents).to.exist;
         expect(le.domains[1].agents).to.exist;
 
-        assert.isTrue(await le.tDomain?.areAgentsUp());
-        assert.isTrue(await le.tDomain?.agents!.updater.status());
-        assert.isTrue(await le.tDomain?.agents!.relayer.status());
-        assert.isTrue(await le.tDomain?.agents!.processor.status());
-        assert.isTrue(await le.jDomain?.areAgentsUp());
-        assert.isTrue(await le.jDomain?.agents!.updater.status());
-        assert.isTrue(await le.jDomain?.agents!.relayer.status());
-        assert.isTrue(await le.jDomain?.agents!.processor.status());
+        assert.isTrue(await tDomain.areAgentsUp());
+        assert.isTrue(await tDomain.agents!.updater.status());
+        assert.isTrue(await tDomain.agents!.relayer.status());
+        assert.isTrue(await tDomain.agents!.processor.status());
+        assert.isTrue(await jDomain.areAgentsUp());
+        assert.isTrue(await jDomain.agents!.updater.status());
+        assert.isTrue(await jDomain.agents!.relayer.status());
+        assert.isTrue(await jDomain.agents!.processor.status());
 
         const docker = new Docker();
 
-        const tUpdater = (le.tDomain?.agents!.updater as LocalAgent).containerName();
-        const tRelayer = (le.tDomain?.agents!.relayer as LocalAgent).containerName();
-        const tProcessor = (le.tDomain?.agents!.processor as LocalAgent).containerName();
+        const tUpdater = (tDomain.agents!.updater as LocalAgent).containerName();
+        const tRelayer = (tDomain.agents!.relayer as LocalAgent).containerName();
+        const tProcessor = (tDomain.agents!.processor as LocalAgent).containerName();
 
-        const jUpdater = (le.jDomain?.agents!.updater as LocalAgent).containerName();
-        const jRelayer = (le.jDomain?.agents!.relayer as LocalAgent).containerName();
-        const jProcessor = (le.jDomain?.agents!.processor as LocalAgent).containerName();
+        const jUpdater = (jDomain.agents!.updater as LocalAgent).containerName();
+        const jRelayer = (jDomain.agents!.relayer as LocalAgent).containerName();
+        const jProcessor = (jDomain.agents!.processor as LocalAgent).containerName();
 
         assert.isTrue((await docker.getContainer(tUpdater).inspect()).State.Running);
         assert.isTrue((await docker.getContainer(tRelayer).inspect()).State.Running);
@@ -74,8 +74,8 @@ describe("NomadDomain test", () => {
         assert.isTrue((await docker.getContainer(jProcessor).inspect()).State.Running);
 
         await le.downAgents();
-        assert.isFalse(await le.tDomain?.areAgentsUp());
-        assert.isFalse(await le.jDomain?.areAgentsUp()); 
+        assert.isFalse(await tDomain.areAgentsUp());
+        assert.isFalse(await jDomain.areAgentsUp()); 
 
         await assert.isRejected(docker.getContainer(tUpdater).inspect(), "no such container");
         await assert.isRejected(docker.getContainer(tRelayer).inspect(), "no such container");
@@ -87,15 +87,15 @@ describe("NomadDomain test", () => {
         // Can up networks
         await le.upNetworks();
 
-        assert.isTrue(await le.tDomain?.network.isConnected());
-        assert.isTrue(await le.jDomain?.network.isConnected());
+        assert.isTrue(await tDomain.network.isConnected());
+        assert.isTrue(await jDomain.network.isConnected());
 
-        assert.isTrue(await le.tDomain?.network.isConnected());
-        assert.isTrue(await le.jDomain?.network.isConnected());
+        assert.isTrue(await tDomain.network.isConnected());
+        assert.isTrue(await jDomain.network.isConnected());
 
         await le.down();
-        assert.isFalse(await le.tDomain?.network.isConnected());
-        assert.isFalse(await le.jDomain?.network.isConnected());
+        assert.isFalse(await tDomain.network.isConnected());
+        assert.isFalse(await jDomain.network.isConnected());
     });
 
 });

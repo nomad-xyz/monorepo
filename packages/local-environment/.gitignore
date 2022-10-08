@@ -1,3 +1,4 @@
 output/verification-*
 output/config.json
 !output/.gitkeep
+.env

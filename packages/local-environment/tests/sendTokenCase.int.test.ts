@@ -40,14 +40,14 @@ describe("Token test", () => {
 
     const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: le });
     const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: le });
-    le.addNetwork(tom.network);
-    le.addNetwork(jerry.network);
+    const tDomain = le.addNetwork(tom.network);
+    const jDomain = le.addNetwork(jerry.network);
     log.info(`Added Tom and Jerry`);
 
-    le.tDomain?.network.addKeys(sender);
-    le.jDomain?.network.addKeys(receiver);
+    tDomain.network.addKeys(sender);
+    jDomain.network.addKeys(receiver);
     
-    le.tDomain?.connectDomain(le.jDomain!);
+    tDomain.connectDomain(jDomain);
     log.info(`Connected Tom and Jerry`);
 
     async function setUp() {
@@ -57,9 +57,9 @@ describe("Token test", () => {
         // Notes, check governance router deployment on Jerry and see if that's actually even passing
         // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
     
-        const [tweth, jweth] = await Promise.all([le.tDomain?.network.deployWETH(), le.jDomain?.network.deployWETH()]);
-        le.tDomain?.network.setWETH(tweth);
-        le.jDomain?.network.setWETH(jweth);
+        const [tweth, jweth] = await Promise.all([tDomain.network.deployWETH(), jDomain.network.deployWETH()]);
+        tDomain.network.setWETH(tweth);
+        jDomain.network.setWETH(jweth);
         
         log.info(await le.deploy());
         
@@ -75,11 +75,11 @@ describe("Token test", () => {
     });
 
     it("should handle token creation, transfer logic", async function () {
-        expect(le.tDomain).to.not.be.undefined;
-        expect(le.jDomain).to.not.be.undefined;
+        expect(tDomain).to.not.be.undefined;
+        expect(jDomain).to.not.be.undefined;
         
         const tokenFactory = getCustomToken();
-        const tokenOnTom = await le.tDomain?.network.deployToken(
+        const tokenOnTom = await tDomain?.network.deployToken(
           tokenFactory,
           sender.toAddress(),
           "MyToken",
@@ -89,14 +89,14 @@ describe("Token test", () => {
         // const tDomain = le.domain(t).name;
         
         const token: TokenIdentifier = {
-          domain: le.tDomain!.network.name,
-          id: tokenOnTom!.address,
+          domain: tDomain.network.name,
+          id: tokenOnTom.address,
         };
         assert.exists(tokenFactory);
         assert.exists(tokenOnTom);
         assert.exists(token);
 
-        log.info(`Tokenfactory, token deployed:`, tokenOnTom!.address);
+        log.info(`Tokenfactory, token deployed:`, tokenOnTom.address);
 
         const ctx = le.getBridgeSDK();
         assert.exists(ctx);
@@ -104,8 +104,8 @@ describe("Token test", () => {
     
         // Default multiprovider comes with signer (`o.setSigner(jerry, signer);`) assigned
         // to each domain, but we change it to allow sending from different signer
-        ctx.registerWalletSigner(le.tDomain!.name, sender.toString());
-        ctx.registerWalletSigner(le.jDomain!.name, receiver.toString());
+        ctx.registerWalletSigner(tDomain.name, sender.toString());
+        ctx.registerWalletSigner(jDomain.name, receiver.toString());
         console.log(`registered wallet signers for tom and jerry`);
     
         // get 3 random amounts which will be bridged
@@ -117,7 +117,7 @@ describe("Token test", () => {
         assert.exists(amount3);
         log.info(`Preparation done`);
 
-        expect(await sendTokensAndConfirm(le, le.tDomain!, le.jDomain!, token, receiver.toAddress(), [
+        expect(await sendTokensAndConfirm(le, tDomain, jDomain, token, receiver.toAddress(), [
           amount1,
           amount2,
           amount3,
@@ -127,8 +127,8 @@ describe("Token test", () => {
 
         const tokenContract = await sendTokensAndConfirm(
           le,
-          le.jDomain!,
-          le.tDomain!,
+          jDomain,
+          tDomain,
           token,
           new Key().toAddress(),
           [amount3, amount2, amount1], log

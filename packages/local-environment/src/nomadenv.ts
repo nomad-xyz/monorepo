@@ -34,10 +34,11 @@ export class NomadEnv {
   }
 
   // Adds a network to the array of NomadDomains if it's not already there.
-  addNetwork(network: Network): void {
+  addNetwork(network: Network): NomadDomain {
     const d = new NomadDomain(network, this);
     if (!this.domains.includes(d)) this.domains.push(d);
     d.addNomadEnv(this);
+    return d;
   }
 
   // Gets governing network
@@ -143,14 +144,6 @@ export class NomadEnv {
   //@TODO Feature: switches after contracts exist
   deployedOnce(): boolean {
     return false;
-  }
-
-  get tDomain(): NomadDomain | undefined {
-    return this.domains[0];
-  }
-
-  get jDomain(): NomadDomain | undefined {
-    return this.domains[1];
   }
 
   get deployerKey(): string {
@@ -267,11 +260,9 @@ export async function defaultStart(): Promise<NomadEnv> {
   le.addNetwork(tom.network);
   le.addNetwork(jerry.network);
 
-  log.info(`Upped Tom and Jerry`);
-
-  log.info(`Initializing NomadEnv with domains`);
-
   await le.upNetworks();
+
+  log.info(`Upped Tom and Jerry`);
 
   // Loop through to connect each network to each other
   for (const domain of le.domains) {
