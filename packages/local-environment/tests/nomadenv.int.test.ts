@@ -17,16 +17,8 @@ describe("NomadDomain test", () => {
         });
         expect(le).to.exist;
         
-        let tDomainNumber = 1;
-        let jDomainNumber = 2;
-      
-        if (process.env.tDomainNumber) {
-          tDomainNumber = parseInt(process.env.tDomainNumber);
-        }
-      
-        if (process.env.jDomainNumber) {
-          jDomainNumber = parseInt(process.env.jDomainNumber);
-        }
+        const tDomainNumber = 1;
+        const jDomainNumber = 2;
 
         // Can add domains with undefined forkURL
         const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: le });
