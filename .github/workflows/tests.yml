@@ -10,7 +10,7 @@ jobs:
         with:
           node-version: "16.13.2"
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1 
+        uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
       - run: |
@@ -74,11 +74,6 @@ jobs:
           yarn build
       - run: |
           yarn test:unit
-      - name: "Check Gas snapshot"
-        continue-on-error: true
-        id: snapshot-check
-        run: |
-          yarn snapshot:check
       - name: "Inspect Storage Layout"
         continue-on-error: false
         id: storage-inspect-check
