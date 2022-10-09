@@ -5,9 +5,9 @@ import { NonceManager } from "@ethersproject/experimental";
 import fs from "fs";
 import bunyan from "bunyan";
 import { NomadDomain } from "./domain";
-import { HardhatNetwork } from "./network";
 import { BridgeContext } from "@nomad-xyz/sdk-bridge";
 import { NomadContext } from "@nomad-xyz/sdk";
+import { Network } from "./network";
 import { ensureEnvFileIsLoaded } from "./env";
 
 ensureEnvFileIsLoaded();
@@ -23,18 +23,22 @@ export class NomadEnv {
   constructor(governor: NomadLocator) {
     this.domains = [];
     this.governor = governor;
-    this.bridgeSDK = new BridgeContext(this.nomadConfig());
-    this.coreSDK = new NomadContext(this.nomadConfig());
+    this.bridgeSDK = new BridgeContext(this.nomadConfig);
+    this.coreSDK = new NomadContext(this.nomadConfig);
   }
 
-  refreshSDK(config: NomadConfig) {
+  refreshSDK(config: NomadConfig): BridgeContext {
     this.bridgeSDK = new BridgeContext(config);
+    this.coreSDK = new NomadContext(config);
+    return this.bridgeSDK;
   }
 
-  // Adds a network to the array of networks if it's not already there.
-  addDomain(d: NomadDomain) {
+  // Adds a network to the array of NomadDomains if it's not already there.
+  addNetwork(network: Network): NomadDomain {
+    const d = new NomadDomain(network, this);
     if (!this.domains.includes(d)) this.domains.push(d);
     d.addNomadEnv(this);
+    return d;
   }
 
   // Gets governing network
@@ -78,22 +82,23 @@ export class NomadEnv {
     this.outputConfigAndVerification(outputDir, deployContext);
     await this.outputCallBatch(outputDir, deployContext);
 
-    return deployContext
+    return deployContext;
   }
 
   async deploy(): Promise<DeployContext> {
     let context;
     if (this.deployedOnce()) {
       //TODO: INPUT RESUME DEPLOYMENT LOGIC HERE
-      throw new Error(`LOOK AT ME!`)
+      throw new Error(`LOOK AT ME!`);
     } else {
-      context = await this.deployFresh();
+      try {
+        context = await this.deployFresh();
+      } catch (e) {
+        console.error(e);
+        throw e;
+      }
     }
     this.refreshSDK(context.data);
-
-    // fs.writeFileSync('./conf.json', JSON.stringify(context.data));
-
-   
 
     // console.log(`=== DEPLOYED!`)
 
@@ -102,7 +107,7 @@ export class NomadEnv {
     return context;
   }
 
-  outputConfigAndVerification(outputDir: string, deployContext: DeployContext) {
+  outputConfigAndVerification(outputDir: string, deployContext: DeployContext): void {
     // output the config
     fs.mkdirSync(outputDir, { recursive: true });
     fs.writeFileSync(
@@ -120,7 +125,7 @@ export class NomadEnv {
     }
   }
 
-  async outputCallBatch(outputDir: string, deployContext: DeployContext) {
+  async outputCallBatch(outputDir: string, deployContext: DeployContext): Promise<void> {
     const governanceBatch = deployContext.callBatch;
     if (!governanceBatch.isEmpty()) {
       // build & write governance batch
@@ -155,7 +160,8 @@ export class NomadEnv {
 
   setDeployContext(): DeployContext {
     //@TODO remove re-initialization.
-    const deployContext = new DeployContext(this.nomadConfig());
+    this.log.info(this.nomadConfig);
+    const deployContext = new DeployContext(this.nomadConfig);
     // add deploy signer and overrides for each network
     for (const domain of this.domains) {
       const name = domain.network.name;
@@ -172,7 +178,7 @@ export class NomadEnv {
     return this.deployContext;
   }
 
-  nomadConfig(): NomadConfig {
+  get nomadConfig(): NomadConfig {
     return {
       version: 0,
       environment: "local",
@@ -210,76 +216,79 @@ export class NomadEnv {
     };
   }
 
-  
-
   //Input arguments to d.up to disable a specific agent.
-  async up() {
-    let metrics = 9000;
+  async up(): Promise<void> {
+    const metrics = 9000;
     await Promise.all(this.domains.map((d, i) => d.up(metrics + i * 10)));
   }
 
-  async down() {
+  async down(): Promise<void> {
     await Promise.all(this.domains.map((d) => d.down()));
   }
 
   //Input arguments to d.up to disable a specific agent.
-  async upAgents() {
-    let metrics = 9000;
+  async upAgents(): Promise<void> {
+    const metrics = 9000;
     await Promise.all(this.domains.map((d, i) => d.upAgents(metrics + i * 10)));
   }
 
-  async downAgents() {
+  async downAgents(): Promise<void> {
     await Promise.all(this.domains.map((d) => d.down()));
   }
 
-  async upNetworks() {
+  async upNetworks(): Promise<void> {
     // Await domains to up networks.
     await Promise.all(this.domains.map((d) => d.networkUp()));
   }
 }
 
-export async function defaultStart() {
+export async function defaultStart(): Promise<NomadEnv> {
   // Ups 2 new hardhat test networks tom and jerry to represent home chain and target chain.
   const log = bunyan.createLogger({ name: "localenv" });
 
-  // Instantiate HardhatNetworks
-  const t = new HardhatNetwork("tom", 1);
-  const j = new HardhatNetwork("jerry", 2);
-
-  // Instantiate Nomad domains
-  const tDomain = new NomadDomain(t);
-  const jDomain = new NomadDomain(j);
-
-  // Await domains to up networks.
-  await Promise.all([tDomain.network.up(), jDomain.network.up()]);
-
-  log.info(`Upped Tom and Jerry`);
+  const tDomainNumber = 1;
+  const jDomainNumber = 2;
 
   const le = new NomadEnv({
-    domain: tDomain.network.domainNumber,
+    domain: tDomainNumber,
     id: "0x" + "20".repeat(20),
   });
 
-  le.addDomain(tDomain);
-  le.addDomain(jDomain);
-  log.info(`Going to init NomadEnv with domains`, le.domains);
+  // Instantiates two mainnet forks.
+  const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: le });
+  const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: le });
+  le.addNetwork(tom.network);
+  le.addNetwork(jerry.network);
 
-  tDomain.connectNetwork(jDomain);
-  jDomain.connectNetwork(tDomain);
-  log.info(`Connected Tom and Jerry`);
+  await le.upNetworks();
+
+  log.info(`Upped Tom and Jerry`);
+
+  // Loop through to connect each network to each other
+  for (const domain of le.domains) {
+    for (const connection of le.domains) {
+      if (domain.name != connection.name) {
+        domain.connectDomain(connection);
+      }
+    }
+  }
 
   // Notes, check governance router deployment on Jerry and see if that's actually even passing
   // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
-  const [tweth, jweth] = await Promise.all([t.deployWETH(), j.deployWETH()]);
-  t.setWETH(tweth);
-  j.setWETH(jweth);
+  for (const domain of le.domains) {
+    if (!domain.network.weth) {
+      await Promise.all([domain.network.setWETH(await domain.network.deployWETH())]);
+    }
+  }
 
-  log.info(await le.deploy());
-
-  // let myContracts = le.deploymyproject();
-
+  log.info(`WETH Deployed at `, le.domains[0].network.weth);
+  
   await le.upAgents();
 
   log.info(`Agents up`);
+
+  log.info(await le.deploy());
+
+  return le;
 }

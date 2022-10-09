@@ -11,7 +11,6 @@ import Dockerode from "dockerode";
 import { sleep } from "./utils";
 import { ethers } from "ethers";
 import { Key } from "./keys/key";
-//import { getContractAddress } from "ethers/lib/utils";
 
 // A Network is any arbitrary blockchain, local or testnet.
 
@@ -39,24 +38,31 @@ export abstract class Network {
   recoveryManager: string;
   weth: string;
 
+  abstract up(): Promise<void>;
+  abstract down(): Promise<void>;
+  abstract isConnected(): Promise<boolean>;
   abstract get specs(): NetworkSpecs;
   abstract get rpcs(): string[];
   abstract get config(): ContractConfig;
   abstract get bridgeConfig(): BridgeConfiguration;
 
-  abstract up(): Promise<void>;
-  abstract down(): Promise<void>;
-  abstract isConnected(): Promise<boolean>;
   abstract getJsonRpcSigner(
     addressOrIndex: string | number
   ): ethers.providers.JsonRpcSigner;
   abstract getJsonRpcProvider(): ethers.providers.JsonRpcProvider;
+  abstract setWETH(wethAddress: string): string;
+  abstract deployWETH(): Promise<string>;
+  abstract addKeys(...keys: Key[]): void;
+  abstract deployToken(
+    contractFactory: ethers.ContractFactory,
+    from: string | ethers.providers.JsonRpcSigner,
+    ...args: string[]
+  ): Promise<ethers.Contract>;
 
   constructor(
     name: string,
     domainNumber: number,
     chainId: number,
-    blockTime = 10000
   ) {
     this.name = name;
     this.domainNumber = domainNumber;
@@ -66,7 +72,7 @@ export abstract class Network {
     this.watcher = "";
     this.recoveryManager = "";
     this.weth = "";
-    this.blockTime = blockTime;
+    this.blockTime = 10000;
   }
 
   get isDeployed(): boolean {
@@ -81,14 +87,14 @@ export class DockerizedNetworkActor extends DockerizedActor {
   blockTime: number;
   keys: Key[];
 
-  constructor(name: string) {
-    super(name, "network");
+  constructor(name: string, docker: Dockerode) {
+    super(name, "network", docker);
     this.port = ports++;
     this.blockTime = 2 * 1000;
     this.keys = [];
   }
 
-  addKeys(...keys: Key[]) {
+  addKeys(...keys: Key[]): void {
     // TODO: add a check that network hasn't started yet.
     // Keep in mind! That if the network is like a Test network which already exists,
     // we should adjust this method to create keys and fund them during the call to this method. 
@@ -174,20 +180,29 @@ export class HardhatNetwork extends Network {
   blockTime: number;
   keys: Key[];
   handler: DockerizedNetworkActor;
+  forkUrl?: string;
+  blockExplorer?: string;
+  docker: Dockerode;
 
-  constructor(name: string, domain: number, options?: HardhatNetworkOptions) {
+  constructor(name: string, domain: number, forkUrl?: string, wETHAddress?: string, docker?: Dockerode, options?: HardhatNetworkOptions, blockExplorer?: string) {
     super(name, domain, options?.chainId || domain);
-    this.handler = options?.handler || new DockerizedNetworkActor(this.name);
+    this.docker = docker || new Dockerode();
+    this.handler = options?.handler || new DockerizedNetworkActor(this.name, this.docker);
     this.blockTime = 10;
     this.firstStart = false;
     this.keys = options?.keys || [];
+    if (forkUrl && wETHAddress) {
+      this.weth = wETHAddress;
+      this.forkUrl = forkUrl;
+    }
+    this.blockExplorer = blockExplorer;
   }
 
-  clone(name: string, domain: number, options?: HardhatNetworkOptions): HardhatNetwork {
+  clone(name: string, domain: number, forkUrl?: string, wETHAddress?: string, blockExplorer?: string, docker?: Dockerode, options?: HardhatNetworkOptions): HardhatNetwork {
     if (!options) options = {};
     options.handler = this.handler;
     options.chainId = this.chainId;
-    return new HardhatNetwork(name, domain, options)
+    return new HardhatNetwork(name, domain, forkUrl, wETHAddress, docker, options, blockExplorer);
   }
 
   /* TODO: reimplement abstractions for MULTIPLE hardhat networks (i.e. any Nomad domain).
@@ -217,7 +232,7 @@ export class HardhatNetwork extends Network {
         
     */
 
-  addKeys(...ks: Key[]) {
+  addKeys(...ks: Key[]): void {
     this.handler.addKeys(...ks);
     this.keys.push(...ks);
   }
@@ -249,9 +264,10 @@ export class HardhatNetwork extends Network {
       watchers: [this.watcher],
     };
   }
-
-  setWETH(weth: string): void {
-    this.weth = weth;
+  
+  setWETH(wethAddress: string): string {
+    this.weth = wethAddress;
+    return this.weth;
   }
 
   get bridgeConfig(): BridgeConfiguration {
@@ -340,12 +356,12 @@ export class HardhatNetwork extends Network {
     return this.handler.isConnected();
   }
 
-  async up() {
+  async up(): Promise<void> {
     await this.connect();
     await this.start();
   }
 
-  async down() {
+  async down(): Promise<void> {
     await this.connect();
 
     await this.stop();

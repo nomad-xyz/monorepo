@@ -15,8 +15,16 @@ import { Agents, AgentType } from "./agent";
 import { ethers } from "ethers";
 import { AgentKeys } from "./keys/index";
 import { NomadEnv } from "./nomadenv";
+import Dockerode from "dockerode";
 
 // NomadDomain as a concept refers to settings, configs, and actors (agents, SDK) that are auxiliary to each arbitrary Network.
+
+export interface DomainOptions {
+  nomadEnv?: NomadEnv;
+  forkurl?: string,
+  weth?: string,  
+  docker?: Dockerode,
+}
 
 export class NomadDomain {
   agents?: Agents;
@@ -28,9 +36,9 @@ export class NomadDomain {
   connectedNetworks: NomadDomain[];
 
   constructor(network: Network, nomadEnv?: NomadEnv) {
+    this.network = network;
     this.connectedNetworks = [];
     this.keys = new AgentKeys();
-    this.network = network;
 
     this.nomadEnv = nomadEnv;
 
@@ -41,9 +49,15 @@ export class NomadDomain {
       watcher: signer,
       recoveryManager: signer,
     });
+
   }
 
-  addNomadEnv(e: NomadEnv) {
+  static newHardhatNetwork(name: string, domain: number, creationParams?: DomainOptions): NomadDomain {
+    const network = new HardhatNetwork(name, domain, creationParams?.forkurl, creationParams?.weth, creationParams?.docker);
+    return new NomadDomain(network, creationParams?.nomadEnv);
+  }
+
+  addNomadEnv(e: NomadEnv): void {
     this.nomadEnv = e;
   }
 
@@ -51,17 +65,21 @@ export class NomadDomain {
     return this.network.name;
   }
 
-  ensureAgents(metricsPort = 9090) {
-    if (!this.agents) this.agents = new Agents(this, metricsPort, this.nomadEnv);
+  ensureAgents(metricsPort = 9090, docker?: Dockerode): void {
+    if (!this.agents) this.agents = new Agents(this, metricsPort, docker, this.nomadEnv);
   }
 
-  connectNetwork(d: NomadDomain) {
-    if (!this.connections().includes(d.network.name))
+  connectDomain(d: NomadDomain, connectInReturn=true): void {
+    if (!this.connections().includes(d.network.name) && d.name != this.network.name) {
       this.connectedNetworks.push(d);
+      if (connectInReturn) {
+        d.connectDomain(this, false);
+     }
+    }
   }
 
-  async isAgentsUp(): Promise<boolean> {
-    return await this.agents!.isAllUp();
+  async areAgentsUp(): Promise<boolean | undefined> {
+    return await this.agents?.areAllUp();
   }
 
   /*
@@ -98,7 +116,7 @@ export class NomadDomain {
     updater?: Key;
     watcher?: Key;
     recoveryManager?: Key;
-  }) {
+  }): void {
     if (a.updater) this.network.updater = a.updater.toAddress();
     if (a.watcher) this.network.watcher = a.watcher.toAddress();
     if (a.recoveryManager)
@@ -109,38 +127,38 @@ export class NomadDomain {
     return this.connectedNetworks.map((d) => d.network.name);
   }
 
-  localNetEnsureKeys() {
+  localNetEnsureKeys(): void {
     // TODO: this is not thought through. Docker nets should have keys beforehand
     (this.network as HardhatNetwork).addKeys(...this.keys.array);
   }
 
-  async networkUp() {
-    await this.localNetEnsureKeys();
+  async networkUp(): Promise<void> {
+    this.localNetEnsureKeys();
     await this.network.up();
   }
 
-  async upAgents(metricsPort?: number, agentType?: string) {
-    await this.ensureAgents(metricsPort);
-    await this.agents!.upAll(agentType);
+  async upAgents(metricsPort?: number, agentType?: string): Promise<void> {
+    this.ensureAgents(metricsPort);
+    await this.agents?.upAll(agentType);
   }
 
-  async up(metricsPort?: number, agentType?: string) {
+  async up(metricsPort?: number, agentType?: string): Promise<void> {
     await this.networkUp();
     await this.upAgents(metricsPort, agentType);
   }
 
-  async down() {
+  async down(): Promise<[void | undefined, void]> {
     return await Promise.all([
       this.downAgents(),
       this.downNetwork(),
     ]);
   }
 
-  async downAgents() {
+  async downAgents(): Promise<void> {
     return await this.agents?.downAll();
   }
 
-  async downNetwork() {
+  async downNetwork(): Promise<void> {
     return await this.network.down();
   }
 
@@ -196,7 +214,7 @@ export class NomadDomain {
 
   processorConfig(subsidizedRemotes?: string[]): ProcessorConfig {
     if (subsidizedRemotes || this.nomadEnv) {
-      subsidizedRemotes = subsidizedRemotes || this.nomadEnv?.getDomains().map(d => d.name)
+      subsidizedRemotes = subsidizedRemotes || this.nomadEnv?.getDomains().map(d => d.name);
     }
     else {
       throw new Error(`No arg 'subsidizedRemotes' passed or no nomadEnv set`);
@@ -204,7 +222,7 @@ export class NomadDomain {
 
     return {
       interval: 5,
-      subsidizedRemotes: subsidizedRemotes!
+      subsidizedRemotes: subsidizedRemotes!,
     };
   }
 
@@ -292,6 +310,6 @@ export class NomadDomain {
   }
 
   get rpcs(): string[] {
-    return [this.network.rpcs[0]];
+    return this.network.rpcs;
   }
 }

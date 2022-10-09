@@ -42,19 +42,31 @@ if (process.env.BLOCK_TIME) {
   } catch (_) {}
 }
 
-console.log(`Staring with accounts:`, accounts.map(a=>a.privateKey))
+console.log(`Staring with accounts:`, accounts.map(a=>a.privateKey));
+
+let defaultNetwork = "hardhat";
+
+let hardhat = {
+  mining: {
+    auto: false,
+    interval: blockTime,
+  },
+  // url: "http://0.0.0.0:8545",
+  accounts,
+};
+
+// If a mainnet fork, then replace hardhat configurations with the following.
+if (process.env.ALCHEMY_FORK_URL) {
+  hardhat = {
+    url: `${process.env.ALCHEMY_FORK_URL}`,
+    blockNumber: parseInt(process.env.BLOCK_NUMBER),
+  };
+};
 
 module.exports = {
   solidity: "0.8.4",
-  defaultNetwork: "hardhat",
+  defaultNetwork: defaultNetwork,
   networks: {
-    hardhat: {
-      mining: {
-        auto: false,
-        interval: blockTime,
-      },
-      // url: "http://0.0.0.0:8545",
-      accounts,
-    },
+    hardhat: hardhat,
   },
 };

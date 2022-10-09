@@ -72,6 +72,8 @@ $ yarn install
 $ yarn build
 ```
 
+If you wish to interact with the local environment, Docker is a requirement and can be downloaded [here](https://www.docker.com/products/docker-desktop).
+
 ### Common yarn scripts
 
 Packages in this repo follow a standard yarn script template. New packages

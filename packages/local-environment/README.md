@@ -4,10 +4,18 @@ If you add tests that require a new docker image for agents, update the `AGENTS_
 
 ## Bootup instructions
 
-The following commands should be ran in monorepo root.
+If you want to test with mainnet forking, simply input your Alchemy API key into the `.env` file:
 
 ```sh
-./packages/local-environment/build.sh
+ALCHEMY_FORK_URL=your_api_key
+```
+
+If you have no need for mainnet forking, proceed to the next step.
+
+Then the following commands should be ran in monorepo root.
+
+```sh
+./packages/local-environment/prepare.sh
 ```
 
 The following should be done inside local-environment package root.
@@ -31,14 +39,14 @@ AGENTS_IMAGE=your_custom_image:some_tag
 
 Then, boot up docker.
 
-Run the following inside /packages/local-environment if this is your first time booting up.
-
-```sh
-yarn bootup
-```
-
 For any subsequent runs, do:
 
 ```sh
-yarn start
+yarn test:integration
+```
+
+or
+
+```sh
+yarn test:unit
 ```

@@ -10,29 +10,21 @@ import { NomadDomain } from "../src/domain";
     const log = bunyan.createLogger({name: 'localenv'});
 
     // Instantiate HardhatNetworks
-    const t = new HardhatNetwork('tom', 1);
-    const j = new HardhatNetwork('jerry', 2);
+
+    // Instantiate Nomad domains
+    const tDomain = new NomadDomain('tom',1);
+    const jDomain = new NomadDomain('jerry',1);
 
     const sender = new Key();
     const receiver = new Key();
 
-    t.addKeys(sender);
-    j.addKeys(receiver);
+    tDomain.network.addKeys(sender);
+    jDomain.network.addKeys(receiver);
 
-    // Instantiate Nomad domains
-    const tDomain = new NomadDomain(t);
-    const jDomain = new NomadDomain(j);
+    const le = new NomadEnv({domain: tDomain.network.domainNumber, id: '0x'+'20'.repeat(20)});
 
-
-
-    log.info(`Upped Tom and Jerry`);
-
-    log.info(`Upped Tom and Jerry`);
-
-    const le = new NomadEnv({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
-
-    le.addDomain(tDomain);
-    le.addDomain(jDomain);
+    le.addNetwork(tDomain);
+    le.addNetwork(jDomain);
     log.info(`Added Tom and Jerry`);
 
     // Set keys
@@ -48,8 +40,7 @@ import { NomadDomain } from "../src/domain";
 
     // log.info(`Added Keys`)
     
-    tDomain.connectNetwork(jDomain);
-    jDomain.connectNetwork(tDomain);
+    tDomain.connectDomain(jDomain);
     log.info(`Connected Tom and Jerry`);
 
     await le.upNetworks();
@@ -58,9 +49,9 @@ import { NomadDomain } from "../src/domain";
     // Notes, check governance router deployment on Jerry and see if that's actually even passing
     // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
-    const [tweth, jweth] = await Promise.all([t.deployWETH(), j.deployWETH()]);
-    t.setWETH(tweth);
-    j.setWETH(jweth);
+    const [tweth, jweth] = await Promise.all([tDomain.network.deployWETH(), jDomain.network.deployWETH()]);
+    tDomain.network.setWETH(tweth);
+    jDomain.network.setWETH(jweth);
 
     log.info(await le.deploy());
 
@@ -71,7 +62,7 @@ import { NomadDomain } from "../src/domain";
     // ]);
 
     
-    await le.upAgents()
+    await le.upAgents();
     // await le.upAgents({kathy:false, watcher: false}) // warning: nokathy.
     
 

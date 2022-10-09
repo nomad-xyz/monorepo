@@ -1,4 +1,4 @@
-import Docker from "dockerode";
+import Dockerode from "dockerode";
 import bunyan from "bunyan";
 import { EventEmitter } from "events";
 import { StreamMatcher } from "./utils";
@@ -24,17 +24,17 @@ export abstract class Actor {
 
 export abstract class DockerizedActor extends Actor {
   
-  docker: Docker;
-  container?: Docker.Container;
+  docker: Dockerode;
+  container?: Dockerode.Container;
   events: DockerEmitter;
   private eventsStream?: NodeJS.ReadableStream;
   logMatcher?: StreamMatcher;
 
   log = bunyan.createLogger({ name: "localenv" });
 
-  constructor(name: string, actorType: string) {
-    super(name, actorType)
-    this.docker = new Docker();
+  constructor(name: string, actorType: string, docker?: Dockerode) {
+    super(name, actorType);
+    this.docker = docker || new Dockerode();
     this.events = new DockerEmitter();
   }
 
@@ -46,7 +46,7 @@ export abstract class DockerizedActor extends Actor {
     return !!this.container;
   }
 
-  async isRunning(): Promise<boolean> {
+  async isRunning(): Promise<boolean>{
     const inspect = await this.container?.inspect();
     return !!inspect && inspect.State.Running;
   }
@@ -63,15 +63,15 @@ export abstract class DockerizedActor extends Actor {
   async stop(): Promise<void> {
     if (!this.isConnected()) throw new Error(`Not connected`);
     if (!(await this.isRunning())) {
-      this.log.info(`Attempted to stop container that is NOT running, proceeding without action`)
+      this.log.info(`Attempted to stop container that is NOT running, proceeding without action`);
     } else {
       if (this.container) {
         const containerId = this.container.id;
         const containerInfo = await this.container.inspect();
-        this.log.info(`Attempting to stop container that IS running, container id:`, containerId, containerInfo.Name)
+        this.log.info(`Attempting to stop container that IS running, container id:`, containerId, containerInfo.Name);
         try {
           await this.container.stop();
-          this.log.info(`Successfully stopped container with id '${containerId}'`)
+          this.log.info(`Successfully stopped container with id '${containerId}'`);
         } catch(e) {
           this.log.info(`Failed stopping container with id '${containerId}'! Error:`, e);
           throw e;
@@ -95,7 +95,7 @@ export abstract class DockerizedActor extends Actor {
     }
   }
 
-  async removeContainer() {
+  async removeContainer(): Promise<void> {
     await this.container?.remove();
 
     delete this.container;
@@ -121,7 +121,7 @@ export abstract class DockerizedActor extends Actor {
     return !!this.logMatcher;
   }
 
-  attachLogMatcher() {
+  attachLogMatcher(): void {
     if (this.isLogMatcherAttached()) return;
     if (!this.container) throw new Error(`Container doesnt exist yet!`);
 
@@ -142,15 +142,15 @@ export abstract class DockerizedActor extends Actor {
   registerAllLogEvents(): void {
     this.logMatcherRegisterEvent(
       "info_messages",
-      /INFO\".+\"message\"\:\"([^\"]+)/
+      /INFO".+"message":"([^"]+)/
     );
   }
 
-  detachLogMatcher() {
+  detachLogMatcher(): void {
     this.logMatcher?.end();
   }
 
-  logMatcherRegisterEvent(eventName: string, pattern: RegExp) {
+  logMatcherRegisterEvent(eventName: string, pattern: RegExp): void {
     if (!this.logMatcher) throw new Error(`No LogMatcher is attached`);
     this.logMatcher.register(pattern, (match) => {
       this.events.emit(`logs.${eventName}`, match);
@@ -166,7 +166,7 @@ export abstract class DockerizedActor extends Actor {
   }
 
   async subscribeToContainerEvents(): Promise<void> {
-    if (!this.isConnected()) throw new Error('Container is not connected')
+    if (!this.isConnected()) throw new Error('Container is not connected');
     if (this.isSubscribed()) return;
 
     const events = await this.docker.getEvents({
@@ -201,7 +201,7 @@ export abstract class DockerizedActor extends Actor {
 
   async disconnect(): Promise<void> {
     try {
-      await this.container?.remove()
+      await this.container?.remove();
     } catch(_) {
       // do nothing
     }
@@ -228,7 +228,7 @@ export abstract class DockerizedActor extends Actor {
     return containers[0]?.Id;
   }
 
-  abstract createContainer(): Promise<Docker.Container>;
+  abstract createContainer(): Promise<Dockerode.Container>;
 
   async getEvents(): Promise<EventEmitter> {
     await this.subscribeToContainerEvents();

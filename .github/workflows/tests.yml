@@ -73,8 +73,6 @@ jobs:
       - run: |
           yarn build
       - run: |
-          yarn bootup
-      - run: |
           yarn test:unit
       - name: "Inspect Storage Layout"
         continue-on-error: false

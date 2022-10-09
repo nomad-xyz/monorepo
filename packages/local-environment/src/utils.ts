@@ -1,11 +1,12 @@
 import * as Stream from "stream";
 import { ethers } from "ethers";
 
-export function sleep(ms: number) {
+export function sleep(ms: number): Promise<void> {
   return new Promise((res) => setTimeout(res, ms));
 }
 
 export function readLine(q: string): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const readline = require("readline");
 
   const rl = readline.createInterface({
@@ -70,17 +71,18 @@ export class Waiter<T> {
     this.timeout = setTimeout(this.doTimeout.bind(this), timeoutMs);
   }
 
-  fail(e: any) {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  fail(e: any): void {
     if (this.reject) this.reject(e);
     this.stop();
   }
 
-  succeed(value: T) {
+  succeed(value: T): void {
     if (this.resolve) this.resolve(value);
     this.stop();
   }
 
-  doTimeout() {
+  doTimeout(): void {
     if (this.resolve) this.resolve(null);
     this.stop();
   }
@@ -122,12 +124,13 @@ export class StreamMatcher extends Stream.Transform {
     this.subscribe();
   }
 
-  _transform(chunk: any, encoding: string, callback: Function) {
+  // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/explicit-module-boundary-types
+  _transform(chunk: any, encoding: string, callback: Function): void {
     this.push(chunk);
     callback();
   }
 
-  subscribe() {
+  subscribe(): void {
     this.on("data", async (chunk: Buffer) => {
       if (!this.pattern2executor.size) return;
 
@@ -176,7 +179,7 @@ export class StreamMatcher extends Stream.Transform {
   }
 }
 
-function domainHash(domain: Number): string {
+function domainHash(domain: number): string {
   return ethers.utils.solidityKeccak256(
     ["uint32", "string"],
     [domain, "NOMAD"]
@@ -189,8 +192,8 @@ export function signUpdate(
   oldRoot: string,
   newRoot: string
 ): Promise<string> {
-  let message = getMessage(domain, oldRoot, newRoot);
-  let msgHash = ethers.utils.arrayify(ethers.utils.keccak256(message));
+  const message = getMessage(domain, oldRoot, newRoot);
+  const msgHash = ethers.utils.arrayify(ethers.utils.keccak256(message));
   return signer.signMessage(msgHash);
 }
 

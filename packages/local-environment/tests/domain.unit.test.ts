@@ -1,73 +1,148 @@
-import { HardhatNetwork } from "../src/network";
 import { NomadDomain } from "../src/domain";
-import { expect, assert } from "chai";
 import { NomadEnv } from "../src/nomadenv";
-import { Agents } from "../src/agent";
+import { AgentType } from "../src/agent";
 
-describe("NomadDomain test", () => {
-    //TODO: We should implement any-network connection logic and test accordingly.
-    it('can create and operate domain from any hardhat network', async () => {
-        const t = new HardhatNetwork('tom', 1);
-        const j = new HardhatNetwork('jerry', 2);
-        const tDomain = new NomadDomain(t);
-        const jDomain = new NomadDomain(j);
-        tDomain.networkUp();
-        jDomain.networkUp();
-        expect(t).to.exist;
-        expect(j).to.exist;
-        expect(tDomain).to.exist;
-        expect(jDomain).to.exist;
-        expect(tDomain.networkJsonRpcProvider).to.exist;
-        expect(jDomain.networkJsonRpcProvider).to.exist;
-        // Name
-        expect(tDomain.domain.name).to.equal(t.name).to.equal(tDomain.name);
-        expect(jDomain.domain.name).to.equal(j.name).to.equal(jDomain.name);
-        // DomainNumber
-        expect(tDomain.domain.domain).to.equal(t.domainNumber);
-        expect(jDomain.domain.domain).to.equal(j.domainNumber);
-        // Connections
-        tDomain.connectNetwork(jDomain);
-        jDomain.connectNetwork(tDomain);
-        assert.isTrue(tDomain.connectedNetworks.includes(jDomain));
-        assert.isTrue(jDomain.connectedNetworks.includes(tDomain));
+jest.mock('dockerode');
 
-        // Addresses set
-        expect(t.updater).to.equal(tDomain.keys.getAgentAddress("signer"));
-        expect(t.watcher).to.equal(tDomain.keys.getAgentAddress("signer"));
-        expect(t.recoveryManager).to.equal(tDomain.keys.getAgentAddress("signer"));
-        expect(j.updater).to.equal(jDomain.keys.getAgentAddress("signer"));
-        expect(j.watcher).to.equal(jDomain.keys.getAgentAddress("signer"));
-        expect(j.recoveryManager).to.equal(jDomain.keys.getAgentAddress("signer"));
+beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-        // Domain agents
-        await tDomain.upAgents(9000);
-        await jDomain.upAgents(9010);
-        expect(tDomain.agents).to.exist;
-        expect(jDomain.agents).to.exist;
+test("Domains should be initalizable (without nomadEnv)", async () => {
 
-        assert.isTrue(await tDomain.isAgentsUp());
-        assert.isTrue(await tDomain.agents!.updater.status());
-        assert.isTrue(await tDomain.agents!.relayer.status());
-        assert.isTrue(await tDomain.agents!.processor.status());
-        assert.isTrue(await jDomain.isAgentsUp());
-        assert.isTrue(await jDomain.agents!.updater.status());
-        assert.isTrue(await jDomain.agents!.relayer.status());
-        assert.isTrue(await jDomain.agents!.processor.status());
+    const local = NomadDomain.newHardhatNetwork('local', 1337);
+    const domain = new NomadDomain(local.network);
 
-        await tDomain.downAgents();
-        await jDomain.downAgents();
+    expect(domain).toBeTruthy();
+    expect(domain.network).toBeDefined();
+    expect(domain.network.updater).toBeDefined();
+    expect(domain.network.watcher).toBeDefined();
+    expect(domain.network.recoveryManager).toBeDefined();
+    expect(domain.connections).toBeDefined();
+    expect(domain.nomadEnv).toBeUndefined();
+    expect(domain.name).toEqual('local');
+    expect(domain.networkRpcs).toBeDefined();
+    expect(domain.rpcs).toBeDefined();
+    expect(domain.watcherKeys).toBeDefined();
+    expect(domain.connectedNetworks).toStrictEqual([]);
+    
+});
 
-        assert.isFalse(await tDomain.isAgentsUp());
-        assert.isFalse(await jDomain.isAgentsUp());
+test("Domains can add NomadEnv", async () => {
 
-        // Add domains
-        const le = new NomadEnv({domain: t.domainNumber, id: '0x'+'20'.repeat(20)});
-        tDomain.addNomadEnv(le);
-        expect(tDomain.nomadEnv).to.equal(le);
+    const local = NomadDomain.newHardhatNetwork('local', 1337);
+    const domain = new NomadDomain(local.network);
 
-        // Down / cleanup
-        expect(await tDomain.downNetwork());
-        expect(await jDomain.downNetwork());
-    })
+    const le = new NomadEnv({domain: domain.network.domainNumber, id: '0x'+'20'.repeat(20)});
+    expect(le).toBeTruthy();
+    domain.addNomadEnv(le);
+    expect(domain.nomadEnv).toBeDefined();
+    expect(domain.nomadEnv).toEqual(le);
+    
+});
 
-})
+test("Domains can't connect to domains with identical names", async () => {
+
+    const localfoo = NomadDomain.newHardhatNetwork('local', 1337);
+    const domainfoo = new NomadDomain(localfoo.network);
+    const localbar = NomadDomain.newHardhatNetwork('local', 1338);
+    const domainbar = new NomadDomain(localbar.network);
+
+    expect(domainfoo.connections.length).toBe(0);
+    expect(domainbar.connections.length).toBe(0);
+    expect(domainfoo.name).toEqual('local');
+    expect(domainbar.name).toEqual('local');
+    domainfoo.connectDomain(domainbar);
+    expect(domainfoo.connections.length).toBe(0);
+    
+});
+
+test("Domains can connect to general domains", async () => {
+
+    const localfoo = NomadDomain.newHardhatNetwork('localfoo', 1337);
+    const domainfoo = new NomadDomain(localfoo.network);
+    const localbar = NomadDomain.newHardhatNetwork('localbar', 1338);
+    const domainbar = new NomadDomain(localbar.network);
+
+    expect(domainfoo.connections.length).toBe(0);
+    expect(domainbar.connections.length).toBe(0);
+    expect(domainfoo.name).toEqual('localfoo');
+    expect(domainbar.name).toEqual('localbar');
+    domainfoo.connectDomain(domainbar);
+    expect(domainfoo.connections()).toEqual(['localbar']);
+    expect(domainbar.connections()).toEqual(['localfoo']);
+});
+
+test("Domains can't connect to already connected domains", async () => {
+
+    const localfoo = NomadDomain.newHardhatNetwork('localfoo', 1337);
+    const domainfoo = new NomadDomain(localfoo.network);
+    const localbar = NomadDomain.newHardhatNetwork('localbar', 1338);
+    const domainbar = new NomadDomain(localbar.network);
+
+    expect(domainfoo.connections.length).toBe(0);
+    expect(domainbar.connections.length).toBe(0);
+    expect(domainfoo.name).toEqual('localfoo');
+    expect(domainbar.name).toEqual('localbar');
+    domainfoo.connectDomain(domainbar);
+    expect(domainfoo.connections()).toEqual(['localbar']);
+    expect(domainbar.connections()).toEqual(['localfoo']);
+
+    // Shouldn't create duplicaates of either networks
+    domainbar.connectDomain(domainfoo);
+    expect(domainfoo.connections()).toEqual(['localbar']);
+    expect(domainbar.connections()).toEqual(['localfoo']);
+});
+
+test("Domains can create agents if none present", async () => {
+
+    const local = NomadDomain.newHardhatNetwork('local', 1337);
+    const domain = new NomadDomain(local.network);
+
+    expect(domain.agents).toBeUndefined();
+    expect(await domain.areAgentsUp()).toBe(undefined);
+    domain.ensureAgents();
+    expect(domain.agents).toBeDefined();
+    expect(await domain.areAgentsUp()).toBe(false);
+    expect(await domain.agents?.areAllUp()).toBeFalsy();
+    
+});
+
+test("Domains can get agent keys and addresses", async () => {
+
+    const local = NomadDomain.newHardhatNetwork('local', 1337);
+    const domain = new NomadDomain(local.network);
+
+    expect(domain.agents).toBeUndefined();
+    expect(await domain.areAgentsUp()).toBe(undefined);
+    domain.ensureAgents();
+    expect(domain.agents).toBeDefined();
+    expect(await domain.areAgentsUp()).toBe(false);
+    expect(await domain.agents?.areAllUp()).toBeFalsy();
+
+    expect(domain.getAgentAddress(AgentType.Updater)).toStrictEqual('0x9C7BC14e8a4B054e98C6DB99B9f1Ea2797BAee7B');
+    expect(domain.getAgentSigner(AgentType.Updater).toAddress()).toStrictEqual('0x9C7BC14e8a4B054e98C6DB99B9f1Ea2797BAee7B');
+    
+});
+
+
+test("Configs are defined", async () => {
+
+    const local = NomadDomain.newHardhatNetwork('local', 1337);
+    const domain = new NomadDomain(local.network);
+    const le = new NomadEnv({domain: domain.network.domainNumber, id: '0x'+'20'.repeat(20)});
+
+    domain.addNomadEnv(le);
+    expect(domain.nomadEnv).toBeDefined();
+
+    expect(domain.agentConfig).toBeDefined();
+    expect(domain.kathyConfig).toBeDefined();
+    expect(domain.updaterConfig).toBeDefined();
+    expect(domain.watcherConfig).toBeDefined();
+    expect(domain.processorConfig).toBeDefined();
+    expect(domain.domain).toBeDefined();
+    expect(domain.bridgeConfig).toBeDefined();
+    expect(domain.gasConfig).toBeDefined();
+    expect(domain.specs).toBeDefined();
+
+});
