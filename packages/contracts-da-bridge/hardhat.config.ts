@@ -14,7 +14,10 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
   async (_, __, runSuper) => {
     const paths: string[] = await runSuper();
 
-    return paths.filter((p) => !p.endsWith(".t.sol") && !p.includes("test"));
+    return paths.filter(
+      (p) =>
+        !p.endsWith(".t.sol") && !p.endsWith(".s.sol") && !p.includes("test")
+    );
   }
 );
 
