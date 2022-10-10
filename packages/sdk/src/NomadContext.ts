@@ -92,10 +92,10 @@ export interface Process {
 }
 
 export type EventResult = {
-  // dispatch: Dispatch, 
-  update?: Update, 
-  relay?: Update,
-  process?: Process,
+  dispatch: Dispatch, 
+  update: Update, 
+  relay: Update,
+  process: Process,
 }
 
 
@@ -114,10 +114,10 @@ export type EventResult = {
 export class NomadContext extends MultiProvider<config.Domain> {
   protected _cores: Map<string, CoreContracts<this>>;
   protected _blacklist: Set<number>;
-  protected _backend: EventBackend<Partial<EventFilter>, EventResult, Dispatch>;
+  protected _backend: EventBackend<Partial<EventFilter>, Partial<EventResult>>;
   readonly conf: config.NomadConfig;
 
-  constructor(environment: string | config.NomadConfig = 'development', backend: EventBackend<Partial<EventFilter>, EventResult, Dispatch>) {
+  constructor(environment: string | config.NomadConfig = 'development', backend: EventBackend<Partial<EventFilter>, Partial<EventResult>>) {
     super();
 
     const conf: config.NomadConfig =
@@ -421,10 +421,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
     }
   }
 
-  async _events(f: Partial<EventFilter>): Promise<EventResult> {
+  async _events(f: Partial<EventFilter>): Promise<Partial<EventResult>> {
     return await this._backend.getEvents(f);
-  }
-  async _dispatch(f: Partial<EventFilter>): Promise<Dispatch[]> {
-    return await this._backend.getDispatch(f);
   }
 }

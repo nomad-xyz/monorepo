@@ -8,9 +8,8 @@ let ctx = new NomadContext('production', backend);
 
 
 (async () => {
-    const ms = await NomadMessage.baseFromTransactionHashUsingBackend(ctx, '0x83e3dcf9235ec286864fcdc9ff3cbb8bc8d19eba3d034f8ef5f642ad95a4a93b');
-    if (!ms[0]) throw new Error(`No message found`);
-    const m = ms[0];
+    const m = await NomadMessage.baseFromTransactionHashUsingBackend(ctx, '0x83e3dcf9235ec286864fcdc9ff3cbb8bc8d19eba3d034f8ef5f642ad95a4a93b');
+    if (!m) throw new Error(`No message found`);
 
     const p = await m.getProcess();
 

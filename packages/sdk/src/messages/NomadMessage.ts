@@ -52,10 +52,10 @@ export class NomadMessage<T extends NomadContext> {
   readonly replica: core.Replica;
 
   readonly context: T;
-  protected eventCache: EventResult;
+  protected eventCache: Partial<EventResult>;
   protected _confirmAt?: Date; 
 
-  constructor(context: T, dispatch: Dispatch) {
+  constructor(context: T, dispatch: Dispatch, eventCache?: Partial<EventResult>) {
     this.context = context;
     this.message = parseMessage(dispatch.args.message);
     this.dispatch = dispatch;
@@ -64,7 +64,7 @@ export class NomadMessage<T extends NomadContext> {
       this.message.from,
       this.message.destination,
     );
-    this.eventCache = {};
+    this.eventCache = eventCache || {};
   }
 
   /**
@@ -189,27 +189,27 @@ export class NomadMessage<T extends NomadContext> {
   static async baseFromTransactionHashUsingBackend<T extends NomadContext>(
     context: T,
     transactionHash: string,
-  ): Promise<NomadMessage<T>[]> {
-    const dispatches = await context._dispatch({
+  ): Promise<NomadMessage<T>> {
+    const events = await context._events({
       transactionHash,
     });
-    if (!dispatches) throw new Error(`No dispatch`);
-    return await Promise.all(dispatches.map(async (dispatch) => {
-      const d: Dispatch = {
-        args: {
-          messageHash: dispatch.messageHash,
-          leafIndex: BigNumber.from(dispatch.leafIndex),
-          destinationAndNonce: BigNumber.from(dispatch.destinationAndNonce),
-          committedRoot: dispatch.committedRoot,
-          message: dispatch.message,
-        },
-        transactionHash: dispatch.transactionHash,
-      };
-      const m = new NomadMessage(context, d);
-      await m._events();
-      return m
-    }))
-    // const messageWithDispatch = await NomadMessage.baseFromCache(context, eventCache);
+    const dispatch = events?.dispatch;
+    if (!dispatch) throw new Error(`No dispatch`);
+
+    const d: Dispatch = {
+      args: {
+        messageHash: dispatch.messageHash,
+        leafIndex: BigNumber.from(dispatch.leafIndex),
+        destinationAndNonce: BigNumber.from(dispatch.destinationAndNonce),
+        committedRoot: dispatch.committedRoot,
+        message: dispatch.message,
+      },
+      transactionHash: dispatch.transactionHash,
+    };
+    const m = new NomadMessage(context, d, events);
+    await m._events();
+
+    return m
   }
 
   /**
@@ -253,7 +253,7 @@ export class NomadMessage<T extends NomadContext> {
    *
    * @returns An record of all events and correlating txs
    */
-  private async _events(): Promise<EventResult> {
+  private async _events(): Promise<Partial<EventResult>> {
     if (this.eventCache.process) return this.eventCache;
     this.eventCache = await this.context._events({
       committedRoot: this.committedRoot,
