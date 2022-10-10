@@ -12,11 +12,19 @@ contract HomeTest is NomadTestWithUpdaterManager {
 
     uint256 dispatchedMessages;
 
+    uint256 messageMaxSize;
+
     function setUp() public override {
         super.setUp();
         home = new HomeHarness(homeDomain);
         home.initialize(IUpdaterManager(address(updaterManager)));
         updaterManager.setHome(address(home));
+
+        messageMaxSize = 2 * 2**10;
+    }
+
+    function test_maxMessage() public {
+        assertEq(home.MAX_MESSAGE_BODY_BYTES(), messageMaxSize);
     }
 
     event Dispatch(
@@ -92,6 +100,37 @@ contract HomeTest is NomadTestWithUpdaterManager {
         assertEq(uint256(home.nonces(remoteDomain)), nonce + 1);
     }
 
+    function testFuzz_dispatchSuccess(
+        bytes32 recipient,
+        address sender,
+        bytes memory messageBody,
+        uint32 destDomain
+    ) public {
+        uint32 nonce = home.nonces(destDomain);
+        bytes memory message = Message.formatMessage(
+            homeDomain,
+            bytes32(uint256(uint160(sender))),
+            nonce,
+            destDomain,
+            recipient,
+            messageBody
+        );
+        vm.assume(message.length < messageMaxSize);
+        bytes32 messageHash = keccak256(message);
+        vm.expectEmit(true, true, true, true);
+        // first message that is sent on this home
+        uint256 leafIndex = dispatchedMessages++;
+        emit Dispatch(
+            messageHash,
+            leafIndex,
+            (uint64(remoteDomain) << 32) | nonce,
+            home.committedRoot(),
+            message
+        );
+        vm.prank(sender);
+        home.dispatch(remoteDomain, recipient, messageBody);
+    }
+
     function test_dispatchRejectBigMessage() public {
         bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
         address sender = vm.addr(1555);
@@ -101,7 +140,7 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home.dispatch(remoteDomain, recipient, messageBody);
     }
 
-    function test_dispatchRejectFailedState() public {
+    function test_dispatchRevertFailedState() public {
         test_improperUpdate();
         vm.expectRevert("failed state");
         bytes memory messageBody = hex"3432bb02";
