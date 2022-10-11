@@ -5,7 +5,7 @@ import { EventFilter, EventResult } from "../NomadContext";
 
 
 export default abstract class EventBackend<Filter, Result> {
-    abstract getEvents(f: Partial<Filter>): Promise<Result>;
+    abstract getEvents(f: Filter): Promise<Result>;
 }
 
 
@@ -118,6 +118,7 @@ export class GoldSkyCoreBackend extends EventBackend<Partial<EventFilter>, Parti
 
 
         const response = await request(this.getUrl(), query, GoldSkyCoreBackend.fillFilter(f), headers);
+        if (response.subgraph_dispatch > 1) throw new Error(`More than one dispatch found for the query`);
         const dispatch = response.subgraph_dispatch[0];
         const update = response.subgraph_update[0];
         const relay = response.subgraph_update[1];
