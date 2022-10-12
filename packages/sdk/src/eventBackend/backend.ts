@@ -180,3 +180,167 @@ export class GoldSkyCoreBackend extends EventBackend<Partial<EventFilter>, Parti
     }
 }
 
+
+
+
+export type ErinMessageResult = {
+    committed_root: string,
+    destination_and_nonce: string,
+    destination_domain_id: number,
+    destination_domain_name: string,
+    dispatch_block: string,
+    dispatch_tx: string,
+    dispatched_at: string,
+    id: string,
+    leaf_index: string,
+    message: string,
+    message__action__amount: string,
+    message__action__details_hash: string,
+    message__action__to: string,
+    message__action__type: string,
+    message__token__domain: string,
+    message__token__id: string,
+    message_body: string,
+    message_hash: string,
+    message_type: string,
+    new_root: string,
+    nonce: number,
+    old_root: string,
+    origin_domain_id: number,
+    origin_domain_name: string,
+    process_block: string,
+    process_tx: string,
+    processed_at: string,
+    recipient_address: string,
+    relay_block: string,
+    relay_chain_id: number,
+    relay_tx: string,
+    relayed_at: string,
+    sender_address: string,
+    signature: string,
+    update_block: string,
+    update_chain_id: number,
+    update_tx: string,
+    updated_at: string,
+}
+
+
+export class ErinBackend extends EventBackend<Partial<EventFilter>, ErinMessageResult>{
+    env: string;
+    constructor(env: string) {
+        super();
+        this.env = env;
+    }
+
+    getUrl(): string {
+        return `https://${this.env}.goldsky.io/c/nomad/gql/v1/graphql`
+    }
+
+    static fillFilter(f: Partial<EventFilter>) {
+        return {
+            committedRoot: f.committedRoot || '',
+            messageHash: f.messageHash || '',
+            transactionHash: f.transactionHash || '',
+        }
+    }
+
+    async getEvents(f: Partial<EventFilter>): Promise<ErinMessageResult> {
+
+          const query = gql`
+            query Query($committedRoot: String, $messageHash: String, $transactionHash: String) {
+
+                    events(where: {_or: [{dispatch_tx: {_eq: $transactionHash}}, {message_hash: {_eq: $messageHash}}, {old_root: {_eq: $committedRoot}}]}) {
+                      committed_root
+                      destination_and_nonce
+                      destination_domain_id
+                      destination_domain_name
+                      dispatch_block
+                      dispatch_tx
+                      dispatched_at
+                      id
+                      leaf_index
+                      message
+                      message__action__amount
+                      message__action__details_hash
+                      message__action__to
+                      message__action__type
+                      message__token__domain
+                      message__token__id
+                      message_body
+                      message_hash
+                      message_type
+                      new_root
+                      nonce
+                      old_root
+                      origin_domain_id
+                      origin_domain_name
+                      process_block
+                      process_tx
+                      processed_at
+                      recipient_address
+                      relay_block
+                      relay_chain_id
+                      relay_tx
+                      relayed_at
+                      sender_address
+                      signature
+                      update_block
+                      update_chain_id
+                      update_tx
+                      updated_at
+                    }
+            }
+          `;
+
+          const headers = {
+            "content-type": "application/json",
+            "x-hasura-admin-secret": "yaZj76nCg5q"
+          }
+
+        const response = await request(this.getUrl(), query, GoldSkyCoreBackend.fillFilter(f), headers);
+
+        const r: ErinMessageResult = {
+            committed_root: response.events[0].committed_root,
+            destination_and_nonce: response.events[0].destination_and_nonce,
+            destination_domain_id: response.events[0].destination_domain_id,
+            destination_domain_name: response.events[0].destination_domain_name,
+            dispatch_block: response.events[0].dispatch_block,
+            dispatch_tx: response.events[0].dispatch_tx,
+            dispatched_at: response.events[0].dispatched_at,
+            id: response.events[0].id,
+            leaf_index: response.events[0].leaf_index,
+            message: response.events[0].message,
+            message__action__amount: response.events[0].message__action__amount,
+            message__action__details_hash: response.events[0].message__action__details_hash,
+            message__action__to: response.events[0].message__action__to,
+            message__action__type: response.events[0].message__action__type,
+            message__token__domain: response.events[0].message__token__domain,
+            message__token__id: response.events[0].message__token__id,
+            message_body: response.events[0].message_body,
+            message_hash: response.events[0].message_hash,
+            message_type: response.events[0].message_type,
+            new_root: response.events[0].new_root,
+            nonce: response.events[0].nonce,
+            old_root: response.events[0].old_root,
+            origin_domain_id: response.events[0].origin_domain_id,
+            origin_domain_name: response.events[0].origin_domain_name,
+            process_block: response.events[0].process_block,
+            process_tx: response.events[0].process_tx,
+            processed_at: response.events[0].processed_at,
+            recipient_address: response.events[0].recipient_address,
+            relay_block: response.events[0].relay_block,
+            relay_chain_id: response.events[0].relay_chain_id,
+            relay_tx: response.events[0].relay_tx,
+            relayed_at: response.events[0].relayed_at,
+            sender_address: response.events[0].sender_address,
+            signature: response.events[0].signature,
+            update_block: response.events[0].update_block,
+            update_chain_id: response.events[0].update_chain_id,
+            update_tx: response.events[0].update_tx,
+            updated_at: response.events[0].updated_at,
+        };
+
+        return r;
+    }
+}
+

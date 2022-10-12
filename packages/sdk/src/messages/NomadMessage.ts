@@ -9,7 +9,7 @@ import * as core from '@nomad-xyz/contracts-core';
 import { utils } from '@nomad-xyz/multi-provider';
 
 import { NomadContext } from '..';
-import { EventResult, MessageProof,  } from '../NomadContext';
+import { /*EventResult,*/ MessageProof,  } from '../NomadContext';
 import {
   Dispatch,
   ParsedMessage,
@@ -17,6 +17,7 @@ import {
   ReplicaStatusNames,
   ReplicaMessageStatus,
 } from './types';
+import { ErinMessageResult } from '../eventBackend';
 // import { EventBase, Process, Update } from '../eventBackend/events';
 
 /**
@@ -52,10 +53,10 @@ export class NomadMessage<T extends NomadContext> {
   readonly replica: core.Replica;
 
   readonly context: T;
-  protected eventCache: Partial<EventResult>;
+  protected eventCache: Partial<ErinMessageResult>;
   protected _confirmAt?: Date; 
 
-  constructor(context: T, dispatch: Dispatch, eventCache?: Partial<EventResult>) {
+  constructor(context: T, dispatch: Dispatch, eventCache?: Partial<ErinMessageResult>) {
     this.context = context;
     this.message = parseMessage(dispatch.args.message);
     this.dispatch = dispatch;
@@ -193,18 +194,18 @@ export class NomadMessage<T extends NomadContext> {
     const events = await context._events({
       transactionHash,
     });
-    const dispatch = events?.dispatch;
-    if (!dispatch) throw new Error(`No dispatch`);
+    // const dispatch = events?.dispatch;
+    if (!events.dispatch_block || !events.committed_root) throw new Error(`No dispatch`);
 
     const d: Dispatch = {
       args: {
-        messageHash: dispatch.messageHash,
-        leafIndex: BigNumber.from(dispatch.leafIndex),
-        destinationAndNonce: BigNumber.from(dispatch.destinationAndNonce),
-        committedRoot: dispatch.committedRoot,
-        message: dispatch.message,
+        messageHash: events.message_hash!,
+        leafIndex: BigNumber.from(events.leaf_index),
+        destinationAndNonce: BigNumber.from(events.destination_and_nonce),
+        committedRoot: events.committed_root!,
+        message: events.message!,
       },
-      transactionHash: dispatch.transactionHash,
+      transactionHash: events.dispatch_tx!,
     };
     const m = new NomadMessage(context, d, events);
     await m._events();
@@ -218,10 +219,10 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An relay tx (if any)
    */
   async getRelay(): Promise<string | undefined> {
-    if (!this.eventCache.relay) {
+    if (!this.eventCache.relay_tx) {
       await this._events();
     }
-    return this.eventCache.relay?.transactionHash;
+    return this.eventCache.relay_tx;
   }
 
   /**
@@ -230,10 +231,10 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An update tx (if any)
    */
   async getUpdate(): Promise<string | undefined> {
-    if (!this.eventCache.update) {
+    if (!this.eventCache.update_tx) {
       await this._events();
     }
-    return this.eventCache.update?.transactionHash;
+    return this.eventCache.update_tx;
   }
 
   /**
@@ -242,10 +243,10 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An process tx (if any)
    */
   async getProcess(): Promise<string | undefined> {
-    if (!this.eventCache.process) {
+    if (!this.eventCache.process_tx) {
       await this._events();
     }
-    return this.eventCache.process?.transactionHash;
+    return this.eventCache.process_tx;
   }
 
   /**
@@ -253,8 +254,8 @@ export class NomadMessage<T extends NomadContext> {
    *
    * @returns An record of all events and correlating txs
    */
-  private async _events(): Promise<Partial<EventResult>> {
-    if (this.eventCache.process) return this.eventCache;
+  private async _events(): Promise<Partial<ErinMessageResult>> {
+    if (this.eventCache.process_tx) return this.eventCache;
     this.eventCache = await this.context._events({
       committedRoot: this.committedRoot,
       messageHash: this.dispatch.args.messageHash,
@@ -290,8 +291,8 @@ export class NomadMessage<T extends NomadContext> {
   async confirmAt(): Promise<Date | undefined> {
     if (!this._confirmAt || this._confirmAt.valueOf() === 0) {
       await this._events();
-      if (this.eventCache.relay) {
-        const intTs = parseInt(this.eventCache.relay.timestamp); // may throw
+      if (this.eventCache.relay_tx) {
+        const intTs = parseInt(this.eventCache.relayed_at!); // may throw
         if (intTs <= 946684800000) {
           throw new Error(`That could not be`);
         }
@@ -379,13 +380,13 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An record of all events and correlating txs
    */
   async status(): Promise<MessageStatus | undefined> {
-    if (this.eventCache.process) return MessageStatus.Processed;
+    if (this.eventCache.process_tx) return MessageStatus.Processed;
 
     const confirmAt = await this.confirmAt();
     const now = new Date();
     if (confirmAt && confirmAt < now) return MessageStatus.Relayed;
 
-    if (this.eventCache.update) return MessageStatus.Included;
+    if (this.eventCache.update_tx) return MessageStatus.Included;
 
     return MessageStatus.Dispatched;
   }

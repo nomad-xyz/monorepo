@@ -7,7 +7,7 @@ import fetch from 'cross-fetch';
 
 import { CoreContracts } from './CoreContracts';
 import { NomadMessage } from './messages/NomadMessage';
-import EventBackend from './eventBackend/backend';
+import EventBackend, { ErinMessageResult } from './eventBackend/backend';
 
 export type Address = string;
 
@@ -114,10 +114,10 @@ export type EventResult = {
 export class NomadContext extends MultiProvider<config.Domain> {
   protected _cores: Map<string, CoreContracts<this>>;
   protected _blacklist: Set<number>;
-  protected _backend: EventBackend<Partial<EventFilter>, Partial<EventResult>>;
+  protected _backend: EventBackend<Partial<EventFilter>, Partial<ErinMessageResult>>;
   readonly conf: config.NomadConfig;
 
-  constructor(environment: string | config.NomadConfig = 'development', backend: EventBackend<Partial<EventFilter>, Partial<EventResult>>) {
+  constructor(environment: string | config.NomadConfig = 'development', backend: EventBackend<Partial<EventFilter>, Partial<ErinMessageResult>>) {
     super();
 
     const conf: config.NomadConfig =
@@ -421,7 +421,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
     }
   }
 
-  async _events(f: Partial<EventFilter>): Promise<Partial<EventResult>> {
+  async _events(f: Partial<EventFilter>): Promise<Partial<ErinMessageResult>> {
     return await this._backend.getEvents(f);
   }
 }
