@@ -9,7 +9,7 @@ import * as core from '@nomad-xyz/contracts-core';
 import { utils } from '@nomad-xyz/multi-provider';
 
 import { NomadContext } from '..';
-import { /*EventResult,*/ MessageProof,  } from '../NomadContext';
+import { MessageProof,  } from '../NomadContext';
 import {
   Dispatch,
   ParsedMessage,
@@ -17,8 +17,7 @@ import {
   ReplicaStatusNames,
   ReplicaMessageStatus,
 } from './types';
-import { ErinMessageResult } from '../eventBackend';
-// import { EventBase, Process, Update } from '../eventBackend/events';
+import MessageBackend from '../messageBackend/backend';
 
 /**
  * Parse a serialized Nomad message from raw bytes.
@@ -37,12 +36,6 @@ export function parseMessage(message: string): ParsedMessage {
   return { from, sender, nonce, destination, recipient, body };
 }
 
-// type EventCache = {
-//   update?: Update,// & EventBase,
-//   relay?: Update,// & EventBase,
-//   process?: Process,// & EventBase,
-// }
-
 /**
  * A deserialized Nomad message.
  */
@@ -53,11 +46,13 @@ export class NomadMessage<T extends NomadContext> {
   readonly replica: core.Replica;
 
   readonly context: T;
-  protected eventCache: Partial<ErinMessageResult>;
   protected _confirmAt?: Date; 
 
-  constructor(context: T, dispatch: Dispatch, eventCache?: Partial<ErinMessageResult>) {
+  readonly _backend?: MessageBackend;
+
+  constructor(context: T, dispatch: Dispatch, _backend?: MessageBackend) {
     this.context = context;
+    this._backend = _backend;
     this.message = parseMessage(dispatch.args.message);
     this.dispatch = dispatch;
     this.home = context.mustGetCore(this.message.from).home;
@@ -65,7 +60,14 @@ export class NomadMessage<T extends NomadContext> {
       this.message.from,
       this.message.destination,
     );
-    this.eventCache = eventCache || {};
+  }
+
+  get backend(): MessageBackend {
+    return this._backend || this.context._backend;
+  }
+
+  get messageHash(): string {
+    return this.dispatch.args.messageHash
   }
 
   /**
@@ -191,24 +193,10 @@ export class NomadMessage<T extends NomadContext> {
     context: T,
     transactionHash: string,
   ): Promise<NomadMessage<T>> {
-    const events = await context._events({
-      transactionHash,
-    });
-    // const dispatch = events?.dispatch;
-    if (!events.dispatch_block || !events.committed_root) throw new Error(`No dispatch`);
+    const dispatch = await context._backend.getDispatch(transactionHash);
+    if (!dispatch) throw new Error(`No dispatch`);
 
-    const d: Dispatch = {
-      args: {
-        messageHash: events.message_hash!,
-        leafIndex: BigNumber.from(events.leaf_index),
-        destinationAndNonce: BigNumber.from(events.destination_and_nonce),
-        committedRoot: events.committed_root!,
-        message: events.message!,
-      },
-      transactionHash: events.dispatch_tx!,
-    };
-    const m = new NomadMessage(context, d, events);
-    await m._events();
+    const m = new NomadMessage(context, dispatch);
 
     return m
   }
@@ -219,10 +207,7 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An relay tx (if any)
    */
   async getRelay(): Promise<string | undefined> {
-    if (!this.eventCache.relay_tx) {
-      await this._events();
-    }
-    return this.eventCache.relay_tx;
+    return await this.backend.relayTx(this.messageHash)
   }
 
   /**
@@ -231,10 +216,7 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An update tx (if any)
    */
   async getUpdate(): Promise<string | undefined> {
-    if (!this.eventCache.update_tx) {
-      await this._events();
-    }
-    return this.eventCache.update_tx;
+    return await this.backend.updateTx(this.messageHash)
   }
 
   /**
@@ -243,29 +225,7 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An process tx (if any)
    */
   async getProcess(): Promise<string | undefined> {
-    if (!this.eventCache.process_tx) {
-      await this._events();
-    }
-    return this.eventCache.process_tx;
-  }
-
-  /**
-   * Get all lifecycle events associated with this message
-   *
-   * @returns An record of all events and correlating txs
-   */
-  private async _events(): Promise<Partial<ErinMessageResult>> {
-    if (this.eventCache.process_tx) return this.eventCache;
-    this.eventCache = await this.context._events({
-      committedRoot: this.committedRoot,
-      messageHash: this.dispatch.args.messageHash,
-    })
-    
-    // await getEvents(
-    //   this.context.conf.environment,
-    //   this.transactionHash,
-    // );
-    return this.eventCache;
+    return await this.backend.processTx(this.messageHash)
   }
 
   /**
@@ -289,21 +249,7 @@ export class NomadMessage<T extends NomadContext> {
    * @returns The timestamp at which a message can confirm
    */
   async confirmAt(): Promise<Date | undefined> {
-    if (!this._confirmAt || this._confirmAt.valueOf() === 0) {
-      await this._events();
-      if (this.eventCache.relay_tx) {
-        const intTs = parseInt(this.eventCache.relayed_at!); // may throw
-        if (intTs <= 946684800000) {
-          throw new Error(`That could not be`);
-        }
-        const optimisticSeconds = 30*60*1000;
-        const confirmAt = new Date(intTs + optimisticSeconds);
-        this._confirmAt = confirmAt;
-      }
-    }
-
-    if (!this._confirmAt || this._confirmAt.valueOf() === 0) return;
-    return this._confirmAt;
+    return await this.backend.confirmAt(this.messageHash)
   }
 
   async process(): Promise<ContractTransaction> {
@@ -380,13 +326,13 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An record of all events and correlating txs
    */
   async status(): Promise<MessageStatus | undefined> {
-    if (this.eventCache.process_tx) return MessageStatus.Processed;
+    if (await this.getProcess()) return MessageStatus.Processed;
 
     const confirmAt = await this.confirmAt();
     const now = new Date();
     if (confirmAt && confirmAt < now) return MessageStatus.Relayed;
 
-    if (this.eventCache.update_tx) return MessageStatus.Included;
+    if (await this.getUpdate()) return MessageStatus.Included;
 
     return MessageStatus.Dispatched;
   }

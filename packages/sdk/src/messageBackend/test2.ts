@@ -1,7 +1,7 @@
 import { NomadContext, NomadMessage } from "..";
 import { ErinBackend } from "./backend";
 
-let backend = new ErinBackend('api');
+let backend = new ErinBackend('api', "yaZj76nCg5q");
 
 let ctx = new NomadContext('production', backend);
 

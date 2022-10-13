@@ -7,7 +7,7 @@ import fetch from 'cross-fetch';
 
 import { CoreContracts } from './CoreContracts';
 import { NomadMessage } from './messages/NomadMessage';
-import EventBackend, { ErinMessageResult } from './eventBackend/backend';
+import MessageBackend from './messageBackend/backend';
 
 export type Address = string;
 
@@ -55,49 +55,6 @@ export type MessageProof = {
   };
 };
 
-export type EventFilter = {
-  committedRoot: string, 
-  messageHash: string,
-  transactionHash: string;
-};
-
-export interface Dispatch {
-  tag: "dispatch",
-  leafIndex: number;
-  destinationAndNonce: number;
-  committedRoot: string;
-  message: string;
-  messageHash: string;
-  transactionHash: string;
-  timestamp: string;
-}
-
-export interface Update {
-  tag: "update",
-  homeDomain: number;
-  oldRoot: string;
-  newRoot: string;
-  signature: string;
-  transactionHash: string;
-  timestamp: string;
-}
-
-export interface Process {
-  tag: "process",
-  messageHash: string;
-  success: boolean;
-  returnData: string;
-  transactionHash: string;
-  timestamp: string;
-}
-
-export type EventResult = {
-  dispatch: Dispatch, 
-  update: Update, 
-  relay: Update,
-  process: Process,
-}
-
 
 /**
  * The NomadContext manages connections to Nomad core and Bridge contracts.
@@ -114,10 +71,10 @@ export type EventResult = {
 export class NomadContext extends MultiProvider<config.Domain> {
   protected _cores: Map<string, CoreContracts<this>>;
   protected _blacklist: Set<number>;
-  protected _backend: EventBackend<Partial<EventFilter>, Partial<ErinMessageResult>>;
+  readonly _backend: MessageBackend;
   readonly conf: config.NomadConfig;
 
-  constructor(environment: string | config.NomadConfig = 'development', backend: EventBackend<Partial<EventFilter>, Partial<ErinMessageResult>>) {
+  constructor(environment: string | config.NomadConfig = 'development', backend: MessageBackend) {
     super();
 
     const conf: config.NomadConfig =
@@ -419,9 +376,5 @@ export class NomadContext extends MultiProvider<config.Domain> {
       }
       throw e;
     }
-  }
-
-  async _events(f: Partial<EventFilter>): Promise<Partial<ErinMessageResult>> {
-    return await this._backend.getEvents(f);
   }
 }
