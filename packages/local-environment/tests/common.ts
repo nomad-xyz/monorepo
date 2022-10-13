@@ -171,19 +171,19 @@ export async function setupTwo(log: Logger): Promise<{ le: NomadEnv }> {
     jDomainNumber = parseInt(process.env.jDomainNumber);
   }
 
-  const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
-  const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: le.forkUrl, weth: le.wETHAddress, nomadEnv: le });
-  le.addNetwork(tom.network);
-  le.addNetwork(jerry.network);
+  const tom = NomadDomain.newHardhatNetwork("tom", tDomainNumber, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: le });
+  const jerry = NomadDomain.newHardhatNetwork("jerry", jDomainNumber, { forkurl: `${process.env.ALCHEMY_FORK_URL}`, weth: `${process.env.WETH_ADDRESS}`, nomadEnv: le });
+  const tDomain = le.addNetwork(tom.network);
+  const jDomain = le.addNetwork(jerry.network);
   log.info(`Added Tom and Jerry`);
 
   const sender = new Key();
   const receiver = new Key();
 
-  le.tDomain?.network.addKeys(sender);
-  le.jDomain?.network.addKeys(receiver);
+  tDomain.network.addKeys(sender);
+  jDomain.network.addKeys(receiver);
 
-  le.tDomain?.connectDomain(le.jDomain!);
+  tDomain.connectDomain(jDomain);
   log.info(`Connected Tom and Jerry`);
 
   await le.upNetworks();
@@ -192,9 +192,9 @@ export async function setupTwo(log: Logger): Promise<{ le: NomadEnv }> {
   // Notes, check governance router deployment on Jerry and see if that's actually even passing
   // ETHHelper deployment may be failing because of lack of governance router, either that or lack of wETH address.
 
-  const [tweth, jweth] = await Promise.all([le.tDomain?.network.deployWETH(), le.jDomain?.network.deployWETH()]);
-  le.tDomain?.network.setWETH(tweth);
-  le.jDomain?.network.setWETH(jweth);
+  const [tweth, jweth] = await Promise.all([tDomain.network.deployWETH(), jDomain.network.deployWETH()]);
+  tDomain.network.setWETH(tweth);
+  jDomain.network.setWETH(jweth);
 
   log.info(await le.deploy());
   

@@ -159,7 +159,6 @@ export class NomadEnv {
   }
 
   setDeployContext(): DeployContext {
-    //@TODO remove re-initialization.
     this.log.info(this.nomadConfig);
     const deployContext = new DeployContext(this.nomadConfig);
     // add deploy signer and overrides for each network
@@ -283,12 +282,12 @@ export async function defaultStart(): Promise<NomadEnv> {
   }
 
   log.info(`WETH Deployed at `, le.domains[0].network.weth);
-  
+
+  log.info(await le.deploy());
+
   await le.upAgents();
 
   log.info(`Agents up`);
-
-  log.info(await le.deploy());
 
   return le;
 }

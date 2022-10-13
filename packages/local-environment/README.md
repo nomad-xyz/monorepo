@@ -1,3 +1,8 @@
+# Nomad Local Environment 
+
+This package enable full-stack, integration and end-to-end tests for the Nomad Protocol.
+For full documentation, please see [here](https://hackmd.io/YMqbk5MoRTiAMwChrcagXA).
+
 ## Adding tests
 
 If you add tests that require a new docker image for agents, update the `AGENTS_IMAGE` env var in `local-environment/.env`
