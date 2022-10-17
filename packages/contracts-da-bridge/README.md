@@ -21,7 +21,7 @@ For testing, we use [Foundry](https://getfoundry.sh/).
 ## Deploying Contracts for Demo
 
 - In the `packages/contracts-da-bridge` directory, populate your `.env` file according the `.env.example` file
-- In the `packages/contracts-da-bridge` directory, run the following command `export $(grep -v '^#' .env | xargs); forge script contracts/script/DeployDemo.s.sol --rpc-url $GOERLI_RPC_URL --etherscan-api-key $ETHERSCAN_KEY --broadcast -vvvv --private-key $PRIVATE_KEY --slow`
+- In the `packages/contracts-da-bridge` directory, run the following command `export $(grep -v '^#' .env | xargs); forge script contracts/script/DeployDemo.s.sol --rpc-url $GOERLI_RPC_URL --etherscan-api-key $ETHERSCAN_API_KEY --broadcast -vvvv --private-key $PRIVATE_KEY --slow`
 - Find the newly deployed contract addresses in the monorepo root `broadcast` folder
 
 ### Suggested workflow
