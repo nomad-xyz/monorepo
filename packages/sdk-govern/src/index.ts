@@ -3,6 +3,7 @@ import { NomadContext, CoreContracts } from '@nomad-xyz/sdk';
 
 import * as utils from './utils';
 import { UnreachableError } from '@nomad-xyz/multi-provider';
+import EventBackend from '@nomad-xyz/sdk/src/eventBackend/backend';
 export { parseAction, Action } from './GovernanceMessage';
 
 export type Address = string;
@@ -56,7 +57,7 @@ export class CallBatch {
     this.local = [];
   }
 
-  static fromContext(context: NomadContext | string): CallBatch {
+  static fromContext(context: NomadContext | string, backend?: EventBackend<EventFilter, EventResult>): CallBatch {
     const ctx =
       typeof context === 'string' ? new NomadContext(context) : context;
     const governorDomain = ctx.governor.domain;

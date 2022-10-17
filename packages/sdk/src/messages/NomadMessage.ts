@@ -9,7 +9,7 @@ import * as core from '@nomad-xyz/contracts-core';
 import { utils } from '@nomad-xyz/multi-provider';
 
 import { NomadContext } from '..';
-import { MessageProof,  } from '../NomadContext';
+import { MessageProof } from '../NomadContext';
 import {
   Dispatch,
   ParsedMessage,

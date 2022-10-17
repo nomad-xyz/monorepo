@@ -8,6 +8,7 @@ import fetch from 'cross-fetch';
 import { CoreContracts } from './CoreContracts';
 import { NomadMessage } from './messages/NomadMessage';
 import MessageBackend from './messageBackend/backend';
+import { GoldSkyBackend } from './messageBackend';
 
 export type Address = string;
 
@@ -74,7 +75,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
   readonly _backend: MessageBackend;
   readonly conf: config.NomadConfig;
 
-  constructor(environment: string | config.NomadConfig = 'development', backend: MessageBackend) {
+  constructor(environment: string | config.NomadConfig = 'development', backend?: MessageBackend) {
     super();
 
     const conf: config.NomadConfig =
@@ -86,7 +87,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
     this.conf = conf;
     this._cores = new Map();
     this._blacklist = new Set();
-    this._backend = backend;
+    this._backend = backend || GoldSkyBackend.default(environment);
 
     for (const network of this.conf.networks) {
       // register domain

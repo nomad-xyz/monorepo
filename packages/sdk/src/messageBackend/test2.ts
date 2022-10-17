@@ -1,9 +1,11 @@
 import { NomadContext, NomadMessage } from "..";
-import { ErinBackend } from "./backend";
+// import { GoldSkyBackend } from "./backend";
 
-let backend = new ErinBackend('api', "yaZj76nCg5q");
+// const GOLDSKY_SECRET = "yaZj76nCg5q";
 
-let ctx = new NomadContext('production', backend);
+// const backend = GoldSkyBackend.defaultBackend();
+
+let ctx = new NomadContext('production');
 
 (async () => {
     const m = await NomadMessage.baseFromTransactionHashUsingBackend(ctx, '0x83e3dcf9235ec286864fcdc9ff3cbb8bc8d19eba3d034f8ef5f642ad95a4a93b');
