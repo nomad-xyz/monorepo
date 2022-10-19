@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/contracts-da-bridge",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Nomad bridge with Polygon Avil",
   "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/contracts-da-bridge#readme",
   "bugs": {
