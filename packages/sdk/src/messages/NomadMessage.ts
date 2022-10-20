@@ -16,8 +16,8 @@ import {
   MessageStatus,
   ReplicaStatusNames,
   ReplicaMessageStatus,
-} from './types';
-import MessageBackend from '../messageBackend/backend';
+} from '.';
+import {MessageBackend} from '../messageBackend';
 
 /**
  * Parse a serialized Nomad message from raw bytes.

@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers';
 import { request, gql } from 'graphql-request';
-import { Dispatch } from '../messages/types';
-import MessageBackend from './backend';
+import { Dispatch } from '../messages';
+import {MessageBackend} from './backend';
 import * as config from '@nomad-xyz/configuration';
 
 const defaultGoldSkySecret = "yaZj76nCg5q";

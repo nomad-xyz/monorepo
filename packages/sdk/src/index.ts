@@ -6,4 +6,7 @@ export { FailedHomeError } from './error';
 
 export { NomadContext } from './NomadContext';
 
-export * from './messages/types';
+export * from './messages';
+
+export * from './messageBackend';
+

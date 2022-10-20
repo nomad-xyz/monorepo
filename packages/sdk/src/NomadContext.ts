@@ -7,7 +7,7 @@ import fetch from 'cross-fetch';
 
 import { CoreContracts } from './CoreContracts';
 import { NomadMessage } from './messages/NomadMessage';
-import MessageBackend from './messageBackend/backend';
+import {MessageBackend} from './messageBackend';
 import { GoldSkyBackend } from './messageBackend';
 
 export type Address = string;
