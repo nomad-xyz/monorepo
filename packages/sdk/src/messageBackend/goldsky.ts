@@ -4,7 +4,7 @@ import { Dispatch } from '../messages';
 import {MessageBackend} from './backend';
 import * as config from '@nomad-xyz/configuration';
 
-const defaultGoldSkySecret = "yaZj76nCg5q";
+const defaultGoldSkySecret = "";
 
 /**
  * Filter that is used to fetch data from GoldSky
