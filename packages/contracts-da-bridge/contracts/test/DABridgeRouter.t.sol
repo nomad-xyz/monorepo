@@ -47,19 +47,29 @@ contract DABridgeRouterTest is Test {
     }
 
     function test_failsInvalidDomain() public {
-        bytes memory message = DABridgeMessage.formatDataRoot(
-            _blockNumber,
-            _dataRoot
-        );
+        DABridgeMessage.DataRootBatchItem[]
+            memory _dataRoots = new DABridgeMessage.DataRootBatchItem[](1);
+
+        _dataRoots[0] = DABridgeMessage.DataRootBatchItem({
+            dataRoot: _dataRoot,
+            blockNumber: _blockNumber
+        });
+
+        bytes memory message = DABridgeMessage.formatDataRootBatch(_dataRoots);
         vm.expectRevert("!valid domain");
         router.handle(invalidDomain, uint32(0), remoteRouter, message);
     }
 
     function test_handleSuccess() public {
-        bytes memory message = DABridgeMessage.formatDataRoot(
-            _blockNumber,
-            _dataRoot
-        );
+        DABridgeMessage.DataRootBatchItem[]
+            memory _dataRoots = new DABridgeMessage.DataRootBatchItem[](1);
+
+        _dataRoots[0] = DABridgeMessage.DataRootBatchItem({
+            dataRoot: _dataRoot,
+            blockNumber: _blockNumber
+        });
+
+        bytes memory message = DABridgeMessage.formatDataRootBatch(_dataRoots);
         uint64 originAndNonce = (uint64(domain) << 32) | 0;
         vm.expectEmit(true, true, false, true);
         emit DataRootReceived(originAndNonce, _blockNumber, _dataRoot);

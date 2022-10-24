@@ -74,7 +74,7 @@ contract DABridgeRouter is Version0, Router {
     ) external override onlyReplica onlyRemoteRouter(_origin, _sender) {
         require(_origin == _availDomain, "!valid domain");
         bytes29 _view = _message.ref(0).getTypedView();
-        if (_view.isValidDataRoot()) {
+        if (_view.isValidDataRootBatch()) {
             _handleDataRoot(_origin, _nonce, _view);
         } else {
             revert("!valid message");
@@ -94,27 +94,20 @@ contract DABridgeRouter is Version0, Router {
         uint32 _nonce,
         bytes29 _message
     ) internal {
-        (uint32 blockNumber, bytes32 dataRoot) = _parse(_message);
-        assert(roots[blockNumber] == 0);
-        roots[blockNumber] = dataRoot;
-        emit DataRootReceived(
-            _originAndNonce(_origin, _nonce),
-            blockNumber,
-            dataRoot
-        );
-    }
+        DABridgeMessage.DataRootBatchItem[] memory batch = _message
+            .dataRootBatch();
+        for (uint256 i = 0; i < batch.length; i++) {
+            bytes32 root = batch[i].dataRoot;
+            uint32 blockNumber = batch[i].blockNumber;
+            assert(roots[blockNumber] == 0);
 
-    /**
-     * @notice parse blockNumber and root from message and emit event
-     * @param _message The message in the form of raw bytes
-     */
-    function _parse(bytes29 _message)
-        internal
-        pure
-        returns (uint32 blockNumber, bytes32 dataRoot)
-    {
-        blockNumber = _message.blockNumber();
-        dataRoot = _message.dataRoot();
+            roots[blockNumber] = root;
+            emit DataRootReceived(
+                (uint64(_origin) << 32) | uint64(_nonce),
+                blockNumber,
+                root
+            );
+        }
     }
 
     // ============ Internal: Utils ============
