@@ -69,6 +69,7 @@ module.exports = {
       "ETHHelper",
       "TokenRegistry",
       "ERC20",
+      "AllowListNFTRecoveryAccountant",
     ],
     includeFactories: true,
   },
