@@ -4,9 +4,6 @@ pragma solidity 0.7.6;
 import {MockWeth} from "./utils/MockWeth.sol";
 import "forge-std/Test.sol";
 
-// Tests are largely based on ERC20Test from solmate
-// Thank you t11s et al.
-
 contract BridgeTokenTest is Test {
     MockWeth token;
 
