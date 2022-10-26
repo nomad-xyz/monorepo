@@ -38,7 +38,7 @@ Published packages:
 
 Tooling and other unpublished packages:
 
-- `local-enviroment`
+- `local-environment`
 - `deploy`
 - `indexer`
 
