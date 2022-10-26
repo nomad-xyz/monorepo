@@ -276,7 +276,6 @@ contract NFTRecoveryAccountantTest is Test {
         // approve the accountant to spend the tokens
         vm.prank(handler);
         mockToken.approve(address(accountant), _amount);
-        vm.stopPrank();
         // totalCollected should start at zero
         assertEq(accountant.totalCollected(address(mockToken)), 0);
         // call special collect function to move tokens into accountant
@@ -291,6 +290,13 @@ contract NFTRecoveryAccountantTest is Test {
         // prank non-owner address
         vm.prank(recipient);
         vm.expectRevert("Ownable: caller is not the owner");
+        accountant.collect(user, address(mockToken), 100);
+        // prank as a user with tokens
+        uint256 _amount = 123;
+        address handler = vm.addr(112233);
+        mockToken.mint(user, _amount);
+        vm.prank(user);
+        mockToken.approve(address(accountant), _amount);
         accountant.collect(user, address(mockToken), 100);
     }
 
