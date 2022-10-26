@@ -42,12 +42,12 @@ contract NFTRecoveryAccountantTest is Test {
 
     function collectHelper(uint256 _amount) public {
         // mint tokens to a random handler
-        address handler = vm.addr(112233);
+        // Adds modulo bias, but who cares
+        address handler = vm.addr(_amount % 76);
         mockToken.mint(handler, _amount);
         // approve the accountant to spend the tokens
         vm.prank(handler);
         mockToken.approve(address(accountant), _amount);
-        vm.stopPrank();
         // call special collect function to move tokens into accountant
         accountant.collect(handler, address(mockToken), _amount);
     }
@@ -183,7 +183,7 @@ contract NFTRecoveryAccountantTest is Test {
         vm.prank(user);
         // recovering fails with no collect
         vm.expectRevert("currently fully recovered");
-        accountant.exposed_recover(0);
+        acccountant.exposed_recover(0);
     }
 
     // collect -> recover -> recover FAIL (can't recover twice if there's no change in funds)
@@ -268,10 +268,27 @@ contract NFTRecoveryAccountantTest is Test {
         accountant.remove(address(mockToken), 100);
     }
 
-    function test_collect() public {
+    function test_collectSuccesfully() public {
         uint256 _amount = 123456;
         // mint tokens to a random handler
         address handler = vm.addr(112233);
+        mockToken.mint(handler, _amount);
+        // approve the accountant to spend the tokens
+        vm.prank(handler);
+        mockToken.approve(address(accountant), _amount);
+        // totalCollected should start at zero
+        assertEq(accountant.totalCollected(address(mockToken)), 0);
+        // call special collect function to move tokens into accountant
+        vm.expectEmit(true, true, true, true, address(mockToken));
+        emit Transfer(handler, address(accountant), _amount);
+        accountant.collect(handler, address(mockToken), _amount);
+        // totalCollected should be incremented
+        assertEq(accountant.totalCollected(address(mockToken)), _amount);
+    }
+
+    function testFuzz_collectSuccesfully(uint256 _amount, address handler)
+        public
+    {
         mockToken.mint(handler, _amount);
         // approve the accountant to spend the tokens
         vm.prank(handler);
