@@ -63,7 +63,11 @@ export class NomadMessage<T extends NomadContext> {
   }
 
   get backend(): MessageBackend {
-    return this._backend || this.context._backend;
+    const backend = this._backend || this.context._backend;
+    if (!backend) {
+      throw new Error(`No backend in the context`);
+    }
+    return backend;
   }
 
   get messageHash(): string {
@@ -193,6 +197,9 @@ export class NomadMessage<T extends NomadContext> {
     context: T,
     transactionHash: string,
   ): Promise<NomadMessage<T>> {
+    if (!context._backend) {
+      throw new Error(`No backend is set for the context`);
+    }
     const dispatch = await context._backend.getDispatch(transactionHash);
     if (!dispatch) throw new Error(`No dispatch`);
 

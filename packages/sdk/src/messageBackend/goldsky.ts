@@ -78,8 +78,17 @@ export class GoldSkyBackend extends MessageBackend {
         this.dispatchTxToMessageHash = new Map();
     }
 
+    static checkEnvironment(environment: string) {
+        if (environment != 'production') {
+            throw new Error(`Only production environment is supported`);
+        }
+    }
+
     static default(environment: string | config.NomadConfig = 'development'): GoldSkyBackend {
         const environmentString = typeof environment === 'string' ? environment : environment.environment;
+
+        GoldSkyBackend.checkEnvironment(environmentString);
+        
         const secret = process.env.GOLDSKY_SECRET || defaultGoldSkySecret;
         if (!secret) throw new Error(`GOLDSKY_SECRET not found in env`);
         return new GoldSkyBackend(environmentString, secret);
