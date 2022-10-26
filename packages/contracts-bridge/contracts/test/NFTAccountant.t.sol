@@ -36,6 +36,61 @@ contract NFTAccountantTest is Test {
         accountant.exposed_setAffectedAmount(asset, AFFECTED_TOKEN_AMOUNT);
     }
 
+    function test_affectedAssets() public {
+        address payable[14] memory affectedAssets = [
+            0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599,
+            0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,
+            0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
+            0x853d955aCEf822Db058eb8505911ED77F175b99e,
+            0xdAC17F958D2ee523a2206206994597C13D831ec7,
+            0x6B175474E89094C44Da98b954EedeAC495271d0F,
+            0xD417144312DbF50465b1C641d016962017Ef6240,
+            0x3d6F0DEa3AC3C607B3998e6Ce14b6350721752d9,
+            0x40EB746DEE876aC1E78697b7Ca85142D178A1Fc8,
+            0xf1a91C7d44768070F711c68f33A7CA25c8D30268,
+            0x3432B6A60D23Ca0dFCa7761B7ab56459D9C964D0,
+            0x3431F91b3a388115F00C5Ba9FdB899851D005Fb5,
+            0xE5097D9baeAFB89f9bcB78C9290d545dB5f9e9CB,
+            0xf1Dc500FdE233A4055e25e5BbF516372BC4F6871
+        ];
+        for (uint256 i; i < 14; i++) {
+            assertEq(accountant.affectedAssets()[i], affectedAssets[i]);
+        }
+    }
+
+    function test_isAffectedAsset() public {
+        address payable[14] memory affectedAssets = [
+            0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599,
+            0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,
+            0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
+            0x853d955aCEf822Db058eb8505911ED77F175b99e,
+            0xdAC17F958D2ee523a2206206994597C13D831ec7,
+            0x6B175474E89094C44Da98b954EedeAC495271d0F,
+            0xD417144312DbF50465b1C641d016962017Ef6240,
+            0x3d6F0DEa3AC3C607B3998e6Ce14b6350721752d9,
+            0x40EB746DEE876aC1E78697b7Ca85142D178A1Fc8,
+            0xf1a91C7d44768070F711c68f33A7CA25c8D30268,
+            0x3432B6A60D23Ca0dFCa7761B7ab56459D9C964D0,
+            0x3431F91b3a388115F00C5Ba9FdB899851D005Fb5,
+            0xE5097D9baeAFB89f9bcB78C9290d545dB5f9e9CB,
+            0xf1Dc500FdE233A4055e25e5BbF516372BC4F6871
+        ];
+        for (uint256 i; i < 14; i++) {
+            assertEq(accountant.isAffectedAsset(affectedAssets[i]), true);
+        }
+    }
+
+    function test_recordOnlyBridgeRouter() public {
+        address asset = address(mockToken);
+        uint256 amount = 1000;
+        vm.expectRevert("only BridgeRouter");
+        vm.prank(address(0xBEEF));
+        accountant.record(asset, user, amount);
+        // second one is executed with msg.sender = address(this)
+        // which is the BridgeRouter
+        accountant.record(asset, user, amount);
+    }
+
     function test_initValues() public {
         // check initialized values once instead of for every test
         assertEq(accountant.owner(), address(this));
