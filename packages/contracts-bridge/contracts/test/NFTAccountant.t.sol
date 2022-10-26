@@ -110,6 +110,9 @@ contract NFTAccountantTest is Test {
         assertEq(accountant.totalAffected(asset), AFFECTED_TOKEN_AMOUNT);
         assertTrue(accountant.isAffectedAsset(asset));
         assertEq(accountant.totalRecovered(asset), 0);
+        assertEq(accountant.name(), "Nomad NFT");
+        assertEq(accountant.symbol(), "noNFT");
+        assertEq(accountant.baseURI(), "https://nft.nomad.xyz/");
     }
 
     function recordCheck() public {
