@@ -33,15 +33,15 @@
     "snapshot": "forge clean && FOUNDRY_PROFILE=bridge forge snapshot",
     "snapshot:check": "forge clean && FOUNDRY_PROFILE=bridge forge snapshot --check",
     "gen-proof": "../../scripts/accumulator-cli",
-    "storage-inspect:check": "../../scripts/storage-inspect.sh check BridgeRouter BridgeToken ETHHelper TokenRegistry",
-    "storage-inspect:generate": "../../scripts/storage-inspect.sh generate BridgeRouter BridgeToken ETHHelper TokenRegistry"
+    "storage-inspect:check": "../../scripts/storage-inspect.sh check BridgeRouter EthereumBridgeRouter BridgeToken ETHHelper TokenRegistry EventAccountant NFTAccountant NFTRecoveryAccountant AllowListNFTRecoveryAccountant",
+    "storage-inspect:generate": "../../scripts/storage-inspect.sh generate BridgeRouter EthereumBridgeRouter BridgeToken ETHHelper TokenRegistry EventAccountant NFTAccountant NFTRecoveryAccountant AllowListNFTRecoveryAccountant"
   },
   "dependencies": {
     "@nomad-xyz/contracts-core": "workspace:^",
     "@nomad-xyz/contracts-router": "workspace:^",
     "@openzeppelin/contracts": "~3.4.2",
     "@openzeppelin/contracts-upgradeable": "~3.4.2",
-    "@summa-tx/memview-sol": "^2.0.0"
+    "@summa-tx/memview-sol": "^2.1.1"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.1",

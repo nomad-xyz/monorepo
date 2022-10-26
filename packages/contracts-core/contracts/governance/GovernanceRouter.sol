@@ -201,10 +201,6 @@ contract GovernanceRouter is Version0, Initializable, IMessageRecipient {
         recoveryManager = _recoveryManager;
         // initialize XAppConnectionManager
         setXAppConnectionManager(_xAppConnectionManager);
-        require(
-            xAppConnectionManager.localDomain() == localDomain,
-            "XAppConnectionManager bad domain"
-        );
     }
 
     // ============ External Functions ============
@@ -256,6 +252,12 @@ contract GovernanceRouter is Version0, Initializable, IMessageRecipient {
         uint32[] calldata _domains,
         GovernanceMessage.Call[][] calldata _remoteCalls
     ) external onlyGovernorOrRecoveryManager {
+        // extend the access modifier onlyGovernor, limiting the call to
+        // external actors. This is to protect against governanceRouter calling
+        // the function through executeCallBatch.
+        // executeGovernanceActions is intended to be executed ONLY by external actors,
+        // namely either the governor or the recovery manager
+        require(msg.sender != address(this), "!sender is an external address");
         require(
             _domains.length == _remoteCalls.length,
             "!domains length matches calls length"
@@ -407,6 +409,10 @@ contract GovernanceRouter is Version0, Initializable, IMessageRecipient {
         onlyGovernorOrRecoveryManager
     {
         xAppConnectionManager = XAppConnectionManager(_xAppConnectionManager);
+        require(
+            xAppConnectionManager.localDomain() == localDomain,
+            "XAppConnectionManager bad domain"
+        );
     }
 
     /**
@@ -450,11 +456,10 @@ contract GovernanceRouter is Version0, Initializable, IMessageRecipient {
     // ============ Internal Functions ============
 
     /**
-     * @notice Handle message dispatching calls locally
-     * @dev We considered requiring the batch was not previously known.
-     *      However, this would prevent us from ever processing identical
-     *      batches, which seems desirable in some cases.
-     *      As a result, we simply set it to pending.
+     * @notice Handle message storing batch of calls to be executed locally
+     * @dev If a second, identical batch is attempted to deliver while
+     *      the first is still pending, the second delivery will revert,
+     *      allowing the second batch to be delivered later after the first is executed.
      * @param _msg The message
      */
     function _handleBatch(bytes29 _msg)
@@ -462,8 +467,12 @@ contract GovernanceRouter is Version0, Initializable, IMessageRecipient {
         typeAssert(_msg, GovernanceMessage.Types.Batch)
     {
         bytes32 _batchHash = _msg.batchHash();
-        // prevent accidental SSTORE and extra event if already pending
-        if (inboundCallBatches[_batchHash] == BatchStatus.Pending) return;
+        // prevent delivery of identical batches while one is still pending
+        require(
+            inboundCallBatches[_batchHash] != BatchStatus.Pending,
+            "BatchStatus is Pending"
+        );
+        // set batch to pending & emit
         inboundCallBatches[_batchHash] = BatchStatus.Pending;
         emit BatchReceived(_batchHash);
     }
@@ -620,7 +629,10 @@ contract GovernanceRouter is Version0, Initializable, IMessageRecipient {
         view
         returns (bool)
     {
-        return _domain == governorDomain && _address == routers[_domain];
+        return
+            _domain == governorDomain &&
+            _address == routers[_domain] &&
+            _address != 0;
     }
 
     /**

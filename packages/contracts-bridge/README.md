@@ -41,3 +41,9 @@ We suggest all contributors to use slither while developing, to avoid common mis
 - Run `yarn test:static-analyze`
 
 We use a `yarn command` because we need to link the top-level `node_modules` directory in the `bridge-contracts` package. It's a known [issue](https://github.com/crytic/slither/issues/852) for which the workaround is to link the directory.
+
+## Accountant
+
+The NFT Accountant is a system for recording unbridging events on Ethereum.
+
+Users receive an NFT representing the amount being unbridged. Users can use this NFT to recover funds on a continual basis.

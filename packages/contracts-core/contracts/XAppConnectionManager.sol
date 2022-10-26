@@ -96,7 +96,7 @@ contract XAppConnectionManager is Ownable {
         );
         require(watcherPermissions[_watcher][_domain], "!valid watcher");
         // remove the replica from mappings
-        _unenrollReplica(_replica);
+        _clearReplica(_replica);
     }
 
     /**
@@ -116,8 +116,9 @@ contract XAppConnectionManager is Ownable {
         external
         onlyOwner
     {
-        // un-enroll any existing replica
-        _unenrollReplica(_replica);
+        // un-enroll any existing replica or domain
+        _clearReplica(_replica);
+        _clearDomain(_domain);
         // add replica and domain to two-way mapping
         replicaToDomain[_replica] = _domain;
         domainToReplica[_domain] = _replica;
@@ -129,7 +130,7 @@ contract XAppConnectionManager is Ownable {
      * @param _replica the address of the Replica
      */
     function ownerUnenrollReplica(address _replica) external onlyOwner {
-        _unenrollReplica(_replica);
+        _clearReplica(_replica);
     }
 
     /**
@@ -186,11 +187,26 @@ contract XAppConnectionManager is Ownable {
      * @notice Remove the replica from the two-way mappings
      * @param _replica replica to un-enroll
      */
-    function _unenrollReplica(address _replica) internal {
+    function _clearReplica(address _replica) internal {
         uint32 _currentDomain = replicaToDomain[_replica];
-        domainToReplica[_currentDomain] = address(0);
-        replicaToDomain[_replica] = 0;
-        emit ReplicaUnenrolled(_currentDomain, _replica);
+        if (_currentDomain != 0) {
+            domainToReplica[_currentDomain] = address(0);
+            replicaToDomain[_replica] = 0;
+            emit ReplicaUnenrolled(_currentDomain, _replica);
+        }
+    }
+
+    /**
+     * @notice remove the domain from the two-way mapping
+     * @param _domain domain to un-enroll
+     */
+    function _clearDomain(uint32 _domain) internal {
+        address _currentReplica = domainToReplica[_domain];
+        if (_currentReplica != address(0)) {
+            domainToReplica[_domain] = address(0);
+            replicaToDomain[_currentReplica] = 0;
+            emit ReplicaUnenrolled(_domain, _currentReplica);
+        }
     }
 
     /**

@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import "../DABridgeMessage.sol";
 import "../DABridgeRouter.sol";
 import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
+import {Home} from "@nomad-xyz/contracts-core/contracts/Home.sol";
 
 contract DABridgeRouterTest is Test {
     DABridgeRouter router;
@@ -16,6 +17,7 @@ contract DABridgeRouterTest is Test {
         bytes32 dataRoot
     );
 
+    uint32 localDomain = 3;
     uint32 domain = uint32(1);
     uint32 invalidDomain = uint32(2);
     bytes32 remoteRouter = bytes32(uint256(1));
@@ -25,7 +27,9 @@ contract DABridgeRouterTest is Test {
 
     function setUp() public {
         // mock replica
+        Home h = new Home(localDomain);
         XAppConnectionManager m = new XAppConnectionManager();
+        m.setHome(address(h));
         m.ownerEnrollReplica(address(this), uint32(1));
         router = new DABridgeRouter();
         router.initialize(address(m), domain);

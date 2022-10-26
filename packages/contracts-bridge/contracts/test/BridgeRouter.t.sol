@@ -2,6 +2,9 @@
 pragma solidity 0.7.6;
 
 import {BridgeTest} from "./utils/BridgeTest.sol";
+import {BridgeMessage} from "../BridgeMessage.sol";
+import {RevertingToHook} from "./utils/RevertingToHook.sol";
+import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/libs/TypeCasts.sol";
 import "forge-std/console2.sol";
 
 contract BridgeRouterTest is BridgeTest {
@@ -13,12 +16,19 @@ contract BridgeRouterTest is BridgeTest {
 
     bool fastLiquidityEnabled;
 
+    RevertingToHook revertingToHook;
+
+    using TypeCasts for bytes32;
+    using TypeCasts for address payable;
+    using TypeCasts for address;
+
     function setUp() public override {
         super.setUp();
         tokenSender = bridgeUser;
         tokenReceiver = addressToBytes32(vm.addr(3040));
         senderDomain = localDomain;
         receiverDomain = remoteDomain;
+        revertingToHook = new RevertingToHook();
     }
 
     function test_dustAmmountIs006() public {
@@ -54,28 +64,18 @@ contract BridgeRouterTest is BridgeTest {
         bridgeRouter.send(
             address(localToken),
             amount,
-            receiverDomain,
+            localDomain,
             tokenReceiver,
             fastLiquidityEnabled
         );
         vm.stopPrank();
     }
 
-    function test_sendLocalTokenSuccess() public {
+    function test_sendLocalTokenDisabled() public {
         uint256 amount = 100;
         vm.startPrank(tokenSender);
-        // Expect that the ERC20 will emit an event with the approval
         localToken.approve(address(bridgeRouter), amount);
-        // Expect the Bridge Router to emit the correct event
-        vm.expectEmit(true, true, true, true, address(bridgeRouter));
-        emit Send(
-            address(localToken),
-            tokenSender,
-            receiverDomain,
-            tokenReceiver,
-            amount,
-            fastLiquidityEnabled
-        );
+        vm.expectRevert("sends temporarily disabled");
         bridgeRouter.send(
             address(localToken),
             amount,
@@ -83,7 +83,14 @@ contract BridgeRouterTest is BridgeTest {
             tokenReceiver,
             fastLiquidityEnabled
         );
-        vm.stopPrank();
+        vm.expectRevert("sends temporarily disabled");
+        bridgeRouter.sendToHook(
+            address(localToken),
+            amount,
+            receiverDomain,
+            tokenReceiver,
+            "0x1234"
+        );
     }
 
     function test_sendRemoteSuccess() public {
@@ -154,5 +161,150 @@ contract BridgeRouterTest is BridgeTest {
         uint256 afterBalance = remoteToken.balanceOf(tokenSender);
         assertEq(afterBalance, startingBalance - amount);
         vm.stopPrank();
+    }
+
+    function test_isAffectedAsset() public view {
+        address payable[14] memory affected = mockAccountant.affectedAssets();
+        for (uint256 i = 0; i < affected.length; i++) {
+            require(mockAccountant.isAffectedAsset(affected[i]));
+        }
+    }
+
+    event MockAcctCalled(
+        address indexed _asset,
+        address indexed _user,
+        uint256 _amount
+    );
+
+    function test_giveLocalUnaffected() public {
+        uint256 amount = 1000;
+        address recipient = address(33);
+        // test with localtoken
+        localToken.mint(address(bridgeRouter), amount);
+        vm.expectEmit(true, true, false, true, address(localToken));
+        emit Transfer(address(bridgeRouter), recipient, amount);
+        bridgeRouter.giveLocal(address(localToken), amount, recipient);
+
+        // test with each affected tokens
+        // This checks for events on the mock accountant
+        // Accountant logic is tested separately
+        address payable[14] memory affected = mockAccountant.affectedAssets();
+        for (uint256 i = 0; i < affected.length; i++) {
+            address a = affected[i];
+            vm.expectEmit(
+                true,
+                true,
+                false,
+                true,
+                address(bridgeRouter.accountant())
+            );
+            emit MockAcctCalled(a, recipient, amount);
+            bridgeRouter.giveLocal(a, amount, recipient);
+        }
+    }
+
+    function test_handleHookTransferRevertsIfCallFailsMessage() public {
+        bytes32 hook = address(revertingToHook).addressToBytes32();
+        uint256 tokenAmount = 100;
+        bytes32 tokenDetailsHash = "sdf";
+        bytes32 sender = address(0xBEEF).addressToBytes32();
+        localToken.mint(address(bridgeRouter), tokenAmount);
+        bytes memory extraData = "sdfdsf";
+        bytes memory action = abi.encodePacked(
+            BridgeMessage.Types.TransferToHook,
+            hook,
+            tokenAmount,
+            tokenDetailsHash,
+            sender,
+            extraData
+        );
+        uint32 origin = 123;
+        uint32 nonce = 10;
+        bytes memory tokenId = abi.encodePacked(
+            localDomain,
+            address(localToken).addressToBytes32()
+        );
+        vm.expectRevert("nope!");
+        bridgeRouter.exposed_handleTransferToHook(
+            origin,
+            nonce,
+            tokenId,
+            action
+        );
+    }
+
+    function test_handleHookTransferRevertsIfCallFailsNoMessage() public {
+        bytes32 hook = address(revertingToHook).addressToBytes32();
+        uint256 tokenAmount = 100;
+        bytes32 tokenDetailsHash = "sdf";
+        bytes32 sender = address(0xBEEF).addressToBytes32();
+        localToken.mint(address(bridgeRouter), tokenAmount);
+        bytes memory extraData = "sdfdsf";
+        bytes memory action = abi.encodePacked(
+            BridgeMessage.Types.TransferToHook,
+            hook,
+            tokenAmount,
+            tokenDetailsHash,
+            sender,
+            extraData
+        );
+        uint32 origin = 600;
+        uint32 nonce = 10;
+        bytes memory tokenId = abi.encodePacked(
+            localDomain,
+            address(localToken).addressToBytes32()
+        );
+        vm.expectRevert();
+        bridgeRouter.exposed_handleTransferToHook(
+            origin,
+            nonce,
+            tokenId,
+            action
+        );
+    }
+
+    function test_handleHookTransferSucceeds() public {
+        bytes32 hook = address(revertingToHook).addressToBytes32();
+        uint256 tokenAmount = 100;
+        bytes32 tokenDetailsHash = "sdf";
+        bytes32 sender = address(0xBEEF).addressToBytes32();
+        localToken.mint(address(bridgeRouter), tokenAmount);
+        bytes memory extraData = "sdfdsf";
+        bytes memory action = abi.encodePacked(
+            BridgeMessage.Types.TransferToHook,
+            hook,
+            tokenAmount,
+            tokenDetailsHash,
+            sender,
+            extraData
+        );
+        uint32 origin = 9;
+        uint32 nonce = 10;
+        bytes memory tokenId = abi.encodePacked(
+            localDomain,
+            address(localToken).addressToBytes32()
+        );
+        // The hook succeeds
+        bridgeRouter.exposed_handleTransferToHook(
+            origin,
+            nonce,
+            tokenId,
+            action
+        );
+        assertEq(revertingToHook.test(), 123);
+    }
+
+    function test_exitBridgeOnly() public {
+        address payable[14] memory affected = mockAccountant.affectedAssets();
+        for (uint256 i = 0; i < affected.length; i++) {
+            vm.expectRevert();
+            bridgeRouter.send(
+                affected[i],
+                1,
+                receiverDomain,
+                tokenReceiver,
+                fastLiquidityEnabled
+            );
+        }
     }
 }

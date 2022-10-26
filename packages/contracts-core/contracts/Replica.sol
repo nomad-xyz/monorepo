@@ -245,6 +245,7 @@ contract Replica is Version0, NomadBase {
         external
         onlyOwner
     {
+        require(_root != bytes32(0) || _confirmAt == 0, "can't set zero root");
         uint256 _previousConfirmAt = confirmAt[_root];
         confirmAt[_root] = _confirmAt;
         emit SetConfirmation(_root, _previousConfirmAt, _confirmAt);

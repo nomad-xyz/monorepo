@@ -3009,7 +3009,7 @@ __metadata:
     "@nomiclabs/hardhat-waffle": ^2.0.1
     "@openzeppelin/contracts": ~3.4.2
     "@openzeppelin/contracts-upgradeable": ~3.4.2
-    "@summa-tx/memview-sol": ^2.0.0
+    "@summa-tx/memview-sol": ^2.1.1
     "@typechain/ethers-v5": 7.2.0
     "@typechain/hardhat": ^2.0.1
     "@types/node": ^17.0.14
@@ -3052,7 +3052,7 @@ __metadata:
     "@nomiclabs/hardhat-waffle": ^2.0.1
     "@openzeppelin/contracts": ^3.4.2
     "@openzeppelin/contracts-upgradeable": ~3.4.2
-    "@summa-tx/memview-sol": ^2.0.0
+    "@summa-tx/memview-sol": ^2.1.1
     "@typechain/ethers-v5": 7.2.0
     "@typechain/hardhat": ^2.0.1
     dotenv: ^10.0.0
@@ -3114,7 +3114,7 @@ __metadata:
     "@nomiclabs/hardhat-waffle": ^2.0.1
     "@openzeppelin/contracts": ~3.4.2
     "@openzeppelin/contracts-upgradeable": ~3.4.2
-    "@summa-tx/memview-sol": ^2.0.0
+    "@summa-tx/memview-sol": ^2.1.1
     "@typechain/ethers-v5": 7.2.0
     "@typechain/hardhat": ^2.0.1
     "@types/node": ^17.0.14
@@ -4468,6 +4468,13 @@ __metadata:
   version: 2.0.1
   resolution: "@summa-tx/memview-sol@npm:2.0.1"
   checksum: fbdb525033024f2a0a2078c8f36fb74902ea8590b91c4a68b2782eec27f5585220ae17e973ba96dff77bb87cd7491dca0a3af6694dfabc6db4e64c5ce740d5c8
+  languageName: node
+  linkType: hard
+
+"@summa-tx/memview-sol@npm:^2.1.1":
+  version: 2.1.1
+  resolution: "@summa-tx/memview-sol@npm:2.1.1"
+  checksum: ec9e0f1fc406b000930cfaec72e71a78b5a910cab590259805aece11a5029cf092d33144e5186139162032d296b0987b541ea546768621c8dcc9f781c3d00914
   languageName: node
   linkType: hard
 

@@ -6,6 +6,7 @@ import {BridgeMessage} from "./BridgeMessage.sol";
 import {IBridgeToken} from "./interfaces/IBridgeToken.sol";
 import {ITokenRegistry} from "./interfaces/ITokenRegistry.sol";
 import {IBridgeHook} from "./interfaces/IBridgeHook.sol";
+import {IEventAccountant} from "./interfaces/IEventAccountant.sol";
 // ============ External Imports ============
 import {XAppConnectionClient} from "@nomad-xyz/contracts-router/contracts/XAppConnectionClient.sol";
 import {Router} from "@nomad-xyz/contracts-router/contracts/Router.sol";
@@ -17,9 +18,9 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 /**
- * @title BridgeRouter
+ * @title BaseBridgeRouter
  */
-contract BridgeRouter is Version0, Router {
+abstract contract BaseBridgeRouter is Version0, Router {
     // ============ Libraries ============
 
     using TypedMemView for bytes;
@@ -29,15 +30,16 @@ contract BridgeRouter is Version0, Router {
 
     // ============ Constants ============
 
-    // the amount transferred to bridgoors without gas funds
+    // The amount transferred to bridgoors without gas funds
     uint256 public constant DUST_AMOUNT = 0.06 ether;
 
     // ============ Public Storage ============
 
     // contract that manages registry representation tokens
     ITokenRegistry public tokenRegistry;
-    // token transfer prefill ID => LP that pre-filled message to provide fast
-    // liquidity
+    // DEPRECATED; mapped token transfer prefill ID =>
+    // LP that pre-filled message to provide fast liquidity
+    // while fast liquidity feature existed
     mapping(bytes32 => address) public liquidityProvider;
 
     // ============ Upgrade Gap ============
@@ -68,15 +70,13 @@ contract BridgeRouter is Version0, Router {
 
     /**
      * @notice emitted when tokens are dispensed to an account on this domain
-     *         emitted both when fast liquidity is provided, and when the
-     *         transfer ultimately settles
      * @param originAndNonce Domain where the transfer originated and the
      *        unique identifier for the message from origin to destination,
      *        combined in a single field ((origin << 32) & nonce)
      * @param token The address of the local token contract being received
      * @param recipient The address receiving the tokens; the original
      *        recipient of the transfer
-     * @param liquidityProvider The account providing liquidity
+     * @param liquidityProvider DEPRECATED; The account providing liquidity
      * @param amount The amount of tokens being received
      */
     event Receive(
@@ -150,6 +150,10 @@ contract BridgeRouter is Version0, Router {
         require(_recipient != bytes32(0), "!recip");
         // debit tokens from the sender
         (bytes29 _tokenId, bytes32 _detailsHash) = _takeTokens(_token, _amount);
+        require(
+            _destination == _tokenId.domain(),
+            "sends temporarily disabled"
+        );
         // format Transfer message
         bytes29 _action = BridgeMessage.formatTransfer(
             _recipient,
@@ -180,6 +184,11 @@ contract BridgeRouter is Version0, Router {
     ) external {
         // debit tokens from msg.sender
         (bytes29 _tokenId, bytes32 _detailsHash) = _takeTokens(_token, _amount);
+        require(_remoteHook != bytes32(0), "!hook");
+        require(
+            _destination == _tokenId.domain(),
+            "sends temporarily disabled"
+        );
         // format Hook transfer message
         bytes29 _action = BridgeMessage.formatTransferToHook(
             _remoteHook,
@@ -331,9 +340,7 @@ contract BridgeRouter is Version0, Router {
      * @notice Handles an incoming TransferToHook message.
      *
      * @dev The hook is called AFTER tokens have been transferred to the hook
-     *      contract. If this hook errors, the bridge WILL NOT revert, and the
-     *      hook contract will own those tokens. Hook contracts MUST have a
-     *      recovery plan in place for these situations.
+     *      contract. If this hook errors, the bridge WILL revert.
      *
      * @param _origin The domain of the chain from which the transfer originated
      * @param _nonce The unique identifier for the message from origin to destination
@@ -350,7 +357,7 @@ contract BridgeRouter is Version0, Router {
         address _hook = _action.evmHook();
         // send tokens
         address _token = _giveTokens(_origin, _nonce, _tokenId, _action, _hook);
-        // ABI-encode the calldata for a `Hook.onRecive` call
+        // ABI-encode the calldata for a `Hook.onReceive` call
         bytes memory _call = abi.encodeWithSelector(
             IBridgeHook.onReceive.selector,
             _origin,
@@ -362,13 +369,18 @@ contract BridgeRouter is Version0, Router {
             _action.extraData().clone()
         );
         // Call the hook with the ABI-encoded payload
-        // We use a low-level call here so that solc will skip pre-call
-        // and post-call checks. Specifically we want to skip
-        // 1. pre-flight extcode check
-        // 2. post-flight success check
-        // We do this so that the hook contract need not exist, and need
-        // not execute succesfully
-        _hook.call(_call);
+        // We use a low-level call here so that solc will skip the pre-call check.
+        // Specifically we want to skip the pre-flight extcode check and revert
+        // if the call reverts, with the revert message of the call
+        (bool _success, ) = _hook.call(_call);
+        // Revert with the call's revert string
+        if (!_success) {
+            assembly {
+                let data := returndatasize()
+                returndatacopy(0, 0, data)
+                revert(0, data)
+            }
+        }
     }
 
     /**
@@ -402,17 +414,9 @@ contract BridgeRouter is Version0, Router {
         uint256 _amount = _action.amnt();
         // send the tokens into circulation on this chain
         if (tokenRegistry.isLocalOrigin(_token)) {
-            // if the token is of local origin, the tokens have been held in
-            // escrow in this contract
-            // while they have been circulating on remote chains;
-            // transfer the tokens to the recipient
-            IERC20(_token).safeTransfer(_recipient, _amount);
+            _giveLocal(_token, _amount, _recipient);
         } else {
-            // if the token is of remote origin, mint the tokens to the
-            // recipient on this chain
-            IBridgeToken(_token).mint(_recipient, _amount);
-            // Tell the token what its detailsHash is
-            IBridgeToken(_token).setDetailsHash(_action.detailsHash());
+            _giveRepr(_token, _amount, _recipient, _action.detailsHash());
         }
         // emit Receive event
         emit Receive(
@@ -422,6 +426,42 @@ contract BridgeRouter is Version0, Router {
             address(0),
             _amount
         );
+    }
+
+    /**
+     * @notice Gives local tokens on inbound bridge message
+     * @dev May record ProcessFailure instead of transferring the asset itself
+     * @param _token The asset
+     * @param _amount The amount
+     * @param _recipient The recipient
+     */
+    function _giveLocal(
+        address _token,
+        uint256 _amount,
+        address _recipient
+    ) internal virtual {
+        IERC20(_token).safeTransfer(_recipient, _amount);
+    }
+
+    /**
+     * @notice Gives remote tokens on inbound bridge message
+     * @dev Mints the appropriate amount to the user
+     * @param _token The asset
+     * @param _amount The amount
+     * @param _recipient The recipient
+     * @param _detailsHash The hash of the token details
+     */
+    function _giveRepr(
+        address _token,
+        uint256 _amount,
+        address _recipient,
+        bytes32 _detailsHash
+    ) internal {
+        // if the token is of remote origin, mint the tokens to the
+        // recipient on this chain
+        IBridgeToken(_token).mint(_recipient, _amount);
+        // Tell the token what its detailsHash is
+        IBridgeToken(_token).setDetailsHash(_detailsHash);
     }
 
     // ============ Internal: Dust with Gas ============
@@ -474,5 +514,69 @@ contract BridgeRouter is Version0, Router {
      */
     function renounceOwnership() public override onlyOwner {
         // do nothing
+    }
+}
+
+/**
+ * @title BridgeRouter
+ */
+contract BridgeRouter is BaseBridgeRouter {
+
+}
+
+/**
+ * @title EthereumBridgeRouter
+ */
+contract EthereumBridgeRouter is BaseBridgeRouter {
+    using SafeERC20 for IERC20;
+
+    // ============== Immutables ==============
+    IEventAccountant public immutable accountant;
+
+    // ======== Constructor =======
+    constructor(address _accountant) {
+        accountant = IEventAccountant(_accountant);
+    }
+
+    /**
+     * @notice Approve funds remaining in the bridge router to be collected via accountant
+     */
+    function approveAffectedAssets() external onlyOwner {
+        address payable[14] memory _assets = accountant.affectedAssets();
+        for (uint256 i = 0; i < 14; i++) {
+            IERC20 _asset = IERC20(_assets[i]);
+            uint256 _balance = _asset.balanceOf(address(this));
+            if (_balance > 0) {
+                // some tokens require setting approval to 0 before changing the approval to another value
+                // in order to enable calling this function multiple times,
+                // set approval to zero first
+                _asset.approve(address(accountant), 0);
+                _asset.approve(address(accountant), _balance);
+            }
+        }
+    }
+
+    /**
+     * @notice Gives local tokens on inbound bridge message
+     * @dev May record ProcessFailure instead of transferring the asset itself
+     * @param _token The asset
+     * @param _amount The amount
+     * @param _recipient The recipient
+     */
+    function _giveLocal(
+        address _token,
+        uint256 _amount,
+        address _recipient
+    ) internal override {
+        // if the token is of local origin, the tokens have been held in this
+        // contract while the representations have been circulating on remote
+        // chains
+        // For unaffected assets, we transfer the tokens to the recipient
+        // For affected assets, we instead record a failure with the accountant
+        if (accountant.isAffectedAsset(_token)) {
+            accountant.record(_token, _recipient, _amount);
+        } else {
+            IERC20(_token).safeTransfer(_recipient, _amount);
+        }
     }
 }
