@@ -183,7 +183,7 @@ contract NFTRecoveryAccountantTest is Test {
         vm.prank(user);
         // recovering fails with no collect
         vm.expectRevert("currently fully recovered");
-        acccountant.exposed_recover(0);
+        accountant.exposed_recover(0);
     }
 
     // collect -> recover -> recover FAIL (can't recover twice if there's no change in funds)
@@ -289,6 +289,7 @@ contract NFTRecoveryAccountantTest is Test {
     function testFuzz_collectSuccesfully(uint256 _amount, address handler)
         public
     {
+        vm.assume(handler != address(0));
         mockToken.mint(handler, _amount);
         // approve the accountant to spend the tokens
         vm.prank(handler);
