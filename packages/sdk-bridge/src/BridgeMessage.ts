@@ -105,7 +105,7 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
   }
 
   get backend(): BridgeMessageBackend {
-    const backend = this._backend || this.context._bridgeBackend;
+    const backend = this._backend || this.context._backend;
     if (!backend) {
       throw new Error(`No backend in the context`);
     }
@@ -121,10 +121,11 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
     transactionHash: string,
     _backend?: BridgeMessageBackend,
   ): Promise<BridgeMessage> {
-    if (!context._backend) {
+    const backend = context._backend||_backend;
+    if (!backend) {
       throw new Error(`No backend is set for the context`);
     }
-    const dispatch = await context._backend.getDispatch(transactionHash);
+    const dispatch = await backend.getDispatch(transactionHash);
     if (!dispatch) throw new Error(`No dispatch`);
 
     const m = new NomadMessage(context, dispatch);
@@ -152,7 +153,7 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
       context,
       nomadMessage.dispatch,
       parsedMessageBody as ParsedTransferMessage,
-      _backend || context._bridgeBackend || GoldSkyBridgeBackend.default(context.environment) // TODO: adjust
+      _backend || context._backend || GoldSkyBridgeBackend.default(context.environment) // TODO: adjust
     );
   }
 

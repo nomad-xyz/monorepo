@@ -22,12 +22,12 @@ const MOCK_GOERLI_ACCOUNTANT = '0x661afa47c0efeaee1414116b4fe7182dab37dc7b';
 
 export class BridgeContext extends NomadContext {
   private bridges: Map<string, BridgeContracts>;
-  readonly _bridgeBackend?: BridgeMessageBackend;
+  readonly _backend?: BridgeMessageBackend;
 
 
   constructor(environment: string | config.NomadConfig = 'development', backend?: BridgeMessageBackend) {
     super(environment, backend);
-    this._bridgeBackend = backend;
+    this._backend = backend;
     this.bridges = new Map();
 
     for (const network of this.conf.networks) {
