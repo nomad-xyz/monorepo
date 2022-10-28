@@ -18,9 +18,6 @@ contract MockBeaconNotAddr {
         // only encodes the address of the implementation. The Beacon checks if the
         // calling address is the controller and proceeds to do the special functionality.
         if (msg.sender != controller) {
-            // if not called by the controller,
-            // load implementation address from storage slot zero
-            // and return it.
             assembly {
                 mstore(0, sload(2))
                 return(0, 32)

@@ -16,9 +16,6 @@ contract MockBeaconRevert {
         // only encodes the address of the implementation. The Beacon checks if the
         // calling address is the controller and proceeds to do the special functionality.
         if (msg.sender != controller) {
-            // if not called by the controller,
-            // load implementation address from storage slot zero
-            // and return it.
             revert("lol no");
         } else {
             // if called by the controller,
