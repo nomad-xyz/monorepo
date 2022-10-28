@@ -182,7 +182,7 @@ contract NFTRecoveryAccountantTest is Test {
     }
 
     /// @notice Produce a fuzzed test scenario of 64 random users, who bridge back 64 random amounts
-    /// on each of the 64 different combinations for total affected and collected Assets.
+    /// on each of the 64 different combinations of (total affected, collected Assets).
     function testFuzz_totalRecoveredCorrectAfterUsersRecover(
         address[64] memory users,
         uint192[64] memory amounts,
@@ -341,6 +341,9 @@ contract NFTRecoveryAccountantTest is Test {
         vm.prank(recipient);
         vm.expectRevert("Ownable: caller is not the owner");
         accountant.remove(address(mockToken), 100);
+        accountant.remove(address(mockToken), 100);
+        // 100 removed
+        assertEq(mockToken.balanceOf(address(mockToken)), 100);
     }
 
     function test_collectSuccesfully() public {
