@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+### 2.0.0
+
 - (feat): accountant in typechain lib
 - (minor): differentiate EthereumBridgeRouter
 - (minor): add NFT accountant

@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+### 2.0.0
+
 - (patch) fix: prevent remote router from ever being 0 in `mustHaveRemote`
 
 ### 1.1.0
