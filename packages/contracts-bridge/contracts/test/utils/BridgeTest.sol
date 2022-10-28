@@ -19,6 +19,7 @@ import {UpgradeBeaconController} from "@nomad-xyz/contracts-core/contracts/upgra
 
 // Contract-core Contracts
 import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
+import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 
 import "forge-std/Test.sol";
 
@@ -40,13 +41,15 @@ contract BridgeTest is Test {
     XAppConnectionManager xAppConnectionManager;
     UpgradeBeaconController upgradeBeaconController;
     UpgradeBeacon tokenBeacon;
+
     // Token Registry for all tokens in the domain
     TokenRegistryHarness tokenRegistry;
     BridgeToken bridgeToken;
+
     // Implementation contract for all tokens in the domain
     ERC20Mock localToken;
-    address remoteTokenAddress;
-    BridgeToken remoteToken;
+    address remoteTokenLocalAddress;
+    bytes32 remoteTokenRemoteAddress;
 
     function setUp() public virtual {
         // Mocks
@@ -55,7 +58,7 @@ contract BridgeTest is Test {
         mockUpdaterPK = 420;
         mockUpdater = vm.addr(mockUpdaterPK);
         bridgeUser = vm.addr(9305);
-        remoteBridgeRouter = addressToBytes32(vm.addr(99123));
+        remoteBridgeRouter = TypeCasts.addressToBytes32(vm.addr(99123));
         bridgeUserTokenAmount = 10000;
         mockAccountant = new MockAccountant();
 
@@ -67,6 +70,7 @@ contract BridgeTest is Test {
         );
         localDomain = 1500;
         remoteDomain = 3000;
+        remoteTokenRemoteAddress = TypeCasts.addressToBytes32(address(0xBEEF));
         mockHome = new MockHome(localDomain);
 
         // Create implementations
@@ -80,7 +84,10 @@ contract BridgeTest is Test {
             address(upgradeBeaconController)
         );
         initializeContracts();
-        createRemoteToken();
+        remoteTokenLocalAddress = createRemoteToken(
+            remoteDomain,
+            remoteTokenRemoteAddress
+        );
     }
 
     function initializeContracts() public {
@@ -98,21 +105,25 @@ contract BridgeTest is Test {
         bridgeRouter.enrollRemoteRouter(remoteDomain, remoteBridgeRouter);
     }
 
-    function createRemoteToken() public {
-        remoteTokenAddress = tokenRegistry.deployToken(
-            remoteDomain,
-            addressToBytes32(vm.addr(999999999))
+    /// @notice Create the representation of a remote token
+    /// @param domain The remote domain
+    /// @param remoteAddress The id of the remote token, which also happens
+    /// to be the address of the token on that domain
+    function createRemoteToken(uint32 domain, bytes32 remoteAddress)
+        public
+        returns (address)
+    {
+        address localAddress = tokenRegistry.exposed_deployToken(
+            domain,
+            remoteAddress
         );
         // The address is actually that of an UpgradeProxy that points
         // to the BridgeToken implementation
-        remoteToken = BridgeToken(remoteTokenAddress);
+        BridgeToken remoteToken = BridgeToken(localAddress);
         assertEq(remoteToken.owner(), address(bridgeRouter));
         vm.startPrank(remoteToken.owner());
         remoteToken.mint(bridgeUser, bridgeUserTokenAmount);
         vm.stopPrank();
-    }
-
-    function addressToBytes32(address addr) public pure returns (bytes32) {
-        return bytes32(uint256(uint160(addr)) << 96);
+        return localAddress;
     }
 }
