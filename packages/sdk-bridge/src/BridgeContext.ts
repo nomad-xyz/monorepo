@@ -7,6 +7,7 @@ import { AccountantAsset, BridgeContracts, NftInfo } from './BridgeContracts';
 import { ResolvedTokenInfo, TokenIdentifier } from './tokens';
 import { TransferMessage } from './BridgeMessage';
 import * as config from '@nomad-xyz/configuration';
+import BridgeMessageBackend, { GoldSkyBridgeBackend } from './backend';
 
 type Address = string;
 const DEFAULT_GAS_LIMIT = BigNumber.from(350000);
@@ -21,9 +22,12 @@ const MOCK_GOERLI_ACCOUNTANT = '0x661afa47c0efeaee1414116b4fe7182dab37dc7b';
 
 export class BridgeContext extends NomadContext {
   private bridges: Map<string, BridgeContracts>;
+  readonly _bridgeBackend?: BridgeMessageBackend;
 
-  constructor(environment: string | config.NomadConfig = 'development') {
-    super(environment);
+
+  constructor(environment: string | config.NomadConfig = 'development', backend?: BridgeMessageBackend) {
+    super(environment, backend);
+    this._bridgeBackend = backend;
     this.bridges = new Map();
 
     for (const network of this.conf.networks) {
@@ -42,7 +46,7 @@ export class BridgeContext extends NomadContext {
   }
 
   static fromNomadContext(context: NomadContext): BridgeContext {
-    const bridge = new BridgeContext(context.conf);
+    const bridge = new BridgeContext(context.conf, GoldSkyBridgeBackend.default(context.environment));
 
     for (const domain of context.domainNumbers) {
       const provider = context.getProvider(domain);
