@@ -127,6 +127,7 @@ contract TokenRegistryTest is BridgeTest {
     function test_ensureLocalTokenDeployFuzzed(uint32 domain, bytes32 id)
         public
     {
+        vm.assume(domain != 0 && id != bytes32(0));
         vm.startPrank(tokenRegistry.owner());
         if (domain == localDomain) {
             assertEq(
@@ -189,6 +190,7 @@ contract TokenRegistryTest is BridgeTest {
         bytes32 id,
         address addr
     ) public {
+        vm.assume(dom != 0 && id != bytes32(0) && addr != address(0));
         vm.prank(tokenRegistry.owner());
         tokenRegistry.enrollCustom(dom, id, addr);
         (uint32 storedDomain, bytes32 storedId) = tokenRegistry
@@ -222,7 +224,12 @@ contract TokenRegistryTest is BridgeTest {
         uint32 domain,
         bytes32 id
     ) public {
-        vm.assume(domain != 0);
+        vm.assume(
+            domain != 0 &&
+                id != bytes32(0) &&
+                oldAddress != address(0) &&
+                newAddress != address(0)
+        );
         vm.prank(tokenRegistry.owner());
         tokenRegistry.enrollCustom(domain, id, oldAddress);
         vm.prank(tokenRegistry.owner());
@@ -437,7 +444,7 @@ contract TokenRegistryTest is BridgeTest {
         bytes32 id,
         address repr
     ) public {
-        vm.assume(domain != localDomain && domain != 0);
+        vm.assume(domain != localDomain && domain != 0 && repr != address(0));
         vm.assume(
             repr != address(localToken) && repr != remoteTokenLocalAddress
         );
