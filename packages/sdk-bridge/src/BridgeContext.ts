@@ -1,5 +1,5 @@
 import { BigNumberish, BigNumber, ethers } from 'ethers';
-import { utils as mpUtils } from '@nomad-xyz/multi-provider';
+import { UnreachableError, utils as mpUtils } from '@nomad-xyz/multi-provider';
 import * as bridge from '@nomad-xyz/contracts-bridge';
 import { FailedHomeError, NomadContext } from '@nomad-xyz/sdk';
 import { hexlify } from '@ethersproject/bytes';
@@ -482,7 +482,8 @@ export class BridgeContext extends NomadContext {
     if (!nftInfo) return;
     // mustGetBridge is safe here, as if ethereum doesn't exist, the NFT info
     // will be undefined
-    const accountant = this.mustGetBridge('ethereum').accountant!;
+    const accountant = this.mustGetBridge('ethereum').accountant;
+    if (!accountant) throw new UnreachableError('checked in nftInfo() call');
     // check if it will succeed/fail with callStatic
     await accountant.callStatic.recover(id, overrides);
     return accountant.populateTransaction.recover(id, overrides);
@@ -517,14 +518,15 @@ export class BridgeContext extends NomadContext {
 
   /**
    * Checks if an address is on the allow list
-   * 
+   *
    * @param address A 20-byte Ethereum address
    * @returns Boolean, whether the address is on the allow list or not
    */
   async isAllowed(address: Address): Promise<boolean> {
     if (address.length !== 42) throw new Error('Address must be 20 bytes');
     const accountant = this.mustGetBridge('ethereum').accountant;
-    if (!accountant) throw new Error('Not able to fetch NFT Accountant contract');
+    if (!accountant)
+      throw new Error('Not able to fetch NFT Accountant contract');
     return await accountant.allowList(address);
   }
 }
