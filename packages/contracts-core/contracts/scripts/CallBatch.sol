@@ -56,6 +56,10 @@ abstract contract CallBatch is Script {
         write(indent, string(line));
     }
 
+    function writeArrayClose(string memory indent, bool terminal) private {
+        write(indent, terminal ? "]" : "],");
+    }
+
     function writeCall(string memory indent, GovernanceMessage.Call storage call, bool terminal) private {
         write(indent, "{");
 
@@ -76,7 +80,7 @@ abstract contract CallBatch is Script {
         for (uint32 i = 0; i < calls.length; i++) {
             writeCall(innerer, calls[i], i == calls.length - 1);
         }
-        write(inner, "]");
+        writeArrayClose(inner, true);
         write(indent, "}");
     }
 
