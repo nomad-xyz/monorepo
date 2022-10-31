@@ -116,12 +116,16 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
     return await this.backend.receivedTx(this.messageHash)
   }
 
+  async getSender(): Promise<string | undefined> {
+    return await this.backend.sender(this.messageHash)
+  }
+
   static async bridgeBaseFromTransactionHashUsingBackend(
     context: BridgeContext,
     transactionHash: string,
     _backend?: BridgeMessageBackend,
   ): Promise<BridgeMessage> {
-    const backend = context._backend||_backend;
+    const backend = context._backend || _backend;
     if (!backend) {
       throw new Error(`No backend is set for the context`);
     }

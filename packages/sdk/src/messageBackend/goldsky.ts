@@ -142,7 +142,7 @@ export class GoldSkyBackend extends MessageBackend {
     /**
      * Stores message into internal cache
      */
-    private storeMessage(m: GoldSkyMessage) {
+    storeMessage(m: GoldSkyMessage) {
         this.messageCache.set(m.message_hash, m);
         this.dispatchTxToMessageHash.set(m.dispatch_tx, m.message_hash);
     }

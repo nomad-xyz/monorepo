@@ -25,6 +25,7 @@ export type GoldSkyBridgeMessage =  GoldSkyMessage & {
     send_tx: string,
     sent_at: string,
     send_block: string,
+    original_sender: string,
     receive_tx: string,
     origin_and_nonce: string,
     receive_block: string,
@@ -57,15 +58,43 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
         return new GoldSkyBridgeBackend(environmentString, secret);
     }
 
-    async sender(messageHash: string): Promise<string | undefined> {
-        return 'sender not implemented in SQL view yet';
+    /**
+     * Stores message into internal cache
+     */
+    storeMessage(m: GoldSkyBridgeMessage) {
+        this.messageCache.set(m.message_hash, m);
+        this.dispatchTxToMessageHash.set(m.dispatch_tx, m.message_hash);
     }
+
+    /**
+     * Get the message representation associated with this message (if any)
+     * by message hash
+     *
+     * @returns A message representation (if any)
+     */
+     async getMessage(messageHash: string): Promise<GoldSkyBridgeMessage | undefined> {
+        let m = this.messageCache.get(messageHash);
+        if (!m) {
+            m = await this.fetchMessage({
+                messageHash
+            });
+            if (m) {
+                this.storeMessage(m);
+            }
+        }
+
+        return m;
+    }
+
+    async sender(messageHash: string): Promise<string | undefined> {
+        const m = await this.getMessage(messageHash);
+        return m?.original_sender;
+    }
+
     async receivedTx(messageHash: string): Promise<string | undefined> {
         const m = await this.getMessage(messageHash);
-        return m?.relay_tx;
+        return m?.receive_tx;
     }
-
-
 
     /**
      * Fetches internal message from backend
@@ -120,6 +149,8 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
                     send_tx
                     sent_at
                     send_block
+                    original_sender
+                    
                     receive_tx
                     origin_and_nonce
                     receive_block
@@ -138,7 +169,7 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
       const events = response.bridge_events;
 
       if (events.length <= 0) return undefined;
-      else if (events.length > 1) throw new Error(`Transaction contains more than one Dispatch event`);
+      else if (events.length > 5) throw new Error(`Transaction contains more than one Dispatch event`);
 
       const r: GoldSkyBridgeMessage = {
           committed_root: events[0].committed_root,
@@ -183,6 +214,7 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
           send_tx: events[0].send_tx,
           sent_at: events[0].sent_at,
           send_block: events[0].send_block,
+          original_sender: events[0].original_sender,
           receive_tx: events[0].receive_tx,
           origin_and_nonce: events[0].origin_and_nonce,
           receive_block: events[0].receive_block,
