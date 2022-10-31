@@ -3,7 +3,7 @@ import { utils as mpUtils } from '@nomad-xyz/multi-provider';
 import * as bridge from '@nomad-xyz/contracts-bridge';
 import { FailedHomeError, NomadContext } from '@nomad-xyz/sdk';
 import { hexlify } from '@ethersproject/bytes';
-import { BridgeContracts } from './BridgeContracts';
+import { AccountantAsset, BridgeContracts, NftInfo } from './BridgeContracts';
 import { ResolvedTokenInfo, TokenIdentifier } from './tokens';
 import { TransferMessage } from './BridgeMessage';
 import * as config from '@nomad-xyz/configuration';
@@ -446,5 +446,66 @@ export class BridgeContext extends NomadContext {
     }
 
     return message;
+  }
+
+  /**
+   * Get the info associated with the NFT ID, if any.
+   *
+   * @param id The numerical NFT ID
+   * @returns The NFT info, or undefined if no NFT exists, or undefined if
+   *          this is not production (i.e. there is no network named "ethereum")
+   * @throws If no ethereum signer is available, or if the transaction errors
+   */
+  async nftInfo(id: BigNumberish): Promise<NftInfo | undefined> {
+    return await this.mustGetBridge('ethereum')?.nftInfo(id);
+  }
+
+  /**
+   * Prepare a transaction to recover from the NFT, if possible
+   *
+   * @param id The numerical NFT ID
+   * @returns A populated transaction
+   * @throws If no ethereum signer is available, or if the transaction errors
+   */
+  async prepareRecover(
+    id: BigNumberish,
+    overrides: ethers.PayableOverrides = {},
+  ): Promise<ethers.PopulatedTransaction | undefined> {
+    // first check that the NFT exists
+    const nftInfo = await this.nftInfo(id);
+    if (!nftInfo) return;
+    // mustGetBridge is safe here, as if ethereum doesn't exist, the NFT info
+    // will be undefined
+    return await this.mustGetBridge(
+      'ethereum',
+    ).accountant?.populateTransaction.recover(id, overrides);
+  }
+
+  /**
+   * Recover from the NFT, if possible
+   *
+   * @param id The numerical NFT ID
+   * @returns A populated transaction
+   * @throws If no ethereum signer is available, or if the transaction errors
+   */
+  async recover(
+    id: BigNumberish,
+    overrides: ethers.PayableOverrides = {},
+  ): Promise<ethers.ContractReceipt | undefined> {
+    const tx = await this.prepareRecover(id, overrides);
+    if (!tx) return;
+    const dispatch = await this.mustGetSigner('ethereum').sendTransaction(tx);
+    return await dispatch.wait();
+  }
+
+  /**
+   * Read the accountant's information on an asset
+   *
+   * @param id The numerical NFT ID
+   * @returns A populated transaction
+   * @throws If no ethereum signer is available, or if the transaction errors
+   */
+  async assetInfo(token: string): Promise<AccountantAsset | undefined> {
+    return await this.mustGetBridge('ethereum').accountant?.assetInfo(token);
   }
 }

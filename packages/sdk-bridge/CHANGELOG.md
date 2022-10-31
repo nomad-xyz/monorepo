@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- add NFT related convenience methods to `BridgeContext`
+
 ### 1.1.1
 
 - fix: getProof error, MessageStatus enum
