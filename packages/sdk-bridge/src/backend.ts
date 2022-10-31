@@ -42,7 +42,7 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
      * Checks whether an environment is supported by the backend. Throws on unsupported
      * @param environment environment to check
      */
-    static checkEnvironment(environment: string) {
+    static checkEnvironment(environment: string): void {
         if (environment != 'production') {
             throw new Error(`Only production environment is supported`);
         }
@@ -66,7 +66,7 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
     /**
      * Stores message into internal cache
      */
-    storeMessage(m: GoldSkyBridgeMessage) {
+    storeMessage(m: GoldSkyBridgeMessage): void {
         this.messageCache.set(m.message_hash, m);
         this.dispatchTxToMessageHash.set(m.dispatch_tx, m.message_hash);
     }
@@ -81,7 +81,7 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
         let m = this.messageCache.get(messageHash);
         if (!m) {
             m = await this.fetchMessage({
-                messageHash
+                messageHash,
             });
             if (m) {
                 this.storeMessage(m);
@@ -177,7 +177,7 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
         const headers = {
           "content-type": "application/json",
           "x-hasura-admin-secret": this._secret,
-        }
+        };
 
       const response = await request(this.uri, query, GoldSkyBackend.fillFilter(f), headers);
 

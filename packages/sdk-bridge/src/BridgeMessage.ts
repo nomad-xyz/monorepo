@@ -113,11 +113,11 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
   }
 
   async getReceived(): Promise<string | undefined> {
-    return await this.backend.receivedTx(this.messageHash)
+    return await this.backend.receivedTx(this.messageHash);
   }
 
   async getSender(): Promise<string | undefined> {
-    return await this.backend.sender(this.messageHash)
+    return await this.backend.sender(this.messageHash);
   }
 
   static async bridgeBaseFromTransactionHashUsingBackend(
