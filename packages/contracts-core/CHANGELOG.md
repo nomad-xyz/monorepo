@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- feature: Config.sol exposes configuration to foundry scripts
 - (patch): filter scripts from hh compilation
 
 ### 2.0.0
