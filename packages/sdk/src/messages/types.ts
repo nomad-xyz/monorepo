@@ -1,5 +1,4 @@
 import { BigNumber } from '@ethersproject/bignumber';
-// import { TransactionReceipt } from '@ethersproject/abstract-provider';
 
 // copied from Home.d.ts
 export type Dispatch = {

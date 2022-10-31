@@ -1,7 +1,6 @@
 import {  GoldSkyBackend, GoldSkyMessage, MessageFilter } from "@nomad-xyz/sdk";
 import {MessageBackend} from "@nomad-xyz/sdk";
 import { request, gql } from 'graphql-request';
-// import { Dispatch } from '../messages';
 import * as config from '@nomad-xyz/configuration';
 
 const defaultGoldSkySecret = "";
@@ -11,13 +10,8 @@ const defaultGoldSkySecret = "";
  * Abstract class required for operation of NomadMessage
  */
  export default abstract class BridgeMessageBackend extends MessageBackend {
-    // abstract getDispatch(tx: string): Promise<Dispatch | undefined>;
-    // abstract getMessageHash(tx: string): Promise<string | undefined>;
     abstract sender(messageHash: string): Promise<string | undefined>;
     abstract receivedTx(messageHash: string): Promise<string | undefined>;
-    // abstract relayTx(messageHash: string): Promise<string | undefined>;
-    // abstract processTx(messageHash: string): Promise<string | undefined>;
-    // abstract confirmAt(messageHash: string): Promise<Date | undefined>;
 }
 
 
@@ -32,7 +26,9 @@ export type GoldSkyBridgeMessage =  GoldSkyMessage & {
     received_at: string,
 };
 
-
+/**
+ * GoldSky bridge backend for NomadMessage 
+ */
 export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessageBackend {
 
     messageCache: Map<string, GoldSkyBridgeMessage>;
@@ -42,12 +38,21 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
         this.messageCache = new Map();
     }
 
+    /**
+     * Checks whether an environment is supported by the backend. Throws on unsupported
+     * @param environment environment to check
+     */
     static checkEnvironment(environment: string) {
         if (environment != 'production') {
             throw new Error(`Only production environment is supported`);
         }
     }
 
+    /**
+     * Creates a default GoldSky backend for an environment
+     * @param environment environment to create the backend for
+     * @returns backend
+     */
     static default(environment: string | config.NomadConfig = 'development'): GoldSkyBridgeBackend {
         const environmentString = typeof environment === 'string' ? environment : environment.environment;
 
@@ -72,7 +77,7 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
      *
      * @returns A message representation (if any)
      */
-     async getMessage(messageHash: string): Promise<GoldSkyBridgeMessage | undefined> {
+    async getMessage(messageHash: string): Promise<GoldSkyBridgeMessage | undefined> {
         let m = this.messageCache.get(messageHash);
         if (!m) {
             m = await this.fetchMessage({
@@ -86,11 +91,21 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
         return m;
     }
 
+    /**
+     * Gets an original sender of the message
+     * @param messageHash 
+     * @returns sender's address
+     */
     async sender(messageHash: string): Promise<string | undefined> {
         const m = await this.getMessage(messageHash);
         return m?.original_sender;
     }
 
+    /**
+     * Gets a transaction related to Received event
+     * @param messageHash 
+     * @returns transaction hash
+     */
     async receivedTx(messageHash: string): Promise<string | undefined> {
         const m = await this.getMessage(messageHash);
         return m?.receive_tx;
