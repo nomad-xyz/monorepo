@@ -7,15 +7,19 @@ import {TypeCasts} from "../XAppConnectionManager.sol";
 
 import "forge-std/Script.sol";
 
-
 abstract contract CallBatch is Script {
     GovernanceMessage.Call[] calls;
 
-    string public domain;
     bool public complete;
+    string public domain;
     string public outputFile;
 
-    constructor(string memory _domain, string memory _outputFile) {
+    function initializeCallBatch(
+        string memory _domain,
+        string memory _outputFile
+    ) public {
+        require(bytes(domain).length == 0, "already initialized");
+        require(bytes(outputFile).length == 0, "already initialized");
         domain = _domain;
         outputFile = string(abi.encodePacked("./actions/", _outputFile));
     }
@@ -33,26 +37,27 @@ abstract contract CallBatch is Script {
         vm.writeLine(outputFile, string(abi.encodePacked(indent, line)));
     }
 
-    function writeKV(string memory indent, string memory key, string memory value, bool terminal) private {
+    function writeKV(
+        string memory indent,
+        string memory key,
+        string memory value,
+        bool terminal
+    ) private {
         string memory comma = terminal ? "" : ",";
 
         bytes memory line = abi.encodePacked(
-            "\"",
+            '"',
             key,
-            "\": \"",
+            '": "',
             value,
-            "\"",
+            '"',
             comma
         );
         write(indent, string(line));
     }
 
     function writeArrayOpen(string memory indent, string memory key) private {
-        bytes memory line = abi.encodePacked(
-            "\"",
-            key,
-            "\": ["
-        );
+        bytes memory line = abi.encodePacked('"', key, '": [');
         write(indent, string(line));
     }
 
@@ -60,7 +65,11 @@ abstract contract CallBatch is Script {
         write(indent, terminal ? "]" : "],");
     }
 
-    function writeCall(string memory indent, GovernanceMessage.Call storage call, bool terminal) private {
+    function writeCall(
+        string memory indent,
+        GovernanceMessage.Call storage call,
+        bool terminal
+    ) private {
         write(indent, "{");
 
         string memory inner = string(abi.encodePacked(indent, "  "));
@@ -85,16 +94,16 @@ abstract contract CallBatch is Script {
     }
 
     function finish() public {
+        require(bytes(domain).length != 0, "must initialize");
+        require(bytes(outputFile).length != 0, "must initialize");
         complete = true;
         writeOutput();
     }
 }
 
 contract TestCallBatch is CallBatch {
-
-    constructor() CallBatch("hello world", "test.json") {}
-
-    function run() public {
+    function run(string memory _domain, string memory _outputFile) public {
+        initializeCallBatch(_domain, _outputFile);
         push(address(3), bytes("abcd"));
         push(address(3), bytes("abcd"));
         push(address(3), bytes("abcd"));
