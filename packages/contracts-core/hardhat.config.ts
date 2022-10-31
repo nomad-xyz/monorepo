@@ -2,8 +2,8 @@ import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 import "hardhat-packager";
 
-import {subtask} from "hardhat/config";
-import {TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS} from "hardhat/builtin-tasks/task-names";
+import { subtask } from "hardhat/config";
+import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from "hardhat/builtin-tasks/task-names";
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -15,7 +15,10 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
   async (_, __, runSuper) => {
     const paths: string[] = await runSuper();
 
-    return paths.filter((p) => !p.endsWith(".t.sol") && !p.includes("test"));
+    return paths.filter(
+      (p) =>
+        !p.endsWith(".t.sol") && !p.includes("test") && !p.includes("scripts")
+    );
   }
 );
 
