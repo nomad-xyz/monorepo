@@ -514,4 +514,11 @@ export class BridgeContext extends NomadContext {
   async assetInfo(token: string): Promise<AccountantAsset | undefined> {
     return await this.mustGetBridge('ethereum').accountant?.assetInfo(token);
   }
+
+  async isAllowed(address: Address): Promise<boolean> {
+    if (address.length !== 42) throw new Error('Address must be 20 bytes');
+    const accountant = this.mustGetBridge('ethereum').accountant;
+    if (!accountant) throw new Error('Not able to fetch NFT Accountant contract')
+    return await accountant.allowList(address);
+  }
 }
