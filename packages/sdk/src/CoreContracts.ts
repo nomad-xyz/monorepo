@@ -20,11 +20,15 @@ export class CoreContracts<T extends NomadContext> extends Contracts<
   config.Domain,
   NomadContext
 > {
-  protected conf: config.CoreContracts;
+  protected conf: config.EthereumCoreDeploymentInfo;
 
   private _governor?: Governor;
 
-  constructor(context: T, domain: string, conf: config.CoreContracts) {
+  constructor(
+    context: T,
+    domain: string,
+    conf: config.EthereumCoreDeploymentInfo,
+  ) {
     super(context, domain, conf);
     this.conf = conf;
   }

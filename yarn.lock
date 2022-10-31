@@ -2998,6 +2998,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nomad-xyz/configuration@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@nomad-xyz/configuration@npm:2.0.0"
+  checksum: 23715adc99fd38a873b5f64d7ff80181999ed4869026371837523c1be1cafc70150d0dca2750bdc53b22d112c7aba3800885aec28b9009958b7141914c681ca5
+  languageName: node
+  linkType: hard
+
 "@nomad-xyz/contracts-bridge@npm:1.0.0-rc.3":
   version: 1.0.0-rc.3
   resolution: "@nomad-xyz/contracts-bridge@npm:1.0.0-rc.3"
@@ -3373,7 +3380,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk-bridge@workspace:packages/sdk-bridge"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0
+    "@nomad-xyz/configuration": ^2.0.0
     "@nomad-xyz/contracts-bridge": "workspace:^"
     "@nomad-xyz/sdk": "workspace:^"
     "@types/jest": ^28.1.7
@@ -3401,7 +3408,7 @@ __metadata:
     "@gnosis.pm/safe-core-sdk": ^2.0.0
     "@gnosis.pm/safe-ethers-adapters": ^0.1.0-alpha.8
     "@gnosis.pm/safe-ethers-lib": ^1.0.0
-    "@nomad-xyz/configuration": ^0.1.0
+    "@nomad-xyz/configuration": ^2.0.0
     "@nomad-xyz/sdk": "workspace:^"
     "@types/jest": ^28.1.7
     "@types/node": ^16.9.1
@@ -3426,7 +3433,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@nomad-xyz/configuration": ^0.1.0
+    "@nomad-xyz/configuration": ^2.0.0
     "@nomad-xyz/contracts-core": "workspace:^"
     "@nomad-xyz/local-environment": "workspace:^"
     "@nomad-xyz/multi-provider": "workspace:^"

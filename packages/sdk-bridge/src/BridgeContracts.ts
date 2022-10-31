@@ -32,12 +32,12 @@ export interface AccountantAsset {
 }
 
 export class BridgeContracts extends Contracts<config.Domain, BridgeContext> {
-  protected conf: config.BridgeContracts;
+  protected conf: config.EthereumBridgeDeploymentInfo;
 
   constructor(
     context: BridgeContext,
     domain: string,
-    conf: config.BridgeContracts,
+    conf: config.EthereumBridgeDeploymentInfo,
   ) {
     super(context, domain, conf);
     this.conf = conf;
@@ -105,7 +105,7 @@ export class BridgeContracts extends Contracts<config.Domain, BridgeContext> {
     if (!this.connection) throw new NoProviderError(this.context, this.domain);
     if (!this.conf.accountant) return;
     return NftAccountant__factory.connect(
-      this.conf.accountant,
+      this.conf.accountant.proxy,
       this.connection,
     );
   }
@@ -127,7 +127,7 @@ export class BridgeContracts extends Contracts<config.Domain, BridgeContext> {
   /**
    * Get the info associated with the NFT ID, if any.
    *
-   * @param id The numerical NFT ID
+   * @param token The numerical NFT ID
    * @throws if there is no connection for this network
    */
   async assetInfo(token: string): Promise<AccountantAsset | undefined> {

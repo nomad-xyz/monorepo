@@ -24,11 +24,17 @@ export class BridgeContext extends NomadContext {
   constructor(environment: string | config.NomadConfig = 'development') {
     super(environment);
     this.bridges = new Map();
+
     for (const network of this.conf.networks) {
+      const conf = this.conf.bridge[network] as {
+        bridgeRouter?: config.Proxy;
+      };
+      if (!conf.bridgeRouter) throw new Error('substrate not yet supported');
+
       const bridge = new BridgeContracts(
         this,
         network,
-        this.conf.bridge[network],
+        conf as config.EthereumBridgeDeploymentInfo,
       );
       this.bridges.set(bridge.domain, bridge);
     }
