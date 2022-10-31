@@ -338,10 +338,6 @@ export class TransferMessage extends BridgeMessage {
     return false;
   }
 
-  async getReceived(): Promise<string | undefined> {
-    return await this.backend.receivedTx(this.messageHash)
-  }
-
   /**
    * The amount of tokens being transferred (in the smallest unit)
    */
