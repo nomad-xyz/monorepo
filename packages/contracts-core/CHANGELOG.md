@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- (patch): filter scripts from hh compilation
+
 ### 2.0.0
 
 - proveAndProcess now allows just-processing

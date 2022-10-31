@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- (patch): filter scripts from hh compilation
+
 ### 2.0.0
 
 - (feat): accountant in typechain lib
