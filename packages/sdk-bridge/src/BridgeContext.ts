@@ -482,16 +482,17 @@ export class BridgeContext extends NomadContext {
     if (!nftInfo) return;
     // mustGetBridge is safe here, as if ethereum doesn't exist, the NFT info
     // will be undefined
-    return await this.mustGetBridge(
-      'ethereum',
-    ).accountant?.populateTransaction.recover(id, overrides);
+    const accountant = this.mustGetBridge('ethereum').accountant!
+    // check if it will succeed/fail with callStatic
+    await accountant.callStatic.recover(id, overrides);
+    return accountant.populateTransaction.recover(id, overrides);
   }
 
   /**
    * Recover from the NFT, if possible
    *
    * @param id The numerical NFT ID
-   * @returns A populated transaction
+   * @returns A transaction receipt
    * @throws If no ethereum signer is available, or if the transaction errors
    */
   async recover(
@@ -507,14 +508,19 @@ export class BridgeContext extends NomadContext {
   /**
    * Read the accountant's information on an asset
    *
-   * @param id The numerical NFT ID
-   * @returns A populated transaction
-   * @throws If no ethereum signer is available, or if the transaction errors
+   * @param id The token address on Ethereum
+   * @returns The asset info (_totalAffected, _totalMinted, _totalCollected, _totalRecovered)
    */
   async assetInfo(token: string): Promise<AccountantAsset | undefined> {
     return await this.mustGetBridge('ethereum').accountant?.assetInfo(token);
   }
 
+  /**
+   * Checks if an address is on the allow list
+   * 
+   * @param address A 20-byte Ethereum address
+   * @returns Boolean, whether the address is on the allow list or not
+   */
   async isAllowed(address: Address): Promise<boolean> {
     if (address.length !== 42) throw new Error('Address must be 20 bytes');
     const accountant = this.mustGetBridge('ethereum').accountant;
