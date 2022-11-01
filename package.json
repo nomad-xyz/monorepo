@@ -13,6 +13,7 @@
     "compile": "yarn workspaces foreach -Apvt --exclude @nomad-xyz/deploy run compile",
     "contracts-bridge": "yarn workspace @nomad-xyz/contracts-bridge",
     "contracts-core": "yarn workspace @nomad-xyz/contracts-core",
+    "contracts-ops": "yarn workspace @nomad-xyz/contracts-ops",
     "contracts-router": "yarn workspace @nomad-xyz/contracts-router",
     "deploy": "yarn workspace @nomad-xyz/deploy",
     "gen-proof": "scripts/accumulator-cli",
