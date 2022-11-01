@@ -15,9 +15,9 @@ contract RotateUpdater is Script, Config, CallBatch {
     function setReplicaUpdater(
         string memory localDomain,
         string memory connection,
-        address newUpdater
     ) private {
-        // TODO: fix to use updater of remote chain
+        // New updater is the updater for the remote Home
+        address newUpdater = updater(connection);
         Replica replica = replicaOf(localDomain, connection);
         if (replica.updater() != newUpdater) {
             push(
@@ -29,12 +29,12 @@ contract RotateUpdater is Script, Config, CallBatch {
 
     function setUpdater(
     ) internal {
+        // Load info from config
         string[] memory connections = connections(domain);
         address newUpdater = updater(domain);
-
         Home home = home(domain);
         UpdaterManager updaterManager = updaterManager(domain);
-
+        // Updater manager will call `home.setUpdater()`
         if (newUpdater != home.updater()) {
             push(
                 address(updaterManager),
@@ -44,7 +44,7 @@ contract RotateUpdater is Script, Config, CallBatch {
                 )
             );
         }
-
+        // Set each replica
         for (uint256 i = 0; i < connections.length; i++) {
             setReplicaUpdater(domain, connections[i], newUpdater);
         }
