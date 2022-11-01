@@ -21,8 +21,8 @@
     "lint": "solhint contracts/*.sol",
     "lint:fix": "solhint --fix contracts/*.sol",
     "prettier": "prettier --write './contracts'",
-    "test:unit": "FOUNDRY_PROFILE=bridge-ci forge test",
-    "test:unit:local": "FOUNDRY_PROFILE=bridge forge test"
+    "test:unit": "FOUNDRY_PROFILE=ops forge test",
+    "test:unit:local": "FOUNDRY_PROFILE=ops forge test"
   },
   "dependencies": {
     "@nomad-xyz/contracts-bridge": "workspace:^",
