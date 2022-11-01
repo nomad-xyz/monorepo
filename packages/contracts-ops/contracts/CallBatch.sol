@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity 0.7.6;
+pragma abicoder v2;
 
 // solhint-disable quotes
 
 import {GovernanceMessage} from "@nomad-xyz/contracts-core/contracts/governance/GovernanceMessage.sol";
+import {GovernanceRouter} from "@nomad-xyz/contracts-core/contracts/governance/GovernanceRouter.sol";
 import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 
 import "forge-std/Script.sol";
@@ -14,6 +16,8 @@ abstract contract CallBatch is Script {
     bool public complete;
     string public domain;
     string public outputFile;
+
+    GovernanceMessage.Call built;
 
     function __CallBatch_initialize(
         string memory _domain,
@@ -100,6 +104,24 @@ abstract contract CallBatch is Script {
         require(bytes(outputFile).length != 0, "must initialize");
         complete = true;
         writeOutput();
+    }
+
+    function build(address governanceRouter) public {
+        require(bytes(domain).length != 0, "must initialize");
+        require(bytes(outputFile).length != 0, "must initialize");
+        complete = true;
+
+        bytes memory data = abi.encodeWithSelector(
+            GovernanceRouter.executeGovernanceActions.selector,
+            calls,
+            new uint32[](0),
+            new GovernanceMessage.Call[][](0)
+        );
+
+        built.to = TypeCasts.addressToBytes32(governanceRouter);
+        built.data = data;
+
+        writeCall("", built, true);
     }
 }
 

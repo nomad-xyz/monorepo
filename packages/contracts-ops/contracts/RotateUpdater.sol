@@ -12,6 +12,20 @@ import {Replica} from "@nomad-xyz/contracts-core/contracts/Replica.sol";
 import "forge-std/Script.sol";
 
 contract RotateUpdater is Script, Config, CallBatch {
+    function setReplicaUpdater(
+        string memory localDomain,
+        string memory connection,
+        address newUpdater
+    ) private {
+        Replica replica = replicaOf(localDomain, connection);
+        if (replica.updater() != newUpdater) {
+            push(
+                address(replica),
+                abi.encodeWithSelector(replica.setUpdater.selector, newUpdater)
+            );
+        }
+    }
+
     function run(
         string calldata configFile,
         string calldata localDomain,
@@ -28,11 +42,6 @@ contract RotateUpdater is Script, Config, CallBatch {
 
         if (newUpdater != home.updater()) {
             push(
-                address(home),
-                abi.encodeWithSelector(home.setUpdater.selector, newUpdater)
-            );
-
-            push(
                 address(updaterManager),
                 abi.encodeWithSelector(
                     updaterManager.setUpdater.selector,
@@ -42,16 +51,7 @@ contract RotateUpdater is Script, Config, CallBatch {
         }
 
         for (uint256 i = 0; i < connections.length; i++) {
-            string memory connection = connections[i];
-            Replica replica = replicaOf(localDomain, connection);
-            if (replica.updater() != newUpdater)
-                push(
-                    address(replica),
-                    abi.encodeWithSelector(
-                        replica.setUpdater.selector,
-                        newUpdater
-                    )
-                );
+            setReplicaUpdater(localDomain, connections[i], newUpdater);
         }
 
         finish();
