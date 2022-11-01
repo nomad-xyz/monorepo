@@ -4,6 +4,7 @@ yarn-error.log
 **/tsconfig.tsbuildinfo
 dist/
 cache/
+actions/
 scripts/accumulator-cli
 **/.coverage
 
