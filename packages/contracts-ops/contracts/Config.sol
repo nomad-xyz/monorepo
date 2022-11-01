@@ -2,11 +2,11 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import {UpgradeBeaconProxy} from "../upgrade/UpgradeBeaconProxy.sol";
-import {UpgradeBeacon} from "../upgrade/UpgradeBeacon.sol";
-import {UpgradeBeaconController} from "../upgrade/UpgradeBeaconController.sol";
-import {UpdaterManager} from "../UpdaterManager.sol";
-import {XAppConnectionManager} from "../XAppConnectionManager.sol";
+import {UpgradeBeaconProxy} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeaconProxy.sol";
+import {UpgradeBeacon} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeacon.sol";
+import {UpgradeBeaconController} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeaconController.sol";
+import {UpdaterManager} from "@nomad-xyz/contracts-core/contracts/UpdaterManager.sol";
+import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 
 import "forge-std/Vm.sol";
 import "forge-std/Test.sol";
@@ -195,7 +195,7 @@ contract TestJson is Test, Config {
         assertEq(coreDeployHeight("ethereum"), 1234);
         assertEq(
             address(governanceRouter("ethereum").proxy),
-                0x569D80f7FC17316B4C83f072b92EF37B72819DE0
+            0x569D80f7FC17316B4C83f072b92EF37B72819DE0
         );
     }
 }
