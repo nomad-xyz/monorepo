@@ -9,12 +9,9 @@ import {UpdaterManager} from "../UpdaterManager.sol";
 import {XAppConnectionManager} from "../XAppConnectionManager.sol";
 
 import "forge-std/Vm.sol";
-import "forge-std/StdJson.sol";
 import "forge-std/Test.sol";
 
 abstract contract Config {
-    using stdJson for string;
-
     Vm private constant vm =
         Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
