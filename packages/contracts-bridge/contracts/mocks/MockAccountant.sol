@@ -80,6 +80,6 @@ contract MockNftAccountant is NFTRecoveryAccountant {
         _originalAmount = uint256(_rec.amount);
         _originalUser = _rec.originalUser;
         _recovered = uint256(_rec.recovered);
-        _recoverable = 50000000;
+        _recoverable = 0.05 ether;
     }
 }
