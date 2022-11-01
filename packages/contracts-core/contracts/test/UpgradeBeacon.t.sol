@@ -83,8 +83,6 @@ contract UpgradeBeaconTest is UpgradeTest {
         public
     {
         vm.assume(!Address.isContract(newImpl));
-        // any address that is not a EOA
-        address newImpl = address(0xBEEFEEF);
         vm.startPrank(controllerAddr);
         (bool success, bytes memory ret) = beaconAddr.call(abi.encode(newImpl));
         assertFalse(success);
