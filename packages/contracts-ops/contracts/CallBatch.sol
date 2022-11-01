@@ -17,8 +17,6 @@ abstract contract CallBatch is Script {
     string public domain;
     string public outputFile;
 
-    GovernanceMessage.Call public built;
-
     function __CallBatch_initialize(
         string memory _domain,
         string memory _outputFile
