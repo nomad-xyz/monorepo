@@ -188,6 +188,7 @@ abstract contract Config {
 
 contract TestJson is Test, Config {
     function setUp() public {
+        // solhint-disable-next-line quotes
         config = '{"core": {"ethereum": {"deployHeight": 1234, "governanceRouter": {"proxy":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0","implementation":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0","beacon":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0"}}}}';
     }
 
