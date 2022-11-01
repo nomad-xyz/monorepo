@@ -33,7 +33,7 @@ contract MockNftAccountant is NFTRecoveryAccountant {
         address _user = ownerOf(_id);
         require(_user == msg.sender, "only NFT holder can recover");
         Record memory _rec = records[_id];
-        uint256 _amount = 50000000;
+        uint256 _amount = 0.5 ether;
         _rec.recovered += uint96(_amount);
         emit Recovery(_id, _rec.asset, _user, _amount);
     }
