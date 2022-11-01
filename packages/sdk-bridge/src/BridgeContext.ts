@@ -10,6 +10,7 @@ import * as config from '@nomad-xyz/configuration';
 
 type Address = string;
 const DEFAULT_GAS_LIMIT = BigNumber.from(350000);
+const MOCK_GOERLI_ACCOUNTANT = '0x0bebe57a1b7ba65e94e8131bce912b442f1a13a1';
 
 /**
  * The BridgeContext manages connections to Nomad Bridge contracts.
@@ -455,15 +456,40 @@ export class BridgeContext extends NomadContext {
   }
 
   /**
+   * Get the accountant associated with this environment, if any. Accountants
+   * will be on Goerli for staging, Ethereum for production.
+   */
+  get accountant(): bridge.NFTAccountant | undefined {
+    switch (this.environment) {
+      case 'staging': {
+        return bridge.NftAccountant__factory.connect(
+          MOCK_GOERLI_ACCOUNTANT,
+          this.mustGetConnection('goerli'),
+        );
+      }
+      case 'production': {
+        return this.mustGetBridge('ethereum').accountant;
+      }
+      default: {
+        return;
+      }
+    }
+  }
+
+  /**
    * Get the info associated with the NFT ID, if any.
    *
    * @param id The numerical NFT ID
    * @returns The NFT info, or undefined if no NFT exists, or undefined if
    *          this is not production (i.e. there is no network named "ethereum")
-   * @throws If no ethereum signer is available, or if the transaction errors
+   * @throws If no signer is available, or if the transaction errors
    */
   async nftInfo(id: BigNumberish): Promise<NftInfo | undefined> {
-    return await this.mustGetBridge('ethereum')?.nftInfo(id);
+    const info = await this.accountant?.info(id);
+    if (!info || info._originalAmount.isZero()) {
+      return;
+    }
+    return info;
   }
 
   /**
@@ -471,7 +497,7 @@ export class BridgeContext extends NomadContext {
    *
    * @param id The numerical NFT ID
    * @returns A populated transaction
-   * @throws If no ethereum signer is available, or if the transaction errors
+   * @throws If no signer is available, or if the transaction errors
    */
   async prepareRecover(
     id: BigNumberish,
@@ -482,11 +508,11 @@ export class BridgeContext extends NomadContext {
     if (!nftInfo) return;
     // mustGetBridge is safe here, as if ethereum doesn't exist, the NFT info
     // will be undefined
-    const accountant = this.mustGetBridge('ethereum').accountant;
-    if (!accountant) throw new UnreachableError('checked in nftInfo() call');
+    if (!this.accountant)
+      throw new UnreachableError('checked in nftInfo() call');
     // check if it will succeed/fail with callStatic
-    await accountant.callStatic.recover(id, overrides);
-    return accountant.populateTransaction.recover(id, overrides);
+    await this.accountant.callStatic.recover(id, overrides);
+    return this.accountant.populateTransaction.recover(id, overrides);
   }
 
   /**
@@ -494,7 +520,7 @@ export class BridgeContext extends NomadContext {
    *
    * @param id The numerical NFT ID
    * @returns A transaction receipt
-   * @throws If no ethereum signer is available, or if the transaction errors
+   * @throws If no signer is available, or if the transaction errors
    */
   async recover(
     id: BigNumberish,
@@ -502,7 +528,10 @@ export class BridgeContext extends NomadContext {
   ): Promise<ethers.ContractReceipt | undefined> {
     const tx = await this.prepareRecover(id, overrides);
     if (!tx) return;
-    const dispatch = await this.mustGetSigner('ethereum').sendTransaction(tx);
+    // Netowrk must be either eth or goerli, as this is checked in
+    // /s`prepareRecover`
+    const network = this.environment === 'production' ? 'ethereum' : 'goerli';
+    const dispatch = await this.mustGetSigner(network).sendTransaction(tx);
     return await dispatch.wait();
   }
 
@@ -513,7 +542,7 @@ export class BridgeContext extends NomadContext {
    * @returns The asset info (_totalAffected, _totalMinted, _totalCollected, _totalRecovered)
    */
   async assetInfo(token: string): Promise<AccountantAsset | undefined> {
-    return await this.mustGetBridge('ethereum').accountant?.assetInfo(token);
+    return await this.accountant?.assetInfo(token);
   }
 
   /**
@@ -524,9 +553,8 @@ export class BridgeContext extends NomadContext {
    */
   async isAllowed(address: Address): Promise<boolean> {
     if (address.length !== 42) throw new Error('Address must be 20 bytes');
-    const accountant = this.mustGetBridge('ethereum').accountant;
-    if (!accountant)
+    if (!this.accountant)
       throw new Error('Not able to fetch NFT Accountant contract');
-    return await accountant.allowList(address);
+    return await this.accountant.allowList(address);
   }
 }
