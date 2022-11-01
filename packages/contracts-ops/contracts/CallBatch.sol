@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-
 pragma solidity 0.7.6;
+
+// solhint-disable quotes
 
 import {GovernanceMessage} from "@nomad-xyz/contracts-core/contracts/governance/GovernanceMessage.sol";
 import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
@@ -8,7 +9,7 @@ import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManag
 import "forge-std/Script.sol";
 
 abstract contract CallBatch is Script {
-    GovernanceMessage.Call[] calls;
+    GovernanceMessage.Call[] public calls;
 
     bool public complete;
     string public domain;
@@ -43,6 +44,7 @@ abstract contract CallBatch is Script {
         string memory value,
         bool terminal
     ) private {
+
         string memory comma = terminal ? "" : ",";
 
         bytes memory line = abi.encodePacked(
