@@ -128,7 +128,7 @@ abstract contract Config {
             );
     }
 
-    function replicaOfUpdgrade(string memory local, string memory remote)
+    function replicaOfUpgrade(string memory local, string memory remote)
         public
         returns (Upgrade memory)
     {
@@ -143,7 +143,7 @@ abstract contract Config {
         public
         returns (Replica)
     {
-        return Replica(address(replicaOfUpdgrade(local, remote).proxy));
+        return Replica(address(replicaOfUpgrade(local, remote).proxy));
     }
 
     function networks() public returns (string[] memory) {
