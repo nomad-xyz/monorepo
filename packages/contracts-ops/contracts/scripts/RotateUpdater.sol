@@ -17,6 +17,7 @@ contract RotateUpdater is Script, Config, CallBatch {
         string memory connection,
         address newUpdater
     ) private {
+        // TODO: fix to use updater of remote chain
         Replica replica = replicaOf(localDomain, connection);
         if (replica.updater() != newUpdater) {
             push(
