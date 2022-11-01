@@ -70,4 +70,9 @@ out = 'packages/contracts-da-bridge/foundry_artifacts'
 ffi = true
 fuzz-runs = 10_000
 
-
+[profile.ops]
+src = 'packages/contracts-ops/contracts'
+test = 'packages/contracts-ops/contracts/test'
+out = 'packages/contracts-ops/foundry_artifacts'
+ffi = true
+fs_permissions = [{access = "read-write", path = "./actions"}]

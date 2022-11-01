@@ -1,0 +1,40 @@
+{
+  "name": "@nomad-xyz/contracts-ops",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Nomad foundry scripts",
+  "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/contracts-ops#readme",
+  "bugs": {
+    "url": "https://github.com/nomad-xyz/monorepo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nomad-xyz/monorepo.git"
+  },
+  "license": "MIT OR Apache-2.0",
+  "author": "James Prestwich",
+  "scripts": {
+    "build": "yarn build:deps && yarn compile",
+    "build:deps": "../../scripts/install-deps.sh",
+    "clean": "FOUNDRY_PROFILE=ops forge clean",
+    "compile": "FOUNDRY_PROFILE=ops forge build",
+    "lint": "solhint contracts/*.sol",
+    "lint:fix": "solhint --fix contracts/*.sol",
+    "prettier": "prettier --write './contracts'",
+    "test:unit": "FOUNDRY_PROFILE=ops forge test",
+    "test:unit:local": "FOUNDRY_PROFILE=ops forge test"
+  },
+  "dependencies": {
+    "@nomad-xyz/contracts-bridge": "workspace:^",
+    "@nomad-xyz/contracts-core": "workspace:^",
+    "@nomad-xyz/contracts-router": "workspace:^"
+  },
+  "devDependencies": {
+    "eslint": "^7.20.0",
+    "prettier": "^2.2.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.5",
+    "solhint": "^3.3.2",
+    "solhint-plugin-prettier": "^0.0.5"
+  },
+  "packageManager": "yarn@3.2.0"
+}
