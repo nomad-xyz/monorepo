@@ -2,8 +2,8 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import {Config} from "./Config.sol";
-import {CallBatch} from "./CallBatch.sol";
+import {Config} from "../Config.sol";
+import {CallBatch} from "../CallBatch.sol";
 
 import {UpdaterManager} from "@nomad-xyz/contracts-core/contracts/UpdaterManager.sol";
 import {Home} from "@nomad-xyz/contracts-core/contracts/Home.sol";
@@ -14,7 +14,7 @@ import "forge-std/Script.sol";
 contract RotateUpdater is Script, Config, CallBatch {
     function setReplicaUpdater(
         string memory localDomain,
-        string memory connection,
+        string memory connection
     ) private {
         // New updater is the updater for the remote Home
         address newUpdater = updater(connection);
@@ -27,10 +27,7 @@ contract RotateUpdater is Script, Config, CallBatch {
         }
     }
 
-    function setUpdater(
-    ) internal {
-        // Load info from config
-        string[] memory connections = connections(domain);
+    function setHomeUpdater() private {
         address newUpdater = updater(domain);
         Home home = home(domain);
         UpdaterManager updaterManager = updaterManager(domain);
@@ -44,9 +41,16 @@ contract RotateUpdater is Script, Config, CallBatch {
                 )
             );
         }
+    }
+
+    // Sets the updater for the home and all replicas
+    function setUpdater() internal {
+        // Load info from config
+        string[] memory connections = connections(domain);
+        setHomeUpdater();
         // Set each replica
         for (uint256 i = 0; i < connections.length; i++) {
-            setReplicaUpdater(domain, connections[i], newUpdater);
+            setReplicaUpdater(domain, connections[i]);
         }
     }
 
@@ -59,6 +63,7 @@ contract RotateUpdater is Script, Config, CallBatch {
         __CallBatch_initialize(localDomain, output);
     }
 
+    // entrypoint
     function createCallList(
         string calldata configFile,
         string calldata localDomain,
@@ -69,9 +74,12 @@ contract RotateUpdater is Script, Config, CallBatch {
         finish();
     }
 
-    function createRecoveryTx(string calldata configFile,
+    // entrypoint
+    function createRecoveryTx(
+        string calldata configFile,
         string calldata localDomain,
-        string calldata output) public {
+        string calldata output
+    ) public {
         initialize(configFile, localDomain, output);
         setUpdater();
         build(address(governanceRouter(localDomain).proxy));
