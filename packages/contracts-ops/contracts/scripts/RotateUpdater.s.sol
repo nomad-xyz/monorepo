@@ -11,14 +11,13 @@ import {Replica} from "@nomad-xyz/contracts-core/contracts/Replica.sol";
 
 import "forge-std/Script.sol";
 
-contract RotateUpdater is Script, Config, CallBatch {
+contract RotateUpdaterLogic is Config, CallBatch {
     function setReplicaUpdater(
-        string memory localDomain,
         string memory remoteDomain
     ) private {
         // New updater is the updater for the remote Home
         address newUpdater = updater(remoteDomain);
-        Replica replica = replicaOf(localDomain, remoteDomain);
+        Replica replica = replicaOf(domain, remoteDomain);
         if (replica.updater() != newUpdater) {
             push(
                 address(replica),
@@ -50,10 +49,13 @@ contract RotateUpdater is Script, Config, CallBatch {
         setHomeUpdater();
         // Set each replica
         for (uint256 i = 0; i < connections.length; i++) {
-            setReplicaUpdater(domain, connections[i]);
+            setReplicaUpdater(connections[i]);
         }
     }
+}
 
+
+contract RotateUpdater is Script, RotateUpdaterLogic {
     function initialize(
         string calldata configFile,
         string calldata localDomain,
