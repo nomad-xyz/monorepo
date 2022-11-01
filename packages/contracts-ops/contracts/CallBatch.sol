@@ -17,7 +17,7 @@ abstract contract CallBatch is Script {
     string public domain;
     string public outputFile;
 
-    GovernanceMessage.Call built;
+    GovernanceMessage.Call public built;
 
     function __CallBatch_initialize(
         string memory _domain,
@@ -27,6 +27,10 @@ abstract contract CallBatch is Script {
         require(bytes(outputFile).length == 0, "already initialized");
         domain = _domain;
         outputFile = string(abi.encodePacked("./actions/", _outputFile));
+    }
+
+    function nextIndent(string memory indent) private pure returns (string memory) {
+        return string(abi.encodePacked("  ", indent));
     }
 
     function push(address to, bytes memory data) public {
@@ -61,11 +65,10 @@ abstract contract CallBatch is Script {
         write(indent, string(line));
     }
 
-    function writeObjectBody(
-        string memory indent,
-        string[2][] memory kvs
-    ) private {
-        for (uint i = 0; i < kvs.length; i++) {
+    function writeObjectBody(string memory indent, string[2][] memory kvs)
+        private
+    {
+        for (uint256 i = 0; i < kvs.length; i++) {
             writeKV(indent, kvs[i][0], kvs[i][1], i == kvs.length - 1);
         }
     }
@@ -79,30 +82,28 @@ abstract contract CallBatch is Script {
         write(indent, terminal ? "]" : "],");
     }
 
-    function writeSimpleObject(
-        string memory indent,
-        string[2][] memory kvs,
-        bool terminal
-    ) private {
-        write(indent, "{");
-        string memory inner = string(abi.encodePacked("  ", indent));
-        writeObjectBody(inner, kvs);
+    function writeObjectOpen(string memory indent, string memory name) private {
+        string memory line = string(
+            bytes(name).length == 0
+                ? abi.encodePacked(indent, "{")
+                : abi.encodePacked('"', name, '": {')
+        );
+        write(indent, line);
+    }
+
+    function writeObjectClose(string memory indent, bool terminal) private {
         write(indent, terminal ? "}" : "},");
     }
 
-    function writeSimpleNamedObject(
+    function writeSimpleObject(
         string memory indent,
         string memory name,
         string[2][] memory kvs,
         bool terminal
     ) private {
-        string memory open = string(abi.encodePacked(
-            '"', name, '": {"'
-        ));
-        string memory inner = string(abi.encodePacked("  ", indent));
-        write(indent, open);
-        writeObjectBody(inner, kvs);
-        write(indent, terminal ? "}" : "},");
+        writeObjectOpen(indent, name);
+        writeObjectBody(nextIndent(indent), kvs);
+        writeObjectClose(indent, terminal);
     }
 
     function writeCall(
@@ -110,20 +111,17 @@ abstract contract CallBatch is Script {
         GovernanceMessage.Call storage call,
         bool terminal
     ) private {
+        string memory inner = nextIndent(indent);
         write(indent, "{");
-
-        string memory inner = string(abi.encodePacked(indent, "  "));
         writeKV(inner, "to", vm.toString(call.to), false);
         writeKV(inner, "data", vm.toString(call.data), true);
-
-        string memory close = terminal ? "}" : "},";
-        write(indent, close);
+        writeObjectClose(indent, terminal);
     }
 
-    function writeOutput() private {
+    function writeCallList() private {
         string memory indent = "";
-        string memory inner = "  ";
-        string memory innerer = "    ";
+        string memory inner = nextIndent(indent);
+        string memory innerer = nextIndent(inner);
         write(indent, "{");
         writeArrayOpen(inner, domain);
         for (uint32 i = 0; i < calls.length; i++) {
@@ -138,7 +136,7 @@ abstract contract CallBatch is Script {
         require(bytes(outputFile).length != 0, "must initialize");
         require(!complete, "already written");
         complete = true;
-        writeOutput();
+        writeCallList();
     }
 
     function build(address governanceRouter) public {
@@ -159,7 +157,7 @@ abstract contract CallBatch is Script {
         kvs[0][1] = vm.toString(governanceRouter);
         kvs[1][0] = "data";
         kvs[1][1] = vm.toString(data);
-        writeSimpleObject("", kvs, true);
+        writeSimpleObject("", "", kvs, true);
     }
 }
 
