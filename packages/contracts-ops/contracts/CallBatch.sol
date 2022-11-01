@@ -2,8 +2,8 @@
 
 pragma solidity 0.7.6;
 
-import {GovernanceMessage} from "../governance/GovernanceMessage.sol";
-import {TypeCasts} from "../XAppConnectionManager.sol";
+import {GovernanceMessage} from "@nomad-xyz/contracts-core/contracts/governance/GovernanceMessage.sol";
+import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 
 import "forge-std/Script.sol";
 
