@@ -7,6 +7,8 @@ import {UpgradeBeacon} from "@nomad-xyz/contracts-core/contracts/upgrade/Upgrade
 import {UpgradeBeaconController} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeaconController.sol";
 import {UpdaterManager} from "@nomad-xyz/contracts-core/contracts/UpdaterManager.sol";
 import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
+import {Home} from "@nomad-xyz/contracts-core/contracts/Home.sol";
+import {Replica} from "@nomad-xyz/contracts-core/contracts/Replica.sol";
 
 import "forge-std/Vm.sol";
 import "forge-std/Test.sol";

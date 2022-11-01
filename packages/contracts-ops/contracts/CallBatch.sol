@@ -15,7 +15,7 @@ abstract contract CallBatch is Script {
     string public domain;
     string public outputFile;
 
-    function initializeCallBatch(
+    function __CallBatch_initialize(
         string memory _domain,
         string memory _outputFile
     ) public {
@@ -105,7 +105,7 @@ abstract contract CallBatch is Script {
 
 contract TestCallBatch is CallBatch {
     function run(string memory _domain, string memory _outputFile) public {
-        initializeCallBatch(_domain, _outputFile);
+        __CallBatch_initialize(_domain, _outputFile);
         push(address(3), bytes("abcd"));
         push(address(3), bytes("abcd"));
         push(address(3), bytes("abcd"));
