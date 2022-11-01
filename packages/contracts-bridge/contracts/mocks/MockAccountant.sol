@@ -8,6 +8,15 @@ contract MockNftAccountant is NFTRecoveryAccountant {
 
     constructor() NFTRecoveryAccountant(address(0), address(1)) {}
 
+    function exposed_increaseTotalAffected(address _asset) public {
+        if (totalAffected[_asset] == 0) {
+            totalAffected[_asset] = 5000 ether;
+        } else {
+            totalAffected[_asset] = totalAffected[_asset] + 10 ether;
+        }
+
+    }
+
     function exposed_record(
         address _asset,
         address _user,
