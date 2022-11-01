@@ -102,6 +102,7 @@ abstract contract CallBatch is Script {
     function finish() public {
         require(bytes(domain).length != 0, "must initialize");
         require(bytes(outputFile).length != 0, "must initialize");
+        require(!complete, "already written");
         complete = true;
         writeOutput();
     }
@@ -109,6 +110,7 @@ abstract contract CallBatch is Script {
     function build(address governanceRouter) public {
         require(bytes(domain).length != 0, "must initialize");
         require(bytes(outputFile).length != 0, "must initialize");
+        require(!complete, "already written");
         complete = true;
 
         bytes memory data = abi.encodeWithSelector(
