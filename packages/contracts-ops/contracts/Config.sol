@@ -180,7 +180,7 @@ abstract contract Config {
             abi.decode(loadBridgeAttribute(domain, "deployHeight"), (uint256));
     }
 
-    function bridgeRouter(string memory domain)
+    function bridgeRouterUpgrade(string memory domain)
         public
         onlyInitialized
         returns (Upgrade memory)
@@ -189,7 +189,7 @@ abstract contract Config {
             abi.decode(loadBridgeAttribute(domain, "bridgeRouter"), (Upgrade));
     }
 
-    function bridgeToken(string memory domain)
+    function bridgeTokenUpgrade(string memory domain)
         public
         onlyInitialized
         returns (Upgrade memory)
@@ -198,7 +198,7 @@ abstract contract Config {
             abi.decode(loadBridgeAttribute(domain, "bridgeToken"), (Upgrade));
     }
 
-    function tokenRegistry(string memory domain)
+    function tokenRegistryUpgrade(string memory domain)
         public
         onlyInitialized
         returns (Upgrade memory)
