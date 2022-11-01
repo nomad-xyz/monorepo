@@ -40,11 +40,6 @@ abstract contract Config {
         return bytes(config).length != 0;
     }
 
-    function core(string memory domain) private returns (string memory) {
-        string memory path = string(abi.encodePacked(".core.", domain));
-        return string(vm.parseJson(config, path));
-    }
-
     function corePath(string memory domain)
         private
         pure
@@ -132,11 +127,6 @@ abstract contract Config {
 
     function networks() public returns (string[] memory) {
         return abi.decode(vm.parseJson(config, ".networks"), (string[]));
-    }
-
-    function bridge(string memory domain) private returns (string memory) {
-        string memory path = string(abi.encodePacked(".bridge.", domain));
-        return string(vm.parseJson(config, path));
     }
 
     function bridgePath(string memory domain)
