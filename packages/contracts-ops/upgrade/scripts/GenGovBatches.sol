@@ -19,8 +19,8 @@ import {TokenRegistry} from "../../contracts-bridge/contracts/TokenRegistry.sol"
 import {Test} from "forge-std/Test.sol";
 
 // Ops libs
-import {Config} from "../contracts/Config.sol";
-import {CallBatch} from "../contracts/Callbatch.sol";
+import {Config} from "../../contracts/Config.sol";
+import {CallBatch} from "../../contracts/Callbatch.sol";
 
 contract GenGovBatches is Test, Config, CallBatch {
     string domainName;
