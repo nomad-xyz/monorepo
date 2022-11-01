@@ -75,3 +75,4 @@ src = 'packages/contracts-ops/contracts'
 test = 'packages/contracts-ops/contracts/test'
 out = 'packages/contracts-ops/foundry_artifacts'
 ffi = true
+fs_permissions = [{access = "read-write", path = "./actions"}]
