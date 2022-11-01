@@ -61,6 +61,15 @@ abstract contract CallBatch is Script {
         write(indent, string(line));
     }
 
+    function writeObjectBody(
+        string memory indent,
+        string[2][] memory kvs
+    ) private {
+        for (uint i = 0; i < kvs.length; i++) {
+            writeKV(indent, kvs[i][0], kvs[i][1], i == kvs.length - 1);
+        }
+    }
+
     function writeArrayOpen(string memory indent, string memory key) private {
         bytes memory line = abi.encodePacked('"', key, '": [');
         write(indent, string(line));
@@ -68,6 +77,32 @@ abstract contract CallBatch is Script {
 
     function writeArrayClose(string memory indent, bool terminal) private {
         write(indent, terminal ? "]" : "],");
+    }
+
+    function writeSimpleObject(
+        string memory indent,
+        string[2][] memory kvs,
+        bool terminal
+    ) private {
+        write(indent, "{");
+        string memory inner = string(abi.encodePacked("  ", indent));
+        writeObjectBody(inner, kvs);
+        write(indent, terminal ? "}" : "},");
+    }
+
+    function writeSimpleNamedObject(
+        string memory indent,
+        string memory name,
+        string[2][] memory kvs,
+        bool terminal
+    ) private {
+        string memory open = string(abi.encodePacked(
+            '"', name, '": {"'
+        ));
+        string memory inner = string(abi.encodePacked("  ", indent));
+        write(indent, open);
+        writeObjectBody(inner, kvs);
+        write(indent, terminal ? "}" : "},");
     }
 
     function writeCall(
@@ -119,15 +154,17 @@ abstract contract CallBatch is Script {
             new GovernanceMessage.Call[][](0)
         );
 
-        built.to = TypeCasts.addressToBytes32(governanceRouter);
-        built.data = data;
-
-        writeCall("", built, true);
+        string[2][] memory kvs = new string[2][](2);
+        kvs[0][0] = "to";
+        kvs[0][1] = vm.toString(governanceRouter);
+        kvs[1][0] = "data";
+        kvs[1][1] = vm.toString(data);
+        writeSimpleObject("", kvs, true);
     }
 }
 
 contract TestCallBatch is CallBatch {
-    function run(string memory _domain, string memory _outputFile) public {
+    function finish(string memory _domain, string memory _outputFile) public {
         __CallBatch_initialize(_domain, _outputFile);
         push(address(3), bytes("abcd"));
         push(address(3), bytes("abcd"));
@@ -136,5 +173,16 @@ contract TestCallBatch is CallBatch {
         push(address(3), bytes("abcd"));
         push(address(3), bytes("abcd"));
         finish();
+    }
+
+    function build(string memory _domain, string memory _outputFile) public {
+        __CallBatch_initialize(_domain, _outputFile);
+        push(address(3), bytes("abcd"));
+        push(address(3), bytes("abcd"));
+        push(address(3), bytes("abcd"));
+        push(address(3), bytes("abcd"));
+        push(address(3), bytes("abcd"));
+        push(address(3), bytes("abcd"));
+        build(address(34));
     }
 }
