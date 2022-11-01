@@ -7,6 +7,8 @@ import {UpgradeBeacon} from "@nomad-xyz/contracts-core/contracts/upgrade/Upgrade
 import {UpgradeBeaconController} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeaconController.sol";
 import {UpdaterManager} from "@nomad-xyz/contracts-core/contracts/UpdaterManager.sol";
 import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
+import {Home} from "@nomad-xyz/contracts-core/contracts/Home.sol";
+import {Replica} from "@nomad-xyz/contracts-core/contracts/Replica.sol";
 
 import "forge-std/Vm.sol";
 import "forge-std/Test.sol";
@@ -80,12 +82,16 @@ abstract contract Config {
             );
     }
 
-    function home(string memory domain)
+    function homeUpgrade(string memory domain)
         public
         onlyInitialized
         returns (Upgrade memory)
     {
         return abi.decode(loadCoreAttribute(domain, "home"), (Upgrade));
+    }
+
+    function home(string memory domain) public onlyInitialized returns (Home) {
+        return Home(address(homeUpgrade(domain).proxy));
     }
 
     function updaterManager(string memory domain)
@@ -120,6 +126,24 @@ abstract contract Config {
                 loadCoreAttribute(domain, "xAppconnectionManager"),
                 (XAppConnectionManager)
             );
+    }
+
+    function replicaOfUpgrade(string memory local, string memory remote)
+        public
+        returns (Upgrade memory)
+    {
+        string memory path = string(
+            abi.encodePacked(corePath(local), ".replicas.", remote)
+        );
+        bytes memory res = vm.parseJson(config, path);
+        return abi.decode(res, (Upgrade));
+    }
+
+    function replicaOf(string memory local, string memory remote)
+        public
+        returns (Replica)
+    {
+        return Replica(address(replicaOfUpgrade(local, remote).proxy));
     }
 
     function networks() public returns (string[] memory) {
@@ -158,7 +182,7 @@ abstract contract Config {
             abi.decode(loadBridgeAttribute(domain, "deployHeight"), (uint256));
     }
 
-    function bridgeRouter(string memory domain)
+    function bridgeRouterUpgrade(string memory domain)
         public
         onlyInitialized
         returns (Upgrade memory)
@@ -167,7 +191,7 @@ abstract contract Config {
             abi.decode(loadBridgeAttribute(domain, "bridgeRouter"), (Upgrade));
     }
 
-    function bridgeToken(string memory domain)
+    function bridgeTokenUpgrade(string memory domain)
         public
         onlyInitialized
         returns (Upgrade memory)
@@ -176,13 +200,96 @@ abstract contract Config {
             abi.decode(loadBridgeAttribute(domain, "bridgeToken"), (Upgrade));
     }
 
-    function tokenRegistry(string memory domain)
+    function tokenRegistryUpgrade(string memory domain)
         public
         onlyInitialized
         returns (Upgrade memory)
     {
         return
             abi.decode(loadBridgeAttribute(domain, "tokenRegistry"), (Upgrade));
+    }
+
+    function protocol(string memory domain) private returns (string memory) {
+        string memory path = string(abi.encodePacked(".protocol.", domain));
+        return string(vm.parseJson(config, path));
+    }
+
+    function protocolPath(string memory domain)
+        private
+        pure
+        returns (string memory)
+    {
+        return string(abi.encodePacked(".protocol.networks.", domain));
+    }
+
+    function protocolConfigPath(string memory domain)
+        private
+        pure
+        returns (string memory)
+    {
+        return string(abi.encodePacked(protocolPath(domain), ".configuration"));
+    }
+
+    function protocolAttributePath(string memory domain, string memory key)
+        private
+        pure
+        returns (string memory)
+    {
+        return string(abi.encodePacked(protocolPath(domain), ".", key));
+    }
+
+    function loadProtocolAttribute(string memory domain, string memory key)
+        private
+        returns (bytes memory)
+    {
+        return vm.parseJson(config, protocolAttributePath(domain, key));
+    }
+
+    function protocolConfigAttributePath(
+        string memory domain,
+        string memory key
+    ) private pure returns (string memory) {
+        return string(abi.encodePacked(protocolConfigPath(domain), ".", key));
+    }
+
+    function loadProtocolConfigAttribute(
+        string memory domain,
+        string memory key
+    ) private returns (bytes memory) {
+        return vm.parseJson(config, protocolConfigAttributePath(domain, key));
+    }
+
+    function connections(string memory domain)
+        public
+        onlyInitialized
+        returns (string[] memory)
+    {
+        return
+            abi.decode(
+                loadProtocolAttribute(domain, "connections"),
+                (string[])
+            );
+    }
+
+    function domainNumber(string memory domain)
+        public
+        onlyInitialized
+        returns (uint32)
+    {
+        return
+            abi.decode(loadProtocolConfigAttribute(domain, "domain"), (uint32));
+    }
+
+    function updater(string memory domain)
+        public
+        onlyInitialized
+        returns (address)
+    {
+        return
+            abi.decode(
+                loadProtocolConfigAttribute(domain, "updater"),
+                (address)
+            );
     }
 }
 
