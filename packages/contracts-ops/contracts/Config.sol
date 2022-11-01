@@ -128,22 +128,22 @@ abstract contract Config {
             );
     }
 
-    function replicaOfUpdgrade(string memory local, string memory replica)
+    function replicaOfUpdgrade(string memory local, string memory remote)
         public
         returns (Upgrade memory)
     {
         string memory path = string(
-            abi.encodePacked(corePath(local), ".replicas.", replica)
+            abi.encodePacked(corePath(local), ".replicas.", remote)
         );
         bytes memory res = vm.parseJson(config, path);
         return abi.decode(res, (Upgrade));
     }
 
-    function replicaOf(string memory local, string memory replica)
+    function replicaOf(string memory local, string memory remote)
         public
         returns (Replica)
     {
-        return Replica(address(replicaOfUpdgrade(local, replica).proxy));
+        return Replica(address(replicaOfUpdgrade(local, remote).proxy));
     }
 
     function networks() public returns (string[] memory) {

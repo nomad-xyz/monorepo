@@ -17,7 +17,7 @@ Contains forge scripts for Nomad system maintenance
 ## Scripts & Entrypoints
 
 - `RotateUpdaters.sol`
-  - Rotates updaters of all
+  - Rotates updaters of the Home and all Replicas on a given chain
   - Uses `Config` and `CallBatch`
   - Entrypoints:
     - `createCallList(configFile, localDomain, outputFile)`

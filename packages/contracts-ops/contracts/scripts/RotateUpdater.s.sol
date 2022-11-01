@@ -14,11 +14,11 @@ import "forge-std/Script.sol";
 contract RotateUpdater is Script, Config, CallBatch {
     function setReplicaUpdater(
         string memory localDomain,
-        string memory connection
+        string memory remoteDomain
     ) private {
         // New updater is the updater for the remote Home
-        address newUpdater = updater(connection);
-        Replica replica = replicaOf(localDomain, connection);
+        address newUpdater = updater(remoteDomain);
+        Replica replica = replicaOf(localDomain, remoteDomain);
         if (replica.updater() != newUpdater) {
             push(
                 address(replica),
@@ -58,7 +58,7 @@ contract RotateUpdater is Script, Config, CallBatch {
         string calldata configFile,
         string calldata localDomain,
         string calldata output
-    ) internal {
+    ) private {
         __Config_initialize(configFile);
         __CallBatch_initialize(localDomain, output);
     }
