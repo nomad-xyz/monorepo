@@ -26,19 +26,13 @@ contract RotateUpdater is Script, Config, CallBatch {
         }
     }
 
-    function run(
-        string calldata configFile,
-        string calldata localDomain,
-        string calldata output
-    ) public {
-        __Config_initialize(configFile);
-        __CallBatch_initialize(localDomain, output);
+    function setUpdater(
+    ) internal {
+        string[] memory connections = connections(domain);
+        address newUpdater = updater(domain);
 
-        string[] memory connections = connections(localDomain);
-        address newUpdater = updater(localDomain);
-
-        Home home = home(localDomain);
-        UpdaterManager updaterManager = updaterManager(localDomain);
+        Home home = home(domain);
+        UpdaterManager updaterManager = updaterManager(domain);
 
         if (newUpdater != home.updater()) {
             push(
@@ -51,9 +45,34 @@ contract RotateUpdater is Script, Config, CallBatch {
         }
 
         for (uint256 i = 0; i < connections.length; i++) {
-            setReplicaUpdater(localDomain, connections[i], newUpdater);
+            setReplicaUpdater(domain, connections[i], newUpdater);
         }
+    }
 
+    function initialize(
+        string calldata configFile,
+        string calldata localDomain,
+        string calldata output
+    ) internal {
+        __Config_initialize(configFile);
+        __CallBatch_initialize(localDomain, output);
+    }
+
+    function createCallList(
+        string calldata configFile,
+        string calldata localDomain,
+        string calldata output
+    ) public {
+        initialize(configFile, localDomain, output);
+        setUpdater();
         finish();
+    }
+
+    function createRecoveryTx(string calldata configFile,
+        string calldata localDomain,
+        string calldata output) public {
+        initialize(configFile, localDomain, output);
+        setUpdater();
+        build(address(governanceRouter(localDomain).proxy));
     }
 }

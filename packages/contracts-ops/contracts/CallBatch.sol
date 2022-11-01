@@ -48,7 +48,6 @@ abstract contract CallBatch is Script {
         string memory value,
         bool terminal
     ) private {
-
         string memory comma = terminal ? "" : ",";
 
         bytes memory line = abi.encodePacked(
