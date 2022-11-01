@@ -12,9 +12,7 @@ import {Replica} from "@nomad-xyz/contracts-core/contracts/Replica.sol";
 import "forge-std/Script.sol";
 
 contract RotateUpdaterLogic is Config, CallBatch {
-    function setReplicaUpdater(
-        string memory remoteDomain
-    ) private {
+    function setReplicaUpdater(string memory remoteDomain) private {
         // New updater is the updater for the remote Home
         address newUpdater = updater(remoteDomain);
         Replica replica = replicaOf(domain, remoteDomain);
@@ -53,7 +51,6 @@ contract RotateUpdaterLogic is Config, CallBatch {
         }
     }
 }
-
 
 contract RotateUpdater is Script, RotateUpdaterLogic {
     function initialize(

@@ -14,14 +14,17 @@ contract EnrollReplicasLogic is Config, CallBatch {
         XAppConnectionManager xcm = xAppconnectionManager(domain);
         address replica = address(replicaOf(domain, remote));
         uint32 domainNumber = domainNumber(remote);
-        push(
-            address(xcm),
-            abi.encodeWithSelector(
-                xcm.ownerEnrollReplica.selector,
-                replica,
-                domainNumber
-            )
-        );
+
+        if (xcm.replicaToDomain(replica) != domainNumber) {
+            push(
+                address(xcm),
+                abi.encodeWithSelector(
+                    xcm.ownerEnrollReplica.selector,
+                    replica,
+                    domainNumber
+                )
+            );
+        }
     }
 
     function enrollReplicas() internal {
