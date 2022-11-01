@@ -25,7 +25,6 @@ src = 'packages/contracts-core/contracts'
 test = 'packages/contracts-core/contracts/test'
 out = 'packages/contracts-core/foundry_artifacts'
 ffi = true
-fs_permissions = [{access = "read-write", path = "./actions"}]
 
 [profile.core-ci]
 src = 'packages/contracts-core/contracts'
