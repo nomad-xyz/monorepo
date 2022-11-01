@@ -39,7 +39,7 @@ contract MerkleTest is Test {
         return (root, leaf, index, proof);
     }
 
-    function toHexString(bytes32 input) private returns (string memory) {
+    function toHexString(bytes32 input) private pure returns (string memory) {
         (uint256 a, uint256 b) = uint256(input).encodeHex();
         return string(abi.encodePacked("0x", a, b));
     }

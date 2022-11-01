@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- (feat): add mock accountant
 - (patch): filter scripts from hh compilation
 
 ### 2.0.0
