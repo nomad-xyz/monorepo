@@ -61,7 +61,7 @@ contract DeployImplementations is Test {
         );
         path = string(
             abi.encodePacked(
-                "packages/contracts-ops/upgrade/output/",
+                "actions/"
                 "implementations-",
                 vm.toString(uint256(_domain)),
                 ".json"

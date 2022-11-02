@@ -39,7 +39,7 @@ function storeConfig(config: config.NomadConfig, fileName: string) {
 }
 
 function loadImplementations(domain: number): Implementations {
-  return getFromPath(`./output/implementations-${domain}.json`);
+  return getFromPath(`../../../../actions/implementations-${domain}.json`);
 }
 
 async function run() {
