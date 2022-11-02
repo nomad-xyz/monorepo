@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+### 3.0.0
+
 - dep: bump configuration to 2.0.0 and resolve type issues
 
 ### 2.1.1
