@@ -4,7 +4,7 @@ import * as config from '@nomad-xyz/configuration';
 
 const ENVIRONMENTS = ['development', 'staging', 'production'];
 const domainA = 1001;
-const domainB = 3001;
+const domainB = 1002;
 
 describe('NomadContext', () => {
   it('fetches from hosted configs', async () => {
@@ -37,7 +37,9 @@ describe('NomadContext', () => {
 
       // For each home domain, check core info
       for (const homeDomain of domains) {
-        const homeConfCore = conf.core[homeDomain];
+        const homeConfCore = conf.core[
+          homeDomain
+        ] as config.EthereumCoreDeploymentInfo;
         const confNetwork = conf.protocol.networks[homeDomain];
         const core = context.mustGetCore(homeDomain);
 
@@ -56,7 +58,9 @@ describe('NomadContext', () => {
 
         // Gets replicas for home domain
         for (const remoteDomain of confNetwork.connections) {
-          const remoteConfCore = conf.core[remoteDomain];
+          const remoteConfCore = conf.core[
+            remoteDomain
+          ] as config.EthereumCoreDeploymentInfo;
           const replica = context.mustGetReplicaFor(homeDomain, remoteDomain);
           expect(replica.address).toEqual(
             remoteConfCore.replicas[homeDomain].proxy,

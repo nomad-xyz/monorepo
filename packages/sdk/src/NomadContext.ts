@@ -92,7 +92,17 @@ export class NomadContext extends MultiProvider<config.Domain> {
         this.registerRpcProvider(network, this.conf.rpcs[network][0]);
       }
       // set core contracts
-      const core = new CoreContracts(this, network, this.conf.core[network]);
+      const netConf = this.conf.core[network] as {
+        upgradeBeaconController?: config.NomadIdentifier;
+      };
+      // type discrimination
+      if (!netConf.upgradeBeaconController)
+        throw new Error('substrate not yet supported');
+      const core = new CoreContracts(
+        this,
+        network,
+        netConf as unknown as config.EthereumCoreDeploymentInfo,
+      );
       this._cores.set(core.domain, core);
     }
   }

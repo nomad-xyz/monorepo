@@ -1,15 +1,16 @@
 import { BigNumberish, BigNumber, ethers } from 'ethers';
-import { utils as mpUtils } from '@nomad-xyz/multi-provider';
+import { UnreachableError, utils as mpUtils } from '@nomad-xyz/multi-provider';
 import * as bridge from '@nomad-xyz/contracts-bridge';
 import { FailedHomeError, NomadContext } from '@nomad-xyz/sdk';
 import { hexlify } from '@ethersproject/bytes';
-import { BridgeContracts } from './BridgeContracts';
+import { AccountantAsset, BridgeContracts, NftInfo } from './BridgeContracts';
 import { ResolvedTokenInfo, TokenIdentifier } from './tokens';
 import { TransferMessage } from './BridgeMessage';
 import * as config from '@nomad-xyz/configuration';
 
 type Address = string;
 const DEFAULT_GAS_LIMIT = BigNumber.from(350000);
+const MOCK_GOERLI_ACCOUNTANT = '0x0bebe57a1b7ba65e94e8131bce912b442f1a13a1';
 
 /**
  * The BridgeContext manages connections to Nomad Bridge contracts.
@@ -24,11 +25,17 @@ export class BridgeContext extends NomadContext {
   constructor(environment: string | config.NomadConfig = 'development') {
     super(environment);
     this.bridges = new Map();
+
     for (const network of this.conf.networks) {
+      const conf = this.conf.bridge[network] as {
+        bridgeRouter?: config.Proxy;
+      };
+      if (!conf.bridgeRouter) throw new Error('substrate not yet supported');
+
       const bridge = new BridgeContracts(
         this,
         network,
-        this.conf.bridge[network],
+        conf as config.EthereumBridgeDeploymentInfo,
       );
       this.bridges.set(bridge.domain, bridge);
     }
@@ -446,5 +453,108 @@ export class BridgeContext extends NomadContext {
     }
 
     return message;
+  }
+
+  /**
+   * Get the accountant associated with this environment, if any. Accountants
+   * will be on Goerli for staging, Ethereum for production.
+   */
+  get accountant(): bridge.NFTAccountant | undefined {
+    switch (this.environment) {
+      case 'staging': {
+        return bridge.NftAccountant__factory.connect(
+          MOCK_GOERLI_ACCOUNTANT,
+          this.mustGetConnection('goerli'),
+        );
+      }
+      case 'production': {
+        return this.mustGetBridge('ethereum').accountant;
+      }
+      default: {
+        return;
+      }
+    }
+  }
+
+  /**
+   * Get the info associated with the NFT ID, if any.
+   *
+   * @param id The numerical NFT ID
+   * @returns The NFT info, or undefined if no NFT exists, or undefined if
+   *          this is not production (i.e. there is no network named "ethereum")
+   * @throws If no signer is available, or if the transaction errors
+   */
+  async nftInfo(id: BigNumberish): Promise<NftInfo | undefined> {
+    const info = await this.accountant?.info(id);
+    if (!info || info._originalAmount.isZero()) {
+      return;
+    }
+    return info;
+  }
+
+  /**
+   * Prepare a transaction to recover from the NFT, if possible
+   *
+   * @param id The numerical NFT ID
+   * @returns A populated transaction
+   * @throws If no signer is available, or if the transaction errors
+   */
+  async prepareRecover(
+    id: BigNumberish,
+    overrides: ethers.PayableOverrides = {},
+  ): Promise<ethers.PopulatedTransaction | undefined> {
+    // first check that the NFT exists
+    const nftInfo = await this.nftInfo(id);
+    if (!nftInfo) return;
+    // mustGetBridge is safe here, as if ethereum doesn't exist, the NFT info
+    // will be undefined
+    if (!this.accountant)
+      throw new UnreachableError('checked in nftInfo() call');
+    // check if it will succeed/fail with callStatic
+    await this.accountant.callStatic.recover(id, overrides);
+    return this.accountant.populateTransaction.recover(id, overrides);
+  }
+
+  /**
+   * Recover from the NFT, if possible
+   *
+   * @param id The numerical NFT ID
+   * @returns A transaction receipt
+   * @throws If no signer is available, or if the transaction errors
+   */
+  async recover(
+    id: BigNumberish,
+    overrides: ethers.PayableOverrides = {},
+  ): Promise<ethers.ContractReceipt | undefined> {
+    const tx = await this.prepareRecover(id, overrides);
+    if (!tx) return;
+    // Netowrk must be either eth or goerli, as this is checked in
+    // /s`prepareRecover`
+    const network = this.environment === 'production' ? 'ethereum' : 'goerli';
+    const dispatch = await this.mustGetSigner(network).sendTransaction(tx);
+    return await dispatch.wait();
+  }
+
+  /**
+   * Read the accountant's information on an asset
+   *
+   * @param id The token address on Ethereum
+   * @returns The asset info (_totalAffected, _totalMinted, _totalCollected, _totalRecovered)
+   */
+  async assetInfo(token: string): Promise<AccountantAsset | undefined> {
+    return await this.accountant?.assetInfo(token);
+  }
+
+  /**
+   * Checks if an address is on the allow list
+   *
+   * @param address A 20-byte Ethereum address
+   * @returns Boolean, whether the address is on the allow list or not
+   */
+  async isAllowed(address: Address): Promise<boolean> {
+    if (address.length !== 42) throw new Error('Address must be 20 bytes');
+    if (!this.accountant)
+      throw new Error('Not able to fetch NFT Accountant contract');
+    return await this.accountant.allowList(address);
   }
 }

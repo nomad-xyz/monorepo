@@ -3,7 +3,7 @@ import * as config from '@nomad-xyz/configuration';
 
 import { NomadContext } from '@nomad-xyz/sdk';
 
-const ENVIRONMENTS = ['test', 'development', 'staging', 'production'];
+const ENVIRONMENTS = ['development', 'staging', 'production'];
 
 describe('sdk-bridge', () => {
   describe('BridgeContext', () => {
@@ -19,7 +19,9 @@ describe('sdk-bridge', () => {
           context.registerRpcProvider(domain, 'http://dummy-rpc-url');
 
           const bridge = context.getBridge(domain);
-          const confBridge = conf.bridge[domain];
+          const confBridge = conf.bridge[
+            domain
+          ] as config.EthereumBridgeDeploymentInfo;
 
           expect(bridge).toBeDefined();
 
