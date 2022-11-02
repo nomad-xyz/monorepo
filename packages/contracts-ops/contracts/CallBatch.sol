@@ -27,7 +27,11 @@ abstract contract CallBatch is Script {
         outputFile = string(abi.encodePacked("./actions/", _outputFile));
     }
 
-    function nextIndent(string memory indent) private pure returns (string memory) {
+    function nextIndent(string memory indent)
+        private
+        pure
+        returns (string memory)
+    {
         return string(abi.encodePacked("  ", indent));
     }
 
