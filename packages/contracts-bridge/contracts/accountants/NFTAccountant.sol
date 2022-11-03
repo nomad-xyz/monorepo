@@ -269,7 +269,7 @@ abstract contract NFTRecoveryAccountant is NFTAccountant {
 }
 
 /// @title AllowListRecoveryAccountant
-abstract contract AllowListNFTRecoveryAccountant is NFTRecoveryAccountant {
+contract AllowListNFTRecoveryAccountant is NFTRecoveryAccountant {
     /// @notice Maps address to allowed status
     mapping(address => bool) public allowList;
 

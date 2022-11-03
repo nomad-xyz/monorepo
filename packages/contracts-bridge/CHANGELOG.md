@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- (patch): make AllowListNFTRecoveryAccountant a deployable contract
 - (feat): add mock accountant
 - (patch): filter scripts from hh compilation
 
