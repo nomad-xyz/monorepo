@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+### 3.0.0-rc.0
+
 - dep: bump configuration to 2.0.0 and resolve type issues
 - add NFT related convenience methods to `BridgeContext`
 
