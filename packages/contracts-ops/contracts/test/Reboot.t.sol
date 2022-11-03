@@ -12,17 +12,18 @@ contract RebootTest is RotateUpdaterLogic, EnrollReplicasLogic, DeployAccountant
     function setUp() public override {
         __Config_initialize(configFile);
         __CallBatch_initialize("ethereum", "", true);
-        setUpExampleProof();
-
+        // run reboot scripts
         setUpdater();
         deployAccountant(domain);
         // TODO: upgrade script
         enrollReplicas;
+        // execute reboot governance actions
         prankExecuteBatch(address(governanceRouter(domain)));
     }
 
     /// @notice It should revert because the message is not proven, i.e is not included in the committed Root
     function test_notProcessUnprovenMessage() public {
+        setUpExampleProof();
         replica.setCommittedRoot(exampleRoot);
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
         bytes32 receiver = bytes32(uint256(uint160(vm.addr(431))));
