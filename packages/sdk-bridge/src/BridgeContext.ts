@@ -10,7 +10,7 @@ import * as config from '@nomad-xyz/configuration';
 
 type Address = string;
 const DEFAULT_GAS_LIMIT = BigNumber.from(350000);
-const MOCK_GOERLI_ACCOUNTANT = '0x0bebe57a1b7ba65e94e8131bce912b442f1a13a1';
+const MOCK_GOERLI_ACCOUNTANT = '0x661afa47c0efeaee1414116b4fe7182dab37dc7b';
 
 /**
  * The BridgeContext manages connections to Nomad Bridge contracts.
