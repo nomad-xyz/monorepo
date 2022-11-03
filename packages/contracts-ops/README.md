@@ -13,6 +13,13 @@ Contains forge scripts for Nomad system maintenance
   - call `push(to, data)` to add a call to the batch
   - call `finish()` to output the list of calls
   - call `build()` to output the built call to `executeGovernanceActions()`
+- `JsonWriter.sol` utility for writing simple JSON to files
+  - initialize a `Buffer` in memory
+  - use `writeLine` to write lines to the buffer
+  - use `writeArrayOpen` and `writeArrayClose` to start and end arrays
+  - use `writeObjectOpen` and `writeObjectClose` to start and end objects
+  - use `writeKv` to write object KV pairs
+  - use `flushTo` to persist the contents of the buffer to a file on disk
 
 ## Scripts & Entrypoints
 
