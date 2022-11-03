@@ -54,7 +54,7 @@ abstract contract DeployAccountant is Script, Config {
         // deploy UpgradeBeaconProxy
         proxy = new UpgradeBeaconProxy(
             address(beacon),
-            "0x"
+            ""
         );
         // initialize proxy
         // Note: this is necessary to perform separately from the Proxy deployment
