@@ -70,15 +70,6 @@ abstract contract Config is INomadProtocol {
         return abi.decode(loadCoreAttribute(domain, "deployHeight"), (uint256));
     }
 
-    function governanceRouter(string memory domain)
-        public
-        override
-        onlyInitialized
-        returns (GovernanceRouter)
-    {
-        return GovernanceRouter(address(governanceRouterUpgrade(domain).proxy));
-    }
-
     function governanceRouterUpgrade(string memory domain)
         public
         override
@@ -90,6 +81,15 @@ abstract contract Config is INomadProtocol {
                 loadCoreAttribute(domain, "governanceRouter"),
                 (Upgrade)
             );
+    }
+
+    function governanceRouter(string memory domain)
+        public
+        override
+        onlyInitialized
+        returns (GovernanceRouter)
+    {
+        return GovernanceRouter(address(governanceRouterUpgrade(domain).proxy));
     }
 
     function homeUpgrade(string memory domain)
@@ -219,15 +219,6 @@ abstract contract Config is INomadProtocol {
             abi.decode(loadBridgeAttribute(domain, "deployHeight"), (uint256));
     }
 
-    function bridgeRouter(string memory domain)
-        public
-        override
-        onlyInitialized
-        returns (BridgeRouter)
-    {
-        return BridgeRouter(address(bridgeRouterUpgrade(domain).proxy));
-    }
-
     function bridgeRouterUpgrade(string memory domain)
         public
         override
@@ -236,6 +227,15 @@ abstract contract Config is INomadProtocol {
     {
         return
             abi.decode(loadBridgeAttribute(domain, "bridgeRouter"), (Upgrade));
+    }
+
+    function bridgeRouter(string memory domain)
+        public
+        override
+        onlyInitialized
+        returns (BridgeRouter)
+    {
+        return BridgeRouter(address(bridgeRouterUpgrade(domain).proxy));
     }
 
     function bridgeTokenUpgrade(string memory domain)
@@ -248,6 +248,16 @@ abstract contract Config is INomadProtocol {
             abi.decode(loadBridgeAttribute(domain, "bridgeToken"), (Upgrade));
     }
 
+    function tokenRegistryUpgrade(string memory domain)
+        public
+        override
+        onlyInitialized
+        returns (Upgrade memory)
+    {
+        return
+            abi.decode(loadBridgeAttribute(domain, "tokenRegistry"), (Upgrade));
+    }
+
     function tokenRegistry(string memory domain)
         public
         override
@@ -257,14 +267,13 @@ abstract contract Config is INomadProtocol {
         return TokenRegistry(address(tokenRegistryUpgrade(domain).proxy));
     }
 
-    function tokenRegistryUpgrade(string memory domain)
+    function accountantUpgrade(string memory domain)
         public
         override
         onlyInitialized
         returns (Upgrade memory)
     {
-        return
-            abi.decode(loadBridgeAttribute(domain, "tokenRegistry"), (Upgrade));
+        return abi.decode(loadBridgeAttribute(domain, "accountant"), (Upgrade));
     }
 
     function accountant(string memory domain)
@@ -277,15 +286,6 @@ abstract contract Config is INomadProtocol {
             AllowListNFTRecoveryAccountant(
                 address(accountantUpgrade(domain).proxy)
             );
-    }
-
-    function accountantUpgrade(string memory domain)
-        public
-        override
-        onlyInitialized
-        returns (Upgrade memory)
-    {
-        return abi.decode(loadBridgeAttribute(domain, "accountant"), (Upgrade));
     }
 
     function ethHelper(string memory domain)
