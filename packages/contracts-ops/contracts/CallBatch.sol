@@ -75,7 +75,7 @@ abstract contract CallBatch is Script {
         require(bytes(outputFile.path).length != 0, "must initialize");
         require(!complete, "already written");
         complete = true;
-        JsonWriter.Buffer memory buffer = JsonWriter.Buffer(new bytes(0));
+        JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
         writeCallList(buffer);
         buffer.flushTo(outputFile);
     }
@@ -85,7 +85,7 @@ abstract contract CallBatch is Script {
         require(bytes(outputFile.path).length != 0, "must initialize");
         require(!complete, "already written");
         complete = true;
-        JsonWriter.Buffer memory buffer = JsonWriter.Buffer(new bytes(0));
+        JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
         bytes memory data = abi.encodeWithSelector(
             GovernanceRouter.executeGovernanceActions.selector,
             calls,

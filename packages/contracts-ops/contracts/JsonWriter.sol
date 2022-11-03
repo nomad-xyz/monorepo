@@ -16,6 +16,10 @@ library JsonWriter {
         bytes contents;
     }
 
+    function newBuffer() internal pure returns (Buffer memory) {
+        return Buffer(new bytes(0));
+    }
+
     function nextIndent(string memory indent)
         internal
         pure
