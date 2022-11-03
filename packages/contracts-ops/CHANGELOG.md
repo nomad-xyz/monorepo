@@ -4,6 +4,7 @@
 
 - feature: prankable callbatch
 - feature: JsonWriter
+- feature: deploy upgradable NFTAccountant
 - feature: replica enrollment
 - feature: callbatch contract
 - feature: Config.sol exposes configuration to foundry scripts

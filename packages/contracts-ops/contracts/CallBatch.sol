@@ -8,7 +8,7 @@ import {GovernanceMessage} from "@nomad-xyz/contracts-core/contracts/governance/
 import {GovernanceRouter} from "@nomad-xyz/contracts-core/contracts/governance/GovernanceRouter.sol";
 import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 
-import "./JsonWriter.sol";
+import {JsonWriter} from "./JsonWriter.sol";
 
 import "forge-std/Script.sol";
 
