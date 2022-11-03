@@ -100,6 +100,27 @@ abstract contract CallBatch is Script {
         buffer.writeSimpleObject("", "", kvs, true);
         buffer.flushTo(outputFile);
     }
+
+    function prank(address router) public {
+        // prank the router itself to avoid governor chain issues
+        vm.prank(router);
+        GovernanceRouter(router).executeGovernanceActions(
+            calls,
+            new uint32[](0),
+            new GovernanceMessage.Call[][](0)
+        );
+    }
+
+    function prankRecovery(address router) public {
+        // prank recovery (only works if recovery is active)
+        address recovery = GovernanceRouter(router).recoveryManager();
+        vm.prank(recovery);
+        GovernanceRouter(router).executeGovernanceActions(
+            calls,
+            new uint32[](0),
+            new GovernanceMessage.Call[][](0)
+        );
+    }
 }
 
 contract TestCallBatch is CallBatch {
