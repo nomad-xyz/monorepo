@@ -41,19 +41,21 @@ contract EnrollReplicas is Script, EnrollReplicasLogic {
     function initialize(
         string calldata configFile,
         string calldata localDomain,
-        string calldata output
+        string calldata output,
+        bool overwrite
     ) private {
         __Config_initialize(configFile);
-        __CallBatch_initialize(localDomain, output);
+        __CallBatch_initialize(localDomain, output, overwrite);
     }
 
     // entrypoint
     function createCallList(
         string calldata configFile,
         string calldata localDomain,
-        string calldata output
+        string calldata output,
+        bool overwrite
     ) external {
-        initialize(configFile, localDomain, output);
+        initialize(configFile, localDomain, output, overwrite);
         enrollReplicas();
         finish();
     }
@@ -62,9 +64,10 @@ contract EnrollReplicas is Script, EnrollReplicasLogic {
     function createRecoveryTx(
         string calldata configFile,
         string calldata localDomain,
-        string calldata output
+        string calldata output,
+        bool overwrite
     ) external {
-        initialize(configFile, localDomain, output);
+        initialize(configFile, localDomain, output, overwrite);
         enrollReplicas();
         build(address(governanceRouter(localDomain).proxy));
     }

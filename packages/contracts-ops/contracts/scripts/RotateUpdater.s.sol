@@ -56,19 +56,21 @@ contract RotateUpdater is Script, RotateUpdaterLogic {
     function initialize(
         string calldata configFile,
         string calldata localDomain,
-        string calldata output
+        string calldata output,
+        bool overwrite
     ) private {
         __Config_initialize(configFile);
-        __CallBatch_initialize(localDomain, output);
+        __CallBatch_initialize(localDomain, output, overwrite);
     }
 
     // entrypoint
     function createCallList(
         string calldata configFile,
         string calldata localDomain,
-        string calldata output
+        string calldata output,
+        bool overwrite
     ) public {
-        initialize(configFile, localDomain, output);
+        initialize(configFile, localDomain, output, overwrite);
         setUpdater();
         finish();
     }
@@ -77,9 +79,10 @@ contract RotateUpdater is Script, RotateUpdaterLogic {
     function createRecoveryTx(
         string calldata configFile,
         string calldata localDomain,
-        string calldata output
+        string calldata output,
+        bool overwrite
     ) public {
-        initialize(configFile, localDomain, output);
+        initialize(configFile, localDomain, output, overwrite);
         setUpdater();
         build(address(governanceRouter(localDomain).proxy));
     }
