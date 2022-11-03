@@ -13,7 +13,9 @@ contract DeployAccountant is Script, Config {
     // entrypoint
     function deploy(string calldata configFile, string calldata domain) public {
         __Config_initialize(configFile);
+        vm.startBroadcast();
         deployAccountant(domain);
+        vm.stopBroadcast();
     }
 
     // Deploys & configures the NFTAccountant with upgrade setup
