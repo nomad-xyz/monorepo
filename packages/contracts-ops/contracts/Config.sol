@@ -9,21 +9,21 @@ import {UpdaterManager} from "@nomad-xyz/contracts-core/contracts/UpdaterManager
 import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 import {Home} from "@nomad-xyz/contracts-core/contracts/Home.sol";
 import {Replica} from "@nomad-xyz/contracts-core/contracts/Replica.sol";
+import {GovernanceRouter} from "@nomad-xyz/contracts-core/contracts/governance/GovernanceRouter.sol";
+import {BridgeRouter} from "@nomad-xyz/contracts-bridge/contracts/BridgeRouter.sol";
+import {TokenRegistry} from "@nomad-xyz/contracts-bridge/contracts/TokenRegistry.sol";
+import {ETHHelper} from "@nomad-xyz/contracts-bridge/contracts/ETHHelper.sol";
+import {AllowListNFTRecoveryAccountant} from "@nomad-xyz/contracts-bridge/contracts/accountants/NFTAccountant.sol";
 
 import "forge-std/Vm.sol";
 import "forge-std/Test.sol";
+import {INomadProtocol} from "./test/utils/NomadProtocol.sol";
 
-abstract contract Config {
+abstract contract Config is INomadProtocol {
     Vm private constant vm =
         Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     string internal config;
-
-    struct Upgrade {
-        UpgradeBeacon beacon;
-        address implementation;
-        UpgradeBeaconProxy proxy;
-    }
 
     modifier onlyInitialized() {
         require(isInitialized(), "not initialized");
@@ -72,6 +72,16 @@ abstract contract Config {
 
     function governanceRouter(string memory domain)
         public
+        override
+        onlyInitialized
+        returns (GovernanceRouter)
+    {
+        return GovernanceRouter(address(governanceRouterUpgrade(domain).proxy));
+    }
+
+    function governanceRouterUpgrade(string memory domain)
+        public
+        override
         onlyInitialized
         returns (Upgrade memory)
     {
@@ -84,18 +94,25 @@ abstract contract Config {
 
     function homeUpgrade(string memory domain)
         public
+        override
         onlyInitialized
         returns (Upgrade memory)
     {
         return abi.decode(loadCoreAttribute(domain, "home"), (Upgrade));
     }
 
-    function home(string memory domain) public onlyInitialized returns (Home) {
+    function home(string memory domain)
+        public
+        override
+        onlyInitialized
+        returns (Home)
+    {
         return Home(address(homeUpgrade(domain).proxy));
     }
 
     function updaterManager(string memory domain)
         public
+        override
         onlyInitialized
         returns (UpdaterManager)
     {
@@ -108,6 +125,7 @@ abstract contract Config {
 
     function upgradeBeaconController(string memory domain)
         public
+        override
         returns (UpgradeBeaconController)
     {
         return
@@ -117,8 +135,9 @@ abstract contract Config {
             );
     }
 
-    function xAppconnectionManager(string memory domain)
+    function xAppConnectionManager(string memory domain)
         public
+        override
         returns (XAppConnectionManager)
     {
         return
@@ -130,6 +149,7 @@ abstract contract Config {
 
     function replicaOfUpgrade(string memory local, string memory remote)
         public
+        override
         returns (Upgrade memory)
     {
         string memory path = string(
@@ -141,13 +161,30 @@ abstract contract Config {
 
     function replicaOf(string memory local, string memory remote)
         public
+        override
         returns (Replica)
     {
         return Replica(address(replicaOfUpgrade(local, remote).proxy));
     }
 
-    function networks() public returns (string[] memory) {
+    function networks() public override returns (string[] memory) {
         return abi.decode(vm.parseJson(config, ".networks"), (string[]));
+    }
+
+    function governor() public override returns (address) {
+        return
+            abi.decode(
+                vm.parseJson(config, ".protocol.governor.id"),
+                (address)
+            );
+    }
+
+    function governorDomain() public override returns (uint256) {
+        return
+            abi.decode(
+                vm.parseJson(config, ".protocol.governor.domain"),
+                (uint256)
+            );
     }
 
     function bridgePath(string memory domain)
@@ -182,8 +219,18 @@ abstract contract Config {
             abi.decode(loadBridgeAttribute(domain, "deployHeight"), (uint256));
     }
 
+    function bridgeRouter(string memory domain)
+        public
+        override
+        onlyInitialized
+        returns (BridgeRouter)
+    {
+        return BridgeRouter(address(bridgeRouterUpgrade(domain).proxy));
+    }
+
     function bridgeRouterUpgrade(string memory domain)
         public
+        override
         onlyInitialized
         returns (Upgrade memory)
     {
@@ -193,6 +240,7 @@ abstract contract Config {
 
     function bridgeTokenUpgrade(string memory domain)
         public
+        override
         onlyInitialized
         returns (Upgrade memory)
     {
@@ -200,8 +248,18 @@ abstract contract Config {
             abi.decode(loadBridgeAttribute(domain, "bridgeToken"), (Upgrade));
     }
 
+    function tokenRegistry(string memory domain)
+        public
+        override
+        onlyInitialized
+        returns (TokenRegistry)
+    {
+        return TokenRegistry(address(tokenRegistryUpgrade(domain).proxy));
+    }
+
     function tokenRegistryUpgrade(string memory domain)
         public
+        override
         onlyInitialized
         returns (Upgrade memory)
     {
@@ -209,9 +267,33 @@ abstract contract Config {
             abi.decode(loadBridgeAttribute(domain, "tokenRegistry"), (Upgrade));
     }
 
-    function protocol(string memory domain) private returns (string memory) {
-        string memory path = string(abi.encodePacked(".protocol.", domain));
-        return string(vm.parseJson(config, path));
+    function accountant(string memory domain)
+        public
+        override
+        onlyInitialized
+        returns (AllowListNFTRecoveryAccountant)
+    {
+        return
+            AllowListNFTRecoveryAccountant(
+                address(accountantUpgrade(domain).proxy)
+            );
+    }
+
+    function accountantUpgrade(string memory domain)
+        public
+        override
+        onlyInitialized
+        returns (Upgrade memory)
+    {
+        return abi.decode(loadBridgeAttribute(domain, "accountant"), (Upgrade)); // TODO: correct?
+    }
+
+    function ethHelper(string memory domain)
+        public
+        override
+        returns (ETHHelper)
+    {
+        return abi.decode(loadCoreAttribute(domain, "ethHelper"), (ETHHelper));
     }
 
     function protocolPath(string memory domain)
@@ -261,6 +343,7 @@ abstract contract Config {
 
     function connections(string memory domain)
         public
+        override
         onlyInitialized
         returns (string[] memory)
     {
@@ -282,6 +365,7 @@ abstract contract Config {
 
     function updater(string memory domain)
         public
+        override
         onlyInitialized
         returns (address)
     {
@@ -291,18 +375,78 @@ abstract contract Config {
                 (address)
             );
     }
+
+    function recoveryManager(string memory domain)
+        public
+        override
+        onlyInitialized
+        returns (address)
+    {
+        return
+            abi.decode(
+                loadProtocolConfigAttribute(
+                    domain,
+                    "governance.recoveryManager"
+                ),
+                (address)
+            );
+    }
+
+    function watchers(string memory domain)
+        public
+        override
+        onlyInitialized
+        returns (address[] memory)
+    {
+        return
+            abi.decode(
+                loadProtocolConfigAttribute(domain, "watchers"),
+                (address[])
+            );
+    }
+
+    function recoveryTimelock(string memory domain)
+        public
+        override
+        onlyInitialized
+        returns (uint256)
+    {
+        return
+            abi.decode(
+                loadProtocolConfigAttribute(
+                    domain,
+                    "governance.recoveryTimelock"
+                ),
+                (uint256)
+            );
+    }
+
+    function optimisticSeconds(string memory domain)
+        public
+        override
+        onlyInitialized
+        returns (uint256)
+    {
+        return
+            abi.decode(
+                loadProtocolConfigAttribute(domain, "optimisticSeconds"),
+                (uint256)
+            );
+    }
 }
 
 contract TestJson is Test, Config {
     function setUp() public {
         // solhint-disable-next-line quotes
-        config = '{"core": {"ethereum": {"deployHeight": 1234, "governanceRouter": {"proxy":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0","implementation":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0","beacon":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0"}}}}';
+        config = '{ "networks": ["avalanche", "ethereum"], "protocol": {"governor": {"domain": 6648936, "id": "0x93277b8f5939975b9e6694d5fd2837143afbf68a"}}, "core": {"ethereum": {"deployHeight": 1234, "governanceRouter": {"proxy":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0","implementation":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0","beacon":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0"}}}}';
     }
 
     function test_Json() public {
+        assertEq(networks()[0], "avalanche");
+        assertEq(governor(), 0x93277b8f5939975b9E6694d5Fd2837143afBf68A);
         assertEq(coreDeployHeight("ethereum"), 1234);
         assertEq(
-            address(governanceRouter("ethereum").proxy),
+            address(governanceRouter("ethereum")),
             0x569D80f7FC17316B4C83f072b92EF37B72819DE0
         );
     }
