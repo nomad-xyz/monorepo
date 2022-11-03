@@ -46,13 +46,13 @@ contract UpgradeProxyTest is UpgradeTest {
         );
     }
 
-    function test_constructorBeaconNotContractFuzzed(address beaconAddr)
+    function test_constructorBeaconNotContractFuzzed(address _beaconAddr)
         public
     {
-        vm.assume(!isContract(beaconAddr));
+        vm.assume(!isContract(_beaconAddr));
         vm.expectRevert("beacon !contract");
         proxy = new UpgradeBeaconProxy(
-            beaconAddr,
+            _beaconAddr,
             abi.encodeWithSignature("gondor()")
         );
     }
@@ -68,9 +68,9 @@ contract UpgradeProxyTest is UpgradeTest {
         );
     }
 
-    function test_constructorImplNotcontractFuzzed(address implAddr) public {
-        vm.assume(!isContract(implAddr));
-        mockBeacon = new MockBeacon(implAddr, controllerAddr);
+    function test_constructorImplNotcontractFuzzed(address _implAddr) public {
+        vm.assume(!isContract(_implAddr));
+        mockBeacon = new MockBeacon(_implAddr, controllerAddr);
         beaconAddr = address(mockBeacon);
         vm.expectRevert("beacon implementation !contract");
         proxy = new UpgradeBeaconProxy(
