@@ -101,7 +101,7 @@ abstract contract CallBatch is Script {
         buffer.flushTo(outputFile);
     }
 
-    function prank(address router) public {
+    function prankExecuteBatch(address router) public {
         // prank the router itself to avoid governor chain issues
         vm.prank(router);
         GovernanceRouter(router).executeGovernanceActions(
@@ -111,7 +111,7 @@ abstract contract CallBatch is Script {
         );
     }
 
-    function prankRecovery(address router) public {
+    function prankRecoveryExecuteBatch(address router) public {
         // prank recovery (only works if recovery is active)
         address recovery = GovernanceRouter(router).recoveryManager();
         vm.prank(recovery);
