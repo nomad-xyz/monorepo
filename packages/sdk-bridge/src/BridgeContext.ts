@@ -510,9 +510,12 @@ export class BridgeContext extends NomadContext {
     // will be undefined
     if (!this.accountant)
       throw new UnreachableError('checked in nftInfo() call');
+    // set from so that estimation will succeed
+    const callOverrides: ethers.CallOverrides = overrides || {};
+    callOverrides.from = nftInfo._holder;
     // check if it will succeed/fail with callStatic
-    await this.accountant.callStatic.recover(id, overrides);
-    return this.accountant.populateTransaction.recover(id, overrides);
+    await this.accountant.callStatic.recover(id, callOverrides);
+    return this.accountant.populateTransaction.recover(id, callOverrides);
   }
 
   /**
