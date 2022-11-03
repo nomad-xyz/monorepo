@@ -84,6 +84,6 @@ contract RotateUpdater is Script, RotateUpdaterLogic {
     ) public {
         initialize(configFile, localDomain, output, overwrite);
         setUpdater();
-        build(address(governanceRouter(localDomain).proxy));
+        build(address(governanceRouter(localDomain)));
     }
 }
