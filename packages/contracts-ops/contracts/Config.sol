@@ -285,7 +285,7 @@ abstract contract Config is INomadProtocol {
         onlyInitialized
         returns (Upgrade memory)
     {
-        return abi.decode(loadBridgeAttribute(domain, "accountant"), (Upgrade)); // TODO: correct?
+        return abi.decode(loadBridgeAttribute(domain, "accountant"), (Upgrade));
     }
 
     function ethHelper(string memory domain)
