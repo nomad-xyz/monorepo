@@ -69,9 +69,9 @@ contract UpgradeProxyTest is UpgradeTest {
     }
 
     function test_constructorImplNotcontractFuzzed(address _implAddr) public {
-        vm.assume(!isContract(_implAddr));
         mockBeacon = new MockBeacon(_implAddr, controllerAddr);
         beaconAddr = address(mockBeacon);
+        vm.assume(!isContract(_implAddr));
         vm.expectRevert("beacon implementation !contract");
         proxy = new UpgradeBeaconProxy(
             beaconAddr,
