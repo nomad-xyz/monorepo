@@ -1,4 +1,4 @@
-export { BridgeContracts } from './BridgeContracts';
+export * from './BridgeContracts';
 
 export * from './BridgeContext';
 
