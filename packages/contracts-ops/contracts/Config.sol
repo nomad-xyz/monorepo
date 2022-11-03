@@ -39,6 +39,14 @@ abstract contract Config is INomadProtocol {
         return bytes(config).length != 0;
     }
 
+    function domainError(string memory message, string memory domain)
+        private
+        pure
+        returns (string memory)
+    {
+        return string(abi.encodePacked(message, domain));
+    }
+
     function corePath(string memory domain)
         private
         pure
@@ -293,7 +301,9 @@ abstract contract Config is INomadProtocol {
         override
         returns (ETHHelper)
     {
-        return abi.decode(loadCoreAttribute(domain, "ethHelper"), (ETHHelper));
+        bytes memory raw = loadCoreAttribute(domain, "ethHelper");
+        require(raw.length != 0, domainError("no ethHelper for ", domain));
+        return abi.decode(raw, (ETHHelper));
     }
 
     function protocolPath(string memory domain)
@@ -438,10 +448,13 @@ abstract contract Config is INomadProtocol {
 contract TestJson is Test, Config {
     function setUp() public {
         // solhint-disable-next-line quotes
-        config = '{ "networks": ["avalanche", "ethereum"], "protocol": {"governor": {"domain": 6648936, "id": "0x93277b8f5939975b9e6694d5fd2837143afbf68a"}}, "core": {"ethereum": {"deployHeight": 1234, "governanceRouter": {"proxy":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0","implementation":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0","beacon":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0"}}}}';
+        config = '{ "networks": ["avalanche", "ethereum"], "protocol": {"governor": {"domain": 6648936, "id": "0x93277b8f5939975b9e6694d5fd2837143afbf68a"}}, "core": {"ethereum": {"deployHeight": 1234, "governanceRouter": {"proxy":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0","implementation":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0","beacon":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0"}, "ethHelper": "0x999d80F7FC17316b4c83f072b92EF37b72718De0"}}}';
     }
 
     function test_Json() public {
+        assertEq(address(ethHelper("ethereum")), 0x999d80F7FC17316b4c83f072b92EF37b72718De0);
+        vm.expectRevert("no ethHelper for randomDomain");
+        ethHelper("randomDomain");
         assertEq(networks()[0], "avalanche");
         assertEq(governor(), 0x93277b8f5939975b9E6694d5Fd2837143afBf68A);
         assertEq(coreDeployHeight("ethereum"), 1234);
