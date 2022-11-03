@@ -14,10 +14,10 @@ import {BridgeRouter} from "@nomad-xyz/contracts-bridge/contracts/BridgeRouter.s
 import {TokenRegistry} from "@nomad-xyz/contracts-bridge/contracts/TokenRegistry.sol";
 import {ETHHelper} from "@nomad-xyz/contracts-bridge/contracts/ETHHelper.sol";
 import {AllowListNFTRecoveryAccountant} from "@nomad-xyz/contracts-bridge/contracts/accountants/NFTAccountant.sol";
+import {INomadProtocol} from "./test/utils/INomadProtocol.sol";
 
 import "forge-std/Vm.sol";
 import "forge-std/Test.sol";
-import {INomadProtocol} from "./test/utils/NomadProtocol.sol";
 
 abstract contract Config is INomadProtocol {
     Vm private constant vm =
