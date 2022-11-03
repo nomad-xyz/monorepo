@@ -79,16 +79,6 @@ library JsonWriter {
         writeLine(buffer, indent, string(line));
     }
 
-    function writeObjectBody(
-        Buffer memory buffer,
-        string memory indent,
-        string[2][] memory kvs
-    ) internal pure {
-        for (uint256 i = 0; i < kvs.length; i++) {
-            writeKv(buffer, indent, kvs[i][0], kvs[i][1], i == kvs.length - 1);
-        }
-    }
-
     function writeArrayOpen(
         Buffer memory buffer,
         string memory indent,
@@ -125,6 +115,16 @@ library JsonWriter {
         bool terminal
     ) internal pure {
         writeLine(buffer, indent, terminal ? "}" : "},");
+    }
+
+    function writeObjectBody(
+        Buffer memory buffer,
+        string memory indent,
+        string[2][] memory kvs
+    ) internal pure {
+        for (uint256 i = 0; i < kvs.length; i++) {
+            writeKv(buffer, indent, kvs[i][0], kvs[i][1], i == kvs.length - 1);
+        }
     }
 
     function writeSimpleObject(
