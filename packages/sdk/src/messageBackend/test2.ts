@@ -1,7 +1,6 @@
 import { NomadContext, NomadMessage } from "..";
 // import { GoldSkyBackend } from "..";
 
-// const GOLDSKY_SECRET = "yaZj76nCg5q";
 
 // const backend = GoldSkyBackend.default('production', );
 
