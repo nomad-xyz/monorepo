@@ -7,7 +7,7 @@ import { NomadMessage, Dispatch } from '@nomad-xyz/sdk';
 import { ResolvedTokenInfo, TokenIdentifier } from './tokens';
 import { BridgeContracts } from './BridgeContracts';
 import { BridgeContext } from './BridgeContext';
-import BridgeMessageBackend, { GoldSkyBridgeBackend } from './backend';
+import BridgeMessageBackend from './backend';
 
 const ACTION_LEN = {
   identifier: 1,
@@ -120,20 +120,21 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
     return await this.backend.sender(this.messageHash);
   }
 
-  static async bridgeBaseFromTransactionHashUsingBackend(
+  static async bridgeFirstFromBackend(
     context: BridgeContext,
     transactionHash: string,
-    _backend?: BridgeMessageBackend,
+    // _backend?: BridgeMessageBackend,
   ): Promise<BridgeMessage> {
-    const backend = context._backend || _backend;
-    if (!backend) {
-      throw new Error(`No backend is set for the context`);
-    }
-    const dispatch = await backend.getDispatch(transactionHash);
-    if (!dispatch) throw new Error(`No dispatch`);
+    // const backend = context._backend || _backend;
+    // if (!backend) {
+    //   throw new Error(`No backend is set for the context`);
+    // }
+    // const dispatches = await backend.getDispatches(transactionHash, 1);
+    // if (!dispatches || dispatches.length === 0) throw new Error(`No dispatch`);
 
-    const m = new NomadMessage(context, dispatch);
-    const bm = BridgeMessage.fromNomadMessage(context, m, _backend);
+    // const m = new NomadMessage(context, dispatches[0]);
+    const m = await this.baseFirstFromBackend(context, transactionHash);
+    const bm = BridgeMessage.fromNomadMessage(context, m, context._backend);
 
     return bm;
   }
@@ -157,7 +158,7 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
       context,
       nomadMessage.dispatch,
       parsedMessageBody as ParsedTransferMessage,
-      _backend || context._backend || GoldSkyBridgeBackend.default(context.environment) // TODO: adjust
+      _backend || context._backend // TODO: adjust
     );
   }
 

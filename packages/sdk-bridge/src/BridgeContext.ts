@@ -27,7 +27,7 @@ export class BridgeContext extends NomadContext {
 
   constructor(environment: string | config.NomadConfig = 'development', backend?: BridgeMessageBackend) {
     super(environment, backend);
-    this._backend = backend;
+    this._backend = backend || GoldSkyBridgeBackend.default(environment, this);
     this.bridges = new Map();
 
     for (const network of this.conf.networks) {
@@ -46,7 +46,7 @@ export class BridgeContext extends NomadContext {
   }
 
   static fromNomadContext(context: NomadContext): BridgeContext {
-    const bridge = new BridgeContext(context.conf, GoldSkyBridgeBackend.default(context.environment));
+    const bridge = new BridgeContext(context.conf);
 
     for (const domain of context.domainNumbers) {
       const provider = context.getProvider(domain);

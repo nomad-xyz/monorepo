@@ -88,7 +88,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
     this._cores = new Map();
     this._blacklist = new Set();
     // TODO: What if backend doesn't exist for this environment?
-    this._backend = backend || GoldSkyBackend.default(environment);
+    this._backend = backend || GoldSkyBackend.default(environment, this);
 
     for (const network of this.conf.networks) {
       // register domain

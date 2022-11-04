@@ -1,7 +1,8 @@
-import {  GoldSkyBackend, GoldSkyMessage, MessageFilter } from "@nomad-xyz/sdk";
+import {  GoldSkyBackend, GoldSkyMessage, MessageFilter, NomadContext } from "@nomad-xyz/sdk";
 import {MessageBackend} from "@nomad-xyz/sdk";
 import { request, gql } from 'graphql-request';
 import * as config from '@nomad-xyz/configuration';
+import { BridgeContext } from "./BridgeContext";
 
 const defaultGoldSkySecret = "";
 
@@ -30,12 +31,14 @@ export type GoldSkyBridgeMessage =  GoldSkyMessage & {
  * GoldSky bridge backend for NomadMessage 
  */
 export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessageBackend {
+    context: BridgeContext;
 
     messageCache: Map<string, GoldSkyBridgeMessage>;
 
-    constructor(env: string, secret: string) {
-        super(env, secret);
+    constructor(env: string, secret: string, context: BridgeContext) {
+        super(env, secret, context);
         this.messageCache = new Map();
+        this.context = context;
     }
 
     /**
@@ -53,22 +56,27 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
      * @param environment environment to create the backend for
      * @returns backend
      */
-    static default(environment: string | config.NomadConfig = 'development'): GoldSkyBridgeBackend {
+    static default(environment: string | config.NomadConfig = 'development', context: BridgeContext): GoldSkyBridgeBackend {
         const environmentString = typeof environment === 'string' ? environment : environment.environment;
 
         GoldSkyBridgeBackend.checkEnvironment(environmentString);
         
         const secret = process.env.GOLDSKY_SECRET || defaultGoldSkySecret;
         if (!secret) throw new Error(`GOLDSKY_SECRET not found in env`);
-        return new GoldSkyBridgeBackend(environmentString, secret);
+        return new GoldSkyBridgeBackend(environmentString, secret, context);
     }
 
     /**
      * Stores message into internal cache
      */
-    storeMessage(m: GoldSkyBridgeMessage): void {
+     storeMessage(m: GoldSkyBridgeMessage) {
         this.messageCache.set(m.message_hash, m);
-        this.dispatchTxToMessageHash.set(m.dispatch_tx, m.message_hash);
+        const messageHashes = this.dispatchTxToMessageHash.get(m.dispatch_tx);
+        if (!messageHashes) {
+            this.dispatchTxToMessageHash.set(m.dispatch_tx, [m.message_hash])
+        } else {
+            if (!messageHashes.includes(m.message_hash)) messageHashes.push(m.message_hash);
+        }
     }
 
     /**
@@ -77,12 +85,12 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
      *
      * @returns A message representation (if any)
      */
-    async getMessage(messageHash: string): Promise<GoldSkyBridgeMessage | undefined> {
+    async getMessage(messageHash: string, forceFetch=false): Promise<GoldSkyBridgeMessage | undefined> {
         let m = this.messageCache.get(messageHash);
-        if (!m) {
-            m = await this.fetchMessage({
-                messageHash,
-            });
+        if (!m || forceFetch) {
+            m = (await this.fetchMessages({
+                messageHash
+            }, 1))?.[0];
             if (m) {
                 this.storeMessage(m);
             }
@@ -92,12 +100,41 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
     }
 
     /**
+     * Get the message representation associated with this message (if any)
+     * by dispatch transaction
+     *
+     * @returns A message representation (if any)
+     */
+     async getMessagesByTx(tx: string, limit?: number, forceFetch=true): Promise<GoldSkyBridgeMessage[] | undefined> {
+        let ms: GoldSkyBridgeMessage[] | undefined;
+        let messageHashes = this.dispatchTxToMessageHash.get(tx);
+        const enoughMessages = limit && messageHashes && limit <= messageHashes.length;
+        if (!enoughMessages || forceFetch) {
+            ms = await this.fetchMessages({
+                transactionHash: tx
+            });
+            if (ms && ms.length) {
+                ms.forEach(m => this.storeMessage(m))
+            }
+        } else {
+            // messageHashes! are there as they are already tested in `enoughHashes` above
+            // getMessage(hash)! is also there as in order to get into `messageHashes` a message needs to get fetched
+            ms = await Promise.all(messageHashes!.map(async (hash) => {
+                return (await this.getMessage(hash))!
+            }));
+        }
+
+        return ms;
+    }
+
+    /**
      * Gets an original sender of the message
      * @param messageHash 
      * @returns sender's address
      */
     async sender(messageHash: string): Promise<string | undefined> {
-        const m = await this.getMessage(messageHash);
+        let m = await this.getMessage(messageHash);
+        if (!m?.original_sender) m = await this.getMessage(messageHash, true);
         return m?.original_sender;
     }
 
@@ -107,7 +144,8 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
      * @returns transaction hash
      */
     async receivedTx(messageHash: string): Promise<string | undefined> {
-        const m = await this.getMessage(messageHash);
+        let m = await this.getMessage(messageHash);
+        if (!m?.receive_tx) m = await this.getMessage(messageHash, true);
         return m?.receive_tx;
     }
 
@@ -116,7 +154,7 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
      *
      * @returns Internal message representation (if any)
      */
-     async fetchMessage(f: Partial<MessageFilter>): Promise<GoldSkyBridgeMessage|undefined> {
+     async fetchMessages(f: Partial<MessageFilter>, limit?: number): Promise<GoldSkyBridgeMessage[]|undefined> {
 
         const query = gql`
           query Query($committedRoot: String, $messageHash: String, $transactionHash: String) {
@@ -179,64 +217,65 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
           "x-hasura-admin-secret": this._secret,
         };
 
-      const response = await request(this.uri, query, GoldSkyBackend.fillFilter(f), headers);
+        const filter = {
+            ...GoldSkyBackend.fillFilter(f),
+            limit: limit || null
+        };
 
-      const events = response.bridge_events;
+      const response = await request(this.uri, query, filter, headers);
+
+      const {events} = response;
 
       if (events.length <= 0) return undefined;
-      else if (events.length > 5) throw new Error(`Transaction contains more than one Dispatch event`);
 
-      const r: GoldSkyBridgeMessage = {
-          committed_root: events[0].committed_root,
-          destination_and_nonce: events[0].destination_and_nonce,
-          destination_domain_id: events[0].destination_domain_id,
-          destination_domain_name: events[0].destination_domain_name,
-          dispatch_block: events[0].dispatch_block,
-          dispatch_tx: events[0].dispatch_tx,
-          dispatched_at: events[0].dispatched_at,
-          id: events[0].id,
-          leaf_index: events[0].leaf_index,
-          message: events[0].message,
-          message__action__amount: events[0].message__action__amount,
-          message__action__details_hash: events[0].message__action__details_hash,
-          message__action__to: events[0].message__action__to,
-          message__action__type: events[0].message__action__type,
-          message__token__domain: events[0].message__token__domain,
-          message__token__id: events[0].message__token__id,
-          message_body: events[0].message_body,
-          message_hash: events[0].message_hash,
-          message_type: events[0].message_type,
-          new_root: events[0].new_root,
-          nonce: events[0].nonce,
-          old_root: events[0].old_root,
-          origin_domain_id: events[0].origin_domain_id,
-          origin_domain_name: events[0].origin_domain_name,
-          process_block: events[0].process_block,
-          process_tx: events[0].process_tx,
-          processed_at: events[0].processed_at,
-          recipient_address: events[0].recipient_address,
-          relay_block: events[0].relay_block,
-          relay_chain_id: events[0].relay_chain_id,
-          relay_tx: events[0].relay_tx,
-          relayed_at: events[0].relayed_at,
-          sender_address: events[0].sender_address,
-          signature: events[0].signature,
-          update_block: events[0].update_block,
-          update_chain_id: events[0].update_chain_id,
-          update_tx: events[0].update_tx,
-          updated_at: events[0].updated_at,
-
-          send_tx: events[0].send_tx,
-          sent_at: events[0].sent_at,
-          send_block: events[0].send_block,
-          original_sender: events[0].original_sender,
-          receive_tx: events[0].receive_tx,
-          origin_and_nonce: events[0].origin_and_nonce,
-          receive_block: events[0].receive_block,
-          received_at: events[0].received_at,
-      };
-
-
-      return r;
+        return events.map((event: any) => ({
+            committed_root: event.committed_root,
+            destination_and_nonce: event.destination_and_nonce,
+            destination_domain_id: event.destination_domain_id,
+            destination_domain_name: event.destination_domain_name,
+            dispatch_block: event.dispatch_block,
+            dispatch_tx: event.dispatch_tx,
+            dispatched_at: event.dispatched_at,
+            id: event.id,
+            leaf_index: event.leaf_index,
+            message: event.message,
+            message__action__amount: event.message__action__amount,
+            message__action__details_hash: event.message__action__details_hash,
+            message__action__to: event.message__action__to,
+            message__action__type: event.message__action__type,
+            message__token__domain: event.message__token__domain,
+            message__token__id: event.message__token__id,
+            message_body: event.message_body,
+            message_hash: event.message_hash,
+            message_type: event.message_type,
+            new_root: event.new_root,
+            nonce: event.nonce,
+            old_root: event.old_root,
+            origin_domain_id: event.origin_domain_id,
+            origin_domain_name: event.origin_domain_name,
+            process_block: event.process_block,
+            process_tx: event.process_tx,
+            processed_at: event.processed_at,
+            recipient_address: event.recipient_address,
+            relay_block: event.relay_block,
+            relay_chain_id: event.relay_chain_id,
+            relay_tx: event.relay_tx,
+            relayed_at: event.relayed_at,
+            sender_address: event.sender_address,
+            signature: event.signature,
+            update_block: event.update_block,
+            update_chain_id: event.update_chain_id,
+            update_tx: event.update_tx,
+            updated_at: event.updated_at,
+  
+            send_tx: event.send_tx,
+            sent_at: event.sent_at,
+            send_block: event.send_block,
+            original_sender: event.original_sender,
+            receive_tx: event.receive_tx,
+            origin_and_nonce: event.origin_and_nonce,
+            receive_block: event.receive_block,
+            received_at: event.received_at,
+        } as GoldSkyBridgeMessage))
   }
 }

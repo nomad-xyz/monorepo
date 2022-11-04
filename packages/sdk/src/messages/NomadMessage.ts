@@ -193,17 +193,18 @@ export class NomadMessage<T extends NomadContext> {
     return await NomadMessage.baseSingleFromReceipt(context, receipt);
   }
 
-  static async baseFromTransactionHashUsingBackend<T extends NomadContext>(
+  static async baseFirstFromBackend<T extends NomadContext>(
     context: T,
     transactionHash: string,
   ): Promise<NomadMessage<T>> {
     if (!context._backend) {
       throw new Error(`No backend is set for the context`);
     }
-    const dispatch = await context._backend.getDispatch(transactionHash);
-    if (!dispatch) throw new Error(`No dispatch`);
+    const dispatches = await context._backend.getDispatches(transactionHash, 1);
+    if (!dispatches || dispatches.length === 0) throw new Error(`No dispatch`);
 
-    const m = new NomadMessage(context, dispatch);
+
+    const m = new NomadMessage(context, dispatches[0]);
 
     return m
   }
@@ -255,8 +256,42 @@ export class NomadMessage<T extends NomadContext> {
    *
    * @returns The timestamp at which a message can confirm
    */
-  async confirmAt(): Promise<Date | undefined> {
-    return await this.backend.confirmAt(this.messageHash)
+
+  /**
+     * Calculates an expected confirmation timestamp from relayed event
+     *
+     * @returns Timestamp (if any)
+     */
+  async confirmAt(messageHash: string): Promise<Date | undefined> {
+
+    const relayedAt = await this.backend.relayedAt(messageHash);
+    if (relayedAt) {
+      // Additional check for adequate numbers
+      if (relayedAt?.valueOf() <= 946684800000) {
+          throw new Error(`RelayedAt could not be smaller than 946684800000 (2000-01-01)`);
+      }
+
+      const destinationDomainId = await this.backend.destinationDomainId(messageHash);
+
+      // Destination domain must be present as long as relayed at is found already, since
+      // destination domain data is present in Dispatch event, and relay data at Relay event,
+      // which is later.
+      if (!destinationDomainId) {
+        throw new Error(`Destination domain is not present`);
+      }
+
+      const domain = this.context.getDomain(destinationDomainId);
+      if (domain === undefined) {
+          throw new Error(`Destination domain is not in the config`);
+      }
+
+      const optimisticSecondsUnparsed = domain.configuration.optimisticSeconds;
+      const optimisticSeconds: number = typeof optimisticSecondsUnparsed === 'string' ? parseInt(optimisticSecondsUnparsed) : optimisticSecondsUnparsed;
+      
+      const confirmAt = new Date(relayedAt.valueOf() + (optimisticSeconds * 1000));
+      return confirmAt;
+    }
+    return undefined
   }
 
   async process(): Promise<ContractTransaction> {
@@ -335,7 +370,7 @@ export class NomadMessage<T extends NomadContext> {
   async status(): Promise<MessageStatus | undefined> {
     if (await this.getProcess()) return MessageStatus.Processed;
 
-    const confirmAt = await this.confirmAt();
+    const confirmAt = await this.confirmAt(this.messageHash);
     const now = new Date();
     if (confirmAt && confirmAt < now) return MessageStatus.Relayed;
 

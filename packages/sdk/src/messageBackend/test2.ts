@@ -1,14 +1,14 @@
 import { NomadContext, NomadMessage } from "..";
-// import { GoldSkyBackend } from "./backend";
+// import { GoldSkyBackend } from "..";
 
 // const GOLDSKY_SECRET = "yaZj76nCg5q";
 
-// const backend = GoldSkyBackend.defaultBackend();
+// const backend = GoldSkyBackend.default('production', );
 
 let ctx = new NomadContext('production');
 
 (async () => {
-    const m = await NomadMessage.baseFromTransactionHashUsingBackend(ctx, '0x83e3dcf9235ec286864fcdc9ff3cbb8bc8d19eba3d034f8ef5f642ad95a4a93b');
+    const m = await NomadMessage.baseFirstFromBackend(ctx, '0x83e3dcf9235ec286864fcdc9ff3cbb8bc8d19eba3d034f8ef5f642ad95a4a93b');
     if (!m) throw new Error(`No message found`);
 
     const p = await m.getProcess();
