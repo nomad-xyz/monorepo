@@ -89,6 +89,14 @@ contract DeployImplementations is Test, Config {
         xAppConnectionManager = address(getXAppConnectionManager(localDomain));
         updaterManager = address(getUpdaterManager(localDomain));
         localDomainNumber = uint32(domainNumber(localDomain));
+        string memory rpc = getRpcs(localDomain)[0];
+        vm.createFork(rpc);
+        title("Input Data");
+        console2.log("RPC:               ", rpc);
+        console2.log("Timelock:          ", recoveryTimelock);
+        console2.log("XCnMngr:           ", xAppConnectionManager);
+        console2.log("UpdMngr:           ", updaterManager);
+        console2.log("DomNubr:           ", uint256(localDomainNumber));
 
         // Input validation
         require(localDomainNumber != 0, "localDomainNumber can't be zero");
