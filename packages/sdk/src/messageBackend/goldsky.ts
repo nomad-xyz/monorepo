@@ -48,16 +48,16 @@ export type GoldSkyMessage = {
     process_tx: string,
     processed_at: string,
     recipient_address: string,
-    relay_block: string,
-    relay_chain_id: number,
-    relay_tx: string,
-    relayed_at: string,
+    relay_block?: string,
+    relay_chain_id?: number,
+    relay_tx?: string,
+    relayed_at?: string,
     sender_address: string,
     signature: string,
-    update_block: string,
-    update_chain_id: number,
-    update_tx: string,
-    updated_at: string,
+    update_block?: string,
+    update_chain_id?: number,
+    update_tx?: string,
+    updated_at?: string,
 }
 
 /**
@@ -273,7 +273,7 @@ export class GoldSkyBackend extends MessageBackend {
      async relayedAt(messageHash: string): Promise<Date | undefined> {
         let m = await this.getMessage(messageHash);
         if (!m?.relayed_at) m = await this.getMessage(messageHash, true);
-        return m ? new Date(m.relayed_at): undefined;
+        return m && m.relayed_at ? new Date(m.relayed_at): undefined;
      }
 
     /**
@@ -284,7 +284,7 @@ export class GoldSkyBackend extends MessageBackend {
     async updatedAt(messageHash: string): Promise<Date | undefined> {
         let m = await this.getMessage(messageHash);
         if (!m?.updated_at) m = await this.getMessage(messageHash, true);
-        return m ? new Date(m.updated_at): undefined;
+        return m && m.updated_at ? new Date(m.updated_at): undefined;
     }
 
     /**
@@ -295,7 +295,7 @@ export class GoldSkyBackend extends MessageBackend {
     async processedAt(messageHash: string): Promise<Date | undefined> {
         let m = await this.getMessage(messageHash);
         if (!m?.processed_at) m = await this.getMessage(messageHash, true);
-        return m ? new Date(m.processed_at): undefined;
+        return m && m.processed_at ? new Date(m.processed_at): undefined;
     }
 
     async destinationDomainId(messageHash: string): Promise<number | undefined> {
