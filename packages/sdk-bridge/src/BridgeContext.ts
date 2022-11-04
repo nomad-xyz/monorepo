@@ -22,7 +22,7 @@ const MOCK_GOERLI_ACCOUNTANT = '0x661afa47c0efeaee1414116b4fe7182dab37dc7b';
 
 export class BridgeContext extends NomadContext {
   private bridges: Map<string, BridgeContracts>;
-  readonly _backend?: BridgeMessageBackend;
+  _backend?: BridgeMessageBackend;
 
 
   constructor(environment: string | config.NomadConfig = 'development', backend?: BridgeMessageBackend) {
@@ -43,6 +43,15 @@ export class BridgeContext extends NomadContext {
       );
       this.bridges.set(bridge.domain, bridge);
     }
+  }
+
+  /**
+   * Create default backend for the context
+   */
+   withDefaultBackend() {
+    // TODO: What if backend doesn't exist for this environment?
+    this._backend = GoldSkyBridgeBackend.default(this.environment, this);
+    return this;
   }
 
   static fromNomadContext(context: NomadContext): BridgeContext {

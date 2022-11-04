@@ -72,7 +72,7 @@ export type MessageProof = {
 export class NomadContext extends MultiProvider<config.Domain> {
   protected _cores: Map<string, CoreContracts<this>>;
   protected _blacklist: Set<number>;
-  readonly _backend?: MessageBackend;
+  _backend?: MessageBackend;
   readonly conf: config.NomadConfig;
 
   constructor(environment: string | config.NomadConfig = 'development', backend?: MessageBackend) {
@@ -87,8 +87,6 @@ export class NomadContext extends MultiProvider<config.Domain> {
     this.conf = conf;
     this._cores = new Map();
     this._blacklist = new Set();
-    // TODO: What if backend doesn't exist for this environment?
-    this._backend = backend || GoldSkyBackend.default(environment, this);
 
     for (const network of this.conf.networks) {
       // register domain
@@ -111,6 +109,15 @@ export class NomadContext extends MultiProvider<config.Domain> {
       );
       this._cores.set(core.domain, core);
     }
+  }
+
+  /**
+   * Create default backend for the context
+   */
+  withDefaultBackend() {
+    // TODO: What if backend doesn't exist for this environment?
+    this._backend = GoldSkyBackend.default(this.environment, this);
+    return this;
   }
 
   get governor(): config.NomadLocator {

@@ -4,11 +4,10 @@
 import { BridgeContext } from "./BridgeContext";
 import { BridgeMessage } from "./BridgeMessage";
 
-// const GOLDSKY_SECRET = "yaZj76nCg5q";
 
 // const backend = GoldSkyBridgeBackend.default('production');
 
-const ctx = new BridgeContext('production');
+const ctx = new BridgeContext('production').withDefaultBackend();
 
 (async () => {
     const m = await BridgeMessage.bridgeFirstFromBackend(ctx, '0x83e3dcf9235ec286864fcdc9ff3cbb8bc8d19eba3d034f8ef5f642ad95a4a93b');

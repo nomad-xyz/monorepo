@@ -99,9 +99,6 @@ export class GoldSkyBackend extends MessageBackend {
         const secret = process.env.GOLDSKY_SECRET || defaultGoldSkySecret;
         if (!secret) throw new Error(`GOLDSKY_SECRET not found in env`);
 
-        // if (!context) {
-        //     context = new NomadContext(environment);
-        // }
         return new GoldSkyBackend(environmentString, secret, context || new NomadContext(environment));
     }
 

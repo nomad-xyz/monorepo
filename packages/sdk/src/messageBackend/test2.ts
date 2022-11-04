@@ -5,7 +5,7 @@ import { NomadContext, NomadMessage } from "..";
 
 // const backend = GoldSkyBackend.default('production', );
 
-let ctx = new NomadContext('production');
+let ctx = new NomadContext('production').withDefaultBackend();
 
 (async () => {
     const m = await NomadMessage.baseFirstFromBackend(ctx, '0x83e3dcf9235ec286864fcdc9ff3cbb8bc8d19eba3d034f8ef5f642ad95a4a93b');
