@@ -50,37 +50,40 @@ contract DeployImplementations is Test, Config {
                               UPGRADE
   //////////////////////////////////////////////////////////////*/
 
-    function deploy(string memory _localDomain, string memory _configPath)
+    function deploy(string memory configPath, string[] memory domains)
         external
     {
-        __Config_initialize(_configPath);
-        localDomain = _localDomain;
-        loadConfig();
-        title(
-            string(
-                abi.encodePacked(
-                    "Deploying  & Initializing implementations on domain: ",
-                    _localDomain,
-                    " : ",
-                    vm.toString(uint256(localDomainNumber))
+        __Config_initialize(configPath);
+        for (uint256 i; i < domains.length; i++) {
+            localDomain = domains[i];
+            title(
+                string(
+                    abi.encodePacked(
+                        "Deploying  & Initializing implementations on domain: ",
+                        localDomain,
+                        " : ",
+                        vm.toString(uint256(localDomainNumber))
+                    )
                 )
-            )
-        );
-        outputFile = JsonWriter.File(
-            string(
-                abi.encodePacked(
-                    "actions/"
-                    "implementations-",
-                    localDomain,
-                    ".json"
-                )
-            ),
-            true
-        );
-        vm.startBroadcast();
-        deployImplementations();
-        writeImpl();
-        vm.stopBroadcast();
+            );
+            console2.log("Reading configuration from path: ", configPath);
+            loadConfig();
+            outputFile = JsonWriter.File(
+                string(
+                    abi.encodePacked(
+                        "actions/"
+                        "implementations-",
+                        localDomain,
+                        ".json"
+                    )
+                ),
+                true
+            );
+            vm.startBroadcast();
+            deployImplementations();
+            writeImpl();
+            vm.stopBroadcast();
+        }
     }
 
     function loadConfig() internal {
@@ -90,8 +93,8 @@ contract DeployImplementations is Test, Config {
         updaterManager = address(getUpdaterManager(localDomain));
         localDomainNumber = uint32(domainNumber(localDomain));
         string memory rpc = getRpcs(localDomain)[0];
-        vm.createFork(rpc);
-        title("Input Data");
+        vm.createSelectFork(rpc);
+        title("Input");
         console2.log("RPC:               ", rpc);
         console2.log("Timelock:          ", recoveryTimelock);
         console2.log("XCnMngr:           ", xAppConnectionManager);
@@ -123,6 +126,8 @@ contract DeployImplementations is Test, Config {
         // un-initialized implementations can't harm the protocol
         // (unless, in the future, we introduce delegatecall in any implementations)
         // Home
+
+        title("Deployment Information");
 
         home = new Home(localDomainNumber);
         home.initialize(IUpdaterManager(updaterManager));
@@ -160,13 +165,13 @@ contract DeployImplementations is Test, Config {
                       CONSOLE.LOG UTILITIES
   //////////////////////////////////////////////////////////////*/
 
-    function title(string memory title1) internal {
+    function title(string memory title1) internal view {
         console2.log("===========================");
         console2.log(title1);
         console2.log("===========================");
     }
 
-    function title(string memory title1, string memory title2) internal {
+    function title(string memory title1, string memory title2) internal view {
         console2.log(" ");
         console2.log("===========================");
         console2.log(title1, title2);
