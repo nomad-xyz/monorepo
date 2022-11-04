@@ -1,4 +1,4 @@
-import {  GoldSkyBackend, GoldSkyMessage, MessageFilter, NomadContext } from "@nomad-xyz/sdk";
+import {  GoldSkyBackend, GoldSkyMessage, MessageFilter } from "@nomad-xyz/sdk";
 import {MessageBackend} from "@nomad-xyz/sdk";
 import { request, gql } from 'graphql-request';
 import * as config from '@nomad-xyz/configuration';
@@ -157,9 +157,9 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
      async fetchMessages(f: Partial<MessageFilter>, limit?: number): Promise<GoldSkyBridgeMessage[]|undefined> {
 
         const query = gql`
-          query Query($committedRoot: String, $messageHash: String, $transactionHash: String) {
+          query Query($committedRoot: String, $messageHash: String, $transactionHash: String, $limit: Int) {
 
-                  bridge_events(where: {_or: [{dispatch_tx: {_eq: $transactionHash}}, {message_hash: {_eq: $messageHash}}, {old_root: {_eq: $committedRoot}}]}) {
+                  bridge_events(where: {_or: [{dispatch_tx: {_eq: $transactionHash}}, {message_hash: {_eq: $messageHash}}, {old_root: {_eq: $committedRoot}}]}, limit: $limit) {
                     committed_root
                     destination_and_nonce
                     destination_domain_id
@@ -224,7 +224,7 @@ export class GoldSkyBridgeBackend extends GoldSkyBackend implements BridgeMessag
 
       const response = await request(this.uri, query, filter, headers);
 
-      const {events} = response;
+      const events = response.bridge_events;
 
       if (events.length <= 0) return undefined;
 
