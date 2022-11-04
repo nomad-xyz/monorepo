@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity 0.7.6;
+pragma abicoder v2;
 
 /*//////////////////////////////////////////////////////////////
                                  IMPORTS
@@ -17,17 +18,23 @@ import {IUpdaterManager} from "@nomad-xyz/contracts-core/contracts/interfaces/IU
 // Utilities
 import {Test} from "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
+import {Config} from "../Config.sol";
+import {JsonWriter} from "../JsonWriter.sol";
 
-contract DeployImplementations is Test {
+contract DeployImplementations is Test, Config {
+    using JsonWriter for JsonWriter.Buffer;
+
     /*//////////////////////////////////////////////////////////////
                             UPGRADE ARGUMENTS
   //////////////////////////////////////////////////////////////*/
 
     // configuration
-    uint32 domain;
+    string localDomain;
+    uint32 localDomainNumber;
     uint256 recoveryTimelock;
     address xAppConnectionManager;
     address updaterManager;
+    JsonWriter.File outputFile;
     /*//////////////////////////////////////////////////////////////
                             DEPLOYED CONTRACTS
   //////////////////////////////////////////////////////////////*/
@@ -43,45 +50,57 @@ contract DeployImplementations is Test {
                               UPGRADE
   //////////////////////////////////////////////////////////////*/
 
-    string path;
-
-    function deploy(
-        uint32 _domain,
-        uint256 _recoveryTimelock,
-        address _xAppConnectionManager,
-        address _updaterManager
-    ) external {
-        domain = _domain;
-        recoveryTimelock = _recoveryTimelock;
-        xAppConnectionManager = _xAppConnectionManager;
-        updaterManager = _updaterManager;
+    function deploy(string memory _localDomain, string memory _configPath)
+        external
+    {
+        __Config_initialize(_configPath);
+        localDomain = _localDomain;
+        loadConfig();
         title(
-            "Deploying implementations on domain ",
-            vm.toString(uint256(_domain))
-        );
-        path = string(
-            abi.encodePacked(
-                "actions/"
-                "implementations-",
-                vm.toString(uint256(_domain)),
-                ".json"
+            string(
+                abi.encodePacked(
+                    "Deploying  & Initializing implementations on domain: ",
+                    _localDomain,
+                    " : ",
+                    vm.toString(uint256(localDomainNumber))
+                )
             )
         );
+        outputFile = JsonWriter.File(
+            string(
+                abi.encodePacked(
+                    "actions/"
+                    "implementations-",
+                    localDomain,
+                    ".json"
+                )
+            ),
+            true
+        );
+        vm.startBroadcast();
+        deployImplementations();
+        writeImpl();
+        vm.stopBroadcast();
+    }
+
+    function loadConfig() internal {
+        recoveryTimelock = getGovernanceConfiguration(localDomain)
+            .recoveryTimelock;
+        xAppConnectionManager = address(getXAppConnectionManager(localDomain));
+        updaterManager = address(getUpdaterManager(localDomain));
+        localDomainNumber = uint32(domainNumber(localDomain));
 
         // Input validation
-        require(domain != 0, "domain can't be zero");
+        require(localDomainNumber != 0, "localDomainNumber can't be zero");
         require(recoveryTimelock != 0, "recovery timelock can't be zero");
         require(
             xAppConnectionManager != address(0),
             "xAppConnectionManager can't be address(0)"
         );
-        require(updaterManager != address(0), "updaterManager can't be 0");
-
-        vm.startBroadcast();
-        deployImplementations();
-        // initializeImplementations();
-        writeImpl();
-        vm.stopBroadcast();
+        require(
+            updaterManager != address(0),
+            "updaterManager can't be address(0)"
+        );
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -89,50 +108,44 @@ contract DeployImplementations is Test {
   //////////////////////////////////////////////////////////////*/
 
     function deployImplementations() internal {
-        // Home
-        home = new Home(domain);
-        console2.log("home implementation address");
-        console2.log(address(home));
-        // Replica
-        replica = new Replica(domain);
-        console2.log("replica implementation address");
-        console2.log(address(replica));
-        // GovernanceRouter
-        governanceRouter = new GovernanceRouter(domain, recoveryTimelock);
-        console2.log("governanceRouter implementation address");
-        console2.log(address(governanceRouter));
-        // BridgeRouter
-        bridgeRouter = new BridgeRouter();
-        console2.log("bridgeRouter implementation address");
-        console2.log(address(bridgeRouter));
-        // TokenRegistry
-        tokenRegistry = new TokenRegistry();
-        console2.log("tokenRegistry implementation address");
-        console2.log(address(tokenRegistry));
-        // BridgeToken
-        bridgeToken = new BridgeToken();
-        console2.log("bridgeToken implementation address");
-        console2.log(address(bridgeToken));
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                  IMPLEMENTATION INITIALIZATION
-  //////////////////////////////////////////////////////////////*/
-
-    function initializeImplementations() internal {
-        title("Initializing implementations with dummy values...");
         // NOTE: these init values do not map to correct expected values.
         // Storage variables in implementation contracts don't matter.
         // Purpose is to initialize the implementations as a matter of best practice,
         // despite the fact that in Nomad's architecture,
         // un-initialized implementations can't harm the protocol
         // (unless, in the future, we introduce delegatecall in any implementations)
+        // Home
+
+        home = new Home(localDomainNumber);
         home.initialize(IUpdaterManager(updaterManager));
+        console2.log("Home deployed at", address(home));
+
+        // Replica
+        replica = new Replica(localDomainNumber);
         replica.initialize(0, address(0), bytes32(0), 0);
+        console2.log("Replica deployed at", address(replica));
+
+        // GovernanceRouter
+        governanceRouter = new GovernanceRouter(
+            localDomainNumber,
+            recoveryTimelock
+        );
         governanceRouter.initialize(xAppConnectionManager, address(0));
-        tokenRegistry.initialize(address(bridgeToken), xAppConnectionManager);
+        console2.log("Governance Router deploed at", address(governanceRouter));
+
+        // BridgeRouter
+        bridgeRouter = new BridgeRouter();
         bridgeRouter.initialize(address(tokenRegistry), xAppConnectionManager);
+        console2.log("Bridge Router deployed at", address(bridgeRouter));
+
+        tokenRegistry = new TokenRegistry();
+        tokenRegistry.initialize(address(bridgeToken), xAppConnectionManager);
+        console2.log("Token Registry deployed at", address(tokenRegistry));
+
+        // BridgeToken
+        bridgeToken = new BridgeToken();
         bridgeToken.initialize();
+        console2.log("Bridge Token deployed at", address(bridgeToken));
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -154,68 +167,22 @@ contract DeployImplementations is Test {
     }
 
     function writeImpl() internal {
-        string memory json = "{\n";
-        // add home
-        json = string(
-            abi.encodePacked(
-                json,
-                '"home":',
-                '"',
-                vm.toString(address(home)),
-                '",\n'
-            )
-        );
-        //add replica
-        json = string(
-            abi.encodePacked(
-                json,
-                '"replica":',
-                '"',
-                vm.toString(address(replica)),
-                '",\n'
-            )
-        );
-        //add governanceRouter
-        json = string(
-            abi.encodePacked(
-                json,
-                '"governanceRouter":',
-                '"',
-                vm.toString(address(governanceRouter)),
-                '",\n'
-            )
-        );
-        //add tokenRegistry
-        json = string(
-            abi.encodePacked(
-                json,
-                '"tokenRegistry":',
-                '"',
-                vm.toString(address(tokenRegistry)),
-                '",\n'
-            )
-        );
-        //add bridgeRouter
-        json = string(
-            abi.encodePacked(
-                json,
-                '"bridgeRouter":',
-                '"',
-                vm.toString(address(bridgeRouter)),
-                '",\n'
-            )
-        );
-        //add bridgeToken
-        json = string(
-            abi.encodePacked(
-                json,
-                '"bridgeToken":',
-                '"',
-                vm.toString(address(bridgeToken)),
-                '"\n}'
-            )
-        );
-        console2.log(json);
-        vm.writeFile(path, json);
+        JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
+        string memory indent = "";
+        string[2][] memory kvs = new string[2][](6);
+        kvs[0][0] = "home";
+        kvs[0][1] = vm.toString(address(home));
+        kvs[1][0] = "replica";
+        kvs[1][1] = vm.toString(address(replica));
+        kvs[2][0] = "governanceRouter";
+        kvs[2][1] = vm.toString(address(governanceRouter));
+        kvs[3][0] = "tokenRegistry";
+        kvs[3][1] = vm.toString(address(tokenRegistry));
+        kvs[4][0] = "bridgeRouter";
+        kvs[4][1] = vm.toString(address(bridgeRouter));
+        kvs[5][0] = "bridgeToken";
+        kvs[5][1] = vm.toString(address(bridgeToken));
+        buffer.writeSimpleObject(indent, "", kvs, true);
+        buffer.flushTo(outputFile);
     }
 }

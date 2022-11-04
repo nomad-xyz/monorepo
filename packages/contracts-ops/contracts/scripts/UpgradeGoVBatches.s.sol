@@ -205,11 +205,7 @@ contract UpgradeGovBatches is Test, Config, CallBatch {
         console2.log("===========================");
     }
 
-    function title(string memory title1, string memory title2)
-        internal
-        view
-        kkkkkkk
-    {
+    function title(string memory title1, string memory title2) internal view {
         console2.log(" ");
         console2.log("===========================");
         console2.log(title1, title2);
