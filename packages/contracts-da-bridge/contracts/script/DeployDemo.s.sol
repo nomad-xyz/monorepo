@@ -4,6 +4,7 @@ pragma solidity 0.7.6;
 import "forge-std/Script.sol";
 import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 import {Replica} from "@nomad-xyz/contracts-core/contracts/Replica.sol";
+import {Home} from "@nomad-xyz/contracts-core/contracts/Home.sol";
 import {DABridgeRouter} from "../DABridgeRouter.sol";
 
 contract DeployDABridgeRouter is Script {
@@ -26,6 +27,8 @@ contract DeployDABridgeRouter is Script {
 
         vm.startBroadcast();
 
+        Home home = new Home(uint32(localDomain));
+
         Replica replica = new Replica(uint32(localDomain));
         replica.initialize(
             uint32(remoteDomain),
@@ -35,6 +38,7 @@ contract DeployDABridgeRouter is Script {
         );
 
         XAppConnectionManager manager = new XAppConnectionManager();
+        manager.setHome(address(home));
         manager.ownerEnrollReplica(address(replica), uint32(remoteDomain));
 
         DABridgeRouter router = new DABridgeRouter();
