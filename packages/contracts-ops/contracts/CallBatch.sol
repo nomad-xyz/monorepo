@@ -12,27 +12,30 @@ import {JsonWriter} from "./JsonWriter.sol";
 
 import "forge-std/Script.sol";
 
-abstract contract CallBatch is Script {
+abstract contract CallBatch {
     using JsonWriter for JsonWriter.Buffer;
     using JsonWriter for string;
+
+    Vm private constant vm =
+        Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     GovernanceMessage.Call[] public calls;
 
     bool public complete;
     string public domain;
-    JsonWriter.File outputFile;
+    JsonWriter.File callBatchOutput;
 
     function __CallBatch_initialize(
         string memory _domain,
-        string memory _outputFile,
+        string memory _callBatchOutput,
         bool _overwrite
     ) public {
         require(bytes(domain).length == 0, "already initialized");
-        require(bytes(outputFile.path).length == 0, "already initialized");
+        require(bytes(callBatchOutput.path).length == 0, "already initialized");
         domain = _domain;
-        _outputFile = string(abi.encodePacked("./actions/", _outputFile));
-        outputFile.path = _outputFile;
-        outputFile.overwrite = _overwrite;
+        _callBatchOutput = string(abi.encodePacked("./actions/", _callBatchOutput));
+        callBatchOutput.path = _callBatchOutput;
+        callBatchOutput.overwrite = _overwrite;
     }
 
     function push(address to, bytes memory data) public {
@@ -72,17 +75,17 @@ abstract contract CallBatch is Script {
 
     function finish() public {
         require(bytes(domain).length != 0, "must initialize");
-        require(bytes(outputFile.path).length != 0, "must initialize");
+        require(bytes(callBatchOutput.path).length != 0, "must initialize");
         require(!complete, "already written");
         complete = true;
         JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
         writeCallList(buffer);
-        buffer.flushTo(outputFile);
+        buffer.flushTo(callBatchOutput);
     }
 
     function build(address governanceRouter) public {
         require(bytes(domain).length != 0, "must initialize");
-        require(bytes(outputFile.path).length != 0, "must initialize");
+        require(bytes(callBatchOutput.path).length != 0, "must initialize");
         require(!complete, "already written");
         complete = true;
         JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
@@ -98,7 +101,7 @@ abstract contract CallBatch is Script {
         kvs[1][0] = "data";
         kvs[1][1] = vm.toString(data);
         buffer.writeSimpleObject("", "", kvs, true);
-        buffer.flushTo(outputFile);
+        buffer.flushTo(callBatchOutput);
     }
 
     function prankExecuteBatch(address router) public {
@@ -126,10 +129,10 @@ abstract contract CallBatch is Script {
 contract TestCallBatch is CallBatch {
     function finish(
         string memory _domain,
-        string memory _outputFile,
+        string memory _callBatchOutput,
         bool overwrite
     ) public {
-        __CallBatch_initialize(_domain, _outputFile, overwrite);
+        __CallBatch_initialize(_domain, _callBatchOutput, overwrite);
         push(address(3), bytes("abcd"));
         push(address(3), bytes("abcd"));
         push(address(3), bytes("abcd"));
@@ -141,10 +144,10 @@ contract TestCallBatch is CallBatch {
 
     function build(
         string memory _domain,
-        string memory _outputFile,
+        string memory _callBatchOutput,
         bool overwrite
     ) public {
-        __CallBatch_initialize(_domain, _outputFile, overwrite);
+        __CallBatch_initialize(_domain, _callBatchOutput, overwrite);
         push(address(3), bytes("abcd"));
         push(address(3), bytes("abcd"));
         push(address(3), bytes("abcd"));
