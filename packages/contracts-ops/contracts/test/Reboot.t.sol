@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity 0.7.6;
 
+import "forge-std/Script.sol";
+import {ReplicaTest} from "@nomad-xyz/contracts-core/contracts/test/Replica.t.sol";
 import {RotateUpdaterLogic} from "../scripts/RotateUpdater.s.sol";
 import {EnrollReplicasLogic} from "../scripts/EnrollReplica.s.sol";
 import {DeployAccountant} from "../scripts/DeployAccountant.s.sol";
-import {ReplicaTest} from "../../../contracts-core/contracts/test/Replica.t.sol";
+import {Config} from "../Config.sol";
+import {CallBatch} from "../CallBatch.sol";
+import {INomadProtocol} from "../test/utils/INomadProtocol.sol";
 
 // TODO: this is currently not possible because the Config is inherited by all of them. want to figure out how we can refactor to fix this
-contract RebootTest is RotateUpdaterLogic, EnrollReplicasLogic, DeployAccountant, ReplicaTest {
+contract RebootTest is Script, INomadProtocol, Config, CallBatch, RotateUpdaterLogic, EnrollReplicasLogic, DeployAccountant, ReplicaTest {
 
     function setUp() public override {
         __Config_initialize(configFile);
