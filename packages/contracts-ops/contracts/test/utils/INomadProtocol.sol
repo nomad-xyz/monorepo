@@ -41,8 +41,9 @@ interface INomadProtocol {
 
     /////////////////////*  BRIDGE ACTORS */////////////////////
 
-    //    function fundsRecipient(string memory domain) external returns (address);
-    //    function accountantOwner(string memory domain) external returns (address);
+    function fundsRecipient(string memory domain) external returns (address);
+
+    function accountantOwner(string memory domain) external returns (address);
 
     /////////////////////*  CONSTANTS */////////////////////
 

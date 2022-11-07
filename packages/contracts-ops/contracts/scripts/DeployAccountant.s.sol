@@ -21,7 +21,12 @@ abstract contract DeployAccountant is Script, Config {
     UpgradeBeaconProxy proxy;
 
     // entrypoint
-    function deploy(string calldata _configFile, string memory _domain, string memory _outputFile, bool _overwrite) public {
+    function deploy(
+        string calldata _configFile,
+        string memory _domain,
+        string memory _outputFile,
+        bool _overwrite
+    ) public {
         // initialize
         __Config_initialize(_configFile);
         _outputFile = string(abi.encodePacked("./actions/", _outputFile));
@@ -37,13 +42,11 @@ abstract contract DeployAccountant is Script, Config {
 
     // Deploys & configures the NFTAccountant with upgrade setup
     function deployAccountant(string memory _domain) internal {
-        address fundsRecipient = vm.addr(567); // TODO
-        address accountantOwner = vm.addr(89); // TODO
         // deploy implementation
         implementation = new AllowListNFTRecoveryAccountant(
-                address(bridgeRouter(_domain)),
-                fundsRecipient
-            );
+            address(bridgeRouter(_domain)),
+            fundsRecipient(_domain)
+        );
         // initialize implementation
         implementation.initialize();
         // deploy UpgradeBeacon (with UpgradeBeaconController as owner)
@@ -52,10 +55,7 @@ abstract contract DeployAccountant is Script, Config {
             address(upgradeBeaconController(_domain))
         );
         // deploy UpgradeBeaconProxy
-        proxy = new UpgradeBeaconProxy(
-            address(beacon),
-            ""
-        );
+        proxy = new UpgradeBeaconProxy(address(beacon), "");
         // initialize proxy
         // Note: this is necessary to perform separately from the Proxy deployment
         //       because the initialize function has no parameters
@@ -63,7 +63,7 @@ abstract contract DeployAccountant is Script, Config {
         AllowListNFTRecoveryAccountant(address(proxy)).initialize();
         // transfer ownership of proxy
         AllowListNFTRecoveryAccountant(address(proxy)).transferOwnership(
-            accountantOwner
+            accountantOwner(_domain)
         );
     }
 
