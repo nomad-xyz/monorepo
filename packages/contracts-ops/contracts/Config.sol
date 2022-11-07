@@ -322,6 +322,17 @@ abstract contract Config is INomadProtocol {
         return string(abi.encodePacked(protocolPath(domain), ".configuration"));
     }
 
+    function bridgeConfigPath(string memory domain)
+        private
+        pure
+        returns (string memory)
+    {
+        return
+            string(
+                abi.encodePacked(protocolPath(domain), ".bridgeConfiguration")
+            );
+    }
+
     function protocolAttributePath(string memory domain, string memory key)
         private
         pure
@@ -349,6 +360,23 @@ abstract contract Config is INomadProtocol {
         string memory key
     ) private returns (bytes memory) {
         return vm.parseJson(config, protocolConfigAttributePath(domain, key));
+    }
+
+    function accountantConfigAttributePath(
+        string memory domain,
+        string memory key
+    ) private pure returns (string memory) {
+        return
+            string(
+                abi.encodePacked(bridgeConfigPath(domain), ".accountant.", key)
+            );
+    }
+
+    function loadAccountantConfigAttribute(
+        string memory domain,
+        string memory key
+    ) private returns (bytes memory) {
+        return vm.parseJson(config, accountantConfigAttributePath(domain, key));
     }
 
     function connections(string memory domain)
@@ -443,6 +471,32 @@ abstract contract Config is INomadProtocol {
                 (uint256)
             );
     }
+
+    function fundsRecipient(string memory domain)
+        public
+        override
+        onlyInitialized
+        returns (address)
+    {
+        return
+            abi.decode(
+                loadAccountantConfigAttribute(domain, "fundsRecipient"),
+                (address)
+            );
+    }
+
+    function accountantOwner(string memory domain)
+        public
+        override
+        onlyInitialized
+        returns (address)
+    {
+        return
+            abi.decode(
+                loadAccountantConfigAttribute(domain, "owner"),
+                (address)
+            );
+    }
 }
 
 contract TestJson is Test, Config {
@@ -452,7 +506,10 @@ contract TestJson is Test, Config {
     }
 
     function test_Json() public {
-        assertEq(address(ethHelper("ethereum")), 0x999d80F7FC17316b4c83f072b92EF37b72718De0);
+        assertEq(
+            address(ethHelper("ethereum")),
+            0x999d80F7FC17316b4c83f072b92EF37b72718De0
+        );
         vm.expectRevert("no ethHelper for randomDomain");
         ethHelper("randomDomain");
         assertEq(networks()[0], "avalanche");
