@@ -155,6 +155,14 @@ abstract contract CallBatch is Script {
         buffer.flushTo(outputFileRemote);
     }
 
+    function build(address governanceRouter) public {
+        require(
+            remoteCalls.length == 0,
+            "You need to pass an array of remote Domains"
+        );
+        build(governanceRouter, new uint32[](0));
+    }
+
     function build(
         address governanceRouter,
         uint32[] memory remoteDomainNumbers
@@ -176,28 +184,11 @@ abstract contract CallBatch is Script {
         kvs[1][0] = "data";
         kvs[1][1] = vm.toString(data);
         buffer.writeSimpleObject("", "", kvs, true);
-        buffer.flushTo(outputFileCombined);
-    }
-
-    function build(address governanceRouter) public {
-        require(bytes(localDomain).length != 0, "must initialize");
-        require(bytes(outputFileLocal.path).length != 0, "must initialize");
-        require(!complete, "already written");
-        complete = true;
-        JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
-        bytes memory data = abi.encodeWithSelector(
-            GovernanceRouter.executeGovernanceActions.selector,
-            localCalls,
-            new uint32[](0),
-            new GovernanceMessage.Call[](0)
-        );
-        string[2][] memory kvs = new string[2][](2);
-        kvs[0][0] = "to";
-        kvs[0][1] = vm.toString(governanceRouter);
-        kvs[1][0] = "data";
-        kvs[1][1] = vm.toString(data);
-        buffer.writeSimpleObject("", "", kvs, true);
-        buffer.flushTo(outputFileCombined);
+        if (remoteCalls.length == 0) {
+            buffer.flushTo(outputFileLocal);
+        } else {
+            buffer.flushTo(outputFileCombined);
+        }
     }
 
     function prankExecuteBatch(address router) public {
