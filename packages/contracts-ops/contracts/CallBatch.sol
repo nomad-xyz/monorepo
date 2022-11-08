@@ -220,7 +220,7 @@ abstract contract CallBatch is Script {
 }
 
 contract TestCallBatch is CallBatch {
-    function test_combined() public {
+    function combined() public {
         string memory local = "ethereum";
         string[] memory remotes = new string[](2);
         remotes[0] = "evmos";
