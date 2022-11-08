@@ -804,24 +804,36 @@ contract GovernanceRouterTest is Test {
     }
 
     function test_setXAppConnectionManagerOnlyGovernor() public {
+        MockHome newHome = new MockHome(homeDomain);
+        MockXAppConnectionManager newMngr = new MockXAppConnectionManager(
+            address(newHome)
+        );
         vm.startPrank(address(0xBEEEEEEEEEEEF));
-        address newMngr = vm.addr(151515);
         vm.expectRevert("! called by governor");
-        governanceRouter.setXAppConnectionManager(newMngr);
+        governanceRouter.setXAppConnectionManager(address(newMngr));
         vm.stopPrank();
-        governanceRouter.setXAppConnectionManager(newMngr);
-        assertEq(address(governanceRouter.xAppConnectionManager()), newMngr);
+        governanceRouter.setXAppConnectionManager(address(newMngr));
+        assertEq(
+            address(governanceRouter.xAppConnectionManager()),
+            address(newMngr)
+        );
     }
 
     function test_setXAppConnectionManagerOnlyRecoveryManager() public {
+        MockHome newHome = new MockHome(homeDomain);
+        MockXAppConnectionManager newMngr = new MockXAppConnectionManager(
+            address(newHome)
+        );
         enterRecovery();
         vm.prank(address(0xBEEEEEEEEEEEF));
-        address newMngr = vm.addr(151515);
         vm.expectRevert("! called by recovery manager");
-        governanceRouter.setXAppConnectionManager(newMngr);
+        governanceRouter.setXAppConnectionManager(address(newMngr));
         vm.prank(governanceRouter.recoveryManager());
-        governanceRouter.setXAppConnectionManager(newMngr);
-        assertEq(address(governanceRouter.xAppConnectionManager()), newMngr);
+        governanceRouter.setXAppConnectionManager(address(newMngr));
+        assertEq(
+            address(governanceRouter.xAppConnectionManager()),
+            address(newMngr)
+        );
     }
 
     function test_initiateRecoveryTimeLockOnlyNotInRecovery() public {
