@@ -11,6 +11,7 @@ import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManag
 import {JsonWriter} from "./JsonWriter.sol";
 
 import "forge-std/Script.sol";
+import "forge-std/console2.sol";
 
 abstract contract CallBatch is Script {
     using JsonWriter for JsonWriter.Buffer;
@@ -18,6 +19,7 @@ abstract contract CallBatch is Script {
 
     GovernanceMessage.Call[] public localCalls;
     GovernanceMessage.Call[][] public remoteCalls;
+    mapping(string => GovernanceMessage.Call[]) public remoteCallsMap;
 
     bool public complete;
     string public localDomain;
@@ -45,19 +47,20 @@ abstract contract CallBatch is Script {
         string memory _outputFile,
         bool _overwrite
     ) public {
-        require(bytes(_localDomain).length == 0, "already initialized");
+        require(bytes(localDomain).length == 0, "already initialized");
         require(bytes(outputFileLocal.path).length == 0, "already initialized");
         localDomain = _localDomain;
         remoteDomains = _remoteDomains;
-        _outputFile = string(abi.encodePacked("./actions/", _outputFile));
-        outputFileLocal.path = string(abi.encodePacked("local-", _outputFile));
+        outputFileLocal.path = string(
+            abi.encodePacked("./actions/local-", _outputFile)
+        );
         outputFileLocal.overwrite = _overwrite;
         outputFileRemote.path = string(
-            abi.encodePacked("remote-", _outputFile)
+            abi.encodePacked("./actions/remote-", _outputFile)
         );
         outputFileRemote.overwrite = _overwrite;
         outputFileCombined.path = string(
-            abi.encodePacked("combined-", _outputFile)
+            abi.encodePacked("./actions/combined-", _outputFile)
         );
         outputFileCombined.overwrite = _overwrite;
     }
@@ -67,16 +70,9 @@ abstract contract CallBatch is Script {
         bytes memory data,
         string memory domain
     ) public {
-        for (uint256 i; i < remoteDomains.length; i++) {
-            if (
-                keccak256(abi.encodePacked(domain)) ==
-                keccak256(abi.encodePacked(remoteDomains[i]))
-            ) {
-                remoteCalls[i].push(
-                    GovernanceMessage.Call(TypeCasts.addressToBytes32(to), data)
-                );
-            }
-        }
+        remoteCallsMap[domain].push(
+            GovernanceMessage.Call(TypeCasts.addressToBytes32(to), data)
+        );
     }
 
     function pushLocal(address to, bytes memory data) public {
@@ -163,6 +159,15 @@ abstract contract CallBatch is Script {
         build(governanceRouter, new uint32[](0));
     }
 
+    GovernanceMessage.Call[] calls;
+
+    function createRemoteCallsArray() public {
+        for (uint256 i; i < remoteDomains.length; i++) {
+            calls = remoteCallsMap[remoteDomains[i]];
+            remoteCalls.push(calls);
+        }
+    }
+
     function build(
         address governanceRouter,
         uint32[] memory remoteDomainNumbers
@@ -184,9 +189,10 @@ abstract contract CallBatch is Script {
         kvs[1][0] = "data";
         kvs[1][1] = vm.toString(data);
         buffer.writeSimpleObject("", "", kvs, true);
-        if (remoteCalls.length == 0) {
+        if (remoteDomainNumbers.length == 0) {
             buffer.flushTo(outputFileLocal);
         } else {
+            createRemoteCallsArray();
             buffer.flushTo(outputFileCombined);
         }
     }
@@ -214,6 +220,23 @@ abstract contract CallBatch is Script {
 }
 
 contract TestCallBatch is CallBatch {
+    function test_combined() public {
+        string memory local = "ethereum";
+        string[] memory remotes = new string[](2);
+        remotes[0] = "evmos";
+        remotes[1] = "moonbeam";
+        __CallBatch_initialize(local, remotes, "upgradeActions.json", true);
+        bytes memory data = hex"0101";
+        pushLocal(address(0xBEEF), data);
+        pushRemote(address(0xBEEEEF), data, "evmos");
+        pushRemote(address(0xBEEEEEEEF), data, "moonbeam");
+        address govRouter = address(0xBEEFEFE);
+        uint32[] memory remoteDomains = new uint32[](2);
+        remoteDomains[0] = 123;
+        remoteDomains[1] = 8843;
+        build(govRouter, remoteDomains);
+    }
+
     function finish(
         string memory _domain,
         string memory _outputFile,
