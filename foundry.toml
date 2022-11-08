@@ -1,16 +1,16 @@
 [profile.default]
-solc_version = '0.7.6'        # Version of solc that we use
-remappings = [                # Libraries that we use from node_modules and are used by the smart contracts
-"@openzeppelin/=node_modules/@openzeppelin/",
-"@summa-tx/=node_modules/@summa-tx/",
-"@nomad-xyz/=packages/",
-"forge-std/=lib/forge-std/src/"
+solc_version = '0.7.6' # Version of solc that we use
+remappings = [ # Libraries that we use from node_modules and are used by the smart contracts
+  "@openzeppelin/=node_modules/@openzeppelin/",
+  "@summa-tx/=node_modules/@summa-tx/",
+  "@nomad-xyz/=packages/",
+  "forge-std/=lib/forge-std/src/",
 ]
-optimizer = true              # Enable or disable the solc optimizer
-optimizer_runs = 999999       # The number of optimizer runs
-verbosity = 3                 # The verbosity of tests
-bytecode_hash = "none"        # For deterministic code
-block_timestamp = 1622400000  # Timestamp for tests (non-zero)
+optimizer = true # Enable or disable the solc optimizer
+optimizer_runs = 999999 # The number of optimizer runs
+verbosity = 3 # The verbosity of tests
+bytecode_hash = "none" # For deterministic code
+block_timestamp = 1622400000 # Timestamp for tests (non-zero)
 
 # silence warnings
 # 2462 - ignored constructor visibility in OZ dependency
@@ -30,8 +30,9 @@ ffi = true
 src = 'packages/contracts-core/contracts'
 test = 'packages/contracts-core/contracts/test'
 out = 'packages/contracts-core/foundry_artifacts'
-fuzz-runs = 10_000
 ffi = true
+[profile.core-ci.fuzz]
+runs = 10_000
 
 [profile.router]
 src = 'packages/contracts-router/contracts'
@@ -42,7 +43,8 @@ out = 'packages/contracts-router/foundry_artifacts'
 src = 'packages/contracts-router/contracts'
 test = 'packages/contracts-router/contracts/test'
 out = 'packages/contracts-router/foundry_artifacts'
-fuzz-runs = 10_000
+[profile.router-ci.fuzz]
+runs = 10_000
 
 [profile.bridge]
 src = 'packages/contracts-bridge/contracts'
@@ -55,7 +57,8 @@ src = 'packages/contracts-bridge/contracts'
 test = 'packages/contracts-bridge/contracts/test'
 out = 'packages/contracts-bridge/foundry_artifacts'
 ffi = true
-fuzz-runs = 10_000
+[profile.bridge-ci.fuzz]
+runs = 10_000
 
 [profile.da-bridge]
 src = 'packages/contracts-da-bridge/contracts'
@@ -68,11 +71,11 @@ src = 'packages/contracts-da-bridge/contracts'
 test = 'packages/contracts-da-bridge/contracts/test'
 out = 'packages/contracts-da-bridge/foundry_artifacts'
 ffi = true
-fuzz-runs = 10_000
-
+[profile.da-bridge-ci.fuzz]
+runs = 10_000
 [profile.ops]
 src = 'packages/contracts-ops/contracts'
 test = 'packages/contracts-ops/contracts/test'
 out = 'packages/contracts-ops/foundry_artifacts'
 ffi = true
-fs_permissions = [{access = "read-write", path = "./actions"}]
+fs_permissions = [{ access = "read-write", path = "./actions" }]
