@@ -4,6 +4,15 @@ import * as config from '@nomad-xyz/configuration';
 let conf: config.NomadConfig;
 let context: NomadContext;
 
+function to4ByteHex(num: number): string {
+  const hex = num.toString(16);
+  return '0'.repeat(8 - hex.length) + hex;
+}
+
+function toBytes32(address: string): string {
+  return '0'.repeat(24) + address;
+}
+
 describe('NomadMessage', () => {
   beforeAll(async () => {
     conf = await NomadContext.fetchConfig('staging');
@@ -11,11 +20,26 @@ describe('NomadMessage', () => {
   });
 
   it('parses message correctly', async () => {
+    // origin domain: 4 bytes
+    // sender: 32 bytes
+    // nonce: 4 bytes
+    // destination domain: 4 bytes
+    // recipient: 32 bytes
+    // body: x bytes
+    const originDomain = context.resolveDomain(conf.networks[0]);
+    const destinationDomain = context.resolveDomain(conf.networks[0]);
+    const sender = '11'.repeat(20);
+    const nonce = '0'.repeat(7) + 1;
+    const recipient = '22'.repeat(20);
+    const body = '33'.repeat(4);
     const messageBody =
-      '0x00000d030000000000000000000000006d8acf60f3ddb6c49def2a2b77e56be2ff1502cf00005d650000045700000000000000000000000094e10fc081653fda7fb6f3e52189fc58020359bb00000d030000000000000000000000000bb7509324ce409f7bbc4b701f932eaca9736ab7030000000000000000000000009791c9df02d34f2e7d7322d655535d9849e8da5c000000000000000000000000000000000000000000000000002386f26fc1000069144a56ecb1b88cd5fea4f45c41f8bc298716dbc612b16010ccf8d7f01ba0a3';
+      `0x${to4ByteHex(originDomain)}${toBytes32(sender)}${nonce}${to4ByteHex(destinationDomain)}${toBytes32(recipient)}${body}`;
     const parsed = parseMessage(messageBody);
-    expect(parsed.from).toEqual(context.resolveDomain('goerli'));
-    expect(parsed.destination).toEqual(context.resolveDomain('rinkeby'));
-    // TODO: test other fields
+    expect(parsed.from).toEqual(originDomain);
+    expect(parsed.destination).toEqual(destinationDomain);
+    expect(parsed.sender).toEqual(`0x${toBytes32(sender)}`);
+    expect(parsed.nonce).toEqual(1);
+    expect(parsed.recipient).toEqual(`0x${toBytes32(recipient)}`);
+    expect(parsed.body).toEqual(`0x${body}`);
   });
 });
