@@ -24,8 +24,10 @@ export class BridgeContext extends NomadContext {
   private bridges: Map<string, BridgeContracts>;
   _backend?: BridgeMessageBackend;
 
-
-  constructor(environment: string | config.NomadConfig = 'development', backend?: BridgeMessageBackend) {
+  constructor(
+    environment: string | config.NomadConfig = 'development',
+    backend?: BridgeMessageBackend,
+  ) {
     super(environment, backend);
     this._backend = backend || GoldSkyBridgeBackend.default(environment, this);
     this.bridges = new Map();
@@ -48,7 +50,7 @@ export class BridgeContext extends NomadContext {
   /**
    * Create default backend for the context
    */
-   withDefaultBackend() {
+  withDefaultBackend() {
     // TODO: What if backend doesn't exist for this environment?
     this._backend = GoldSkyBridgeBackend.default(this.environment, this);
     return this;

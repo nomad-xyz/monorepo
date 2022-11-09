@@ -7,8 +7,7 @@ import fetch from 'cross-fetch';
 
 import { CoreContracts } from './CoreContracts';
 import { NomadMessage } from './messages/NomadMessage';
-import {MessageBackend} from './messageBackend';
-import { GoldSkyBackend } from './messageBackend';
+import { MessageBackend, GoldSkyBackend } from './messageBackend';
 
 export type Address = string;
 
@@ -56,7 +55,6 @@ export type MessageProof = {
   };
 };
 
-
 /**
  * The NomadContext manages connections to Nomad core and Bridge contracts.
  * It inherits from the {@link MultiProvider}, and ensures that its contracts
@@ -75,7 +73,10 @@ export class NomadContext extends MultiProvider<config.Domain> {
   _backend?: MessageBackend;
   readonly conf: config.NomadConfig;
 
-  constructor(environment: string | config.NomadConfig = 'development', backend?: MessageBackend) {
+  constructor(
+    environment: string | config.NomadConfig = 'development',
+    backend?: MessageBackend,
+  ) {
     super();
 
     const conf: config.NomadConfig =
@@ -87,6 +88,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
     this.conf = conf;
     this._cores = new Map();
     this._blacklist = new Set();
+    this._backend = backend;
 
     for (const network of this.conf.networks) {
       // register domain
@@ -114,7 +116,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
   /**
    * Create default backend for the context
    */
-  withDefaultBackend() {
+  withDefaultBackend(): NomadContext {
     // TODO: What if backend doesn't exist for this environment?
     this._backend = GoldSkyBackend.default(this.environment, this);
     return this;

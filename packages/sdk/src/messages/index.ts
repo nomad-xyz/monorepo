@@ -1,2 +1,2 @@
 export * from './NomadMessage';
-export * from './types';
+export { Dispatch } from './types';

@@ -16,8 +16,8 @@ import {
   MessageStatus,
   ReplicaStatusNames,
   ReplicaMessageStatus,
-} from '.';
-import {MessageBackend} from '../messageBackend';
+} from './types';
+import { MessageBackend } from '../messageBackend';
 
 /**
  * Parse a serialized Nomad message from raw bytes.
@@ -46,7 +46,7 @@ export class NomadMessage<T extends NomadContext> {
   readonly replica: core.Replica;
 
   readonly context: T;
-  protected _confirmAt?: Date; 
+  protected _confirmAt?: Date;
 
   readonly _backend?: MessageBackend;
 
@@ -71,7 +71,7 @@ export class NomadMessage<T extends NomadContext> {
   }
 
   get messageHash(): string {
-    return this.dispatch.args.messageHash
+    return this.dispatch.args.messageHash;
   }
 
   /**
@@ -203,10 +203,9 @@ export class NomadMessage<T extends NomadContext> {
     const dispatches = await context._backend.getDispatches(transactionHash, 1);
     if (!dispatches || dispatches.length === 0) throw new Error(`No dispatch`);
 
-
     const m = new NomadMessage(context, dispatches[0]);
 
-    return m
+    return m;
   }
 
   /**
@@ -215,7 +214,7 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An relay tx (if any)
    */
   async getRelay(): Promise<string | undefined> {
-    return await this.backend.relayTx(this.messageHash)
+    return await this.backend.relayTx(this.messageHash);
   }
 
   /**
@@ -224,7 +223,7 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An update tx (if any)
    */
   async getUpdate(): Promise<string | undefined> {
-    return await this.backend.updateTx(this.messageHash)
+    return await this.backend.updateTx(this.messageHash);
   }
 
   /**
@@ -233,7 +232,7 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An process tx (if any)
    */
   async getProcess(): Promise<string | undefined> {
-    return await this.backend.processTx(this.messageHash)
+    return await this.backend.processTx(this.messageHash);
   }
 
   /**
@@ -258,20 +257,23 @@ export class NomadMessage<T extends NomadContext> {
    */
 
   /**
-     * Calculates an expected confirmation timestamp from relayed event
-     *
-     * @returns Timestamp (if any)
-     */
+   * Calculates an expected confirmation timestamp from relayed event
+   *
+   * @returns Timestamp (if any)
+   */
   async confirmAt(messageHash: string): Promise<Date | undefined> {
-
     const relayedAt = await this.backend.relayedAt(messageHash);
     if (relayedAt) {
       // Additional check for adequate numbers
       if (relayedAt?.valueOf() <= 946684800000) {
-          throw new Error(`RelayedAt could not be smaller than 946684800000 (2000-01-01)`);
+        throw new Error(
+          `RelayedAt could not be smaller than 946684800000 (2000-01-01)`,
+        );
       }
 
-      const destinationDomainId = await this.backend.destinationDomainId(messageHash);
+      const destinationDomainId = await this.backend.destinationDomainId(
+        messageHash,
+      );
 
       // Destination domain must be present as long as relayed at is found already, since
       // destination domain data is present in Dispatch event, and relay data at Relay event,
@@ -282,16 +284,21 @@ export class NomadMessage<T extends NomadContext> {
 
       const domain = this.context.getDomain(destinationDomainId);
       if (domain === undefined) {
-          throw new Error(`Destination domain is not in the config`);
+        throw new Error(`Destination domain is not in the config`);
       }
 
       const optimisticSecondsUnparsed = domain.configuration.optimisticSeconds;
-      const optimisticSeconds: number = typeof optimisticSecondsUnparsed === 'string' ? parseInt(optimisticSecondsUnparsed) : optimisticSecondsUnparsed;
-      
-      const confirmAt = new Date(relayedAt.valueOf() + (optimisticSeconds * 1000));
+      const optimisticSeconds: number =
+        typeof optimisticSecondsUnparsed === 'string'
+          ? parseInt(optimisticSecondsUnparsed)
+          : optimisticSecondsUnparsed;
+
+      const confirmAt = new Date(
+        relayedAt.valueOf() + optimisticSeconds * 1000,
+      );
       return confirmAt;
     }
-    return undefined
+    return undefined;
   }
 
   async process(): Promise<ContractTransaction> {

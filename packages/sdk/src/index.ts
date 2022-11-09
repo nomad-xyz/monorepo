@@ -9,4 +9,3 @@ export { NomadContext } from './NomadContext';
 export * from './messages';
 
 export * from './messageBackend';
-

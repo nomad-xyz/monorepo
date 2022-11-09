@@ -80,7 +80,6 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
 
   readonly _backend?: BridgeMessageBackend;
 
-
   /**
    * @hideconstructor
    */
@@ -158,7 +157,7 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
       context,
       nomadMessage.dispatch,
       parsedMessageBody as ParsedTransferMessage,
-      _backend || context._backend // TODO: adjust
+      _backend || context._backend, // TODO: adjust
     );
   }
 
@@ -206,7 +205,7 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
     context: BridgeContext,
     receipt: TransactionReceipt,
     _backend?: BridgeMessageBackend,
-    ): Promise<AnyBridgeMessage> {
+  ): Promise<AnyBridgeMessage> {
     const messages: AnyBridgeMessage[] = await BridgeMessage.fromReceipt(
       context,
       receipt,
@@ -233,7 +232,7 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
     nameOrDomain: string | number,
     transactionHash: string,
     _backend?: BridgeMessageBackend,
-    ): Promise<AnyBridgeMessage[]> {
+  ): Promise<AnyBridgeMessage[]> {
     const provider = context.mustGetProvider(nameOrDomain);
     const receipt = await provider.getTransactionReceipt(transactionHash);
     if (!receipt) {
@@ -258,7 +257,7 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
     nameOrDomain: string | number,
     transactionHash: string,
     _backend?: BridgeMessageBackend,
-    ): Promise<AnyBridgeMessage> {
+  ): Promise<AnyBridgeMessage> {
     const provider = context.mustGetProvider(nameOrDomain);
     const receipt = await provider.getTransactionReceipt(transactionHash);
     if (!receipt) {
@@ -317,7 +316,7 @@ export class TransferMessage extends BridgeMessage {
     context: BridgeContext,
     dispatch: Dispatch,
     parsed: ParsedTransferMessage,
-    _backend?: BridgeMessageBackend, 
+    _backend?: BridgeMessageBackend,
   ) {
     super(context, dispatch, parsed.token, true, _backend);
     this.action = parsed.action;
