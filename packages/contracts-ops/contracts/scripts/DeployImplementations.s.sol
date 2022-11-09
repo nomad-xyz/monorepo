@@ -151,6 +151,71 @@ contract DeployImplementations is Test, Config {
         console2.log("Bridge Token deployed at", address(bridgeToken));
     }
 
+    function updateImpl(string memory domain) internal {
+        string memory valueKey = string(
+            abi.encodePacked(".core.", domain, "home", "implementation")
+        );
+        vm.write(configPath, vm.toString(address(home)), valueKey);
+
+        valueKey = string(
+            abi.encodePacked(
+                ".core.",
+                domain,
+                "governanceRouter",
+                "implementation"
+            )
+        );
+        vm.write(configPath, vm.toString(address(governanceRouter)), valueKey);
+
+        string[] memory domains = networks();
+        for (uint256 i; i < domains.length; i++) {
+            if (
+                keccak256(abi.encodePacked(domains[i])) !=
+                keccak256(abi.encodePacked(domain))
+            ) {
+                valueKey = string(
+                    abi.encodePacked(
+                        ".core.",
+                        domains[i],
+                        "governanceRouter",
+                        "implementation"
+                    )
+                );
+                vm.write(configPath, vm.toString(address(replica)), valueKey);
+            }
+        }
+        valueKey = string(
+            abi.encodePacked(
+                ".bridge.",
+                domain,
+                "bridgeRouter",
+                "implementation"
+            )
+        );
+        vm.write(configPath, vm.toString(address(bridgeRouter)), valueKey);
+
+        valueKey = string(
+            abi.encodePacked(
+                ".bridge.",
+                domain,
+                "bridgeToken",
+                "implementation"
+            )
+        );
+        vm.write(configPath, vm.toString(address(bridgeToken)), valueKey);
+
+        valueKey = string(
+            abi.encodePacked(
+                ".bridge.",
+                domain,
+                "tokenRegistry",
+                "implementation"
+            )
+        );
+        vm.write(configPath, vm.toString(address(tokenRegistry)), valueKey);
+        console2.log("Updated implementations for", domain);
+    }
+
     /*//////////////////////////////////////////////////////////////
                       CONSOLE.LOG UTILITIES
   //////////////////////////////////////////////////////////////*/
@@ -167,70 +232,5 @@ contract DeployImplementations is Test, Config {
         console2.log(title1, title2);
         console2.log("===========================");
         console2.log(" ");
-    }
-
-    function updateImpl(string memory domain) internal {
-        string memory valueKey = string(
-            abi.encodePacked(".core.", domain, "home", "implementation")
-        );
-        vm.write(configPath, address(home), valueKey);
-
-        valueKey = string(
-            abi.encodePacked(
-                ".core.",
-                domain,
-                "governanceRouter",
-                "implementation"
-            )
-        );
-        vm.write(configPath, address(governanceRouter), valueKey);
-
-        string[] memory domains = networks();
-        for (uint256 i; i < domains.length; i++) {
-            if (
-                keccak256(abi.encodePacked(domains[i])) !=
-                keccak256(abi.encodePacked(domain))
-            ) {
-                valueKey = string(
-                    abi.encodePacked(
-                        ".core.",
-                        domains[i],
-                        "governanceRouter",
-                        "implementation"
-                    )
-                );
-                vm.write(configPath, address(replica), valueKey);
-            }
-        }
-        valueKey = string(
-            abi.encodePacked(
-                ".bridge.",
-                domain,
-                "bridgeRouter",
-                "implementation"
-            )
-        );
-        vm.write(configPath, address(bridgeRouter), valueKey);
-
-        valueKey = string(
-            abi.encodePacked(
-                ".bridge.",
-                domain,
-                "bridgeToken",
-                "implementation"
-            )
-        );
-        vm.write(configPath, address(bridgeToken), valueKey);
-
-        valueKey = string(
-            abi.encodePacked(
-                ".bridge.",
-                domain,
-                "tokenRegistry",
-                "implementation"
-            )
-        );
-        vm.write(configPath, address(tokenRegistry), valueKey);
-        console2.log("Updated implementations for", domain);
     }
 }
