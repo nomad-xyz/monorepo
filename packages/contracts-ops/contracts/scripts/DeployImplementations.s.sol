@@ -30,6 +30,8 @@ contract DeployImplementations is Test, Config {
 
     // configuration
     string localDomain;
+    string[] domains;
+    string domainsToBeUpgraded;
     uint32 localDomainNumber;
     uint256 recoveryTimelock;
     address xAppConnectionManager;
@@ -50,10 +52,11 @@ contract DeployImplementations is Test, Config {
                               UPGRADE
   //////////////////////////////////////////////////////////////*/
 
-    function deploy(string memory _configPath, string[] memory domains)
+    function deploy(string memory _configPath, string[] memory _domains)
         external
     {
         configPath = _configPath;
+        domains = _domains;
         __Config_initialize(configPath);
         for (uint256 i; i < domains.length; i++) {
             localDomain = domains[i];
@@ -166,8 +169,6 @@ contract DeployImplementations is Test, Config {
             )
         );
         vm.write(configPath, vm.toString(address(governanceRouter)), valueKey);
-
-        string[] memory domains = networks();
         for (uint256 i; i < domains.length; i++) {
             if (
                 keccak256(abi.encodePacked(domains[i])) !=
