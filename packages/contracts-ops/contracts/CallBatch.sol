@@ -24,9 +24,7 @@ abstract contract CallBatch is Script {
     bool public complete;
     string public localDomain;
     string[] public remoteDomains;
-    JsonWriter.File outputFileLocal;
-    JsonWriter.File outputFileRemote;
-    JsonWriter.File outputFileCombined;
+    JsonWriter.File outputFile;
 
     function __CallBatch_initialize(
         string memory _localDomain,
@@ -44,25 +42,18 @@ abstract contract CallBatch is Script {
     function __CallBatch_initialize(
         string memory _localDomain,
         string[] memory _remoteDomains,
-        string memory _outputFile,
+        string memory _outputFilePath,
         bool _overwrite
     ) public {
         require(bytes(localDomain).length == 0, "already initialized");
-        require(bytes(outputFileLocal.path).length == 0, "already initialized");
+        require(bytes(outputFile.path).length == 0, "already initialized");
+        outputFile.path = _outputFilePath;
+        outputFile.overwrite = _overwrite;
         localDomain = _localDomain;
         remoteDomains = _remoteDomains;
-        outputFileLocal.path = string(
-            abi.encodePacked("./actions/local-", _outputFile)
+        outputFile.path = string(
+            abi.encodePacked("./actions/", _outputFilePath)
         );
-        outputFileLocal.overwrite = _overwrite;
-        outputFileRemote.path = string(
-            abi.encodePacked("./actions/remote-", _outputFile)
-        );
-        outputFileRemote.overwrite = _overwrite;
-        outputFileCombined.path = string(
-            abi.encodePacked("./actions/combined-", _outputFile)
-        );
-        outputFileCombined.overwrite = _overwrite;
     }
 
     function pushRemote(
@@ -84,6 +75,40 @@ abstract contract CallBatch is Script {
         localCalls.push(GovernanceMessage.Call(to, data));
     }
 
+    function writeCallList(
+        JsonWriter.Buffer memory buffer,
+        GovernanceMessage.Call[] storage calls,
+        string memory domain
+    ) private {
+        buffer.writeArrayOpen(" ", domain);
+        for (uint32 i = 0; i < calls.length; i++) {
+            writeCall(buffer, " ", calls[i], i == calls.length - 1);
+        }
+        console2.log("Bufer contents", string(buffer.contents));
+    }
+
+    function writeLocal(JsonWriter.Buffer memory buffer) private {
+        console2.log("writing local");
+        buffer.writeObjectOpen("", "local");
+        writeCallList(buffer, localCalls, localDomain);
+        buffer.writeArrayClose(" ", true);
+        buffer.writeObjectClose("", false);
+    }
+
+    function writeRemotes(JsonWriter.Buffer memory buffer) private {
+        console2.log("writing remotes");
+        buffer.writeObjectOpen("", "remote");
+        for (uint256 j; j < remoteDomains.length; j++) {
+            writeCallList(
+                buffer,
+                remoteCallsMap[remoteDomains[j]],
+                remoteDomains[j]
+            );
+            buffer.writeArrayClose(" ", j == remoteDomains.length - 1);
+        }
+        buffer.writeObjectClose("", true);
+    }
+
     function writeCall(
         JsonWriter.Buffer memory buffer,
         string memory indent,
@@ -97,58 +122,18 @@ abstract contract CallBatch is Script {
         buffer.writeObjectClose(indent, terminal);
     }
 
-    function writeCallList(JsonWriter.Buffer memory buffer, bool local)
-        private
-    {
-        if (local) {
-            string memory indent = "";
-            string memory inner = indent.nextIndent();
-            string memory innerer = inner.nextIndent();
-            buffer.writeLine(indent, "{");
-            buffer.writeArrayOpen(inner, localDomain);
-            for (uint32 i = 0; i < localCalls.length; i++) {
-                writeCall(
-                    buffer,
-                    innerer,
-                    localCalls[i],
-                    i == localCalls.length - 1
-                );
-            }
-            buffer.writeArrayClose(inner, true);
-            buffer.writeLine(indent, "}");
-        } else {
-            for (uint256 j; j < remoteDomains.length; j++) {
-                string memory indent = "";
-                string memory inner = indent.nextIndent();
-                string memory innerer = inner.nextIndent();
-                buffer.writeLine(indent, "{");
-                buffer.writeArrayOpen(inner, remoteDomains[j]);
-                for (uint32 i = 0; i < remoteCalls[j].length; i++) {
-                    writeCall(
-                        buffer,
-                        innerer,
-                        remoteCalls[j][i],
-                        i == remoteCalls[j].length - 1
-                    );
-                }
-                buffer.writeArrayClose(inner, true);
-                buffer.writeLine(indent, "}");
-            }
-        }
-    }
-
     function finish() public {
         require(bytes(localDomain).length != 0, "must initialize");
-        require(bytes(outputFileLocal.path).length != 0, "must initialize");
+        require(bytes(outputFile.path).length != 0, "must initialize");
         require(!complete, "already written");
         complete = true;
         JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
-        writeCallList(buffer, true);
-        buffer.flushTo(outputFileLocal);
-
-        buffer = JsonWriter.newBuffer();
-        writeCallList(buffer, false);
-        buffer.flushTo(outputFileRemote);
+        buffer.writeObjectOpen("", "");
+        writeLocal(buffer);
+        createRemoteCallsArray();
+        writeRemotes(buffer);
+        buffer.writeObjectClose("", true);
+        buffer.flushTo(outputFile);
     }
 
     function build(address governanceRouter) public {
@@ -173,8 +158,13 @@ abstract contract CallBatch is Script {
         uint32[] memory remoteDomainNumbers
     ) public {
         require(bytes(localDomain).length != 0, "must initialize");
-        require(bytes(outputFileLocal.path).length != 0, "must initialize");
+        require(bytes(outputFile.path).length != 0, "must initialize");
         require(!complete, "already written");
+        createRemoteCallsArray();
+        require(
+            remoteDomainNumbers.length == remoteCalls.length,
+            "wrong number of domain numbers"
+        );
         complete = true;
         JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
         bytes memory data = abi.encodeWithSelector(
@@ -189,12 +179,7 @@ abstract contract CallBatch is Script {
         kvs[1][0] = "data";
         kvs[1][1] = vm.toString(data);
         buffer.writeSimpleObject("", "", kvs, true);
-        if (remoteDomainNumbers.length == 0) {
-            buffer.flushTo(outputFileLocal);
-        } else {
-            createRemoteCallsArray();
-            buffer.flushTo(outputFileCombined);
-        }
+        buffer.flushTo(outputFile);
     }
 
     function prankExecuteBatch(address router) public {
@@ -220,7 +205,7 @@ abstract contract CallBatch is Script {
 }
 
 contract TestCallBatch is CallBatch {
-    function combined() public {
+    function test_combined() public {
         string memory local = "ethereum";
         string[] memory remotes = new string[](2);
         remotes[0] = "evmos";
