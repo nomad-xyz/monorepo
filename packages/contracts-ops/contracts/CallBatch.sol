@@ -32,10 +32,9 @@ abstract contract CallBatch is Script {
         bool _overwrite
     ) public {
         require(localDomain == 0, "already initialized");
-        require(bytes(outputFile.path).length == 0, "already initialized");
+        require(_localDomain != 0, "can't pass zero domain");
         localDomainName = _localDomainName;
         localDomain = _localDomain;
-        outputFile.path = _outputFilePath;
         outputFile.overwrite = _overwrite;
         outputFile.path = string(
             abi.encodePacked("./actions/", _outputFilePath)
@@ -224,7 +223,6 @@ abstract contract CallBatch is Script {
 
     function writeCallBatch(bool recovery) public {
         require(localDomain != 0, "must initialize");
-        require(bytes(outputFile.path).length != 0, "must initialize");
         require(!written, "already written");
         // write raw local & remote calls to file
         JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
