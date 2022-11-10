@@ -162,7 +162,7 @@ abstract contract CallBatch is Script {
         require(!complete, "already written");
         // if called via `build(address)`, remoteDomainNumber will be zero
         // and remoteBatches should be ignored
-        if (remoteDomaiNumbers.length != 0) {
+        if (remoteDomainNumbers.length != 0) {
             createRemoteCallsArray();
         }
         require(
