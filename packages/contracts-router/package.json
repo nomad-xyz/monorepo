@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/contracts-router",
-  "version": "2.0.0",
+  "version": "2.1.0-rc.0",
   "description": "The Nomad router, a reusable base for cross-chain applications",
   "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/contracts-router#readme",
   "bugs": {

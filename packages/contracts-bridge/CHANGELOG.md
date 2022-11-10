@@ -2,9 +2,12 @@
 
 ### Unreleased
 
+### 2.1.0-rc.0
+
 - (patch): make AllowListNFTRecoveryAccountant a deployable contract
 - (feat): add mock accountant
 - (patch): filter scripts from hh compilation
+- (patch): total affected assets calculations
 
 ### 2.0.0
 
