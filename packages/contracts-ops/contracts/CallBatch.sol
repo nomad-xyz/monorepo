@@ -11,7 +11,6 @@ import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManag
 import {JsonWriter} from "./JsonWriter.sol";
 
 import "forge-std/Script.sol";
-import "forge-std/console2.sol";
 
 abstract contract CallBatch is Script {
     using JsonWriter for JsonWriter.Buffer;
@@ -84,11 +83,9 @@ abstract contract CallBatch is Script {
         for (uint32 i = 0; i < calls.length; i++) {
             writeCall(buffer, " ", calls[i], i == calls.length - 1);
         }
-        console2.log("Bufer contents", string(buffer.contents));
     }
 
     function writeLocal(JsonWriter.Buffer memory buffer) private {
-        console2.log("writing local");
         buffer.writeObjectOpen("", "local");
         writeCallList(buffer, localCalls, localDomain);
         buffer.writeArrayClose(" ", true);
@@ -96,7 +93,6 @@ abstract contract CallBatch is Script {
     }
 
     function writeRemotes(JsonWriter.Buffer memory buffer) private {
-        console2.log("writing remotes");
         buffer.writeObjectOpen("", "remote");
         for (uint256 j; j < remoteDomains.length; j++) {
             writeCallList(
