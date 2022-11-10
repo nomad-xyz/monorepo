@@ -160,7 +160,11 @@ abstract contract CallBatch is Script {
         require(bytes(localDomain).length != 0, "must initialize");
         require(bytes(outputFile.path).length != 0, "must initialize");
         require(!complete, "already written");
-        createRemoteCallsArray();
+        // if called via `build(address)`, remoteDomainNumber will be zero
+        // and remoteBatches should be ignored
+        if (remoteDomaiNumbers.length != 0) {
+            createRemoteCallsArray();
+        }
         require(
             remoteDomainNumbers.length == remoteCalls.length,
             "wrong number of domain numbers"
@@ -205,7 +209,7 @@ abstract contract CallBatch is Script {
 }
 
 contract TestCallBatch is CallBatch {
-    function test_combined() public {
+    function combinedBuild() public {
         string memory local = "ethereum";
         string[] memory remotes = new string[](2);
         remotes[0] = "evmos";
@@ -220,6 +224,40 @@ contract TestCallBatch is CallBatch {
         remoteDomains[0] = 123;
         remoteDomains[1] = 8843;
         build(govRouter, remoteDomains);
+    }
+
+    function combinedFinish() public {
+        string memory local = "ethereum";
+        string[] memory remotes = new string[](2);
+        remotes[0] = "evmos";
+        remotes[1] = "moonbeam";
+        __CallBatch_initialize(local, remotes, "upgradeActions.json", true);
+        bytes memory data = hex"0101";
+        pushLocal(address(0xBEEF), data);
+        pushRemote(address(0xBEEEEF), data, "evmos");
+        pushRemote(address(0xBEEEEEEEF), data, "moonbeam");
+        address govRouter = address(0xBEEFEFE);
+        uint32[] memory remoteDomains = new uint32[](2);
+        remoteDomains[0] = 123;
+        remoteDomains[1] = 8843;
+        finish();
+    }
+
+    function combinedLocal() public {
+        string memory local = "ethereum";
+        string[] memory remotes = new string[](2);
+        remotes[0] = "evmos";
+        remotes[1] = "moonbeam";
+        __CallBatch_initialize(local, remotes, "upgradeActions.json", true);
+        bytes memory data = hex"0101";
+        pushLocal(address(0xBEEF), data);
+        pushRemote(address(0xBEEEEF), data, "evmos");
+        pushRemote(address(0xBEEEEEEEF), data, "moonbeam");
+        address govRouter = address(0xBEEFEFE);
+        uint32[] memory remoteDomains = new uint32[](2);
+        remoteDomains[0] = 123;
+        remoteDomains[1] = 8843;
+        build(govRouter);
     }
 
     function finish(
