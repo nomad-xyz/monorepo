@@ -37,6 +37,7 @@ contract DeployImplementations is Test, Config {
     address xAppConnectionManager;
     address updaterManager;
     string configPath;
+    string rpcEndpoint;
     /*//////////////////////////////////////////////////////////////
                             DEPLOYED CONTRACTS
   //////////////////////////////////////////////////////////////*/
@@ -72,6 +73,7 @@ contract DeployImplementations is Test, Config {
             );
             console2.log("Reading configuration from path: ", configPath);
             loadConfig();
+            vm.createSelectFork(rpcEndpoint);
             vm.startBroadcast();
             deployImplementations();
             updateImpl(localDomain);
@@ -85,10 +87,9 @@ contract DeployImplementations is Test, Config {
         xAppConnectionManager = address(getXAppConnectionManager(localDomain));
         updaterManager = address(getUpdaterManager(localDomain));
         localDomainNumber = uint32(domainNumber(localDomain));
-        string memory rpc = getRpcs(localDomain)[0];
-        vm.createSelectFork(rpc);
+        rpcEndpoint = getRpcs(localDomain)[0];
         title("Input");
-        console2.log("RPC:               ", rpc);
+        console2.log("RPC:               ", rpcEndpoint);
         console2.log("Timelock:          ", recoveryTimelock);
         console2.log("XCnMngr:           ", xAppConnectionManager);
         console2.log("UpdMngr:           ", updaterManager);
