@@ -278,12 +278,10 @@ contract TestCallBatch is CallBatch {
     }
 
     // single chain calls, recovery mode
-    function writeRecoverySingle(string memory _outputFile, bool overwrite)
-        public
-    {
+    function writeRecoverySingle() public {
         string memory localName = "ethereum";
         uint32 local = 1111;
-        __CallBatch_initialize(localName, local, _outputFile, overwrite);
+        __CallBatch_initialize(localName, local, "upgradeActions.json", true);
         pushLocal(address(3), bytes("abcd"));
         pushLocal(address(3), bytes("abcd"));
         pushLocal(address(3), bytes("abcd"));
@@ -295,12 +293,10 @@ contract TestCallBatch is CallBatch {
 
     // single chain calls, governance mode
     // (data should be same as single chain recovery mode)
-    function writeGovernanceSingle(string memory _outputFile, bool overwrite)
-        public
-    {
+    function writeGovernanceSingle() public {
         string memory localName = "ethereum";
         uint32 local = 1111;
-        __CallBatch_initialize(localName, local, _outputFile, overwrite);
+        __CallBatch_initialize(localName, local, "upgradeActions.json", true);
         pushLocal(address(3), bytes("abcd"));
         pushLocal(address(3), bytes("abcd"));
         pushLocal(address(3), bytes("abcd"));
