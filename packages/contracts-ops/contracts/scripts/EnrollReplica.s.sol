@@ -11,9 +11,9 @@ import "forge-std/Script.sol";
 
 contract EnrollReplicasLogic is Config, CallBatch {
     function enrollReplica(string memory remote) internal {
-        XAppConnectionManager xcm = xAppConnectionManager(domain);
-        address replica = address(replicaOf(domain, remote));
-        uint32 domainNumber = domainNumber(remote);
+        XAppConnectionManager xcm = getXAppConnectionManager(domain);
+        address replica = address(getReplicaOf(domain, remote));
+        uint32 domainNumber = getDomainNumber(remote);
 
         if (xcm.replicaToDomain(replica) != domainNumber) {
             push(
@@ -69,6 +69,6 @@ contract EnrollReplicas is Script, EnrollReplicasLogic {
     ) external {
         initialize(configFile, localDomain, output, overwrite);
         enrollReplicas();
-        build(address(governanceRouter(localDomain)));
+        build(address(getGovernanceRouter(localDomain)));
     }
 }

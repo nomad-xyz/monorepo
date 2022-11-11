@@ -70,7 +70,7 @@ abstract contract Config is INomadProtocol {
         return vm.parseJson(config, coreAttributePath(domain, key));
     }
 
-    function coreDeployHeight(string memory domain)
+    function getCoreDeployHeight(string memory domain)
         public
         onlyInitialized
         returns (uint256)
@@ -91,7 +91,7 @@ abstract contract Config is INomadProtocol {
             );
     }
 
-    function governanceRouter(string memory domain)
+    function getGovernanceRouter(string memory domain)
         public
         override
         onlyInitialized
@@ -109,7 +109,7 @@ abstract contract Config is INomadProtocol {
         return abi.decode(loadCoreAttribute(domain, "home"), (Upgrade));
     }
 
-    function home(string memory domain)
+    function getHome(string memory domain)
         public
         override
         onlyInitialized
@@ -118,7 +118,7 @@ abstract contract Config is INomadProtocol {
         return Home(address(homeUpgrade(domain).proxy));
     }
 
-    function updaterManager(string memory domain)
+    function getUpdaterManager(string memory domain)
         public
         override
         onlyInitialized
@@ -131,7 +131,7 @@ abstract contract Config is INomadProtocol {
             );
     }
 
-    function upgradeBeaconController(string memory domain)
+    function getUpgradeBeaconController(string memory domain)
         public
         override
         returns (UpgradeBeaconController)
@@ -143,7 +143,7 @@ abstract contract Config is INomadProtocol {
             );
     }
 
-    function xAppConnectionManager(string memory domain)
+    function getXAppConnectionManager(string memory domain)
         public
         override
         returns (XAppConnectionManager)
@@ -167,7 +167,7 @@ abstract contract Config is INomadProtocol {
         return abi.decode(res, (Upgrade));
     }
 
-    function replicaOf(string memory local, string memory remote)
+    function getReplicaOf(string memory local, string memory remote)
         public
         override
         returns (Replica)
@@ -175,11 +175,11 @@ abstract contract Config is INomadProtocol {
         return Replica(address(replicaOfUpgrade(local, remote).proxy));
     }
 
-    function networks() public override returns (string[] memory) {
+    function getNetworks() public override returns (string[] memory) {
         return abi.decode(vm.parseJson(config, ".networks"), (string[]));
     }
 
-    function governor() public override returns (address) {
+    function getGovernor() public override returns (address) {
         return
             abi.decode(
                 vm.parseJson(config, ".protocol.governor.id"),
@@ -187,7 +187,7 @@ abstract contract Config is INomadProtocol {
             );
     }
 
-    function governorDomain() public override returns (uint256) {
+    function getGovernorDomain() public override returns (uint256) {
         return
             abi.decode(
                 vm.parseJson(config, ".protocol.governor.domain"),
@@ -218,7 +218,7 @@ abstract contract Config is INomadProtocol {
         return vm.parseJson(config, bridgeAttributePath(domain, key));
     }
 
-    function bridgeDeployHeight(string memory domain)
+    function getBridgeDeployHeight(string memory domain)
         public
         onlyInitialized
         returns (uint256)
@@ -237,7 +237,7 @@ abstract contract Config is INomadProtocol {
             abi.decode(loadBridgeAttribute(domain, "bridgeRouter"), (Upgrade));
     }
 
-    function bridgeRouter(string memory domain)
+    function getBridgeRouter(string memory domain)
         public
         override
         onlyInitialized
@@ -266,7 +266,7 @@ abstract contract Config is INomadProtocol {
             abi.decode(loadBridgeAttribute(domain, "tokenRegistry"), (Upgrade));
     }
 
-    function tokenRegistry(string memory domain)
+    function getTokenRegistry(string memory domain)
         public
         override
         onlyInitialized
@@ -284,7 +284,7 @@ abstract contract Config is INomadProtocol {
         return abi.decode(loadBridgeAttribute(domain, "accountant"), (Upgrade));
     }
 
-    function accountant(string memory domain)
+    function getAccountant(string memory domain)
         public
         override
         onlyInitialized
@@ -296,7 +296,7 @@ abstract contract Config is INomadProtocol {
             );
     }
 
-    function ethHelper(string memory domain)
+    function getEthHelper(string memory domain)
         public
         override
         returns (ETHHelper)
@@ -392,7 +392,7 @@ abstract contract Config is INomadProtocol {
             );
     }
 
-    function domainNumber(string memory domain)
+    function getDomainNumber(string memory domain)
         public
         onlyInitialized
         returns (uint32)
@@ -401,7 +401,7 @@ abstract contract Config is INomadProtocol {
             abi.decode(loadProtocolConfigAttribute(domain, "domain"), (uint32));
     }
 
-    function updater(string memory domain)
+    function getUpdater(string memory domain)
         public
         override
         onlyInitialized
@@ -414,7 +414,7 @@ abstract contract Config is INomadProtocol {
             );
     }
 
-    function recoveryManager(string memory domain)
+    function getRecoveryManager(string memory domain)
         public
         override
         onlyInitialized
@@ -430,7 +430,7 @@ abstract contract Config is INomadProtocol {
             );
     }
 
-    function watchers(string memory domain)
+    function getWatchers(string memory domain)
         public
         override
         onlyInitialized
@@ -443,7 +443,7 @@ abstract contract Config is INomadProtocol {
             );
     }
 
-    function recoveryTimelock(string memory domain)
+    function getRecoveryTimelock(string memory domain)
         public
         override
         onlyInitialized
@@ -459,7 +459,7 @@ abstract contract Config is INomadProtocol {
             );
     }
 
-    function optimisticSeconds(string memory domain)
+    function getOptimisticSeconds(string memory domain)
         public
         override
         onlyInitialized
@@ -472,7 +472,7 @@ abstract contract Config is INomadProtocol {
             );
     }
 
-    function fundsRecipient(string memory domain)
+    function getFundsRecipient(string memory domain)
         public
         override
         onlyInitialized
@@ -485,7 +485,7 @@ abstract contract Config is INomadProtocol {
             );
     }
 
-    function accountantOwner(string memory domain)
+    function getAccountantOwner(string memory domain)
         public
         override
         onlyInitialized
@@ -507,17 +507,20 @@ contract TestJson is Test, Config {
 
     function test_Json() public {
         assertEq(
-            address(ethHelper("ethereum")),
+            address(getEthHelper("ethereum")),
             0x999d80F7FC17316b4c83f072b92EF37b72718De0
         );
         vm.expectRevert("no ethHelper for randomDomain");
-        ethHelper("randomDomain");
-        assertEq(networks()[0], "avalanche");
-        assertEq(fundsRecipient("avalanche"), 0x0000011111222223333344444555557777799999);
-        assertEq(governor(), 0x93277b8f5939975b9E6694d5Fd2837143afBf68A);
-        assertEq(coreDeployHeight("ethereum"), 1234);
+        getEthHelper("randomDomain");
+        assertEq(getNetworks()[0], "avalanche");
         assertEq(
-            address(governanceRouter("ethereum")),
+            getFundsRecipient("avalanche"),
+            0x0000011111222223333344444555557777799999
+        );
+        assertEq(getGovernor(), 0x93277b8f5939975b9E6694d5Fd2837143afBf68A);
+        assertEq(getCoreDeployHeight("ethereum"), 1234);
+        assertEq(
+            address(getGovernanceRouter("ethereum")),
             0x569D80f7FC17316B4C83f072b92EF37B72819DE0
         );
     }
