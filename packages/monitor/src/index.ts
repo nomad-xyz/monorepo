@@ -1,4 +1,3 @@
-
 import { NomadContext } from "@nomad-xyz/sdk";
 import { defaultGoldSkySecret, Goldsky } from "./goldsky";
 import { MonitoringCollector } from "./server";
