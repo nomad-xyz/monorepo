@@ -74,8 +74,8 @@ contract DeployImplementations is Test, Config {
             loadConfig();
             vm.startBroadcast();
             deployImplementations();
-            vm.stopBroadcast();
             updateImpl(localDomain);
+            vm.stopBroadcast();
         }
     }
 
@@ -155,16 +155,17 @@ contract DeployImplementations is Test, Config {
     }
 
     function updateImpl(string memory domain) internal {
+        console2.log("Updating implementation addresses..");
         string memory valueKey = string(
-            abi.encodePacked(".core.", domain, "home", "implementation")
+            abi.encodePacked(".core.", domain, ".home", ".implementation")
         );
         vm.writeJson(vm.toString(address(home)), configPath, valueKey);
         valueKey = string(
             abi.encodePacked(
                 ".core.",
                 domain,
-                "governanceRouter",
-                "implementation"
+                ".governanceRouter",
+                ".implementation"
             )
         );
         vm.writeJson(
@@ -179,10 +180,10 @@ contract DeployImplementations is Test, Config {
             ) {
                 valueKey = string(
                     abi.encodePacked(
-                        ".core.",
+                        ".core",
+                        ".replicas.",
                         domains[i],
-                        "governanceRouter",
-                        "implementation"
+                        ".implementation"
                     )
                 );
                 vm.writeJson(
@@ -196,8 +197,8 @@ contract DeployImplementations is Test, Config {
             abi.encodePacked(
                 ".bridge.",
                 domain,
-                "bridgeRouter",
-                "implementation"
+                ".bridgeRouter",
+                ".implementation"
             )
         );
         vm.writeJson(vm.toString(address(bridgeRouter)), configPath, valueKey);
@@ -206,8 +207,8 @@ contract DeployImplementations is Test, Config {
             abi.encodePacked(
                 ".bridge.",
                 domain,
-                "bridgeToken",
-                "implementation"
+                ".bridgeToken",
+                ".implementation"
             )
         );
         vm.writeJson(vm.toString(address(bridgeToken)), configPath, valueKey);
@@ -216,12 +217,11 @@ contract DeployImplementations is Test, Config {
             abi.encodePacked(
                 ".bridge.",
                 domain,
-                "tokenRegistry",
-                "implementation"
+                ".tokenRegistry",
+                ".implementation"
             )
         );
         vm.writeJson(vm.toString(address(tokenRegistry)), configPath, valueKey);
-        console2.log("Updated implementations for", domain);
     }
 
     /*//////////////////////////////////////////////////////////////
