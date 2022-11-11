@@ -1,0 +1,58 @@
+{
+  "name": "@nomad-xyz/monitor",
+  "version": "0.0.0",
+  "description": "Nomad Monitor",
+  "keywords": [
+    "nomad",
+    "monitor"
+  ],
+  "homepage": "https://github.com/nomad-xyz/monorepo/tree/main/packages/monitor#readme",
+  "bugs": {
+    "url": "https://github.com/nomad-xyz/monorepo/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nomad-xyz/monorepo.git"
+  },
+  "license": "Apache-2.0 OR MIT",
+  "author": "Illusory Systems Inc.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "src/**/*"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "check": "tsc --noEmit",
+    "test:coverage": "jest --collectCoverage",
+    "lint": "eslint --fix ./src ./tests",
+    "prettier": "prettier --write ./src ./tests",
+    "test:unit": "jest --coverage=false",
+    "start": "ts-node src/index"
+  },
+  "dependencies": {
+    "@nomad-xyz/sdk": "workspace:^",
+    "cross-fetch": "^3.1.5",
+    "ethers": "^5.0.0",
+    "graphql": "^16.5.0",
+    "graphql-request": "^4.3.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^28.1.7",
+    "@types/node": "^16.9.1",
+    "@typescript-eslint/eslint-plugin": "^5.20.0",
+    "@typescript-eslint/parser": "^5.20.0",
+    "dotenv": "^10.0.0",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "fs": "0.0.1-security",
+    "jest": "^28.1.3",
+    "nyc": "^15.1.0",
+    "prettier": "^2.4.1",
+    "regenerator-runtime": "^0.13.9",
+    "ts-jest": "^28.0.8",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.4.3"
+  }
+}
