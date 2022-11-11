@@ -158,8 +158,7 @@ contract DeployImplementations is Test, Config {
         string memory valueKey = string(
             abi.encodePacked(".core.", domain, "home", "implementation")
         );
-        vm.write(configPath, vm.toString(address(home)), valueKey);
-
+        vm.writeJson(vm.toString(address(home)), configPath, valueKey);
         valueKey = string(
             abi.encodePacked(
                 ".core.",
@@ -168,7 +167,11 @@ contract DeployImplementations is Test, Config {
                 "implementation"
             )
         );
-        vm.write(configPath, vm.toString(address(governanceRouter)), valueKey);
+        vm.writeJson(
+            vm.toString(address(governanceRouter)),
+            configPath,
+            valueKey
+        );
         for (uint256 i; i < domains.length; i++) {
             if (
                 keccak256(abi.encodePacked(domains[i])) !=
@@ -182,7 +185,11 @@ contract DeployImplementations is Test, Config {
                         "implementation"
                     )
                 );
-                vm.write(configPath, vm.toString(address(replica)), valueKey);
+                vm.writeJson(
+                    vm.toString(address(replica)),
+                    configPath,
+                    valueKey
+                );
             }
         }
         valueKey = string(
@@ -193,7 +200,7 @@ contract DeployImplementations is Test, Config {
                 "implementation"
             )
         );
-        vm.write(configPath, vm.toString(address(bridgeRouter)), valueKey);
+        vm.writeJson(vm.toString(address(bridgeRouter)), configPath, valueKey);
 
         valueKey = string(
             abi.encodePacked(
@@ -203,7 +210,7 @@ contract DeployImplementations is Test, Config {
                 "implementation"
             )
         );
-        vm.write(configPath, vm.toString(address(bridgeToken)), valueKey);
+        vm.writeJson(vm.toString(address(bridgeToken)), configPath, valueKey);
 
         valueKey = string(
             abi.encodePacked(
@@ -213,7 +220,7 @@ contract DeployImplementations is Test, Config {
                 "implementation"
             )
         );
-        vm.write(configPath, vm.toString(address(tokenRegistry)), valueKey);
+        vm.writeJson(vm.toString(address(tokenRegistry)), configPath, valueKey);
         console2.log("Updated implementations for", domain);
     }
 
