@@ -134,10 +134,7 @@ abstract contract CallBatch is Script {
         if (remoteDomains.length == 0) return;
         buffer.writeObjectOpen("", "remotes");
         for (uint256 j; j < remoteDomains.length; j++) {
-            buffer.writeArrayOpen(
-                " ",
-                string(abi.encodePacked(remoteDomains[j]))
-            );
+            buffer.writeArrayOpen(" ", vm.toString(uint256(remoteDomains[j])));
             writeCallList(buffer, remoteCalls[remoteDomains[j]]);
             bool terminal = j == remoteDomains.length - 1;
             buffer.writeArrayClose(" ", terminal);
@@ -152,7 +149,7 @@ abstract contract CallBatch is Script {
         GovernanceMessage.Call[] memory calls,
         bool isLastDomain
     ) private {
-        buffer.writeObjectOpen(indent, string(abi.encodePacked(domain)));
+        buffer.writeObjectOpen(indent, vm.toString(uint256(domain)));
         bytes memory data = abi.encodeWithSelector(
             GovernanceRouter.executeGovernanceActions.selector,
             calls,
