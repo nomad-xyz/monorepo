@@ -29,7 +29,7 @@ export class BridgeContext extends NomadContext {
     backend?: BridgeMessageBackend,
   ) {
     super(environment, backend);
-    this._backend = backend || GoldSkyBridgeBackend.default(environment, this);
+    this._backend = backend;
     this.bridges = new Map();
 
     for (const network of this.conf.networks) {
