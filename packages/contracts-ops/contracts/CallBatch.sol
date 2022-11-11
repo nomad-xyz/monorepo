@@ -142,7 +142,7 @@ abstract contract CallBatch is Script {
         private
     {
         if (remoteDomains.length == 0) return;
-        buffer.writeObjectOpen(indent, "remotes");
+        buffer.writeObjectOpen(indent, "remote");
         for (uint256 j; j < remoteDomains.length; j++) {
             string memory inner = indent.nextIndent();
             buffer.writeArrayOpen(
