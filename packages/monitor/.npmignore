@@ -1,0 +1,8 @@
+node_modules/
+tmp.ts
+.env
+config/
+scripts/
+tests/
+tsconfig.json
+tsconfig.tsbuildinfo
