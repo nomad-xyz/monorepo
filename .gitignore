@@ -2,6 +2,7 @@ node_modules/
 lib/
 yarn-error.log
 **/tsconfig.tsbuildinfo
+**/.env
 dist/
 cache/
 actions/
