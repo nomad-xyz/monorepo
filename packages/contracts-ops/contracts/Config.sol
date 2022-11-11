@@ -118,7 +118,7 @@ abstract contract Config is INomadProtocol {
         return Home(address(homeUpgrade(domain).proxy));
     }
 
-    function updaterManager(string memory domain)
+    function getUpdaterManager(string memory domain)
         public
         override
         onlyInitialized
@@ -511,10 +511,10 @@ contract TestJson is Test, Config {
             0x999d80F7FC17316b4c83f072b92EF37b72718De0
         );
         vm.expectRevert("no ethHelper for randomDomain");
-        ethHelper("randomDomain");
-        assertEq(networks()[0], "avalanche");
+        getEthHelper("randomDomain");
+        assertEq(getNetworks()[0], "avalanche");
         assertEq(
-            fundsRecipient("avalanche"),
+            getFundsRecipient("avalanche"),
             0x0000011111222223333344444555557777799999
         );
         assertEq(getGovernor(), 0x93277b8f5939975b9E6694d5Fd2837143afBf68A);

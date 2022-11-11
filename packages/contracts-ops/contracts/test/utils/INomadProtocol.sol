@@ -29,55 +29,65 @@ interface INomadProtocol {
 
     /////////////////////*  CORE ACTORS */////////////////////
 
-    function governor() external returns (address);
+    function getGovernor() external returns (address);
 
-    function governorDomain() external returns (uint256);
+    function getGovernorDomain() external returns (uint256);
 
-    function updater(string memory domain) external returns (address);
+    function getUpdater(string memory domain) external returns (address);
 
-    function recoveryManager(string memory domain) external returns (address);
+    function getRecoveryManager(string memory domain)
+        external
+        returns (address);
 
-    function watchers(string memory domain) external returns (address[] memory);
+    function getWatchers(string memory domain)
+        external
+        returns (address[] memory);
 
     /////////////////////*  BRIDGE ACTORS */////////////////////
 
-    function fundsRecipient(string memory domain) external returns (address);
+    function getFundsRecipient(string memory domain) external returns (address);
 
-    function accountantOwner(string memory domain) external returns (address);
+    function getAccountantOwner(string memory domain)
+        external
+        returns (address);
 
     /////////////////////*  CONSTANTS */////////////////////
 
-    function networks() external returns (string[] memory);
+    function getNetworks() external returns (string[] memory);
 
     function connections(string memory domain)
         external
         returns (string[] memory);
 
-    function optimisticSeconds(string memory domain) external returns (uint256);
+    function getOptimisticSeconds(string memory domain)
+        external
+        returns (uint256);
 
-    function recoveryTimelock(string memory domain) external returns (uint256);
+    function getRecoveryTimelock(string memory domain)
+        external
+        returns (uint256);
 
     /////////////////////*  CORE CONTRACTS */////////////////////
 
-    function upgradeBeaconController(string memory domain)
+    function getUpgradeBeaconController(string memory domain)
         external
         returns (UpgradeBeaconController);
 
-    function xAppConnectionManager(string memory domain)
+    function getXAppConnectionManager(string memory domain)
         external
         returns (XAppConnectionManager);
 
-    function updaterManager(string memory domain)
+    function getUpdaterManager(string memory domain)
         external
         returns (UpdaterManager);
 
-    function home(string memory domain) external returns (Home);
+    function getHome(string memory domain) external returns (Home);
 
     function homeUpgrade(string memory domain)
         external
         returns (Upgrade memory);
 
-    function governanceRouter(string memory domain)
+    function getGovernanceRouter(string memory domain)
         external
         returns (GovernanceRouter);
 
@@ -85,7 +95,7 @@ interface INomadProtocol {
         external
         returns (Upgrade memory);
 
-    function replicaOf(string memory local, string memory remote)
+    function getReplicaOf(string memory local, string memory remote)
         external
         returns (Replica);
 
@@ -95,15 +105,17 @@ interface INomadProtocol {
 
     /////////////////////*  BRIDGE CONTRACTS */////////////////////
 
-    function ethHelper(string memory domain) external returns (ETHHelper);
+    function getEthHelper(string memory domain) external returns (ETHHelper);
 
-    function bridgeRouter(string memory domain) external returns (BridgeRouter);
+    function getBridgeRouter(string memory domain)
+        external
+        returns (BridgeRouter);
 
     function bridgeRouterUpgrade(string memory domain)
         external
         returns (Upgrade memory);
 
-    function tokenRegistry(string memory domain)
+    function getTokenRegistry(string memory domain)
         external
         returns (TokenRegistry);
 
@@ -115,7 +127,7 @@ interface INomadProtocol {
         external
         returns (Upgrade memory);
 
-    function accountant(string memory domain)
+    function getAccountant(string memory domain)
         external
         returns (AllowListNFTRecoveryAccountant);
 

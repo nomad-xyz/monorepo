@@ -44,15 +44,15 @@ abstract contract DeployAccountant is Script, Config {
     function deployAccountant(string memory _domain) internal {
         // deploy implementation
         implementation = new AllowListNFTRecoveryAccountant(
-            address(bridgeRouter(_domain)),
-            fundsRecipient(_domain)
+            address(getBridgeRouter(_domain)),
+            getFundsRecipient(_domain)
         );
         // initialize implementation
         implementation.initialize();
         // deploy UpgradeBeacon (with UpgradeBeaconController as owner)
         beacon = new UpgradeBeacon(
             address(implementation),
-            address(upgradeBeaconController(_domain))
+            address(getUpgradeBeaconController(_domain))
         );
         // deploy UpgradeBeaconProxy
         proxy = new UpgradeBeaconProxy(address(beacon), "");
@@ -63,7 +63,7 @@ abstract contract DeployAccountant is Script, Config {
         AllowListNFTRecoveryAccountant(address(proxy)).initialize();
         // transfer ownership of proxy
         AllowListNFTRecoveryAccountant(address(proxy)).transferOwnership(
-            accountantOwner(_domain)
+            getAccountantOwner(_domain)
         );
     }
 
