@@ -114,7 +114,10 @@ library JsonWriter {
         string memory indent,
         string memory name
     ) internal pure {
-        require(bytes(name).length != 0, "empty object name");
+        if (bytes(name).length == 0) {
+            writeObjectOpen(buffer, indent);
+            return;
+        }
         string memory line = string(abi.encodePacked('"', name, '": {'));
         writeLine(buffer, indent, line);
     }
