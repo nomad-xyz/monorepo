@@ -171,7 +171,7 @@ contract GovernanceRouterTest is Test {
         bytes memory data
     ) public {
         // Create test batch for tests
-        vm.assume(origin != homeDomain);
+        vm.assume(origin != homeDomain && sender != bytes32(0) && origin != 0);
         address to = address(0xBEEF);
         calls.push(GovernanceMessage.Call(to.addressToBytes32(), data));
         callsBatchHash = GovernanceMessage.getBatchHash(calls);
@@ -212,7 +212,7 @@ contract GovernanceRouterTest is Test {
         bytes32 sender
     ) public {
         // Create test handle
-        vm.assume(origin != homeDomain);
+        vm.assume(origin != homeDomain && sender != bytes32(0) && origin != 0);
         handleOrigin = origin;
         handleSender = sender;
         handleMessage = GovernanceMessage.formatTransferGovernor(
