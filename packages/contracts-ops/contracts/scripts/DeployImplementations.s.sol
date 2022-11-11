@@ -82,11 +82,10 @@ contract DeployImplementations is Test, Config {
     }
 
     function loadConfig() internal {
-        recoveryTimelock = getGovernanceConfiguration(localDomain)
-            .recoveryTimelock;
+        recoveryTimelock = getRecoveryTimelock(localDomain);
         xAppConnectionManager = address(getXAppConnectionManager(localDomain));
         updaterManager = address(getUpdaterManager(localDomain));
-        localDomainNumber = uint32(domainNumber(localDomain));
+        localDomainNumber = uint32(getDomainNumber(localDomain));
         rpcEndpoint = getRpcs(localDomain)[0];
         title("Input");
         console2.log("RPC:               ", rpcEndpoint);
