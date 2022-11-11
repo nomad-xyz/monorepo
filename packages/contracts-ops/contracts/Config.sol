@@ -179,6 +179,11 @@ abstract contract Config is INomadProtocol {
         return abi.decode(vm.parseJson(config, ".networks"), (string[]));
     }
 
+    function getRpcs(string memory domain) public returns (string[] memory) {
+        string memory key = string(abi.encodePacked(".rpcs.", domain));
+        return abi.decode(vm.parseJson(config, key), (string[]));
+    }
+
     function getGovernor() public override returns (address) {
         return
             abi.decode(
