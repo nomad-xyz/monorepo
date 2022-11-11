@@ -117,29 +117,43 @@ abstract contract CallBatch is Script {
 
     function writeCallList(
         JsonWriter.Buffer memory buffer,
+        string memory indent,
         GovernanceMessage.Call[] storage calls
     ) private {
         for (uint32 i = 0; i < calls.length; i++) {
-            writeCall(buffer, " ", calls[i], i == calls.length - 1);
+            writeCall(
+                buffer,
+                indent.nextIndent(),
+                calls[i],
+                i == calls.length - 1
+            );
         }
     }
 
-    function writeLocal(JsonWriter.Buffer memory buffer) private {
-        buffer.writeArrayOpen("", "local");
-        writeCallList(buffer, localCalls);
-        buffer.writeArrayClose("", false);
+    function writeLocal(JsonWriter.Buffer memory buffer, string memory indent)
+        private
+    {
+        buffer.writeArrayOpen(indent, "local");
+        writeCallList(buffer, indent, localCalls);
+        buffer.writeArrayClose(indent, false);
     }
 
-    function writeRemotes(JsonWriter.Buffer memory buffer) private {
+    function writeRemotes(JsonWriter.Buffer memory buffer, string memory indent)
+        private
+    {
         if (remoteDomains.length == 0) return;
-        buffer.writeObjectOpen("", "remotes");
+        buffer.writeObjectOpen(indent, "remotes");
         for (uint256 j; j < remoteDomains.length; j++) {
-            buffer.writeArrayOpen(" ", vm.toString(uint256(remoteDomains[j])));
-            writeCallList(buffer, remoteCalls[remoteDomains[j]]);
+            string memory inner = indent.nextIndent();
+            buffer.writeArrayOpen(
+                inner,
+                vm.toString(uint256(remoteDomains[j]))
+            );
+            writeCallList(buffer, inner, remoteCalls[remoteDomains[j]]);
             bool terminal = j == remoteDomains.length - 1;
-            buffer.writeArrayClose(" ", terminal);
+            buffer.writeArrayClose(inner, terminal);
         }
-        buffer.writeObjectClose("", false);
+        buffer.writeObjectClose(indent, false);
     }
 
     function writeRecoveryData(
@@ -174,17 +188,19 @@ abstract contract CallBatch is Script {
         buffer.writeKv(indent, "data", vm.toString(data), true);
     }
 
-    function writeBuilt(JsonWriter.Buffer memory buffer, bool recovery)
-        private
-    {
-        buffer.writeObjectOpen("", "built");
-        string memory indent = " ";
+    function writeBuilt(
+        JsonWriter.Buffer memory buffer,
+        string memory indent,
+        bool recovery
+    ) private {
+        buffer.writeObjectOpen(indent, "built");
+        string memory inner = indent.nextIndent();
         if (recovery) {
             // write local domain built
             bool isLastDomain = remoteDomains.length == 0;
             writeRecoveryData(
                 buffer,
-                indent,
+                inner,
                 localDomain,
                 localCalls,
                 isLastDomain
@@ -194,16 +210,16 @@ abstract contract CallBatch is Script {
                 isLastDomain = j == remoteDomains.length - 1;
                 writeRecoveryData(
                     buffer,
-                    indent,
+                    inner,
                     remoteDomains[j],
                     remoteCalls[remoteDomains[j]],
                     isLastDomain
                 );
             }
         } else {
-            writeGovernorData(buffer, indent);
+            writeGovernorData(buffer, inner);
         }
-        buffer.writeObjectClose("", true);
+        buffer.writeObjectClose(indent, true);
     }
 
     GovernanceMessage.Call[][] private builtRemoteCalls;
@@ -223,11 +239,13 @@ abstract contract CallBatch is Script {
         require(!written, "already written");
         // write raw local & remote calls to file
         JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
-        buffer.writeObjectOpen("");
-        writeLocal(buffer);
-        writeRemotes(buffer);
-        writeBuilt(buffer, recovery);
-        buffer.writeObjectClose("", true);
+        string memory indent = "";
+        string memory inner = indent.nextIndent();
+        buffer.writeObjectOpen(indent);
+        writeLocal(buffer, inner);
+        writeRemotes(buffer, inner);
+        writeBuilt(buffer, inner, recovery);
+        buffer.writeObjectClose(indent, true);
         buffer.flushTo(outputFile);
         // finish
         written = true;
@@ -242,8 +260,8 @@ contract TestCallBatch is CallBatch {
         __CallBatch_initialize(localName, local, "upgradeActions.json", true);
         bytes memory data = hex"0101";
         pushLocal(address(0xBEEF), data);
-        pushRemote(address(0xBEEEEF), data, 22);
-        pushRemote(address(0xBEEEEEEEF), data, 33);
+        pushRemote(address(0xBEEEEF), data, 2222);
+        pushRemote(address(0xBEEEEEEEF), data, 3333);
         writeCallBatch(true);
     }
 
