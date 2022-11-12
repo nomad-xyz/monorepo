@@ -102,16 +102,23 @@ library JsonWriter {
         writeLine(buffer, indent, terminal ? "]" : "],");
     }
 
+    function writeObjectOpen(Buffer memory buffer, string memory indent)
+        internal
+        pure
+    {
+        writeLine(buffer, indent, "{");
+    }
+
     function writeObjectOpen(
         Buffer memory buffer,
         string memory indent,
         string memory name
     ) internal pure {
-        string memory line = string(
-            bytes(name).length == 0
-                ? abi.encodePacked(indent, "{")
-                : abi.encodePacked('"', name, '": {')
-        );
+        if (bytes(name).length == 0) {
+            writeObjectOpen(buffer, indent);
+            return;
+        }
+        string memory line = string(abi.encodePacked('"', name, '": {'));
         writeLine(buffer, indent, line);
     }
 

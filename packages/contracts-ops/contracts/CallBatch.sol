@@ -16,32 +16,90 @@ abstract contract CallBatch is Script {
     using JsonWriter for JsonWriter.Buffer;
     using JsonWriter for string;
 
-    GovernanceMessage.Call[] public calls;
+    string localDomainName;
+    uint32 public localDomain;
+    GovernanceMessage.Call[] public localCalls;
+    uint32[] public remoteDomains;
+    mapping(uint32 => GovernanceMessage.Call[]) public remoteCalls;
 
-    bool public complete;
-    string public domain;
+    bool public written;
     JsonWriter.File outputFile;
 
     function __CallBatch_initialize(
-        string memory _domain,
-        string memory _outputFile,
+        string memory _localDomainName,
+        uint32 _localDomain,
+        string memory _outputFilePath,
         bool _overwrite
     ) public {
-        require(bytes(domain).length == 0, "already initialized");
-        require(bytes(outputFile.path).length == 0, "already initialized");
-        domain = _domain;
-        _outputFile = string(abi.encodePacked("./actions/", _outputFile));
-        outputFile.path = _outputFile;
+        require(localDomain == 0, "already initialized");
+        require(_localDomain != 0, "can't pass zero domain");
+        localDomainName = _localDomainName;
+        localDomain = _localDomain;
         outputFile.overwrite = _overwrite;
+        outputFile.path = string(
+            abi.encodePacked("./actions/", _outputFilePath)
+        );
     }
 
-    function push(address to, bytes memory data) public {
-        push(TypeCasts.addressToBytes32(to), data);
+    function pushRemote(
+        address to,
+        bytes memory data,
+        uint32 domain
+    ) public {
+        require(!written, "callbatch has been completed");
+        // if no calls have been pushed for this domain previously, add to array of remote domains
+        if (remoteCalls[domain].length == 0) {
+            remoteDomains.push(domain);
+        }
+        // push to array of calls for this domain
+        remoteCalls[domain].push(
+            GovernanceMessage.Call(TypeCasts.addressToBytes32(to), data)
+        );
     }
 
-    function push(bytes32 to, bytes memory data) public {
-        require(!complete, "callbatch has been completed");
-        calls.push(GovernanceMessage.Call(to, data));
+    function pushLocal(address to, bytes memory data) public {
+        pushLocal(TypeCasts.addressToBytes32(to), data);
+    }
+
+    function pushLocal(bytes32 to, bytes memory data) public {
+        require(!written, "callbatch has been completed");
+        localCalls.push(GovernanceMessage.Call(to, data));
+    }
+
+    // only works if recovery is not active and localDomain is governor domain
+    function prankExecuteGovernor(address router) public {
+        // prank governor
+        address gov = GovernanceRouter(router).governor();
+        require(gov != address(0), "!gov chain");
+        vm.prank(gov);
+        // execute local & remote calls
+        // NOTE: remote calls will be sent as Nomad message
+        GovernanceRouter(router).executeGovernanceActions(
+            localCalls,
+            remoteDomains,
+            buildRemoteCalls()
+        );
+    }
+
+    // only works if recovery is active on specified domain
+    function prankExecuteRecoveryManager(address router, uint32 domain) public {
+        // prank recovery manager
+        address rm = GovernanceRouter(router).recoveryManager();
+        require(GovernanceRouter(router).inRecovery(), "!in recovery");
+        vm.prank(rm);
+        // get calls only for specified domain
+        GovernanceMessage.Call[] memory _domainCalls;
+        if (domain == localDomain) {
+            _domainCalls = localCalls;
+        } else {
+            _domainCalls = remoteCalls[domain];
+        }
+        // execute local calls
+        GovernanceRouter(router).executeGovernanceActions(
+            _domainCalls,
+            new uint32[](0),
+            new GovernanceMessage.Call[][](0)
+        );
     }
 
     function writeCall(
@@ -50,107 +108,201 @@ abstract contract CallBatch is Script {
         GovernanceMessage.Call storage call,
         bool terminal
     ) private {
+        buffer.writeObjectOpen(indent);
         string memory inner = indent.nextIndent();
-        buffer.writeLine(indent, "{");
         buffer.writeKv(inner, "to", vm.toString(call.to), false);
         buffer.writeKv(inner, "data", vm.toString(call.data), true);
         buffer.writeObjectClose(indent, terminal);
     }
 
-    function writeCallList(JsonWriter.Buffer memory buffer) private {
-        string memory indent = "";
-        string memory inner = indent.nextIndent();
-        string memory innerer = inner.nextIndent();
-        buffer.writeLine(indent, "{");
-        buffer.writeArrayOpen(inner, domain);
+    function writeCallList(
+        JsonWriter.Buffer memory buffer,
+        string memory indent,
+        GovernanceMessage.Call[] storage calls
+    ) private {
         for (uint32 i = 0; i < calls.length; i++) {
-            writeCall(buffer, innerer, calls[i], i == calls.length - 1);
+            writeCall(
+                buffer,
+                indent.nextIndent(),
+                calls[i],
+                i == calls.length - 1
+            );
         }
-        buffer.writeArrayClose(inner, true);
-        buffer.writeLine(indent, "}");
     }
 
-    function finish() public {
-        require(bytes(domain).length != 0, "must initialize");
-        require(bytes(outputFile.path).length != 0, "must initialize");
-        require(!complete, "already written");
-        complete = true;
-        JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
-        writeCallList(buffer);
-        buffer.flushTo(outputFile);
+    function writeLocal(JsonWriter.Buffer memory buffer, string memory indent)
+        private
+    {
+        buffer.writeArrayOpen(indent, "local");
+        writeCallList(buffer, indent, localCalls);
+        buffer.writeArrayClose(indent, false);
     }
 
-    function build(address governanceRouter) public {
-        require(bytes(domain).length != 0, "must initialize");
-        require(bytes(outputFile.path).length != 0, "must initialize");
-        require(!complete, "already written");
-        complete = true;
-        JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
+    function writeRemotes(JsonWriter.Buffer memory buffer, string memory indent)
+        private
+    {
+        if (remoteDomains.length == 0) return;
+        buffer.writeObjectOpen(indent, "remote");
+        for (uint256 j; j < remoteDomains.length; j++) {
+            string memory inner = indent.nextIndent();
+            buffer.writeArrayOpen(
+                inner,
+                vm.toString(uint256(remoteDomains[j]))
+            );
+            writeCallList(buffer, inner, remoteCalls[remoteDomains[j]]);
+            bool terminal = j == remoteDomains.length - 1;
+            buffer.writeArrayClose(inner, terminal);
+        }
+        buffer.writeObjectClose(indent, false);
+    }
+
+    function writeRecoveryData(
+        JsonWriter.Buffer memory buffer,
+        string memory indent,
+        uint32 domain,
+        GovernanceMessage.Call[] memory calls,
+        bool isLastDomain
+    ) private {
+        buffer.writeObjectOpen(indent, vm.toString(uint256(domain)));
         bytes memory data = abi.encodeWithSelector(
             GovernanceRouter.executeGovernanceActions.selector,
             calls,
             new uint32[](0),
             new GovernanceMessage.Call[][](0)
         );
-        string[2][] memory kvs = new string[2][](2);
-        kvs[0][0] = "to";
-        kvs[0][1] = vm.toString(governanceRouter);
-        kvs[1][0] = "data";
-        kvs[1][1] = vm.toString(data);
-        buffer.writeSimpleObject("", "", kvs, true);
+        string memory inner = indent.nextIndent();
+        buffer.writeKv(inner, "data", vm.toString(data), true);
+        buffer.writeObjectClose(indent, isLastDomain);
+    }
+
+    function writeGovernorData(
+        JsonWriter.Buffer memory buffer,
+        string memory indent
+    ) private {
+        bytes memory data = abi.encodeWithSelector(
+            GovernanceRouter.executeGovernanceActions.selector,
+            localCalls,
+            remoteDomains,
+            buildRemoteCalls()
+        );
+        buffer.writeKv(indent, "data", vm.toString(data), true);
+    }
+
+    function writeBuilt(
+        JsonWriter.Buffer memory buffer,
+        string memory indent,
+        bool recovery
+    ) private {
+        buffer.writeObjectOpen(indent, "built");
+        string memory inner = indent.nextIndent();
+        if (recovery) {
+            // write local domain built
+            bool isLastDomain = remoteDomains.length == 0;
+            writeRecoveryData(
+                buffer,
+                inner,
+                localDomain,
+                localCalls,
+                isLastDomain
+            );
+            // write remote domains built
+            for (uint256 j; j < remoteDomains.length; j++) {
+                isLastDomain = j == remoteDomains.length - 1;
+                writeRecoveryData(
+                    buffer,
+                    inner,
+                    remoteDomains[j],
+                    remoteCalls[remoteDomains[j]],
+                    isLastDomain
+                );
+            }
+        } else {
+            writeGovernorData(buffer, inner);
+        }
+        buffer.writeObjectClose(indent, true);
+    }
+
+    GovernanceMessage.Call[][] private builtRemoteCalls;
+
+    function buildRemoteCalls()
+        private
+        returns (GovernanceMessage.Call[][] memory _remoteCalls)
+    {
+        for (uint256 i; i < remoteDomains.length; i++) {
+            builtRemoteCalls.push(remoteCalls[remoteDomains[i]]);
+        }
+        _remoteCalls = builtRemoteCalls;
+    }
+
+    function writeCallBatch(bool recovery) public {
+        require(localDomain != 0, "must initialize");
+        require(!written, "already written");
+        // write raw local & remote calls to file
+        JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
+        string memory indent = "";
+        string memory inner = indent.nextIndent();
+        buffer.writeObjectOpen(indent);
+        writeLocal(buffer, inner);
+        writeRemotes(buffer, inner);
+        writeBuilt(buffer, inner, recovery);
+        buffer.writeObjectClose(indent, true);
         buffer.flushTo(outputFile);
-    }
-
-    function prankExecuteBatch(address router) public {
-        // prank the router itself to avoid governor chain issues
-        vm.prank(router);
-        GovernanceRouter(router).executeGovernanceActions(
-            calls,
-            new uint32[](0),
-            new GovernanceMessage.Call[][](0)
-        );
-    }
-
-    function prankRecoveryExecuteBatch(address router) public {
-        // prank recovery (only works if recovery is active)
-        address recovery = GovernanceRouter(router).recoveryManager();
-        vm.prank(recovery);
-        GovernanceRouter(router).executeGovernanceActions(
-            calls,
-            new uint32[](0),
-            new GovernanceMessage.Call[][](0)
-        );
+        // finish
+        written = true;
     }
 }
 
 contract TestCallBatch is CallBatch {
-    function finish(
-        string memory _domain,
-        string memory _outputFile,
-        bool overwrite
-    ) public {
-        __CallBatch_initialize(_domain, _outputFile, overwrite);
-        push(address(3), bytes("abcd"));
-        push(address(3), bytes("abcd"));
-        push(address(3), bytes("abcd"));
-        push(address(3), bytes("abcd"));
-        push(address(3), bytes("abcd"));
-        push(address(3), bytes("abcd"));
-        finish();
+    // multi chain calls, recovery mode
+    function writeRecoveryMulti() public {
+        string memory localName = "ethereum";
+        uint32 local = 1111;
+        __CallBatch_initialize(localName, local, "upgradeActions.json", true);
+        bytes memory data = hex"0101";
+        pushLocal(address(0xBEEF), data);
+        pushRemote(address(0xBEEEEF), data, 2222);
+        pushRemote(address(0xBEEEEEEEF), data, 3333);
+        writeCallBatch(true);
     }
 
-    function build(
-        string memory _domain,
-        string memory _outputFile,
-        bool overwrite
-    ) public {
-        __CallBatch_initialize(_domain, _outputFile, overwrite);
-        push(address(3), bytes("abcd"));
-        push(address(3), bytes("abcd"));
-        push(address(3), bytes("abcd"));
-        push(address(3), bytes("abcd"));
-        push(address(3), bytes("abcd"));
-        push(address(3), bytes("abcd"));
-        build(address(34));
+    // multi chain calls, governance mode
+    function writeGovernanceMulti() public {
+        string memory localName = "ethereum";
+        uint32 local = 1111;
+        __CallBatch_initialize(localName, local, "upgradeActions.json", true);
+        bytes memory data = hex"0101";
+        pushLocal(address(0xBEEF), data);
+        pushRemote(address(0xBEEEEF), data, 2222);
+        pushRemote(address(0xBEEEEEEEF), data, 3333);
+        writeCallBatch(false);
+    }
+
+    // single chain calls, recovery mode
+    function writeRecoverySingle() public {
+        string memory localName = "ethereum";
+        uint32 local = 1111;
+        __CallBatch_initialize(localName, local, "upgradeActions.json", true);
+        pushLocal(address(3), bytes("abcd"));
+        pushLocal(address(3), bytes("abcd"));
+        pushLocal(address(3), bytes("abcd"));
+        pushLocal(address(3), bytes("abcd"));
+        pushLocal(address(3), bytes("abcd"));
+        pushLocal(address(3), bytes("abcd"));
+        writeCallBatch(true);
+    }
+
+    // single chain calls, governance mode
+    // (data should be same as single chain recovery mode)
+    function writeGovernanceSingle() public {
+        string memory localName = "ethereum";
+        uint32 local = 1111;
+        __CallBatch_initialize(localName, local, "upgradeActions.json", true);
+        pushLocal(address(3), bytes("abcd"));
+        pushLocal(address(3), bytes("abcd"));
+        pushLocal(address(3), bytes("abcd"));
+        pushLocal(address(3), bytes("abcd"));
+        pushLocal(address(3), bytes("abcd"));
+        pushLocal(address(3), bytes("abcd"));
+        writeCallBatch(false);
     }
 }

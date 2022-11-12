@@ -9,14 +9,14 @@ import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppCon
 
 import "forge-std/Script.sol";
 
-contract EnrollReplicasLogic is Config, CallBatch {
+abstract contract EnrollReplicasLogic is Config, CallBatch {
     function enrollReplica(string memory remote) internal {
-        XAppConnectionManager xcm = getXAppConnectionManager(domain);
-        address replica = address(getReplicaOf(domain, remote));
+        XAppConnectionManager xcm = getXAppConnectionManager(localDomainName);
+        address replica = address(getReplicaOf(localDomainName, remote));
         uint32 domainNumber = getDomainNumber(remote);
 
         if (xcm.replicaToDomain(replica) != domainNumber) {
-            push(
+            pushLocal(
                 address(xcm),
                 abi.encodeWithSelector(
                     xcm.ownerEnrollReplica.selector,
@@ -29,7 +29,7 @@ contract EnrollReplicasLogic is Config, CallBatch {
 
     function enrollReplicas() internal {
         // Load info from config
-        string[] memory connections = connections(domain);
+        string[] memory connections = connections(localDomainName);
         // Set each replica
         for (uint256 i = 0; i < connections.length; i++) {
             enrollReplica(connections[i]);
@@ -37,38 +37,35 @@ contract EnrollReplicasLogic is Config, CallBatch {
     }
 }
 
-contract EnrollReplicas is Script, EnrollReplicasLogic {
+abstract contract EnrollReplicas is Script, EnrollReplicasLogic {
     function initialize(
         string calldata configFile,
-        string calldata localDomain,
+        string calldata _localDomain,
         string calldata output,
         bool overwrite
     ) private {
         __Config_initialize(configFile);
-        __CallBatch_initialize(localDomain, output, overwrite);
+        __CallBatch_initialize(
+            _localDomain,
+            getDomainNumber(_localDomain),
+            output,
+            overwrite
+        );
     }
 
     // entrypoint
-    function createCallList(
+    function enroll(
         string calldata configFile,
-        string calldata localDomain,
+        string calldata _localDomain,
         string calldata output,
         bool overwrite
     ) external {
-        initialize(configFile, localDomain, output, overwrite);
+        initialize(configFile, _localDomain, output, overwrite);
         enrollReplicas();
-        finish();
-    }
-
-    // entrypoint
-    function createRecoveryTx(
-        string calldata configFile,
-        string calldata localDomain,
-        string calldata output,
-        bool overwrite
-    ) external {
-        initialize(configFile, localDomain, output, overwrite);
-        enrollReplicas();
-        build(address(getGovernanceRouter(localDomain)));
+        // NOTE: script is currently written for one chain only
+        // to be used in recovery mode
+        // FUTURE: refactor to be multi-chain
+        bool recovery = true;
+        writeCallBatch(recovery);
     }
 }
