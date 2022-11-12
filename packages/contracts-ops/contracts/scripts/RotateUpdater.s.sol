@@ -14,8 +14,8 @@ import "forge-std/Script.sol";
 abstract contract RotateUpdaterLogic is Config, CallBatch {
     function setReplicaUpdater(string memory remoteDomain) private {
         // New updater is the updater for the remote Home
-        address newUpdater = updater(remoteDomain);
-        Replica replica = replicaOf(localDomainName, remoteDomain);
+        address newUpdater = getUpdater(remoteDomain);
+        Replica replica = getReplicaOf(localDomainName, remoteDomain);
         if (replica.updater() != newUpdater) {
             pushLocal(
                 address(replica),
@@ -25,9 +25,9 @@ abstract contract RotateUpdaterLogic is Config, CallBatch {
     }
 
     function setHomeUpdater() private {
-        address newUpdater = updater(localDomainName);
-        Home home = home(localDomainName);
-        UpdaterManager updaterManager = updaterManager(localDomainName);
+        address newUpdater = getUpdater(localDomainName);
+        Home home = getHome(localDomainName);
+        UpdaterManager updaterManager = getUpdaterManager(localDomainName);
         // Updater manager will call `home.setUpdater()`
         if (newUpdater != home.updater()) {
             pushLocal(
@@ -62,7 +62,7 @@ abstract contract RotateUpdater is Script, RotateUpdaterLogic {
         __Config_initialize(configFile);
         __CallBatch_initialize(
             _localDomain,
-            domainNumber(_localDomain),
+            getDomainNumber(_localDomain),
             output,
             overwrite
         );
