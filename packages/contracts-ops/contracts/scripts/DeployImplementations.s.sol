@@ -67,13 +67,14 @@ contract DeployImplementations is Test, Config {
                     abi.encodePacked(
                         "Deploying  & Initializing implementations on (domain, domainNumber) -> (",
                         localDomain,
-                        vm.toString(uint256(localDomainNumber))")"
+                        vm.toString(uint256(localDomainNumber)),
+                        ")"
                     )
                 )
             );
             console2.log("Reading configuration from path: ", configPath);
             loadConfig();
-            console2.log("Switching to Fork and deploying....")
+            console2.log("Switching to Fork and deploying....");
             vm.selectFork(forkIdentifiers[i]);
             vm.startBroadcast();
             deployImplementations();
@@ -186,9 +187,16 @@ contract DeployImplementations is Test, Config {
                 keccak256(abi.encodePacked(domains[i])) !=
                 keccak256(abi.encodePacked(domain))
             ) {
+                console2.log(
+                    "Updating Replica of domain ",
+                    domains[i],
+                    "with",
+                    vm.toString(address(replica))
+                );
                 valueKey = string(
                     abi.encodePacked(
-                        ".core",
+                        ".core.",
+                        domain,
                         ".replicas.",
                         domains[i],
                         ".implementation"
