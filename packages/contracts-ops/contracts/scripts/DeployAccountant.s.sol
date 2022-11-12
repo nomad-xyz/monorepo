@@ -43,7 +43,7 @@ abstract contract DeployAccountantLogic is Script, Config {
     }
 }
 
-abstract contract DeployAccountant is Script, Config, DeployAccountantLogic {
+abstract contract DeployAccountant is DeployAccountantLogic {
     using JsonWriter for JsonWriter.Buffer;
     using JsonWriter for string;
 
