@@ -68,6 +68,7 @@ abstract contract CallBatch is Script {
 
     // only works if recovery is not active and localDomain is governor domain
     function prankExecuteGovernor(address router) public {
+        require(localCalls.length != 0 || remoteDomains.length != 0, "no calls pushed");
         // prank governor
         address gov = GovernanceRouter(router).governor();
         require(gov != address(0), "!gov chain");
@@ -94,6 +95,7 @@ abstract contract CallBatch is Script {
         } else {
             _domainCalls = remoteCalls[domain];
         }
+        require(_domainCalls.length != 0, "no calls pushed for domain");
         // execute local calls
         GovernanceRouter(router).executeGovernanceActions(
             _domainCalls,
@@ -237,6 +239,7 @@ abstract contract CallBatch is Script {
     function writeCallBatch(bool recovery) public {
         require(localDomain != 0, "must initialize");
         require(!written, "already written");
+        require(localCalls.length != 0 || remoteDomains.length != 0, "no calls pushed");
         // write raw local & remote calls to file
         JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
         string memory indent = "";
