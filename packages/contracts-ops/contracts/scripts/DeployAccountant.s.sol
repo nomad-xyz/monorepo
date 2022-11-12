@@ -72,6 +72,7 @@ contract DeployAccountant is DeployAccountantLogic {
     function write() internal {
         JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
         string memory indent = "";
+        buffer.writeObjectOpen(indent);
         string[2][] memory kvs = new string[2][](3);
         kvs[0][0] = "implementation";
         kvs[0][1] = vm.toString(address(implementation));
@@ -79,7 +80,8 @@ contract DeployAccountant is DeployAccountantLogic {
         kvs[1][1] = vm.toString(address(beacon));
         kvs[2][0] = "proxy";
         kvs[2][1] = vm.toString(address(proxy));
-        buffer.writeSimpleObject(indent, "accountant", kvs, true);
+        buffer.writeSimpleObject(indent.nextIndent(), "accountant", kvs, true);
+        buffer.writeObjectClose(indent, true);
         buffer.flushTo(outputFile);
     }
 }
