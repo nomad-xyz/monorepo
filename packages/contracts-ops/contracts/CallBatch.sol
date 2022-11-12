@@ -112,7 +112,12 @@ abstract contract CallBatch is Script {
     ) private {
         buffer.writeObjectOpen(indent);
         string memory inner = indent.nextIndent();
-        buffer.writeKv(inner, "to", vm.toString(call.to), false);
+        buffer.writeKv(
+            inner,
+            "to",
+            vm.toString(TypeCasts.bytes32ToAddress(call.to)),
+            false
+        );
         buffer.writeKv(inner, "data", vm.toString(call.data), true);
         buffer.writeObjectClose(indent, terminal);
     }
