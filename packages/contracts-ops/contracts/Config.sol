@@ -397,8 +397,7 @@ abstract contract Config is INomadProtocol {
         onlyInitialized
         returns (uint32)
     {
-        return
-            abi.decode(loadProtocolAttribute(domain, "domain"), (uint32));
+        return abi.decode(loadProtocolAttribute(domain, "domain"), (uint32));
     }
 
     function getUpdater(string memory domain)
