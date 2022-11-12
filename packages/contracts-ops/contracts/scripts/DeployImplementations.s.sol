@@ -187,12 +187,6 @@ contract DeployImplementations is Test, Config {
                 keccak256(abi.encodePacked(domains[i])) !=
                 keccak256(abi.encodePacked(domain))
             ) {
-                console2.log(
-                    "Updating Replica of domain ",
-                    domains[i],
-                    "with",
-                    vm.toString(address(replica))
-                );
                 valueKey = string(
                     abi.encodePacked(
                         ".core.",
