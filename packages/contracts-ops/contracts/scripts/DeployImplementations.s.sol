@@ -31,13 +31,13 @@ contract DeployImplementations is Test, Config {
     // configuration
     string localDomain;
     string[] domains;
+    uint256[] forkIdentifiers;
     string domainsToBeUpgraded;
     uint32 localDomainNumber;
     uint256 recoveryTimelock;
     address xAppConnectionManager;
     address updaterManager;
     string configPath;
-    string rpcEndpoint;
     /*//////////////////////////////////////////////////////////////
                             DEPLOYED CONTRACTS
   //////////////////////////////////////////////////////////////*/
@@ -59,21 +59,22 @@ contract DeployImplementations is Test, Config {
         configPath = _configPath;
         domains = _domains;
         __Config_initialize(configPath);
+        createForks();
         for (uint256 i; i < domains.length; i++) {
             localDomain = domains[i];
             title(
                 string(
                     abi.encodePacked(
-                        "Deploying  & Initializing implementations on domain: ",
+                        "Deploying  & Initializing implementations on (domain, domainNumber) -> (",
                         localDomain,
-                        " : ",
-                        vm.toString(uint256(localDomainNumber))
+                        vm.toString(uint256(localDomainNumber))")"
                     )
                 )
             );
             console2.log("Reading configuration from path: ", configPath);
             loadConfig();
-            vm.createSelectFork(rpcEndpoint);
+            console2.log("Switching to Fork and deploying....")
+            vm.selectFork(forkIdentifiers[i]);
             vm.startBroadcast();
             deployImplementations();
             updateImpl(localDomain);
@@ -86,9 +87,7 @@ contract DeployImplementations is Test, Config {
         xAppConnectionManager = address(getXAppConnectionManager(localDomain));
         updaterManager = address(getUpdaterManager(localDomain));
         localDomainNumber = uint32(getDomainNumber(localDomain));
-        rpcEndpoint = getRpcs(localDomain)[0];
         title("Input");
-        console2.log("RPC:               ", rpcEndpoint);
         console2.log("Timelock:          ", recoveryTimelock);
         console2.log("XCnMngr:           ", xAppConnectionManager);
         console2.log("UpdMngr:           ", updaterManager);
@@ -105,6 +104,15 @@ contract DeployImplementations is Test, Config {
             updaterManager != address(0),
             "updaterManager can't be address(0)"
         );
+    }
+
+    function createForks() internal {
+        title("Loading the forks from the following RPCs..");
+        for (uint256 i; i < domains.length; i++) {
+            string memory rpcEndpoint = getRpcs(domains[i])[0];
+            console2.log(domains[i], "--->", rpcEndpoint);
+            forkIdentifiers.push(vm.createFork(rpcEndpoint));
+        }
     }
 
     /*//////////////////////////////////////////////////////////////
