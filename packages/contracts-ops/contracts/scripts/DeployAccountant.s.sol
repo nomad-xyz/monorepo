@@ -10,35 +10,10 @@ import {AllowListNFTRecoveryAccountant} from "@nomad-xyz/contracts-bridge/contra
 import {UpgradeBeacon} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeacon.sol";
 import {UpgradeBeaconProxy} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeaconProxy.sol";
 
-abstract contract DeployAccountant is Script, Config {
-    using JsonWriter for JsonWriter.Buffer;
-    using JsonWriter for string;
-
-    JsonWriter.File outputFile;
-
+abstract contract DeployAccountantLogic is Script, Config {
     AllowListNFTRecoveryAccountant implementation;
     UpgradeBeacon beacon;
     UpgradeBeaconProxy proxy;
-
-    // entrypoint
-    function deploy(
-        string calldata _configFile,
-        string memory _domain,
-        string memory _outputFile,
-        bool _overwrite
-    ) public {
-        // initialize
-        __Config_initialize(_configFile);
-        _outputFile = string(abi.encodePacked("./actions/", _outputFile));
-        outputFile.path = _outputFile;
-        outputFile.overwrite = _overwrite;
-        // deploy & configure accountant
-        vm.startBroadcast();
-        deployAccountant(_domain);
-        vm.stopBroadcast();
-        // write contract addresses to JSON
-        write();
-    }
 
     // Deploys & configures the NFTAccountant with upgrade setup
     function deployAccountant(string memory _domain) internal {
@@ -65,6 +40,33 @@ abstract contract DeployAccountant is Script, Config {
         AllowListNFTRecoveryAccountant(address(proxy)).transferOwnership(
             getAccountantOwner(_domain)
         );
+    }
+}
+
+contract DeployAccountant is DeployAccountantLogic {
+    using JsonWriter for JsonWriter.Buffer;
+    using JsonWriter for string;
+
+    JsonWriter.File outputFile;
+
+    // entrypoint
+    function deploy(
+        string calldata _configFile,
+        string memory _domain,
+        string memory _outputFile,
+        bool _overwrite
+    ) public {
+        // initialize
+        __Config_initialize(_configFile);
+        _outputFile = string(abi.encodePacked("./actions/", _outputFile));
+        outputFile.path = _outputFile;
+        outputFile.overwrite = _overwrite;
+        // deploy & configure accountant
+        vm.startBroadcast();
+        deployAccountant(_domain);
+        vm.stopBroadcast();
+        // write contract addresses to JSON
+        write();
     }
 
     function write() internal {
