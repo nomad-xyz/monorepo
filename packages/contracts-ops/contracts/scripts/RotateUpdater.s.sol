@@ -52,7 +52,7 @@ abstract contract RotateUpdaterLogic is Config, CallBatch {
     }
 }
 
-abstract contract RotateUpdater is Script, RotateUpdaterLogic {
+contract RotateUpdater is Script, RotateUpdaterLogic {
     function initialize(
         string calldata configFile,
         string calldata _localDomain,
