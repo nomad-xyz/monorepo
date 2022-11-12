@@ -37,7 +37,7 @@ abstract contract EnrollReplicasLogic is Config, CallBatch {
     }
 }
 
-abstract contract EnrollReplicas is Script, EnrollReplicasLogic {
+contract EnrollReplicas is Script, EnrollReplicasLogic {
     function initialize(
         string calldata configFile,
         string calldata _localDomain,
