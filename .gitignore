@@ -6,6 +6,7 @@ yarn-error.log
 dist/
 cache/
 actions/
+broadcast/
 scripts/accumulator-cli
 **/.coverage
 
