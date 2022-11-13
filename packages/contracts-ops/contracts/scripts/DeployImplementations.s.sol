@@ -28,9 +28,7 @@ abstract contract DeployImplementationsLogic is Script, Config {
     Home home;
     Replica replica;
     GovernanceRouter governanceRouter;
-    // type of BridgeRouter differs by domain,
-    // so store as address
-    address payable bridgeRouter;
+    BridgeRouter bridgeRouter;
     TokenRegistry tokenRegistry;
     BridgeToken bridgeToken;
 
@@ -62,11 +60,13 @@ abstract contract DeployImplementationsLogic is Script, Config {
         );
         // BridgeRouter
         if (keccak256(bytes(_domain)) == keccak256(bytes("ethereum"))) {
-            bridgeRouter = address(
-                new EthereumBridgeRouter(address(getAccountant(_domain)))
+            bridgeRouter = BridgeRouter(
+                address(
+                    new EthereumBridgeRouter(address(getAccountant(_domain)))
+                )
             );
         } else {
-            bridgeRouter = address(new BridgeRouter());
+            bridgeRouter = new BridgeRouter();
         }
         BridgeRouter(bridgeRouter).initialize(
             address(tokenRegistry),
@@ -133,7 +133,13 @@ contract DeployImplementations is DeployImplementationsLogic {
             address(governanceRouter),
             false
         );
-        writeImplementation(buffer, inner, "bridgeRouter", bridgeRouter, false);
+        writeImplementation(
+            buffer,
+            inner,
+            "bridgeRouter",
+            address(bridgeRouter),
+            false
+        );
         writeImplementation(
             buffer,
             inner,
