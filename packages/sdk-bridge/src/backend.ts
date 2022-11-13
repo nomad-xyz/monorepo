@@ -78,7 +78,7 @@ export class GoldSkyBridgeBackend
   /**
    * Stores message into internal cache
    */
-  storeMessage(m: GoldSkyBridgeMessage) {
+  storeMessage(m: GoldSkyBridgeMessage): void {
     this.messageCache.set(m.message_hash, m);
     const messageHashes = this.dispatchTxToMessageHash.get(m.dispatch_tx);
     if (!messageHashes) {
@@ -129,7 +129,7 @@ export class GoldSkyBridgeBackend
     forceFetch = true,
   ): Promise<GoldSkyBridgeMessage[] | undefined> {
     let ms: GoldSkyBridgeMessage[] | undefined;
-    let messageHashes = this.dispatchTxToMessageHash.get(tx);
+    const messageHashes = this.dispatchTxToMessageHash.get(tx);
     const enoughMessages =
       limit && messageHashes && limit <= messageHashes.length;
     if (!enoughMessages || forceFetch) {
@@ -142,9 +142,14 @@ export class GoldSkyBridgeBackend
     } else {
       // messageHashes! are there as they are already tested in `enoughHashes` above
       // getMessage(hash)! is also there as in order to get into `messageHashes` a message needs to get fetched
+      if (!messageHashes)
+         throw new Error('MessageHashes are unexpectedly not existing');
       ms = await Promise.all(
-        messageHashes!.map(async (hash) => {
-          return (await this.getMessage(hash))!;
+        messageHashes.map(async (hash) => {
+          const message = await this.getMessage(hash);
+          if (!message)
+            throw new Error("Couldn't get a message from existing messages."); // Message must be in messageHashes
+          return message;
         }),
       );
     }

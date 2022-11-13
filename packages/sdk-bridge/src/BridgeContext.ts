@@ -50,7 +50,7 @@ export class BridgeContext extends NomadContext {
   /**
    * Create default backend for the context
    */
-  withDefaultBackend() {
+  withDefaultBackend(): BridgeContext {
     // TODO: What if backend doesn't exist for this environment?
     this._backend = GoldSkyBridgeBackend.default(this.environment, this);
     return this;
