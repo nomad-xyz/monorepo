@@ -29,7 +29,7 @@ abstract contract EnrollReplicasLogic is Config, CallBatch {
 
     function enrollReplicas() internal {
         // Load info from config
-        string[] memory connections = connections(localDomainName);
+        string[] memory connections = getConnections(localDomainName);
         // Set each replica
         for (uint256 i = 0; i < connections.length; i++) {
             enrollReplica(connections[i]);

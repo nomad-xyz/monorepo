@@ -43,7 +43,7 @@ abstract contract RotateUpdaterLogic is Config, CallBatch {
     // Sets the updater for the home and all replicas
     function setUpdater() internal {
         // Load info from config
-        string[] memory connections = connections(localDomainName);
+        string[] memory connections = getConnections(localDomainName);
         setHomeUpdater();
         // Set each replica
         for (uint256 i = 0; i < connections.length; i++) {
