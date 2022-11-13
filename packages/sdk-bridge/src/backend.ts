@@ -14,8 +14,11 @@ export default abstract class BridgeMessageBackend extends MessageBackend {
   abstract receivedTx(messageHash: string): Promise<string | undefined>;
 }
 
+/**
+ * GoldSky bridge message representation
+ */
 export type GoldSkyBridgeMessage = GoldSkyMessage & {
-  origin_and_nonce: string;
+  origin_and_nonce?: string;
 
   send_tx?: string;
   sent_at?: string;
@@ -49,7 +52,7 @@ export class GoldSkyBridgeBackend
    */
   static checkEnvironment(environment: string): void {
     if (environment != 'production') {
-      throw new Error(`Only production environment is supported`);
+      throw new Error(`Only production environment is supported. Provided: ${environment}`);
     }
   }
 

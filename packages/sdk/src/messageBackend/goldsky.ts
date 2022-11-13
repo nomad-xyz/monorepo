@@ -85,16 +85,30 @@ export class GoldSkyBackend extends MessageBackend {
     this.context = context;
   }
 
+  /**
+   * Resolves current context used with the backend
+   * @returns Nomad context
+   */
   getContext(): NomadContext {
     return this.context;
   }
 
+  /**
+   * Checks whether the backend environment is supported
+   * @param environment name of the environment as string
+   */
   static checkEnvironment(environment: string): void {
     if (environment != 'production') {
-      throw new Error(`Only production environment is supported`);
+      throw new Error(`Only production environment is supported. Provided: ${environment}`);
     }
   }
 
+  /**
+   * Default GoldSky backend for the environment
+   * @param environment name of the environment as string
+   * @param context Nomad context to be used with the backend
+   * @returns 
+   */
   static default(
     environment: string | config.NomadConfig = 'development',
     context?: NomadContext,
@@ -138,9 +152,9 @@ export class GoldSkyBackend extends MessageBackend {
   }
 
   /**
-   * Prepares a Dispatch event from backend's internal message representation
+   * Prepares Dispatch events from backend's internal message representation
    *
-   * @returns A Dispatch event assiciated with transaction (if any)
+   * @returns Dispatch events assiciated with transaction (if any)
    */
   async getDispatches(
     tx: string,
@@ -227,10 +241,8 @@ export class GoldSkyBackend extends MessageBackend {
         ms.forEach((m) => this.storeMessage(m));
       }
     } else {
-      // messageHashes! are there as they are already tested in `enoughHashes` above
-      // getMessage(hash)! is also there as in order to get into `messageHashes` a message needs to get fetched
       if (!messageHashes)
-        throw new Error('messageHashes are unexpectedly not existing');
+        throw new Error('MessageHashes are unexpectedly not existing');
       ms = await Promise.all(
         messageHashes.map(async (hash) => {
           const message = await this.getMessage(hash);
@@ -332,6 +344,11 @@ export class GoldSkyBackend extends MessageBackend {
     return m && m.processed_at ? new Date(m.processed_at) : undefined;
   }
 
+  /**
+   * Gets destination domain for a specific message
+   * @param messageHash message hash identifier
+   * @returns destination domain id
+   */
   async destinationDomainId(messageHash: string): Promise<number | undefined> {
     let m = await this.getMessage(messageHash);
     if (!m?.destination_domain_id) m = await this.getMessage(messageHash, true);

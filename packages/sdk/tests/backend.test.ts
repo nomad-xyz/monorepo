@@ -12,7 +12,7 @@ describe('Backend internals', () => {
     const defaultCallSpy = jest.spyOn(GoldSkyBackend, 'default');
 
     const context = new NomadContext('production').withDefaultBackend();
-    const backend = new GoldSkyBackend('production', 'rerfg', context);
+    const backend = new GoldSkyBackend('production', 'dummy', context);
     context._backend = backend;
 
     const dispatchSpy = jest.spyOn(backend, 'getDispatches');

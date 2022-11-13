@@ -13,7 +13,7 @@ describe('Backend internals', () => {
     const defaultCallSpy = jest.spyOn(GoldSkyBridgeBackend, 'default');
 
     const context = new BridgeContext('production').withDefaultBackend();
-    const backend = new GoldSkyBridgeBackend('production', 'rerfg', context);
+    const backend = new GoldSkyBridgeBackend('production', 'dummy', context);
     context._backend = backend;
 
     const getMessageSpy = jest.spyOn(backend, 'getMessage');
