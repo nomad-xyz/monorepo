@@ -36,29 +36,15 @@ abstract contract DeployImplementationsLogic is Script, Config {
                        IMPLEMENTATION DEPLOYMENT
     //////////////////////////////////////////////////////////////*/
 
-    // NOTE: these init values do not map to correct expected values.
-    // Storage variables in implementation contracts don't matter.
-    // Purpose is to initialize the implementations as a matter of best practice,
-    // despite the fact that in Nomad's architecture,
-    // un-initialized implementations can't harm the protocol
-    // (unless, in the future, we introduce delegatecall in any implementations)
     function deployImplementations(string memory _domain) internal {
         // Home
         home = new Home(getDomainNumber(_domain));
-        // NOTE: must pass real value for UpdaterManager because it is queried
-        home.initialize(IUpdaterManager(address(getUpdaterManager(_domain))));
         // Replica
         replica = new Replica(getDomainNumber(_domain));
-        replica.initialize(0, address(0), bytes32(0), 0);
         // GovernanceRouter
         governanceRouter = new GovernanceRouter(
             getDomainNumber(_domain),
             getRecoveryTimelock(_domain)
-        );
-        // NOTE: must pass real value for xAppConnectionManager because it is queried
-        governanceRouter.initialize(
-            address(getXAppConnectionManager(_domain)),
-            address(0)
         );
         // BridgeRouter
         if (keccak256(bytes(_domain)) == keccak256(bytes("ethereum"))) {
@@ -70,13 +56,10 @@ abstract contract DeployImplementationsLogic is Script, Config {
         } else {
             bridgeRouter = new BridgeRouter();
         }
-        BridgeRouter(bridgeRouter).initialize(address(0), address(0));
         // TokenRegistry
         tokenRegistry = new TokenRegistry();
-        tokenRegistry.initialize(address(0), address(0));
         // BridgeToken
         bridgeToken = new BridgeToken();
-        bridgeToken.initialize();
     }
 }
 
@@ -91,7 +74,7 @@ contract DeployImplementations is DeployImplementationsLogic {
         string memory _configPath,
         string memory _outputFile,
         string memory _domain
-    ) external {
+    ) public {
         __Config_initialize(_configPath);
         // begin output file
         _outputFile = string(abi.encodePacked("./actions/", _outputFile));
