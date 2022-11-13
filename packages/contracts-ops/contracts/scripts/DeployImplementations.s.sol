@@ -45,6 +45,7 @@ abstract contract DeployImplementationsLogic is Script, Config {
     function deployImplementations(string memory _domain) internal {
         // Home
         home = new Home(getDomainNumber(_domain));
+        // NOTE: must pass real value for UpdaterManager because it is queried
         home.initialize(IUpdaterManager(address(getUpdaterManager(_domain))));
         // Replica
         replica = new Replica(getDomainNumber(_domain));
@@ -54,6 +55,7 @@ abstract contract DeployImplementationsLogic is Script, Config {
             getDomainNumber(_domain),
             getRecoveryTimelock(_domain)
         );
+        // NOTE: must pass real value for xAppConnectionManager because it is queried
         governanceRouter.initialize(
             address(getXAppConnectionManager(_domain)),
             address(0)
@@ -68,16 +70,10 @@ abstract contract DeployImplementationsLogic is Script, Config {
         } else {
             bridgeRouter = new BridgeRouter();
         }
-        BridgeRouter(bridgeRouter).initialize(
-            address(tokenRegistry),
-            address(getXAppConnectionManager(_domain))
-        );
+        BridgeRouter(bridgeRouter).initialize(address(0), address(0));
         // TokenRegistry
         tokenRegistry = new TokenRegistry();
-        tokenRegistry.initialize(
-            address(bridgeToken),
-            address(getXAppConnectionManager(_domain))
-        );
+        tokenRegistry.initialize(address(0), address(0));
         // BridgeToken
         bridgeToken = new BridgeToken();
         bridgeToken.initialize();
