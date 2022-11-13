@@ -55,7 +55,7 @@ interface INomadProtocol {
 
     function getNetworks() external returns (string[] memory);
 
-    function connections(string memory domain)
+    function getConnections(string memory domain)
         external
         returns (string[] memory);
 

@@ -56,7 +56,7 @@ abstract contract Config is INomadProtocol {
     }
 
     function coreAttributePath(string memory domain, string memory key)
-        private
+        internal
         pure
         returns (string memory)
     {
@@ -155,16 +155,24 @@ abstract contract Config is INomadProtocol {
             );
     }
 
+    function replicaOfPath(string memory local, string memory remote)
+        internal
+        pure
+        returns (string memory)
+    {
+        return string(abi.encodePacked(corePath(local), ".replicas.", remote));
+    }
+
     function replicaOfUpgrade(string memory local, string memory remote)
         public
         override
         returns (Upgrade memory)
     {
-        string memory path = string(
-            abi.encodePacked(corePath(local), ".replicas.", remote)
-        );
-        bytes memory res = vm.parseJson(config, path);
-        return abi.decode(res, (Upgrade));
+        return
+            abi.decode(
+                vm.parseJson(config, replicaOfPath(local, remote)),
+                (Upgrade)
+            );
     }
 
     function getReplicaOf(string memory local, string memory remote)
@@ -177,6 +185,11 @@ abstract contract Config is INomadProtocol {
 
     function getNetworks() public override returns (string[] memory) {
         return abi.decode(vm.parseJson(config, ".networks"), (string[]));
+    }
+
+    function getRpcs(string memory domain) public returns (string[] memory) {
+        string memory key = string(abi.encodePacked(".rpcs.", domain));
+        return abi.decode(vm.parseJson(config, key), (string[]));
     }
 
     function getGovernor() public override returns (address) {
@@ -204,7 +217,7 @@ abstract contract Config is INomadProtocol {
     }
 
     function bridgeAttributePath(string memory domain, string memory key)
-        private
+        internal
         pure
         returns (string memory)
     {
@@ -379,7 +392,7 @@ abstract contract Config is INomadProtocol {
         return vm.parseJson(config, accountantConfigAttributePath(domain, key));
     }
 
-    function connections(string memory domain)
+    function getConnections(string memory domain)
         public
         override
         onlyInitialized
