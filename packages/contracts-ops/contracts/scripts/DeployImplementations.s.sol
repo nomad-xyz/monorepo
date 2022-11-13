@@ -124,21 +124,22 @@ contract DeployImplementations is DeployImplementationsLogic {
         buffer.writeObjectOpen(indent, _domain);
         string memory inner = indent.nextIndent();
         // write implementations
-        writeImplementation(buffer, inner, "home", address(home));
-        writeImplementation(buffer, inner, "replica", address(replica));
-
+        writeImplementation(buffer, inner, "home", address(home), false);
+        writeImplementation(buffer, inner, "replica", address(replica), false);
         writeImplementation(
             buffer,
             inner,
             "governanceRouter",
-            address(governanceRouter)
+            address(governanceRouter),
+            false
         );
-        writeImplementation(buffer, inner, "bridgeRouter", bridgeRouter);
+        writeImplementation(buffer, inner, "bridgeRouter", bridgeRouter, false);
         writeImplementation(
             buffer,
             inner,
             "tokenRegistry",
-            address(tokenRegistry)
+            address(tokenRegistry),
+            false
         );
         writeImplementation(
             buffer,
@@ -148,15 +149,6 @@ contract DeployImplementations is DeployImplementationsLogic {
             true
         );
         buffer.writeObjectClose(indent, true);
-    }
-
-    function writeImplementation(
-        JsonWriter.Buffer memory buffer,
-        string memory inner,
-        string memory contractName,
-        address implementation
-    ) private {
-        writeImplementation(buffer, inner, contractName, implementation, false);
     }
 
     function writeImplementation(
