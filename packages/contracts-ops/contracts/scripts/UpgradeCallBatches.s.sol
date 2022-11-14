@@ -8,7 +8,6 @@ pragma abicoder v2;
 
 // Utilities
 import {Test} from "forge-std/Test.sol";
-import {console2} from "forge-std/console2.sol";
 
 // Ops libs
 import {Config} from "../Config.sol";
