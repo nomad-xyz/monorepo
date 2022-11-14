@@ -128,11 +128,12 @@ contract TokenRegistryTest is BridgeTest {
         public
     {
         vm.assume(domain != 0 && id != bytes32(0));
+        bytes32 tokenId = BridgeMessage.formatTokenId(domain, id);
         vm.startPrank(tokenRegistry.owner());
         if (domain == localDomain) {
             assertEq(
-                tokenRegistry.ensureLocalToken(domain, id),
-                TypeCasts.bytes32ToAddress(id)
+                tokenRegistry.ensureLocalToken(domain, tokenId),
+                TypeCasts.bytes32ToAddress(tokenId)
             );
             return;
         }
