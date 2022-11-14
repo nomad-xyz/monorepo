@@ -88,7 +88,6 @@ contract DeployImplementations is DeployImplementationsLogic {
         vm.startBroadcast();
         deployImplementations(_domain);
         write(buffer, indent.nextIndent(), _domain);
-        vm.stopBroadcast();
         // write final output
         buffer.writeObjectClose(indent, true);
         buffer.flushTo(outputFile);
