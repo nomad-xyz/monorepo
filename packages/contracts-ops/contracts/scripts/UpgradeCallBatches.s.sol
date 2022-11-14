@@ -134,14 +134,18 @@ contract UpgradeCallBatches is Test, Config, CallBatch {
     //////////////////////////////////////////////////////////////*/
 
     function generateGovernanceCalls(string memory domain) internal {
-        title("BeaconController upgrade encoded calls");
+        title("BeaconController upgrade encoded calls for", domain);
+        console2.log(
+            "Domain Number: ",
+            vm.toString(uint256(getDomainNumber(domain)))
+        );
         console2.log("Function signature: upgrade(address, address)");
         console2.log(
             "Arguments: <contract_beacon>, <new_implementation_address>"
         );
 
         upgradeHome = abi.encodeWithSignature(
-            "upgrade(address, address)",
+            "upgrade(address,address)",
             homeBeacon,
             homeImpl
         );
@@ -149,14 +153,14 @@ contract UpgradeCallBatches is Test, Config, CallBatch {
         console2.logBytes(upgradeHome);
 
         upgradeReplica = abi.encodeWithSignature(
-            "upgrade(address, address)",
+            "upgrade(address,address)",
             replicaBeacon,
             replicaImpl
         );
         console2.log("Upgrade Replica");
         console2.logBytes(upgradeReplica);
         upgradeGovRouter = abi.encodeWithSignature(
-            "upgrade(address, address)",
+            "upgrade(address,address)",
             governanceRouterBeacon,
             governanceRouterImpl
         );
@@ -164,7 +168,7 @@ contract UpgradeCallBatches is Test, Config, CallBatch {
         console2.logBytes(upgradeGovRouter);
 
         upgradeBridgeRouter = abi.encodeWithSignature(
-            "upgrade(address, address)",
+            "upgrade(address,address)",
             bridgeRouterBeacon,
             bridgeRouterImpl
         );
@@ -172,7 +176,7 @@ contract UpgradeCallBatches is Test, Config, CallBatch {
         console2.logBytes(upgradeBridgeRouter);
 
         upgradeTokenRegistry = abi.encodeWithSignature(
-            "upgrade(address, address)",
+            "upgrade(address,address)",
             tokenRegistryBeacon,
             tokenRegistryImpl
         );
@@ -180,7 +184,7 @@ contract UpgradeCallBatches is Test, Config, CallBatch {
         console2.logBytes(upgradeTokenRegistry);
 
         upgradeBridgeToken = abi.encodeWithSignature(
-            "upgrade(address, address)",
+            "upgrade(address,address)",
             bridgeTokenBeacon,
             bridgeTokenImpl
         );
