@@ -54,21 +54,21 @@ contract UpgradeCallBatches is Test, Config, CallBatch {
     bytes executeCallBatchCall;
 
     string configFile;
-    string[] remoteDomainNames;
+    string[] domainNames;
     string[] networksArray;
 
     function run(
         string memory _configFile,
-        string[] memory _remoteDomainNames,
+        string[] memory _domainNames,
         string memory _localDomainName,
         bool recovery
     ) external {
         localDomainName = _localDomainName;
-        remoteDomainNames = _remoteDomainNames;
+        domainNames = _domainNames;
         configFile = _configFile;
         setUp();
-        for (uint256 i; i < remoteDomainNames.length; i++) {
-            string memory domain = remoteDomainNames[i];
+        for (uint256 i; i < domainNames.length; i++) {
+            string memory domain = domainNames[i];
             loadBeacons(domain);
             loadImplementations(domain);
             loadController(domain);
