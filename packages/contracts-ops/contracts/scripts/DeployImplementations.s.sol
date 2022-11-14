@@ -76,68 +76,43 @@ contract DeployImplementations is DeployImplementationsLogic {
     function updateImpl(string memory _domain, string memory _configPath)
         internal
     {
-        string memory valueKey = string(
-            abi.encodePacked(".core.", _domain, ".home", ".implementation")
-        );
-        vm.writeJson(vm.toString(address(home)), _configPath, valueKey);
-        valueKey = string(
-            abi.encodePacked(
-                ".core.",
-                _domain,
-                ".governanceRouter",
-                ".implementation"
-            )
+        vm.writeJson(
+            vm.toString(address(home)),
+            _configPath,
+            coreAttributePath(_domain, "home.implementation")
         );
         vm.writeJson(
             vm.toString(address(governanceRouter)),
             _configPath,
-            valueKey
+            coreAttributePath(_domain, "governanceRouter.implementation")
         );
         string[] memory connections = getConnections(_domain);
         for (uint256 i; i < connections.length; i++) {
-            valueKey = string(
-                abi.encodePacked(
-                    ".core.",
-                    _domain,
-                    ".replicas.",
-                    connections[i],
-                    ".implementation"
+            vm.writeJson(
+                vm.toString(address(replica)),
+                _configPath,
+                string(
+                    abi.encodePacked(
+                        replicaOfPath(_domain, connections[i]),
+                        ".implementation"
+                    )
                 )
             );
-            vm.writeJson(vm.toString(address(replica)), _configPath, valueKey);
         }
-        valueKey = string(
-            abi.encodePacked(
-                ".bridge.",
-                _domain,
-                ".bridgeRouter",
-                ".implementation"
-            )
+        vm.writeJson(
+            vm.toString(address(bridgeRouter)),
+            _configPath,
+            bridgeAttributePath(_domain, "bridgeRouter.implementation")
         );
-        vm.writeJson(vm.toString(address(bridgeRouter)), _configPath, valueKey);
-
-        valueKey = string(
-            abi.encodePacked(
-                ".bridge.",
-                _domain,
-                ".bridgeToken",
-                ".implementation"
-            )
-        );
-        vm.writeJson(vm.toString(address(bridgeToken)), _configPath, valueKey);
-
-        valueKey = string(
-            abi.encodePacked(
-                ".bridge.",
-                _domain,
-                ".tokenRegistry",
-                ".implementation"
-            )
+        vm.writeJson(
+            vm.toString(address(bridgeToken)),
+            _configPath,
+            bridgeAttributePath(_domain, "bridgeToken.implementation")
         );
         vm.writeJson(
             vm.toString(address(tokenRegistry)),
             _configPath,
-            valueKey
+            bridgeAttributePath(_domain, "tokenRegistry.implementation")
         );
     }
 }
