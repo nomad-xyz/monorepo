@@ -7,13 +7,16 @@ pragma abicoder v2;
     //////////////////////////////////////////////////////////////*/
 
 // Utilities
-import {Test} from "forge-std/Test.sol";
+import {Script, console2} from "forge-std/Script.sol";
 
 // Ops libs
 import {Config} from "../Config.sol";
 import {CallBatch} from "../CallBatch.sol";
 
-contract UpgradeCallBatches is Test, Config, CallBatch {
+// Contract for selector
+import {UpgradeBeaconController} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeaconController.sol";
+
+contract UpgradeCallBatches is Script, Config, CallBatch {
     /*//////////////////////////////////////////////////////////////
                                  BEACONS
     //////////////////////////////////////////////////////////////*/
@@ -56,7 +59,7 @@ contract UpgradeCallBatches is Test, Config, CallBatch {
     string[] domainNames;
     string[] networksArray;
 
-    function run(
+    function printCallBatches(
         string memory _configFile,
         string[] memory _domainNames,
         string memory _localDomainName,
@@ -68,9 +71,6 @@ contract UpgradeCallBatches is Test, Config, CallBatch {
         setUp();
         for (uint256 i; i < domainNames.length; i++) {
             string memory domain = domainNames[i];
-            loadBeacons(domain);
-            loadImplementations(domain);
-            loadController(domain);
             generateGovernanceCalls(domain);
         }
         writeCallBatch(recovery);
@@ -88,46 +88,6 @@ contract UpgradeCallBatches is Test, Config, CallBatch {
         networksArray = getNetworks();
     }
 
-    function loadBeacons(string memory domain) internal {
-        bridgeTokenBeacon = address(bridgeTokenUpgrade(domain).beacon);
-        tokenRegistryBeacon = address(tokenRegistryUpgrade(domain).beacon);
-        bridgeRouterBeacon = address(bridgeRouterUpgrade(domain).beacon);
-        governanceRouterBeacon = address(
-            governanceRouterUpgrade(domain).beacon
-        );
-        governanceRouterProxy = address(governanceRouterUpgrade(domain).proxy);
-        for (uint256 i; i < networksArray.length; i++) {
-            if (!compareStrings(networksArray[i], domain)) {
-                replicaBeacon = address(
-                    replicaOfUpgrade(domain, networksArray[i]).beacon
-                );
-                break;
-            }
-            homeImpl = address(homeUpgrade(domain).beacon);
-        }
-        homeBeacon = address(homeUpgrade(domain).beacon);
-    }
-
-    function loadImplementations(string memory domain) internal {
-        bridgeTokenImpl = bridgeTokenUpgrade(domain).implementation;
-        tokenRegistryImpl = tokenRegistryUpgrade(domain).implementation;
-        bridgeRouterImpl = bridgeRouterUpgrade(domain).implementation;
-        governanceRouterImpl = governanceRouterUpgrade(domain).implementation;
-        // All replicas have the same implmentation
-        for (uint256 i; i < networksArray.length; i++) {
-            if (!compareStrings(networksArray[i], domain)) {
-                replicaImpl = replicaOfUpgrade(domain, networksArray[i])
-                    .implementation;
-                break;
-            }
-            homeImpl = homeUpgrade(domain).implementation;
-        }
-    }
-
-    function loadController(string memory domain) internal {
-        beaconController = address(getUpgradeBeaconController(domain));
-    }
-
     /*//////////////////////////////////////////////////////////////
                        GOVERNANCE CALL GENERATORS
     //////////////////////////////////////////////////////////////*/
@@ -143,53 +103,54 @@ contract UpgradeCallBatches is Test, Config, CallBatch {
             "Arguments: <contract_beacon>, <new_implementation_address>"
         );
 
-        upgradeHome = abi.encodeWithSignature(
-            "upgrade(address,address)",
+        upgradeHome = abi.encodeWithSelector(
+            UpgradeBeaconController.upgrade.selector,
             homeBeacon,
             homeImpl
         );
         console2.log("Upgrade Home");
         console2.logBytes(upgradeHome);
 
-        upgradeReplica = abi.encodeWithSignature(
-            "upgrade(address,address)",
+        upgradeReplica = abi.encodeWithSelector(
+            UpgradeBeaconController.upgrade.selector,
             replicaBeacon,
             replicaImpl
         );
         console2.log("Upgrade Replica");
         console2.logBytes(upgradeReplica);
-        upgradeGovRouter = abi.encodeWithSignature(
-            "upgrade(address,address)",
+        upgradeGovRouter = abi.encodeWithSelector(
+            UpgradeBeaconController.upgrade.selector,
             governanceRouterBeacon,
             governanceRouterImpl
         );
         console2.log("Upgrade Governance Router");
         console2.logBytes(upgradeGovRouter);
 
-        upgradeBridgeRouter = abi.encodeWithSignature(
-            "upgrade(address,address)",
+        upgradeBridgeRouter = abi.encodeWithSelector(
+            UpgradeBeaconController.upgrade.selector,
             bridgeRouterBeacon,
             bridgeRouterImpl
         );
         console2.log("Upgrade Bridge Router");
         console2.logBytes(upgradeBridgeRouter);
 
-        upgradeTokenRegistry = abi.encodeWithSignature(
-            "upgrade(address,address)",
+        upgradeTokenRegistry = abi.encodeWithSelector(
+            UpgradeBeaconController.upgrade.selector,
             tokenRegistryBeacon,
             tokenRegistryImpl
         );
         console2.log("Upgrade Token Registry");
         console2.logBytes(upgradeTokenRegistry);
 
-        upgradeBridgeToken = abi.encodeWithSignature(
-            "upgrade(address,address)",
+        upgradeBridgeToken = abi.encodeWithSelector(
+            UpgradeBeaconController.upgrade.selector,
             bridgeTokenBeacon,
             bridgeTokenImpl
         );
         console2.log("Upgrade Bridge Token");
         console2.logBytes(upgradeBridgeToken);
-        if (compareStrings(domain, localDomainName)) {
+        uint32 domainNumber = getDomainNumber(domain);
+        if (domainNumber == getDomainNumber(localDomainName)) {
             pushLocal(beaconController, upgradeBridgeToken);
             pushLocal(beaconController, upgradeTokenRegistry);
             pushLocal(beaconController, upgradeBridgeRouter);
@@ -197,7 +158,6 @@ contract UpgradeCallBatches is Test, Config, CallBatch {
             pushLocal(beaconController, upgradeReplica);
             pushLocal(beaconController, upgradeHome);
         } else {
-            uint32 domainNumber = getDomainNumber(domain);
             pushRemote(beaconController, upgradeBridgeToken, domainNumber);
             pushRemote(beaconController, upgradeTokenRegistry, domainNumber);
             pushRemote(beaconController, upgradeBridgeRouter, domainNumber);
@@ -211,25 +171,17 @@ contract UpgradeCallBatches is Test, Config, CallBatch {
                                 UTILITIES
     //////////////////////////////////////////////////////////////*/
 
-    function title(string memory title1) internal {
+    function title(string memory title1) internal view {
         console2.log("===========================");
         console2.log(title1);
         console2.log("===========================");
     }
 
-    function title(string memory title1, string memory title2) internal {
+    function title(string memory title1, string memory title2) internal view {
         console2.log(" ");
         console2.log("===========================");
         console2.log(title1, title2);
         console2.log("===========================");
         console2.log(" ");
-    }
-
-    function compareStrings(string memory a, string memory b)
-        internal
-        returns (bool)
-    {
-        return (keccak256(abi.encodePacked(a)) ==
-            keccak256(abi.encodePacked(b)));
     }
 }
