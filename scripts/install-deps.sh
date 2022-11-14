@@ -16,4 +16,4 @@ if [ -d "../lib/forge-std" ]; then
     rm -rf ../lib/forge-std
   fi
 fi
-forge install foundry-rs/forge-std@be5c649 --no-git
+forge install foundry-rs/forge-std@33d4895 --no-git

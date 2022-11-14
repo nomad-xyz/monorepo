@@ -87,7 +87,7 @@ contract DABridgeMessageTest is Test {
             _dataRoot
         );
         bytes29 _view = message.ref(0);
-        vm.expectRevert(stdError.lowLevelError);
+        vm.expectRevert(bytes(""));
         _view.getTypedView();
     }
 
