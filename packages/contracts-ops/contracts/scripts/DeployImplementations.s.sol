@@ -140,7 +140,7 @@ contract DeployImplementations is DeployImplementationsLogic {
             "bridgeToken",
             bridgeTokenUpgrade(_domain),
             address(bridgeToken),
-            true
+            false,
         );
         writeImplementation(
             buffer,
@@ -148,7 +148,7 @@ contract DeployImplementations is DeployImplementationsLogic {
             "tokenRegistry",
             tokenRegistryUpgrade(_domain),
             address(tokenRegistry),
-            false
+            true
         );
         buffer.writeObjectClose(indent, true);
     }
