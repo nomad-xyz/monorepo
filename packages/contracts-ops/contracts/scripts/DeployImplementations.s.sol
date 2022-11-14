@@ -140,7 +140,7 @@ contract DeployImplementations is DeployImplementationsLogic {
             "bridgeToken",
             bridgeTokenUpgrade(_domain),
             address(bridgeToken),
-            false,
+            false
         );
         writeImplementation(
             buffer,
