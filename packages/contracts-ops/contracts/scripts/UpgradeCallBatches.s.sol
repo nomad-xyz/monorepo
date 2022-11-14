@@ -11,8 +11,8 @@ import {Test} from "forge-std/Test.sol";
 import {console2} from "forge-std/console2.sol";
 
 // Ops libs
-import {Config} from "../../contracts/Config.sol";
-import {CallBatch} from "../../contracts/Callbatch.sol";
+import {Config} from "../Config.sol";
+import {CallBatch} from "../CallBatch.sol";
 
 contract UpgradeCallBatches is Test, Config, CallBatch {
     /*//////////////////////////////////////////////////////////////
