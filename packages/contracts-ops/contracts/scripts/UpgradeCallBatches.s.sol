@@ -78,11 +78,14 @@ contract UpgradeCallBatches is Test, Config, CallBatch {
     }
 
     function setUp() internal {
-        localDomain = getDomainNumber(localDomainName);
         __Config_initialize(configFile);
-        console2.log(config);
-        string memory outputFile = "actions/upgradeActions.json";
-        __CallBatch_initialize(localDomainName, localDomain, outputFile, true);
+        string memory outputFile = "upgradeActions.json";
+        __CallBatch_initialize(
+            localDomainName,
+            getDomainNumber(localDomainName),
+            outputFile,
+            true
+        );
         networksArray = getNetworks();
     }
 
