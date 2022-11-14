@@ -86,6 +86,7 @@ contract UpgradeCallBatches is Script, Config, CallBatch {
             true
         );
         networksArray = getNetworks();
+        console2.log("Governance Actions have been output to", outputFile);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -93,62 +94,36 @@ contract UpgradeCallBatches is Script, Config, CallBatch {
     //////////////////////////////////////////////////////////////*/
 
     function generateGovernanceCalls(string memory domain) internal {
-        title("BeaconController upgrade encoded calls for", domain);
-        console2.log(
-            "Domain Number: ",
-            vm.toString(uint256(getDomainNumber(domain)))
-        );
-        console2.log("Function signature: upgrade(address, address)");
-        console2.log(
-            "Arguments: <contract_beacon>, <new_implementation_address>"
-        );
-
         upgradeHome = abi.encodeWithSelector(
             UpgradeBeaconController.upgrade.selector,
             homeBeacon,
             homeImpl
         );
-        console2.log("Upgrade Home");
-        console2.logBytes(upgradeHome);
-
         upgradeReplica = abi.encodeWithSelector(
             UpgradeBeaconController.upgrade.selector,
             replicaBeacon,
             replicaImpl
         );
-        console2.log("Upgrade Replica");
-        console2.logBytes(upgradeReplica);
         upgradeGovRouter = abi.encodeWithSelector(
             UpgradeBeaconController.upgrade.selector,
             governanceRouterBeacon,
             governanceRouterImpl
         );
-        console2.log("Upgrade Governance Router");
-        console2.logBytes(upgradeGovRouter);
-
         upgradeBridgeRouter = abi.encodeWithSelector(
             UpgradeBeaconController.upgrade.selector,
             bridgeRouterBeacon,
             bridgeRouterImpl
         );
-        console2.log("Upgrade Bridge Router");
-        console2.logBytes(upgradeBridgeRouter);
-
         upgradeTokenRegistry = abi.encodeWithSelector(
             UpgradeBeaconController.upgrade.selector,
             tokenRegistryBeacon,
             tokenRegistryImpl
         );
-        console2.log("Upgrade Token Registry");
-        console2.logBytes(upgradeTokenRegistry);
-
         upgradeBridgeToken = abi.encodeWithSelector(
             UpgradeBeaconController.upgrade.selector,
             bridgeTokenBeacon,
             bridgeTokenImpl
         );
-        console2.log("Upgrade Bridge Token");
-        console2.logBytes(upgradeBridgeToken);
         uint32 domainNumber = getDomainNumber(domain);
         if (domainNumber == getDomainNumber(localDomainName)) {
             pushLocal(beaconController, upgradeBridgeToken);
@@ -165,23 +140,5 @@ contract UpgradeCallBatches is Script, Config, CallBatch {
             pushRemote(beaconController, upgradeReplica, domainNumber);
             pushRemote(beaconController, upgradeHome, domainNumber);
         }
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                                UTILITIES
-    //////////////////////////////////////////////////////////////*/
-
-    function title(string memory title1) internal view {
-        console2.log("===========================");
-        console2.log(title1);
-        console2.log("===========================");
-    }
-
-    function title(string memory title1, string memory title2) internal view {
-        console2.log(" ");
-        console2.log("===========================");
-        console2.log(title1, title2);
-        console2.log("===========================");
-        console2.log(" ");
     }
 }
