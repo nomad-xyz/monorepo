@@ -4,8 +4,6 @@ import * as config from '@nomad-xyz/configuration';
 import { BridgeContext } from './BridgeContext';
 import { nulls2undefined } from '@nomad-xyz/sdk/src/messageBackend/utils';
 
-const defaultGoldSkySecret = '';
-
 /**
  * Abstract class required for operation of NomadMessage
  */
@@ -51,9 +49,15 @@ export class GoldSkyBridgeBackend
    * @param environment environment to check
    */
   static checkEnvironment(environment: string): void {
-    if (environment != 'production') {
-      throw new Error(`Only production environment is supported. Provided: ${environment}`);
-    }
+    GoldSkyBackend.checkEnvironment(environment);
+  }
+
+  /**
+   *  Returns default secret for Goldsky
+   * @returns secret as a string
+   */
+  static defaultSecret(): string {
+    return GoldSkyBackend.defaultSecret();
   }
 
   /**
@@ -70,7 +74,7 @@ export class GoldSkyBridgeBackend
 
     GoldSkyBridgeBackend.checkEnvironment(environmentString);
 
-    const secret = process.env.GOLDSKY_SECRET || defaultGoldSkySecret;
+    const secret = process.env.GOLDSKY_SECRET || GoldSkyBridgeBackend.defaultSecret();
     if (!secret) throw new Error(`GOLDSKY_SECRET not found in env`);
     return new GoldSkyBridgeBackend(environmentString, secret, context);
   }
@@ -257,17 +261,12 @@ export class GoldSkyBridgeBackend
       }
     `;
 
-    const headers = {
-      'content-type': 'application/json',
-      'x-hasura-admin-secret': this._secret,
-    };
-
     const filter = {
       ...GoldSkyBackend.fillFilter(f),
       limit: limit || null,
     };
 
-    const response = await request(this.uri, query, filter, headers);
+    const response = await request(this.uri, query, filter, this.headers);
 
     const events: GoldSkyBridgeMessage[] = nulls2undefined(response.events);
 

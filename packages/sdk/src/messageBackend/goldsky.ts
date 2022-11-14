@@ -6,7 +6,12 @@ import * as config from '@nomad-xyz/configuration';
 import { NomadContext } from '..';
 import { nulls2undefined } from './utils';
 
-const defaultGoldSkySecret = '';
+const defaultGoldSkySecret = "mpa%H&RAHu9;eUe";
+
+const supportedEnvironments = [
+  "production",
+  "staging",
+];
 
 /**
  * Filter that is used to fetch data from GoldSky
@@ -98,9 +103,17 @@ export class GoldSkyBackend extends MessageBackend {
    * @param environment name of the environment as string
    */
   static checkEnvironment(environment: string): void {
-    if (environment != 'production') {
-      throw new Error(`Only production environment is supported. Provided: ${environment}`);
+    if (!supportedEnvironments.includes(environment)) {
+      throw new Error(`Only the following environments are supported: ${supportedEnvironments.join(', ')}. Provided: ${environment}`);
     }
+  }
+
+  /**
+   *  Returns default secret for Goldsky
+   * @returns secret as a string
+   */
+  static defaultSecret(): string {
+    return defaultGoldSkySecret;
   }
 
   /**
@@ -118,7 +131,7 @@ export class GoldSkyBackend extends MessageBackend {
 
     GoldSkyBackend.checkEnvironment(environmentString);
 
-    const secret = process.env.GOLDSKY_SECRET || defaultGoldSkySecret;
+    const secret = process.env.GOLDSKY_SECRET || GoldSkyBackend.defaultSecret();
     if (!secret) throw new Error(`GOLDSKY_SECRET not found in env`);
 
     return new GoldSkyBackend(
@@ -149,6 +162,19 @@ export class GoldSkyBackend extends MessageBackend {
   get uri(): string {
     // return `https://${this.env}.goldsky.io/c/nomad/gql/v1/graphql`
     return `https://api.goldsky.io/c/nomad/gql/v1/graphql`;
+  }
+
+  /**
+   * Prepares headers for connecting to hasura
+   */
+  get headers(): {
+    'content-type': string;
+    'x-goldsky-secret': string;
+  } {
+    return {
+      'content-type': 'application/json',
+      'x-goldsky-secret': this._secret,
+    };
   }
 
   /**
@@ -433,17 +459,12 @@ export class GoldSkyBackend extends MessageBackend {
       }
     `;
 
-    const headers = {
-      'content-type': 'application/json',
-      'x-hasura-admin-secret': this._secret,
-    };
-
     const filter = {
       ...GoldSkyBackend.fillFilter(f),
       limit: limit || null,
     };
 
-    const response = await request(this.uri, query, filter, headers);
+    const response = await request(this.uri, query, filter, this.headers);
 
     const events: GoldSkyMessage[] = nulls2undefined(response.events);
 
