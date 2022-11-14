@@ -127,7 +127,7 @@ contract TokenRegistryTest is BridgeTest {
     function test_ensureLocalTokenDeployFuzzed(uint32 domain, bytes32 id)
         public
     {
-        vm.assume(domain != 0 && id != bytes32(0));
+        vm.assume(domain != 0 && TypeCasts.bytes32ToAddress(id) != address(0));
         vm.startPrank(tokenRegistry.owner());
         if (domain == localDomain) {
             assertEq(
