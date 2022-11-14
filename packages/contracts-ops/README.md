@@ -23,7 +23,7 @@ Contains forge scripts for Nomad system maintenance
 
 ## Scripts & Entrypoints
 
-- `RotateUpdaters.sol`
+- `RotateUpdaters.s.sol`
   - Rotates updaters of the Home and all Replicas on a given chain
   - Uses `Config` and `CallBatch`
   - Entrypoints:
@@ -33,6 +33,17 @@ Contains forge scripts for Nomad system maintenance
     - `createRecoveryTx(configFile, localDomain, outputFile)`
       - Outputs a built transaction, suitable for submitting to the
         governance router via the recovery manager
+- `UpgradeCallBatches.s.sol`
+  - Builds the calldata needed to be sent from the multi-sigs to upgrade the protocol
+  - uses `CallBatch` and `Config`
+  - Entrypoint:
+    - `printCallBatches(string,string[],string,bool)`:
+      - config path (e.g `actions/production.json`)
+      - list of domains for which batches should be built (e.g `[evmos,ethereum,moonbeam]`)
+      - name of the domain that should be considered as local (e.g `ethereum`)
+      - `true` if scripts should run for recovery mode, `false` otherwise
+  - Example:
+    - `FOUNDRY_PROFILE=ops forge script UpgradeCallBatches --sig "printCallBatches(string,string[],string,bool)" "actions/production.json" "[evmos,avalanche,xdai,milkomedaC1,moonbeam,ethereum]" "ethereum" true`
 
 ## Usage
 
