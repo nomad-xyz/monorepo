@@ -7,14 +7,18 @@ const domainA = 1001;
 const domainB = 1002;
 
 describe('NomadContext', () => {
-  it('fetches from hosted configs', async () => {
+  // TODO: figure out a better unit test this
+  // we should not fetch from a hosted url in our unit tests
+  it.skip('fetches from hosted configs', async () => {
     for (const env of ENVIRONMENTS) {
       const context = await NomadContext.fetch(env, false);
       expect(context).toBeDefined();
     }
   });
 
-  it('Is properly instantiated from a NomadConfig', async () => {
+  // TODO: figure out a better unit test this
+  // we should not fetch from a hosted url in our unit tests
+  it.skip('Is properly instantiated from a NomadConfig', async () => {
     for (const env of ENVIRONMENTS) {
       const conf = await NomadContext.fetchConfig(env);
       const context = new NomadContext(conf);
