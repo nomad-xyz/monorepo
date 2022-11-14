@@ -64,92 +64,80 @@ abstract contract DeployImplementationsLogic is Script, Config {
 }
 
 contract DeployImplementations is DeployImplementationsLogic {
-    using JsonWriter for JsonWriter.Buffer;
-    using JsonWriter for string;
-
-    JsonWriter.File outputFile;
-
     // entrypoint
-    function deploy(
-        string memory _configPath,
-        string memory _outputFile,
-        string memory _domain
-    ) public {
+    function deploy(string memory _configPath, string memory _domain) public {
         __Config_initialize(_configPath);
-        // begin output file
-        _outputFile = string(abi.encodePacked("./actions/", _outputFile));
-        outputFile.path = _outputFile;
-        outputFile.overwrite = false;
-        JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
-        string memory indent = "";
-        buffer.writeObjectOpen(indent);
-        // loop through domains and deploy implementations
         vm.createSelectFork(getRpcs(_domain)[0]);
         vm.startBroadcast();
         deployImplementations(_domain);
-        write(buffer, indent.nextIndent(), _domain);
-        // write final output
-        buffer.writeObjectClose(indent, true);
-        buffer.flushTo(outputFile);
+        updateImpl(_domain, _configPath);
     }
 
-    function write(
-        JsonWriter.Buffer memory buffer,
-        string memory indent,
-        string memory _domain
-    ) private {
-        // start
-        buffer.writeObjectOpen(indent, _domain);
-        string memory inner = indent.nextIndent();
-        // write implementations
-        writeImplementation(buffer, inner, "home", address(home), false);
-        writeImplementation(buffer, inner, "replica", address(replica), false);
-        writeImplementation(
-            buffer,
-            inner,
-            "governanceRouter",
-            address(governanceRouter),
-            false
+    function updateImpl(string memory _domain, string memory _configPath)
+        internal
+    {
+        string memory valueKey = string(
+            abi.encodePacked(".core.", _domain, ".home", ".implementation")
         );
-        writeImplementation(
-            buffer,
-            inner,
-            "bridgeRouter",
-            address(bridgeRouter),
-            false
+        vm.writeJson(vm.toString(address(home)), _configPath, valueKey);
+        valueKey = string(
+            abi.encodePacked(
+                ".core.",
+                _domain,
+                ".governanceRouter",
+                ".implementation"
+            )
         );
-        writeImplementation(
-            buffer,
-            inner,
-            "tokenRegistry",
-            address(tokenRegistry),
-            false
+        vm.writeJson(
+            vm.toString(address(governanceRouter)),
+            _configPath,
+            valueKey
         );
-        writeImplementation(
-            buffer,
-            inner,
-            "bridgeToken",
-            address(bridgeToken),
-            true
+        string[] memory connections = getConnections(_domain);
+        for (uint256 i; i < connections.length; i++) {
+            valueKey = string(
+                abi.encodePacked(
+                    ".core.",
+                    _domain,
+                    ".replicas.",
+                    connections[i],
+                    ".implementation"
+                )
+            );
+            vm.writeJson(vm.toString(address(replica)), _configPath, valueKey);
+        }
+        valueKey = string(
+            abi.encodePacked(
+                ".bridge.",
+                _domain,
+                ".bridgeRouter",
+                ".implementation"
+            )
         );
-        buffer.writeObjectClose(indent, true);
-    }
+        vm.writeJson(vm.toString(address(bridgeRouter)), _configPath, valueKey);
 
-    function writeImplementation(
-        JsonWriter.Buffer memory buffer,
-        string memory inner,
-        string memory contractName,
-        address implementation,
-        bool terminal
-    ) private {
-        string[2][] memory kvs = new string[2][](1);
-        kvs[0][0] = "implementation";
-        kvs[0][1] = vm.toString(address(implementation));
-        buffer.writeSimpleObject(
-            inner.nextIndent(),
-            contractName,
-            kvs,
-            terminal
+        valueKey = string(
+            abi.encodePacked(
+                ".bridge.",
+                _domain,
+                ".bridgeToken",
+                ".implementation"
+            )
+        );
+        vm.writeJson(vm.toString(address(bridgeToken)), _configPath, valueKey);
+
+        valueKey = string(
+            abi.encodePacked(
+                ".bridge.",
+                _domain,
+                ".tokenRegistry",
+                ".implementation"
+            )
+        );
+        vm.writeJson(
+            vm.toString(address(tokenRegistry)),
+            _configPath,
+            valueKey
         );
     }
 }

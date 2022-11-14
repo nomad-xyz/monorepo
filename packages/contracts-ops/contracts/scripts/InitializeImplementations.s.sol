@@ -9,11 +9,10 @@ contract DeployAndInitializeImplementations is DeployImplementations {
     // entrypoint
     function deployAndInitialize(
         string memory _configPath,
-        string memory _outputFile,
         string memory _domain
     ) public {
         // deploy implementations & write their values to _outputFile
-        deploy(_configPath, _outputFile, _domain);
+        deploy(_configPath, _domain);
         // initialize implementations
         initializeImplementations(_domain);
     }
