@@ -18,7 +18,6 @@ import {INomadProtocol} from "./test/utils/INomadProtocol.sol";
 
 import "forge-std/Vm.sol";
 import "forge-std/Test.sol";
-import "forge-std/console2.sol";
 
 abstract contract Config is INomadProtocol {
     Vm private constant vm =
