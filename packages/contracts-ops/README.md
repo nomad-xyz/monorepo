@@ -37,13 +37,13 @@ Contains forge scripts for Nomad system maintenance
   - Builds the calldata needed to be sent from the multi-sigs to upgrade the protocol
   - uses `CallBatch` and `Config`
   - Entrypoint:
-    - `run(string,string[],string,bool)`:
+    - `printCallBatches(string,string[],string,bool)`:
       - config path (e.g `actions/production.json`)
       - list of domains for which batches should be built (e.g `[evmos,ethereum,moonbeam]`)
       - name of the domain that should be considered as local (e.g `ethereum`)
       - `true` if scripts should run for recovery mode, `false` otherwise
   - Example:
-    - `FOUNDRY_PROFILE=ops forge script UpgradeCallBatches --sig "run(string,string[],string,bool)" "actions/production.json" "[evmos,avalanche,xdai,milkomedaC1,moonbeam,ethereum]" "ethereum" true`
+    - `FOUNDRY_PROFILE=ops forge script UpgradeCallBatches --sig "printCallBatches(string,string[],string,bool)" "actions/production.json" "[evmos,avalanche,xdai,milkomedaC1,moonbeam,ethereum]" "ethereum" true`
 
 ## Usage
 
