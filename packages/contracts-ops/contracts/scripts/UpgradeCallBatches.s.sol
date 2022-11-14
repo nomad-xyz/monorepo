@@ -17,6 +17,8 @@ import {CallBatch} from "../CallBatch.sol";
 import {UpgradeBeaconController} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeaconController.sol";
 
 contract UpgradeCallBatches is Script, Config, CallBatch {
+    string currentDomain;
+
     function printCallBatches(
         string memory _configFile,
         string[] memory _domainNames,
@@ -26,8 +28,8 @@ contract UpgradeCallBatches is Script, Config, CallBatch {
         localDomainName = _localDomainName;
         setUp(_configFile);
         for (uint256 i; i < _domainNames.length; i++) {
-            string memory domain = _domainNames[i];
-            generateGovernanceCalls(domain);
+            currentDomain = _domainNames[i];
+            generateGovernanceCalls();
         }
         writeCallBatch(recovery);
     }
@@ -48,73 +50,31 @@ contract UpgradeCallBatches is Script, Config, CallBatch {
                        GOVERNANCE CALL GENERATORS
     //////////////////////////////////////////////////////////////*/
 
-    function generateGovernanceCalls(string memory domain) internal {
-        bytes memory upgradeHome;
-        bytes memory upgradeReplica;
-        bytes memory upgradeGovRouter;
-        bytes memory upgradeBridgeRouter;
-        bytes memory upgradeTokenRegistry;
-        bytes memory upgradeBridgeToken;
+    function generateGovernanceCalls() internal {
+        pushUpgrade(governanceRouterUpgrade(currentDomain));
+        pushUpgrade(bridgeRouterUpgrade(currentDomain));
+        pushUpgrade(bridgeTokenUpgrade(currentDomain));
+        pushUpgrade(tokenRegistryUpgrade(currentDomain));
+        pushUpgrade(homeUpgrade(currentDomain));
+        pushUpgrade(
+            replicaOfUpgrade(currentDomain, getConnections(currentDomain)[0])
+        );
+    }
 
-        upgradeHome = abi.encodeWithSelector(
+    function pushUpgrade(Upgrade memory _upgrade) private {
+        bytes memory call = abi.encodeWithSelector(
             UpgradeBeaconController.upgrade.selector,
-            address(homeUpgrade(domain).beacon),
-            address(homeUpgrade(domain).implementation)
+            address(_upgrade.beacon),
+            address(_upgrade.implementation)
         );
-        string[] memory networks = getNetworks();
-        address replicaImpl;
-        address replicaBeacon;
-        for (uint256 i; i < networks.length; i++) {
-            if (getDomainNumber(networks[i]) != getDomainNumber(domain)) {
-                replicaImpl = address(
-                    replicaOfUpgrade(domain, networks[i]).implementation
-                );
-                replicaBeacon = address(
-                    replicaOfUpgrade(domain, networks[i]).beacon
-                );
-            }
-        }
-        upgradeReplica = abi.encodeWithSelector(
-            UpgradeBeaconController.upgrade.selector,
-            replicaBeacon,
-            replicaImpl
+        uint32 domainNumber = getDomainNumber(currentDomain);
+        address beaconController = address(
+            getUpgradeBeaconController(currentDomain)
         );
-        upgradeGovRouter = abi.encodeWithSelector(
-            UpgradeBeaconController.upgrade.selector,
-            address(governanceRouterUpgrade(domain).beacon),
-            address(governanceRouterUpgrade(domain).implementation)
-        );
-        upgradeBridgeRouter = abi.encodeWithSelector(
-            UpgradeBeaconController.upgrade.selector,
-            address(bridgeRouterUpgrade(domain).beacon),
-            address(bridgeRouterUpgrade(domain).implementation)
-        );
-        upgradeTokenRegistry = abi.encodeWithSelector(
-            UpgradeBeaconController.upgrade.selector,
-            address(tokenRegistryUpgrade(domain).beacon),
-            address(tokenRegistryUpgrade(domain).implementation)
-        );
-        upgradeBridgeToken = abi.encodeWithSelector(
-            UpgradeBeaconController.upgrade.selector,
-            address(bridgeTokenUpgrade(domain).beacon),
-            address(bridgeTokenUpgrade(domain).implementation)
-        );
-        uint32 domainNumber = getDomainNumber(domain);
-        address beaconController = address(getUpgradeBeaconController(domain));
         if (domainNumber == getDomainNumber(localDomainName)) {
-            pushLocal(beaconController, upgradeBridgeToken);
-            pushLocal(beaconController, upgradeTokenRegistry);
-            pushLocal(beaconController, upgradeBridgeRouter);
-            pushLocal(beaconController, upgradeGovRouter);
-            pushLocal(beaconController, upgradeReplica);
-            pushLocal(beaconController, upgradeHome);
+            pushLocal(beaconController, call);
         } else {
-            pushRemote(beaconController, upgradeBridgeToken, domainNumber);
-            pushRemote(beaconController, upgradeTokenRegistry, domainNumber);
-            pushRemote(beaconController, upgradeBridgeRouter, domainNumber);
-            pushRemote(beaconController, upgradeGovRouter, domainNumber);
-            pushRemote(beaconController, upgradeReplica, domainNumber);
-            pushRemote(beaconController, upgradeHome, domainNumber);
+            pushRemote(beaconController, call, domainNumber);
         }
     }
 }
