@@ -17,20 +17,6 @@ import {CallBatch} from "../CallBatch.sol";
 import {UpgradeBeaconController} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeaconController.sol";
 
 contract UpgradeCallBatches is Script, Config, CallBatch {
-    /*//////////////////////////////////////////////////////////////
-                            GOVERNANCE CALLS
-    //////////////////////////////////////////////////////////////*/
-
-    bytes upgradeHome;
-    bytes upgradeReplica;
-    bytes upgradeGovRouter;
-    bytes upgradeBridgeRouter;
-    bytes upgradeTokenRegistry;
-    bytes upgradeBridgeToken;
-
-    string configFile;
-    string[] domainNames;
-
     function printCallBatches(
         string memory _configFile,
         string[] memory _domainNames,
@@ -38,18 +24,16 @@ contract UpgradeCallBatches is Script, Config, CallBatch {
         bool recovery
     ) external {
         localDomainName = _localDomainName;
-        domainNames = _domainNames;
-        configFile = _configFile;
-        setUp();
-        for (uint256 i; i < domainNames.length; i++) {
-            string memory domain = domainNames[i];
+        setUp(_configFile);
+        for (uint256 i; i < _domainNames.length; i++) {
+            string memory domain = _domainNames[i];
             generateGovernanceCalls(domain);
         }
         writeCallBatch(recovery);
     }
 
-    function setUp() internal {
-        __Config_initialize(configFile);
+    function setUp(string memory _configFile) internal {
+        __Config_initialize(_configFile);
         string memory outputFile = "upgradeActions.json";
         __CallBatch_initialize(
             localDomainName,
@@ -65,6 +49,13 @@ contract UpgradeCallBatches is Script, Config, CallBatch {
     //////////////////////////////////////////////////////////////*/
 
     function generateGovernanceCalls(string memory domain) internal {
+        bytes memory upgradeHome;
+        bytes memory upgradeReplica;
+        bytes memory upgradeGovRouter;
+        bytes memory upgradeBridgeRouter;
+        bytes memory upgradeTokenRegistry;
+        bytes memory upgradeBridgeToken;
+
         upgradeHome = abi.encodeWithSelector(
             UpgradeBeaconController.upgrade.selector,
             address(homeUpgrade(domain).beacon),
