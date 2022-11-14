@@ -37,15 +37,15 @@ abstract contract DeployImplementationsLogic is Script, Config {
     //////////////////////////////////////////////////////////////*/
 
     function deployImplementations(string memory _domain) internal {
-        // Home
-        home = new Home(getDomainNumber(_domain));
-        // Replica
-        replica = new Replica(getDomainNumber(_domain));
         // GovernanceRouter
         governanceRouter = new GovernanceRouter(
             getDomainNumber(_domain),
             getRecoveryTimelock(_domain)
         );
+        // Home
+        home = new Home(getDomainNumber(_domain));
+        // Replica
+        replica = new Replica(getDomainNumber(_domain));
         // BridgeRouter
         if (keccak256(bytes(_domain)) == keccak256(bytes("ethereum"))) {
             bridgeRouter = BridgeRouter(
@@ -56,10 +56,10 @@ abstract contract DeployImplementationsLogic is Script, Config {
         } else {
             bridgeRouter = new BridgeRouter();
         }
-        // TokenRegistry
-        tokenRegistry = new TokenRegistry();
         // BridgeToken
         bridgeToken = new BridgeToken();
+        // TokenRegistry
+        tokenRegistry = new TokenRegistry();
     }
 }
 
@@ -102,35 +102,53 @@ contract DeployImplementations is DeployImplementationsLogic {
         buffer.writeObjectOpen(indent, _domain);
         string memory inner = indent.nextIndent();
         // write implementations
-        writeImplementation(buffer, inner, "home", address(home), false);
-        writeImplementation(buffer, inner, "replica", address(replica), false);
         writeImplementation(
             buffer,
             inner,
             "governanceRouter",
+            governanceRouterUpgrade(_domain),
             address(governanceRouter),
             false
         );
         writeImplementation(
             buffer,
             inner,
+            "home",
+            homeUpgrade(_domain),
+            address(home),
+            false
+        );
+        writeImplementation(
+            buffer,
+            inner,
+            "replica",
+            replicaOfUpgrade(_domain, getConnections(_domain)[0]),
+            address(replica),
+            false
+        );
+        writeImplementation(
+            buffer,
+            inner,
             "bridgeRouter",
+            bridgeRouterUpgrade(_domain),
             address(bridgeRouter),
             false
         );
         writeImplementation(
             buffer,
             inner,
-            "tokenRegistry",
-            address(tokenRegistry),
-            false
+            "bridgeToken",
+            bridgeTokenUpgrade(_domain),
+            address(bridgeToken),
+            true
         );
         writeImplementation(
             buffer,
             inner,
-            "bridgeToken",
-            address(bridgeToken),
-            true
+            "tokenRegistry",
+            tokenRegistryUpgrade(_domain),
+            address(tokenRegistry),
+            false
         );
         buffer.writeObjectClose(indent, true);
     }
@@ -139,12 +157,17 @@ contract DeployImplementations is DeployImplementationsLogic {
         JsonWriter.Buffer memory buffer,
         string memory inner,
         string memory contractName,
-        address implementation,
+        Upgrade memory _upgrade,
+        address newImplementation,
         bool terminal
     ) private {
-        string[2][] memory kvs = new string[2][](1);
-        kvs[0][0] = "implementation";
-        kvs[0][1] = vm.toString(address(implementation));
+        string[2][] memory kvs = new string[2][](3);
+        kvs[0][0] = "beacon";
+        kvs[0][1] = vm.toString(address(_upgrade.beacon));
+        kvs[1][0] = "implementation";
+        kvs[1][1] = vm.toString(address(newImplementation));
+        kvs[2][0] = "proxy";
+        kvs[2][1] = vm.toString(address(_upgrade.proxy));
         buffer.writeSimpleObject(
             inner.nextIndent(),
             contractName,
