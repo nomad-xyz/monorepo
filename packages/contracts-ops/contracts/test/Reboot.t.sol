@@ -3,13 +3,15 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";
-import {RotateUpdaterLogic} from "../scripts/RotateUpdater.s.sol";
-import {EnrollReplicasLogic} from "../scripts/EnrollReplica.s.sol";
-import {DeployAccountantLogic} from "../scripts/DeployAccountant.s.sol";
 import {Config} from "../Config.sol";
 import {CallBatch} from "../CallBatch.sol";
-import {DeployAndInitializeImplementationsLogic} from "../scripts/InitializeImplementations.s.sol";
+
+import {DeployAccountantLogic} from "../scripts/DeployAccountant.s.sol";
+import {DeployImplementationsLogic} from "../scripts/DeployImplementations.s.sol";
+import {InitializeImplementationsLogic} from "../scripts/InitializeImplementations.s.sol";
 import {UpgradeCallBatchLogic} from "../scripts/UpgradeCallBatches.s.sol";
+import {RotateUpdaterLogic} from "../scripts/RotateUpdater.s.sol";
+import {EnrollReplicasLogic} from "../scripts/EnrollReplica.s.sol";
 
 contract RebootTest is
     Config,
@@ -17,40 +19,36 @@ contract RebootTest is
     RotateUpdaterLogic,
     EnrollReplicasLogic,
     DeployAccountantLogic,
-    DeployAndInitializeImplementationsLogic,
+    DeployImplementationsLogic,
+    InitializeImplementationsLogic,
     UpgradeCallBatchLogic,
     Test
 {
-    function setUp() public {
+    function setUp() public {}
+
+    function test_setup() public {
         string memory _domain = "ethereum";
-        __Config_initialize("./actions/config.json");
+        string memory _configPath = "./actions/config.json";
+        __Config_initialize(_configPath);
         __CallBatch_initialize(_domain, getDomainNumber(_domain), "", true);
-        // deploy accountant contracts
+        // deploy accountant setup
         deployAccountant(_domain);
+        updateAccountant(_domain, _configPath);
         // deploy implementations
         deployImplementations(_domain);
+        updateImplementations(_domain, _configPath);
         // initialize implementations
         initializeImplementations(_domain);
-        // push upgrade writeCallBatch
+        // generate governance actions to upgrade
         upgrade(_domain);
-        assertEq(localCalls.length, 6);
         // generate governance actions for Rotate Updater
         setUpdater();
-        assertEq(localCalls.length, 12);
         // generate governance actions to Enroll Replicas
         enrollReplicas();
-        assertEq(localCalls.length, 17);
         // execute governance actions
         prankExecuteRecoveryManager(
             address(getGovernanceRouter(_domain)),
             getDomainNumber(_domain)
-        );
-    }
-
-    function test_setup() public {
-        assertEq(
-            getUpdater("ethereum"),
-            0x71dC76C07E92325e7Cc09117AB94310Da63Fc2b9
         );
     }
 }
