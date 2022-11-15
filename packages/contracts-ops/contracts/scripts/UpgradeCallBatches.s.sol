@@ -16,41 +16,11 @@ import {CallBatch} from "../CallBatch.sol";
 // Contract for selector
 import {UpgradeBeaconController} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeaconController.sol";
 
-contract UpgradeCallBatches is Script, Config, CallBatch {
+contract UpgradeCallBatchLogic is Script, Config, CallBatch {
     string currentDomain;
 
-    function printCallBatches(
-        string memory _configFile,
-        string[] memory _domainNames,
-        string memory _localDomainName,
-        bool recovery
-    ) external {
-        localDomainName = _localDomainName;
-        setUp(_configFile);
-        for (uint256 i; i < _domainNames.length; i++) {
-            currentDomain = _domainNames[i];
-            generateGovernanceCalls();
-        }
-        writeCallBatch(recovery);
-    }
-
-    function setUp(string memory _configFile) internal {
-        __Config_initialize(_configFile);
-        string memory _outputFile = "upgradeActions.json";
-        __CallBatch_initialize(
-            localDomainName,
-            getDomainNumber(localDomainName),
-            _outputFile,
-            true
-        );
-        console2.log("Governance Actions have been output to", _outputFile);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                       GOVERNANCE CALL GENERATORS
-    //////////////////////////////////////////////////////////////*/
-
-    function generateGovernanceCalls() internal {
+    function generateGovernanceCalls(string memory _domain) internal {
+        currentDomain = _domain;
         pushUpgrade(governanceRouterUpgrade(currentDomain));
         pushUpgrade(bridgeRouterUpgrade(currentDomain));
         pushUpgrade(bridgeTokenUpgrade(currentDomain));
@@ -76,5 +46,34 @@ contract UpgradeCallBatches is Script, Config, CallBatch {
         } else {
             pushRemote(beaconController, call, domainNumber);
         }
+    }
+}
+
+contract UpgradeCallBatches is UpgradeCallBatchLogic {
+    // entrypoint
+    function printCallBatches(
+        string memory _configFile,
+        string[] memory _domainNames,
+        string memory _localDomainName,
+        bool recovery
+    ) external {
+        localDomainName = _localDomainName;
+        setUp(_configFile);
+        for (uint256 i; i < _domainNames.length; i++) {
+            generateGovernanceCalls(_domainNames[i]);
+        }
+        writeCallBatch(recovery);
+    }
+
+    function setUp(string memory _configFile) internal {
+        __Config_initialize(_configFile);
+        string memory _outputFile = "upgradeActions.json";
+        __CallBatch_initialize(
+            localDomainName,
+            getDomainNumber(localDomainName),
+            _outputFile,
+            true
+        );
+        console2.log("Governance Actions have been output to", _outputFile);
     }
 }

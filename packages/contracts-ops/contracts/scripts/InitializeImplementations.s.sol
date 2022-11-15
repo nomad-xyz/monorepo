@@ -2,21 +2,10 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import {DeployImplementations} from "./DeployImplementations.s.sol";
+import {DeployImplementationsLogic} from "./DeployImplementations.s.sol";
 import {IUpdaterManager} from "@nomad-xyz/contracts-core/contracts/interfaces/IUpdaterManager.sol";
 
-contract DeployAndInitializeImplementations is DeployImplementations {
-    // entrypoint
-    function deployAndInitialize(
-        string memory _configPath,
-        string memory _domain
-    ) public {
-        // deploy implementations & write their values to _outputFile
-        deploy(_configPath, _domain);
-        // initialize implementations
-        initializeImplementations(_domain);
-    }
-
+contract DeployAndInitializeImplementationsLogic is DeployImplementationsLogic {
     // NOTE: init values are zero wherever possible
     // Storage variables in implementation contracts don't matter.
     function initializeImplementations(string memory _domain) internal {
@@ -37,5 +26,24 @@ contract DeployAndInitializeImplementations is DeployImplementations {
         tokenRegistry.initialize(address(0), address(0));
         // BridgeToken
         bridgeToken.initialize();
+    }
+}
+
+contract DeployAndInitializeImplementations is
+    DeployAndInitializeImplementationsLogic
+{
+    // entrypoint
+    function deployAndInitialize(
+        string memory _configPath,
+        string memory _domain
+    ) public {
+        __Config_initialize(_configPath);
+        vm.createSelectFork(getRpcs(_domain)[0]);
+        vm.startBroadcast();
+        // deploy implementations
+        deployImplementations(_domain);
+        // initialize implementations
+        initializeImplementations(_domain);
+        vm.stopBroadcast();
     }
 }

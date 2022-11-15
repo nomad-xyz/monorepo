@@ -70,6 +70,7 @@ contract DeployImplementations is DeployImplementationsLogic {
         vm.createSelectFork(getRpcs(_domain)[0]);
         vm.startBroadcast();
         deployImplementations(_domain);
+        vm.stopBroadcast();
         updateImpl(_domain, _configPath);
     }
 

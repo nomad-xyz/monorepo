@@ -8,6 +8,8 @@ import {EnrollReplicasLogic} from "../scripts/EnrollReplica.s.sol";
 import {DeployAccountantLogic} from "../scripts/DeployAccountant.s.sol";
 import {Config} from "../Config.sol";
 import {CallBatch} from "../CallBatch.sol";
+import {DeployAndInitializeImplementationsLogic} from "../scripts/InitializeImplementations.s.sol";
+import {UpgradeCallBatchLogic} from "../scripts/UpgradeCallBatches.s.sol";
 
 contract RebootTest is
     Config,
@@ -15,29 +17,33 @@ contract RebootTest is
     RotateUpdaterLogic,
     EnrollReplicasLogic,
     DeployAccountantLogic,
+    DeployAndInitializeImplementationsLogic,
+    UpgradeCallBatchLogic,
     Test
 {
     function setUp() public {
+        string memory _domain = "ethereum";
         __Config_initialize("./actions/config.json");
-        __CallBatch_initialize(
-            "ethereum",
-            getDomainNumber("ethereum"),
-            "",
-            true
-        );
+        __CallBatch_initialize(_domain, getDomainNumber(_domain), "", true);
         // deploy accountant contracts
-        deployAccountant(localDomainName);
-        // TODO: upgrade script
+        deployAccountant(_domain);
+        // deploy implementations
+        deployImplementations(_domain);
+        // initialize implementations
+        initializeImplementations(_domain);
+        // push upgrade writeCallBatch
+        generateGovernanceCalls(_domain);
+        assertEq(localCalls.length, 6);
         // generate governance actions for Rotate Updater
         setUpdater();
-        assertEq(localCalls.length, 6);
+        assertEq(localCalls.length, 12);
         // generate governance actions to Enroll Replicas
         enrollReplicas();
-        assertEq(localCalls.length, 11);
+        assertEq(localCalls.length, 17);
         // execute governance actions
         prankExecuteRecoveryManager(
-            address(getGovernanceRouter(localDomainName)),
-            localDomain
+            address(getGovernanceRouter(_domain)),
+            getDomainNumber(_domain)
         );
     }
 
