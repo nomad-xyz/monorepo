@@ -44,6 +44,21 @@ Contains forge scripts for Nomad system maintenance
       - `true` if scripts should run for recovery mode, `false` otherwise
   - Example:
     - `FOUNDRY_PROFILE=ops forge script UpgradeCallBatches --sig "printCallBatches(string,string[],string,bool)" "actions/production.json" "[evmos,avalanche,xdai,milkomedaC1,moonbeam,ethereum]" "ethereum" true`
+- `Reboot.s.sol`
+  - Performs all steps necessary to reboot the protocol
+    - Deploy fresh implementations 
+    - Push calls to upgrade to fresh implementations 
+    - Rotate the Updater key
+    - Re-enroll the Replicas in the xAppConnectionManager
+  - uses `CallBatch` and `Config`
+  - Entrypoint:
+    - `runReboot(string,string,string,bool)`:
+      - config path (e.g `actions/production.json`)
+      - domain to run the script on (e.g `ethereum`)
+      - callBatch output path (e.g `rebootActions.json`)
+      - `true` to overwrite existing contents of output file, `false` otherwise
+  - Example:
+    - `FOUNDRY_PROFILE=ops forge script Reboot --sig "runReboot(string,string,string,bool)" "actions/production.json" "ethereum" "rebootActions-ethereum.json" true`
 
 ## Usage
 

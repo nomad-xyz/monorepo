@@ -70,7 +70,6 @@ contract Reboot is RebootLogic {
         // perform reboot actions
         reboot(_domain, _configPath);
         // write callbatch
-        // note: this is a one-time script which will be run in recovery mode
         writeCallBatch(true);
     }
 }
