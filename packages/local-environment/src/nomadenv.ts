@@ -72,7 +72,7 @@ export class NomadEnv {
 
     const deployContext = this.setDeployContext();
 
-    const outputDir = "./output";
+    const outputDir = __dirname + "/../../output/";
     const governanceBatch = await deployContext.deployAndRelinquish();
     this.log.info(`Deployed! gov batch:`, governanceBatch);
 
