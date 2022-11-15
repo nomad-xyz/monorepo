@@ -36,14 +36,14 @@ contract UpgradeCallBatches is Script, Config, CallBatch {
 
     function setUp(string memory _configFile) internal {
         __Config_initialize(_configFile);
-        string memory outputFile = "upgradeActions.json";
+        string memory _outputFile = "upgradeActions.json";
         __CallBatch_initialize(
             localDomainName,
             getDomainNumber(localDomainName),
-            outputFile,
+            _outputFile,
             true
         );
-        console2.log("Governance Actions have been output to", outputFile);
+        console2.log("Governance Actions have been output to", _outputFile);
     }
 
     /*//////////////////////////////////////////////////////////////
