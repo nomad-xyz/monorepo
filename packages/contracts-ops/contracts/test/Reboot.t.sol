@@ -50,7 +50,7 @@ contract RebootTest is
     function test_setup() public {
         assertEq(
             getUpdater("ethereum"),
-            0x499B1Fa18E3CaC1c8cDF2B14C458aA70A6a2B68f
+            0x71dC76C07E92325e7Cc09117AB94310Da63Fc2b9
         );
     }
 }
