@@ -8,14 +8,16 @@ type Metrics = number[];
 const metrics: Metrics = [];
 
 // NOTE: this is the general idea
-//  while True:
-//    fetch events that are required to calculate a metric
-//    save result to memory
-//    record observation with prometheus
-//    sleep for a while
+// For each blocking task (or group of task) (so that some task won't block others - similar stuff has Keymaster):
+//   while True:
+//     fetch events that are required to calculate the metric
+//     save result to memory
+//     record observation with prometheus
+//     sleep for a while
 
 (async () => {
   /* eslint-disable-next-line no-constant-condition */
+
   while (true) {
     console.log('inside while loop. metrics: ', metrics);
 
