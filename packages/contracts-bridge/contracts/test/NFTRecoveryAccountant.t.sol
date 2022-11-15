@@ -97,14 +97,13 @@ contract NFTRecoveryAccountantTest is Test {
         assetIndex = uint8(bound(assetIndex, 0, 13));
         address payable asset = accountant.affectedAssets()[assetIndex];
         uint256 totalAffected = accountant.totalAffected(asset);
-        collected = bound(collected, 1, totalAffected);
+        collected = bound(collected, 0, totalAffected);
         famount = bound(famount, 0, totalAffected);
 
         uint256 id = accountant.nextID();
         accountant.record(asset, user, famount);
-        collectHelper(collected);
+        accountant.exposed_setCollectedAmount(asset, collected);
         uint256 recoverable = (collected * famount) / totalAffected;
-        if (recoverable < famount) recoverable = 0;
         assertEq(accountant.recoverable(id), recoverable);
     }
 
@@ -184,64 +183,72 @@ contract NFTRecoveryAccountantTest is Test {
     /// @notice Produce a fuzzed test scenario of 64 random users, who bridge back 64 random amounts
     /// on each of the 64 different combinations of (total affected, collected Assets).
     function testFuzz_totalRecoveredCorrectAfterUsersRecover(
-        address[64] memory users,
-        uint192[64] memory amounts,
-        uint256[64] memory totalAffected,
-        uint256[64] memory collectedAssets
+        address[8] memory users,
+        uint192[8] memory amounts,
+        uint256 totalAffected,
+        uint256 collectedAssets
     ) public {
-        for (uint256 j; j < 64; j++) {
-            // Total affected MUST not be 0
-            if (totalAffected[j] == 0) totalAffected[j] = 100_000_000;
-            accountant.exposed_setAffectedAmount(asset, totalAffected[j]);
-            // Total collected MUST be between 1 and totalAffected (inclusive)
-            uint256 collected = bound(collectedAssets[j], 1, totalAffected[j]);
-            collectHelper(collected);
-            // Keep track of how many have been bridged back (instead of the circulation)
-            uint256 bridgedSum;
-            for (uint256 i; i < 64; i++) {
-                // Make sure that the user is not the address(0)
-                if (users[i] == address(0)) users[i] = address(0xBEEF);
-                // Make sure that the user can receive the NFT
-                (bool success, bytes memory data) = users[i].call(
-                    abi.encodeWithSignature(
-                        "onERC721Received(address,address,uint256,bytes)",
-                        address(this),
-                        address(0),
-                        0,
-                        ""
-                    )
-                );
-                // if the user can't receive an ERC721, it's some test contract (e.g VM)
-                // we turn them into a regular EOA
-                if (!success) users[i] = address(0xBEEF);
-                // The amount MUST be between 0 and the total Affected minus the ones that have been bridged already
-                // The user can't have more than that, as total affected is the upper bound for the total assets
-                // that were hacked and bridgedSum is the sum of all the funds that other users have already bridged.
-                // Thus the respective user can have up to their difference
-                uint256 famount = bound(
-                    uint256(amounts[i]),
+        // Total affected MUST not be 0
+        if (totalAffected == 0) totalAffected = 100_000_000;
+        accountant.exposed_setAffectedAmount(asset, totalAffected);
+        // Total collected MUST be between 1 and totalAffected (inclusive)
+        uint256 collected = bound(collectedAssets, 1, totalAffected);
+        collectHelper(collected);
+        // Keep track of how many have been bridged back (instead of the circulation)
+        uint256 bridgedSum;
+        for (uint256 i; i < 8; i++) {
+            // Make sure that the user is not the address(0)
+            if (users[i] == address(0)) users[i] = address(0xBEEF);
+            // Make sure that the user can receive the NFT
+            (bool success, bytes memory data) = users[i].call(
+                abi.encodeWithSignature(
+                    "onERC721Received(address,address,uint256,bytes)",
+                    address(this),
+                    address(0),
                     0,
-                    totalAffected[j] - bridgedSum
-                );
-                bridgedSum += famount;
+                    ""
+                )
+            );
+            // if the user can't receive an ERC721, it's some test contract (e.g VM)
+            // we turn them into a regular EOA
+            if (!success) users[i] = address(0xBEEEEFFFEFEFEFEFEFEFEF);
+            // The amount MUST be between 0 and the total Affected minus the ones that have been bridged already
+            // The user can't have more than that, as total affected is the upper bound for the total assets
+            // that were hacked and bridgedSum is the sum of all the funds that other users have already bridged.
+            // Thus the respective user can have up to their difference
+            uint256 famount = bound(
+                uint256(amounts[i]),
+                0,
+                totalAffected - bridgedSum
+            );
+            bridgedSum += famount;
+            console2.log("bridgedSum", bridgedSum);
+            console2.log("famount", famount);
+            console2.log("total affected", totalAffected);
+            console2.log("total minted", accountant.totalMinted(asset));
 
-                uint256 prevtotalRecovered = accountant.totalRecovered(asset);
-                uint256 id = accountant.nextID();
+            uint256 prevtotalRecovered = accountant.totalRecovered(asset);
+            uint256 id = accountant.nextID();
+            if (accountant.totalMinted(asset) + famount > totalAffected) {
+                vm.expectRevert("overmint");
                 accountant.record(asset, users[i], famount);
-                uint256 recoverable = accountant.recoverable(id);
-                address fuser = accountant.ownerOf(id);
-                if (recoverable == 0) {
-                    vm.expectRevert("currently fully recovered");
-                    vm.prank(fuser);
-                    accountant.exposed_recover(id);
-                    return;
-                }
-                recoverCheck(id);
-                assertEq(
-                    accountant.totalRecovered(asset),
-                    prevtotalRecovered + recoverable
-                );
+                // This asset has been overminted and we should check the next one
+                return;
             }
+            accountant.record(asset, users[i], famount);
+            uint256 recoverable = accountant.recoverable(id);
+            address fuser = accountant.ownerOf(id);
+            if (recoverable == 0) {
+                vm.expectRevert("currently fully recovered");
+                vm.prank(fuser);
+                accountant.exposed_recover(id);
+                return;
+            }
+            recoverCheck(id);
+            assertEq(
+                accountant.totalRecovered(asset),
+                prevtotalRecovered + recoverable
+            );
         }
     }
 
@@ -336,14 +343,14 @@ contract NFTRecoveryAccountantTest is Test {
 
     function test_removeOnlyOwner() public {
         // collect funds
-        collectHelper(200);
+        mockToken.mint(address(accountant), 200);
         // prank non-owner address
         vm.prank(recipient);
         vm.expectRevert("Ownable: caller is not the owner");
         accountant.remove(address(mockToken), 100);
         accountant.remove(address(mockToken), 100);
         // 100 removed
-        assertEq(mockToken.balanceOf(address(mockToken)), 100);
+        assertEq(mockToken.balanceOf(address(accountant)), 100);
     }
 
     function test_collectSuccesfully() public {

@@ -13,6 +13,12 @@ contract NFTRecoveryAccountantHarness is AllowListNFTRecoveryAccountant {
         totalAffected[asset] = amount;
     }
 
+    function exposed_setCollectedAmount(address asset, uint256 amount)
+        external
+    {
+        totalCollected[asset] = amount;
+    }
+
     // bypass allowlist
     function exposed_recover(uint256 tokenId) external {
         _recover(tokenId);

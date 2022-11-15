@@ -233,6 +233,9 @@ contract NFTAccountantTest is Test {
         vm.assume(!accountant.isAffectedAsset(fasset));
         // Fuzz only for addresses that can in fact receive an ERC721
         // Filters through the address of the test contract, VM, and others.
+        //
+        // Create2Deployer
+        vm.assume(fuser != 0x4e59b44847b379578588920cA78FbF26c0B4956C);
         (bool success, bytes memory data) = fuser.call(
             abi.encodeWithSignature(
                 "onERC721Received(address,address,uint256,bytes)",
