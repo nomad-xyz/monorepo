@@ -61,22 +61,11 @@ abstract contract DeployImplementationsLogic is Script, Config {
         // BridgeToken
         bridgeToken = new BridgeToken();
     }
-}
 
-contract DeployImplementations is DeployImplementationsLogic {
-    // entrypoint
-    function deploy(string memory _configPath, string memory _domain) public {
-        __Config_initialize(_configPath);
-        vm.createSelectFork(getRpcs(_domain)[0]);
-        vm.startBroadcast();
-        deployImplementations(_domain);
-        vm.stopBroadcast();
-        updateImpl(_domain, _configPath);
-    }
-
-    function updateImpl(string memory _domain, string memory _configPath)
-        internal
-    {
+    function updateImplementations(
+        string memory _domain,
+        string memory _configPath
+    ) internal {
         vm.writeJson(
             vm.toString(address(home)),
             _configPath,
@@ -115,5 +104,18 @@ contract DeployImplementations is DeployImplementationsLogic {
             _configPath,
             bridgeAttributePath(_domain, "tokenRegistry.implementation")
         );
+        __Config_reload(_configPath);
+    }
+}
+
+contract DeployImplementations is DeployImplementationsLogic {
+    // entrypoint
+    function deploy(string memory _configPath, string memory _domain) public {
+        __Config_initialize(_configPath);
+        vm.createSelectFork(getRpcs(_domain)[0]);
+        vm.startBroadcast();
+        deployImplementations(_domain);
+        vm.stopBroadcast();
+        updateImplementations(_domain, _configPath);
     }
 }

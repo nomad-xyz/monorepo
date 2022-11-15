@@ -35,6 +35,10 @@ abstract contract Config is INomadProtocol {
         config = vm.readFile(file);
     }
 
+    function __Config_reload(string memory file) internal {
+        config = vm.readFile(file);
+    }
+
     function isInitialized() public view returns (bool) {
         return bytes(config).length != 0;
     }
