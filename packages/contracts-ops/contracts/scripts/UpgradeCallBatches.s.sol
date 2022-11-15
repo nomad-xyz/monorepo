@@ -19,7 +19,7 @@ import {UpgradeBeaconController} from "@nomad-xyz/contracts-core/contracts/upgra
 contract UpgradeCallBatchLogic is Script, Config, CallBatch {
     string currentDomain;
 
-    function generateGovernanceCalls(string memory _domain) internal {
+    function upgrade(string memory _domain) internal {
         currentDomain = _domain;
         pushUpgrade(governanceRouterUpgrade(currentDomain));
         pushUpgrade(bridgeRouterUpgrade(currentDomain));
@@ -60,7 +60,7 @@ contract UpgradeCallBatches is UpgradeCallBatchLogic {
         localDomainName = _localDomainName;
         setUp(_configFile);
         for (uint256 i; i < _domainNames.length; i++) {
-            generateGovernanceCalls(_domainNames[i]);
+            upgrade(_domainNames[i]);
         }
         writeCallBatch(recovery);
     }

@@ -32,7 +32,7 @@ contract RebootTest is
         // initialize implementations
         initializeImplementations(_domain);
         // push upgrade writeCallBatch
-        generateGovernanceCalls(_domain);
+        upgrade(_domain);
         assertEq(localCalls.length, 6);
         // generate governance actions for Rotate Updater
         setUpdater();
