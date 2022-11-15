@@ -1,4 +1,4 @@
-import { BridgeContext } from '@nomad-xyz/sdk-bridge';
+import { BridgeContext } from '../src';
 import * as config from '@nomad-xyz/configuration';
 
 import { NomadContext } from '@nomad-xyz/sdk';

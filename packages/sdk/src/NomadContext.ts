@@ -7,6 +7,7 @@ import fetch from 'cross-fetch';
 
 import { CoreContracts } from './CoreContracts';
 import { NomadMessage } from './messages/NomadMessage';
+import { MessageBackend, GoldSkyBackend } from './messageBackend';
 
 export type Address = string;
 
@@ -69,9 +70,13 @@ export type MessageProof = {
 export class NomadContext extends MultiProvider<config.Domain> {
   protected _cores: Map<string, CoreContracts<this>>;
   protected _blacklist: Set<number>;
+  _backend?: MessageBackend;
   readonly conf: config.NomadConfig;
 
-  constructor(environment: string | config.NomadConfig = 'development') {
+  constructor(
+    environment: string | config.NomadConfig = 'development',
+    backend?: MessageBackend,
+  ) {
     super();
 
     const conf: config.NomadConfig =
@@ -83,6 +88,7 @@ export class NomadContext extends MultiProvider<config.Domain> {
     this.conf = conf;
     this._cores = new Map();
     this._blacklist = new Set();
+    this._backend = backend;
 
     for (const network of this.conf.networks) {
       // register domain
@@ -105,6 +111,15 @@ export class NomadContext extends MultiProvider<config.Domain> {
       );
       this._cores.set(core.domain, core);
     }
+  }
+
+  /**
+   * Create default backend for the context
+   */
+  withDefaultBackend(): NomadContext {
+    // TODO: What if backend doesn't exist for this environment?
+    this._backend = GoldSkyBackend.default(this.environment, this);
+    return this;
   }
 
   get governor(): config.NomadLocator {

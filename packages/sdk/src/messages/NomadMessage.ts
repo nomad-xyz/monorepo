@@ -9,7 +9,6 @@ import * as core from '@nomad-xyz/contracts-core';
 import { utils } from '@nomad-xyz/multi-provider';
 
 import { NomadContext } from '..';
-import { getEvents, IndexerTx } from '../api';
 import { MessageProof } from '../NomadContext';
 import {
   Dispatch,
@@ -18,6 +17,7 @@ import {
   ReplicaStatusNames,
   ReplicaMessageStatus,
 } from './types';
+import { MessageBackend } from '../messageBackend';
 
 /**
  * Parse a serialized Nomad message from raw bytes.
@@ -46,10 +46,13 @@ export class NomadMessage<T extends NomadContext> {
   readonly replica: core.Replica;
 
   readonly context: T;
-  protected eventCache: IndexerTx;
+  protected _confirmAt?: Date;
 
-  constructor(context: T, dispatch: Dispatch) {
+  readonly _backend?: MessageBackend;
+
+  constructor(context: T, dispatch: Dispatch, _backend?: MessageBackend) {
     this.context = context;
+    this._backend = _backend;
     this.message = parseMessage(dispatch.args.message);
     this.dispatch = dispatch;
     this.home = context.mustGetCore(this.message.from).home;
@@ -57,14 +60,18 @@ export class NomadMessage<T extends NomadContext> {
       this.message.from,
       this.message.destination,
     );
-    this.eventCache = {};
   }
 
-  /**
-   * The receipt of the TX that dispatched this message
-   */
-  get receipt(): TransactionReceipt {
-    return this.dispatch.receipt;
+  get backend(): MessageBackend {
+    const backend = this._backend || this.context._backend;
+    if (!backend) {
+      throw new Error(`No backend in the context`);
+    }
+    return backend;
+  }
+
+  get messageHash(): string {
+    return this.dispatch.args.messageHash;
   }
 
   /**
@@ -101,7 +108,6 @@ export class NomadMessage<T extends NomadContext> {
               message,
             },
             transactionHash: receipt.transactionHash,
-            receipt,
           };
           messages.push(new NomadMessage(context, dispatch));
         }
@@ -187,16 +193,28 @@ export class NomadMessage<T extends NomadContext> {
     return await NomadMessage.baseSingleFromReceipt(context, receipt);
   }
 
+  static async baseFirstFromBackend<T extends NomadContext>(
+    context: T,
+    transactionHash: string,
+  ): Promise<NomadMessage<T>> {
+    if (!context._backend) {
+      throw new Error(`No backend is set for the context`);
+    }
+    const dispatches = await context._backend.getDispatches(transactionHash, 1);
+    if (!dispatches || dispatches.length === 0) throw new Error(`No dispatch`);
+
+    const m = new NomadMessage(context, dispatches[0]);
+
+    return m;
+  }
+
   /**
    * Get the `Relay` event associated with this message (if any)
    *
    * @returns An relay tx (if any)
    */
   async getRelay(): Promise<string | undefined> {
-    if (!this.eventCache.relayed) {
-      await this._events();
-    }
-    return this.eventCache.relayTx;
+    return await this.backend.relayTx(this.messageHash);
   }
 
   /**
@@ -205,10 +223,7 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An update tx (if any)
    */
   async getUpdate(): Promise<string | undefined> {
-    if (!this.eventCache.updated) {
-      await this._events();
-    }
-    return this.eventCache.updateTx;
+    return await this.backend.updateTx(this.messageHash);
   }
 
   /**
@@ -217,24 +232,7 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An process tx (if any)
    */
   async getProcess(): Promise<string | undefined> {
-    if (!this.eventCache.processed) {
-      await this._events();
-    }
-    return this.eventCache.processTx;
-  }
-
-  /**
-   * Get all lifecycle events associated with this message
-   *
-   * @returns An record of all events and correlating txs
-   */
-  private async _events(): Promise<IndexerTx> {
-    if (this.eventCache.processed) return this.eventCache;
-    this.eventCache = await getEvents(
-      this.context.conf.environment,
-      this.transactionHash,
-    );
-    return this.eventCache;
+    return await this.backend.processTx(this.messageHash);
   }
 
   /**
@@ -257,12 +255,50 @@ export class NomadMessage<T extends NomadContext> {
    *
    * @returns The timestamp at which a message can confirm
    */
-  async confirmAt(): Promise<number | undefined> {
-    if (!this.eventCache.confirmAt || this.eventCache.confirmAt === 0) {
-      await this._events();
+
+  /**
+   * Calculates an expected confirmation timestamp from relayed event
+   *
+   * @returns Timestamp (if any)
+   */
+  async confirmAt(messageHash: string): Promise<Date | undefined> {
+    const relayedAt = await this.backend.relayedAt(messageHash);
+    if (relayedAt) {
+      // Additional check for adequate numbers
+      if (relayedAt?.valueOf() <= 946684800000) {
+        throw new Error(
+          `RelayedAt could not be smaller than 946684800000 (2000-01-01)`,
+        );
+      }
+
+      const destinationDomainId = await this.backend.destinationDomainId(
+        messageHash,
+      );
+
+      // Destination domain must be present as long as relayed at is found already, since
+      // destination domain data is present in Dispatch event, and relay data at Relay event,
+      // which is later.
+      if (!destinationDomainId) {
+        throw new Error(`Destination domain is not present`);
+      }
+
+      const domain = this.context.getDomain(destinationDomainId);
+      if (domain === undefined) {
+        throw new Error(`Destination domain is not in the config`);
+      }
+
+      const optimisticSecondsUnparsed = domain.configuration.optimisticSeconds;
+      const optimisticSeconds: number =
+        typeof optimisticSecondsUnparsed === 'string'
+          ? parseInt(optimisticSecondsUnparsed)
+          : optimisticSecondsUnparsed;
+
+      const confirmAt = new Date(
+        relayedAt.valueOf() + optimisticSeconds * 1000,
+      );
+      return confirmAt;
     }
-    if (this.eventCache.confirmAt === 0) return;
-    return this.eventCache.confirmAt;
+    return undefined;
   }
 
   async process(): Promise<ContractTransaction> {
@@ -339,11 +375,15 @@ export class NomadMessage<T extends NomadContext> {
    * @returns An record of all events and correlating txs
    */
   async status(): Promise<MessageStatus | undefined> {
-    if (this.eventCache.processed) return MessageStatus.Processed;
-    const confirmAt = await this.confirmAt();
-    const now = Date.now() / 1000;
+    if (await this.getProcess()) return MessageStatus.Processed;
+
+    const confirmAt = await this.confirmAt(this.messageHash);
+    const now = new Date();
     if (confirmAt && confirmAt < now) return MessageStatus.Relayed;
-    return (await this._events()).state;
+
+    if (await this.getUpdate()) return MessageStatus.Included;
+
+    return MessageStatus.Dispatched;
   }
 
   /**

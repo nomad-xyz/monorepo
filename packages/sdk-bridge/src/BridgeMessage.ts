@@ -7,6 +7,7 @@ import { NomadMessage, Dispatch } from '@nomad-xyz/sdk';
 import { ResolvedTokenInfo, TokenIdentifier } from './tokens';
 import { BridgeContracts } from './BridgeContracts';
 import { BridgeContext } from './BridgeContext';
+import BridgeMessageBackend from './backend';
 
 const ACTION_LEN = {
   identifier: 1,
@@ -77,6 +78,8 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
   readonly fromBridge: BridgeContracts;
   readonly toBridge: BridgeContracts;
 
+  readonly _backend?: BridgeMessageBackend;
+
   /**
    * @hideconstructor
    */
@@ -85,11 +88,12 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
     dispatch: Dispatch,
     token: TokenIdentifier,
     callerKnowsWhatTheyAreDoing: boolean,
+    _backend?: BridgeMessageBackend,
   ) {
     if (!callerKnowsWhatTheyAreDoing) {
       throw new Error('Use `fromReceipt` to instantiate');
     }
-    super(context, dispatch);
+    super(context, dispatch, _backend);
 
     const fromBridge = context.mustGetBridge(this.message.from);
     const toBridge = context.mustGetBridge(this.message.destination);
@@ -97,6 +101,41 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
     this.fromBridge = fromBridge;
     this.toBridge = toBridge;
     this.token = token;
+  }
+
+  get backend(): BridgeMessageBackend {
+    const backend = this._backend || this.context._backend;
+    if (!backend) {
+      throw new Error(`No backend in the context`);
+    }
+    return backend;
+  }
+
+  async getReceived(): Promise<string | undefined> {
+    return await this.backend.receivedTx(this.messageHash);
+  }
+
+  async getSender(): Promise<string | undefined> {
+    return await this.backend.sender(this.messageHash);
+  }
+
+  static async bridgeFirstFromBackend(
+    context: BridgeContext,
+    transactionHash: string,
+    // _backend?: BridgeMessageBackend,
+  ): Promise<BridgeMessage> {
+    // const backend = context._backend || _backend;
+    // if (!backend) {
+    //   throw new Error(`No backend is set for the context`);
+    // }
+    // const dispatches = await backend.getDispatches(transactionHash, 1);
+    // if (!dispatches || dispatches.length === 0) throw new Error(`No dispatch`);
+
+    // const m = new NomadMessage(context, dispatches[0]);
+    const m = await this.baseFirstFromBackend(context, transactionHash);
+    const bm = BridgeMessage.fromNomadMessage(context, m, context._backend);
+
+    return bm;
   }
 
   /**
@@ -111,12 +150,14 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
   static fromNomadMessage(
     context: BridgeContext,
     nomadMessage: NomadMessage<BridgeContext>,
+    _backend?: BridgeMessageBackend,
   ): AnyBridgeMessage {
     const parsedMessageBody = parseBody(nomadMessage.message.body);
     return new TransferMessage(
       context,
       nomadMessage.dispatch,
       parsedMessageBody as ParsedTransferMessage,
+      _backend || context._backend, // TODO: adjust
     );
   }
 
@@ -131,6 +172,7 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
   static async fromReceipt(
     context: BridgeContext,
     receipt: TransactionReceipt,
+    _backend?: BridgeMessageBackend,
   ): Promise<AnyBridgeMessage[]> {
     const nomadMessages: NomadMessage<BridgeContext>[] =
       await NomadMessage.baseFromReceipt(context, receipt);
@@ -140,6 +182,7 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
         const bridgeMessage = BridgeMessage.fromNomadMessage(
           context,
           nomadMessage,
+          _backend,
         );
         bridgeMessages.push(bridgeMessage);
       } catch (e) {
@@ -161,10 +204,12 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
   static async singleFromReceipt(
     context: BridgeContext,
     receipt: TransactionReceipt,
+    _backend?: BridgeMessageBackend,
   ): Promise<AnyBridgeMessage> {
     const messages: AnyBridgeMessage[] = await BridgeMessage.fromReceipt(
       context,
       receipt,
+      _backend,
     );
     if (messages.length !== 1) {
       throw new Error('Expected single Dispatch in transaction');
@@ -186,13 +231,14 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
     context: BridgeContext,
     nameOrDomain: string | number,
     transactionHash: string,
+    _backend?: BridgeMessageBackend,
   ): Promise<AnyBridgeMessage[]> {
     const provider = context.mustGetProvider(nameOrDomain);
     const receipt = await provider.getTransactionReceipt(transactionHash);
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return BridgeMessage.fromReceipt(context, receipt);
+    return BridgeMessage.fromReceipt(context, receipt, _backend);
   }
 
   /**
@@ -210,13 +256,14 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
     context: BridgeContext,
     nameOrDomain: string | number,
     transactionHash: string,
+    _backend?: BridgeMessageBackend,
   ): Promise<AnyBridgeMessage> {
     const provider = context.mustGetProvider(nameOrDomain);
     const receipt = await provider.getTransactionReceipt(transactionHash);
     if (!receipt) {
       throw new Error(`No receipt for ${transactionHash} on ${nameOrDomain}`);
     }
-    return BridgeMessage.singleFromReceipt(context, receipt);
+    return BridgeMessage.singleFromReceipt(context, receipt, _backend);
   }
 
   /**
@@ -269,8 +316,9 @@ export class TransferMessage extends BridgeMessage {
     context: BridgeContext,
     dispatch: Dispatch,
     parsed: ParsedTransferMessage,
+    _backend?: BridgeMessageBackend,
   ) {
-    super(context, dispatch, parsed.token, true);
+    super(context, dispatch, parsed.token, true, _backend);
     this.action = parsed.action;
   }
 
