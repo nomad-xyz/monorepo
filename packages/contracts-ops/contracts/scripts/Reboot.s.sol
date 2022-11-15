@@ -33,15 +33,17 @@ contract RebootLogic is
     UpgradeCallBatchLogic
 {
     function reboot(string memory _domain, string memory _configPath) internal {
-        // deploy accountant setup
-        deployAccountant(_domain);
-        updateAccountant(_domain, _configPath);
+        // if ethereum, deploy accountant setup
+        if (keccak256(bytes(_domain)) == keccak256(bytes("ethereum"))) {
+            deployAccountant(_domain);
+            updateAccountant(_domain, _configPath);
+        }
         // deploy implementations
         deployImplementations(_domain);
         updateImplementations(_domain, _configPath);
         // initialize implementations
         initializeImplementations(_domain);
-        // generate governance actions to upgrade
+        // generate governance actions to Upgrade
         upgrade(_domain);
         // generate governance actions for Rotate Updater
         setUpdater();
