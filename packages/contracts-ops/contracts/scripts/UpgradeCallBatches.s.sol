@@ -32,6 +32,13 @@ contract UpgradeCallBatchLogic is Script, Config, CallBatch {
     }
 
     function pushUpgrade(Upgrade memory _upgrade) private {
+        // check if upgrade is unnecessary
+        (, bytes memory result) = address(_upgrade.beacon).call("");
+        address _current = abi.decode(result, (address));
+        if (_current == _upgrade.implementation) {
+            return;
+        }
+        // send upgrade
         bytes memory call = abi.encodeWithSelector(
             UpgradeBeaconController.upgrade.selector,
             address(_upgrade.beacon),
