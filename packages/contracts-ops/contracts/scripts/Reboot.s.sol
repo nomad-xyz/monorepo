@@ -32,15 +32,15 @@ contract RebootLogic is
     InitializeImplementationsLogic,
     UpgradeCallBatchLogic
 {
-    function reboot(string memory _domain, string memory _configPath) internal {
+    function reboot(string memory _domain) internal {
         // if ethereum, deploy accountant setup
         if (keccak256(bytes(_domain)) == keccak256(bytes("ethereum"))) {
             deployAccountant(_domain);
-            updateAccountant(_domain, _configPath);
+            updateAccountant(_domain);
         }
         // deploy implementations
         deployImplementations(_domain);
-        updateImplementations(_domain, _configPath);
+        updateImplementations(_domain);
         // initialize implementations
         initializeImplementations(_domain);
         // generate governance actions to Upgrade
@@ -68,7 +68,7 @@ contract Reboot is RebootLogic {
             _overwrite
         );
         // perform reboot actions
-        reboot(_domain, _configPath);
+        reboot(_domain);
         // write callbatch
         writeCallBatch(true);
     }

@@ -14,7 +14,7 @@ contract RebootTest is RebootLogic, Test {
         __Config_initialize(_configPath);
         __CallBatch_initialize(_domain, getDomainNumber(_domain), "", true);
         // perform reboot actions
-        reboot(_domain, _configPath);
+        reboot(_domain);
         // execute governance actions via vm.prank
         prankExecuteRecoveryManager(
             address(getGovernanceRouter(_domain)),

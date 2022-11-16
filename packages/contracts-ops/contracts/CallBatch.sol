@@ -114,7 +114,7 @@ abstract contract CallBatch {
         string memory indent,
         GovernanceMessage.Call storage call,
         bool terminal
-    ) private {
+    ) private view {
         buffer.writeObjectOpen(indent);
         string memory inner = indent.nextIndent();
         buffer.writeKv(
@@ -131,7 +131,7 @@ abstract contract CallBatch {
         JsonWriter.Buffer memory buffer,
         string memory indent,
         GovernanceMessage.Call[] storage calls
-    ) private {
+    ) private view {
         for (uint32 i = 0; i < calls.length; i++) {
             writeCall(
                 buffer,
@@ -144,6 +144,7 @@ abstract contract CallBatch {
 
     function writeLocal(JsonWriter.Buffer memory buffer, string memory indent)
         private
+        view
     {
         buffer.writeArrayOpen(indent, "local");
         writeCallList(buffer, indent, localCalls);
@@ -152,6 +153,7 @@ abstract contract CallBatch {
 
     function writeRemotes(JsonWriter.Buffer memory buffer, string memory indent)
         private
+        view
     {
         if (remoteDomains.length == 0) return;
         buffer.writeObjectOpen(indent, "remote");
@@ -174,7 +176,7 @@ abstract contract CallBatch {
         uint32 domain,
         GovernanceMessage.Call[] memory calls,
         bool isLastDomain
-    ) private {
+    ) private pure {
         buffer.writeObjectOpen(indent, vm.toString(uint256(domain)));
         bytes memory data = abi.encodeWithSelector(
             GovernanceRouter.executeGovernanceActions.selector,

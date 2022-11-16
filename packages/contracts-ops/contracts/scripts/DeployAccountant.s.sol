@@ -41,36 +41,29 @@ abstract contract DeployAccountantLogic is Script, Config {
         );
     }
 
-    function updateAccountant(string memory _domain, string memory _configPath)
-        internal
-    {
+    function updateAccountant(string memory _domain) internal {
         vm.writeJson(
             vm.toString(address(beacon)),
-            _configPath,
+            configPath,
             bridgeAttributePath(_domain, "accountant.beacon")
         );
         vm.writeJson(
             vm.toString(address(implementation)),
-            _configPath,
+            configPath,
             bridgeAttributePath(_domain, "accountant.implementation")
         );
         vm.writeJson(
             vm.toString(address(proxy)),
-            _configPath,
+            configPath,
             bridgeAttributePath(_domain, "accountant.proxy")
         );
-        __Config_reload(_configPath);
+        reloadConfig();
     }
 }
 
 contract DeployAccountant is DeployAccountantLogic {
     // entrypoint
-    function deploy(
-        string calldata _configFile,
-        string memory _domain,
-        string memory _outputFile,
-        bool _overwrite
-    ) public {
+    function deploy(string calldata _configFile, string memory _domain) public {
         // initialize
         __Config_initialize(_configFile);
         // deploy & configure accountant
@@ -78,6 +71,6 @@ contract DeployAccountant is DeployAccountantLogic {
         deployAccountant(_domain);
         vm.stopBroadcast();
         // write contract addresses to JSON
-        updateAccountant(_domain, _configFile);
+        updateAccountant(_domain);
     }
 }

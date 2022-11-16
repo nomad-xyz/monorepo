@@ -71,11 +71,15 @@ src = 'packages/contracts-da-bridge/contracts'
 test = 'packages/contracts-da-bridge/contracts/test'
 out = 'packages/contracts-da-bridge/foundry_artifacts'
 ffi = true
+
 [profile.da-bridge-ci.fuzz]
 runs = 10_000
+
 [profile.ops]
 src = 'packages/contracts-ops/contracts'
 test = 'packages/contracts-ops/contracts/test'
 out = 'packages/contracts-ops/foundry_artifacts'
 ffi = true
 fs_permissions = [{ access = "read-write", path = "./actions" }]
+# same as above, + 5574 for contract size
+ignored_error_codes = [2462, 5878, 9302, 5574]

@@ -62,25 +62,22 @@ abstract contract DeployImplementationsLogic is Script, Config {
         bridgeToken = new BridgeToken();
     }
 
-    function updateImplementations(
-        string memory _domain,
-        string memory _configPath
-    ) internal {
+    function updateImplementations(string memory _domain) internal {
         vm.writeJson(
             vm.toString(address(home)),
-            _configPath,
+            configPath,
             coreAttributePath(_domain, "home.implementation")
         );
         vm.writeJson(
             vm.toString(address(governanceRouter)),
-            _configPath,
+            configPath,
             coreAttributePath(_domain, "governanceRouter.implementation")
         );
         string[] memory connections = getConnections(_domain);
         for (uint256 i; i < connections.length; i++) {
             vm.writeJson(
                 vm.toString(address(replica)),
-                _configPath,
+                configPath,
                 string(
                     abi.encodePacked(
                         replicaOfPath(_domain, connections[i]),
@@ -91,20 +88,20 @@ abstract contract DeployImplementationsLogic is Script, Config {
         }
         vm.writeJson(
             vm.toString(address(bridgeRouter)),
-            _configPath,
+            configPath,
             bridgeAttributePath(_domain, "bridgeRouter.implementation")
         );
         vm.writeJson(
             vm.toString(address(bridgeToken)),
-            _configPath,
+            configPath,
             bridgeAttributePath(_domain, "bridgeToken.implementation")
         );
         vm.writeJson(
             vm.toString(address(tokenRegistry)),
-            _configPath,
+            configPath,
             bridgeAttributePath(_domain, "tokenRegistry.implementation")
         );
-        __Config_reload(_configPath);
+        reloadConfig();
     }
 }
 
@@ -116,6 +113,6 @@ contract DeployImplementations is DeployImplementationsLogic {
         vm.startBroadcast();
         deployImplementations(_domain);
         vm.stopBroadcast();
-        updateImplementations(_domain, _configPath);
+        updateImplementations(_domain);
     }
 }
