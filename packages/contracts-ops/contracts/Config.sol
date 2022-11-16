@@ -23,6 +23,8 @@ abstract contract Config is INomadProtocol {
     Vm private constant vm =
         Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
+    string internal inputPath;
+    string internal outputPath;
     string internal config;
 
     modifier onlyInitialized() {
@@ -30,9 +32,23 @@ abstract contract Config is INomadProtocol {
         _;
     }
 
-    function __Config_initialize(string memory file) internal {
+    function __Config_initialize(string memory _fileName) internal {
         require(!isInitialized(), "already init");
-        config = vm.readFile(file);
+        inputPath = string(abi.encodePacked("./actions/", _fileName));
+        _readConfig(inputPath);
+        // copy input config to output path
+        // NOTE: will overwrite any existing contents of output file
+        outputPath = string(abi.encodePacked("./actions/output-", _fileName));
+        vm.writeFile(outputPath, config);
+    }
+
+    function reloadConfig() internal {
+        _readConfig(outputPath);
+    }
+
+    function _readConfig(string memory _path) private {
+        config = vm.readFile(_path);
+        require(bytes(config).length != 0, string(abi.encodePacked("empty config ", _path)));
     }
 
     function isInitialized() public view returns (bool) {
@@ -65,6 +81,7 @@ abstract contract Config is INomadProtocol {
 
     function loadCoreAttribute(string memory domain, string memory key)
         private
+        view
         returns (bytes memory)
     {
         return vm.parseJson(config, coreAttributePath(domain, key));
@@ -72,6 +89,7 @@ abstract contract Config is INomadProtocol {
 
     function getCoreDeployHeight(string memory domain)
         public
+        view
         onlyInitialized
         returns (uint256)
     {
@@ -80,6 +98,7 @@ abstract contract Config is INomadProtocol {
 
     function governanceRouterUpgrade(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (Upgrade memory)
@@ -93,6 +112,7 @@ abstract contract Config is INomadProtocol {
 
     function getGovernanceRouter(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (GovernanceRouter)
@@ -102,6 +122,7 @@ abstract contract Config is INomadProtocol {
 
     function homeUpgrade(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (Upgrade memory)
@@ -111,6 +132,7 @@ abstract contract Config is INomadProtocol {
 
     function getHome(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (Home)
@@ -118,8 +140,18 @@ abstract contract Config is INomadProtocol {
         return Home(address(homeUpgrade(domain).proxy));
     }
 
+    function getHomeImpl(string memory domain)
+        public
+        view
+        onlyInitialized
+        returns (Home)
+    {
+        return Home(address(homeUpgrade(domain).implementation));
+    }
+
     function getUpdaterManager(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (UpdaterManager)
@@ -133,6 +165,7 @@ abstract contract Config is INomadProtocol {
 
     function getUpgradeBeaconController(string memory domain)
         public
+        view
         override
         returns (UpgradeBeaconController)
     {
@@ -145,6 +178,7 @@ abstract contract Config is INomadProtocol {
 
     function getXAppConnectionManager(string memory domain)
         public
+        view
         override
         returns (XAppConnectionManager)
     {
@@ -165,6 +199,7 @@ abstract contract Config is INomadProtocol {
 
     function replicaOfUpgrade(string memory local, string memory remote)
         public
+        view
         override
         returns (Upgrade memory)
     {
@@ -177,22 +212,27 @@ abstract contract Config is INomadProtocol {
 
     function getReplicaOf(string memory local, string memory remote)
         public
+        view
         override
         returns (Replica)
     {
         return Replica(address(replicaOfUpgrade(local, remote).proxy));
     }
 
-    function getNetworks() public override returns (string[] memory) {
+    function getNetworks() public view override returns (string[] memory) {
         return abi.decode(vm.parseJson(config, ".networks"), (string[]));
     }
 
-    function getRpcs(string memory domain) public returns (string[] memory) {
+    function getRpcs(string memory domain)
+        public
+        view
+        returns (string[] memory)
+    {
         string memory key = string(abi.encodePacked(".rpcs.", domain));
         return abi.decode(vm.parseJson(config, key), (string[]));
     }
 
-    function getGovernor() public override returns (address) {
+    function getGovernor() public view override returns (address) {
         return
             abi.decode(
                 vm.parseJson(config, ".protocol.governor.id"),
@@ -200,7 +240,7 @@ abstract contract Config is INomadProtocol {
             );
     }
 
-    function getGovernorDomain() public override returns (uint256) {
+    function getGovernorDomain() public view override returns (uint256) {
         return
             abi.decode(
                 vm.parseJson(config, ".protocol.governor.domain"),
@@ -226,6 +266,7 @@ abstract contract Config is INomadProtocol {
 
     function loadBridgeAttribute(string memory domain, string memory key)
         private
+        view
         returns (bytes memory)
     {
         return vm.parseJson(config, bridgeAttributePath(domain, key));
@@ -233,6 +274,7 @@ abstract contract Config is INomadProtocol {
 
     function getBridgeDeployHeight(string memory domain)
         public
+        view
         onlyInitialized
         returns (uint256)
     {
@@ -242,6 +284,7 @@ abstract contract Config is INomadProtocol {
 
     function bridgeRouterUpgrade(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (Upgrade memory)
@@ -252,6 +295,7 @@ abstract contract Config is INomadProtocol {
 
     function getBridgeRouter(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (BridgeRouter)
@@ -261,6 +305,7 @@ abstract contract Config is INomadProtocol {
 
     function bridgeTokenUpgrade(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (Upgrade memory)
@@ -271,6 +316,7 @@ abstract contract Config is INomadProtocol {
 
     function tokenRegistryUpgrade(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (Upgrade memory)
@@ -281,6 +327,7 @@ abstract contract Config is INomadProtocol {
 
     function getTokenRegistry(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (TokenRegistry)
@@ -290,15 +337,23 @@ abstract contract Config is INomadProtocol {
 
     function accountantUpgrade(string memory domain)
         public
+        view
         override
         onlyInitialized
-        returns (Upgrade memory)
+        returns (Upgrade memory _acctUpgrade)
     {
-        return abi.decode(loadBridgeAttribute(domain, "accountant"), (Upgrade));
+        bytes memory raw = loadBridgeAttribute(domain, "accountant");
+        // if accountant exists, decode & return
+        if (raw.length != 0) {
+            _acctUpgrade = abi.decode(raw, (Upgrade));
+        }
+        // if accountant doesn't exist, an empty upgrade setup will be returned
+        // user can check if setup == address(0) to check if accountant is present
     }
 
     function getAccountant(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (AllowListNFTRecoveryAccountant)
@@ -311,6 +366,7 @@ abstract contract Config is INomadProtocol {
 
     function getEthHelper(string memory domain)
         public
+        view
         override
         returns (ETHHelper)
     {
@@ -356,6 +412,7 @@ abstract contract Config is INomadProtocol {
 
     function loadProtocolAttribute(string memory domain, string memory key)
         private
+        view
         returns (bytes memory)
     {
         return vm.parseJson(config, protocolAttributePath(domain, key));
@@ -371,7 +428,7 @@ abstract contract Config is INomadProtocol {
     function loadProtocolConfigAttribute(
         string memory domain,
         string memory key
-    ) private returns (bytes memory) {
+    ) private view returns (bytes memory) {
         return vm.parseJson(config, protocolConfigAttributePath(domain, key));
     }
 
@@ -388,12 +445,13 @@ abstract contract Config is INomadProtocol {
     function loadAccountantConfigAttribute(
         string memory domain,
         string memory key
-    ) private returns (bytes memory) {
+    ) private view returns (bytes memory) {
         return vm.parseJson(config, accountantConfigAttributePath(domain, key));
     }
 
     function getConnections(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (string[] memory)
@@ -407,6 +465,7 @@ abstract contract Config is INomadProtocol {
 
     function getDomainNumber(string memory domain)
         public
+        view
         onlyInitialized
         returns (uint32)
     {
@@ -415,6 +474,7 @@ abstract contract Config is INomadProtocol {
 
     function getUpdater(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (address)
@@ -428,6 +488,7 @@ abstract contract Config is INomadProtocol {
 
     function getRecoveryManager(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (address)
@@ -444,6 +505,7 @@ abstract contract Config is INomadProtocol {
 
     function getWatchers(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (address[] memory)
@@ -457,6 +519,7 @@ abstract contract Config is INomadProtocol {
 
     function getRecoveryTimelock(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (uint256)
@@ -473,6 +536,7 @@ abstract contract Config is INomadProtocol {
 
     function getOptimisticSeconds(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (uint256)
@@ -486,6 +550,7 @@ abstract contract Config is INomadProtocol {
 
     function getFundsRecipient(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (address)
@@ -499,6 +564,7 @@ abstract contract Config is INomadProtocol {
 
     function getAccountantOwner(string memory domain)
         public
+        view
         override
         onlyInitialized
         returns (address)

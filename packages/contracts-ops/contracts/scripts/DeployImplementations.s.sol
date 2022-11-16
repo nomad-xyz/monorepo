@@ -18,7 +18,7 @@ import {TokenRegistry} from "@nomad-xyz/contracts-bridge/contracts/TokenRegistry
 import {Config} from "../Config.sol";
 import {JsonWriter} from "../JsonWriter.sol";
 // Utilities
-import {Script} from "forge-std/Script.sol";
+import {Script, console2} from "forge-std/Script.sol";
 
 abstract contract DeployImplementationsLogic is Script, Config {
     /*//////////////////////////////////////////////////////////////
@@ -37,6 +37,7 @@ abstract contract DeployImplementationsLogic is Script, Config {
     //////////////////////////////////////////////////////////////*/
 
     function deployImplementations(string memory _domain) internal {
+        console2.log("deploy implementations ", _domain);
         // Home
         home = new Home(getDomainNumber(_domain));
         // Replica
@@ -61,36 +62,23 @@ abstract contract DeployImplementationsLogic is Script, Config {
         // BridgeToken
         bridgeToken = new BridgeToken();
     }
-}
 
-contract DeployImplementations is DeployImplementationsLogic {
-    // entrypoint
-    function deploy(string memory _configPath, string memory _domain) public {
-        __Config_initialize(_configPath);
-        vm.createSelectFork(getRpcs(_domain)[0]);
-        vm.startBroadcast();
-        deployImplementations(_domain);
-        updateImpl(_domain, _configPath);
-    }
-
-    function updateImpl(string memory _domain, string memory _configPath)
-        internal
-    {
+    function writeImplementationConfig(string memory _domain) internal {
         vm.writeJson(
             vm.toString(address(home)),
-            _configPath,
+            outputPath,
             coreAttributePath(_domain, "home.implementation")
         );
         vm.writeJson(
             vm.toString(address(governanceRouter)),
-            _configPath,
+            outputPath,
             coreAttributePath(_domain, "governanceRouter.implementation")
         );
         string[] memory connections = getConnections(_domain);
         for (uint256 i; i < connections.length; i++) {
             vm.writeJson(
                 vm.toString(address(replica)),
-                _configPath,
+                outputPath,
                 string(
                     abi.encodePacked(
                         replicaOfPath(_domain, connections[i]),
@@ -101,18 +89,31 @@ contract DeployImplementations is DeployImplementationsLogic {
         }
         vm.writeJson(
             vm.toString(address(bridgeRouter)),
-            _configPath,
+            outputPath,
             bridgeAttributePath(_domain, "bridgeRouter.implementation")
         );
         vm.writeJson(
             vm.toString(address(bridgeToken)),
-            _configPath,
+            outputPath,
             bridgeAttributePath(_domain, "bridgeToken.implementation")
         );
         vm.writeJson(
             vm.toString(address(tokenRegistry)),
-            _configPath,
+            outputPath,
             bridgeAttributePath(_domain, "tokenRegistry.implementation")
         );
+        reloadConfig();
+    }
+}
+
+contract DeployImplementations is DeployImplementationsLogic {
+    // entrypoint
+    function deploy(string memory _configName, string memory _domain) public {
+        __Config_initialize(_configName);
+        vm.createSelectFork(getRpcs(_domain)[0]);
+        vm.startBroadcast();
+        deployImplementations(_domain);
+        vm.stopBroadcast();
+        writeImplementationConfig(_domain);
     }
 }

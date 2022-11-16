@@ -2,9 +2,8 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "forge-std/Script.sol";
+import {Script, console2} from "forge-std/Script.sol";
 import {Config} from "../Config.sol";
-import {JsonWriter} from "../JsonWriter.sol";
 
 import {AllowListNFTRecoveryAccountant} from "@nomad-xyz/contracts-bridge/contracts/accountants/NFTAccountant.sol";
 import {UpgradeBeacon} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeacon.sol";
@@ -17,6 +16,9 @@ abstract contract DeployAccountantLogic is Script, Config {
 
     // Deploys & configures the NFTAccountant with upgrade setup
     function deployAccountant(string memory _domain) internal {
+        // if accountant was already deployed, don't deploy
+        if (address(getAccountant(_domain)) != address(0)) return;
+        console2.log("deploy accountant ", _domain);
         // deploy implementation
         implementation = new AllowListNFTRecoveryAccountant(
             address(getBridgeRouter(_domain)),
@@ -41,47 +43,39 @@ abstract contract DeployAccountantLogic is Script, Config {
             getAccountantOwner(_domain)
         );
     }
+
+    function writeAccountantConfig(string memory _domain) internal {
+        // if accountant was not deployed, don't write
+        if (address(proxy) == address(0)) return;
+        vm.writeJson(
+            vm.toString(address(beacon)),
+            outputPath,
+            bridgeAttributePath(_domain, "accountant.beacon")
+        );
+        vm.writeJson(
+            vm.toString(address(implementation)),
+            outputPath,
+            bridgeAttributePath(_domain, "accountant.implementation")
+        );
+        vm.writeJson(
+            vm.toString(address(proxy)),
+            outputPath,
+            bridgeAttributePath(_domain, "accountant.proxy")
+        );
+        reloadConfig();
+    }
 }
 
 contract DeployAccountant is DeployAccountantLogic {
-    using JsonWriter for JsonWriter.Buffer;
-    using JsonWriter for string;
-
-    JsonWriter.File outputFile;
-
     // entrypoint
-    function deploy(
-        string calldata _configFile,
-        string memory _domain,
-        string memory _outputFile,
-        bool _overwrite
-    ) public {
+    function deploy(string calldata _configName, string memory _domain) public {
         // initialize
-        __Config_initialize(_configFile);
-        _outputFile = string(abi.encodePacked("./actions/", _outputFile));
-        outputFile.path = _outputFile;
-        outputFile.overwrite = _overwrite;
+        __Config_initialize(_configName);
         // deploy & configure accountant
         vm.startBroadcast();
         deployAccountant(_domain);
         vm.stopBroadcast();
         // write contract addresses to JSON
-        write();
-    }
-
-    function write() internal {
-        JsonWriter.Buffer memory buffer = JsonWriter.newBuffer();
-        string memory indent = "";
-        buffer.writeObjectOpen(indent);
-        string[2][] memory kvs = new string[2][](3);
-        kvs[0][0] = "implementation";
-        kvs[0][1] = vm.toString(address(implementation));
-        kvs[1][0] = "beacon";
-        kvs[1][1] = vm.toString(address(beacon));
-        kvs[2][0] = "proxy";
-        kvs[2][1] = vm.toString(address(proxy));
-        buffer.writeSimpleObject(indent.nextIndent(), "accountant", kvs, true);
-        buffer.writeObjectClose(indent, true);
-        buffer.flushTo(outputFile);
+        writeAccountantConfig(_domain);
     }
 }

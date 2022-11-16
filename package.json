@@ -32,7 +32,7 @@
     "storage-inspect:generate": "yarn workspaces foreach -Apvi --include @nomad-xyz/contracts-core --include @nomad-xyz/contracts-bridge --include @nomad-xyz/contracts-router run storage-inspect:generate",
     "test:coverage": "yarn workspaces foreach -Apvi run test:coverage",
     "test:integration": "yarn local-environment test:integration",
-    "test:unit": "yarn workspaces foreach -Apvt --exclude @nomad-xyz/deploy run test:unit"
+    "test:unit": "yarn workspaces foreach -Apvt --exclude @nomad-xyz/deploy --exclude @nomad-xyz/contracts-ops run test:unit"
   },
   "packageManager": "yarn@3.2.0"
 }

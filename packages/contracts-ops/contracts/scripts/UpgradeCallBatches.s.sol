@@ -16,52 +16,38 @@ import {CallBatch} from "../CallBatch.sol";
 // Contract for selector
 import {UpgradeBeaconController} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeaconController.sol";
 
-contract UpgradeCallBatches is Script, Config, CallBatch {
+contract UpgradeCallBatchLogic is Script, Config, CallBatch {
     string currentDomain;
 
-    function printCallBatches(
-        string memory _configFile,
-        string[] memory _domainNames,
-        string memory _localDomainName,
-        bool recovery
-    ) external {
-        localDomainName = _localDomainName;
-        setUp(_configFile);
-        for (uint256 i; i < _domainNames.length; i++) {
-            currentDomain = _domainNames[i];
-            generateGovernanceCalls();
+    function pushUpgrade(string memory _domain) internal {
+        currentDomain = _domain;
+        console2.log("upgrade ", _domain);
+        pushSingleUpgrade(
+            governanceRouterUpgrade(currentDomain),
+            "governanceRouter"
+        );
+        pushSingleUpgrade(bridgeRouterUpgrade(currentDomain), "bridgeRouter");
+        pushSingleUpgrade(bridgeTokenUpgrade(currentDomain), "bridgeToken");
+        pushSingleUpgrade(tokenRegistryUpgrade(currentDomain), "tokenRegistry");
+        pushSingleUpgrade(homeUpgrade(currentDomain), "home");
+        pushSingleUpgrade(
+            replicaOfUpgrade(currentDomain, getConnections(currentDomain)[0]),
+            "replica"
+        );
+    }
+
+    function pushSingleUpgrade(
+        Upgrade memory _upgrade,
+        string memory contractName
+    ) private {
+        // check if upgrade is unnecessary
+        (, bytes memory result) = address(_upgrade.beacon).call("");
+        address _current = abi.decode(result, (address));
+        if (_current == _upgrade.implementation) {
+            return;
         }
-        writeCallBatch(recovery);
-    }
-
-    function setUp(string memory _configFile) internal {
-        __Config_initialize(_configFile);
-        string memory outputFile = "upgradeActions.json";
-        __CallBatch_initialize(
-            localDomainName,
-            getDomainNumber(localDomainName),
-            outputFile,
-            true
-        );
-        console2.log("Governance Actions have been output to", outputFile);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                       GOVERNANCE CALL GENERATORS
-    //////////////////////////////////////////////////////////////*/
-
-    function generateGovernanceCalls() internal {
-        pushUpgrade(governanceRouterUpgrade(currentDomain));
-        pushUpgrade(bridgeRouterUpgrade(currentDomain));
-        pushUpgrade(bridgeTokenUpgrade(currentDomain));
-        pushUpgrade(tokenRegistryUpgrade(currentDomain));
-        pushUpgrade(homeUpgrade(currentDomain));
-        pushUpgrade(
-            replicaOfUpgrade(currentDomain, getConnections(currentDomain)[0])
-        );
-    }
-
-    function pushUpgrade(Upgrade memory _upgrade) private {
+        console2.log("   upgrade ", contractName);
+        // send upgrade
         bytes memory call = abi.encodeWithSelector(
             UpgradeBeaconController.upgrade.selector,
             address(_upgrade.beacon),
@@ -76,5 +62,34 @@ contract UpgradeCallBatches is Script, Config, CallBatch {
         } else {
             pushRemote(beaconController, call, domainNumber);
         }
+    }
+}
+
+contract UpgradeCallBatches is UpgradeCallBatchLogic {
+    // entrypoint
+    function printCallBatches(
+        string memory _configName,
+        string[] memory _domainNames,
+        string memory _localDomainName,
+        bool recovery
+    ) external {
+        localDomainName = _localDomainName;
+        setUp(_configName);
+        for (uint256 i; i < _domainNames.length; i++) {
+            pushUpgrade(_domainNames[i]);
+        }
+        writeCallBatch(recovery);
+    }
+
+    function setUp(string memory _configName) internal {
+        __Config_initialize(_configName);
+        string memory _batchOutput = "upgradeActions";
+        __CallBatch_initialize(
+            localDomainName,
+            getDomainNumber(localDomainName),
+            _batchOutput,
+            true
+        );
+        console2.log("Governance Actions have been output to", _batchOutput);
     }
 }

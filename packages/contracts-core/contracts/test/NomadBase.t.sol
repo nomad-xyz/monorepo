@@ -18,8 +18,8 @@ contract NomadBaseTest is NomadTest {
         super.setUp();
         nbh = new NomadBaseHarness(homeDomain);
         vm.expectEmit(false, false, false, true);
-        emit NewUpdater(address(0), updater);
-        nbh.initialize(updater);
+        emit NewUpdater(address(0), updaterAddr);
+        nbh.initialize(updaterAddr);
         vm.label(address(nbh), "Nomad Base Harness");
     }
 
@@ -27,7 +27,7 @@ contract NomadBaseTest is NomadTest {
         vm.expectRevert(
             bytes("Initializable: contract is already initialized")
         );
-        nbh.initialize(updater);
+        nbh.initialize(updaterAddr);
     }
 
     function test_ownerIsContractCreator() public {

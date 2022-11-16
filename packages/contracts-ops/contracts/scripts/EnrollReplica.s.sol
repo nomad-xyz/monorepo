@@ -7,15 +7,16 @@ import {CallBatch} from "../CallBatch.sol";
 
 import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 
-import "forge-std/Script.sol";
+import {Script, console2} from "forge-std/Script.sol";
 
 abstract contract EnrollReplicasLogic is Config, CallBatch {
-    function enrollReplica(string memory remote) internal {
+    function pushEnrollReplica(string memory remote) internal {
         XAppConnectionManager xcm = getXAppConnectionManager(localDomainName);
         address replica = address(getReplicaOf(localDomainName, remote));
         uint32 domainNumber = getDomainNumber(remote);
 
         if (xcm.replicaToDomain(replica) != domainNumber) {
+            console2.log("   enroll replica ", remote);
             pushLocal(
                 address(xcm),
                 abi.encodeWithSelector(
@@ -27,41 +28,42 @@ abstract contract EnrollReplicasLogic is Config, CallBatch {
         }
     }
 
-    function enrollReplicas() internal {
+    function pushEnrollReplicas() internal {
+        console2.log("enroll replicas ", localDomainName);
         // Load info from config
         string[] memory connections = getConnections(localDomainName);
         // Set each replica
         for (uint256 i = 0; i < connections.length; i++) {
-            enrollReplica(connections[i]);
+            pushEnrollReplica(connections[i]);
         }
     }
 }
 
 contract EnrollReplicas is Script, EnrollReplicasLogic {
     function initialize(
-        string calldata configFile,
+        string calldata _configName,
         string calldata _localDomain,
-        string calldata output,
+        string calldata _batchOutput,
         bool overwrite
     ) private {
-        __Config_initialize(configFile);
+        __Config_initialize(_configName);
         __CallBatch_initialize(
             _localDomain,
             getDomainNumber(_localDomain),
-            output,
+            _batchOutput,
             overwrite
         );
     }
 
     // entrypoint
     function enroll(
-        string calldata configFile,
+        string calldata _configName,
         string calldata _localDomain,
-        string calldata output,
+        string calldata _batchOutput,
         bool overwrite
     ) external {
-        initialize(configFile, _localDomain, output, overwrite);
-        enrollReplicas();
+        initialize(_configName, _localDomain, _batchOutput, overwrite);
+        pushEnrollReplicas();
         // NOTE: script is currently written for one chain only
         // to be used in recovery mode
         // FUTURE: refactor to be multi-chain

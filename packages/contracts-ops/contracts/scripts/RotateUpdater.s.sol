@@ -9,14 +9,15 @@ import {UpdaterManager} from "@nomad-xyz/contracts-core/contracts/UpdaterManager
 import {Home} from "@nomad-xyz/contracts-core/contracts/Home.sol";
 import {Replica} from "@nomad-xyz/contracts-core/contracts/Replica.sol";
 
-import "forge-std/Script.sol";
+import {Script, console2} from "forge-std/Script.sol";
 
 abstract contract RotateUpdaterLogic is Config, CallBatch {
-    function setReplicaUpdater(string memory remoteDomain) private {
+    function pushSetReplicaUpdater(string memory remoteDomain) private {
         // New updater is the updater for the remote Home
         address newUpdater = getUpdater(remoteDomain);
         Replica replica = getReplicaOf(localDomainName, remoteDomain);
         if (replica.updater() != newUpdater) {
+            console2.log("   rotate updater replica ", remoteDomain);
             pushLocal(
                 address(replica),
                 abi.encodeWithSelector(replica.setUpdater.selector, newUpdater)
@@ -24,12 +25,13 @@ abstract contract RotateUpdaterLogic is Config, CallBatch {
         }
     }
 
-    function setHomeUpdater() private {
+    function pushSetHomeUpdater() private {
         address newUpdater = getUpdater(localDomainName);
         Home home = getHome(localDomainName);
         UpdaterManager updaterManager = getUpdaterManager(localDomainName);
         // Updater manager will call `home.setUpdater()`
         if (newUpdater != home.updater()) {
+            console2.log("   rotate updater home");
             pushLocal(
                 address(updaterManager),
                 abi.encodeWithSelector(
@@ -41,13 +43,14 @@ abstract contract RotateUpdaterLogic is Config, CallBatch {
     }
 
     // Sets the updater for the home and all replicas
-    function setUpdater() internal {
+    function pushSetUpdater() internal {
+        console2.log("rotate updaters ", localDomainName);
         // Load info from config
         string[] memory connections = getConnections(localDomainName);
-        setHomeUpdater();
+        pushSetHomeUpdater();
         // Set each replica
         for (uint256 i = 0; i < connections.length; i++) {
-            setReplicaUpdater(connections[i]);
+            pushSetReplicaUpdater(connections[i]);
         }
     }
 }
@@ -70,13 +73,13 @@ contract RotateUpdater is Script, RotateUpdaterLogic {
 
     // entrypoint
     function rotate(
-        string calldata configFile,
+        string calldata _configName,
         string calldata _localDomain,
-        string calldata output,
+        string calldata _batchOutput,
         bool overwrite
     ) public {
-        initialize(configFile, _localDomain, output, overwrite);
-        setUpdater();
+        initialize(_configName, _localDomain, _batchOutput, overwrite);
+        pushSetUpdater();
         // NOTE: script is currently written for one chain only
         // to be used in recovery mode
         // FUTURE: refactor to be multi-chain

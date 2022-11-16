@@ -61,9 +61,9 @@ contract HomeTest is NomadTestWithUpdaterManager {
 
     function test_onlyUpdaterManagerSetUpdater() public {
         address newUpdater = vm.addr(420);
-        address oldUpdater = updater;
-        assertEq(home.updater(), updater);
-        assertEq(updaterManager.updater(), updater);
+        address oldUpdater = updaterAddr;
+        assertEq(home.updater(), updaterAddr);
+        assertEq(updaterManager.updater(), updaterAddr);
         vm.expectEmit(false, false, false, true);
         emit NewUpdater(oldUpdater, newUpdater);
         vm.prank(address(updaterManager));

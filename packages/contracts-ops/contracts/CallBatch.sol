@@ -11,10 +11,14 @@ import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManag
 import {JsonWriter} from "./JsonWriter.sol";
 
 import "forge-std/Script.sol";
+import "forge-std/Vm.sol";
 
-abstract contract CallBatch is Script {
+abstract contract CallBatch {
     using JsonWriter for JsonWriter.Buffer;
     using JsonWriter for string;
+
+    Vm private constant vm =
+        Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     string localDomainName;
     uint32 public localDomain;
@@ -23,22 +27,20 @@ abstract contract CallBatch is Script {
     mapping(uint32 => GovernanceMessage.Call[]) public remoteCalls;
 
     bool public written;
-    JsonWriter.File outputFile;
+    JsonWriter.File batchOutput;
 
     function __CallBatch_initialize(
         string memory _localDomainName,
         uint32 _localDomain,
-        string memory _outputFilePath,
+        string memory _batchOutput,
         bool _overwrite
     ) public {
         require(localDomain == 0, "already initialized");
         require(_localDomain != 0, "can't pass zero domain");
         localDomainName = _localDomainName;
         localDomain = _localDomain;
-        outputFile.overwrite = _overwrite;
-        outputFile.path = string(
-            abi.encodePacked("./actions/", _outputFilePath)
-        );
+        batchOutput.overwrite = _overwrite;
+        batchOutput.path = string(abi.encodePacked("./actions/", _batchOutput));
     }
 
     function pushRemote(
@@ -112,7 +114,7 @@ abstract contract CallBatch is Script {
         string memory indent,
         GovernanceMessage.Call storage call,
         bool terminal
-    ) private {
+    ) private view {
         buffer.writeObjectOpen(indent);
         string memory inner = indent.nextIndent();
         buffer.writeKv(
@@ -129,7 +131,7 @@ abstract contract CallBatch is Script {
         JsonWriter.Buffer memory buffer,
         string memory indent,
         GovernanceMessage.Call[] storage calls
-    ) private {
+    ) private view {
         for (uint32 i = 0; i < calls.length; i++) {
             writeCall(
                 buffer,
@@ -142,6 +144,7 @@ abstract contract CallBatch is Script {
 
     function writeLocal(JsonWriter.Buffer memory buffer, string memory indent)
         private
+        view
     {
         buffer.writeArrayOpen(indent, "local");
         writeCallList(buffer, indent, localCalls);
@@ -150,6 +153,7 @@ abstract contract CallBatch is Script {
 
     function writeRemotes(JsonWriter.Buffer memory buffer, string memory indent)
         private
+        view
     {
         if (remoteDomains.length == 0) return;
         buffer.writeObjectOpen(indent, "remote");
@@ -172,7 +176,7 @@ abstract contract CallBatch is Script {
         uint32 domain,
         GovernanceMessage.Call[] memory calls,
         bool isLastDomain
-    ) private {
+    ) private pure {
         buffer.writeObjectOpen(indent, vm.toString(uint256(domain)));
         bytes memory data = abi.encodeWithSelector(
             GovernanceRouter.executeGovernanceActions.selector,
@@ -260,7 +264,7 @@ abstract contract CallBatch is Script {
         writeRemotes(buffer, inner);
         writeBuilt(buffer, inner, recovery);
         buffer.writeObjectClose(indent, true);
-        buffer.flushTo(outputFile);
+        buffer.flushTo(batchOutput);
         // finish
         written = true;
     }

@@ -11,7 +11,7 @@ import {MerkleTest} from "./MerkleTest.sol";
 contract NomadTest is Test {
     uint256 updaterPK = 1;
     uint256 fakeUpdaterPK = 2;
-    address updater = vm.addr(updaterPK);
+    address updaterAddr = vm.addr(updaterPK);
     address fakeUpdater = vm.addr(fakeUpdaterPK);
     address signer = vm.addr(3);
     address fakeSigner = vm.addr(4);
@@ -22,7 +22,7 @@ contract NomadTest is Test {
     MerkleTest merkleTest;
 
     function setUp() public virtual {
-        vm.label(updater, "updater");
+        vm.label(updaterAddr, "updater");
         vm.label(fakeUpdater, "fake updater");
         vm.label(signer, "signer");
         vm.label(fakeSigner, "fake signer");
@@ -91,7 +91,7 @@ contract NomadTestWithUpdaterManager is NomadTest {
 
     function setUp() public virtual override {
         super.setUp();
-        updaterManager = new UpdaterManager(updater);
+        updaterManager = new UpdaterManager(updaterAddr);
     }
 }
 

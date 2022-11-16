@@ -16,7 +16,7 @@ contract ReplicaTest is ReplicaHandlers {
 
     ReplicaHarness replica;
 
-    uint256 optimisticSeconds;
+    uint256 optimisticTimeout;
     bytes32 committedRoot;
 
     bytes32 exampleRoot;
@@ -24,7 +24,7 @@ contract ReplicaTest is ReplicaHandlers {
     uint256 exampleLeafIndex;
     bytes32[32] exampleProof;
 
-    function setUp() public override {
+    function setUp() public virtual override {
         super.setUp();
         committedRoot = "commited root";
 
@@ -137,17 +137,17 @@ contract ReplicaTest is ReplicaHandlers {
     }
 
     function initializeReplica() public {
-        optimisticSeconds = 10;
+        optimisticTimeout = 10;
 
         replica.initialize(
             remoteDomain,
-            updater,
+            updaterAddr,
             committedRoot,
-            optimisticSeconds
+            optimisticTimeout
         );
         assertEq(uint256(replica.remoteDomain()), uint256(remoteDomain));
         assertEq(replica.committedRoot(), committedRoot);
-        assertEq(replica.optimisticSeconds(), optimisticSeconds);
+        assertEq(replica.optimisticSeconds(), optimisticTimeout);
         assertEq(replica.confirmAt(committedRoot), 1);
     }
 
@@ -168,7 +168,7 @@ contract ReplicaTest is ReplicaHandlers {
 
         assertEq(
             replica.confirmAt(newRoot),
-            block.timestamp + optimisticSeconds
+            block.timestamp + optimisticTimeout
         );
         assertEq(replica.committedRoot(), newRoot);
     }
@@ -465,7 +465,7 @@ contract ReplicaTest is ReplicaHandlers {
 
     function test_setUpdaterOnlyOwner() public {
         vm.expectEmit(false, false, false, true);
-        emit NewUpdater(updater, vm.addr(10));
+        emit NewUpdater(updaterAddr, vm.addr(10));
         vm.prank(replica.owner());
         replica.setUpdater(vm.addr(10));
         vm.prank(vm.addr(1453));
