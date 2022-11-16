@@ -2,7 +2,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 import {Config} from "../Config.sol";
 
 import {AllowListNFTRecoveryAccountant} from "@nomad-xyz/contracts-bridge/contracts/accountants/NFTAccountant.sol";

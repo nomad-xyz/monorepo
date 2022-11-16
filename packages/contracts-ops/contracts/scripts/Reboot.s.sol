@@ -7,7 +7,7 @@ IMPORTS
 //////////////////////////////////////////////////////////////*/
 
 // Utilities
-import {Script, console2} from "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 
 // Ops libs
 import {Config} from "../Config.sol";

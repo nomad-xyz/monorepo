@@ -9,7 +9,7 @@ import {UpdaterManager} from "@nomad-xyz/contracts-core/contracts/UpdaterManager
 import {Home} from "@nomad-xyz/contracts-core/contracts/Home.sol";
 import {Replica} from "@nomad-xyz/contracts-core/contracts/Replica.sol";
 
-import "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 
 abstract contract RotateUpdaterLogic is Config, CallBatch {
     function setReplicaUpdater(string memory remoteDomain) private {

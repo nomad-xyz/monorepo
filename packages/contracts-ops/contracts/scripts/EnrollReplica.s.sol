@@ -7,7 +7,7 @@ import {CallBatch} from "../CallBatch.sol";
 
 import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 
-import "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 
 abstract contract EnrollReplicasLogic is Config, CallBatch {
     function enrollReplica(string memory remote) internal {
