@@ -130,6 +130,15 @@ abstract contract Config is INomadProtocol {
         return Home(address(homeUpgrade(domain).proxy));
     }
 
+    function getHomeImpl(string memory domain)
+        public
+        view
+        onlyInitialized
+        returns (Home)
+    {
+        return Home(address(homeUpgrade(domain).implementation));
+    }
+
     function getUpdaterManager(string memory domain)
         public
         view

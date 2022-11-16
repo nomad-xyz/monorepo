@@ -22,37 +22,51 @@ contract InitializeImplementationsLogic is Script, Config {
     function initializeImplementations(string memory _domain) internal {
         // Home
         // NOTE: must pass real value for UpdaterManager because it is queried
-        Home home = Home(homeUpgrade(_domain).implementation);
-        home.initialize(IUpdaterManager(address(getUpdaterManager(_domain))));
+        Home home = getHomeImpl(_domain);
+        if (address(home.updaterManager()) == address(0)) {
+            home.initialize(
+                IUpdaterManager(address(getUpdaterManager(_domain)))
+            );
+        }
         // Replica
         Replica replica = Replica(
             replicaOfUpgrade(_domain, getConnections(_domain)[0]).implementation
         );
-        replica.initialize(0, address(0), bytes32(0), 0);
+        if (replica.owner() == address(0)) {
+            replica.initialize(0, address(0), bytes32(0), 0);
+        }
         // GovernanceRouter
         // NOTE: must pass real value for xAppConnectionManager because it is queried
         GovernanceRouter governanceRouter = GovernanceRouter(
             governanceRouterUpgrade(_domain).implementation
         );
-        governanceRouter.initialize(
-            address(getXAppConnectionManager(_domain)),
-            address(0)
-        );
+        if (address(governanceRouter.xAppConnectionManager()) == address(0)) {
+            governanceRouter.initialize(
+                address(getXAppConnectionManager(_domain)),
+                address(0)
+            );
+        }
         // BridgeRouter
         BridgeRouter bridgeRouter = BridgeRouter(
             payable(bridgeRouterUpgrade(_domain).implementation)
         );
-        bridgeRouter.initialize(address(0), address(0));
+        if (address(bridgeRouter.tokenRegistry()) == address(0)) {
+            bridgeRouter.initialize(address(0), address(0));
+        }
         // TokenRegistry
         TokenRegistry tokenRegistry = TokenRegistry(
             tokenRegistryUpgrade(_domain).implementation
         );
-        tokenRegistry.initialize(address(0), address(0));
+        if (tokenRegistry.owner() == address(0)) {
+            tokenRegistry.initialize(address(0), address(0));
+        }
         // BridgeToken
         BridgeToken bridgeToken = BridgeToken(
             bridgeTokenUpgrade(_domain).implementation
         );
-        bridgeToken.initialize();
+        if (bridgeToken.owner() == address(0)) {
+            bridgeToken.initialize();
+        }
     }
 }
 
