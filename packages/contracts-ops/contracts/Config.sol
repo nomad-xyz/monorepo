@@ -330,9 +330,15 @@ abstract contract Config is INomadProtocol {
         view
         override
         onlyInitialized
-        returns (Upgrade memory)
+        returns (Upgrade memory _acctUpgrade)
     {
-        return abi.decode(loadBridgeAttribute(domain, "accountant"), (Upgrade));
+        bytes memory raw = loadBridgeAttribute(domain, "accountant");
+        // if accountant exists, decode & return
+        if (raw.length != 0) {
+            _acctUpgrade = abi.decode(raw, (Upgrade));
+        }
+        // if accountant doesn't exist, an empty upgrade setup will be returned
+        // user can check if setup == address(0) to check if accountant is present
     }
 
     function getAccountant(string memory domain)

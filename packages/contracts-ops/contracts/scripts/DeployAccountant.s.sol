@@ -16,6 +16,8 @@ abstract contract DeployAccountantLogic is Script, Config {
 
     // Deploys & configures the NFTAccountant with upgrade setup
     function deployAccountant(string memory _domain) internal {
+        // if accountant was already deployed, don't deploy
+        if (address(getAccountant(_domain)) != address(0)) return;
         // deploy implementation
         implementation = new AllowListNFTRecoveryAccountant(
             address(getBridgeRouter(_domain)),
@@ -42,6 +44,8 @@ abstract contract DeployAccountantLogic is Script, Config {
     }
 
     function writeAccountantConfig(string memory _domain) internal {
+        // if accountant was not deployed, don't write
+        if (address(proxy) == address(0)) return;
         vm.writeJson(
             vm.toString(address(beacon)),
             configPath,
