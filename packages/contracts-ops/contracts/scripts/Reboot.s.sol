@@ -55,12 +55,12 @@ contract RebootLogic is
 contract Reboot is RebootLogic {
     // entrypoint
     function runReboot(
-        string memory _configPath,
+        string memory _configName,
         string memory _domain,
         string memory _callBatchOutput,
         bool _overwrite
     ) external {
-        __Config_initialize(_configPath);
+        __Config_initialize(_configName);
         __CallBatch_initialize(
             _domain,
             getDomainNumber(_domain),

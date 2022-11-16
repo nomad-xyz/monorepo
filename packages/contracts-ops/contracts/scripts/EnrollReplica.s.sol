@@ -41,28 +41,28 @@ abstract contract EnrollReplicasLogic is Config, CallBatch {
 
 contract EnrollReplicas is Script, EnrollReplicasLogic {
     function initialize(
-        string calldata configFile,
+        string calldata _configName,
         string calldata _localDomain,
-        string calldata output,
+        string calldata _batchOutput,
         bool overwrite
     ) private {
-        __Config_initialize(configFile);
+        __Config_initialize(_configName);
         __CallBatch_initialize(
             _localDomain,
             getDomainNumber(_localDomain),
-            output,
+            _batchOutput,
             overwrite
         );
     }
 
     // entrypoint
     function enroll(
-        string calldata configFile,
+        string calldata _configName,
         string calldata _localDomain,
-        string calldata output,
+        string calldata _batchOutput,
         bool overwrite
     ) external {
-        initialize(configFile, _localDomain, output, overwrite);
+        initialize(_configName, _localDomain, _batchOutput, overwrite);
         pushEnrollReplicas();
         // NOTE: script is currently written for one chain only
         // to be used in recovery mode

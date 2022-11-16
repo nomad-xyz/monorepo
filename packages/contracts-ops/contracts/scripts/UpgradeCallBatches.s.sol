@@ -68,28 +68,28 @@ contract UpgradeCallBatchLogic is Script, Config, CallBatch {
 contract UpgradeCallBatches is UpgradeCallBatchLogic {
     // entrypoint
     function printCallBatches(
-        string memory _configFile,
+        string memory _configName,
         string[] memory _domainNames,
         string memory _localDomainName,
         bool recovery
     ) external {
         localDomainName = _localDomainName;
-        setUp(_configFile);
+        setUp(_configName);
         for (uint256 i; i < _domainNames.length; i++) {
             pushUpgrade(_domainNames[i]);
         }
         writeCallBatch(recovery);
     }
 
-    function setUp(string memory _configFile) internal {
-        __Config_initialize(_configFile);
-        string memory _outputFile = "upgradeActions.json";
+    function setUp(string memory _configName) internal {
+        __Config_initialize(_configName);
+        string memory _batchOutput = "upgradeActions";
         __CallBatch_initialize(
             localDomainName,
             getDomainNumber(localDomainName),
-            _outputFile,
+            _batchOutput,
             true
         );
-        console2.log("Governance Actions have been output to", _outputFile);
+        console2.log("Governance Actions have been output to", _batchOutput);
     }
 }

@@ -66,19 +66,19 @@ abstract contract DeployImplementationsLogic is Script, Config {
     function writeImplementationConfig(string memory _domain) internal {
         vm.writeJson(
             vm.toString(address(home)),
-            configPath,
+            outputPath,
             coreAttributePath(_domain, "home.implementation")
         );
         vm.writeJson(
             vm.toString(address(governanceRouter)),
-            configPath,
+            outputPath,
             coreAttributePath(_domain, "governanceRouter.implementation")
         );
         string[] memory connections = getConnections(_domain);
         for (uint256 i; i < connections.length; i++) {
             vm.writeJson(
                 vm.toString(address(replica)),
-                configPath,
+                outputPath,
                 string(
                     abi.encodePacked(
                         replicaOfPath(_domain, connections[i]),
@@ -89,17 +89,17 @@ abstract contract DeployImplementationsLogic is Script, Config {
         }
         vm.writeJson(
             vm.toString(address(bridgeRouter)),
-            configPath,
+            outputPath,
             bridgeAttributePath(_domain, "bridgeRouter.implementation")
         );
         vm.writeJson(
             vm.toString(address(bridgeToken)),
-            configPath,
+            outputPath,
             bridgeAttributePath(_domain, "bridgeToken.implementation")
         );
         vm.writeJson(
             vm.toString(address(tokenRegistry)),
-            configPath,
+            outputPath,
             bridgeAttributePath(_domain, "tokenRegistry.implementation")
         );
         reloadConfig();
@@ -108,8 +108,8 @@ abstract contract DeployImplementationsLogic is Script, Config {
 
 contract DeployImplementations is DeployImplementationsLogic {
     // entrypoint
-    function deploy(string memory _configPath, string memory _domain) public {
-        __Config_initialize(_configPath);
+    function deploy(string memory _configName, string memory _domain) public {
+        __Config_initialize(_configName);
         vm.createSelectFork(getRpcs(_domain)[0]);
         vm.startBroadcast();
         deployImplementations(_domain);

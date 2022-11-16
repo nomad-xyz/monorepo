@@ -38,12 +38,12 @@ Contains forge scripts for Nomad system maintenance
   - uses `CallBatch` and `Config`
   - Entrypoint:
     - `printCallBatches(string,string[],string,bool)`:
-      - config path (e.g `actions/production.json`)
+      - name of config JSON file in `./actions` folder (e.g `production.json` for `./actions/production.json`)
       - list of domains for which batches should be built (e.g `[evmos,ethereum,moonbeam]`)
       - name of the domain that should be considered as local (e.g `ethereum`)
       - `true` if scripts should run for recovery mode, `false` otherwise
   - Example:
-    - `FOUNDRY_PROFILE=ops forge script UpgradeCallBatches --sig "printCallBatches(string,string[],string,bool)" "actions/production.json" "[evmos,avalanche,xdai,milkomedaC1,moonbeam,ethereum]" "ethereum" true`
+    - `FOUNDRY_PROFILE=ops forge script UpgradeCallBatches --sig "printCallBatches(string,string[],string,bool)" "production.json" "[evmos,avalanche,xdai,milkomedaC1,moonbeam,ethereum]" "ethereum" true`
 - `Reboot.s.sol`
   - Performs all steps necessary to reboot the protocol
     - Deploy fresh implementations 
@@ -53,12 +53,12 @@ Contains forge scripts for Nomad system maintenance
   - uses `CallBatch` and `Config`
   - Entrypoint:
     - `runReboot(string,string,string,bool)`:
-      - config path (e.g `actions/production.json`)
+      - name of config JSON file in `./actions` folder (e.g `production.json` for `./actions/production.json`)
       - domain to run the script on (e.g `ethereum`)
-      - callBatch output path (e.g `rebootActions.json`)
+      - name of JSON file to output callBatch (e.g `rebootActions.json` for `./actions/rebootActions.json`)
       - `true` to overwrite existing contents of output file, `false` otherwise
   - Example:
-    - `FOUNDRY_PROFILE=ops forge script Reboot --sig "runReboot(string,string,string,bool)" "actions/production.json" "ethereum" "rebootActions-ethereum.json" true`
+    - `FOUNDRY_PROFILE=ops forge script Reboot --sig "runReboot(string,string,string,bool)" "production.json" "ethereum" "rebootActions.json" true`
 
 ## Usage
 

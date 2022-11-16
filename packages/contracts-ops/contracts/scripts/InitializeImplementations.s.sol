@@ -87,10 +87,10 @@ contract DeployAndInitializeImplementations is
 {
     // entrypoint
     function deployAndInitialize(
-        string memory _configPath,
+        string memory _configName,
         string memory _domain
     ) public {
-        __Config_initialize(_configPath);
+        __Config_initialize(_configName);
         vm.createSelectFork(getRpcs(_domain)[0]);
         vm.startBroadcast();
         // deploy implementations

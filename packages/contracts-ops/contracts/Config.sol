@@ -23,7 +23,8 @@ abstract contract Config is INomadProtocol {
     Vm private constant vm =
         Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
-    string internal configPath;
+    string internal inputPath;
+    string internal outputPath;
     string internal config;
 
     modifier onlyInitialized() {
@@ -31,14 +32,17 @@ abstract contract Config is INomadProtocol {
         _;
     }
 
-    function __Config_initialize(string memory file) internal {
+    function __Config_initialize(string memory _fileName) internal {
         require(!isInitialized(), "already init");
-        configPath = file;
-        config = vm.readFile(file);
+        inputPath = string(abi.encodePacked("./actions/", _fileName));
+        config = vm.readFile(inputPath);
+        // copy input config to output path
+        outputPath = string(abi.encodePacked("./actions/config-out.json"));
+        vm.writeFile(outputPath, config);
     }
 
     function reloadConfig() internal {
-        config = vm.readFile(configPath);
+        config = vm.readFile(outputPath);
     }
 
     function isInitialized() public view returns (bool) {

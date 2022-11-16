@@ -49,17 +49,17 @@ abstract contract DeployAccountantLogic is Script, Config {
         if (address(proxy) == address(0)) return;
         vm.writeJson(
             vm.toString(address(beacon)),
-            configPath,
+            outputPath,
             bridgeAttributePath(_domain, "accountant.beacon")
         );
         vm.writeJson(
             vm.toString(address(implementation)),
-            configPath,
+            outputPath,
             bridgeAttributePath(_domain, "accountant.implementation")
         );
         vm.writeJson(
             vm.toString(address(proxy)),
-            configPath,
+            outputPath,
             bridgeAttributePath(_domain, "accountant.proxy")
         );
         reloadConfig();
@@ -68,9 +68,9 @@ abstract contract DeployAccountantLogic is Script, Config {
 
 contract DeployAccountant is DeployAccountantLogic {
     // entrypoint
-    function deploy(string calldata _configFile, string memory _domain) public {
+    function deploy(string calldata _configName, string memory _domain) public {
         // initialize
-        __Config_initialize(_configFile);
+        __Config_initialize(_configName);
         // deploy & configure accountant
         vm.startBroadcast();
         deployAccountant(_domain);

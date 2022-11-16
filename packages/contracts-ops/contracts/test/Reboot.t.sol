@@ -10,8 +10,8 @@ contract RebootTest is RebootLogic, Test {
 
     function test_setup() public {
         string memory _domain = "ethereum";
-        string memory _configPath = "./actions/config.json";
-        __Config_initialize(_configPath);
+        string memory _configName = "config.json";
+        __Config_initialize(_configName);
         __CallBatch_initialize(_domain, getDomainNumber(_domain), "", true);
         // perform reboot actions
         reboot(_domain);

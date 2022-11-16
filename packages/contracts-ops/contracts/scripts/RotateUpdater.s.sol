@@ -73,12 +73,12 @@ contract RotateUpdater is Script, RotateUpdaterLogic {
 
     // entrypoint
     function rotate(
-        string calldata configFile,
+        string calldata _configName,
         string calldata _localDomain,
-        string calldata output,
+        string calldata _batchOutput,
         bool overwrite
     ) public {
-        initialize(configFile, _localDomain, output, overwrite);
+        initialize(_configName, _localDomain, _batchOutput, overwrite);
         pushSetUpdater();
         // NOTE: script is currently written for one chain only
         // to be used in recovery mode
