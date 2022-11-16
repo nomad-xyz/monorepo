@@ -19,19 +19,19 @@ import {UpgradeBeaconController} from "@nomad-xyz/contracts-core/contracts/upgra
 contract UpgradeCallBatchLogic is Script, Config, CallBatch {
     string currentDomain;
 
-    function upgrade(string memory _domain) internal {
+    function pushUpgrade(string memory _domain) internal {
         currentDomain = _domain;
-        pushUpgrade(governanceRouterUpgrade(currentDomain));
-        pushUpgrade(bridgeRouterUpgrade(currentDomain));
-        pushUpgrade(bridgeTokenUpgrade(currentDomain));
-        pushUpgrade(tokenRegistryUpgrade(currentDomain));
-        pushUpgrade(homeUpgrade(currentDomain));
-        pushUpgrade(
+        pushSingleUpgrade(governanceRouterUpgrade(currentDomain));
+        pushSingleUpgrade(bridgeRouterUpgrade(currentDomain));
+        pushSingleUpgrade(bridgeTokenUpgrade(currentDomain));
+        pushSingleUpgrade(tokenRegistryUpgrade(currentDomain));
+        pushSingleUpgrade(homeUpgrade(currentDomain));
+        pushSingleUpgrade(
             replicaOfUpgrade(currentDomain, getConnections(currentDomain)[0])
         );
     }
 
-    function pushUpgrade(Upgrade memory _upgrade) private {
+    function pushSingleUpgrade(Upgrade memory _upgrade) private {
         // check if upgrade is unnecessary
         (, bytes memory result) = address(_upgrade.beacon).call("");
         address _current = abi.decode(result, (address));
@@ -67,7 +67,7 @@ contract UpgradeCallBatches is UpgradeCallBatchLogic {
         localDomainName = _localDomainName;
         setUp(_configFile);
         for (uint256 i; i < _domainNames.length; i++) {
-            upgrade(_domainNames[i]);
+            pushUpgrade(_domainNames[i]);
         }
         writeCallBatch(recovery);
     }

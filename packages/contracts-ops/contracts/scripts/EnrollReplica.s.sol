@@ -10,7 +10,7 @@ import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppCon
 import {Script} from "forge-std/Script.sol";
 
 abstract contract EnrollReplicasLogic is Config, CallBatch {
-    function enrollReplica(string memory remote) internal {
+    function pushEnrollReplica(string memory remote) internal {
         XAppConnectionManager xcm = getXAppConnectionManager(localDomainName);
         address replica = address(getReplicaOf(localDomainName, remote));
         uint32 domainNumber = getDomainNumber(remote);
@@ -27,12 +27,12 @@ abstract contract EnrollReplicasLogic is Config, CallBatch {
         }
     }
 
-    function enrollReplicas() internal {
+    function pushEnrollReplicas() internal {
         // Load info from config
         string[] memory connections = getConnections(localDomainName);
         // Set each replica
         for (uint256 i = 0; i < connections.length; i++) {
-            enrollReplica(connections[i]);
+            pushEnrollReplica(connections[i]);
         }
     }
 }
@@ -61,7 +61,7 @@ contract EnrollReplicas is Script, EnrollReplicasLogic {
         bool overwrite
     ) external {
         initialize(configFile, _localDomain, output, overwrite);
-        enrollReplicas();
+        pushEnrollReplicas();
         // NOTE: script is currently written for one chain only
         // to be used in recovery mode
         // FUTURE: refactor to be multi-chain

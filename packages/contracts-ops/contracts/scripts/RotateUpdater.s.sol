@@ -12,7 +12,7 @@ import {Replica} from "@nomad-xyz/contracts-core/contracts/Replica.sol";
 import {Script} from "forge-std/Script.sol";
 
 abstract contract RotateUpdaterLogic is Config, CallBatch {
-    function setReplicaUpdater(string memory remoteDomain) private {
+    function pushSetReplicaUpdater(string memory remoteDomain) private {
         // New updater is the updater for the remote Home
         address newUpdater = getUpdater(remoteDomain);
         Replica replica = getReplicaOf(localDomainName, remoteDomain);
@@ -24,7 +24,7 @@ abstract contract RotateUpdaterLogic is Config, CallBatch {
         }
     }
 
-    function setHomeUpdater() private {
+    function pushSetHomeUpdater() private {
         address newUpdater = getUpdater(localDomainName);
         Home home = getHome(localDomainName);
         UpdaterManager updaterManager = getUpdaterManager(localDomainName);
@@ -41,13 +41,13 @@ abstract contract RotateUpdaterLogic is Config, CallBatch {
     }
 
     // Sets the updater for the home and all replicas
-    function setUpdater() internal {
+    function pushSetUpdater() internal {
         // Load info from config
         string[] memory connections = getConnections(localDomainName);
-        setHomeUpdater();
+        pushSetHomeUpdater();
         // Set each replica
         for (uint256 i = 0; i < connections.length; i++) {
-            setReplicaUpdater(connections[i]);
+            pushSetReplicaUpdater(connections[i]);
         }
     }
 }
@@ -76,7 +76,7 @@ contract RotateUpdater is Script, RotateUpdaterLogic {
         bool overwrite
     ) public {
         initialize(configFile, _localDomain, output, overwrite);
-        setUpdater();
+        pushSetUpdater();
         // NOTE: script is currently written for one chain only
         // to be used in recovery mode
         // FUTURE: refactor to be multi-chain

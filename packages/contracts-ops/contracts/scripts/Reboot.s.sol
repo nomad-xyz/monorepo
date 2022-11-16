@@ -44,11 +44,11 @@ contract RebootLogic is
         // initialize implementations
         initializeImplementations(_domain);
         // generate governance actions to Upgrade
-        upgrade(_domain);
+        pushUpgrade(_domain);
         // generate governance actions for Rotate Updater
-        setUpdater();
+        pushSetUpdater();
         // generate governance actions to Enroll Replicas
-        enrollReplicas();
+        pushEnrollReplicas();
     }
 }
 
