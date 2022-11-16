@@ -21,7 +21,6 @@ contract UpgradeCallBatchLogic is Script, Config, CallBatch {
 
     function pushUpgrade(string memory _domain) internal {
         currentDomain = _domain;
-        console2.log("upgrade ", _domain);
         pushSingleUpgrade(
             governanceRouterUpgrade(currentDomain),
             "governanceRouter"
@@ -46,7 +45,6 @@ contract UpgradeCallBatchLogic is Script, Config, CallBatch {
         if (_current == _upgrade.implementation) {
             return;
         }
-        console2.log("   upgrade ", contractName);
         // send upgrade
         bytes memory call = abi.encodeWithSelector(
             UpgradeBeaconController.upgrade.selector,

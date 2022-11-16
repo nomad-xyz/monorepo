@@ -18,7 +18,7 @@ import {TokenRegistry} from "@nomad-xyz/contracts-bridge/contracts/TokenRegistry
 import {Config} from "../Config.sol";
 import {JsonWriter} from "../JsonWriter.sol";
 // Utilities
-import {Script, console2} from "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 
 abstract contract DeployImplementationsLogic is Script, Config {
     /*//////////////////////////////////////////////////////////////
@@ -37,7 +37,6 @@ abstract contract DeployImplementationsLogic is Script, Config {
     //////////////////////////////////////////////////////////////*/
 
     function deployImplementations(string memory _domain) internal {
-        console2.log("deploy implementations ", _domain);
         // Home
         home = new Home(getDomainNumber(_domain));
         // Replica
