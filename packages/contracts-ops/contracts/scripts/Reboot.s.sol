@@ -36,11 +36,11 @@ contract RebootLogic is
         // if ethereum, deploy accountant setup
         if (keccak256(bytes(_domain)) == keccak256(bytes("ethereum"))) {
             deployAccountant(_domain);
-            updateAccountant(_domain);
+            writeAccountantConfig(_domain);
         }
         // deploy implementations
         deployImplementations(_domain);
-        updateImplementations(_domain);
+        writeImplementationConfig(_domain);
         // initialize implementations
         initializeImplementations(_domain);
         // generate governance actions to Upgrade

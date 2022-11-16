@@ -70,7 +70,7 @@ contract DeployAndInitializeImplementations is
         vm.startBroadcast();
         // deploy implementations
         deployImplementations(_domain);
-        updateImplementations(_domain);
+        writeImplementationConfig(_domain);
         // initialize implementations
         initializeImplementations(_domain);
         vm.stopBroadcast();

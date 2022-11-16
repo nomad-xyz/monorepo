@@ -62,7 +62,7 @@ abstract contract DeployImplementationsLogic is Script, Config {
         bridgeToken = new BridgeToken();
     }
 
-    function updateImplementations(string memory _domain) internal {
+    function writeImplementationConfig(string memory _domain) internal {
         vm.writeJson(
             vm.toString(address(home)),
             configPath,
@@ -113,6 +113,6 @@ contract DeployImplementations is DeployImplementationsLogic {
         vm.startBroadcast();
         deployImplementations(_domain);
         vm.stopBroadcast();
-        updateImplementations(_domain);
+        writeImplementationConfig(_domain);
     }
 }

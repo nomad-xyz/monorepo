@@ -41,7 +41,7 @@ abstract contract DeployAccountantLogic is Script, Config {
         );
     }
 
-    function updateAccountant(string memory _domain) internal {
+    function writeAccountantConfig(string memory _domain) internal {
         vm.writeJson(
             vm.toString(address(beacon)),
             configPath,
@@ -71,6 +71,6 @@ contract DeployAccountant is DeployAccountantLogic {
         deployAccountant(_domain);
         vm.stopBroadcast();
         // write contract addresses to JSON
-        updateAccountant(_domain);
+        writeAccountantConfig(_domain);
     }
 }
