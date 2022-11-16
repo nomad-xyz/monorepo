@@ -21,23 +21,32 @@ contract UpgradeCallBatchLogic is Script, Config, CallBatch {
 
     function pushUpgrade(string memory _domain) internal {
         currentDomain = _domain;
-        pushSingleUpgrade(governanceRouterUpgrade(currentDomain));
-        pushSingleUpgrade(bridgeRouterUpgrade(currentDomain));
-        pushSingleUpgrade(bridgeTokenUpgrade(currentDomain));
-        pushSingleUpgrade(tokenRegistryUpgrade(currentDomain));
-        pushSingleUpgrade(homeUpgrade(currentDomain));
+        console2.log("upgrade ", _domain);
         pushSingleUpgrade(
-            replicaOfUpgrade(currentDomain, getConnections(currentDomain)[0])
+            governanceRouterUpgrade(currentDomain),
+            "governanceRouter"
+        );
+        pushSingleUpgrade(bridgeRouterUpgrade(currentDomain), "bridgeRouter");
+        pushSingleUpgrade(bridgeTokenUpgrade(currentDomain), "bridgeToken");
+        pushSingleUpgrade(tokenRegistryUpgrade(currentDomain), "tokenRegistry");
+        pushSingleUpgrade(homeUpgrade(currentDomain), "home");
+        pushSingleUpgrade(
+            replicaOfUpgrade(currentDomain, getConnections(currentDomain)[0]),
+            "replica"
         );
     }
 
-    function pushSingleUpgrade(Upgrade memory _upgrade) private {
+    function pushSingleUpgrade(
+        Upgrade memory _upgrade,
+        string memory contractName
+    ) private {
         // check if upgrade is unnecessary
         (, bytes memory result) = address(_upgrade.beacon).call("");
         address _current = abi.decode(result, (address));
         if (_current == _upgrade.implementation) {
             return;
         }
+        console2.log("   upgrade ", contractName);
         // send upgrade
         bytes memory call = abi.encodeWithSelector(
             UpgradeBeaconController.upgrade.selector,

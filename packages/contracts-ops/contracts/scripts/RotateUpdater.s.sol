@@ -9,7 +9,7 @@ import {UpdaterManager} from "@nomad-xyz/contracts-core/contracts/UpdaterManager
 import {Home} from "@nomad-xyz/contracts-core/contracts/Home.sol";
 import {Replica} from "@nomad-xyz/contracts-core/contracts/Replica.sol";
 
-import {Script} from "forge-std/Script.sol";
+import {Script, console2} from "forge-std/Script.sol";
 
 abstract contract RotateUpdaterLogic is Config, CallBatch {
     function pushSetReplicaUpdater(string memory remoteDomain) private {
@@ -17,6 +17,7 @@ abstract contract RotateUpdaterLogic is Config, CallBatch {
         address newUpdater = getUpdater(remoteDomain);
         Replica replica = getReplicaOf(localDomainName, remoteDomain);
         if (replica.updater() != newUpdater) {
+            console2.log("   rotate updater replica ", remoteDomain);
             pushLocal(
                 address(replica),
                 abi.encodeWithSelector(replica.setUpdater.selector, newUpdater)
@@ -30,6 +31,7 @@ abstract contract RotateUpdaterLogic is Config, CallBatch {
         UpdaterManager updaterManager = getUpdaterManager(localDomainName);
         // Updater manager will call `home.setUpdater()`
         if (newUpdater != home.updater()) {
+            console2.log("   rotate updater home");
             pushLocal(
                 address(updaterManager),
                 abi.encodeWithSelector(
@@ -42,6 +44,7 @@ abstract contract RotateUpdaterLogic is Config, CallBatch {
 
     // Sets the updater for the home and all replicas
     function pushSetUpdater() internal {
+        console2.log("rotate updaters ", localDomainName);
         // Load info from config
         string[] memory connections = getConnections(localDomainName);
         pushSetHomeUpdater();

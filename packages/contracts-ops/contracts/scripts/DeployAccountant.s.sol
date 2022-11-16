@@ -2,7 +2,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import {Script} from "forge-std/Script.sol";
+import {Script, console2} from "forge-std/Script.sol";
 import {Config} from "../Config.sol";
 
 import {AllowListNFTRecoveryAccountant} from "@nomad-xyz/contracts-bridge/contracts/accountants/NFTAccountant.sol";
@@ -18,6 +18,7 @@ abstract contract DeployAccountantLogic is Script, Config {
     function deployAccountant(string memory _domain) internal {
         // if accountant was already deployed, don't deploy
         if (address(getAccountant(_domain)) != address(0)) return;
+        console2.log("deploy accountant ", _domain);
         // deploy implementation
         implementation = new AllowListNFTRecoveryAccountant(
             address(getBridgeRouter(_domain)),
