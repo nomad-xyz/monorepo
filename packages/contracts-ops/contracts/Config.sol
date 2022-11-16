@@ -48,7 +48,10 @@ abstract contract Config is INomadProtocol {
 
     function _readConfig(string memory _path) private {
         config = vm.readFile(_path);
-        require(bytes(config).length != 0, string(abi.encodePacked("empty config ", _path)));
+        require(
+            bytes(config).length != 0,
+            string(abi.encodePacked("empty config ", _path))
+        );
     }
 
     function isInitialized() public view returns (bool) {
@@ -403,7 +406,7 @@ abstract contract Config is INomadProtocol {
     }
 
     function protocolAttributePath(string memory domain, string memory key)
-        private
+        internal
         pure
         returns (string memory)
     {
@@ -411,7 +414,7 @@ abstract contract Config is INomadProtocol {
     }
 
     function loadProtocolAttribute(string memory domain, string memory key)
-        private
+        internal
         view
         returns (bytes memory)
     {
@@ -428,7 +431,7 @@ abstract contract Config is INomadProtocol {
     function loadProtocolConfigAttribute(
         string memory domain,
         string memory key
-    ) private view returns (bytes memory) {
+    ) internal view returns (bytes memory) {
         return vm.parseJson(config, protocolConfigAttributePath(domain, key));
     }
 
