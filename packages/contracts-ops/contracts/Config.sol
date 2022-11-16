@@ -35,14 +35,20 @@ abstract contract Config is INomadProtocol {
     function __Config_initialize(string memory _fileName) internal {
         require(!isInitialized(), "already init");
         inputPath = string(abi.encodePacked("./actions/", _fileName));
-        config = vm.readFile(inputPath);
+        _readConfig(inputPath);
         // copy input config to output path
-        outputPath = string(abi.encodePacked("./actions/config-out.json"));
+        // NOTE: will overwrite any existing contents of output file
+        outputPath = string(abi.encodePacked("./actions/output-", _fileName));
         vm.writeFile(outputPath, config);
     }
 
     function reloadConfig() internal {
-        config = vm.readFile(outputPath);
+        _readConfig(outputPath);
+    }
+
+    function _readConfig(string memory _path) private {
+        config = vm.readFile(_path);
+        require(bytes(config).length != 0, string(abi.encodePacked("empty config ", _path)));
     }
 
     function isInitialized() public view returns (bool) {
