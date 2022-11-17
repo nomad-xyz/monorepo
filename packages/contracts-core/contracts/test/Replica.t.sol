@@ -191,70 +191,70 @@ contract ReplicaTest is ReplicaHandlers {
 
     // Pre-computed values come from the nomad-xyz/rust test fixtures
     // https://github.com/nomad-xyz/rust/blob/main/fixtures/merkle.json
-//    function test_acceptLeafCorrectProof() public {
-//        replica.setCommittedRoot(exampleRoot);
-//        assertTrue(replica.prove(exampleLeaf, exampleProof, exampleLeafIndex));
-//    }
-//
-//    function test_rejectLeafWrongProof() public {
-//        replica.setCommittedRoot(exampleRoot);
-//        // We change a small part of the proof to invalidate it
-//        exampleProof[31] = "lol wrong proof m8";
-//        assertFalse(replica.prove(exampleLeaf, exampleProof, exampleLeafIndex));
-//    }
-//
-//    event Process(
-//        bytes32 indexed messageHash,
-//        bool indexed success,
-//        bytes indexed returnData
-//    );
-//
-//    function test_proveAndProcess() public {
-//        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
-//        bytes32 receiver = bytes32(uint256(uint160(address(goodXappSimple))));
-//        uint32 nonce = 0;
-//        bytes memory messageBody = "0x";
-//        bytes memory message = Message.formatMessage(
-//            remoteDomain,
-//            sender,
-//            nonce,
-//            homeDomain,
-//            receiver,
-//            messageBody
-//        );
-//        (bytes32 root, , uint256 index, bytes32[32] memory proof) = merkleTest
-//            .getProof(message);
-//        replica.setCommittedRoot(root);
-//        vm.expectEmit(true, true, true, true);
-//        bytes memory returnData = hex"";
-//        emit Process(message.ref(0).keccak(), true, returnData);
-//        replica.proveAndProcess(message, proof, index);
-//    }
-//
-//    function test_processProvenMessage() public {
-//        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
-//        bytes32 receiver = bytes32(uint256(uint160(address(goodXappSimple))));
-//        uint32 nonce = 0;
-//        bytes memory messageBody = "0x";
-//        bytes memory message = Message.formatMessage(
-//            remoteDomain,
-//            sender,
-//            nonce,
-//            homeDomain,
-//            receiver,
-//            messageBody
-//        );
-//        (
-//            bytes32 root,
-//            bytes32 leaf,
-//            uint256 index,
-//            bytes32[32] memory proof
-//        ) = merkleTest.getProof(message);
-//        replica.setCommittedRoot(root);
-//        assertTrue(replica.prove(leaf, proof, index));
-//        assertTrue(replica.process(message));
-//    }
-//
+    function test_acceptLeafCorrectProof() public {
+        replica.setCommittedRoot(exampleRoot);
+        assertTrue(replica.prove(exampleLeaf, exampleProof, exampleLeafIndex));
+    }
+
+    function test_rejectLeafWrongProof() public {
+        replica.setCommittedRoot(exampleRoot);
+        // We change a small part of the proof to invalidate it
+        exampleProof[31] = "lol wrong proof m8";
+        assertFalse(replica.prove(exampleLeaf, exampleProof, exampleLeafIndex));
+    }
+
+    event Process(
+        bytes32 indexed messageHash,
+        bool indexed success,
+        bytes indexed returnData
+    );
+
+    function test_proveAndProcess() public {
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32 receiver = bytes32(uint256(uint160(address(goodXappSimple))));
+        uint32 nonce = 0;
+        bytes memory messageBody = "0x";
+        bytes memory message = Message.formatMessage(
+            remoteDomain,
+            sender,
+            nonce,
+            homeDomain,
+            receiver,
+            messageBody
+        );
+        (bytes32 root, , uint256 index, bytes32[32] memory proof) = merkleTest
+            .getProof(message);
+        replica.setCommittedRoot(root);
+        vm.expectEmit(true, true, true, true);
+        bytes memory returnData = hex"";
+        emit Process(message.ref(0).keccak(), true, returnData);
+        replica.proveAndProcess(message, proof, index);
+    }
+
+    function test_processProvenMessage() public {
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32 receiver = bytes32(uint256(uint160(address(goodXappSimple))));
+        uint32 nonce = 0;
+        bytes memory messageBody = "0x";
+        bytes memory message = Message.formatMessage(
+            remoteDomain,
+            sender,
+            nonce,
+            homeDomain,
+            receiver,
+            messageBody
+        );
+        (
+            bytes32 root,
+            bytes32 leaf,
+            uint256 index,
+            bytes32[32] memory proof
+        ) = merkleTest.getProof(message);
+        replica.setCommittedRoot(root);
+        assertTrue(replica.prove(leaf, proof, index));
+        assertTrue(replica.process(message));
+    }
+
     function test_updateProveAndProcessMessage() public {
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
         bytes32 receiver = bytes32(uint256(uint160(address(goodXappSimple))));
@@ -281,174 +281,174 @@ contract ReplicaTest is ReplicaHandlers {
         assertTrue(replica.prove(leaf, proof, index));
         assertTrue(replica.process(message));
     }
-//
-//    /// @notice It should revert because process will call handle() in an empty address
-//    function test_notProcessLegacyProvenMessageEmptyAddress() public {
-//        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
-//        bytes32 receiver = bytes32(uint256(uint160(vm.addr(431))));
-//        uint32 nonce = 0;
-//        bytes memory messageBody = "0x";
-//        bytes memory message = Message.formatMessage(
-//            remoteDomain,
-//            sender,
-//            nonce,
-//            homeDomain,
-//            receiver,
-//            messageBody
-//        );
-//        replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
-//        vm.expectRevert();
-//        replica.process(message);
-//    }
-//
-//    /// @notice It should not revert because process will call handle() and handle will simply return 0
-//    function test_processLegacyProvenMessageReturnZeroHandler() public {
-//        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
-//        bytes32 receiver = bytes32(
-//            uint256(uint160(address(badXappAssemblyReturnZero)))
-//        );
-//        uint32 nonce = 0;
-//        bytes memory messageBody = hex"";
-//        bytes memory message = Message.formatMessage(
-//            remoteDomain,
-//            sender,
-//            nonce,
-//            homeDomain,
-//            receiver,
-//            messageBody
-//        );
-//        replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
-//        vm.expectEmit(true, true, true, true);
-//        emit Process(message.ref(0).keccak(), true, "");
-//        assertTrue(replica.process(message));
-//    }
-//
-//    /// @notice It should revert because it calls a handle() function that has a require() that is not satisfied
-//    function test_notProcessLegacyProvenMessageRevertingHandlers1() public {
-//        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
-//        bytes32 receiver = bytes32(
-//            uint256(uint160(address(badXappRevertRequire)))
-//        );
-//        uint32 nonce = 0;
-//        bytes memory messageBody = "0x";
-//        bytes memory message = Message.formatMessage(
-//            remoteDomain,
-//            sender,
-//            nonce,
-//            homeDomain,
-//            receiver,
-//            messageBody
-//        );
-//        replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
-//        vm.expectRevert();
-//        replica.process(message);
-//    }
-//
-//    /// @notice It revert because it calls a handle() function that has a require() that isn't satisfied. That require
-//    //also returns a revert reason string
-//    function test_notProcessLegacyProvenMessageRevertingHandlers2() public {
-//        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
-//        bytes32 receiver = bytes32(
-//            uint256(uint160(address(badXappRevertRequireString)))
-//        );
-//        uint32 nonce = 0;
-//        bytes memory messageBody = "0x";
-//        bytes memory message = Message.formatMessage(
-//            remoteDomain,
-//            sender,
-//            nonce,
-//            homeDomain,
-//            receiver,
-//            messageBody
-//        );
-//        replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
-//        vm.expectRevert("no can do");
-//        replica.process(message);
-//    }
-//
-//    /// @notice It should revert because it calls a handle() function that has a revert() call in the assembly{} block
-//    function test_notProcessLegacyProvenMessageRevertingHandlers3() public {
-//        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
-//        bytes32 receiver = bytes32(
-//            uint256(uint160(address(badXappRevertData)))
-//        );
-//        uint32 nonce = 0;
-//        bytes memory messageBody = "0x";
-//        bytes memory message = Message.formatMessage(
-//            remoteDomain,
-//            sender,
-//            nonce,
-//            homeDomain,
-//            receiver,
-//            messageBody
-//        );
-//        replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
-//        vm.expectRevert(
-//            hex"0000000000000000000000000000000000000000000000000000000000abcdef"
-//        );
-//        replica.process(message);
-//    }
-//
-//    /// @notice It should revert because it calls a handle() function that has a revert() call in the assembly{} block
-//    function test_notProcessLegacyProvenMessageRevertingHandlers4() public {
-//        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
-//        bytes32 receiver = bytes32(
-//            uint256(uint160(address(badXappAssemblyRevert)))
-//        );
-//        uint32 nonce = 0;
-//        bytes memory messageBody = "0x";
-//        bytes memory message = Message.formatMessage(
-//            remoteDomain,
-//            sender,
-//            nonce,
-//            homeDomain,
-//            receiver,
-//            messageBody
-//        );
-//        replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
-//        vm.expectRevert();
-//        replica.process(message);
-//    }
-//
-//    /// @notice It should revert because the message's destination is not this Replica's domain
-//    function test_notProcessLegacyWrongDestination() public {
-//        replica.setCommittedRoot(exampleRoot);
-//        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
-//        bytes32 receiver = bytes32(uint256(uint160(vm.addr(431))));
-//        uint32 nonce = 0;
-//        bytes memory messageBody = "0x";
-//        bytes memory message = Message.formatMessage(
-//            homeDomain,
-//            sender,
-//            nonce,
-//            remoteDomain,
-//            receiver,
-//            messageBody
-//        );
-//        replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
-//        vm.expectRevert("!destination");
-//        replica.process(message);
-//    }
-//
-//    /// @notice It should revert because the message is not proven, i.e is not included in the committed Root
-//    function test_notProcessUnprovenMessage() public {
-//        replica.setCommittedRoot(exampleRoot);
-//        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
-//        bytes32 receiver = bytes32(uint256(uint160(vm.addr(431))));
-//        uint32 nonce = 0;
-//        bytes memory messageBody = "0x";
-//        bytes memory message = Message.formatMessage(
-//            remoteDomain,
-//            sender,
-//            nonce,
-//            homeDomain,
-//            receiver,
-//            messageBody
-//        );
-//        vm.expectRevert("!proven");
-//        replica.process(message);
-//    }
-//
+
+    /// @notice It should revert because process will call handle() in an empty address
+    function test_notProcessLegacyProvenMessageEmptyAddress() public {
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32 receiver = bytes32(uint256(uint160(vm.addr(431))));
+        uint32 nonce = 0;
+        bytes memory messageBody = "0x";
+        bytes memory message = Message.formatMessage(
+            remoteDomain,
+            sender,
+            nonce,
+            homeDomain,
+            receiver,
+            messageBody
+        );
+        replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
+        vm.expectRevert();
+        replica.process(message);
+    }
+
+    /// @notice It should not revert because process will call handle() and handle will simply return 0
+    function test_processLegacyProvenMessageReturnZeroHandler() public {
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32 receiver = bytes32(
+            uint256(uint160(address(badXappAssemblyReturnZero)))
+        );
+        uint32 nonce = 0;
+        bytes memory messageBody = hex"";
+        bytes memory message = Message.formatMessage(
+            remoteDomain,
+            sender,
+            nonce,
+            homeDomain,
+            receiver,
+            messageBody
+        );
+        replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
+        vm.expectEmit(true, true, true, true);
+        emit Process(message.ref(0).keccak(), true, "");
+        assertTrue(replica.process(message));
+    }
+
+    /// @notice It should revert because it calls a handle() function that has a require() that is not satisfied
+    function test_notProcessLegacyProvenMessageRevertingHandlers1() public {
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32 receiver = bytes32(
+            uint256(uint160(address(badXappRevertRequire)))
+        );
+        uint32 nonce = 0;
+        bytes memory messageBody = "0x";
+        bytes memory message = Message.formatMessage(
+            remoteDomain,
+            sender,
+            nonce,
+            homeDomain,
+            receiver,
+            messageBody
+        );
+        replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
+        vm.expectRevert();
+        replica.process(message);
+    }
+
+    /// @notice It revert because it calls a handle() function that has a require() that isn't satisfied. That require
+    //also returns a revert reason string
+    function test_notProcessLegacyProvenMessageRevertingHandlers2() public {
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32 receiver = bytes32(
+            uint256(uint160(address(badXappRevertRequireString)))
+        );
+        uint32 nonce = 0;
+        bytes memory messageBody = "0x";
+        bytes memory message = Message.formatMessage(
+            remoteDomain,
+            sender,
+            nonce,
+            homeDomain,
+            receiver,
+            messageBody
+        );
+        replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
+        vm.expectRevert("no can do");
+        replica.process(message);
+    }
+
+    /// @notice It should revert because it calls a handle() function that has a revert() call in the assembly{} block
+    function test_notProcessLegacyProvenMessageRevertingHandlers3() public {
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32 receiver = bytes32(
+            uint256(uint160(address(badXappRevertData)))
+        );
+        uint32 nonce = 0;
+        bytes memory messageBody = "0x";
+        bytes memory message = Message.formatMessage(
+            remoteDomain,
+            sender,
+            nonce,
+            homeDomain,
+            receiver,
+            messageBody
+        );
+        replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
+        vm.expectRevert(
+            hex"0000000000000000000000000000000000000000000000000000000000abcdef"
+        );
+        replica.process(message);
+    }
+
+    /// @notice It should revert because it calls a handle() function that has a revert() call in the assembly{} block
+    function test_notProcessLegacyProvenMessageRevertingHandlers4() public {
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32 receiver = bytes32(
+            uint256(uint160(address(badXappAssemblyRevert)))
+        );
+        uint32 nonce = 0;
+        bytes memory messageBody = "0x";
+        bytes memory message = Message.formatMessage(
+            remoteDomain,
+            sender,
+            nonce,
+            homeDomain,
+            receiver,
+            messageBody
+        );
+        replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
+        vm.expectRevert();
+        replica.process(message);
+    }
+
+    /// @notice It should revert because the message's destination is not this Replica's domain
+    function test_notProcessLegacyWrongDestination() public {
+        replica.setCommittedRoot(exampleRoot);
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32 receiver = bytes32(uint256(uint160(vm.addr(431))));
+        uint32 nonce = 0;
+        bytes memory messageBody = "0x";
+        bytes memory message = Message.formatMessage(
+            homeDomain,
+            sender,
+            nonce,
+            remoteDomain,
+            receiver,
+            messageBody
+        );
+        replica.setMessageStatus(message, replica.LEGACY_STATUS_PROVEN());
+        vm.expectRevert("!destination");
+        replica.process(message);
+    }
+
+    /// @notice It should revert because the message is not proven, i.e is not included in the committed Root
+    function test_notProcessUnprovenMessage() public {
+        replica.setCommittedRoot(exampleRoot);
+        bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
+        bytes32 receiver = bytes32(uint256(uint160(vm.addr(431))));
+        uint32 nonce = 0;
+        bytes memory messageBody = "0x";
+        bytes memory message = Message.formatMessage(
+            remoteDomain,
+            sender,
+            nonce,
+            homeDomain,
+            receiver,
+            messageBody
+        );
+        vm.expectRevert("!proven");
+        replica.process(message);
+    }
+
     event SetOptimisticTimeout(uint256 optimisticSeconds);
 
     function test_setOptimisticTimeoutOnlyOwner() public {
@@ -496,12 +496,12 @@ contract ReplicaTest is ReplicaHandlers {
     function test_setConfirmationZeroRootOnlyRemove() public {
         bytes32 newRoot = bytes32(0);
         uint256 newConfirmAt = 0;
-//        uint256 previousConfirmAt = replica.confirmAt(newRoot);
-//        vm.expectEmit(true, false, false, true);
-//        emit SetConfirmation(newRoot, previousConfirmAt, newConfirmAt);
-//        vm.prank(replica.owner());
-//        replica.setConfirmation(newRoot, newConfirmAt);
-//        assertEq(replica.confirmAt(newRoot), newConfirmAt);
+        uint256 previousConfirmAt = replica.confirmAt(newRoot);
+        vm.expectEmit(true, false, false, true);
+        emit SetConfirmation(newRoot, previousConfirmAt, newConfirmAt);
+        vm.prank(replica.owner());
+        replica.setConfirmation(newRoot, newConfirmAt);
+        assertEq(replica.confirmAt(newRoot), newConfirmAt);
         vm.prank(replica.owner());
         newConfirmAt = 100;
         vm.expectRevert("can't set zero root");
