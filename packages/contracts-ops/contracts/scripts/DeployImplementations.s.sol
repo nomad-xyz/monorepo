@@ -16,7 +16,6 @@ import {BridgeToken} from "@nomad-xyz/contracts-bridge/contracts/BridgeToken.sol
 import {TokenRegistry} from "@nomad-xyz/contracts-bridge/contracts/TokenRegistry.sol";
 // Ops
 import {Config} from "../Config.sol";
-import {JsonWriter} from "../JsonWriter.sol";
 // Utilities
 import {Script} from "forge-std/Script.sol";
 
