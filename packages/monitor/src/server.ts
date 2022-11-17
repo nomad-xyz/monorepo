@@ -190,5 +190,9 @@ export class HomeStatusCollector {
     }
     return true; // BAD!!!
   }
-  
+
+  get failed(): boolean {
+    return !this.healthy;
+  }
+
 }
