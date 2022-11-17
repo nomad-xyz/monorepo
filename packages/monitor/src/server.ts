@@ -11,6 +11,30 @@ export const prefix = `nomad_metrics`;
 export enum GoldSkyQuery {
   QueryExample1 = 'queryexample1',
   QueryExample2 = 'queryexample2',
+  // TODO: since tables are labeled by environment, we should use a
+  // different set of queries between staging / production
+  stagingProcessFailureEvents = `
+    query StagingProcessFailureEvents {
+      staging_process_failure_aggregate {
+        nodes {
+          amount
+          asset
+          _gs_chain
+        }
+      }
+    }
+  `,
+  stagingRecoveryEvents = `
+    query StagingRecoveryEvents {
+      staging_recovery_aggregate {
+        nodes {
+          _gs_chain
+          amount
+          asset
+        }
+      }
+    }
+  `,
 }
 
 const buckets = [
@@ -156,12 +180,11 @@ export class IndexerCollector extends MetricsCollector {
 }
 
 export class HomeStatusCollector {
-  
   home: Home;
   domain: number;
   logger: Logger;
   metrics: IndexerCollector;
-  
+
   constructor(
     domain: number,
     ctx: BridgeContext,
@@ -194,5 +217,4 @@ export class HomeStatusCollector {
   get failed(): boolean {
     return !this.healthy;
   }
-
 }
