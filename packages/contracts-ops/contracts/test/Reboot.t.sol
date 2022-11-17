@@ -5,9 +5,7 @@ pragma abicoder v2;
 import "forge-std/Test.sol";
 import {RebootLogic} from "../scripts/Reboot.s.sol";
 import {ReplicaTest} from "@nomad-xyz/contracts-core/contracts/test/Replica.t.sol";
-import {NomadTest} from "@nomad-xyz/contracts-core/contracts/test/utils/NomadTest.sol";
 import {ReplicaHarness} from "@nomad-xyz/contracts-core/contracts/test/harnesses/ReplicaHarness.sol";
-import {Replica} from "@nomad-xyz/contracts-core/contracts/Replica.sol";
 
 contract RebootTest is RebootLogic, ReplicaTest {
     string remote;
@@ -40,8 +38,9 @@ contract RebootTest is RebootLogic, ReplicaTest {
         // set home domain to actual values
         homeDomain = getDomainNumber(_domain);
         // setup replica to actual value
-        Replica rep = getReplicaOf(localDomainName, remote);
-        replica = ReplicaHarness(address(rep));
+        replica = ReplicaHarness(
+            address(getReplicaOf(localDomainName, remote))
+        );
         // set committed root and optimistic timeout
         committedRoot = replica.committedRoot();
         optimisticTimeout = replica.optimisticSeconds();
