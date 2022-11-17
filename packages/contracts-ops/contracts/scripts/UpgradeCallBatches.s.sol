@@ -41,7 +41,7 @@ contract UpgradeCallBatchLogic is Script, Config, CallBatch {
         string memory contractName
     ) private {
         // check if upgrade is unnecessary
-        (, bytes memory result) = address(_upgrade.beacon).call("");
+        (, bytes memory result) = address(_upgrade.beacon).staticcall("");
         address _current = abi.decode(result, (address));
         if (_current == _upgrade.implementation) {
             return;
