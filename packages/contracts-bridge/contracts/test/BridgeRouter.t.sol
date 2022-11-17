@@ -11,8 +11,7 @@ import {RevertingToHook} from "packages/contracts-bridge/contracts/test/utils/Re
 
 // External Imports
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
-import {Test} from "forge-std/Test.sol";
-import "forge-std/console.sol";
+import {Test, console2} from "forge-std/Test.sol";
 
 /// @notice The default bridgeRouter is BridgeRouter (BaseBridgeRouter)
 /// @dev It should implement common functionality between nonEthereumBridgeRouter and
@@ -212,8 +211,8 @@ abstract contract BridgeRouterFixture is BridgeTestFixture {
         // setUp(). We bound that so we don't revert because of math overflow
         tokenAmount = bound(
             tokenAmount,
-            bridgeUserTokenAmount,
-            type(uint256).max
+            0,
+            type(uint256).max - bridgeUserTokenAmount
         );
         localToken.mint(address(bridgeRouter), tokenAmount);
         bytes memory action = abi.encodePacked(
@@ -226,7 +225,6 @@ abstract contract BridgeRouterFixture is BridgeTestFixture {
         bytes memory tokenId = abi.encodePacked(localDomain, id);
         bytes32 sender = remoteBridgeRouter;
         bytes memory message = abi.encodePacked(tokenId, action);
-        localToken.mint(address(bridgeRouter), 100);
         vm.prank(mockReplica);
         bridgeRouter.handle(remoteDomain, nonce, sender, message);
         assertEq(
@@ -273,8 +271,8 @@ abstract contract BridgeRouterFixture is BridgeTestFixture {
         // setUp(). We bound that so we don't revert because of math overflow
         tokenAmount = bound(
             tokenAmount,
-            bridgeUserTokenAmount,
-            type(uint256).max
+            0,
+            type(uint256).max - bridgeUserTokenAmount
         );
         bytes32 hook = address(revertingToHook).addressToBytes32();
         bytes32 sender = remoteBridgeRouter;
@@ -892,8 +890,13 @@ contract nonEthereumBridgeRouterTest is BridgeRouterFixture {
         bytes memory tokenId = abi.encodePacked(remoteDomain, token);
         // As the token has no representation on the local domain
         // bridgeRouter will ask TokenRegistry to deploy a new BridgeToken representation
-        // The address of the deployment is determenistic because it uses CREATE2
-        address tokenRepresentation = 0xD457ECDAD18BA6917097BcA0c5A1D6A97da8C26a;
+        // The address of the deployment is determenistic because it uses CREATE
+        address tokenRepresentation = computeCreateAddress(
+            address(tokenRegistry),
+            // we use nonce = 2, because this is the second contract deployed by
+            // tokenRegistry
+            2
+        );
         vm.expectEmit(true, true, false, true);
         // It mints new representation tokens
         emit Transfer(address(0), recipient, tokenAmount);
