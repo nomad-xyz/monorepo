@@ -47,9 +47,6 @@ contract RebootTest is RebootLogic, ReplicaTest {
         optimisticTimeout = replica.optimisticSeconds();
         // setup fake app handlers
         setUpBadHandlers();
-    }
-
-    function test_upgradeHarness() public {
         // Upgrade Replica to Replica Harness
         // deploy ReplicaHarness implementation
         ReplicaHarness harnessImpl = new ReplicaHarness(
@@ -67,28 +64,12 @@ contract RebootTest is RebootLogic, ReplicaTest {
             )
         );
         reloadConfig();
-        Upgrade memory replicaU = replicaOfUpgrade(localDomainName, remote);
-        (, bytes memory result) = address(replicaU.beacon).call("");
-        address _current = abi.decode(result, (address));
-        require(
-            replicaU.implementation == address(harnessImpl),
-            "harness not loaded"
-        );
-        require(_current != address(harnessImpl), "current impl is hardness");
-        require(
-            address(replicaU.beacon) ==
-                0x0876dFe4AcAe0e1c0a43302716483f5752298b71,
-            "not eth replica beacon"
-        );
         // push upgrade call for harness
-        pushSingleUpgrade(replicaU);
+        pushSingleUpgrade(replicaOfUpgrade(localDomainName, remote));
         // execute upgrade call
         prankExecuteRecoveryManager(
             address(getGovernanceRouter(localDomainName)),
             getDomainNumber(localDomainName)
         );
-        //        assertEq(getUpdater(remote), updaterAddr);
-        //        assertEq(replica.updater(), updaterAddr);
-        //        assertEq(address(replica), 0x5D94309E5a0090b165FA4181519701637B6DAEBA);
     }
 }
