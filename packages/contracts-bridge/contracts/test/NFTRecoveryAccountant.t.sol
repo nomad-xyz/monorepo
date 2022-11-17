@@ -222,11 +222,6 @@ contract NFTRecoveryAccountantTest is Test {
                 totalAffected - bridgedSum
             );
             bridgedSum += famount;
-            console2.log("bridgedSum", bridgedSum);
-            console2.log("famount", famount);
-            console2.log("total affected", totalAffected);
-            console2.log("total minted", accountant.totalMinted(asset));
-
             uint256 prevtotalRecovered = accountant.totalRecovered(asset);
             uint256 id = accountant.nextID();
             if (accountant.totalMinted(asset) + famount > totalAffected) {
