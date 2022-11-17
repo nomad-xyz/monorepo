@@ -21,6 +21,15 @@ contract NomadTest is Test {
 
     MerkleTest merkleTest;
 
+    event Update(
+        uint32 indexed homeDomain,
+        bytes32 indexed oldRoot,
+        bytes32 indexed newRoot,
+        bytes signature
+    );
+
+    event NewUpdater(address oldUpdater, address newUpdater);
+
     function setUp() public virtual {
         vm.label(updaterAddr, "updater");
         vm.label(fakeUpdater, "fake updater");
