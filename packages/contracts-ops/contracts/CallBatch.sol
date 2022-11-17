@@ -85,6 +85,11 @@ abstract contract CallBatch {
             remoteDomains,
             buildRemoteCalls()
         );
+        delete localCalls;
+        for (uint32 i = 0; i < remoteDomains.length; i++) {
+            delete remoteCalls[remoteDomains[i]];
+        }
+        delete remoteDomains;
     }
 
     // only works if recovery is active on specified domain
@@ -107,6 +112,7 @@ abstract contract CallBatch {
             new uint32[](0),
             new GovernanceMessage.Call[][](0)
         );
+        delete localCalls;
     }
 
     function writeCall(
