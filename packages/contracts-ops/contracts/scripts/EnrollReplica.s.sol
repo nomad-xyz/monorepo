@@ -7,7 +7,7 @@ import {CallBatch} from "../CallBatch.sol";
 
 import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 
-import {Script, console2} from "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 
 abstract contract EnrollReplicasLogic is Config, CallBatch {
     function pushEnrollReplica(string memory remote) internal {
@@ -16,7 +16,6 @@ abstract contract EnrollReplicasLogic is Config, CallBatch {
         uint32 domainNumber = getDomainNumber(remote);
 
         if (xcm.replicaToDomain(replica) != domainNumber) {
-            console2.log("   enroll replica ", remote);
             pushLocal(
                 address(xcm),
                 abi.encodeWithSelector(
@@ -29,7 +28,6 @@ abstract contract EnrollReplicasLogic is Config, CallBatch {
     }
 
     function pushEnrollReplicas() internal {
-        console2.log("enroll replicas ", localDomainName);
         // Load info from config
         string[] memory connections = getConnections(localDomainName);
         // Set each replica

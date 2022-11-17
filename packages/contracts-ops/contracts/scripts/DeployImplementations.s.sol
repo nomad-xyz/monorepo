@@ -18,66 +18,65 @@ import {TokenRegistry} from "@nomad-xyz/contracts-bridge/contracts/TokenRegistry
 import {Config} from "../Config.sol";
 import {JsonWriter} from "../JsonWriter.sol";
 // Utilities
-import {Script, console2} from "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 
 abstract contract DeployImplementationsLogic is Script, Config {
     /*//////////////////////////////////////////////////////////////
                           DEPLOYED CONTRACTS
     //////////////////////////////////////////////////////////////*/
 
-    Home home;
-    Replica replica;
-    GovernanceRouter governanceRouter;
-    BridgeRouter bridgeRouter;
-    TokenRegistry tokenRegistry;
-    BridgeToken bridgeToken;
+    Home homeImpl;
+    Replica replicaImpl;
+    GovernanceRouter governanceRouterImpl;
+    BridgeRouter bridgeRouterImpl;
+    TokenRegistry tokenRegistryImpl;
+    BridgeToken bridgeTokenImpl;
 
     /*//////////////////////////////////////////////////////////////
                        IMPLEMENTATION DEPLOYMENT
     //////////////////////////////////////////////////////////////*/
 
     function deployImplementations(string memory _domain) internal {
-        console2.log("deploy implementations ", _domain);
         // Home
-        home = new Home(getDomainNumber(_domain));
+        homeImpl = new Home(getDomainNumber(_domain));
         // Replica
-        replica = new Replica(getDomainNumber(_domain));
+        replicaImpl = new Replica(getDomainNumber(_domain));
         // GovernanceRouter
-        governanceRouter = new GovernanceRouter(
+        governanceRouterImpl = new GovernanceRouter(
             getDomainNumber(_domain),
             getRecoveryTimelock(_domain)
         );
         // BridgeRouter
         if (keccak256(bytes(_domain)) == keccak256(bytes("ethereum"))) {
-            bridgeRouter = BridgeRouter(
+            bridgeRouterImpl = BridgeRouter(
                 address(
                     new EthereumBridgeRouter(address(getAccountant(_domain)))
                 )
             );
         } else {
-            bridgeRouter = new BridgeRouter();
+            bridgeRouterImpl = new BridgeRouter();
         }
         // TokenRegistry
-        tokenRegistry = new TokenRegistry();
+        tokenRegistryImpl = new TokenRegistry();
         // BridgeToken
-        bridgeToken = new BridgeToken();
+        bridgeTokenImpl = new BridgeToken();
     }
 
     function writeImplementationConfig(string memory _domain) internal {
         vm.writeJson(
-            vm.toString(address(home)),
+            vm.toString(address(homeImpl)),
             outputPath,
             coreAttributePath(_domain, "home.implementation")
         );
         vm.writeJson(
-            vm.toString(address(governanceRouter)),
+            vm.toString(address(governanceRouterImpl)),
             outputPath,
             coreAttributePath(_domain, "governanceRouter.implementation")
         );
         string[] memory connections = getConnections(_domain);
         for (uint256 i; i < connections.length; i++) {
             vm.writeJson(
-                vm.toString(address(replica)),
+                vm.toString(address(replicaImpl)),
                 outputPath,
                 string(
                     abi.encodePacked(
@@ -88,17 +87,17 @@ abstract contract DeployImplementationsLogic is Script, Config {
             );
         }
         vm.writeJson(
-            vm.toString(address(bridgeRouter)),
+            vm.toString(address(bridgeRouterImpl)),
             outputPath,
             bridgeAttributePath(_domain, "bridgeRouter.implementation")
         );
         vm.writeJson(
-            vm.toString(address(bridgeToken)),
+            vm.toString(address(bridgeTokenImpl)),
             outputPath,
             bridgeAttributePath(_domain, "bridgeToken.implementation")
         );
         vm.writeJson(
-            vm.toString(address(tokenRegistry)),
+            vm.toString(address(tokenRegistryImpl)),
             outputPath,
             bridgeAttributePath(_domain, "tokenRegistry.implementation")
         );

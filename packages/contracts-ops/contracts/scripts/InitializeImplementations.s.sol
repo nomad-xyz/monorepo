@@ -2,7 +2,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import {Script, console2} from "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 import {Config} from "../Config.sol";
 import {DeployImplementationsLogic} from "./DeployImplementations.s.sol";
 
@@ -20,12 +20,10 @@ contract InitializeImplementationsLogic is Script, Config {
     // NOTE: init values are zero wherever possible
     // Storage variables in implementation contracts don't matter.
     function initializeImplementations(string memory _domain) internal {
-        console2.log("initialize implementations ", _domain);
         // Home
         // NOTE: must pass real value for UpdaterManager because it is queried
         Home home = getHomeImpl(_domain);
         if (address(home.updaterManager()) == address(0)) {
-            console2.log("   initialize home ", _domain);
             home.initialize(
                 IUpdaterManager(address(getUpdaterManager(_domain)))
             );
@@ -35,7 +33,6 @@ contract InitializeImplementationsLogic is Script, Config {
             replicaOfUpgrade(_domain, getConnections(_domain)[0]).implementation
         );
         if (replica.owner() == address(0)) {
-            console2.log("   initialize replica ", _domain);
             replica.initialize(0, address(0), bytes32(0), 0);
         }
         // GovernanceRouter
@@ -44,8 +41,6 @@ contract InitializeImplementationsLogic is Script, Config {
             governanceRouterUpgrade(_domain).implementation
         );
         if (address(governanceRouter.xAppConnectionManager()) == address(0)) {
-            console2.log("   initialize governanceRouter ", _domain);
-
             governanceRouter.initialize(
                 address(getXAppConnectionManager(_domain)),
                 address(0)
@@ -56,8 +51,6 @@ contract InitializeImplementationsLogic is Script, Config {
             payable(bridgeRouterUpgrade(_domain).implementation)
         );
         if (address(bridgeRouter.tokenRegistry()) == address(0)) {
-            console2.log("   initialize bridgeRouter ", _domain);
-
             bridgeRouter.initialize(address(0), address(0));
         }
         // TokenRegistry
@@ -65,8 +58,6 @@ contract InitializeImplementationsLogic is Script, Config {
             tokenRegistryUpgrade(_domain).implementation
         );
         if (tokenRegistry.owner() == address(0)) {
-            console2.log("   initialize tokenRegistry ", _domain);
-
             tokenRegistry.initialize(address(0), address(0));
         }
         // BridgeToken
@@ -74,8 +65,6 @@ contract InitializeImplementationsLogic is Script, Config {
             bridgeTokenUpgrade(_domain).implementation
         );
         if (bridgeToken.owner() == address(0)) {
-            console2.log("   initialize bridgeToken ", _domain);
-
             bridgeToken.initialize();
         }
     }

@@ -453,9 +453,9 @@ contract ReplicaTest is ReplicaHandlers {
 
     function test_setOptimisticTimeoutOnlyOwner() public {
         vm.expectEmit(false, false, false, true);
-        emit SetOptimisticTimeout(10);
+        emit SetOptimisticTimeout(30000);
         vm.prank(replica.owner());
-        replica.setOptimisticTimeout(10);
+        replica.setOptimisticTimeout(30000);
         vm.prank(vm.addr(1453));
         vm.expectRevert("Ownable: caller is not the owner");
         replica.setOptimisticTimeout(10);
@@ -496,7 +496,7 @@ contract ReplicaTest is ReplicaHandlers {
     function test_setConfirmationZeroRootOnlyRemove() public {
         bytes32 newRoot = bytes32(0);
         uint256 newConfirmAt = 0;
-        uint256 previousConfirmAt = 0;
+        uint256 previousConfirmAt = replica.confirmAt(newRoot);
         vm.expectEmit(true, false, false, true);
         emit SetConfirmation(newRoot, previousConfirmAt, newConfirmAt);
         vm.prank(replica.owner());
