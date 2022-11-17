@@ -3,7 +3,7 @@ pragma solidity 0.7.6;
 
 import "forge-std/console2.sol";
 // Local imports
-import {BridgeTest} from "./utils/BridgeTest.sol";
+import {BridgeTestFixture} from "./utils/BridgeTest.sol";
 import {BridgeMessage} from "../BridgeMessage.sol";
 import {BridgeToken} from "../BridgeToken.sol";
 import {Encoding} from "../Encoding.sol";

@@ -38,7 +38,7 @@ abstract contract BridgeRouterFixture is BridgeTestFixture {
     function setUp() public virtual override {
         super.setUp();
         tokenSender = bridgeUser;
-        tokenReceiver = addressToBytes32(vm.addr(3040));
+        tokenReceiver = vm.addr(3040).addressToBytes32();
         senderDomain = localDomain;
         receiverDomain = remoteDomain;
         revertingToHook = new RevertingToHook();
@@ -457,7 +457,7 @@ abstract contract BridgeRouterFixture is BridgeTestFixture {
 
     function test_migrateRevertsIfSameRepr() public {
         vm.expectRevert("!different");
-        bridgeRouter.migrate(remoteTokenAddress);
+        bridgeRouter.migrate(remoteTokenLocalAddress);
     }
 
     function test_migrateSuccess() public {
@@ -849,7 +849,7 @@ contract nonEthereumBridgeRouterTest is BridgeRouterFixture {
         address recipient = address(0xBEEF);
         uint256 tokenAmount = 100;
         bytes32 tokenDetailsHash = "adsf";
-        address token = remoteTokenAddress;
+        address token = remoteTokenLocalAddress;
         bytes memory action = abi.encodePacked(
             BridgeMessage.Types.Transfer,
             recipient.addressToBytes32(),

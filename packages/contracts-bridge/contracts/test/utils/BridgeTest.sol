@@ -3,15 +3,13 @@ pragma solidity 0.7.6;
 
 // Test Contracts
 
-import {MockHome} from "packages/contracts-bridge/contracts/test/utils/MockHome.sol";
-import {MockAccountant} from "packages/contracts-bridge/contracts/test/utils/MockAccountant.sol";
-
-// Interfaces
-import {IBridgeRouterHarness} from "packages/contracts-bridge/contracts/test/harness/IBridgeRouterHarness.sol";
+import {MockHome} from "./MockHome.sol";
+import {MockAccountant} from "./MockAccountant.sol";
 
 // Bridge Contracts
 import {EthereumBridgeRouterHarness} from "../harness/BridgeRouterHarness.sol";
 import {BridgeRouterHarness} from "../harness/BridgeRouterHarness.sol";
+import {IBridgeRouterHarness} from "../harness/IBridgeRouterHarness.sol";
 import {TokenRegistryHarness} from "../harness/TokenRegistryHarness.sol";
 import {TokenRegistry} from "../../TokenRegistry.sol";
 import {BridgeToken} from "../../BridgeToken.sol";
@@ -23,10 +21,15 @@ import {UpgradeBeaconController} from "@nomad-xyz/contracts-core/contracts/upgra
 
 // Contract-core Contracts
 import {XAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
+import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
 
 import "forge-std/Test.sol";
 
 contract BridgeTestFixture is Test {
+    using TypeCasts for bytes32;
+    using TypeCasts for address;
+    using TypeCasts for address payable;
+
     // Local variables
     uint256 mockUpdaterPK;
     address mockUpdater;
@@ -38,20 +41,22 @@ contract BridgeTestFixture is Test {
     bytes32 remoteBridgeRouter;
     uint32 remoteDomain;
 
+    MockAccountant mockAccountant;
     MockHome mockHome;
     address mockReplica;
-    MockAccountant mockAccountant;
-
+    IBridgeRouterHarness bridgeRouter;
     XAppConnectionManager xAppConnectionManager;
     UpgradeBeaconController upgradeBeaconController;
     UpgradeBeacon tokenBeacon;
+
     // Token Registry for all tokens in the domain
     TokenRegistryHarness tokenRegistry;
     BridgeToken bridgeToken;
-    IBridgeRouterHarness bridgeRouter;
+
     // Implementation contract for all tokens in the domain
     ERC20Mock localToken;
-    address remoteTokenAddress;
+    address remoteTokenLocalAddress;
+    bytes32 remoteTokenRemoteAddress;
     BridgeToken remoteToken;
 
     function setUp() public virtual {
@@ -61,8 +66,9 @@ contract BridgeTestFixture is Test {
         mockUpdaterPK = 420;
         mockUpdater = vm.addr(mockUpdaterPK);
         bridgeUser = vm.addr(9305);
-        remoteBridgeRouter = addressToBytes32(vm.addr(99123));
+        remoteBridgeRouter = vm.addr(99123).addressToBytes32();
         bridgeUserTokenAmount = 10000;
+        mockAccountant = new MockAccountant();
 
         localToken = new ERC20Mock(
             "Fake",
@@ -72,8 +78,9 @@ contract BridgeTestFixture is Test {
         );
         localDomain = 1500;
         remoteDomain = 3000;
+        remoteTokenRemoteAddress = address(0xBEEF).addressToBytes32();
         mockHome = new MockHome(localDomain);
-        mockReplica = address(0xBEEEFFFFF);
+        mockReplica = address(0xBEEFEFEEFEF);
 
         // Create implementations
         tokenRegistry = new TokenRegistryHarness();
@@ -84,13 +91,17 @@ contract BridgeTestFixture is Test {
             address(bridgeToken),
             address(upgradeBeaconController)
         );
-        // default bridgeRouter to nonEthereum
+        // Tests that concern the EThereumBridgeRouter, they will already have called
+        // setUpEthereumBridgeRouter(), which means that the address will not be address(0)
         if (address(bridgeRouter) == address(0)) {
             setUpBridgeRouter();
         }
         initializeContracts();
         initializeBridgeRouter();
-        createRemoteToken();
+        remoteTokenLocalAddress = createRemoteToken(
+            remoteDomain,
+            remoteTokenRemoteAddress
+        );
     }
 
     function setUpEthereumBridgeRouter() public {
@@ -98,7 +109,6 @@ contract BridgeTestFixture is Test {
         bridgeRouter = IBridgeRouterHarness(
             address(new EthereumBridgeRouterHarness(address(mockAccountant)))
         );
-        // setup the BridgeTestFixture with an Ethereum Bridge Router
     }
 
     function setUpBridgeRouter() public {
@@ -124,20 +134,25 @@ contract BridgeTestFixture is Test {
         xAppConnectionManager.ownerEnrollReplica(mockReplica, remoteDomain);
     }
 
-    function createRemoteToken() public {
-        remoteTokenAddress = tokenRegistry.deployToken(
-            remoteDomain,
-            addressToBytes32(vm.addr(999999999))
+    /// @notice Create the representation of a remote token
+    /// @param domain The remote domain
+    /// @param remoteAddress The id of the remote token, which also happens
+    /// to be the address of the token on that domain
+    function createRemoteToken(uint32 domain, bytes32 remoteAddress)
+        public
+        returns (address)
+    {
+        address localAddress = tokenRegistry.exposed_deployToken(
+            domain,
+            remoteAddress
         );
         // The address is actually that of an UpgradeProxy that points
         // to the BridgeToken implementation
-        remoteToken = BridgeToken(remoteTokenAddress);
+        remoteToken = BridgeToken(localAddress);
+        assertEq(remoteToken.owner(), address(bridgeRouter));
         vm.startPrank(remoteToken.owner());
         remoteToken.mint(bridgeUser, bridgeUserTokenAmount);
         vm.stopPrank();
-    }
-
-    function addressToBytes32(address addr) public pure returns (bytes32) {
-        return bytes32(uint256(uint160(addr)) << 96);
+        return localAddress;
     }
 }
