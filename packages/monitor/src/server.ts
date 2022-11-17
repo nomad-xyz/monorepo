@@ -1,6 +1,9 @@
 import { Gauge, Histogram, Counter } from 'prom-client';
 import Logger from 'bunyan';
 
+import { Home } from '@nomad-xyz/contracts-core';
+import { BridgeContext } from '@nomad-xyz/sdk-bridge';
+
 import { register } from 'prom-client';
 import express, { Response } from 'express';
 export const prefix = `nomad_metrics`;
@@ -150,4 +153,42 @@ export class IndexerCollector extends MetricsCollector {
   incGoldskyErrors(query: GoldSkyQuery, code: string) {
     this.goldskyErrors.labels(code, query, this.environment).inc();
   }
+}
+
+export class HomeStatusCollector {
+  
+  home: Home;
+  domain: number;
+  logger: Logger;
+  metrics: IndexerCollector;
+  
+  constructor(
+    domain: number,
+    ctx: BridgeContext,
+    logger: Logger,
+    metrics: IndexerCollector,
+  ) {
+    this.domain = domain;
+    this.home = ctx.mustGetCore(domain).home;
+    this.logger = logger;
+    this.metrics = metrics;
+  }
+
+  async healthy(): Promise<boolean> {
+    try {
+      const state = await this.home.state();
+      if (state !== 1) {
+        return false;
+      } else {
+        return true;
+      }
+    } catch (e: any) {
+      this.logger.warn(
+        `Couldn't collect home state for ${this.domain} domain. Error: ${e.message}`,
+      );
+      // TODO! something
+    }
+    return true; // BAD!!!
+  }
+  
 }
