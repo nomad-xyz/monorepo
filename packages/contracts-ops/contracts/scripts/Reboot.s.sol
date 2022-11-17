@@ -68,7 +68,9 @@ contract Reboot is RebootLogic {
             _overwrite
         );
         // perform reboot actions
+        vm.startBroadcast();
         reboot(_domain);
+        vm.stopBroadcast();
         // write callbatch
         writeCallBatch(true);
     }
