@@ -61,7 +61,9 @@ contract RebootTest is
         replica = ReplicaHarness(
             address(getReplicaOf(localDomainName, remote))
         );
-        home = HomeHarness(address(getHome(_domain)));
+        home = HomeHarness(
+            address(getHome(_domain))
+        );
         updaterManager = getUpdaterManager(_domain);
         // set committed root and optimistic timeout
         committedRoot = replica.committedRoot();
