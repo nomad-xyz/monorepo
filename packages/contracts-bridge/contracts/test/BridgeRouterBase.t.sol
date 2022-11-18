@@ -8,7 +8,7 @@ import {BridgeToken} from "packages/contracts-bridge/contracts/BridgeToken.sol";
 import {EthereumBridgeRouterHarness} from "packages/contracts-bridge/contracts/test/harness/BridgeRouterHarness.sol";
 import {TypeCasts} from "packages/contracts-core/contracts/libs/TypeCasts.sol";
 import {RevertingToHook} from "packages/contracts-bridge/contracts/test/utils/RevertingToHook.sol";
-
+import {MockHome} from "./utils/MockHome.sol";
 // External Imports
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 import {Test, console2} from "forge-std/Test.sol";
@@ -26,6 +26,7 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
     bool fastLiquidityEnabled;
 
     RevertingToHook revertingToHook;
+    MockHome home;
 
     using TypeCasts for bytes32;
     using TypeCasts for address payable;
@@ -41,6 +42,8 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         senderDomain = localDomain;
         receiverDomain = remoteDomain;
         revertingToHook = new RevertingToHook();
+
+        home = new MockHome(localDomain);
     }
 
     function test_dustAmmountIs006() public {
@@ -368,7 +371,6 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
             amount,
             fastLiquidityEnabled
         );
-        // TODO: Expect for dispatch event emission
         bridgeRouter.send(
             address(remoteToken),
             amount,
@@ -536,9 +538,30 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
     // the memory of the contract, not the test contract. It doesn't
     // make sense outside the memoroy context of the BridgeRouter
 
-    // TODO: Use the new mockHome affordances to compute
-    // the event emission
-    function test_sendTransferMessage() public {}
+    function test_sendTransferMessage() public {
+        uint32 destination = remoteDomain;
+        bytes32 tokenReceiver = address(0xBEEF).addressToBytes32();
+        uint256 tokenAmount = 1000;
+        bytes32 tokenDetailsHash = "details";
+        bytes memory action = abi.encodePacked(
+            BridgeMessage.Types.Transfer,
+            tokenReceiver,
+            tokenAmount,
+            tokenDetailsHash
+        );
+        // let's assume we send a representation of a remote token
+        bytes32 tokenAddress = remoteTokenLocalAddress.addressToBytes32();
+        bytes memory tokenId = abi.encodePacked(localDomain, tokenAddress);
+        bytes memory message = abi.encodePacked(tokenId, action);
+        vm.expectEmit(true, true, true, true);
+        home.hack_expectDispatchEvent(
+            destination,
+            remoteBridgeRouter,
+            message,
+            address(bridgeRouter)
+        );
+        bridgeRouter.exposed_sendTransferMessage(destination, tokenId, action);
+    }
 
     function test_handleTransferSucceedsIfRecipientNotEvmAddress() public {
         uint256 tokenAmount = 100;

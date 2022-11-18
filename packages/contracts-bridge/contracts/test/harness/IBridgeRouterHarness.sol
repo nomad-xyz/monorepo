@@ -90,8 +90,8 @@ interface IBridgeRouterHarness {
 
     function exposed_sendTransferMessage(
         uint32 dest,
-        bytes29 tokenId,
-        bytes29 action
+        bytes memory tokenId,
+        bytes memory action
     ) external;
 
     function exposed_giveLocal(

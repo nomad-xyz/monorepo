@@ -18,10 +18,14 @@ contract BridgeRouterHarness is BridgeRouter {
 
     function exposed_sendTransferMessage(
         uint32 dest,
-        bytes29 tokenId,
-        bytes29 action
+        bytes memory tokenId,
+        bytes memory action
     ) external {
-        _sendTransferMessage(dest, tokenId, action);
+        _sendTransferMessage(
+            dest,
+            tokenId.ref(uint40(BridgeMessage.Types.TokenId)),
+            action.ref(uint40(BridgeMessage.Types.Transfer))
+        );
     }
 
     function exposed_giveLocal(
@@ -98,10 +102,14 @@ contract EthereumBridgeRouterHarness is EthereumBridgeRouter {
 
     function exposed_sendTransferMessage(
         uint32 dest,
-        bytes29 tokenId,
-        bytes29 action
+        bytes memory tokenId,
+        bytes memory action
     ) external {
-        _sendTransferMessage(dest, tokenId, action);
+        _sendTransferMessage(
+            dest,
+            tokenId.ref(uint40(BridgeMessage.Types.TokenId)),
+            action.ref(uint40(BridgeMessage.Types.Transfer))
+        );
     }
 
     function exposed_giveLocal(
