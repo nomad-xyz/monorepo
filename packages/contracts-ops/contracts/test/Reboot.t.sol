@@ -6,8 +6,10 @@ import "forge-std/Test.sol";
 import {RebootLogic} from "../scripts/Reboot.s.sol";
 import {NomadTest, NomadTestWithUpdaterManager, ReplicaHandlers} from "@nomad-xyz/contracts-core/contracts/test/utils/NomadTest.sol";
 import {ReplicaHarness} from "@nomad-xyz/contracts-core/contracts/test/harnesses/ReplicaHarness.sol";
+import {GovernanceRouterHarness} from "@nomad-xyz/contracts-core/contracts/test/harnesses/GovernanceRouterHarness.sol";
 import {ReplicaTest, ReplicaHandlers} from "@nomad-xyz/contracts-core/contracts/test/Replica.t.sol";
 import {HomeTest} from "@nomad-xyz/contracts-core/contracts/test/Home.t.sol";
+import {GovernanceRouterTest} from "@nomad-xyz/contracts-core/contracts/test/GovernanceRouter.t.sol";
 import {HomeHarness} from "@nomad-xyz/contracts-core/contracts/test/harnesses/HomeHarness.sol";
 
 contract RebootTest is
@@ -16,7 +18,8 @@ contract RebootTest is
     NomadTestWithUpdaterManager,
     ReplicaHandlers,
     ReplicaTest,
-    HomeTest
+    HomeTest,
+    GovernanceRouterTest
 {
     string remote;
 
@@ -27,7 +30,8 @@ contract RebootTest is
             NomadTestWithUpdaterManager,
             ReplicaHandlers,
             ReplicaTest,
-            HomeTest
+            HomeTest,
+            GovernanceRouterTest
         )
     {
         vm.createSelectFork(vm.envString("RPC_URL"), 15_977_625);
@@ -61,6 +65,7 @@ contract RebootTest is
         replica = ReplicaHarness(
             address(getReplicaOf(localDomainName, remote))
         );
+        // setup home to point to the proxy
         home = HomeHarness(address(getHome(_domain)));
         updaterManager = getUpdaterManager(_domain);
         // set committed root and optimistic timeout
@@ -75,6 +80,10 @@ contract RebootTest is
         );
         HomeHarness homeHarnessImpl = new HomeHarness(
             getDomainNumber(localDomainName)
+        );
+        GovernanceRouterHarness govHarnessImpl = new GovernanceRouterHarness(
+            getDomainNumber(localDomainName),
+            timelock
         );
         // update config with new implementation
         vm.writeJson(
@@ -92,10 +101,17 @@ contract RebootTest is
             outputPath,
             coreAttributePath(_domain, "home.implementation")
         );
+        // update config with new implementation
+        vm.writeJson(
+            vm.toString(address(govHarnessImpl)),
+            outputPath,
+            coreAttributePath(_domain, "governanceRouter.implementation")
+        );
         reloadConfig();
         // push upgrade call for harness
         pushSingleUpgrade(replicaOfUpgrade(localDomainName, remote));
         pushSingleUpgrade(homeUpgrade(localDomainName));
+        pushSingleUpgrade(governanceRouterUpgrade(localDomainName));
 
         // execute upgrade call
         prankExecuteRecoveryManager(
