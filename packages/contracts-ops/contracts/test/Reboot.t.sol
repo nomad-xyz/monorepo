@@ -10,10 +10,26 @@ import {ReplicaTest, ReplicaHandlers} from "@nomad-xyz/contracts-core/contracts/
 import {HomeTest} from "@nomad-xyz/contracts-core/contracts/test/Home.t.sol";
 import {HomeHarness} from "@nomad-xyz/contracts-core/contracts/test/harnesses/HomeHarness.sol";
 
-contract Reboot is RebootLogic, NomadTest, NomadTestWithUpdaterManager, ReplicaHandlers, ReplicaTest, HomeTest {
+contract Reboot is
+    RebootLogic,
+    NomadTest,
+    NomadTestWithUpdaterManager,
+    ReplicaHandlers,
+    ReplicaTest,
+    HomeTest
+{
     string remote;
 
-    function setUp() public override (NomadTest, NomadTestWithUpdaterManager, ReplicaHandlers, ReplicaTest, HomeTest) {
+    function setUp()
+        public
+        override(
+            NomadTest,
+            NomadTestWithUpdaterManager,
+            ReplicaHandlers,
+            ReplicaTest,
+            HomeTest
+        )
+    {
         vm.createSelectFork(vm.envString("RPC_URL"), 15_977_625);
         string memory _domain = "ethereum";
         string memory _configName = "config.json";
@@ -45,9 +61,7 @@ contract Reboot is RebootLogic, NomadTest, NomadTestWithUpdaterManager, ReplicaH
         replica = ReplicaHarness(
             address(getReplicaOf(localDomainName, remote))
         );
-        home = HomeHarness(
-            address(getHome(_domain))
-        );
+        home = HomeHarness(address(getHome(_domain)));
         updaterManager = getUpdaterManager(_domain);
         // set committed root and optimistic timeout
         committedRoot = replica.committedRoot();
