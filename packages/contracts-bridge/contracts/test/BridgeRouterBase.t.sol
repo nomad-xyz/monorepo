@@ -16,7 +16,7 @@ import {Test, console2} from "forge-std/Test.sol";
 /// @notice The default bridgeRouter is BridgeRouter (BaseBridgeRouter)
 /// @dev It should implement common functionality between nonEthereumBridgeRouter and
 /// EthereumBridgeRouter
-abstract contract BridgeRouterBase is BridgeTestFixture {
+abstract contract BridgeRouterBaseTest is BridgeTestFixture {
     address tokenSender;
     bytes32 tokenReceiver;
 
@@ -756,14 +756,6 @@ abstract contract BridgeRouterBase is BridgeTestFixture {
         );
         assertEq(revertingToHook.test(), 123);
     }
-
-    event Receive(
-        uint64 indexed originAndNonce,
-        address indexed token,
-        address indexed recipient,
-        address liquidityProvider,
-        uint256 amount
-    );
 
     function test_dust() public {
         address alice = address(0xBEEEEF);

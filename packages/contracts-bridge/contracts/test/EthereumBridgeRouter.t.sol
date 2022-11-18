@@ -2,9 +2,9 @@
 pragma solidity 0.7.6;
 
 import {TypeCasts} from "packages/contracts-core/contracts/libs/TypeCasts.sol";
-import {BridgeRouterBase} from "./BridgeRouterBase.t.sol";
+import {BridgeRouterBaseTest} from "./BridgeRouterBase.t.sol";
 
-contract EthereumBridgeRouterTest is BridgeRouterBase {
+contract EthereumBridgeRouterTest is BridgeRouterBaseTest {
     using TypeCasts for bytes32;
     using TypeCasts for address payable;
     using TypeCasts for address;

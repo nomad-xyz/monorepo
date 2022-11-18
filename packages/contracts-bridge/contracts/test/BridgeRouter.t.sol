@@ -8,15 +8,23 @@ import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 
 // Contracts
 import {BridgeToken} from "packages/contracts-bridge/contracts/BridgeToken.sol";
-import {BridgeRouterBase} from "./BridgeRouterBase.t.sol";
+import {BridgeRouterBaseTest} from "./BridgeRouterBase.t.sol";
 
-contract BridgeRouterTest is BridgeRouterBase {
+contract BridgeRouterTest is BridgeRouterBaseTest {
     using TypeCasts for bytes32;
     using TypeCasts for address payable;
     using TypeCasts for address;
     using TypedMemView for bytes;
     using TypedMemView for bytes29;
     using BridgeMessage for bytes29;
+
+    event Receive(
+        uint64 indexed originAndNonce,
+        address indexed token,
+        address indexed recipient,
+        address liquidityProvider,
+        uint256 amount
+    );
 
     function test_giveTokensLocal() public {
         uint32 origin = remoteDomain;
