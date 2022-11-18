@@ -109,7 +109,7 @@ contract BridgeRouterTest is BridgeRouterBase {
             address(tokenRegistry),
             // we use nonce = 2, because this is the second contract deployed by
             // tokenRegistry
-            2
+            vm.getNonce(address(tokenRegistry))
         );
         vm.expectEmit(true, true, false, true);
         // It mints new representation tokens
