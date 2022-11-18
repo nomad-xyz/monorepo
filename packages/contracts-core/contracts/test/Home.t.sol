@@ -20,14 +20,6 @@ contract HomeTest is NomadTestWithUpdaterManager {
         updaterManager.setHome(address(home));
     }
 
-    event Dispatch(
-        bytes32 indexed messageHash,
-        uint256 indexed leafIndex,
-        uint64 indexed destinationAndNonce,
-        bytes32 committedRoot,
-        bytes message
-    );
-
     function dispatchTestMessage() public returns (bytes memory, uint256) {
         bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
         address sender = vm.addr(1555);

@@ -12,10 +12,11 @@ import "forge-std/Test.sol";
 import {GovernanceMessage} from "../governance/GovernanceMessage.sol";
 import {MockXAppConnectionManager} from "./utils/MockXAppConnectionManager.sol";
 import {MockHome} from "@nomad-xyz/contracts-bridge/contracts/test/utils/MockHome.sol";
+import {NomadTest} from "./utils/NomadTest.sol";
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 import {TypeCasts} from "../libs/TypeCasts.sol";
 
-contract GovernanceRouterTest is Test {
+contract GovernanceRouterTest is NomadTest {
     using GovernanceMessage for bytes29;
     using TypedMemView for bytes;
     using TypedMemView for bytes29;
@@ -23,7 +24,7 @@ contract GovernanceRouterTest is Test {
     using TypeCasts for bytes32;
 
     GovernanceRouterHarness governanceRouter;
-    MockHome home;
+    MockHome mockHome;
     MockXAppConnectionManager xAppConnectionManager;
     GoodXappSimple goodXapp;
 
@@ -40,17 +41,6 @@ contract GovernanceRouterTest is Test {
     bytes32 remoteGovernanceRouter;
     uint32 remoteGovernanceDomain;
 
-    uint32 homeDomain;
-    uint32 remoteDomain;
-
-    event Dispatch(
-        bytes32 indexed messageHash,
-        uint256 indexed leafIndex,
-        uint64 indexed destinationAndNonce,
-        bytes32 committedRoot,
-        bytes message
-    );
-
     event TransferGovernor(
         uint32 previousGovernorDomain,
         uint32 newGovernorDomain,
@@ -58,14 +48,16 @@ contract GovernanceRouterTest is Test {
         address indexed newGovernor
     );
 
-    function setUp() public {
+    function setUp() public virtual override {
         recoveryManager = vm.addr(42);
 
         homeDomain = 1000;
         remoteDomain = 1500;
 
-        home = new MockHome(homeDomain);
-        xAppConnectionManager = new MockXAppConnectionManager(address(home));
+        mockHome = new MockHome(homeDomain);
+        xAppConnectionManager = new MockXAppConnectionManager(
+            address(mockHome)
+        );
         governanceRouter = new GovernanceRouterHarness(homeDomain, timelock);
         // setup governance router
         governanceRouter.initialize(
@@ -370,7 +362,7 @@ contract GovernanceRouterTest is Test {
         localCalls[0] = GovernanceMessage.Call(to, data);
         vm.expectEmit(true, true, true, true);
         // Directly plug into the mock contract to generate the appropriate event to expect
-        home.hack_expectDispatchEvent(
+        mockHome.hack_expectDispatchEvent(
             remoteDomain,
             remoteGovernanceRouter,
             GovernanceMessage.formatBatch(remoteCalls[0]),
@@ -435,7 +427,7 @@ contract GovernanceRouterTest is Test {
         vm.expectRevert("! called by governor");
         governanceRouter.exposed_callRemote(dest, remoteCalls);
         vm.expectEmit(true, true, true, true);
-        home.hack_expectDispatchEvent(
+        mockHome.hack_expectDispatchEvent(
             dest,
             to,
             GovernanceMessage.formatBatch(remoteCalls),
@@ -470,7 +462,7 @@ contract GovernanceRouterTest is Test {
             remoteCalls[i] = GovernanceMessage.Call(to[i], data[i]);
         }
         vm.expectEmit(true, true, true, true);
-        home.hack_expectDispatchEvent(
+        mockHome.hack_expectDispatchEvent(
             dest,
             router,
             GovernanceMessage.formatBatch(remoteCalls),
@@ -529,7 +521,7 @@ contract GovernanceRouterTest is Test {
         for (uint256 i = 0; i < length; i++) {
             if (governanceRouter.domains(i) != uint32(0)) {
                 vm.expectEmit(true, true, true, true);
-                home.hack_expectDispatchEvent(
+                mockHome.hack_expectDispatchEvent(
                     governanceRouter.domains(i),
                     governanceRouter.routers(governanceRouter.domains(i)),
                     GovernanceMessage.formatTransferGovernor(
@@ -575,7 +567,7 @@ contract GovernanceRouterTest is Test {
         for (uint256 i = 0; i < length; i++) {
             if (governanceRouter.domains(i) != uint32(0)) {
                 vm.expectEmit(true, true, true, true);
-                home.hack_expectDispatchEvent(
+                mockHome.hack_expectDispatchEvent(
                     governanceRouter.domains(i),
                     governanceRouter.routers(governanceRouter.domains(i)),
                     GovernanceMessage.formatTransferGovernor(
@@ -596,8 +588,8 @@ contract GovernanceRouterTest is Test {
         address newGovernor = vm.addr(9998888999);
         // Lock the dispatch function. If it is called, it will revert.
         // This is done so that we can verify that the function call will NOT
-        // dispatch any messages to Home.
-        home.hack_toggleLock();
+        // dispatch any messages to mockHome.
+        mockHome.hack_toggleLock();
         vm.expectEmit(true, true, true, true);
         emit TransferGovernor(
             homeDomain,
@@ -615,8 +607,8 @@ contract GovernanceRouterTest is Test {
         address newGovernor = address(0);
         // Lock the dispatch function. If it is called, it will revert.
         // This is done so that we can verify that the function call will NOT
-        // dispatch any messages to Home.
-        home.hack_toggleLock();
+        // dispatch any messages to mockHome.
+        mockHome.hack_toggleLock();
         vm.expectRevert("cannot renounce governor");
         governanceRouter.transferGovernor(newDomain, newGovernor);
     }
@@ -630,7 +622,7 @@ contract GovernanceRouterTest is Test {
             governanceRouter.transferGovernor(newDomain, newGovernor);
             return;
         }
-        home.hack_toggleLock();
+        mockHome.hack_toggleLock();
         vm.expectEmit(true, true, true, true);
         emit TransferGovernor(
             homeDomain,
@@ -713,7 +705,7 @@ contract GovernanceRouterTest is Test {
             remoteCalls[0].to = recipient;
             bytes memory message = GovernanceMessage.formatBatch(remoteCalls);
             vm.expectEmit(true, true, true, true);
-            home.hack_expectDispatchEvent(
+            mockHome.hack_expectDispatchEvent(
                 dest,
                 recipient,
                 message,
@@ -746,7 +738,7 @@ contract GovernanceRouterTest is Test {
             remoteCalls[0].to = recipient;
             bytes memory message = GovernanceMessage.formatBatch(remoteCalls);
             vm.expectEmit(true, true, true, true);
-            home.hack_expectDispatchEvent(
+            mockHome.hack_expectDispatchEvent(
                 dest,
                 recipient,
                 message,
@@ -791,7 +783,7 @@ contract GovernanceRouterTest is Test {
             remoteCalls[0].to = recipient;
             bytes memory message = GovernanceMessage.formatBatch(remoteCalls);
             vm.expectEmit(true, true, true, true);
-            home.hack_expectDispatchEvent(
+            mockHome.hack_expectDispatchEvent(
                 dest,
                 recipient,
                 message,

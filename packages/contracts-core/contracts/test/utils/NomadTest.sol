@@ -30,6 +30,14 @@ contract NomadTest is Test {
 
     event NewUpdater(address oldUpdater, address newUpdater);
 
+    event Dispatch(
+        bytes32 indexed messageHash,
+        uint256 indexed leafIndex,
+        uint64 indexed destinationAndNonce,
+        bytes32 committedRoot,
+        bytes message
+    );
+
     function setUp() public virtual {
         vm.label(updaterAddr, "updater");
         vm.label(fakeUpdater, "fake updater");
