@@ -10,7 +10,7 @@ import {ReplicaTest, ReplicaHandlers} from "@nomad-xyz/contracts-core/contracts/
 import {HomeTest} from "@nomad-xyz/contracts-core/contracts/test/Home.t.sol";
 import {HomeHarness} from "@nomad-xyz/contracts-core/contracts/test/harnesses/HomeHarness.sol";
 
-contract Reboot is
+contract RebootTest is
     RebootLogic,
     NomadTest,
     NomadTestWithUpdaterManager,
