@@ -184,7 +184,7 @@ contract ReplicaTest is ReplicaHandlers {
 
     // Pre-computed values come from the nomad-xyz/rust test fixtures
     // https://github.com/nomad-xyz/rust/blob/main/fixtures/merkle.json
-    function test_acceptLeafCorrectProof() public {
+    function test_acceptLeafCorrectProof() public virtual {
         replica.setCommittedRoot(exampleRoot);
         assertTrue(replica.prove(exampleLeaf, exampleProof, exampleLeafIndex));
     }
