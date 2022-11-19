@@ -151,13 +151,6 @@ contract ReplicaTest is ReplicaHandlers {
         assertEq(replica.confirmAt(committedRoot), 1);
     }
 
-    event Update(
-        uint32 indexed homeDomain,
-        bytes32 indexed oldRoot,
-        bytes32 indexed newRoot,
-        bytes signature
-    );
-
     function test_acceptReplicaUpdate() public {
         bytes32 oldRoot = committedRoot;
         bytes32 newRoot = "newRoot";
@@ -460,8 +453,6 @@ contract ReplicaTest is ReplicaHandlers {
         vm.expectRevert("Ownable: caller is not the owner");
         replica.setOptimisticTimeout(10);
     }
-
-    event NewUpdater(address oldUpdater, address newUpdater);
 
     function test_setUpdaterOnlyOwner() public {
         vm.expectEmit(false, false, false, true);

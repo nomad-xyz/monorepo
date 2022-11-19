@@ -11,9 +11,7 @@ contract NomadBaseTest is NomadTest {
 
     bytes32 oldRoot = "old Root";
     bytes32 newRoot = "new Root";
-
-    event NewUpdater(address oldUpdater, address newUpdater);
-
+    
     function setUp() public override {
         super.setUp();
         nbh = new NomadBaseHarness(homeDomain);

@@ -13,7 +13,7 @@ contract HomeTest is NomadTestWithUpdaterManager {
 
     uint256 dispatchedMessages;
 
-    function setUp() public override {
+    function setUp() public virtual override {
         super.setUp();
         home = new HomeHarness(homeDomain);
         home.initialize(IUpdaterManager(address(updaterManager)));
@@ -44,7 +44,7 @@ contract HomeTest is NomadTestWithUpdaterManager {
         bytes32 messageHash = keccak256(message);
         vm.expectEmit(true, true, true, true);
         // first message that is sent on this home
-        uint256 leafIndex = dispatchedMessages++;
+        uint256 leafIndex = home.count();
         emit Dispatch(
             messageHash,
             leafIndex,
@@ -56,8 +56,6 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home.dispatch(remoteDomain, recipient, messageBody);
         return (message, leafIndex);
     }
-
-    event NewUpdater(address oldUpdater, address newUpdater);
 
     function test_onlyUpdaterManagerSetUpdater() public {
         address newUpdater = vm.addr(420);
@@ -80,6 +78,7 @@ contract HomeTest is NomadTestWithUpdaterManager {
     function test_setUpdaterManagerSuccess() public {
         address newUpdater = address(0xBEEF);
         UpdaterManager newUpdaterManager = new UpdaterManager(newUpdater);
+        vm.prank(home.owner());
         home.setUpdaterManager(address(newUpdaterManager));
         assertEq(address(home.updaterManager()), address(newUpdaterManager));
         assertEq(home.updater(), newUpdater);
@@ -93,12 +92,12 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home.setUpdaterManager(address(newUpdaterManager));
     }
 
-    function test_committedRoot() public {
+    function test_committedRoot() public virtual {
         bytes32 emptyRoot = bytes32(0);
         assertEq(abi.encode(home.committedRoot()), abi.encode(emptyRoot));
     }
 
-    function test_dispatchSuccess() public {
+    function test_dispatchSuccess() public virtual {
         uint256 nonce = home.nonces(remoteDomain);
         (bytes memory message, uint256 leafIndex) = dispatchTestMessage();
         (bytes32 root, , uint256 index, ) = merkleTest.getProof(message);
@@ -125,13 +124,6 @@ contract HomeTest is NomadTestWithUpdaterManager {
         bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));
         home.dispatch(remoteDomain, recipient, messageBody);
     }
-
-    event Update(
-        uint32 indexed homeDomain,
-        bytes32 indexed oldRoot,
-        bytes32 indexed newRoot,
-        bytes signature
-    );
 
     function test_updateSingleMessage() public {
         dispatchTestMessage();
@@ -192,7 +184,7 @@ contract HomeTest is NomadTestWithUpdaterManager {
         home.update(oldRoot, newRoot, sig);
     }
 
-    function test_suggestUpdate() public {
+    function test_suggestUpdate() public virtual {
         (bytes memory message, ) = dispatchTestMessage();
         (bytes32 root, , , ) = merkleTest.getProof(message);
         (bytes32 oldRoot, bytes32 newRoot) = home.suggestUpdate();
