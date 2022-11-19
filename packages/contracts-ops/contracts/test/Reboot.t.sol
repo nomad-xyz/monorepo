@@ -73,19 +73,21 @@ contract RebootTest is
         optimisticTimeout = replica.optimisticSeconds();
         // setup fake app handlers
         setUpBadHandlers();
-        // Upgrade to Harness
-        // deploy ReplicaHarness implementation
+        // upgrade contracts to harness
+        upgradeToHarness();
+    }
+
+    function upgradeToHarness() public {
+        upgradeReplicaHarness();
+        upgradeHomeHarness();
+        upgradeGovernanceRouterHarness();
+    }
+
+    function upgradeReplicaHarness() public {
+        // REPLICA
         ReplicaHarness replicaHarnessImpl = new ReplicaHarness(
             getDomainNumber(localDomainName)
         );
-        HomeHarness homeHarnessImpl = new HomeHarness(
-            getDomainNumber(localDomainName)
-        );
-        GovernanceRouterHarness govHarnessImpl = new GovernanceRouterHarness(
-            getDomainNumber(localDomainName),
-            timelock
-        );
-        // update config with new implementation
         vm.writeJson(
             vm.toString(address(replicaHarnessImpl)),
             outputPath,
@@ -96,30 +98,55 @@ contract RebootTest is
                 )
             )
         );
-        vm.writeJson(
-            vm.toString(address(homeHarnessImpl)),
-            outputPath,
-            coreAttributePath(_domain, "home.implementation")
-        );
-        // update config with new implementation
-        vm.writeJson(
-            vm.toString(address(govHarnessImpl)),
-            outputPath,
-            coreAttributePath(_domain, "governanceRouter.implementation")
-        );
         reloadConfig();
-        // push upgrade call for harness
         pushSingleUpgrade(replicaOfUpgrade(localDomainName, remote));
-        pushSingleUpgrade(homeUpgrade(localDomainName));
-        pushSingleUpgrade(governanceRouterUpgrade(localDomainName));
-
-        // execute upgrade call
         prankExecuteRecoveryManager(
             address(getGovernanceRouter(localDomainName)),
             getDomainNumber(localDomainName)
         );
     }
 
+    function upgradeHomeHarness() public {
+        // HOME
+        HomeHarness homeHarnessImpl = new HomeHarness(
+            getDomainNumber(localDomainName)
+        );
+        vm.writeJson(
+            vm.toString(address(homeHarnessImpl)),
+            outputPath,
+            coreAttributePath(localDomainName, "home.implementation")
+        );
+        reloadConfig();
+        pushSingleUpgrade(homeUpgrade(localDomainName));
+        prankExecuteRecoveryManager(
+            address(getGovernanceRouter(localDomainName)),
+            getDomainNumber(localDomainName)
+        );
+    }
+
+    function upgradeGovernanceRouterHarness() public {
+        // GOV ROUTER
+        GovernanceRouterHarness govHarnessImpl = new GovernanceRouterHarness(
+            getDomainNumber(localDomainName),
+            getRecoveryTimelock(localDomainName)
+        );
+        vm.writeJson(
+            vm.toString(address(govHarnessImpl)),
+            outputPath,
+            coreAttributePath(
+                localDomainName,
+                "governanceRouter.implementation"
+            )
+        );
+        reloadConfig();
+        pushSingleUpgrade(governanceRouterUpgrade(localDomainName));
+        prankExecuteRecoveryManager(
+            address(getGovernanceRouter(localDomainName)),
+            getDomainNumber(localDomainName)
+        );
+    }
+
+    //////////////////////// HOME ////////////////////////
     // HOME
     function test_committedRoot() public override {
         // updates have been submitted so committed root is no longer zero
@@ -152,4 +179,6 @@ contract RebootTest is
         assertEq(home.committedRoot(), oldRoot);
         assertEq(home.root(), newRoot);
     }
+
+    //////////////////////// GOV ROUTER ////////////////////////
 }
