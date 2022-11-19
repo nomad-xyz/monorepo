@@ -11,6 +11,9 @@ import {ReplicaTest, ReplicaHandlers} from "@nomad-xyz/contracts-core/contracts/
 import {HomeTest} from "@nomad-xyz/contracts-core/contracts/test/Home.t.sol";
 import {GovernanceRouterTest} from "@nomad-xyz/contracts-core/contracts/test/GovernanceRouter.t.sol";
 import {HomeHarness} from "@nomad-xyz/contracts-core/contracts/test/harnesses/HomeHarness.sol";
+import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManager.sol";
+import {MockHome} from "@nomad-xyz/contracts-bridge/contracts/test/utils/MockHome.sol";
+import {MockXAppConnectionManager} from "@nomad-xyz/contracts-core/contracts/test/utils/MockXAppConnectionManager.sol";
 
 contract RebootTest is
     RebootLogic,
@@ -34,6 +37,7 @@ contract RebootTest is
             GovernanceRouterTest
         )
     {
+        // ALL
         vm.createSelectFork(vm.envString("RPC_URL"), 15_977_625);
         string memory _domain = "ethereum";
         string memory _configName = "config.json";
@@ -41,8 +45,17 @@ contract RebootTest is
         __CallBatch_initialize(_domain, getDomainNumber(_domain), "", true);
         // call base setup
         super.setUp();
+        // basic vars
+        remote = getConnections(localDomainName)[0];
+        remoteDomain = getDomainNumber(remote);
+        homeDomain = getDomainNumber(localDomainName);
         // set fake updater for ethereum & 1 remote chain
         // before updater rotation, so it will be rotated on-chain
+        vm.writeJson(
+            vm.toString(updaterAddr),
+            outputPath,
+            protocolAttributePath(localDomainName, "updater")
+        );
         vm.writeJson(
             vm.toString(updaterAddr),
             outputPath,
@@ -50,37 +63,33 @@ contract RebootTest is
         );
         reloadConfig();
         // perform reboot actions
-        reboot(_domain);
+        reboot(localDomainName);
         // execute governance actions via vm.prank
         prankExecuteRecoveryManager(
-            address(getGovernanceRouter(_domain)),
-            getDomainNumber(_domain)
+            address(getGovernanceRouter(localDomainName)),
+            getDomainNumber(localDomainName)
         );
-        // set remote domain to actual values
-        remote = getConnections(_domain)[0];
-        remoteDomain = getDomainNumber(remote);
-        // set home domain to actual values
-        homeDomain = getDomainNumber(_domain);
-        // setup replica to actual value
+        // HOME
+        home = HomeHarness(address(getHome(localDomainName)));
+        upgradeHomeHarness();
+        updaterManager = getUpdaterManager(localDomainName);
+        // REPLICA
         replica = ReplicaHarness(
             address(getReplicaOf(localDomainName, remote))
         );
-        // setup home to point to the proxy
-        home = HomeHarness(address(getHome(_domain)));
-        updaterManager = getUpdaterManager(_domain);
-        // set committed root and optimistic timeout
+        upgradeReplicaHarness();
         committedRoot = replica.committedRoot();
         optimisticTimeout = replica.optimisticSeconds();
-        // setup fake app handlers
         setUpBadHandlers();
-        // upgrade contracts to harness
-        upgradeToHarness();
-    }
-
-    function upgradeToHarness() public {
-        upgradeReplicaHarness();
-        upgradeHomeHarness();
+        // GOVERNANCE ROUTER
+        governanceRouter = GovernanceRouterHarness(address(getGovernanceRouter(localDomainName)));
         upgradeGovernanceRouterHarness();
+        recoveryManager = getRecoveryManager(localDomainName);
+        remoteGovernanceRouter = TypeCasts.addressToBytes32(address(getGovernanceRouter(remote)));
+        remoteGovernanceDomain = remoteDomain;
+        xAppConnectionManager = MockXAppConnectionManager(address(getXAppConnectionManager(localDomainName)));
+        goodXapp = goodXappSimple;
+        mockHome = MockHome(address(getHome(localDomainName)));
     }
 
     function upgradeReplicaHarness() public {
