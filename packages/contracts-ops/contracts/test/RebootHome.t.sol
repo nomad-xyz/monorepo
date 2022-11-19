@@ -9,6 +9,7 @@ import {HomeTest} from "@nomad-xyz/contracts-core/contracts/test/Home.t.sol";
 import {HomeHarness} from "@nomad-xyz/contracts-core/contracts/test/harnesses/HomeHarness.sol";
 
 contract HomeRebootTest is RebootTest, HomeTest {
+
     function setUp() public override(NomadTest, HomeTest) {
         setUpReboot(1, "home");
         // HOME

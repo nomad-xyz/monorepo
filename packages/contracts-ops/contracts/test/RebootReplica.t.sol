@@ -9,6 +9,7 @@ import {ReplicaHarness} from "@nomad-xyz/contracts-core/contracts/test/harnesses
 import {ReplicaTest} from "@nomad-xyz/contracts-core/contracts/test/Replica.t.sol";
 
 contract ReplicaRebootTest is RebootTest, ReplicaTest {
+
     function setUp() public override(NomadTest, ReplicaTest) {
         setUpReboot(2, "replica");
         // REPLICA
