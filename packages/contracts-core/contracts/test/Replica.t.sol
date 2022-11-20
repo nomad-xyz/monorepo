@@ -405,7 +405,6 @@ contract ReplicaTest is ReplicaHandlers {
 
     /// @notice It should revert because the message's destination is not this Replica's domain
     function test_notProcessLegacyWrongDestination() public {
-        replica.setCommittedRoot(exampleRoot);
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
         bytes32 receiver = bytes32(uint256(uint160(vm.addr(431))));
         uint32 nonce = 0;
@@ -425,7 +424,6 @@ contract ReplicaTest is ReplicaHandlers {
 
     /// @notice It should revert because the message is not proven, i.e is not included in the committed Root
     function test_notProcessUnprovenMessage() public {
-        replica.setCommittedRoot(exampleRoot);
         bytes32 sender = bytes32(uint256(uint160(vm.addr(134))));
         bytes32 receiver = bytes32(uint256(uint160(vm.addr(431))));
         uint32 nonce = 0;

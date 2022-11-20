@@ -17,21 +17,21 @@ import {CallBatch} from "../CallBatch.sol";
 import {UpgradeBeaconController} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeaconController.sol";
 
 contract UpgradeCallBatchLogic is Script, Config, CallBatch {
-    string currentDomain;
-
     function pushUpgrade(string memory _domain) internal {
-        currentDomain = _domain;
-        pushSingleUpgrade(governanceRouterUpgrade(currentDomain));
-        pushSingleUpgrade(bridgeRouterUpgrade(currentDomain));
-        pushSingleUpgrade(bridgeTokenUpgrade(currentDomain));
-        pushSingleUpgrade(tokenRegistryUpgrade(currentDomain));
-        pushSingleUpgrade(homeUpgrade(currentDomain));
+        pushSingleUpgrade(governanceRouterUpgrade(_domain), _domain);
+        pushSingleUpgrade(bridgeRouterUpgrade(_domain), _domain);
+        pushSingleUpgrade(bridgeTokenUpgrade(_domain), _domain);
+        pushSingleUpgrade(tokenRegistryUpgrade(_domain), _domain);
+        pushSingleUpgrade(homeUpgrade(_domain), _domain);
         pushSingleUpgrade(
-            replicaOfUpgrade(currentDomain, getConnections(currentDomain)[0])
+            replicaOfUpgrade(_domain, getConnections(_domain)[0]),
+            _domain
         );
     }
 
-    function pushSingleUpgrade(Upgrade memory _upgrade) internal {
+    function pushSingleUpgrade(Upgrade memory _upgrade, string memory _domain)
+        internal
+    {
         // check if upgrade is unnecessary
         (, bytes memory result) = address(_upgrade.beacon).staticcall("");
         address _current = abi.decode(result, (address));
@@ -44,10 +44,8 @@ contract UpgradeCallBatchLogic is Script, Config, CallBatch {
             address(_upgrade.beacon),
             address(_upgrade.implementation)
         );
-        uint32 domainNumber = getDomainNumber(currentDomain);
-        address beaconController = address(
-            getUpgradeBeaconController(currentDomain)
-        );
+        uint32 domainNumber = getDomainNumber(_domain);
+        address beaconController = address(getUpgradeBeaconController(_domain));
         if (domainNumber == getDomainNumber(localDomainName)) {
             pushLocal(beaconController, call);
         } else {

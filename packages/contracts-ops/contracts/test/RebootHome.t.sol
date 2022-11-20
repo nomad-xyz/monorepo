@@ -15,6 +15,8 @@ contract HomeRebootTest is RebootTest, HomeTest {
         home = HomeHarness(address(getHome(localDomainName)));
         upgradeHomeHarness();
         updaterManager = getUpdaterManager(localDomainName);
+        // check fork setUp
+        assertEq(home.updater(), updaterAddr);
     }
 
     function upgradeHomeHarness() public {
@@ -28,11 +30,16 @@ contract HomeRebootTest is RebootTest, HomeTest {
             coreAttributePath(localDomainName, "home.implementation")
         );
         reloadConfig();
-        pushSingleUpgrade(homeUpgrade(localDomainName));
+        pushSingleUpgrade(homeUpgrade(localDomainName), localDomainName);
         prankExecuteRecoveryManager(
             address(getGovernanceRouter(localDomainName)),
             getDomainNumber(localDomainName)
         );
+        // assert beacon has been upgraded to harness
+        (, bytes memory result) = address(homeUpgrade(localDomainName).beacon)
+            .staticcall("");
+        address _current = abi.decode(result, (address));
+        assertEq(_current, address(homeHarnessImpl));
     }
 
     //////////////////////// HOME ////////////////////////

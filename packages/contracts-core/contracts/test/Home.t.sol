@@ -11,22 +11,12 @@ import {Message} from "../libs/Message.sol";
 contract HomeTest is NomadTestWithUpdaterManager {
     HomeHarness home;
 
-    uint256 dispatchedMessages;
-
     function setUp() public virtual override {
         super.setUp();
         home = new HomeHarness(homeDomain);
         home.initialize(IUpdaterManager(address(updaterManager)));
         updaterManager.setHome(address(home));
     }
-
-    event Dispatch(
-        bytes32 indexed messageHash,
-        uint256 indexed leafIndex,
-        uint64 indexed destinationAndNonce,
-        bytes32 committedRoot,
-        bytes message
-    );
 
     function dispatchTestMessage() public returns (bytes memory, uint256) {
         bytes32 recipient = bytes32(uint256(uint160(vm.addr(1505))));

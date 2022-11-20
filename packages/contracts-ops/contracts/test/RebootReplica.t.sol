@@ -15,11 +15,13 @@ contract ReplicaRebootTest is RebootTest, ReplicaTest {
         replica = ReplicaHarness(
             address(getReplicaOf(localDomainName, remote))
         );
-        assertEq(replica.updater(), updaterAddr);
         upgradeReplicaHarness();
+        // Replica test vars
         committedRoot = replica.committedRoot();
         optimisticTimeout = replica.optimisticSeconds();
         setUpBadHandlers();
+        // check fork setup
+        assertEq(replica.updater(), updaterAddr);
     }
 
     function upgradeReplicaHarness() public {
@@ -38,11 +40,20 @@ contract ReplicaRebootTest is RebootTest, ReplicaTest {
             )
         );
         reloadConfig();
-        pushSingleUpgrade(replicaOfUpgrade(localDomainName, remote));
+        pushSingleUpgrade(
+            replicaOfUpgrade(localDomainName, remote),
+            localDomainName
+        );
         prankExecuteRecoveryManager(
             address(getGovernanceRouter(localDomainName)),
             getDomainNumber(localDomainName)
         );
+        // assert beacon has been upgraded to harness
+        (, bytes memory result) = address(
+            replicaOfUpgrade(localDomainName, remote).beacon
+        ).staticcall("");
+        address _current = abi.decode(result, (address));
+        assertEq(_current, address(replicaHarnessImpl));
     }
 
     // REPLICA
