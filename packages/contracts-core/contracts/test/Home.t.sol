@@ -11,8 +11,6 @@ import {Message} from "../libs/Message.sol";
 contract HomeTest is NomadTestWithUpdaterManager {
     HomeHarness home;
 
-    uint256 dispatchedMessages;
-
     function setUp() public virtual override {
         super.setUp();
         home = new HomeHarness(homeDomain);
