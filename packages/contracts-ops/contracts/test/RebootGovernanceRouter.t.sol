@@ -23,6 +23,8 @@ contract GovernanceRouterRebootTest is RebootTest, GovernanceRouterTest {
             address(getGovernanceRouter(remote))
         );
         remoteGovernanceDomain = remoteDomain;
+        remoteDomainReplica = getXAppConnectionManager(localDomainName)
+            .domainToReplica(remoteDomain);
         xAppConnectionManager = MockXAppConnectionManager(
             address(getXAppConnectionManager(localDomainName))
         );
@@ -44,10 +46,19 @@ contract GovernanceRouterRebootTest is RebootTest, GovernanceRouterTest {
             )
         );
         reloadConfig();
-        pushSingleUpgrade(governanceRouterUpgrade(localDomainName));
+        pushSingleUpgrade(
+            governanceRouterUpgrade(localDomainName),
+            localDomainName
+        );
         prankExecuteRecoveryManager(
             address(getGovernanceRouter(localDomainName)),
             getDomainNumber(localDomainName)
         );
+        // assert beacon has been upgraded
+        (, bytes memory result) = address(
+            governanceRouterUpgrade(localDomainName).beacon
+        ).staticcall("");
+        address _current = abi.decode(result, (address));
+        assertEq(_current, address(govHarnessImpl));
     }
 }
