@@ -1,12 +1,22 @@
 import { Gauge, Histogram, Counter } from 'prom-client';
 import Logger from 'bunyan';
 
-import { Home } from '@nomad-xyz/contracts-core';
-import { BridgeContext } from '@nomad-xyz/sdk-bridge';
+import * as dotenv from 'dotenv';
+dotenv.config()
+
+import { NomadContext } from '@nomad-xyz/sdk';
 
 import { register } from 'prom-client';
 import express, { Response } from 'express';
+import { TaskRunner } from './taskRunner';
 export const prefix = `nomad_metrics`;
+
+export enum MessageStages {
+  Dispatched = "dispatched",
+  Updated = "updated",
+  Relayed = "relayed",
+  Processed = "processed"
+}
 
 export enum GoldSkyQuery {
   QueryExample1 = 'queryexample1',
@@ -85,7 +95,7 @@ export class MetricsCollector {
   }
 }
 
-export class IndexerCollector extends MetricsCollector {
+export class MonitoringCollector extends MetricsCollector {
   private metricsLatency: Histogram<string>;
   private numMessages: Gauge<string>;
   private homeFailedGauge: Gauge<string>;
@@ -145,14 +155,14 @@ export class IndexerCollector extends MetricsCollector {
     );
   }
 
-  incNumMessages(stage: string, network: string, replica: string) {
+  incNumMessages(stage: MessageStages, network: string, replica: string) {
     this.numMessages.labels(stage, network, replica, this.environment).inc();
   }
-  decNumMessages(stage: string, network: string, replica: string) {
+  decNumMessages(stage: MessageStages, network: string, replica: string) {
     this.numMessages.labels(stage, network, replica, this.environment).dec();
   }
   setNumMessages(
-    stage: string,
+    stage: MessageStages,
     network: string,
     replica: string,
     count: number,
@@ -179,42 +189,70 @@ export class IndexerCollector extends MetricsCollector {
   }
 }
 
-export class HomeStatusCollector {
-  home: Home;
-  domain: number;
+export class HomeStatusCollector extends TaskRunner {
+  ctx: NomadContext;
   logger: Logger;
-  metrics: IndexerCollector;
+  metrics: MonitoringCollector;
 
   constructor(
-    domain: number,
-    ctx: BridgeContext,
+    ctx: NomadContext,
     logger: Logger,
-    metrics: IndexerCollector,
+    metrics: MonitoringCollector,
   ) {
-    this.domain = domain;
-    this.home = ctx.mustGetCore(domain).home;
+    super();
+    this.ctx = ctx;
     this.logger = logger;
     this.metrics = metrics;
   }
 
-  async healthy(): Promise<boolean> {
-    try {
-      const state = await this.home.state();
-      if (state !== 1) {
-        return false;
-      } else {
-        return true;
-      }
-    } catch (e: any) {
-      this.logger.warn(
-        `Couldn't collect home state for ${this.domain} domain. Error: ${e.message}`,
-      );
-      // TODO! something
-    }
-    return true; // BAD!!!
+  async runTasks() {
+    await Promise.all([
+      this.checkAllHomes()
+    ])
   }
 
-  get failed(): boolean {
-    return !this.healthy;
+  async checkAllHomes(): Promise<void> {
+    await this.checkHomes(this.ctx.domainNumbers);
   }
+
+  async checkHomes(networks: (string | number)[]): Promise<void> {
+    for (const n of networks) {
+      await this.checkHome(n);
+    }
+  }
+
+  async checkHome(nameOrDomain: string | number): Promise<void> {
+    const domain = this.ctx.resolveDomain(nameOrDomain);
+    const home = this.ctx.mustGetCore(domain).home;
+    console.log(`Check home ${nameOrDomain}`);
+    const state = await home.state();
+    console.log(`Got home ${nameOrDomain}`);
+    if (state === 2) {
+      this.metrics.setHomeState(nameOrDomain.toString(), true);
+    } else {
+      this.metrics.setHomeState(nameOrDomain.toString(), false);
+    }
+  }
+
+  // async healthy(): Promise<boolean> {
+  //   try {
+  //     const state = await this.home.state();
+  //     if (state !== 1) {
+  //       return false;
+  //     } else {
+  //       return true;
+  //     }
+  //   } catch (e: any) {
+  //     this.logger.warn(
+  //       `Couldn't collect home state for ${this.domain} domain. Error: ${e.message}`,
+  //     );
+  //     throw new Error()
+  //     // TODO! something
+  //   }
+  //   return true; // BAD!!!
+  // }
+
+  // get failed(): boolean {
+  //   return !this.healthy;
+  // }
 }

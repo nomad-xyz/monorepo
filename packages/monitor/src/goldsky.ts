@@ -1,12 +1,17 @@
 import { request, gql } from 'graphql-request';
+import { MessageStages, MonitoringCollector } from './server';
+import { TaskRunner } from './taskRunner';
 
-const defaultGoldSkySecret = "mpa%H&RAHu9;eUe";
+export const defaultGoldSkySecret = "mpa%H&RAHu9;eUe";
 
-class Goldsky {
-    protected secret: string; 
+export class Goldsky extends TaskRunner {
+    protected secret: string;
+    metrics: MonitoringCollector;
 
-    constructor(secret: string) {
+    constructor(secret: string, mc: MonitoringCollector) {
+      super();
         this.secret = secret;
+        this.metrics = mc;
     }
 
     /**
@@ -32,10 +37,18 @@ class Goldsky {
     };
   }
 
+  async runTasks() {
+    await Promise.all([
+      this.numMessages(),
+    ])
+  }
+
   async numMessages(){
     const query = gql`
       query Query {
         number_messages {
+          origin,
+          destination,
           dispatched,
           updated,
           relayed,
@@ -45,31 +58,36 @@ class Goldsky {
     `;
   
       const response = await request(this.uri, query, {}, this.headers);
-      const data = response.number_messages[0];
-      return {
-        dispatched: parseInt(data.dispatched),
-        updated: parseInt(data.updated),
-        relayed: parseInt(data.relayed),
-        processed: parseInt(data.processed),
-      }
+      response.number_messages.forEach((row: any) => {
+
+        const origin =  parseInt(row.origin);
+        const destination =  parseInt(row.destination);
+
+        this.metrics.setNumMessages(MessageStages.Dispatched, origin.toString(), destination.toString(), parseInt(row.dispatched))
+        this.metrics.setNumMessages(MessageStages.Updated, origin.toString(), destination.toString(), parseInt(row.updated))
+        this.metrics.setNumMessages(MessageStages.Relayed, origin.toString(), destination.toString(), parseInt(row.relayed))
+        this.metrics.setNumMessages(MessageStages.Processed, origin.toString(), destination.toString(), parseInt(row.processed))
+      
+      })
   }
 
-  async numEvents(){
-    const query = gql`
-        query MyQuery {
-            events_aggregate {
-            aggregate {
-                count
-            }
-            }
-        }
-    `;
+  // async numEvents(){
+  //   const query = gql`
+  //       query MyQuery {
+  //           events_aggregate {
+  //           aggregate {
+  //               count
+  //           }
+  //           }
+  //       }
+  //   `;
   
-      const response = await request(this.uri, query, {}, this.headers);
-      return parseInt(response.events_aggregate.aggregate.count);
-  }
+  //     const response = await request(this.uri, query, {}, this.headers);
+  //     return parseInt(response.events_aggregate.aggregate.count);
+  // }
 }
 
+/*
 (async () => {
     let g = new Goldsky(defaultGoldSkySecret);
     const ms = await g.numMessages();
@@ -77,4 +95,4 @@ class Goldsky {
     const es = await g.numEvents();
     console.log(es)
 })();
-
+*/
