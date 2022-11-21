@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity 0.7.6;
 
-import {TypeCasts} from "packages/contracts-core/contracts/libs/TypeCasts.sol";
+import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/libs/TypeCasts.sol";
 import {BridgeRouterBaseTest} from "./BridgeRouterBase.t.sol";
 
 contract EthereumBridgeRouterTest is BridgeRouterBaseTest {

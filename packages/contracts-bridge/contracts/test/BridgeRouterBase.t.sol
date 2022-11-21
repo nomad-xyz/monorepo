@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity 0.7.6;
 
-// Local Imports
-import {BridgeMessage} from "packages/contracts-bridge/contracts/BridgeMessage.sol";
-import {BridgeTestFixture} from "packages/contracts-bridge/contracts/test/utils/BridgeTest.sol";
-import {BridgeToken} from "packages/contracts-bridge/contracts/BridgeToken.sol";
-import {EthereumBridgeRouterHarness} from "packages/contracts-bridge/contracts/test/harness/BridgeRouterHarness.sol";
-import {TypeCasts} from "packages/contracts-core/contracts/libs/TypeCasts.sol";
-import {RevertingToHook} from "packages/contracts-bridge/contracts/test/utils/RevertingToHook.sol";
+// Bridge Imports
+import {BridgeMessage} from "../BridgeMessage.sol";
+import {BridgeTestFixture} from "./utils/BridgeTest.sol";
+import {BridgeToken} from "../BridgeToken.sol";
+import {EthereumBridgeRouterHarness} from "./harness/BridgeRouterHarness.sol";
+import {RevertingToHook} from "./utils/RevertingToHook.sol";
 import {MockHome} from "./utils/MockHome.sol";
+// Core Imports
+import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/libs/TypeCasts.sol";
 // External Imports
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 import {Test, console2} from "forge-std/Test.sol";

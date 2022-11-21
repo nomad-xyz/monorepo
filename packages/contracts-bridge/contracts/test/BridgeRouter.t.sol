@@ -2,12 +2,12 @@
 pragma solidity 0.7.6;
 
 // Libraries
-import {BridgeMessage} from "packages/contracts-bridge/contracts/BridgeMessage.sol";
-import {TypeCasts} from "packages/contracts-core/contracts/libs/TypeCasts.sol";
+import {BridgeMessage} from "../BridgeMessage.sol";
+import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/libs/TypeCasts.sol";
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 
 // Contracts
-import {BridgeToken} from "packages/contracts-bridge/contracts/BridgeToken.sol";
+import {BridgeToken} from "../BridgeToken.sol";
 import {BridgeRouterBaseTest} from "./BridgeRouterBase.t.sol";
 
 contract BridgeRouterTest is BridgeRouterBaseTest {

@@ -2,7 +2,7 @@
 pragma solidity 0.7.6;
 
 import {Test} from "forge-std/Test.sol";
-import {Encoding} from "packages/contracts-bridge/contracts/Encoding.sol";
+import {Encoding} from "../Encoding.sol";
 
 contract EncodingTest is Test {
     using Encoding for uint32;
