@@ -9,28 +9,29 @@ import {ReplicaHarness} from "@nomad-xyz/contracts-core/contracts/test/harnesses
 import {ReplicaTest} from "@nomad-xyz/contracts-core/contracts/test/Replica.t.sol";
 
 contract ReplicaRebootTest is RebootTest, ReplicaTest {
+    address replicaHarnessImpl;
+
     function setUp() public override(NomadTest, ReplicaTest) {
         setUpReboot(2, "replica");
-        // REPLICA
+        // upgrade to harness
         replica = ReplicaHarness(
             address(getReplicaOf(localDomainName, remote))
         );
-        upgradeReplicaHarness();
-        // Replica test vars
+        setUp_upgradeReplicaHarness();
+        // set test vars
         committedRoot = replica.committedRoot();
         optimisticTimeout = replica.optimisticSeconds();
         setUpBadHandlers();
-        // check fork setup
-        assertEq(replica.updater(), updaterAddr);
     }
 
-    function upgradeReplicaHarness() public {
+    // upgrade to harness
+    function setUp_upgradeReplicaHarness() public {
         // REPLICA
-        ReplicaHarness replicaHarnessImpl = new ReplicaHarness(
-            getDomainNumber(localDomainName)
+        replicaHarnessImpl = address(
+            new ReplicaHarness(getDomainNumber(localDomainName))
         );
         vm.writeJson(
-            vm.toString(address(replicaHarnessImpl)),
+            vm.toString(replicaHarnessImpl),
             outputPath,
             string(
                 abi.encodePacked(
@@ -48,12 +49,17 @@ contract ReplicaRebootTest is RebootTest, ReplicaTest {
             address(getGovernanceRouter(localDomainName)),
             getDomainNumber(localDomainName)
         );
+    }
+
+    // check fork setUp
+    function test_setUp() public {
+        assertEq(replica.updater(), updaterAddr);
         // assert beacon has been upgraded to harness
         (, bytes memory result) = address(
             replicaOfUpgrade(localDomainName, remote).beacon
         ).staticcall("");
         address _current = abi.decode(result, (address));
-        assertEq(_current, address(replicaHarnessImpl));
+        assertEq(_current, replicaHarnessImpl);
     }
 
     // REPLICA
