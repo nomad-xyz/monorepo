@@ -23,7 +23,11 @@ contract BridgeRouterRebootTest is RebootTest, BridgeRouterTest {
 
     function setUp() public override(BridgeRouterBaseTest, NomadTest) {
         setUpReboot(1, "bridgerouter");
-        // BridgeRouter
+        // This line causes a stack overflow in forge.
+        // Comment it out and tests will run (but fail)
+        // Leave it in and forge will abort
+        tokenRegistry = TokenRegistryHarness(address(getTokenRegistry(ethereum)));
+        bridgeRouter = IBridgeRouterHarness(address(getBridgeRouter(ethereum)));
         setUp_upgradeTokenRegistryHarness();
         setUp_upgradeBridgeRouterHarness();
         xAppConnectionManager = getXAppConnectionManager(ethereum);
@@ -31,10 +35,10 @@ contract BridgeRouterRebootTest is RebootTest, BridgeRouterTest {
         tokenBeacon = UpgradeBeacon(payable(tokenRegistry.tokenBeacon()));
         bridgeToken = BridgeToken(beaconImplementation(tokenBeacon));
         BridgeTestFixture.setUp_testFixtures();
+
     }
 
     function setUp_upgradeTokenRegistryHarness() public {
-        tokenRegistry = TokenRegistryHarness(address(getTokenRegistry(ethereum)));
         tokenRegistryHarnessImpl = address(tokenRegistry);
         vm.writeJson(
             vm.toString(tokenRegistryHarnessImpl),
@@ -50,7 +54,6 @@ contract BridgeRouterRebootTest is RebootTest, BridgeRouterTest {
     }
 
     function setUp_upgradeBridgeRouterHarness() public {
-        bridgeRouter = IBridgeRouterHarness(address(getBridgeRouter(ethereum)));
         bridgeRouterHarnessImpl = address(new BridgeRouterHarness());
         vm.writeJson(
             vm.toString(bridgeRouterHarnessImpl),
