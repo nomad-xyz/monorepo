@@ -41,12 +41,14 @@ contract HomeRebootTest is RebootTest, HomeTest {
 
     // check fork setUp
     function test_setUp() public {
+        assertEq(localDomainName, "ethereum");
         assertEq(home.updater(), updaterAddr);
         // assert beacon has been upgraded to harness
         (, bytes memory result) = address(homeUpgrade(localDomainName).beacon)
             .staticcall("");
         address _current = abi.decode(result, (address));
         assertEq(_current, homeHarnessImpl);
+        home.exposed_destinationAndNonce(3, 5); // check that harness functions work
     }
 
     //////////////////////// HOME ////////////////////////

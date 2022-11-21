@@ -435,6 +435,7 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         if (domain == 0) {
             vm.expectRevert("!null domain");
         }
+        vm.prank(bridgeRouter.owner());
         bridgeRouter.enrollCustom(domain, id, custom);
         // if domain = 0, the transaction will revert (as caught above) and thus
         // we shouldn't perform an assertions

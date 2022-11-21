@@ -6,6 +6,7 @@ import "forge-std/console2.sol";
 import "../../UpdaterManager.sol";
 import "./BadXapps.sol";
 import "./GoodXapps.sol";
+import {UpgradeBeacon} from "../../upgrade/UpgradeBeacon.sol";
 import {MerkleTest} from "./MerkleTest.sol";
 
 contract NomadTest is Test {
@@ -100,6 +101,12 @@ contract NomadTest is Test {
         assembly {
             result := mload(add(source, 32))
         }
+    }
+
+    function beaconImplementation(UpgradeBeacon beacon) internal view returns (address impl) {
+        (, bytes memory data) = address(beacon).staticcall("");
+        impl = abi.decode(data, (address));
+        require(impl != address(0), "bad beacon contract");
     }
 }
 

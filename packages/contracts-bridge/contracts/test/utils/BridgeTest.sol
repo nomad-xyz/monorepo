@@ -32,53 +32,61 @@ contract BridgeTestFixture is NomadTest {
     using TypeCasts for address;
     using TypeCasts for address payable;
 
-    // Local variables
-    uint256 mockUpdaterPK;
-    address mockUpdater;
+    // Fixtures
     address bridgeUser;
     uint256 bridgeUserTokenAmount;
+    ERC20Mock localToken;
 
-    // Remote variables
+    // Mock-only state
+    uint256 mockUpdaterPK;
+    address mockUpdater;
     bytes32 remoteBridgeRouter;
-
-
-    NFTRecoveryAccountantHarness accountant;
     MockHome mockHome;
     address mockReplica;
+
+    // Real or mock
+    TokenRegistryHarness tokenRegistry;
     IBridgeRouterHarness bridgeRouter;
     XAppConnectionManager xAppConnectionManager;
     UpgradeBeaconController upgradeBeaconController;
     UpgradeBeacon tokenBeacon;
-
-    // Token Registry for all tokens in the domain
-    TokenRegistryHarness tokenRegistry;
     BridgeToken bridgeToken;
 
+    // eth-only
+    NFTRecoveryAccountantHarness accountant;
+
     // Implementation contract for all tokens in the domain
-    ERC20Mock localToken;
     address remoteTokenLocalAddress;
     bytes32 remoteTokenRemoteAddress;
     BridgeToken remoteToken;
 
     function setUp() public virtual override {
         NomadTest.setUp();
+        setUp_testFixtures();
+        setUp_mockState();
+    }
+
+    function setUp_testFixtures() public {
+        bridgeUserTokenAmount = 10000;
+        bridgeUser = vm.addr(9305);
+        remoteTokenRemoteAddress = address(0xBEEF).addressToBytes32();
+
+        remoteTokenLocalAddress = createRemoteToken(
+            remoteDomain,
+            remoteTokenRemoteAddress
+        );
+
+        setUp_deployLocalToken();
+    }
+
+    function setUp_mockState() public {
         // Mocks
         // The Private Key numbers are random and of no significance. They
         // serve as a seed for the cheatcode to generate a pseudorandom address.
         mockUpdaterPK = 420;
         mockUpdater = vm.addr(mockUpdaterPK);
-        bridgeUser = vm.addr(9305);
         remoteBridgeRouter = vm.addr(99123).addressToBytes32();
-        bridgeUserTokenAmount = 10000;
         accountant = NFTRecoveryAccountantHarness(address(new MockAccountant()));
-
-        localToken = new ERC20Mock(
-            "Fake",
-            "FK",
-            bridgeUser,
-            bridgeUserTokenAmount
-        );
-        remoteTokenRemoteAddress = address(0xBEEF).addressToBytes32();
         mockHome = new MockHome(homeDomain);
         mockReplica = address(0xBEEFEFEEFEF);
 
@@ -98,9 +106,15 @@ contract BridgeTestFixture is NomadTest {
         }
         initializeContracts();
         initializeBridgeRouter();
-        remoteTokenLocalAddress = createRemoteToken(
-            remoteDomain,
-            remoteTokenRemoteAddress
+
+    }
+
+    function setUp_deployLocalToken() public {
+        localToken = new ERC20Mock(
+            "Fake",
+            "FK",
+            bridgeUser,
+            bridgeUserTokenAmount
         );
     }
 
