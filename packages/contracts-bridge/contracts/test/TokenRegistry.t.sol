@@ -129,7 +129,7 @@ contract TokenRegistryTest is BridgeTestFixture {
     {
         vm.assume(domain != 0 && TypeCasts.bytes32ToAddress(id) != address(0));
         vm.startPrank(tokenRegistry.owner());
-        if (domain == localDomain) {
+        if (domain == homeDomain) {
             assertEq(
                 tokenRegistry.ensureLocalToken(domain, id),
                 TypeCasts.bytes32ToAddress(id)
@@ -241,7 +241,7 @@ contract TokenRegistryTest is BridgeTestFixture {
         (uint32 domain, bytes32 id) = tokenRegistry.getTokenId(
             address(localToken)
         );
-        assertEq(uint256(domain), localDomain);
+        assertEq(uint256(domain), homeDomain);
         assertEq(id, TypeCasts.addressToBytes32(address(localToken)));
     }
 
@@ -255,7 +255,7 @@ contract TokenRegistryTest is BridgeTestFixture {
 
     function test_getTokenIdRerprFuzzed(uint32 dom, bytes32 id) public {
         // Domain can be 0?
-        vm.assume(dom != localDomain && dom != 0);
+        vm.assume(dom != homeDomain && dom != 0);
         vm.assume(id != remoteTokenRemoteAddress && id != bytes32(0));
         address loc = createRemoteToken(dom, id);
         (uint32 storedDomain, bytes32 storedId) = tokenRegistry.getTokenId(loc);
@@ -265,7 +265,7 @@ contract TokenRegistryTest is BridgeTestFixture {
 
     function test_getLocalAddressLocalAsset() public {
         assertEq(
-            tokenRegistry.getLocalAddress(localDomain, address(localToken)),
+            tokenRegistry.getLocalAddress(homeDomain, address(localToken)),
             address(localToken)
         );
     }
@@ -284,7 +284,7 @@ contract TokenRegistryTest is BridgeTestFixture {
         uint32 newRemoteDomain,
         bytes32 newRemoteToken
     ) public {
-        vm.assume(newRemoteDomain != localDomain && newRemoteDomain != 0);
+        vm.assume(newRemoteDomain != homeDomain && newRemoteDomain != 0);
         address local = createRemoteToken(newRemoteDomain, newRemoteToken);
         assertEq(
             tokenRegistry.getLocalAddress(newRemoteDomain, newRemoteToken),
@@ -306,7 +306,7 @@ contract TokenRegistryTest is BridgeTestFixture {
         bytes32 newRemoteToken
     ) public {
         // we don't want to test against a known REGISTERED remote domain
-        vm.assume(newRemoteDomain != localDomain && newRemoteDomain != 0);
+        vm.assume(newRemoteDomain != homeDomain && newRemoteDomain != 0);
         assertEq(
             tokenRegistry.getLocalAddress(newRemoteDomain, newRemoteToken),
             address(0)
@@ -340,7 +340,7 @@ contract TokenRegistryTest is BridgeTestFixture {
     ) public {
         vm.assume(
             newRemoteDomain != remoteDomain &&
-                newRemoteDomain != localDomain &&
+                newRemoteDomain != homeDomain &&
                 newRemoteDomain != 0
         );
         address local = createRemoteToken(newRemoteDomain, newRemoteToken);
@@ -361,7 +361,7 @@ contract TokenRegistryTest is BridgeTestFixture {
         uint32 newRemoteDomain,
         bytes32 newRemoteToken
     ) public {
-        vm.assume(newRemoteDomain != localDomain && newRemoteDomain != 0);
+        vm.assume(newRemoteDomain != homeDomain && newRemoteDomain != 0);
         vm.expectRevert("!token");
         tokenRegistry.mustHaveLocalToken(newRemoteDomain, newRemoteToken);
     }
@@ -380,7 +380,7 @@ contract TokenRegistryTest is BridgeTestFixture {
     ) public {
         vm.assume(
             newRemoteDomain != remoteDomain &&
-                newRemoteDomain != localDomain &&
+                newRemoteDomain != homeDomain &&
                 newRemoteDomain != 0
         );
         address local = createRemoteToken(newRemoteDomain, newRemoteToken);
@@ -408,7 +408,7 @@ contract TokenRegistryTest is BridgeTestFixture {
         bytes32 id,
         address repr
     ) public {
-        vm.assume(domain != localDomain && domain != 0);
+        vm.assume(domain != homeDomain && domain != 0);
         vm.assume(
             repr != address(localToken) && repr != remoteTokenLocalAddress
         );
@@ -444,7 +444,7 @@ contract TokenRegistryTest is BridgeTestFixture {
         bytes32 id,
         address repr
     ) public {
-        vm.assume(domain != localDomain && domain != 0 && repr != address(0));
+        vm.assume(domain != homeDomain && domain != 0 && repr != address(0));
         vm.assume(
             repr != address(localToken) && repr != remoteTokenLocalAddress
         );
@@ -487,7 +487,7 @@ contract TokenRegistryTest is BridgeTestFixture {
     }
 
     function test_deployTokenFuzzed(uint32 domain, bytes32 id) public {
-        vm.assume(domain != localDomain && domain != 0);
+        vm.assume(domain != homeDomain && domain != 0);
         address repr = tokenRegistry.getRepresentationAddress(domain, id);
         assertEq(repr, address(0));
         address calculated = computeCreateAddress(address(tokenRegistry), 2);
@@ -534,7 +534,7 @@ contract TokenRegistryTest is BridgeTestFixture {
     }
 
     function test_defaultDetailsFuzzed(uint32 domain, bytes32 id) public {
-        vm.assume(domain != localDomain && domain != 0);
+        vm.assume(domain != homeDomain && domain != 0);
         (, uint256 secondHalfId) = Encoding.encodeHex(uint256(id));
         string memory name = string(
             abi.encodePacked(
@@ -554,7 +554,7 @@ contract TokenRegistryTest is BridgeTestFixture {
     }
 
     function test_localDomain() public {
-        assertEq(tokenRegistry.exposed_localDomain(), uint256(localDomain));
+        assertEq(tokenRegistry.exposed_localDomain(), uint256(homeDomain));
     }
 
     // Test that renounceOwnership is a noop

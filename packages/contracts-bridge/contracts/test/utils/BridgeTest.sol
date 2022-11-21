@@ -15,6 +15,8 @@ import {TokenRegistry} from "../../TokenRegistry.sol";
 import {BridgeToken} from "../../BridgeToken.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
 
+import {NomadTest} from "@nomad-xyz/contracts-core/contracts/test/utils/NomadTest.sol";
+
 // Upgrade Contracts
 import {UpgradeBeacon} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeacon.sol";
 import {UpgradeBeaconController} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeaconController.sol";
@@ -25,7 +27,7 @@ import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManag
 
 import "forge-std/Test.sol";
 
-contract BridgeTestFixture is Test {
+contract BridgeTestFixture is NomadTest {
     using TypeCasts for bytes32;
     using TypeCasts for address;
     using TypeCasts for address payable;
@@ -34,12 +36,10 @@ contract BridgeTestFixture is Test {
     uint256 mockUpdaterPK;
     address mockUpdater;
     address bridgeUser;
-    uint32 localDomain;
     uint256 bridgeUserTokenAmount;
 
     // Remote variables
     bytes32 remoteBridgeRouter;
-    uint32 remoteDomain;
 
     MockAccountant mockAccountant;
     MockHome mockHome;
@@ -59,7 +59,8 @@ contract BridgeTestFixture is Test {
     bytes32 remoteTokenRemoteAddress;
     BridgeToken remoteToken;
 
-    function setUp() public virtual {
+    function setUp() public virtual override {
+        NomadTest.setUp();
         // Mocks
         // The Private Key numbers are random and of no significance. They
         // serve as a seed for the cheatcode to generate a pseudorandom address.
@@ -76,10 +77,8 @@ contract BridgeTestFixture is Test {
             bridgeUser,
             bridgeUserTokenAmount
         );
-        localDomain = 1500;
-        remoteDomain = 3000;
         remoteTokenRemoteAddress = address(0xBEEF).addressToBytes32();
-        mockHome = new MockHome(localDomain);
+        mockHome = new MockHome(homeDomain);
         mockReplica = address(0xBEEFEFEEFEF);
 
         // Create implementations
