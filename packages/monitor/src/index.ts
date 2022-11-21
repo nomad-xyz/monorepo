@@ -45,9 +45,7 @@ const environment = 'production';
     homeStatus,
   ]
 
-  const p = new Promise(async (res, rej) => {
-    await Promise.all(tasks.map(task => task.runTasks()))
-  })
+  const p = await Promise.all(tasks.map(task => task.runTasks()));
 
   await Promise.all([
     p,
