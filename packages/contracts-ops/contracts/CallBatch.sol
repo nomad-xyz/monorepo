@@ -104,7 +104,7 @@ abstract contract CallBatch {
         } else {
             _domainCalls = remoteCalls[domain];
         }
-        if (_domainCalls.length != 0) return;
+        if (_domainCalls.length == 0) return;
         // execute local calls
         GovernanceRouter(router).executeGovernanceActions(
             _domainCalls,
