@@ -1,11 +1,12 @@
 
 import { NomadContext } from "@nomad-xyz/sdk";
 import { defaultGoldSkySecret, Goldsky } from "./goldsky";
-import {  HomeStatusCollector, MonitoringCollector } from "./server";
+import { MonitoringCollector } from "./server";
 import { TaskRunner } from "./taskRunner";
 import { createLogger } from "./utils";
 
 import * as dotenv from 'dotenv';
+import { HomeStatusCollector } from "./homeStatus";
 dotenv.config();
 
 
@@ -13,7 +14,7 @@ dotenv.config();
 
 console.log('hello monitor');
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // type Metrics = number[];
 // const metrics: Metrics = [];
@@ -45,15 +46,7 @@ const environment = 'production';
   ]
 
   const p = new Promise(async (res, rej) => {
-    await Promise.all(tasks.map(async (task) => {
-      while (true) {
-        await task.runTasks();
-        console.log(`Started`);
-
-        await sleep(5000);
-        console.log(`Finished, waiting`);
-      }
-    }))
+    await Promise.all(tasks.map(task => task.runTasks()))
   })
 
   await Promise.all([
