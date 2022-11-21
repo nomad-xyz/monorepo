@@ -9,30 +9,44 @@ import {HomeTest} from "@nomad-xyz/contracts-core/contracts/test/Home.t.sol";
 import {HomeHarness} from "@nomad-xyz/contracts-core/contracts/test/harnesses/HomeHarness.sol";
 
 contract HomeRebootTest is RebootTest, HomeTest {
+    address homeHarnessImpl;
+
     function setUp() public override(NomadTest, HomeTest) {
         setUpReboot(1, "home");
-        // HOME
+        // upgrade to harness
         home = HomeHarness(address(getHome(localDomainName)));
-        upgradeHomeHarness();
+        setUp_upgradeHomeHarness();
+        // set test vars
         updaterManager = getUpdaterManager(localDomainName);
     }
 
-    function upgradeHomeHarness() public {
+    // upgrade to harness
+    function setUp_upgradeHomeHarness() public {
         // HOME
-        HomeHarness homeHarnessImpl = new HomeHarness(
-            getDomainNumber(localDomainName)
+        homeHarnessImpl = address(
+            new HomeHarness(getDomainNumber(localDomainName))
         );
         vm.writeJson(
-            vm.toString(address(homeHarnessImpl)),
+            vm.toString(homeHarnessImpl),
             outputPath,
             coreAttributePath(localDomainName, "home.implementation")
         );
         reloadConfig();
-        pushSingleUpgrade(homeUpgrade(localDomainName));
+        pushSingleUpgrade(homeUpgrade(localDomainName), localDomainName);
         prankExecuteRecoveryManager(
             address(getGovernanceRouter(localDomainName)),
             getDomainNumber(localDomainName)
         );
+    }
+
+    // check fork setUp
+    function test_setUp() public {
+        assertEq(home.updater(), updaterAddr);
+        // assert beacon has been upgraded to harness
+        (, bytes memory result) = address(homeUpgrade(localDomainName).beacon)
+            .staticcall("");
+        address _current = abi.decode(result, (address));
+        assertEq(_current, homeHarnessImpl);
     }
 
     //////////////////////// HOME ////////////////////////

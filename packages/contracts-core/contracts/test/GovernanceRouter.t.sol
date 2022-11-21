@@ -329,6 +329,7 @@ contract GovernanceRouterTest is Test {
     }
 
     function test_executeGovernanceActionsOnlyRemote() public {
+        vm.prank(governanceRouter.governor());
         GovernanceMessage.Call[]
             memory localCalls = new GovernanceMessage.Call[](0);
         GovernanceMessage.Call[][]
@@ -339,14 +340,15 @@ contract GovernanceRouterTest is Test {
         bytes memory data = hex"BEEF";
         remoteCalls[0][0] = GovernanceMessage.Call(to, data);
         domains[0] = remoteDomain;
+        // check that home dispatches message to remote remoteDomain
         vm.expectEmit(true, true, true, true);
-        emit Dispatch(
-            hex"c1c967c7dda92cf93f914728abddd29f35d0233d615a73e40b109ae83d754596",
-            0,
-            6442450944000,
-            hex"0000000000000000000000000000000000000000000000000000000000000000",
-            hex"000003e8000000000000000000000000efc56627233b02ea95bae7e19f648d7dcd5bb13200000000000005dc000000000000000000000000e2c4a295d6a0daa455a5d49f30b881e69165da8f016b9f965bbbc465cc219497bb8fecc464d76985a15aab0d52f7f20481705cd1dd"
+        home.hack_expectDispatchEvent(
+            remoteDomain,
+            remoteGovernanceRouter,
+            GovernanceMessage.formatBatch(remoteCalls[0]),
+            address(governanceRouter)
         );
+        // execute actions
         governanceRouter.executeGovernanceActions(
             localCalls,
             domains,
