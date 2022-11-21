@@ -1,11 +1,22 @@
+
+import { NomadContext } from "@nomad-xyz/sdk";
+import { defaultGoldSkySecret, Goldsky } from "./goldsky";
+import {  HomeStatusCollector, MonitoringCollector } from "./server";
+import { TaskRunner } from "./taskRunner";
+import { createLogger } from "./utils";
+
+import * as dotenv from 'dotenv';
+dotenv.config();
+
+
 // TODO: import sdk + register from prom-client
 
 console.log('hello monitor');
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-type Metrics = number[];
-const metrics: Metrics = [];
+// type Metrics = number[];
+// const metrics: Metrics = [];
 
 // NOTE: this is the general idea
 // For each blocking task (or group of task) (so that some task won't block others - similar stuff has Keymaster):
@@ -15,21 +26,54 @@ const metrics: Metrics = [];
 //     record observation with prometheus
 //     sleep for a while
 
+const environment = 'production';
+
 (async () => {
   /* eslint-disable-next-line no-constant-condition */
+  const logger = createLogger('monitoring', environment);
+  const mc = new MonitoringCollector(environment, logger);
 
-  while (true) {
-    console.log('inside while loop. metrics: ', metrics);
+  const ctx = new NomadContext(environment);
 
-    // TODO: get the new events from sdk and calculate metrics
-    const newMetrics: Metrics = [Math.random()];
+  ctx.registerRpcProvider(6648936, process.env.ETH_RPC!)
 
-    // update in memory metrics
-    metrics.push(...newMetrics);
+  const goldsky = new Goldsky(defaultGoldSkySecret, mc);
+  const homeStatus = new HomeStatusCollector(ctx, logger, mc);
+  const tasks: TaskRunner[] = [
+    goldsky,
+    homeStatus,
+  ]
 
-    // sleep for some time before starting again
-    await sleep(1000);
-  }
+  const p = new Promise(async (res, rej) => {
+    await Promise.all(tasks.map(async (task) => {
+      while (true) {
+        await task.runTasks();
+        console.log(`Started`);
+
+        await sleep(5000);
+        console.log(`Finished, waiting`);
+      }
+    }))
+  })
+
+  await Promise.all([
+    p,
+    mc.startServer(3001)
+  ])
+
+
+  // while (true) {
+  //   console.log('inside while loop. metrics: ', metrics);
+
+  //   // TODO: get the new events from sdk and calculate metrics
+  //   const newMetrics: Metrics = [Math.random()];
+
+  //   // update in memory metrics
+  //   metrics.push(...newMetrics);
+
+  //   // sleep for some time before starting again
+  //   await sleep(1000);
+  // }
 })();
 
 /*
