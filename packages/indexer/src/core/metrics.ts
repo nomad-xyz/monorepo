@@ -87,6 +87,9 @@ export class IndexerCollector extends MetricsCollector {
 
   private events: Counter<string>;
 
+  private numProcessFailureEvents: Counter<string>;
+  private numRecoveryEvents: Counter<string>;
+
   constructor(environment: string, logger: Logger) {
     super(environment, logger);
 

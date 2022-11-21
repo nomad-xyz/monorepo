@@ -11,39 +11,15 @@ import { sleep } from './utils';
 export const prefix = `nomad_metrics`;
 
 export enum MessageStages {
-  Dispatched = "dispatched",
-  Updated = "updated",
-  Relayed = "relayed",
-  Processed = "processed"
+  Dispatched = 'dispatched',
+  Updated = 'updated',
+  Relayed = 'relayed',
+  Processed = 'processed',
 }
 
 export enum GoldSkyQuery {
   QueryExample1 = 'queryexample1',
   QueryExample2 = 'queryexample2',
-  // TODO: since tables are labeled by environment, we should use a
-  // different set of queries between staging / production
-  stagingProcessFailureEvents = `
-    query StagingProcessFailureEvents {
-      staging_process_failure_aggregate {
-        nodes {
-          amount
-          asset
-          _gs_chain
-        }
-      }
-    }
-  `,
-  stagingRecoveryEvents = `
-    query StagingRecoveryEvents {
-      staging_recovery_aggregate {
-        nodes {
-          _gs_chain
-          amount
-          asset
-        }
-      }
-    }
-  `,
 }
 
 const buckets = [
@@ -72,7 +48,7 @@ export class MetricsCollector {
   /**
    * Starts a server that exposes metrics in the prometheus format
    */
-  startServer(port: number) {
+  startServer(port: number): void {
     if (!Number.isInteger(port) || port <= 0 || port > 65535) {
       throw Error(`Invalid PrometheusPort value: ${port}`);
     }
@@ -101,6 +77,8 @@ export class MonitoringCollector extends MetricsCollector {
   private goldskyRequests: Counter<string>;
   private goldskyLatency: Histogram<string>;
   private goldskyErrors: Counter<string>;
+  private numProcessFailureEvents: Counter<string>;
+  private numRecoveryEvents: Counter<string>;
 
   constructor(environment: string, logger: Logger) {
     super(environment, logger);
@@ -142,22 +120,36 @@ export class MonitoringCollector extends MetricsCollector {
       help: 'Gauge that indicates if home of a network is in failed state.',
       labelNames: ['network', 'environment'],
     });
+
+    // NFT related metrics
+
+    this.numProcessFailureEvents = new Counter({
+      name: prefix + '_num_process_failure_events',
+      help: 'Counter that tracks the number of process failure events. This event is emitted when tokens would have been transferred, but the asset was in the affected assets list.',
+      labelNames: ['asset', 'environment'],
+    });
+
+    this.numRecoveryEvents = new Counter({
+      name: prefix + '_num_recovery_events',
+      help: 'Counter that tracks the number of recovery events. This event is emitted when an NFT is used to access funds.',
+      labelNames: ['asset', 'environment'],
+    });
   }
 
   /**
    * Sets the state for a bridge.
    */
-  setHomeState(network: string, homeFailed: boolean) {
+  setHomeState(network: string, homeFailed: boolean): void {
     this.homeFailedGauge.set(
       { network, environment: this.environment },
       homeFailed ? 1 : 0,
     );
   }
 
-  incNumMessages(stage: MessageStages, network: string, replica: string) {
+  incNumMessages(stage: MessageStages, network: string, replica: string): void {
     this.numMessages.labels(stage, network, replica, this.environment).inc();
   }
-  decNumMessages(stage: MessageStages, network: string, replica: string) {
+  decNumMessages(stage: MessageStages, network: string, replica: string): void {
     this.numMessages.labels(stage, network, replica, this.environment).dec();
   }
   setNumMessages(
@@ -165,25 +157,25 @@ export class MonitoringCollector extends MetricsCollector {
     network: string,
     replica: string,
     count: number,
-  ) {
+  ): void {
     this.numMessages
       .labels(stage, network, replica, this.environment)
       .set(count);
   }
 
-  observeMetricsLatency(ms: number) {
+  observeMetricsLatency(ms: number): void {
     this.metricsLatency.labels(this.environment).observe(ms);
   }
 
-  incGoldskyRequests(query: GoldSkyQuery, req?: number) {
+  incGoldskyRequests(query: GoldSkyQuery, req?: number): void {
     this.goldskyRequests.labels(query, this.environment).inc(req);
   }
 
-  observeGoldskyLatency(query: GoldSkyQuery, ms: number) {
+  observeGoldskyLatency(query: GoldSkyQuery, ms: number): void {
     this.goldskyLatency.labels(query, this.environment).observe(ms);
   }
 
-  incGoldskyErrors(query: GoldSkyQuery, code: string) {
+  incGoldskyErrors(query: GoldSkyQuery, code: string): void {
     this.goldskyErrors.labels(code, query, this.environment).inc();
   }
 }
