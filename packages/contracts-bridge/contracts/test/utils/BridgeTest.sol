@@ -11,10 +11,10 @@ import {EthereumBridgeRouterHarness} from "../harness/BridgeRouterHarness.sol";
 import {BridgeRouterHarness} from "../harness/BridgeRouterHarness.sol";
 import {IBridgeRouterHarness} from "../harness/IBridgeRouterHarness.sol";
 import {TokenRegistryHarness} from "../harness/TokenRegistryHarness.sol";
+import {NFTRecoveryAccountantHarness} from "../harness/NFTAccountantHarness.sol";
 import {TokenRegistry} from "../../TokenRegistry.sol";
 import {BridgeToken} from "../../BridgeToken.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
-
 import {NomadTest} from "@nomad-xyz/contracts-core/contracts/test/utils/NomadTest.sol";
 
 // Upgrade Contracts
@@ -41,7 +41,8 @@ contract BridgeTestFixture is NomadTest {
     // Remote variables
     bytes32 remoteBridgeRouter;
 
-    MockAccountant mockAccountant;
+
+    NFTRecoveryAccountantHarness accountant;
     MockHome mockHome;
     address mockReplica;
     IBridgeRouterHarness bridgeRouter;
@@ -69,7 +70,7 @@ contract BridgeTestFixture is NomadTest {
         bridgeUser = vm.addr(9305);
         remoteBridgeRouter = vm.addr(99123).addressToBytes32();
         bridgeUserTokenAmount = 10000;
-        mockAccountant = new MockAccountant();
+        accountant = NFTRecoveryAccountantHarness(address(new MockAccountant()));
 
         localToken = new ERC20Mock(
             "Fake",
@@ -104,9 +105,9 @@ contract BridgeTestFixture is NomadTest {
     }
 
     function setUpEthereumBridgeRouter() public {
-        mockAccountant = new MockAccountant();
+        accountant = NFTRecoveryAccountantHarness(address(new MockAccountant()));
         bridgeRouter = IBridgeRouterHarness(
-            address(new EthereumBridgeRouterHarness(address(mockAccountant)))
+            address(new EthereumBridgeRouterHarness(address(accountant)))
         );
     }
 
