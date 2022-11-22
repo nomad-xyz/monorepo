@@ -81,14 +81,15 @@ contract NFTAccountantTest is Test {
     }
 
     function test_recordOnlyBridgeRouter() public {
-        address asset = address(mockToken);
-        uint256 amount = 1000;
+        address _user = user;
+        address _asset = address(mockToken);
+        uint256 _amount = 1000;
         vm.expectRevert("only BridgeRouter");
         vm.prank(address(0xBEEF));
-        accountant.record(asset, user, amount);
+        accountant.record(_asset, _user, _amount);
         // second one is executed with msg.sender = address(this)
         // which is the BridgeRouter
-        accountant.record(asset, user, amount);
+        accountant.record(_asset, _user, _amount);
     }
 
     function test_initValues() public {
@@ -115,50 +116,26 @@ contract NFTAccountantTest is Test {
         assertEq(accountant.baseURI(), "https://nft.nomad.xyz/");
     }
 
-    function recordCheck() public {
-        uint256 _id = accountant.nextID();
-        uint256 _prevTotal = accountant.totalMinted(asset);
-        // NFT does not exist before
-        vm.expectRevert("ERC721: owner query for nonexistent token");
-        accountant.ownerOf(_id);
-        // calling record emits event
-        vm.expectEmit(true, true, true, true, address(accountant));
-        emit ProcessFailure(_id, asset, user, amnt);
-        accountant.record(asset, user, amnt);
-        // next NFT is minted to user
-        assertEq(accountant.ownerOf(_id), user);
-        // NFT has correct details
-        (
-            address nftAsset,
-            uint96 nftAmount,
-            address nftOriginalUser,
-            uint96 nftRecovered
-        ) = accountant.records(_id);
-        assertEq(nftAsset, asset);
-        assertEq(uint256(nftAmount), amnt);
-        assertEq(nftOriginalUser, user);
-        assertEq(uint256(nftRecovered), 0);
-        // state variables are appropriately updated
-        assertEq(accountant.nextID(), _id + 1);
-        assertEq(accountant.totalMinted(asset), _prevTotal + amnt);
+    function recordCheckDefault() public {
+        recordCheck(user, amnt, asset);
     }
 
     function recordCheck(
-        address nftOwner,
-        uint256 amount,
-        address asset
+        address _user,
+        uint256 _amount,
+        address _asset
     ) public {
         uint256 _id = accountant.nextID();
-        uint256 _prevTotal = accountant.totalMinted(asset);
+        uint256 _prevTotal = accountant.totalMinted(_asset);
         // NFT does not exist before
         vm.expectRevert("ERC721: owner query for nonexistent token");
         accountant.ownerOf(_id);
         // calling record emits event
         vm.expectEmit(true, true, true, true, address(accountant));
-        emit ProcessFailure(_id, asset, user, amount);
-        accountant.record(asset, user, amount);
+        emit ProcessFailure(_id, _asset, _user, _amount);
+        accountant.record(_asset, _user, _amount);
         // next NFT is minted to user
-        assertEq(accountant.ownerOf(_id), user);
+        assertEq(accountant.ownerOf(_id), _user);
         // NFT has correct details
         (
             address nftAsset,
@@ -166,49 +143,46 @@ contract NFTAccountantTest is Test {
             address nftOriginalUser,
             uint96 nftRecovered
         ) = accountant.records(_id);
-        assertEq(nftAsset, asset);
-        assertEq(uint256(nftAmount), amount);
-        assertEq(nftOriginalUser, user);
+        assertEq(nftAsset, _asset);
+        assertEq(uint256(nftAmount), _amount);
+        assertEq(nftOriginalUser, _user);
         assertEq(uint256(nftRecovered), 0);
         // state variables are appropriately updated
         assertEq(accountant.nextID(), _id + 1);
-        assertEq(accountant.totalMinted(asset), _prevTotal + amount);
+        assertEq(accountant.totalMinted(_asset), _prevTotal + _amount);
     }
 
     function testFuzz_recordSuccess(
         uint8 assetIndex,
-        address payable user,
-        uint256 amount,
-        uint8 times
+        address payable _user,
+        uint256 _amount
     ) public {
-        // Fuzzing parameters
-        vm.assume(user != address(0));
-        assetIndex = uint8(bound(assetIndex, 0, 13));
-        address payable asset = accountant.affectedAssets()[assetIndex];
-        amount = bound(amount, 0, accountant.totalAffected(asset));
-        recordCheck(user, amount, asset);
+        vm.assume(canAcceptNft(_user));
+        address payable _asset = checkUserAndGetAsset(_user, assetIndex);
+        _amount = bound(_amount, 0, accountant.totalAffected(_asset));
+        recordCheck(_user, _amount, _asset);
     }
 
     function test_recordSuccess() public {
-        recordCheck();
+        recordCheckDefault();
     }
 
     function test_recordSuccessForSameUserSameAssetTwice() public {
-        recordCheck();
-        recordCheck();
+        recordCheckDefault();
+        recordCheckDefault();
     }
 
     function test_recordSuccessForSameAssetDifferentUser() public {
-        recordCheck();
+        recordCheckDefault();
         user = vm.addr(12345);
-        recordCheck();
+        recordCheckDefault();
     }
 
     function test_recordSuccessForDifferentAssettsSameUser() public {
-        recordCheck();
+        recordCheckDefault();
         asset = vm.addr(12345);
         accountant.exposed_setAffectedAmount(asset, AFFECTED_TOKEN_AMOUNT);
-        recordCheck();
+        recordCheckDefault();
     }
 
     function test_recordRevertsIfOverMint() public {
@@ -226,38 +200,28 @@ contract NFTAccountantTest is Test {
     }
 
     function testFuzz_recordRevertsIfNotAffectedAsset(
-        address fasset,
-        address fuser,
-        uint256 famount
+        address _asset,
+        address _user,
+        uint256 _amount
     ) public {
-        vm.assume(!accountant.isAffectedAsset(fasset));
+        vm.assume(!accountant.isAffectedAsset(_asset));
         // Fuzz only for addresses that can in fact receive an ERC721
         // Filters through the address of the test contract, VM, and others.
         //
         // Create2Deployer
-        vm.assume(fuser != 0x4e59b44847b379578588920cA78FbF26c0B4956C);
-        (bool success, bytes memory data) = fuser.call(
-            abi.encodeWithSignature(
-                "onERC721Received(address,address,uint256,bytes)",
-                address(this),
-                address(0),
-                0,
-                ""
-            )
-        );
-        vm.assume(success);
-        vm.assume(famount != 0);
-        if (fuser != address(0)) {
+        vm.assume(canAcceptNft(_user));
+        vm.assume(_amount != 0);
+        if (_user != address(0)) {
             vm.expectRevert("overmint");
-            accountant.record(fasset, fuser, famount);
+            accountant.record(_asset, _user, _amount);
         } else {
             vm.expectRevert("ERC721: mint to the zero address");
-            accountant.record(fasset, fuser, famount);
+            accountant.record(_asset, _user, _amount);
         }
     }
 
     function test_transferReverts() public {
-        recordCheck();
+        recordCheckDefault();
         vm.prank(user);
         vm.expectRevert("no transfers");
         accountant.transferFrom(user, vm.addr(99), 0);
@@ -268,22 +232,44 @@ contract NFTAccountantTest is Test {
     }
 
     function testFuzz_transferReverts(
-        address user,
-        address receiver,
-        uint256 amount,
-        uint8 assetIndex
+        address _user,
+        address _receiver,
+        uint256 _amount,
+        uint8 _assetIndex
     ) public {
-        vm.assume(user != address(0));
-        assetIndex = uint8(bound(assetIndex, 0, 13));
-        address payable asset = accountant.affectedAssets()[assetIndex];
-        amount = bound(amount, 0, accountant.totalAffected(asset));
-        recordCheck(user, amount, asset);
-        vm.prank(user);
+        address payable _asset = checkUserAndGetAsset(_user, _assetIndex);
+        _amount = bound(_amount, 0, accountant.totalAffected(_asset));
+        recordCheck(_user, _amount, _asset);
+        vm.prank(_user);
         vm.expectRevert("no transfers");
-        accountant.transferFrom(user, receiver, 0);
+        accountant.transferFrom(_user, _receiver, 0);
         vm.expectRevert("no transfers");
-        accountant.safeTransferFrom(user, receiver, 0);
+        accountant.safeTransferFrom(_user, _receiver, 0);
         vm.expectRevert("no transfers");
-        accountant.safeTransferFrom(user, receiver, 0, "0x1234");
+        accountant.safeTransferFrom(_user, _receiver, 0, "0x1234");
+    }
+
+    function checkUserAndGetAsset(address _user, uint8 _assetIndex)
+        internal
+        returns (address payable _asset)
+    {
+        vm.assume(_user != address(0));
+        _assetIndex = uint8(bound(_assetIndex, 0, 13));
+        _asset = accountant.affectedAssets()[_assetIndex];
+    }
+
+    function canAcceptNft(address _target) internal returns (bool _success) {
+        (_success, ) = _target.call(
+            abi.encodeWithSignature(
+                "onERC721Received(address,address,uint256,bytes)",
+                _target,
+                address(0),
+                0,
+                ""
+            )
+        );
+        _success =
+            _success &&
+            _target != 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     }
 }

@@ -54,7 +54,7 @@ contract NFTRecoveryAccountantTest is Test {
 
     function recoverCheck(uint256 _id) public {
         (address _asst, , , uint256 _recovered) = accountant.records(_id);
-        uint256 _prevtotalRecovered = accountant.totalRecovered(_asst);
+        uint256 _prevTotalRecovered = accountant.totalRecovered(_asst);
         uint256 _recoverable = accountant.recoverable(_id);
         address _user = accountant.ownerOf(_id);
         // recover
@@ -66,7 +66,7 @@ contract NFTRecoveryAccountantTest is Test {
         // totalRecovered is now incremented
         assertEq(
             accountant.totalRecovered(_asst),
-            _prevtotalRecovered + _recoverable
+            _prevTotalRecovered + _recoverable
         );
         // recoverable is now zero
         assertEq(accountant.recoverable(_id), 0);
@@ -222,7 +222,7 @@ contract NFTRecoveryAccountantTest is Test {
                 totalAffected - bridgedSum
             );
             bridgedSum += famount;
-            uint256 prevtotalRecovered = accountant.totalRecovered(asset);
+            uint256 prevTotalRecovered = accountant.totalRecovered(asset);
             uint256 id = accountant.nextID();
             if (accountant.totalMinted(asset) + famount > totalAffected) {
                 vm.expectRevert("overmint");
@@ -242,7 +242,7 @@ contract NFTRecoveryAccountantTest is Test {
             recoverCheck(id);
             assertEq(
                 accountant.totalRecovered(asset),
-                prevtotalRecovered + recoverable
+                prevTotalRecovered + recoverable
             );
         }
     }
