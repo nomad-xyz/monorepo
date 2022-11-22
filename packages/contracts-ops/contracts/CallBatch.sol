@@ -70,10 +70,9 @@ abstract contract CallBatch {
 
     // only works if recovery is not active and localDomain is governor domain
     function prankExecuteGovernor(address router) public {
-        require(
-            localCalls.length != 0 || remoteDomains.length != 0,
-            "no calls pushed"
-        );
+        if (localCalls.length == 0 && remoteDomains.length == 0) {
+            return;
+        }
         // prank governor
         address gov = GovernanceRouter(router).governor();
         require(gov != address(0), "!gov chain");
@@ -105,7 +104,7 @@ abstract contract CallBatch {
         } else {
             _domainCalls = remoteCalls[domain];
         }
-        require(_domainCalls.length != 0, "no calls pushed for domain");
+        if (_domainCalls.length == 0) return;
         // execute local calls
         GovernanceRouter(router).executeGovernanceActions(
             _domainCalls,
