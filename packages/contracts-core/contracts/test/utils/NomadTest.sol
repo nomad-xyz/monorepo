@@ -48,7 +48,6 @@ contract NomadTest is Test {
         vm.label(fakeUpdater, "fake updater");
         vm.label(signer, "signer");
         vm.label(fakeSigner, "fake signer");
-
         merkleTest = new MerkleTest();
     }
 

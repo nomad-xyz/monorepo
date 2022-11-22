@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 // test imports
 import {GovernanceRouterHarness} from "./harnesses/GovernanceRouterHarness.sol";
 import {GovernanceRouter} from "../governance/GovernanceRouter.sol";
+import {Home} from "../Home.sol";
 import {GoodXappSimple} from "./utils/GoodXapps.sol";
 import "forge-std/Test.sol";
 
@@ -12,10 +13,22 @@ import "forge-std/Test.sol";
 import {GovernanceMessage} from "../governance/GovernanceMessage.sol";
 import {MockXAppConnectionManager} from "./utils/MockXAppConnectionManager.sol";
 import {MockHome} from "@nomad-xyz/contracts-bridge/contracts/test/utils/MockHome.sol";
+import {NomadTest} from "./utils/NomadTest.sol";
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 import {TypeCasts} from "../libs/TypeCasts.sol";
 
-contract GovernanceRouterTest is Test {
+// TODO add Recovery and NotRecovery to names
+// TODO add governor and recovery manager to names
+// TODO change to expectCall for other tests like BridgeRouter
+// TODO: transfer governor tests depend on the current governor domain & will fail if homeDomain is not governorDomain
+// TODO: testSetRouterGlobal it doesn't work in recovery
+// TODO functionName_additionalSetupInformation_recoveryOrNot_expectedOutcome
+// state:
+//  - is governor domain; is not governor domain
+//  - is in recovery; is not in recovery
+//  - ??
+
+contract GovernanceRouterTest is NomadTest {
     using GovernanceMessage for bytes29;
     using TypedMemView for bytes;
     using TypedMemView for bytes29;
@@ -33,23 +46,9 @@ contract GovernanceRouterTest is Test {
     GovernanceMessage.Call[] calls;
     bytes32 callsBatchHash;
 
-    uint32 handleOrigin;
-    bytes32 handleSender;
-    bytes handleMessage;
-
     bytes32 remoteGovernanceRouter;
-    uint32 remoteGovernanceDomain;
-
-    uint32 homeDomain;
-    uint32 remoteDomain;
-
-    event Dispatch(
-        bytes32 indexed messageHash,
-        uint256 indexed leafIndex,
-        uint64 indexed destinationAndNonce,
-        bytes32 committedRoot,
-        bytes message
-    );
+    uint32 remoteGovernanceDomain; // TODO: survey places this is used
+    address replica;
 
     event TransferGovernor(
         uint32 previousGovernorDomain,
@@ -58,25 +57,25 @@ contract GovernanceRouterTest is Test {
         address indexed newGovernor
     );
 
-    function setUp() public {
-        recoveryManager = vm.addr(42);
-
-        homeDomain = 1000;
-        remoteDomain = 1500;
-
+    function setUp() public virtual override {
+        // deploy fake xapp
+        goodXapp = new GoodXappSimple();
+        // Set remote vars
+        remoteGovernanceDomain = remoteDomain;
+        remoteGovernanceRouter = vm.addr(420809).addressToBytes32();
+        replica = vm.addr(999);
+        // setup home and xApp connection manager
         home = new MockHome(homeDomain);
-        xAppConnectionManager = new MockXAppConnectionManager(address(home));
-        governanceRouter = new GovernanceRouterHarness(homeDomain, timelock);
+        xAppConnectionManager = new MockXAppConnectionManager(
+            address(home),
+            replica
+        );
         // setup governance router
+        governanceRouter = new GovernanceRouterHarness(homeDomain, timelock);
         governanceRouter.initialize(
             address(xAppConnectionManager),
             recoveryManager
         );
-        // Set a remote governor router
-        remoteGovernanceRouter = vm.addr(420).addressToBytes32();
-        remoteGovernanceDomain = remoteDomain;
-        goodXapp = new GoodXappSimple();
-
         governanceRouter.setRouterLocal(remoteDomain, remoteGovernanceRouter);
     }
 
@@ -108,129 +107,296 @@ contract GovernanceRouterTest is Test {
         );
     }
 
-    function test_handleOnlyReplica() public {
-        // Create test handle
-        handleOrigin = remoteDomain;
-        handleSender = remoteGovernanceRouter;
-        handleMessage = "data";
-        governanceRouter.exposed_setRemoteGovernor(
-            remoteGovernanceDomain,
-            remoteGovernanceRouter
-        );
-        xAppConnectionManager.setIsReplica(false);
+    function test_handleOnlyReplicaNotInRecovery() public {
+        // exit recovery
+        if (governanceRouter.inRecovery()) exitRecovery();
+        // if currently governor domain, transfer to remote governor
+        // else the router will not accept incoming messages
+        if (governanceRouter.governorDomain() == homeDomain) {
+            vm.prank(governanceRouter.governor());
+            governanceRouter.transferGovernor(remoteDomain, vm.addr(412));
+        }
+        // calling handle from non-replica reverts
         vm.expectRevert("!replica");
-        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
-        xAppConnectionManager.setIsReplica(true);
-        // We expect to revert cause the handleMessage is rubbish, but it
-        // passed the onlyReplica modifier, which is what we test here
+        vm.prank(vm.addr(789));
+        governanceRouter.handle(
+            remoteDomain,
+            0,
+            remoteGovernanceRouter,
+            "mock"
+        );
+        // calling handle from replica passes the onlyReplica test
+        // (it will still revert because rubbish message, but with
+        // a diff error message because it passed the onlyReplica modifier)
         vm.expectRevert("!valid message type");
-        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
+        vm.prank(replica);
+        governanceRouter.handle(
+            remoteDomain,
+            0,
+            remoteGovernanceRouter,
+            "mock"
+        );
     }
 
-    function test_handleOnlyGovernorRouter() public {
-        handleOrigin = remoteDomain;
-        handleSender = remoteGovernanceRouter;
-        handleMessage = "data";
-        xAppConnectionManager.setIsReplica(true);
-        vm.expectRevert("!governorRouter");
-        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
-        governanceRouter.exposed_setRemoteGovernor(
-            remoteGovernanceDomain,
-            remoteGovernanceRouter
+    function test_handleOnlyReplicaRecovery() public {
+        // if currently governor domain, transfer to remote governor
+        // else the router will not accept incoming messages
+        if (governanceRouter.governorDomain() == homeDomain) {
+            if (governanceRouter.inRecovery()) exitRecovery();
+            vm.prank(governanceRouter.governor());
+            governanceRouter.transferGovernor(remoteDomain, vm.addr(412));
+        }
+        // enter recovery
+        if (!governanceRouter.inRecovery()) enterRecovery();
+        // calling handle from non-replica reverts
+        vm.expectRevert("!replica");
+        vm.prank(vm.addr(789));
+        governanceRouter.handle(
+            remoteDomain,
+            0,
+            remoteGovernanceRouter,
+            "mock"
         );
-        // We expect to revert cause the handleMessage is rubbish, but it
-        // passed the onlyReplica modifier, which is what we test here
+        // calling handle from replica passes the onlyReplica test
+        // (it will still revert because rubbish message, but with
+        // a diff error message because it passed the onlyReplica modifier)
         vm.expectRevert("!valid message type");
-        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
+        vm.prank(replica);
+        governanceRouter.handle(
+            remoteDomain,
+            0,
+            remoteGovernanceRouter,
+            "mock"
+        );
+    }
+
+    function test_handleOnlyGovernorRouterNotInRecovery() public {
+        // exit recovery
+        if (governanceRouter.inRecovery()) exitRecovery();
+        // if currently governor domain, transfer to remote governor
+        // else the router will not accept incoming messages
+        if (governanceRouter.governorDomain() == homeDomain) {
+            vm.prank(governanceRouter.governor());
+            governanceRouter.transferGovernor(remoteDomain, vm.addr(412));
+        }
+        // sender is wrong
+        vm.expectRevert("!governorRouter");
+        vm.prank(replica);
+        governanceRouter.handle(
+            remoteDomain,
+            0,
+            TypeCasts.addressToBytes32(vm.addr(412)),
+            "data"
+        );
+        // domain is wrong
+        vm.expectRevert("!governorRouter");
+        vm.prank(replica);
+        governanceRouter.handle(
+            (remoteDomain + 1),
+            0,
+            remoteGovernanceRouter,
+            "data"
+        );
+        // domain and sender are wrong
+        vm.expectRevert("!governorRouter");
+        vm.prank(replica);
+        governanceRouter.handle(
+            (remoteDomain + 1),
+            0,
+            remoteGovernanceRouter,
+            "data"
+        );
+        // with correct domain and sender, passes onlyGovernorRouter test
+        // (it will still revert because rubbish message, but with
+        // a diff error message because it passed the onlyReplica modifier)
+        vm.expectRevert("!valid message type");
+        vm.prank(replica);
+        governanceRouter.handle(
+            remoteDomain,
+            0,
+            remoteGovernanceRouter,
+            "data"
+        );
+    }
+
+    function test_handleOnlyGovernorRouterRecovery() public {
+        // if currently governor domain, transfer to remote governor
+        // else the router will not accept incoming messages
+        if (governanceRouter.governorDomain() == homeDomain) {
+            if (governanceRouter.inRecovery()) exitRecovery();
+            vm.prank(governanceRouter.governor());
+            governanceRouter.transferGovernor(remoteDomain, vm.addr(412));
+        }
+        // enter recovery
+        if (!governanceRouter.inRecovery()) enterRecovery();
+        // sender is wrong
+        vm.expectRevert("!governorRouter");
+        vm.prank(replica);
+        governanceRouter.handle(
+            remoteDomain,
+            0,
+            TypeCasts.addressToBytes32(vm.addr(412)),
+            "data"
+        );
+        // domain is wrong
+        vm.expectRevert("!governorRouter");
+        vm.prank(replica);
+        governanceRouter.handle(
+            (remoteDomain + 1),
+            0,
+            remoteGovernanceRouter,
+            "data"
+        );
+        // domain and sender are wrong
+        vm.expectRevert("!governorRouter");
+        vm.prank(replica);
+        governanceRouter.handle(
+            (remoteDomain + 1),
+            0,
+            remoteGovernanceRouter,
+            "data"
+        );
+        // with correct domain and sender, passes onlyGovernorRouter test
+        // (it will still revert because rubbish message, but with
+        // a diff error message because it passed the onlyReplica modifier)
+        vm.expectRevert("!valid message type");
+        vm.prank(replica);
+        governanceRouter.handle(
+            remoteDomain,
+            0,
+            remoteGovernanceRouter,
+            "data"
+        );
     }
 
     event BatchReceived(bytes32 indexed batchHash);
 
     function test_handleBatchCorrectForm() public {
+        // if currently governor domain, transfer to remote governor
+        // else the router will not accept incoming messages
+        if (governanceRouter.governorDomain() == homeDomain) {
+            if (governanceRouter.inRecovery()) exitRecovery();
+            vm.prank(governanceRouter.governor());
+            governanceRouter.transferGovernor(remoteDomain, vm.addr(412));
+        }
         // Create test batch for tests
         address to = address(0xBEEF);
         bytes memory data = "";
         calls.push(GovernanceMessage.Call(to.addressToBytes32(), data));
-        callsBatchHash = GovernanceMessage.getBatchHash(calls);
-        // Create test handle
-        handleOrigin = remoteDomain;
-        handleSender = remoteGovernanceRouter;
-        handleMessage = GovernanceMessage.formatBatch(calls);
-        governanceRouter.exposed_setRemoteGovernor(
-            remoteGovernanceDomain,
-            remoteGovernanceRouter
+        bytes32 batchHash = GovernanceMessage.getBatchHash(calls);
+        // handle should emit BatchReceived event
+        bytes memory message = GovernanceMessage.formatBatch(calls);
+        vm.expectEmit(true, false, false, false);
+        emit BatchReceived(batchHash);
+        vm.startPrank(replica);
+        governanceRouter.handle(
+            remoteDomain,
+            0,
+            remoteGovernanceRouter,
+            message
         );
-        vm.expectEmit(true, false, false, false);
-        emit BatchReceived(callsBatchHash);
-        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
+        // batch is pending
+        assertEq(
+            uint256(governanceRouter.inboundCallBatches(batchHash)),
+            uint256(GovernanceRouter.BatchStatus.Pending)
+        );
+        // same batch can't be delivered while still pending
+        vm.expectRevert("BatchStatus is Pending");
+        governanceRouter.handle(
+            remoteDomain,
+            0,
+            remoteGovernanceRouter,
+            GovernanceMessage.formatBatch(calls)
+        );
     }
 
-    function test_handleBatchCorrectFormFuzzed(
-        uint32 origin,
-        bytes32 sender,
-        bytes memory data
-    ) public {
-        // Create test batch for tests
-        vm.assume(origin != homeDomain && sender != bytes32(0) && origin != 0);
-        address to = address(0xBEEF);
-        calls.push(GovernanceMessage.Call(to.addressToBytes32(), data));
-        callsBatchHash = GovernanceMessage.getBatchHash(calls);
-        // Create test handle
-        handleOrigin = origin;
-        handleSender = sender;
-        handleMessage = GovernanceMessage.formatBatch(calls);
-        governanceRouter.exposed_setRemoteGovernor(origin, sender);
-        vm.expectEmit(true, false, false, false);
-        emit BatchReceived(callsBatchHash);
-        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
-    }
-
-    function test_handleTransferGovernorLocalDomainCorrectForm() public {
-        // Create test handle
-        handleOrigin = remoteDomain;
-        handleSender = remoteGovernanceRouter;
-        handleMessage = GovernanceMessage.formatTransferGovernor(
+    function test_handleTransferGovernor_toLocalGovernor_notRecovery_success()
+        public
+    {
+        // if currently governor domain, transfer to remote governor
+        // else the router will not accept incoming messages
+        if (governanceRouter.governorDomain() == homeDomain) {
+            if (governanceRouter.inRecovery()) exitRecovery();
+            vm.prank(governanceRouter.governor());
+            governanceRouter.transferGovernor(remoteDomain, vm.addr(412));
+        }
+        // Create test transfer gov message
+        address newGov = vm.addr(812);
+        bytes memory handleMessage = GovernanceMessage.formatTransferGovernor(
             homeDomain,
-            address(this).addressToBytes32()
+            newGov.addressToBytes32()
         );
-        governanceRouter.exposed_setRemoteGovernor(
-            remoteGovernanceDomain,
-            remoteGovernanceRouter
-        );
+        // handle should emit transfer governor event
         vm.expectEmit(true, false, false, false);
         emit TransferGovernor(
-            remoteDomain,
+            governanceRouter.governorDomain(),
             homeDomain,
             address(0),
-            address(this)
+            newGov
         );
-        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
+        vm.prank(replica);
+        governanceRouter.handle(
+            remoteDomain,
+            0,
+            remoteGovernanceRouter,
+            handleMessage
+        );
+        // governor should be transferred in storage
+        assertEq(
+            uint256(governanceRouter.governorDomain()),
+            uint256(homeDomain)
+        );
+        assertEq(governanceRouter.governor(), newGov);
     }
 
-    function test_handleTransferGovernorLocalDomainCorrectFormFuzzed(
-        uint32 origin,
-        bytes32 sender
-    ) public {
-        // Create test handle
-        vm.assume(origin != homeDomain && sender != bytes32(0) && origin != 0);
-        handleOrigin = origin;
-        handleSender = sender;
-        handleMessage = GovernanceMessage.formatTransferGovernor(
-            homeDomain,
-            address(this).addressToBytes32()
+    function test_handleTransferGovernor_toRemoteGovernor_notRecovery_success()
+        public
+    {
+        if (governanceRouter.inRecovery()) exitRecovery();
+        // if currently governor domain, transfer to remote governor
+        // else the router will not accept incoming messages
+        if (governanceRouter.governorDomain() == homeDomain) {
+            vm.prank(governanceRouter.governor());
+            governanceRouter.transferGovernor(remoteDomain, vm.addr(412));
+        }
+        uint32 newGovDomain = remoteDomain + 69;
+        // set router for remote domain so gov can be transferred to it
+        vm.prank(governanceRouter.governor());
+        governanceRouter.setRouterLocal(
+            newGovDomain,
+            TypeCasts.addressToBytes32(vm.addr(9999988888))
         );
-        governanceRouter.exposed_setRemoteGovernor(origin, sender);
+        // Create test transfer gov message
+        address newGov = vm.addr(812);
+        bytes memory handleMessage = GovernanceMessage.formatTransferGovernor(
+            newGovDomain,
+            newGov.addressToBytes32()
+        );
+        // handle should emit transfer governor event
         vm.expectEmit(true, false, false, false);
         emit TransferGovernor(
-            remoteDomain,
-            homeDomain,
+            governanceRouter.governorDomain(),
+            newGovDomain,
             address(0),
-            address(this)
+            address(0)
         );
-        governanceRouter.handle(handleOrigin, 0, handleSender, handleMessage);
+        vm.prank(replica);
+        governanceRouter.handle(
+            remoteDomain,
+            0,
+            remoteGovernanceRouter,
+            handleMessage
+        );
+        // governor should be transferred in storage
+        assertEq(
+            uint256(governanceRouter.governorDomain()),
+            uint256(newGovDomain)
+        );
+        assertEq(governanceRouter.governor(), address(0));
     }
 
     function test_executeGovernanceActionsNotRecoveryOnlyGovernor() public {
+        if (governanceRouter.inRecovery()) exitRecovery();
         GovernanceMessage.Call[]
             memory localCalls = new GovernanceMessage.Call[](1);
         GovernanceMessage.Call[][]
@@ -252,7 +418,12 @@ contract GovernanceRouterTest is Test {
         );
     }
 
-    function test_executeGovernanceActionsNotRecoveryIncorrectLength() public {
+    function test_executeGovernanceActionsIncorrectLength() public {
+        if (governanceRouter.inRecovery()) {
+            vm.prank(recoveryManager);
+        } else {
+            vm.prank(governanceRouter.governor());
+        }
         GovernanceMessage.Call[]
             memory localCalls = new GovernanceMessage.Call[](1);
         GovernanceMessage.Call[][]
@@ -264,22 +435,19 @@ contract GovernanceRouterTest is Test {
             domains,
             remoteCalls
         );
-        domains = new uint32[](1);
-        domains[0] = remoteDomain;
-        governanceRouter.executeGovernanceActions(
-            localCalls,
-            domains,
-            remoteCalls
-        );
     }
 
-    function test_executeGovernanceActionsRecoveryOnlyRecoverymanager() public {
+    function test_executeLocalGovernanceActionsRecoveryOnlyRecoveryManager()
+        public
+    {
+        if (!governanceRouter.inRecovery()) enterRecovery();
+        // construct calls
         GovernanceMessage.Call[]
             memory localCalls = new GovernanceMessage.Call[](1);
         GovernanceMessage.Call[][]
             memory remoteCalls = new GovernanceMessage.Call[][](0);
         uint32[] memory domains = new uint32[](0);
-        enterRecovery();
+        // fails when not called by recoveryManager
         vm.prank(address(0xBEEF));
         vm.expectRevert("! called by recovery manager");
         governanceRouter.executeGovernanceActions(
@@ -287,6 +455,7 @@ contract GovernanceRouterTest is Test {
             domains,
             remoteCalls
         );
+        // succeeds when called by recovery manager
         vm.prank(recoveryManager);
         governanceRouter.executeGovernanceActions(
             localCalls,
@@ -296,12 +465,12 @@ contract GovernanceRouterTest is Test {
     }
 
     function test_executeGovernanceActionsRecoveryNotRemoteCalls() public {
+        if (!governanceRouter.inRecovery()) enterRecovery();
         GovernanceMessage.Call[]
             memory localCalls = new GovernanceMessage.Call[](1);
         GovernanceMessage.Call[][]
             memory remoteCalls = new GovernanceMessage.Call[][](1);
         uint32[] memory domains = new uint32[](1);
-        enterRecovery();
         vm.prank(recoveryManager);
         vm.expectRevert("!remote calls in recovery mode");
         governanceRouter.executeGovernanceActions(
@@ -312,6 +481,7 @@ contract GovernanceRouterTest is Test {
     }
 
     function test_executeGovernanceActionsOnlyLocal() public {
+        if (governanceRouter.inRecovery()) exitRecovery();
         GovernanceMessage.Call[]
             memory localCalls = new GovernanceMessage.Call[](1);
         GovernanceMessage.Call[][]
@@ -320,6 +490,34 @@ contract GovernanceRouterTest is Test {
         bytes32 to = address(goodXapp).addressToBytes32();
         bytes memory data = abi.encodeWithSignature("setNumber(uint256)", 55);
         localCalls[0] = GovernanceMessage.Call(to, data);
+        vm.prank(governanceRouter.governor());
+        vm.expectCall(
+            address(goodXapp),
+            abi.encodeWithSelector(GoodXappSimple.setNumber.selector, 55)
+        );
+        governanceRouter.executeGovernanceActions(
+            localCalls,
+            domains,
+            remoteCalls
+        );
+        assertEq(goodXapp.number(), 55);
+    }
+
+    function test_executeGovernanceActionsRecoveryOnlyLocal() public {
+        if (!governanceRouter.inRecovery()) enterRecovery();
+        GovernanceMessage.Call[]
+            memory localCalls = new GovernanceMessage.Call[](1);
+        GovernanceMessage.Call[][]
+            memory remoteCalls = new GovernanceMessage.Call[][](0);
+        uint32[] memory domains = new uint32[](0);
+        bytes32 to = address(goodXapp).addressToBytes32();
+        bytes memory data = abi.encodeWithSignature("setNumber(uint256)", 55);
+        localCalls[0] = GovernanceMessage.Call(to, data);
+        vm.prank(recoveryManager);
+        vm.expectCall(
+            address(goodXapp),
+            abi.encodeWithSelector(GoodXappSimple.setNumber.selector, 55)
+        );
         governanceRouter.executeGovernanceActions(
             localCalls,
             domains,
@@ -329,225 +527,289 @@ contract GovernanceRouterTest is Test {
     }
 
     function test_executeGovernanceActionsOnlyRemote() public {
-        vm.prank(governanceRouter.governor());
+        if (governanceRouter.inRecovery()) exitRecovery();
+        // construct remote calls
         GovernanceMessage.Call[]
             memory localCalls = new GovernanceMessage.Call[](0);
+        uint32[] memory remoteDomains = new uint32[](1);
+        remoteDomains[0] = remoteDomain;
         GovernanceMessage.Call[][]
             memory remoteCalls = new GovernanceMessage.Call[][](1);
         remoteCalls[0] = new GovernanceMessage.Call[](1);
-        uint32[] memory domains = new uint32[](1);
-        bytes32 to = remoteGovernanceRouter;
+        bytes32 to = TypeCasts.addressToBytes32(vm.addr(645));
         bytes memory data = hex"BEEF";
         remoteCalls[0][0] = GovernanceMessage.Call(to, data);
-        domains[0] = remoteDomain;
-        // check that home dispatches message to remote remoteDomain
-        vm.expectEmit(true, true, true, true);
-        home.hack_expectDispatchEvent(
-            remoteDomain,
-            remoteGovernanceRouter,
-            GovernanceMessage.formatBatch(remoteCalls[0]),
-            address(governanceRouter)
+        // expect that Home dispatch is called
+        vm.expectCall(
+            address(home),
+            abi.encodeWithSelector(
+                Home.dispatch.selector,
+                remoteDomains[0],
+                remoteGovernanceRouter,
+                GovernanceMessage.formatBatch(remoteCalls[0])
+            )
         );
         // execute actions
+        vm.prank(governanceRouter.governor());
         governanceRouter.executeGovernanceActions(
             localCalls,
-            domains,
+            remoteDomains,
             remoteCalls
         );
     }
 
     function test_executeGovernanceActionsLocalAndRemote() public {
+        if (governanceRouter.inRecovery()) exitRecovery();
         GovernanceMessage.Call[]
-            memory localCalls = new GovernanceMessage.Call[](2);
+            memory localCalls = new GovernanceMessage.Call[](1);
+        bytes32 to = address(goodXapp).addressToBytes32();
+        bytes memory data = abi.encodeWithSignature("setNumber(uint256)", 55);
+        localCalls[0] = GovernanceMessage.Call(to, data);
+        uint32[] memory remoteDomains = new uint32[](1);
+        remoteDomains[0] = remoteDomain;
         GovernanceMessage.Call[][]
             memory remoteCalls = new GovernanceMessage.Call[][](1);
         remoteCalls[0] = new GovernanceMessage.Call[](1);
-        uint32[] memory domains = new uint32[](1);
-        bytes32 to = remoteGovernanceRouter;
-        bytes memory data = hex"BEEF";
-        remoteCalls[0][0] = GovernanceMessage.Call(to, data);
-        domains[0] = remoteDomain;
-        to = address(goodXapp).addressToBytes32();
-        data = abi.encodeWithSignature("setNumber(uint256)", 55);
-        localCalls[0] = GovernanceMessage.Call(to, data);
-        vm.expectEmit(true, true, true, true);
-        // Directly plug into the mock contract to generate the appropriate event to expect
-        home.hack_expectDispatchEvent(
-            remoteDomain,
-            remoteGovernanceRouter,
-            GovernanceMessage.formatBatch(remoteCalls[0]),
-            address(governanceRouter)
+        bytes32 remoteTo = TypeCasts.addressToBytes32(vm.addr(907));
+        bytes memory remoteData = hex"BEEF";
+        remoteCalls[0][0] = GovernanceMessage.Call(remoteTo, remoteData);
+        vm.expectCall(
+            address(goodXapp),
+            abi.encodeWithSelector(GoodXappSimple.setNumber.selector, 55)
         );
+        vm.expectCall(
+            address(home),
+            abi.encodeWithSelector(
+                Home.dispatch.selector,
+                remoteDomains[0],
+                remoteGovernanceRouter,
+                GovernanceMessage.formatBatch(remoteCalls[0])
+            )
+        );
+        vm.prank(governanceRouter.governor());
         governanceRouter.executeGovernanceActions(
             localCalls,
-            domains,
+            remoteDomains,
             remoteCalls
         );
         assertEq(goodXapp.number(), 55);
     }
 
-    // oof
     function test_executeGovernanceActionsLocalAndRemoteFuzzed(
-        bytes[64] memory data,
-        bytes32[64] memory to,
-        bytes32[64] memory router,
-        uint32[64] memory dom,
-        uint256[64] memory numbers
+        bytes32[8] memory fuzzTo,
+        bytes[8] memory fuzzData,
+        uint32[8] memory fuzzDomains,
+        bytes32[8] memory fuzzRouter
     ) public {
+        // exit recovery, no remote calls in recovery
+        if (governanceRouter.inRecovery()) exitRecovery();
+        // construct empty parameter arrays
         GovernanceMessage.Call[]
-            memory localCalls = new GovernanceMessage.Call[](64);
+            memory localCalls = new GovernanceMessage.Call[](8);
         GovernanceMessage.Call[][]
-            memory remoteCalls = new GovernanceMessage.Call[][](64);
-        uint32[] memory domains = new uint32[](64);
-        for (uint256 i; i < 64; i++) {
-            if (dom[i] == homeDomain) {
-                dom[i] = dom[i] + 1;
+            memory remoteCalls = new GovernanceMessage.Call[][](8);
+        uint32[] memory domains = new uint32[](8);
+        // loop through fuzzed values
+        for (uint256 i; i < 8; i++) {
+            // set domain
+            if (fuzzDomains[i] == homeDomain) {
+                fuzzDomains[i] = fuzzDomains[i] + 1;
             }
-            if (router[i] == bytes32(0)) {
-                router[i] = "non empty address";
+            domains[i] = fuzzDomains[i];
+            // setup remote router IFF it does not already exist
+            if (fuzzRouter[i] == bytes32(0)) {
+                fuzzRouter[i] = "non empty address";
             }
-            governanceRouter.setRouterLocal(dom[i], router[i]);
-            remoteCalls[i] = new GovernanceMessage.Call[](64);
-            domains[i] = dom[i];
-            for (uint256 j; j < 64; j++) {
-                remoteCalls[i][j] = GovernanceMessage.Call(to[i], data[i]);
+            if (governanceRouter.routers(fuzzDomains[i]) == bytes32(0)) {
+                vm.prank(governanceRouter.governor());
+                governanceRouter.setRouterLocal(fuzzDomains[i], fuzzRouter[i]);
             }
-            data[i] = abi.encodeWithSignature("setNumber(uint256)", numbers[i]);
+            // add remote call
+            remoteCalls[i] = new GovernanceMessage.Call[](i + 1);
+            for (uint256 j; j < i + 1; j++) {
+                remoteCalls[i][j] = GovernanceMessage.Call(
+                    fuzzTo[i],
+                    fuzzData[i]
+                );
+            }
+            vm.expectCall(
+                address(home),
+                abi.encodeWithSelector(
+                    Home.dispatch.selector,
+                    fuzzDomains[i],
+                    governanceRouter.routers(fuzzDomains[i]),
+                    GovernanceMessage.formatBatch(remoteCalls[i])
+                )
+            );
+            // add local call
             localCalls[i] = GovernanceMessage.Call(
                 address(goodXapp).addressToBytes32(),
-                data[i]
+                abi.encodeWithSignature("setNumber(uint256)", i)
+            );
+            vm.expectCall(
+                address(goodXapp),
+                abi.encodeWithSelector(GoodXappSimple.setNumber.selector, i)
             );
         }
+        vm.prank(governanceRouter.governor());
         governanceRouter.executeGovernanceActions(
             localCalls,
             domains,
             remoteCalls
         );
-        assertEq(goodXapp.number(), numbers[63]);
     }
 
     function test_callRemoteOnlyGovernor() public {
-        uint32 dest = remoteDomain;
+        if (governanceRouter.inRecovery()) exitRecovery();
         GovernanceMessage.Call[]
-            memory remoteCalls = new GovernanceMessage.Call[](1);
+            memory localCalls = new GovernanceMessage.Call[](0);
+        uint32[] memory remoteDomains = new uint32[](1);
+        remoteDomains[0] = remoteDomain;
+        GovernanceMessage.Call[][]
+            memory remoteCalls = new GovernanceMessage.Call[][](1);
+        remoteCalls[0] = new GovernanceMessage.Call[](1);
         bytes32 to = remoteGovernanceRouter;
-        bytes memory data = "Miami";
-        remoteCalls[0] = GovernanceMessage.Call(to, data);
-        vm.prank(address(0xBEEF));
+        bytes memory data = hex"BEEF";
+        remoteCalls[0][0] = GovernanceMessage.Call(to, data);
         vm.expectRevert("! called by governor");
-        governanceRouter.exposed_callRemote(dest, remoteCalls);
-        vm.expectEmit(true, true, true, true);
-        home.hack_expectDispatchEvent(
-            dest,
-            to,
-            GovernanceMessage.formatBatch(remoteCalls),
-            address(governanceRouter)
+        vm.prank(vm.addr(123));
+        governanceRouter.executeGovernanceActions(
+            localCalls,
+            remoteDomains,
+            remoteCalls
         );
-        governanceRouter.exposed_callRemote(dest, remoteCalls);
-    }
-
-    function test_callRemoteOnlyGovernorNotInRecovery() public {
-        uint32 dest = remoteDomain;
-        GovernanceMessage.Call[]
-            memory remoteCalls = new GovernanceMessage.Call[](1);
-        bytes32 to = remoteGovernanceRouter;
-        bytes memory data = "Miami";
-        remoteCalls[0] = GovernanceMessage.Call(to, data);
-        enterRecovery();
-        vm.expectRevert("in recovery");
-        governanceRouter.exposed_callRemote(dest, remoteCalls);
-    }
-
-    function test_callRemoteWithRouterSuccessFuzzed(
-        uint32 dest,
-        bytes32 router,
-        bytes32[64] memory to,
-        bytes[64] memory data
-    ) public {
-        vm.assume(router != bytes32(0) && dest != homeDomain);
-        governanceRouter.setRouterLocal(dest, router);
-        GovernanceMessage.Call[]
-            memory remoteCalls = new GovernanceMessage.Call[](64);
-        for (uint256 i; i < 64; i++) {
-            remoteCalls[i] = GovernanceMessage.Call(to[i], data[i]);
-        }
-        vm.expectEmit(true, true, true, true);
-        home.hack_expectDispatchEvent(
-            dest,
-            router,
-            GovernanceMessage.formatBatch(remoteCalls),
-            address(governanceRouter)
+        vm.expectRevert("! called by governor");
+        vm.prank(recoveryManager);
+        governanceRouter.executeGovernanceActions(
+            localCalls,
+            remoteDomains,
+            remoteCalls
         );
-        governanceRouter.exposed_callRemote(dest, remoteCalls);
     }
 
-    // reverts if no remote router enrolled
-    function test_callRemoteNoRouterRevertsFuzzed(
-        uint32 dest,
-        bytes32 router,
-        bytes32[16] memory to,
-        bytes[16] memory data
-    ) public {
+    function test_executeGovernanceActionsNotGovernanceRouter() public {
+        if (governanceRouter.inRecovery()) exitRecovery();
+        GovernanceMessage.Call[]
+            memory localCalls = new GovernanceMessage.Call[](1);
+        uint32[] memory remoteDomains = new uint32[](0);
+        GovernanceMessage.Call[][]
+            memory remoteCalls = new GovernanceMessage.Call[][](0);
+        vm.expectRevert("!sender is an external address");
+        vm.prank(address(governanceRouter));
+        governanceRouter.executeGovernanceActions(
+            localCalls,
+            remoteDomains,
+            remoteCalls
+        );
+    }
+
+    function test_callRemoteOnlyGovernorFuzzed(address nonGovernor) public {
         vm.assume(
-            router != bytes32(0) && dest != homeDomain && dest != remoteDomain
+            nonGovernor != governanceRouter.governor() &&
+                nonGovernor != address(governanceRouter)
         );
+        if (governanceRouter.inRecovery()) exitRecovery();
         GovernanceMessage.Call[]
-            memory remoteCalls = new GovernanceMessage.Call[](16);
-        for (uint256 i; i < 16; i++) {
-            remoteCalls[i] = GovernanceMessage.Call(to[i], data[i]);
-        }
-        vm.expectRevert("!router");
-        governanceRouter.exposed_callRemote(dest, remoteCalls);
+            memory localCalls = new GovernanceMessage.Call[](0);
+        uint32[] memory remoteDomains = new uint32[](1);
+        remoteDomains[0] = remoteDomain;
+        GovernanceMessage.Call[][]
+            memory remoteCalls = new GovernanceMessage.Call[][](1);
+        remoteCalls[0] = new GovernanceMessage.Call[](1);
+        bytes32 to = remoteGovernanceRouter;
+        bytes memory data = hex"BEEF";
+        remoteCalls[0][0] = GovernanceMessage.Call(to, data);
+        vm.expectRevert("! called by governor");
+        vm.prank(nonGovernor);
+        governanceRouter.executeGovernanceActions(
+            localCalls,
+            remoteDomains,
+            remoteCalls
+        );
+    }
+
+    function test_callRemoteSuccess() public {
+        if (governanceRouter.inRecovery()) exitRecovery();
+        vm.prank(governanceRouter.governor());
+        GovernanceMessage.Call[]
+            memory localCalls = new GovernanceMessage.Call[](0);
+        uint32[] memory remoteDomains = new uint32[](1);
+        remoteDomains[0] = remoteDomain;
+        GovernanceMessage.Call[][]
+            memory remoteCalls = new GovernanceMessage.Call[][](1);
+        remoteCalls[0] = new GovernanceMessage.Call[](1);
+        bytes32 to = remoteGovernanceRouter;
+        bytes memory data = hex"BEEF";
+        remoteCalls[0][0] = GovernanceMessage.Call(to, data);
+        governanceRouter.executeGovernanceActions(
+            localCalls,
+            remoteDomains,
+            remoteCalls
+        );
     }
 
     function test_transferGovernorOnlyGovernor() public {
-        uint32 newDomain = 123;
         address newGovernor = vm.addr(9998888999);
-        bytes32 router = "router address";
-        governanceRouter.setRouterLocal(newDomain, router);
-        vm.prank(address(0xBEEF));
+        // local
+        vm.prank(address(0xBEEFBEEF));
         vm.expectRevert("! called by governor");
-        governanceRouter.transferGovernor(newDomain, newGovernor);
+        governanceRouter.transferGovernor(homeDomain, newGovernor);
+        // remote
+        vm.prank(address(0xBEEFBEEF));
+        vm.expectRevert("! called by governor");
+        governanceRouter.transferGovernor(remoteDomain, newGovernor);
     }
 
     function test_transferGovernorOnlyNotInRecovery() public {
-        uint32 newDomain = 123;
+        if (!governanceRouter.inRecovery()) enterRecovery();
         address newGovernor = vm.addr(9998888999);
-        bytes32 router = "router address";
-        governanceRouter.setRouterLocal(newDomain, router);
-        enterRecovery();
+        // local
+        vm.prank(governanceRouter.governor());
         vm.expectRevert("in recovery");
-        governanceRouter.transferGovernor(newDomain, newGovernor);
+        governanceRouter.transferGovernor(homeDomain, newGovernor);
+        // remote
+        vm.prank(governanceRouter.governor());
+        vm.expectRevert("in recovery");
+        governanceRouter.transferGovernor(remoteDomain, newGovernor);
     }
 
     function test_transferGovernorRemoteGovernor() public {
-        uint32 newDomain = 123;
+        if (governanceRouter.inRecovery()) exitRecovery();
+        uint32 newGovernorDomain = remoteDomain;
         address newGovernor = vm.addr(9998888999);
-        bytes32 router = "router address";
-        governanceRouter.setRouterLocal(newDomain, router);
-        vm.expectEmit(true, true, true, true);
-        emit TransferGovernor(homeDomain, newDomain, address(this), address(0));
-        uint256 length = governanceRouter.hack_domainsLength();
-        for (uint256 i = 0; i < length; i++) {
-            if (governanceRouter.domains(i) != uint32(0)) {
-                vm.expectEmit(true, true, true, true);
-                home.hack_expectDispatchEvent(
-                    governanceRouter.domains(i),
-                    governanceRouter.routers(governanceRouter.domains(i)),
-                    GovernanceMessage.formatTransferGovernor(
-                        newDomain,
-                        newGovernor.addressToBytes32()
-                    ),
-                    address(governanceRouter)
+        for (uint256 i = 0; i < governanceRouter.hack_domainsLength(); i++) {
+            uint32 _domain = governanceRouter.domains(i);
+            if (_domain != uint32(0)) {
+                vm.expectCall(
+                    address(home),
+                    abi.encodeWithSelector(
+                        Home.dispatch.selector,
+                        _domain,
+                        governanceRouter.routers(_domain),
+                        GovernanceMessage.formatTransferGovernor(
+                            newGovernorDomain,
+                            TypeCasts.addressToBytes32(newGovernor)
+                        )
+                    )
                 );
             }
         }
-        governanceRouter.transferGovernor(newDomain, newGovernor);
+        vm.expectEmit(true, true, true, true);
+        emit TransferGovernor(
+            governanceRouter.governorDomain(),
+            newGovernorDomain,
+            governanceRouter.governor(),
+            address(0)
+        );
+        vm.prank(governanceRouter.governor());
+        governanceRouter.transferGovernor(newGovernorDomain, newGovernor);
         assertEq(governanceRouter.governor(), address(0));
-        assertEq(uint256(governanceRouter.governorDomain()), newDomain);
+        assertEq(uint256(governanceRouter.governorDomain()), newGovernorDomain);
     }
 
     function test_transferGovernorRemoteGovernorMustHaveRouter() public {
+        if (governanceRouter.inRecovery()) exitRecovery();
+        vm.prank(governanceRouter.governor());
         uint32 newDomain = 123;
         address newGovernor = vm.addr(9998888999);
         vm.expectRevert("!router");
@@ -565,60 +827,68 @@ contract GovernanceRouterTest is Test {
                 newDomain != remoteDomain &&
                 router != bytes32(0)
         );
+        if (governanceRouter.inRecovery()) exitRecovery();
+        vm.prank(governanceRouter.governor());
+        governanceRouter.setRouterLocal(newDomain, router);
         if (newGovernor == address(0)) {
+            vm.prank(governanceRouter.governor());
             vm.expectRevert("cannot renounce governor");
             governanceRouter.transferGovernor(newDomain, newGovernor);
             return;
         }
-        governanceRouter.setRouterLocal(newDomain, router);
-        vm.expectEmit(true, true, true, true);
-        emit TransferGovernor(homeDomain, newDomain, address(this), address(0));
-        uint256 length = governanceRouter.hack_domainsLength();
-        for (uint256 i = 0; i < length; i++) {
-            if (governanceRouter.domains(i) != uint32(0)) {
-                vm.expectEmit(true, true, true, true);
-                home.hack_expectDispatchEvent(
-                    governanceRouter.domains(i),
-                    governanceRouter.routers(governanceRouter.domains(i)),
-                    GovernanceMessage.formatTransferGovernor(
-                        newDomain,
-                        newGovernor.addressToBytes32()
-                    ),
-                    address(governanceRouter)
+        for (uint256 i = 0; i < governanceRouter.hack_domainsLength(); i++) {
+            uint32 _domain = governanceRouter.domains(i);
+            if (_domain != uint32(0)) {
+                vm.expectCall(
+                    address(home),
+                    abi.encodeWithSelector(
+                        Home.dispatch.selector,
+                        _domain,
+                        governanceRouter.routers(_domain),
+                        GovernanceMessage.formatTransferGovernor(
+                            newDomain,
+                            TypeCasts.addressToBytes32(newGovernor)
+                        )
+                    )
                 );
             }
         }
+        vm.expectEmit(true, true, true, true);
+        emit TransferGovernor(
+            governanceRouter.governorDomain(),
+            newDomain,
+            governanceRouter.governor(),
+            address(0)
+        );
+        vm.prank(governanceRouter.governor());
         governanceRouter.transferGovernor(newDomain, newGovernor);
         assertEq(governanceRouter.governor(), address(0));
         assertEq(uint256(governanceRouter.governorDomain()), newDomain);
     }
 
     function test_transferGovernorLocalGovernor() public {
+        if (governanceRouter.inRecovery()) exitRecovery();
         uint32 newDomain = homeDomain;
         address newGovernor = vm.addr(9998888999);
-        // Lock the dispatch function. If it is called, it will revert.
-        // This is done so that we can verify that the function call will NOT
-        // dispatch any messages to Home.
-        home.hack_toggleLock();
+        // todo: expectNoCall Home.Dispatch
         vm.expectEmit(true, true, true, true);
         emit TransferGovernor(
             homeDomain,
             newDomain,
-            address(this),
+            governanceRouter.governor(),
             newGovernor
         );
+        vm.prank(governanceRouter.governor());
         governanceRouter.transferGovernor(newDomain, newGovernor);
         assertEq(governanceRouter.governor(), newGovernor);
         assertEq(uint256(governanceRouter.governorDomain()), newDomain);
     }
 
     function test_transferGovernorLocalGovernorCANNOTRENOUNCE() public {
+        if (governanceRouter.inRecovery()) exitRecovery();
         uint32 newDomain = homeDomain;
         address newGovernor = address(0);
-        // Lock the dispatch function. If it is called, it will revert.
-        // This is done so that we can verify that the function call will NOT
-        // dispatch any messages to Home.
-        home.hack_toggleLock();
+        vm.prank(governanceRouter.governor());
         vm.expectRevert("cannot renounce governor");
         governanceRouter.transferGovernor(newDomain, newGovernor);
     }
@@ -626,20 +896,23 @@ contract GovernanceRouterTest is Test {
     function test_transferGovernorLocalGovernorFuzzed(address newGovernor)
         public
     {
+        if (governanceRouter.inRecovery()) exitRecovery();
         uint32 newDomain = homeDomain;
         if (newGovernor == address(0)) {
+            vm.prank(governanceRouter.governor());
             vm.expectRevert("cannot renounce governor");
             governanceRouter.transferGovernor(newDomain, newGovernor);
             return;
         }
-        home.hack_toggleLock();
+        // todo: expectNoCall Home.Dispatch
         vm.expectEmit(true, true, true, true);
         emit TransferGovernor(
             homeDomain,
             newDomain,
-            address(this),
+            governanceRouter.governor(),
             newGovernor
         );
+        vm.prank(governanceRouter.governor());
         governanceRouter.transferGovernor(newDomain, newGovernor);
         assertEq(governanceRouter.governor(), newGovernor);
         assertEq(uint256(governanceRouter.governorDomain()), newDomain);
@@ -683,7 +956,8 @@ contract GovernanceRouterTest is Test {
     }
 
     function test_setRouterGlobalNotInRecovery() public {
-        enterRecovery();
+        if (!governanceRouter.inRecovery()) enterRecovery();
+        vm.prank(governanceRouter.governor());
         uint32 domain = 123;
         bytes32 router = "router";
         vm.expectRevert("in recovery");
@@ -697,84 +971,81 @@ contract GovernanceRouterTest is Test {
     );
 
     function test_setRouterGlobalNewDomain() public {
-        uint32 domain = 123;
+        if (governanceRouter.inRecovery()) exitRecovery();
+        uint32 newDomain = 123;
         bytes32 newRouter = "router";
-        bytes32 previousRouter = governanceRouter.routers(domain);
+        bytes32 previousRouter = governanceRouter.routers(newDomain);
         GovernanceMessage.Call[]
             memory remoteCalls = new GovernanceMessage.Call[](1);
         remoteCalls[0].data = abi.encodeWithSignature(
             "setRouterLocal(uint32,bytes32)",
-            domain,
+            newDomain,
             newRouter
         );
-        uint256 length = governanceRouter.hack_domainsLength();
-        for (uint256 i; i < length; i++) {
-            uint32 dest = governanceRouter.domains(i);
-            assert(dest != 0);
-            bytes32 recipient = governanceRouter.routers(dest);
-            remoteCalls[0].to = recipient;
-            bytes memory message = GovernanceMessage.formatBatch(remoteCalls);
-            vm.expectEmit(true, true, true, true);
-            home.hack_expectDispatchEvent(
-                dest,
-                recipient,
-                message,
-                address(governanceRouter)
+        for (uint256 i; i < governanceRouter.hack_domainsLength(); i++) {
+            uint32 _remoteDomain = governanceRouter.domains(i);
+            bytes32 _remoteRouter = governanceRouter.routers(_remoteDomain);
+            remoteCalls[0].to = _remoteRouter;
+            vm.expectCall(
+                address(home),
+                abi.encodeWithSelector(
+                    Home.dispatch.selector,
+                    _remoteDomain,
+                    _remoteRouter,
+                    GovernanceMessage.formatBatch(remoteCalls)
+                )
             );
         }
         vm.expectEmit(true, false, false, true);
-        emit SetRouter(domain, previousRouter, newRouter);
-        governanceRouter.setRouterGlobal(domain, newRouter);
+        emit SetRouter(newDomain, previousRouter, newRouter);
+        vm.prank(governanceRouter.governor());
+        governanceRouter.setRouterGlobal(newDomain, newRouter);
     }
 
     function test_setRouterGlobalNewDomainFuzzed(
-        uint32 domain,
+        uint32 newDomain,
         bytes32 newRouter
     ) public {
-        vm.assume(domain != homeDomain && domain != 0);
-        bytes32 previousRouter = governanceRouter.routers(domain);
+        if (governanceRouter.inRecovery()) exitRecovery();
+        vm.assume(newDomain != homeDomain && newDomain != 0);
+        bytes32 previousRouter = governanceRouter.routers(newDomain);
         GovernanceMessage.Call[]
             memory remoteCalls = new GovernanceMessage.Call[](1);
         remoteCalls[0].data = abi.encodeWithSignature(
             "setRouterLocal(uint32,bytes32)",
-            domain,
+            newDomain,
             newRouter
         );
-        uint256 length = governanceRouter.hack_domainsLength();
-        for (uint256 i; i < length; i++) {
-            uint32 dest = governanceRouter.domains(i);
-            assert(dest != 0);
-            bytes32 recipient = governanceRouter.routers(dest);
-            remoteCalls[0].to = recipient;
-            bytes memory message = GovernanceMessage.formatBatch(remoteCalls);
-            vm.expectEmit(true, true, true, true);
-            home.hack_expectDispatchEvent(
-                dest,
-                recipient,
-                message,
-                address(governanceRouter)
+        for (uint256 i; i < governanceRouter.hack_domainsLength(); i++) {
+            uint32 _remoteDomain = governanceRouter.domains(i);
+            bytes32 _remoteRouter = governanceRouter.routers(_remoteDomain);
+            remoteCalls[0].to = _remoteRouter;
+            vm.expectCall(
+                address(home),
+                abi.encodeWithSelector(
+                    Home.dispatch.selector,
+                    _remoteDomain,
+                    _remoteRouter,
+                    GovernanceMessage.formatBatch(remoteCalls)
+                )
             );
         }
         vm.expectEmit(true, false, false, true);
-        emit SetRouter(domain, previousRouter, newRouter);
-        governanceRouter.setRouterGlobal(domain, newRouter);
+        emit SetRouter(newDomain, previousRouter, newRouter);
+        vm.prank(governanceRouter.governor());
+        governanceRouter.setRouterGlobal(newDomain, newRouter);
     }
 
     function test_setRouterGlobaExistinglDomainHome() public {
-        uint32 domain = homeDomain;
+        if (governanceRouter.inRecovery()) exitRecovery();
+        vm.prank(governanceRouter.governor());
         bytes32 newRouter = "new router";
-        GovernanceMessage.Call[]
-            memory remoteCalls = new GovernanceMessage.Call[](1);
-        remoteCalls[0].data = abi.encodeWithSignature(
-            "setRouterLocal(uint32,bytes32)",
-            domain,
-            newRouter
-        );
         vm.expectRevert("can't set local router");
-        governanceRouter.setRouterGlobal(domain, newRouter);
+        governanceRouter.setRouterGlobal(homeDomain, newRouter);
     }
 
     function test_setRouterGlobaExistinglDomainRemote() public {
+        if (governanceRouter.inRecovery()) exitRecovery();
         uint32 domain = remoteDomain;
         bytes32 newRouter = "new router";
         bytes32 previousRouter = governanceRouter.routers(domain);
@@ -792,28 +1063,35 @@ contract GovernanceRouterTest is Test {
             bytes32 recipient = governanceRouter.routers(dest);
             remoteCalls[0].to = recipient;
             bytes memory message = GovernanceMessage.formatBatch(remoteCalls);
-            vm.expectEmit(true, true, true, true);
-            home.hack_expectDispatchEvent(
-                dest,
-                recipient,
-                message,
-                address(governanceRouter)
+            vm.expectCall(
+                address(home),
+                abi.encodeWithSelector(
+                    Home.dispatch.selector,
+                    dest,
+                    recipient,
+                    message
+                )
             );
         }
         vm.expectEmit(true, false, false, true);
         emit SetRouter(domain, previousRouter, newRouter);
+        vm.prank(governanceRouter.governor());
         governanceRouter.setRouterGlobal(domain, newRouter);
     }
 
     function test_setXAppConnectionManagerOnlyGovernor() public {
+        if (governanceRouter.inRecovery()) exitRecovery();
         MockHome newHome = new MockHome(homeDomain);
         MockXAppConnectionManager newMngr = new MockXAppConnectionManager(
-            address(newHome)
+            address(newHome),
+            replica
         );
-        vm.startPrank(address(0xBEEEEEEEEEEEF));
+        // fails when not governor
+        vm.prank(address(0xBEEEEEEEEEEEF));
         vm.expectRevert("! called by governor");
         governanceRouter.setXAppConnectionManager(address(newMngr));
-        vm.stopPrank();
+        // succeeds when governor
+        vm.prank(governanceRouter.governor());
         governanceRouter.setXAppConnectionManager(address(newMngr));
         assertEq(
             address(governanceRouter.xAppConnectionManager()),
@@ -822,14 +1100,17 @@ contract GovernanceRouterTest is Test {
     }
 
     function test_setXAppConnectionManagerOnlyRecoveryManager() public {
+        if (!governanceRouter.inRecovery()) enterRecovery();
         MockHome newHome = new MockHome(homeDomain);
         MockXAppConnectionManager newMngr = new MockXAppConnectionManager(
-            address(newHome)
+            address(newHome),
+            replica
         );
-        enterRecovery();
+        // fail from random address
         vm.prank(address(0xBEEEEEEEEEEEF));
         vm.expectRevert("! called by recovery manager");
         governanceRouter.setXAppConnectionManager(address(newMngr));
+        // succeed from recovery manager
         vm.prank(governanceRouter.recoveryManager());
         governanceRouter.setXAppConnectionManager(address(newMngr));
         assertEq(
@@ -839,7 +1120,7 @@ contract GovernanceRouterTest is Test {
     }
 
     function test_initiateRecoveryTimeLockOnlyNotInRecovery() public {
-        enterRecovery();
+        if (!governanceRouter.inRecovery()) enterRecovery();
         vm.prank(recoveryManager);
         vm.expectRevert("in recovery");
         governanceRouter.initiateRecoveryTimelock();
@@ -851,27 +1132,29 @@ contract GovernanceRouterTest is Test {
     );
 
     function test_initiateRecoveryTimeLockOnlyRecoveryManager() public {
+        if (governanceRouter.inRecovery()) exitRecovery();
         vm.expectRevert("! called by recovery manager");
         governanceRouter.initiateRecoveryTimelock();
-        vm.expectEmit(true, false, false, true);
-        emit InitiateRecovery(recoveryManager, block.timestamp + timelock);
-        enterRecovery();
     }
 
     event ExitRecovery(address recoveryManager);
 
     function test_exitRecoveryOnlyRecoveryManager() public {
+        if (!governanceRouter.inRecovery()) enterRecovery();
+        // fails when not called by recovery manager
         vm.expectRevert("! called by recovery manager");
         governanceRouter.exitRecovery();
-        enterRecovery();
+        // succeeds when called by recovery manager
         vm.prank(recoveryManager);
         vm.expectEmit(false, false, false, true);
         emit ExitRecovery(recoveryManager);
         governanceRouter.exitRecovery();
+        // successfully exits recovery
         assertFalse(governanceRouter.inRecovery());
     }
 
     function test_exitRecoveryNotInitiatedRevert() public {
+        if (governanceRouter.inRecovery()) exitRecovery();
         vm.prank(recoveryManager);
         vm.expectRevert("recovery not initiated");
         governanceRouter.exitRecovery();
@@ -1014,25 +1297,26 @@ contract GovernanceRouterTest is Test {
         calls.push(GovernanceMessage.Call(to.addressToBytes32(), data));
         bytes memory message = GovernanceMessage.formatBatch(calls);
         bytes32 hash = GovernanceMessage.getBatchHash(calls);
+        // at first, batch does not exist
         assertEq(
             uint256(governanceRouter.inboundCallBatches(hash)),
             uint256(GovernanceRouter.BatchStatus.Unknown)
         );
+        // after handling the message, batch is pending
         governanceRouter.exposed_handleBatch(message, 1);
         assertEq(
             uint256(governanceRouter.inboundCallBatches(hash)),
             uint256(GovernanceRouter.BatchStatus.Pending)
         );
+        // batch cannot be executed because it will revert
         vm.expectRevert("call failed");
         governanceRouter.executeCallBatch(calls);
-        // since the call failed, the batch should still be pending
+        // since the call failed, the batch is still pending
         assertEq(
             uint256(governanceRouter.inboundCallBatches(hash)),
             uint256(GovernanceRouter.BatchStatus.Pending)
         );
     }
-
-    // _transferGovernor() is tested via the public function transferGovernor()
 
     function test_setRouterRevertLocalDomain() public {
         vm.expectRevert("can't set local router");
@@ -1070,42 +1354,37 @@ contract GovernanceRouterTest is Test {
         // we shouldn't add a new domain, since we set the router of
         // an existing domain
         assertEq(governanceRouter.hack_domainsLength(), previousDomainsLength);
-        assertEq(
-            uint256(governanceRouter.domains(previousDomainsLength - 1)),
-            newDomain
-        );
     }
 
+    // TODO: telemetry into domains array in fork mode?
     function test_setRouterRemoveDomain() public {
-        // Add another domain so that we have 2 remote domains and the domains array
-        // is not empited when removing a remote domain. This is needed to test more
-        // concretely.
-        bytes32 existingRouter = "asdfasfasdf";
-        uint32 existingDomain = 23;
-        governanceRouter.exposed_setRouter(existingDomain, existingRouter);
+        if (governanceRouter.inRecovery()) exitRecovery();
         uint32 newDomain = remoteDomain;
         bytes32 newRouter = bytes32(0);
         bytes32 previousRouter = governanceRouter.routers(newDomain);
-        uint256 previousDomainsLength = governanceRouter.hack_domainsLength();
         vm.expectEmit(true, true, true, false);
         emit SetRouter(newDomain, previousRouter, newRouter);
-        governanceRouter.exposed_setRouter(newDomain, newRouter);
+        vm.prank(governanceRouter.governor());
+        governanceRouter.setRouterLocal(newDomain, newRouter);
         assertEq(governanceRouter.routers(newDomain), newRouter);
-        // we remove the domain, since it's router now is bytes32(0)
-        // removing the domain means that we turn it into 0, but keep it in the array
-        // [1500, 23] --> [0, 23]
-        assertEq(governanceRouter.hack_domainsLength(), previousDomainsLength);
-        assertEq(
-            uint256(governanceRouter.domains(previousDomainsLength - 1)),
-            existingDomain
-        );
-        assertEq(
-            uint256(governanceRouter.domains(previousDomainsLength - 2)),
-            0
-        );
+    }
+
+    // TODO: telemetry into domains array in fork mode?
+    function test_setRouterRemoveDomainRecovery() public {
+        if (!governanceRouter.inRecovery()) enterRecovery();
+        uint32 newDomain = remoteDomain;
+        bytes32 newRouter = bytes32(0);
+        bytes32 previousRouter = governanceRouter.routers(newDomain);
+        vm.expectEmit(true, true, true, false);
+        emit SetRouter(newDomain, previousRouter, newRouter);
+        vm.prank(recoveryManager);
+        governanceRouter.setRouterLocal(newDomain, newRouter);
+        assertEq(governanceRouter.routers(newDomain), newRouter);
     }
 
     function test_isGovernorDomain() public {
+        if (governanceRouter.inRecovery()) exitRecovery();
+        vm.prank(governanceRouter.governor());
         governanceRouter.transferGovernor(
             remoteDomain,
             remoteGovernanceRouter.bytes32ToAddress()
@@ -1151,9 +1430,20 @@ contract GovernanceRouterTest is Test {
 
     function enterRecovery() public {
         vm.prank(recoveryManager);
+        vm.expectEmit(true, false, false, true);
+        emit InitiateRecovery(recoveryManager, block.timestamp + timelock);
         governanceRouter.initiateRecoveryTimelock();
         vm.warp(block.timestamp + timelock);
         assert(governanceRouter.inRecovery());
         assertEq(governanceRouter.recoveryActiveAt(), block.timestamp);
+    }
+
+    function exitRecovery() public {
+        vm.prank(recoveryManager);
+        vm.expectEmit(true, false, false, true);
+        emit ExitRecovery(recoveryManager);
+        governanceRouter.exitRecovery();
+        assert(!governanceRouter.inRecovery());
+        assertEq(governanceRouter.recoveryActiveAt(), 0);
     }
 }
