@@ -17,17 +17,6 @@ import {NomadTest} from "./utils/NomadTest.sol";
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 import {TypeCasts} from "../libs/TypeCasts.sol";
 
-// TODO add Recovery and NotRecovery to names
-// TODO add governor and recovery manager to names
-// TODO change to expectCall for other tests like BridgeRouter
-// TODO: transfer governor tests depend on the current governor domain & will fail if homeDomain is not governorDomain
-// TODO: testSetRouterGlobal it doesn't work in recovery
-// TODO functionName_additionalSetupInformation_recoveryOrNot_expectedOutcome
-// state:
-//  - is governor domain; is not governor domain
-//  - is in recovery; is not in recovery
-//  - ??
-
 contract GovernanceRouterTest is NomadTest {
     using GovernanceMessage for bytes29;
     using TypedMemView for bytes;
@@ -47,7 +36,6 @@ contract GovernanceRouterTest is NomadTest {
     bytes32 callsBatchHash;
 
     bytes32 remoteGovernanceRouter;
-    uint32 remoteGovernanceDomain; // TODO: survey places this is used
     address replica;
 
     event TransferGovernor(
@@ -61,7 +49,6 @@ contract GovernanceRouterTest is NomadTest {
         // deploy fake xapp
         goodXapp = new GoodXappSimple();
         // Set remote vars
-        remoteGovernanceDomain = remoteDomain;
         remoteGovernanceRouter = vm.addr(420809).addressToBytes32();
         replica = vm.addr(999);
         // setup home and xApp connection manager

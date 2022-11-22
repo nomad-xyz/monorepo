@@ -26,7 +26,6 @@ contract GovernanceRouterRebootTest is RebootTest, GovernanceRouterTest {
         remoteGovernanceRouter = TypeCasts.addressToBytes32(
             address(getGovernanceRouter(remote))
         );
-        remoteGovernanceDomain = remoteDomain;
         replica = getXAppConnectionManager(localDomainName).domainToReplica(
             remoteDomain
         );
