@@ -10,10 +10,10 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
 
 contract NFTAccountantTest is Test {
-    address asset;
-    address user;
+    address defaultAsset;
+    address defaultUser;
     address recipient = vm.addr(111);
-    uint256 amnt = 32000;
+    uint256 defaultAmount = 32000;
     ERC20Mock mockToken;
     NFTRecoveryAccountantHarness accountant;
 
@@ -21,7 +21,7 @@ contract NFTAccountantTest is Test {
 
     event ProcessFailure(
         uint256 indexed id,
-        address indexed asset,
+        address indexed defaultAsset,
         address indexed recipient,
         uint256 amount
     );
@@ -30,10 +30,13 @@ contract NFTAccountantTest is Test {
         accountant = new NFTRecoveryAccountantHarness(address(this), recipient);
         accountant.initialize();
         // setup test vars
-        user = vm.addr(90210);
+        defaultUser = vm.addr(90210);
         mockToken = new ERC20Mock("Fake", "FK", address(1), 0);
-        asset = address(mockToken);
-        accountant.exposed_setAffectedAmount(asset, AFFECTED_TOKEN_AMOUNT);
+        defaultAsset = address(mockToken);
+        accountant.exposed_setAffectedAmount(
+            defaultAsset,
+            AFFECTED_TOKEN_AMOUNT
+        );
     }
 
     function test_affectedAssets() public {
@@ -81,7 +84,7 @@ contract NFTAccountantTest is Test {
     }
 
     function test_recordOnlyBridgeRouter() public {
-        address _user = user;
+        address _user = defaultUser;
         address _asset = address(mockToken);
         uint256 _amount = 1000;
         vm.expectRevert("only BridgeRouter");
@@ -97,7 +100,7 @@ contract NFTAccountantTest is Test {
         assertEq(accountant.owner(), address(this));
         assertEq(accountant.bridgeRouter(), address(this));
         assertEq(accountant.nextID(), 0);
-        assertEq(accountant.totalMinted(asset), 0);
+        assertEq(accountant.totalMinted(defaultAsset), 0);
         (
             address _asset,
             uint96 _amount,
@@ -108,16 +111,16 @@ contract NFTAccountantTest is Test {
         assertEq(uint256(_amount), 0);
         assertEq(_originalUser, address(0));
         assertEq(uint256(_recovered), 0);
-        assertEq(accountant.totalAffected(asset), AFFECTED_TOKEN_AMOUNT);
-        assertTrue(accountant.isAffectedAsset(asset));
-        assertEq(accountant.totalRecovered(asset), 0);
+        assertEq(accountant.totalAffected(defaultAsset), AFFECTED_TOKEN_AMOUNT);
+        assertTrue(accountant.isAffectedAsset(defaultAsset));
+        assertEq(accountant.totalRecovered(defaultAsset), 0);
         assertEq(accountant.name(), "Nomad NFT");
         assertEq(accountant.symbol(), "noNFT");
         assertEq(accountant.baseURI(), "https://nft.nomad.xyz/");
     }
 
     function recordCheckDefault() public {
-        recordCheck(user, amnt, asset);
+        recordCheck(defaultUser, defaultAmount, defaultAsset);
     }
 
     function recordCheck(
@@ -134,7 +137,7 @@ contract NFTAccountantTest is Test {
         vm.expectEmit(true, true, true, true, address(accountant));
         emit ProcessFailure(_id, _asset, _user, _amount);
         accountant.record(_asset, _user, _amount);
-        // next NFT is minted to user
+        // next NFT is minted to defaultUser
         assertEq(accountant.ownerOf(_id), _user);
         // NFT has correct details
         (
@@ -174,29 +177,32 @@ contract NFTAccountantTest is Test {
 
     function test_recordSuccessForSameAssetDifferentUser() public {
         recordCheckDefault();
-        user = vm.addr(12345);
+        defaultUser = vm.addr(12345);
         recordCheckDefault();
     }
 
     function test_recordSuccessForDifferentAssettsSameUser() public {
         recordCheckDefault();
-        asset = vm.addr(12345);
-        accountant.exposed_setAffectedAmount(asset, AFFECTED_TOKEN_AMOUNT);
+        defaultAsset = vm.addr(12345);
+        accountant.exposed_setAffectedAmount(
+            defaultAsset,
+            AFFECTED_TOKEN_AMOUNT
+        );
         recordCheckDefault();
     }
 
     function test_recordRevertsIfOverMint() public {
-        amnt = AFFECTED_TOKEN_AMOUNT * 2;
+        defaultAmount = AFFECTED_TOKEN_AMOUNT * 2;
         vm.expectRevert("overmint");
-        accountant.record(asset, user, amnt);
-        amnt = AFFECTED_TOKEN_AMOUNT;
-        accountant.record(asset, user, amnt);
+        accountant.record(defaultAsset, defaultUser, defaultAmount);
+        defaultAmount = AFFECTED_TOKEN_AMOUNT;
+        accountant.record(defaultAsset, defaultUser, defaultAmount);
     }
 
     function test_recordRevertsIfNotAffectedAsset() public {
-        asset = vm.addr(99);
+        defaultAsset = vm.addr(99);
         vm.expectRevert("overmint");
-        accountant.record(asset, user, amnt);
+        accountant.record(defaultAsset, defaultUser, defaultAmount);
     }
 
     function testFuzz_recordRevertsIfNotAffectedAsset(
@@ -222,13 +228,13 @@ contract NFTAccountantTest is Test {
 
     function test_transferReverts() public {
         recordCheckDefault();
-        vm.prank(user);
+        vm.prank(defaultUser);
         vm.expectRevert("no transfers");
-        accountant.transferFrom(user, vm.addr(99), 0);
+        accountant.transferFrom(defaultUser, vm.addr(99), 0);
         vm.expectRevert("no transfers");
-        accountant.safeTransferFrom(user, vm.addr(99), 0);
+        accountant.safeTransferFrom(defaultUser, vm.addr(99), 0);
         vm.expectRevert("no transfers");
-        accountant.safeTransferFrom(user, vm.addr(99), 0, "0x1234");
+        accountant.safeTransferFrom(defaultUser, vm.addr(99), 0, "0x1234");
     }
 
     function testFuzz_transferReverts(
