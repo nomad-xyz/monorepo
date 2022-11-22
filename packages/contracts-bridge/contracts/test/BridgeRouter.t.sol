@@ -2,12 +2,12 @@
 pragma solidity 0.7.6;
 
 // Libraries
-import {BridgeMessage} from "packages/contracts-bridge/contracts/BridgeMessage.sol";
-import {TypeCasts} from "packages/contracts-core/contracts/libs/TypeCasts.sol";
+import {BridgeMessage} from "../BridgeMessage.sol";
+import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/libs/TypeCasts.sol";
 import {TypedMemView} from "@summa-tx/memview-sol/contracts/TypedMemView.sol";
 
 // Contracts
-import {BridgeToken} from "packages/contracts-bridge/contracts/BridgeToken.sol";
+import {BridgeToken} from "../BridgeToken.sol";
 import {BridgeRouterBaseTest} from "./BridgeRouterBase.t.sol";
 
 contract BridgeRouterTest is BridgeRouterBaseTest {
@@ -39,7 +39,7 @@ contract BridgeRouterTest is BridgeRouterBaseTest {
             tokenDetailsHash
         );
         bytes memory tokenId = abi.encodePacked(
-            localDomain,
+            homeDomain,
             address(localToken).addressToBytes32()
         );
         localToken.mint(address(bridgeRouter), tokenAmount);
@@ -47,7 +47,7 @@ contract BridgeRouterTest is BridgeRouterBaseTest {
         emit Transfer(address(bridgeRouter), recipient, tokenAmount);
         vm.expectEmit(true, true, true, true, address(bridgeRouter));
         emit Receive(
-            12884901888012,
+            (uint64(remoteDomain) << 32) | uint64(nonce),
             address(localToken),
             recipient,
             address(0),
@@ -77,14 +77,20 @@ contract BridgeRouterTest is BridgeRouterBaseTest {
             tokenDetailsHash
         );
         bytes memory tokenId = abi.encodePacked(
-            localDomain,
+            homeDomain,
             token.addressToBytes32()
         );
         vm.expectEmit(true, true, false, true, token);
         // It mints new representations
         emit Transfer(address(0), recipient, tokenAmount);
         vm.expectEmit(true, true, true, true);
-        emit Receive(12884901888012, token, recipient, address(0), tokenAmount);
+        emit Receive(
+            (uint64(remoteDomain) << 32) | uint64(nonce),
+            token,
+            recipient,
+            address(0),
+            tokenAmount
+        );
         bridgeRouter.exposed_giveTokens(
             origin,
             nonce,
@@ -124,7 +130,7 @@ contract BridgeRouterTest is BridgeRouterBaseTest {
         emit Transfer(address(0), recipient, tokenAmount);
         vm.expectEmit(true, true, true, true);
         emit Receive(
-            12884901888012,
+            uint64(remoteDomain) << 32 | uint64(nonce),
             tokenRepresentation,
             recipient,
             address(0),
