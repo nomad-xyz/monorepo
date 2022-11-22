@@ -41,8 +41,10 @@ contract BridgeTestFixture is NomadTest {
     uint256 mockUpdaterPK;
     address mockUpdater;
     bytes32 remoteBridgeRouter;
-    MockHome mockHome;
     address mockReplica;
+
+    address home;
+    MockHome mockHome;
 
     // Real or mock
     TokenRegistryHarness tokenRegistry;
@@ -62,11 +64,27 @@ contract BridgeTestFixture is NomadTest {
 
     function setUp() public virtual override {
         NomadTest.setUp();
-        setUp_testFixtures();
         setUp_mockState();
+        setUp_testFixtures();
     }
 
-    function setUp_testFixtures() public {
+    function prankReplica(uint32 _d) internal {
+        vm.prank(xAppConnectionManager.domainToReplica(_d));
+    }
+
+    function prankReplica() internal {
+        prankReplica(remoteDomain);
+    }
+
+    function remoteRouter(uint32 _d) internal view returns (bytes32) {
+        return bridgeRouter.remotes(_d);
+    }
+
+    function remoteRouter() internal view returns (bytes32) {
+        return remoteRouter(remoteDomain);
+    }
+
+    function setUp_testFixtures() public virtual {
         bridgeUserTokenAmount = 10000;
         bridgeUser = vm.addr(9305);
         remoteTokenRemoteAddress = address(0xBEEF).addressToBytes32();
@@ -88,6 +106,7 @@ contract BridgeTestFixture is NomadTest {
         remoteBridgeRouter = vm.addr(99123).addressToBytes32();
         accountant = NFTRecoveryAccountantHarness(address(new MockAccountant()));
         mockHome = new MockHome(homeDomain);
+        home = address(mockHome);
         mockReplica = address(0xBEEFEFEEFEF);
 
         // Create implementations

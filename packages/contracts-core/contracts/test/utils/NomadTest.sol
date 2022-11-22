@@ -3,11 +3,15 @@ pragma solidity 0.7.6;
 
 import "forge-std/Test.sol";
 import "forge-std/console2.sol";
-import "../../UpdaterManager.sol";
 import "./BadXapps.sol";
 import "./GoodXapps.sol";
+import {UpdaterManager} from "../../UpdaterManager.sol";
 import {UpgradeBeacon} from "../../upgrade/UpgradeBeacon.sol";
 import {MerkleTest} from "./MerkleTest.sol";
+
+interface Ownable {
+    function owner() external view returns (address);
+}
 
 contract NomadTest is Test {
     uint256 updaterPK = 1;
@@ -46,6 +50,10 @@ contract NomadTest is Test {
         vm.label(fakeSigner, "fake signer");
 
         merkleTest = new MerkleTest();
+    }
+
+    function prankOwner(address _a) internal {
+        vm.prank(Ownable(_a).owner());
     }
 
     function getMessage(

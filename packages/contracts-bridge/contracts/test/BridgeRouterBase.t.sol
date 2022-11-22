@@ -27,7 +27,8 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
     bool fastLiquidityEnabled;
 
     RevertingToHook revertingToHook;
-    MockHome home;
+
+    uint256 internal constant A_LOT = 0xffff_ffff_ffff_ffff_ffff_ffff_ffff;
 
     using TypeCasts for bytes32;
     using TypeCasts for address payable;
@@ -38,13 +39,16 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
 
     function setUp() public virtual override {
         super.setUp();
+        setUp_testFixtures();
+    }
+
+    function setUp_testFixtures() public virtual override(BridgeTestFixture) {
+        super.setUp_testFixtures();
         tokenSender = bridgeUser;
         tokenReceiver = vm.addr(3040).addressToBytes32();
         senderDomain = homeDomain;
         receiverDomain = remoteDomain;
         revertingToHook = new RevertingToHook();
-
-        home = new MockHome(homeDomain);
     }
 
     function test_dustAmmountIs006() public {
@@ -54,7 +58,7 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
     function test_handleRevertsIfNotCalledByReplica() public {
         uint32 nonce = 23;
         bytes memory message = "lol";
-        bytes32 sender = remoteBridgeRouter;
+        bytes32 sender = remoteRouter();
         vm.expectRevert("!replica");
         bridgeRouter.handle(remoteDomain, nonce, sender, message);
     }
@@ -63,7 +67,7 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         uint32 nonce = 23;
         bytes memory message = "lol";
         bytes32 sender = address(0xBEEF).addressToBytes32();
-        vm.prank(mockReplica);
+        prankReplica();
         vm.expectRevert("!remote router");
         bridgeRouter.handle(remoteDomain, nonce, sender, message);
     }
@@ -76,7 +80,7 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         vm.assume(domain != remoteDomain && sender != remoteBridgeRouter);
         uint32 nonce = 23;
         bytes memory message = "lol";
-        vm.prank(mockReplica);
+        prankReplica();
         vm.expectRevert("!remote router");
         bridgeRouter.handle(domain, nonce, sender, message);
     }
@@ -84,8 +88,8 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
     function test_handleRevertsIfSenderNotCorrectDomain() public {
         uint32 nonce = 23;
         bytes memory message = "lol";
-        bytes32 sender = remoteBridgeRouter;
-        vm.prank(mockReplica);
+        bytes32 sender = remoteRouter();
+        prankReplica();
         vm.expectRevert("!remote router");
         bridgeRouter.handle(123, nonce, sender, message);
     }
@@ -93,8 +97,8 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
     function test_handleRevertsIfMalformedMessage() public {
         uint32 nonce = 23;
         bytes memory message = "lol";
-        bytes32 sender = remoteBridgeRouter;
-        vm.prank(mockReplica);
+        bytes32 sender = remoteRouter();
+        prankReplica();
         vm.expectRevert("Validity assertion failed");
         bridgeRouter.handle(remoteDomain, nonce, sender, message);
     }
@@ -112,9 +116,9 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         );
         bytes32 id = address(localToken).addressToBytes32();
         bytes memory tokenId = abi.encodePacked(remoteDomain, id);
-        bytes32 sender = remoteBridgeRouter;
         bytes memory message = abi.encodePacked(tokenId, action);
-        vm.prank(mockReplica);
+        bytes32 sender = remoteRouter();
+        prankReplica();
         vm.expectRevert("!valid action");
         bridgeRouter.handle(remoteDomain, nonce, sender, message);
     }
@@ -137,9 +141,9 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         );
         bytes32 id = address(localToken).addressToBytes32();
         bytes memory tokenId = abi.encodePacked(remoteDomain, id);
-        bytes32 sender = remoteBridgeRouter;
+        bytes32 sender = remoteRouter();
         bytes memory message = abi.encodePacked(tokenId, action);
-        vm.prank(mockReplica);
+        prankReplica();
         vm.expectRevert("!valid action");
         bridgeRouter.handle(remoteDomain, nonce, sender, message);
     }
@@ -157,9 +161,9 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         );
         bytes32 id = address(localToken).addressToBytes32();
         bytes memory tokenId = abi.encodePacked(remoteDomain, id);
-        bytes32 sender = remoteBridgeRouter;
+        bytes32 sender = remoteRouter();
         bytes memory message = abi.encodePacked(tokenId, action);
-        vm.prank(mockReplica);
+        prankReplica();
         vm.expectRevert("Validity assertion failed");
         bridgeRouter.handle(remoteDomain, nonce, sender, message);
     }
@@ -178,9 +182,9 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         // it should be bytes32
         address id = address(localToken);
         bytes memory tokenId = abi.encodePacked(remoteDomain, id);
-        bytes32 sender = remoteBridgeRouter;
+        bytes32 sender = remoteRouter();
         bytes memory message = abi.encodePacked(tokenId, action);
-        vm.prank(mockReplica);
+        prankReplica();
         vm.expectRevert("Validity assertion failed");
         bridgeRouter.handle(remoteDomain, nonce, sender, message);
     }
@@ -198,10 +202,10 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         );
         bytes32 id = address(localToken).addressToBytes32();
         bytes memory tokenId = abi.encodePacked(homeDomain, id);
-        bytes32 sender = remoteBridgeRouter;
+        bytes32 sender = remoteRouter();
         bytes memory message = abi.encodePacked(tokenId, action);
         localToken.mint(address(bridgeRouter), 100);
-        vm.prank(mockReplica);
+        prankReplica();
         bridgeRouter.handle(remoteDomain, nonce, sender, message);
         assertEq(localToken.balanceOf(tokenReceiver.bytes32ToAddress()), 100);
     }
@@ -216,7 +220,7 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         tokenAmount = bound(
             tokenAmount,
             0,
-            type(uint256).max - bridgeUserTokenAmount
+            A_LOT
         );
         localToken.mint(address(bridgeRouter), tokenAmount);
         bytes memory action = abi.encodePacked(
@@ -227,9 +231,9 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         );
         bytes32 id = address(localToken).addressToBytes32();
         bytes memory tokenId = abi.encodePacked(homeDomain, id);
-        bytes32 sender = remoteBridgeRouter;
+        bytes32 sender = remoteRouter();
         bytes memory message = abi.encodePacked(tokenId, action);
-        vm.prank(mockReplica);
+        prankReplica();
         bridgeRouter.handle(remoteDomain, nonce, sender, message);
         assertEq(
             localToken.balanceOf(tokenReceiver.bytes32ToAddress()),
@@ -241,8 +245,7 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         bytes32 hook = address(revertingToHook).addressToBytes32();
         uint256 tokenAmount = 100;
         bytes32 tokenDetailsHash = "sdf";
-        bytes32 sender = remoteBridgeRouter;
-        localToken.mint(address(bridgeRouter), tokenAmount);
+        bytes32 sender = remoteRouter();
         bytes memory extraData = "sdfdsf";
         bytes memory action = abi.encodePacked(
             BridgeMessage.Types.TransferToHook,
@@ -254,14 +257,16 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         );
         uint32 nonce = 10;
         uint32 origin = 1;
+        localToken.mint(address(bridgeRouter), tokenAmount);
         // Enroll a router for the domain = 1
-        bridgeRouter.enrollRemoteRouter(origin, remoteBridgeRouter);
+        prankOwner(address(bridgeRouter));
+        bridgeRouter.enrollRemoteRouter(origin, sender);
         bytes memory tokenId = abi.encodePacked(
             homeDomain,
             address(localToken).addressToBytes32()
         );
         bytes memory message = abi.encodePacked(tokenId, action);
-        vm.prank(mockReplica);
+        prankReplica();
         bridgeRouter.handle(origin, nonce, sender, message);
         assertEq(revertingToHook.test(), 123);
     }
@@ -278,9 +283,11 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
             0,
             type(uint256).max - bridgeUserTokenAmount
         );
+        // test state
+        uint32 nonce = 10;
+        uint32 origin = 1;
         bytes32 hook = address(revertingToHook).addressToBytes32();
-        bytes32 sender = remoteBridgeRouter;
-        localToken.mint(address(bridgeRouter), tokenAmount);
+        bytes32 sender = remoteRouter();
         bytes memory action = abi.encodePacked(
             BridgeMessage.Types.TransferToHook,
             hook,
@@ -289,16 +296,16 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
             sender,
             extraData
         );
-        uint32 nonce = 10;
-        uint32 origin = 1;
         // Enroll a router for the domain = 1
-        bridgeRouter.enrollRemoteRouter(origin, remoteBridgeRouter);
+        localToken.mint(address(bridgeRouter), tokenAmount);
+        prankOwner(address(bridgeRouter));
+        bridgeRouter.enrollRemoteRouter(origin, sender);
         bytes memory tokenId = abi.encodePacked(
             homeDomain,
             address(localToken).addressToBytes32()
         );
         bytes memory message = abi.encodePacked(tokenId, action);
-        vm.prank(mockReplica);
+        prankReplica();
         bridgeRouter.handle(origin, nonce, sender, message);
         assertEq(revertingToHook.test(), 123);
         assertEq(localToken.balanceOf(address(revertingToHook)), tokenAmount);
@@ -413,6 +420,7 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         BridgeToken(custom).initialize();
         BridgeToken(custom).transferOwnership(address(bridgeRouter));
         uint256 supply = localToken.totalSupply();
+        prankOwner(address(bridgeRouter));
         bridgeRouter.enrollCustom(domain, id, custom);
         // We mint a token to make sure we have the appropriate ownership set
         // We want to make sure we burn it afterwards
@@ -433,11 +441,12 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         BridgeToken(custom).initialize();
         BridgeToken(custom).transferOwnership(address(bridgeRouter));
         uint256 supply = localToken.totalSupply();
+        vm.startPrank(bridgeRouter.owner());
         if (domain == 0) {
             vm.expectRevert("!null domain");
         }
-        vm.prank(bridgeRouter.owner());
         bridgeRouter.enrollCustom(domain, id, custom);
+        vm.stopPrank();
         // if domain = 0, the transaction will revert (as caught above) and thus
         // we shouldn't perform an assertions
         if (domain == 0) {
@@ -469,6 +478,7 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         address custom = address(new BridgeToken());
         BridgeToken(custom).initialize();
         BridgeToken(custom).transferOwnership(address(bridgeRouter));
+        prankOwner(address(bridgeRouter));
         bridgeRouter.enrollCustom(domain, id, custom);
         vm.prank(address(bridgeRouter));
         BridgeToken(custom).mint(user, 1000);
@@ -476,6 +486,7 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         BridgeToken(newCustom).initialize();
         BridgeToken(newCustom).transferOwnership(address(bridgeRouter));
         // Enroll a new representation of the same remote token
+        prankOwner(address(bridgeRouter));
         bridgeRouter.enrollCustom(domain, id, newCustom);
         // Execute as the user who wants to migrate their tokens
         vm.prank(user);
@@ -517,7 +528,7 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         bridgeRouter.exposed_takeTokens(address(localToken), amount);
     }
 
-    function test_takeTokensRemoteSuccess() public {
+    function test_takeTokensRepresentationSuccess() public {
         uint256 amount = 100;
         uint256 startingBalance = remoteToken.balanceOf(tokenSender);
         uint256 startingSupply = remoteToken.totalSupply();
@@ -555,13 +566,12 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         bytes32 tokenAddress = remoteTokenLocalAddress.addressToBytes32();
         bytes memory tokenId = abi.encodePacked(homeDomain, tokenAddress);
         bytes memory message = abi.encodePacked(tokenId, action);
-        vm.expectEmit(true, true, true, true);
-        home.hack_expectDispatchEvent(
+        vm.expectCall(address(home), 0, abi.encodeWithSelector(
+            mockHome.dispatch.selector,
             destination,
-            remoteBridgeRouter,
-            message,
-            address(bridgeRouter)
-        );
+            remoteRouter(),
+            message
+        ));
         bridgeRouter.exposed_sendTransferMessage(destination, tokenId, action);
     }
 
@@ -808,6 +818,7 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
 
     function test_renounceOwnership() public {
         address owner = bridgeRouter.owner();
+        prankOwner(address(bridgeRouter));
         bridgeRouter.renounceOwnership();
         assertEq(bridgeRouter.owner(), owner);
     }

@@ -1,79 +1,90 @@
-// // SPDX-License-Identifier: MIT OR Apache-2.0
-// pragma solidity 0.7.6;
-// pragma abicoder v2;
+// SPDX-License-Identifier: MIT OR Apache-2.0
+pragma solidity 0.7.6;
+pragma abicoder v2;
 
-// import "forge-std/Test.sol";
-// import {RebootTest} from "./Reboot.t.sol";
-// import {NomadTest} from "@nomad-xyz/contracts-core/contracts/test/utils/NomadTest.sol";
-// import {BridgeTestFixture} from "@nomad-xyz/contracts-bridge/contracts/test/utils/BridgeTest.sol";
-// import {BridgeRouterBaseTest} from "@nomad-xyz/contracts-bridge/contracts/test/BridgeRouterBase.t.sol";
-// import {EthereumBridgeRouterTest} from "@nomad-xyz/contracts-bridge/contracts/test/EthereumBridgeRouter.t.sol";
-// import {EthereumBridgeRouterHarness} from "@nomad-xyz/contracts-bridge/contracts/test/harness/BridgeRouterHarness.sol";
-// import {NFTRecoveryAccountantHarness} from "@nomad-xyz/contracts-bridge/contracts/test/harness/NFTAccountantHarness.sol";
-// import {IBridgeRouterHarness} from "@nomad-xyz/contracts-bridge/contracts/test/harness/IBridgeRouterHarness.sol";
+import "forge-std/Test.sol";
+import {RebootTest} from "./Reboot.t.sol";
+import {UpgradeBeacon} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeacon.sol";
+import {NomadTest} from "@nomad-xyz/contracts-core/contracts/test/utils/NomadTest.sol";
+import {BridgeTestFixture} from "@nomad-xyz/contracts-bridge/contracts/test/utils/BridgeTest.sol";
+import {BridgeRouterBaseTest} from "@nomad-xyz/contracts-bridge/contracts/test/BridgeRouterBase.t.sol";
+import {BridgeRouterTest} from "@nomad-xyz/contracts-bridge/contracts/test/BridgeRouter.t.sol";
+import {EthereumBridgeRouterHarness} from "@nomad-xyz/contracts-bridge/contracts/test/harness/BridgeRouterHarness.sol";
+import {TokenRegistryHarness} from "@nomad-xyz/contracts-bridge/contracts/test/harness/TokenRegistryHarness.sol";
+import {IBridgeRouterHarness} from "@nomad-xyz/contracts-bridge/contracts/test/harness/IBridgeRouterHarness.sol";
+import {BridgeToken} from "@nomad-xyz/contracts-bridge/contracts/BridgeToken.sol";
+import {TokenRegistry} from "@nomad-xyz/contracts-bridge/contracts/TokenRegistry.sol";
 
-// contract EthBridgeRouterRebootTest is RebootTest, EthereumBridgeRouterTest {
-//     address bridgeRouterHarnessImpl;
-//     address accountantHarnessImpl;
-//     address fundsRecipient;
+contract EthereumBridgeRouterRebootTest is RebootTest, BridgeRouterTest {
+    address bridgeRouterHarnessImpl;
+    address tokenRegistryHarnessImpl;
 
-//     string constant ethereum = "ethereum";
+    string constant ethereum = "ethereum";
 
-//     function setUp() public override(EthereumBridgeRouterTest, NomadTest) {
-//         BridgeTestFixture.setUp_testFixtures();
+    function setUp() public override(BridgeRouterBaseTest, NomadTest) {
+        setUpReboot(1, "bridgerouter");
+        // load proxies
+        tokenRegistry = TokenRegistryHarness(
+            address(getTokenRegistry(ethereum))
+        );
+        vm.label(address(tokenRegistry), "tokenRegistry");
+        bridgeRouter = IBridgeRouterHarness(address(getBridgeRouter(ethereum)));
+        vm.label(address(bridgeRouter), "bridgeRouter");
+        // upgrade to harness
+        setUp_upgradeTokenRegistryHarness();
+        setUp_upgradeBridgeRouterHarness();
+        // load necessary contracts
+        xAppConnectionManager = getXAppConnectionManager(ethereum);
+        vm.label(address(xAppConnectionManager), "XAppConnectionManager");
+        upgradeBeaconController = getUpgradeBeaconController(ethereum);
+        vm.label(address(upgradeBeaconController), "upgradeBeaconController");
+        tokenBeacon = UpgradeBeacon(payable(tokenRegistry.tokenBeacon()));
+        vm.label(address(tokenBeacon), "tokenBeacon");
+        bridgeToken = BridgeToken(beaconImplementation(tokenBeacon));
+        vm.label(address(bridgeToken), "bridgeToken");
+        // home needed for vm.expectCall
+        home = address(getHome("ethereum"));
+        vm.label(home, "home");
+        BridgeRouterBaseTest.setUp_testFixtures();
+    }
 
-//         setUpReboot(1, "bridgerouter");
-//         // TODO: live accountant?
+    function setUp_upgradeTokenRegistryHarness() public {
+        tokenRegistryHarnessImpl = address(new TokenRegistryHarness());
+        vm.label(tokenRegistryHarnessImpl, "tokenRegistryHarnessImpl");
+        vm.writeJson(
+            vm.toString(tokenRegistryHarnessImpl),
+            outputPath,
+            bridgeAttributePath(ethereum, "tokenRegistry.implementation")
+        );
+        reloadConfig();
+        pushSingleUpgrade(tokenRegistryUpgrade(ethereum), ethereum);
+        prankExecuteRecoveryManager(
+            address(getGovernanceRouter(ethereum)),
+            getDomainNumber(ethereum)
+        );
+    }
 
-//         // BridgeRouter
-//         bridgeRouter = IBridgeRouterHarness(
-//             address(getBridgeRouter(localDomainName))
-//         );
-//         accountant = NFTRecoveryAccountantHarness(
-//             address(getAccountant(ethereum))
-//         );
+    function setUp_upgradeBridgeRouterHarness() public {
+        bridgeRouterHarnessImpl = address(new EthereumBridgeRouterHarness(address(getAccountant(ethereum))));
+        vm.label(bridgeRouterHarnessImpl, "bridgeRouterHarnessImpl");
+        vm.writeJson(
+            vm.toString(bridgeRouterHarnessImpl),
+            outputPath,
+            bridgeAttributePath(ethereum, "bridgeRouter.implementation")
+        );
+        reloadConfig();
+        pushSingleUpgrade(bridgeRouterUpgrade(ethereum), ethereum);
+        prankExecuteRecoveryManager(
+            address(getGovernanceRouter(ethereum)),
+            getDomainNumber(ethereum)
+        );
+    }
 
-//         fundsRecipient = vm.addr(0x01189998819991197253);
-//         // accountant must happen first so that bridgerouter connects to it
-//         // right
-//         setUp_upgradeAccountantHarness();
-//         setUp_upgradeBridgeRouterHarness();
-//     }
-
-//     function setUp_upgradeBridgeRouterHarness() public {
-//         bridgeRouterHarnessImpl = address(
-//             new EthereumBridgeRouterHarness(address(getAccountant(ethereum)))
-//         );
-//         vm.writeJson(
-//             vm.toString(bridgeRouterHarnessImpl),
-//             outputPath,
-//             bridgeAttributePath(ethereum, "bridgeRouter.implementation")
-//         );
-//         reloadConfig();
-//         pushSingleUpgrade(bridgeRouterUpgrade(ethereum), ethereum);
-//         prankExecuteRecoveryManager(
-//             address(getGovernanceRouter(ethereum)),
-//             getDomainNumber(ethereum)
-//         );
-//     }
-
-//     function setUp_upgradeAccountantHarness() public {
-//         accountantHarnessImpl = address(
-//             new NFTRecoveryAccountantHarness(
-//                 address(getBridgeRouter(ethereum)),
-//                 fundsRecipient
-//             )
-//         );
-//         vm.writeJson(
-//             vm.toString(accountantHarnessImpl),
-//             outputPath,
-//             bridgeAttributePath(ethereum, "accountant.implementation")
-//         );
-//         reloadConfig();
-//         pushSingleUpgrade(accountantUpgrade(ethereum), ethereum);
-//         prankExecuteRecoveryManager(
-//             address(getAccountant(ethereum)),
-//             getDomainNumber(ethereum)
-//         );
-//     }
-// }
+    function test_setUp_rebootBridgeRouter() public {
+        // check that the harnesses have harness methods available
+        assertEq(bridgeRouterHarnessImpl, bridgeRouterUpgrade(ethereum).implementation);
+        assertEq(tokenRegistryHarnessImpl, tokenRegistryUpgrade(ethereum).implementation);
+        bridgeRouter.exposed_dust(address(this));
+        tokenRegistry.exposed_localDomain();
+    }
+}
