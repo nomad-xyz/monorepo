@@ -1,6 +1,6 @@
 import { NomadContext } from "@nomad-xyz/sdk";
 import { defaultGoldSkySecret, Goldsky } from "./goldsky";
-import { MonitoringCollector} from "./server";
+import { MonitoringCollector} from "./metrics";
 import { TaskRunner } from "./taskRunner";
 import { createLogger } from "./utils";
 
@@ -47,7 +47,7 @@ const environment = 'production';
     homeStatus,
   ];
 
-  const p = await Promise.all(tasks.map(task => task.runTasks()));
+  const p = Promise.all(tasks.map(task => task.runTasks()));
 
   await Promise.all([
     p,
