@@ -5,6 +5,12 @@ import { sleep } from './utils';
 
 export const defaultGoldSkySecret = 'mpa%H&RAHu9;eUe';
 
+export enum GoldSkyQuery {
+  StagingProcessFailureEvents = 'StagingProcessFailureEvents',
+  StagingRecoveryEvents = 'StagingRecoveryEvents',
+  NumberMessages = 'NumberMessages',
+};
+
 export class Goldsky extends TaskRunner {
   protected secret: string;
   _metrics: MonitoringCollector;
@@ -75,7 +81,7 @@ export class Goldsky extends TaskRunner {
 
     const response = await this.record(
       request(this.uri, query, {}, this.headers),
-      'goldsky', 'StagingProcessFailureEvents', 'kek'
+      'goldsky', GoldSkyQuery.StagingProcessFailureEvents, 'kek'
     );
 
     console.log('numProcessFailureEvents response', response);
@@ -101,7 +107,7 @@ export class Goldsky extends TaskRunner {
 
     const response = await this.record(
       request(this.uri, query, {}, this.headers),
-      'goldsky', 'StagingRecoveryEvents', 'kek'
+      'goldsky', GoldSkyQuery.StagingRecoveryEvents, 'kek'
     );
 
     console.log('numRecoveryEvents response', response);
@@ -125,7 +131,7 @@ export class Goldsky extends TaskRunner {
 
     const response = await this.record(
       request(this.uri, query, {}, this.headers),
-      'goldsky', 'NumberMessages', 'kek'
+      'goldsky', GoldSkyQuery.NumberMessages, 'kek'
     );
     response.number_messages.forEach((row: {
       origin: string,
