@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity 0.7.6;
 
-import {TypeCasts} from "packages/contracts-core/contracts/libs/TypeCasts.sol";
+import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/libs/TypeCasts.sol";
 import {BridgeRouterBaseTest} from "./BridgeRouterBase.t.sol";
 
 contract EthereumBridgeRouterTest is BridgeRouterBaseTest {
@@ -15,9 +15,9 @@ contract EthereumBridgeRouterTest is BridgeRouterBaseTest {
     }
 
     function test_isAffectedAsset() public view {
-        address payable[14] memory affected = mockAccountant.affectedAssets();
+        address payable[14] memory affected = accountant.affectedAssets();
         for (uint256 i = 0; i < affected.length; i++) {
-            require(mockAccountant.isAffectedAsset(affected[i]));
+            require(accountant.isAffectedAsset(affected[i]));
         }
     }
 
@@ -39,7 +39,7 @@ contract EthereumBridgeRouterTest is BridgeRouterBaseTest {
         // test with each affected tokens
         // This checks for events on the mock accountant
         // Accountant logic is tested separately
-        address payable[14] memory affected = mockAccountant.affectedAssets();
+        address payable[14] memory affected = accountant.affectedAssets();
         for (uint256 i = 0; i < affected.length; i++) {
             address a = affected[i];
             vm.expectEmit(
@@ -55,7 +55,7 @@ contract EthereumBridgeRouterTest is BridgeRouterBaseTest {
     }
 
     function test_exitBridgeOnly() public {
-        address payable[14] memory affected = mockAccountant.affectedAssets();
+        address payable[14] memory affected = accountant.affectedAssets();
         for (uint256 i = 0; i < affected.length; i++) {
             vm.expectRevert();
             bridgeRouter.send(

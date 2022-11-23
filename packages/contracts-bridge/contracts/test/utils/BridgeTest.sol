@@ -11,9 +11,11 @@ import {EthereumBridgeRouterHarness} from "../harness/BridgeRouterHarness.sol";
 import {BridgeRouterHarness} from "../harness/BridgeRouterHarness.sol";
 import {IBridgeRouterHarness} from "../harness/IBridgeRouterHarness.sol";
 import {TokenRegistryHarness} from "../harness/TokenRegistryHarness.sol";
+import {NFTRecoveryAccountantHarness} from "../harness/NFTAccountantHarness.sol";
 import {TokenRegistry} from "../../TokenRegistry.sol";
 import {BridgeToken} from "../../BridgeToken.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
+import {NomadTest} from "@nomad-xyz/contracts-core/contracts/test/utils/NomadTest.sol";
 
 // Upgrade Contracts
 import {UpgradeBeacon} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeacon.sol";
@@ -25,61 +27,86 @@ import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/XAppConnectionManag
 
 import "forge-std/Test.sol";
 
-contract BridgeTestFixture is Test {
+contract BridgeTestFixture is NomadTest {
     using TypeCasts for bytes32;
     using TypeCasts for address;
     using TypeCasts for address payable;
 
-    // Local variables
+    // Fixtures
+    address bridgeUser;
+    uint256 bridgeUserTokenAmount;
+    ERC20Mock localToken;
+
+    // Mock-only state
     uint256 mockUpdaterPK;
     address mockUpdater;
-    address bridgeUser;
-    uint32 localDomain;
-    uint256 bridgeUserTokenAmount;
-
-    // Remote variables
     bytes32 remoteBridgeRouter;
-    uint32 remoteDomain;
-
-    MockAccountant mockAccountant;
-    MockHome mockHome;
     address mockReplica;
+
+    address home;
+    MockHome mockHome;
+
+    // Real or mock
+    TokenRegistryHarness tokenRegistry;
     IBridgeRouterHarness bridgeRouter;
     XAppConnectionManager xAppConnectionManager;
     UpgradeBeaconController upgradeBeaconController;
     UpgradeBeacon tokenBeacon;
-
-    // Token Registry for all tokens in the domain
-    TokenRegistryHarness tokenRegistry;
     BridgeToken bridgeToken;
 
+    // eth-only
+    NFTRecoveryAccountantHarness accountant;
+
     // Implementation contract for all tokens in the domain
-    ERC20Mock localToken;
     address remoteTokenLocalAddress;
     bytes32 remoteTokenRemoteAddress;
     BridgeToken remoteToken;
 
-    function setUp() public virtual {
+    function setUp() public virtual override {
+        NomadTest.setUp();
+        setUp_mockState();
+        setUp_testFixtures();
+    }
+
+    function prankReplica(uint32 _d) internal {
+        vm.prank(xAppConnectionManager.domainToReplica(_d));
+    }
+
+    function prankReplica() internal {
+        prankReplica(remoteDomain);
+    }
+
+    function remoteRouter(uint32 _d) internal view returns (bytes32) {
+        return bridgeRouter.remotes(_d);
+    }
+
+    function remoteRouter() internal view returns (bytes32) {
+        return remoteRouter(remoteDomain);
+    }
+
+    function setUp_testFixtures() public virtual {
+        bridgeUserTokenAmount = 10000;
+        bridgeUser = vm.addr(9305);
+        remoteTokenRemoteAddress = address(0xBEEF).addressToBytes32();
+
+        remoteTokenLocalAddress = createRemoteToken(
+            remoteDomain,
+            remoteTokenRemoteAddress
+        );
+
+        setUp_deployLocalToken();
+    }
+
+    function setUp_mockState() public {
         // Mocks
         // The Private Key numbers are random and of no significance. They
         // serve as a seed for the cheatcode to generate a pseudorandom address.
         mockUpdaterPK = 420;
         mockUpdater = vm.addr(mockUpdaterPK);
-        bridgeUser = vm.addr(9305);
         remoteBridgeRouter = vm.addr(99123).addressToBytes32();
-        bridgeUserTokenAmount = 10000;
-        mockAccountant = new MockAccountant();
-
-        localToken = new ERC20Mock(
-            "Fake",
-            "FK",
-            bridgeUser,
-            bridgeUserTokenAmount
-        );
-        localDomain = 1500;
-        remoteDomain = 3000;
-        remoteTokenRemoteAddress = address(0xBEEF).addressToBytes32();
-        mockHome = new MockHome(localDomain);
+        accountant = NFTRecoveryAccountantHarness(address(new MockAccountant()));
+        mockHome = new MockHome(homeDomain);
+        home = address(mockHome);
         mockReplica = address(0xBEEFEFEEFEF);
 
         // Create implementations
@@ -98,16 +125,22 @@ contract BridgeTestFixture is Test {
         }
         initializeContracts();
         initializeBridgeRouter();
-        remoteTokenLocalAddress = createRemoteToken(
-            remoteDomain,
-            remoteTokenRemoteAddress
+
+    }
+
+    function setUp_deployLocalToken() public {
+        localToken = new ERC20Mock(
+            "Fake",
+            "FK",
+            bridgeUser,
+            bridgeUserTokenAmount
         );
     }
 
     function setUpEthereumBridgeRouter() public {
-        mockAccountant = new MockAccountant();
+        accountant = NFTRecoveryAccountantHarness(address(new MockAccountant()));
         bridgeRouter = IBridgeRouterHarness(
-            address(new EthereumBridgeRouterHarness(address(mockAccountant)))
+            address(new EthereumBridgeRouterHarness(address(accountant)))
         );
     }
 
