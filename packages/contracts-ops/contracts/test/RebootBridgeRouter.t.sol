@@ -82,8 +82,14 @@ contract BridgeRouterRebootTest is RebootTest, BridgeRouterTest {
 
     function test_setUp_rebootBridgeRouter() public {
         // check that the harnesses have harness methods available
-        assertEq(bridgeRouterHarnessImpl, bridgeRouterUpgrade(ethereum).implementation);
-        assertEq(tokenRegistryHarnessImpl, tokenRegistryUpgrade(ethereum).implementation);
+        assertEq(
+            bridgeRouterHarnessImpl,
+            bridgeRouterUpgrade(ethereum).implementation
+        );
+        assertEq(
+            tokenRegistryHarnessImpl,
+            tokenRegistryUpgrade(ethereum).implementation
+        );
         bridgeRouter.exposed_dust(address(this));
         tokenRegistry.exposed_localDomain();
     }

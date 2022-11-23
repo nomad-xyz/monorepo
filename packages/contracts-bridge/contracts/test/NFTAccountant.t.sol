@@ -2,52 +2,17 @@
 pragma solidity 0.7.6;
 
 import "forge-std/Test.sol";
-import "forge-std/console2.sol";
 
 import {NFTAccountant} from "../accountants/NFTAccountant.sol";
-import {NFTRecoveryAccountantHarness} from "./harness/NFTAccountantHarness.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
+import {AccountantTest} from "./utils/AccountantTest.sol";
 
-contract NFTAccountantTest is Test {
-    address defaultAsset;
-    address defaultUser;
-    address recipient = vm.addr(111);
-    uint256 defaultAmount = 32000;
-    address bridgeRouter;
-    ERC20Mock mockToken;
-    NFTRecoveryAccountantHarness accountant;
-
-    uint256 public constant AFFECTED_TOKEN_AMOUNT = 100_000_000;
-
+contract NFTAccountantTest is AccountantTest {
     event ProcessFailure(
         uint256 indexed id,
         address indexed user,
         address indexed recipient,
         uint256 amount
     );
-
-    function setUp() public virtual {
-        setUp_vars();
-        accountant = new NFTRecoveryAccountantHarness(bridgeRouter, recipient);
-        accountant.initialize();
-        setUp_mocks();
-    }
-
-    function setUp_vars() public {
-        // setup test vars
-        defaultUser = vm.addr(90210);
-        mockToken = new ERC20Mock("Fake", "FK", address(1), 0);
-        defaultAsset = address(mockToken);
-        bridgeRouter = address(this);
-    }
-
-    function setUp_mocks() public {
-        accountant.exposed_setAffectedAmount(
-            defaultAsset,
-            AFFECTED_TOKEN_AMOUNT
-        );
-    }
 
     function test_affectedAssets() public {
         address payable[14] memory affectedAssets = [
