@@ -20,4 +20,12 @@ contract MockXAppConnectionManager {
     function localDomain() public view returns (uint32) {
         return home.localDomain();
     }
+
+    function domainToReplica(uint32) public view returns (address) {
+        return replica;
+    }
+
+    fallback() external {
+        revert("Mock does not support function");
+    }
 }

@@ -26,14 +26,10 @@ contract GovernanceRouterRebootTest is RebootTest, GovernanceRouterTest {
         remoteGovernanceRouter = TypeCasts.addressToBytes32(
             address(getGovernanceRouter(remote))
         );
-        replica = getXAppConnectionManager(localDomainName).domainToReplica(
-            remoteDomain
-        );
-        xAppConnectionManager = MockXAppConnectionManager(
-            address(getXAppConnectionManager(localDomainName))
-        );
+        xAppConnectionManager = getXAppConnectionManager(localDomainName);
         home = MockHome(address(getHome(localDomainName)));
-        goodXapp = new GoodXappSimple();
+        // set up fixtures
+        GovernanceRouterTest.setUp_testFixtures();
     }
 
     function setUp_upgradeGovernanceRouterHarness() public {

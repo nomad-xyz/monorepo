@@ -7,11 +7,11 @@ import {NomadTest} from "@nomad-xyz/contracts-core/contracts/test/utils/NomadTes
 
 contract RebootTest is RebootLogic, NomadTest {
     string remote;
+    string constant _domain = "ethereum";
 
     function setUpReboot(uint256 addToBlock, string memory testName) public {
         // ALL
         vm.createSelectFork(vm.envString("RPC_URL"), 15_977_624 + addToBlock);
-        string memory _domain = "ethereum";
         // read fresh config from config.json and write it to a test-specific file
         // so that state from each test don't collide
         // NOTE: this is super messy.. it would be better if modifications were stored to memory within the test run
