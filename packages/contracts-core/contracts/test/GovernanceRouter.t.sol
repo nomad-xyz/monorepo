@@ -130,7 +130,11 @@ contract GovernanceRouterTest is NomadTest {
         );
     }
 
-    function test_handleOnlyReplicaRecovery() runNonGoverning runInRecovery public {
+    function test_handleOnlyReplicaRecovery()
+        public
+        runNonGoverning
+        runInRecovery
+    {
         // calling handle from non-replica reverts
         vm.prank(vm.addr(789));
         vm.expectRevert("!replica");
@@ -203,7 +207,11 @@ contract GovernanceRouterTest is NomadTest {
         );
     }
 
-    function test_handleOnlyGovernorRouterRecovery() runNonGoverning runInRecovery public {
+    function test_handleOnlyGovernorRouterRecovery()
+        public
+        runNonGoverning
+        runInRecovery
+    {
         // sender is wrong
         prankReplica();
         vm.expectRevert("!governorRouter");
@@ -246,7 +254,7 @@ contract GovernanceRouterTest is NomadTest {
 
     event BatchReceived(bytes32 indexed batchHash);
 
-    function test_handleBatchCorrectForm() runNonGoverning public {
+    function test_handleBatchCorrectForm() public runNonGoverning {
         // Create test batch for tests
         address to = address(0xBEEF);
         bytes memory data = "";
@@ -574,7 +582,7 @@ contract GovernanceRouterTest is NomadTest {
         bytes[8] memory fuzzData,
         uint32[8] memory fuzzDomains,
         bytes32[8] memory fuzzRouter
-    ) runNotInRecovery public {
+    ) public runNotInRecovery {
         // construct empty parameter arrays
         GovernanceMessage.Call[]
             memory localCalls = new GovernanceMessage.Call[](8);
@@ -676,7 +684,10 @@ contract GovernanceRouterTest is NomadTest {
         );
     }
 
-    function test_callRemoteOnlyGovernorFuzzed(address nonGovernor) runNotInRecovery public {
+    function test_callRemoteOnlyGovernorFuzzed(address nonGovernor)
+        public
+        runNotInRecovery
+    {
         vm.assume(
             nonGovernor != governanceRouter.governor() &&
                 nonGovernor != address(governanceRouter)
@@ -776,7 +787,10 @@ contract GovernanceRouterTest is NomadTest {
         assertEq(uint256(governanceRouter.governorDomain()), newGovernorDomain);
     }
 
-    function test_transferGovernorRemoteGovernorMustHaveRouter() runNotInRecovery public {
+    function test_transferGovernorRemoteGovernorMustHaveRouter()
+        public
+        runNotInRecovery
+    {
         uint32 newDomain = 123;
         address newGovernor = vm.addr(9998888999);
         prankGovernor();
@@ -788,7 +802,7 @@ contract GovernanceRouterTest is NomadTest {
         uint32 newDomain,
         address newGovernor,
         bytes32 router
-    ) runNotInRecovery public {
+    ) public runNotInRecovery {
         vm.assume(
             newDomain != 0 &&
                 newDomain != homeDomain &&
@@ -1416,7 +1430,6 @@ contract GovernanceRouterTest is NomadTest {
         assertEq(governanceRouter.recoveryActiveAt(), 0);
     }
 
-
     modifier runNotInRecovery() {
         if (governanceRouter.inRecovery()) exitRecovery();
         _;
@@ -1453,5 +1466,4 @@ contract GovernanceRouterTest is NomadTest {
     function prankRecoveryManager() internal {
         vm.prank(governanceRouter.recoveryManager());
     }
-
 }
