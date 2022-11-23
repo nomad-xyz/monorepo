@@ -74,11 +74,13 @@ export class MonitoringCollector extends MetricsCollector {
   private metricsLatency: Histogram<string>;
   private numMessages: Gauge<string>;
   private homeFailedGauge: Gauge<string>;
-  private goldskyRequests: Counter<string>;
-  private goldskyLatency: Histogram<string>;
-  private goldskyErrors: Counter<string>;
+  // private goldskyRequests: Counter<string>;
+  // private goldskyLatency: Histogram<string>;
+  // private goldskyErrors: Counter<string>;
   private numProcessFailureEvents: Counter<string>;
   private numRecoveryEvents: Counter<string>;
+  private requests: Histogram<string>;
+  private requestErrors: Counter<string>;
 
   constructor(environment: string, logger: Logger) {
     super(environment, logger);
@@ -89,24 +91,26 @@ export class MonitoringCollector extends MetricsCollector {
       labelNames: ['stage', 'network', 'replica', 'environment'],
     });
 
-    this.goldskyRequests = new Counter({
-      name: prefix + '_goldsky_requests',
-      help: 'Count that indicates how many Goldsky requests are made',
-      labelNames: ['query', 'environment'],
-    });
+    // this.goldskyRequests = new Counter({
+    //   name: prefix + '_goldsky_requests',
+    //   help: 'Count that indicates how many Goldsky requests are made',
+    //   labelNames: ['query', 'environment'],
+    // });
 
-    this.goldskyLatency = new Histogram({
-      name: prefix + '_goldsky_latency',
-      help: 'Histogram that tracks latency of a Goldsky request in ms',
-      labelNames: ['query', 'environment'],
-      buckets,
-    });
+    // this.goldskyLatency = new Histogram({
+    //   name: prefix + '_goldsky_latency',
+    //   help: 'Histogram that tracks latency of a Goldsky request in ms',
+    //   labelNames: ['query', 'environment'],
+    //   buckets,
+    // });
 
-    this.goldskyErrors = new Counter({
-      name: prefix + '_goldsky_errors',
-      help: 'Counter that tracks error codes from Goldsky endpoint',
-      labelNames: ['code', 'query', 'environment'],
-    });
+    // this.goldskyErrors = new Counter({
+    //   name: prefix + '_goldsky_errors',
+    //   help: 'Counter that tracks error codes from Goldsky endpoint',
+    //   labelNames: ['code', 'query', 'environment'],
+    // });
+
+
 
     this.metricsLatency = new Histogram({
       name: prefix + '_metrics_latency',
@@ -134,6 +138,20 @@ export class MonitoringCollector extends MetricsCollector {
       help: 'Counter that tracks the number of recovery events. This event is emitted when an NFT is used to access funds.',
       labelNames: ['asset', 'environment'],
     });
+
+    this.requests = new Histogram({
+      name: prefix + '_requests',
+      help: 'Histogram that tracks latency of response to metrics request in ms',
+      labelNames: ['domain', 'query', 'labels', 'environment'],
+      buckets,
+    });
+
+    this.requestErrors = new Counter({
+      name: prefix + '_request_errors',
+      help: 'Histogram that tracks latency of response to metrics request in ms',
+      labelNames: ['domain', 'query', 'labels', 'environment'],
+    });
+
   }
 
   /**
@@ -167,16 +185,49 @@ export class MonitoringCollector extends MetricsCollector {
     this.metricsLatency.labels(this.environment).observe(ms);
   }
 
-  incGoldskyRequests(query: GoldSkyQuery, req?: number): void {
-    this.goldskyRequests.labels(query, this.environment).inc(req);
+  incNumProcessFailureEvents(asset: string, environment: string): void {
+    this.numProcessFailureEvents.labels(asset, environment).inc();
   }
 
-  observeGoldskyLatency(query: GoldSkyQuery, ms: number): void {
-    this.goldskyLatency.labels(query, this.environment).observe(ms);
+  incNumRecoveryEvents(asset: string, environment: string): void {
+    this.numRecoveryEvents.labels(asset, environment).inc();
   }
 
-  incGoldskyErrors(query: GoldSkyQuery, code: string): void {
-    this.goldskyErrors.labels(code, query, this.environment).inc();
+  // incGoldskyRequests(query: GoldSkyQuery, req?: number): void {
+  //   this.goldskyRequests.labels(query, this.environment).inc(req);
+  // }
+
+  // observeGoldskyLatency(query: GoldSkyQuery, ms: number): void {
+  //   this.goldskyLatency.labels(query, this.environment).observe(ms);
+  // }
+
+  // incGoldskyErrors(query: GoldSkyQuery, code: string): void {
+  //   this.goldskyErrors.labels(code, query, this.environment).inc();
+  // }
+
+  // observeRPCLatency(query: string, provider: string, ms: number): void {
+  //   this.rpcLatency.labels(query, this.environment).observe(ms);
+  // }
+
+  // incRPCErrors(query: string, provider: string, code: string): void {
+  //   this.rpcErrors.labels(code, query, this.environment).inc();
+  // }
+
+  async recordRequest<T>(request: Promise<T>, domain: string, requestName: string, ...labels: string[]): Promise<T> {
+    const start = Date.now();
+    let result: T;
+    console.log('--- 1--->', domain, requestName, labels);
+    try {
+      result = await request;
+    } catch(e) {
+      this.requestErrors.labels(domain, requestName, ...labels, this.environment).inc();
+      throw e;
+    }
+    
+    const duration = Date.now() - start;
+    this.requests.labels(domain, requestName, ...labels, this.environment).observe(duration);
+    
+    return result;
   }
 }
 // TODO: might want to just copy the MetricsCollector from here:

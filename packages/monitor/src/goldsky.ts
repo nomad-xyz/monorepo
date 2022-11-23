@@ -1,5 +1,5 @@
 import { request, gql } from 'graphql-request';
-import { MessageStages, MonitoringCollector } from './server';
+import { MessageStages, MonitoringCollector } from './metrics';
 import { TaskRunner } from './taskRunner';
 import { sleep } from './utils';
 
@@ -7,12 +7,16 @@ export const defaultGoldSkySecret = 'mpa%H&RAHu9;eUe';
 
 export class Goldsky extends TaskRunner {
   protected secret: string;
-  metrics: MonitoringCollector;
+  _metrics: MonitoringCollector;
 
   constructor(secret: string, mc: MonitoringCollector) {
     super();
     this.secret = secret;
-    this.metrics = mc;
+    this._metrics = mc;
+  }
+
+  get metrics(): MonitoringCollector {
+    return this._metrics;
   }
 
   /**
@@ -69,7 +73,10 @@ export class Goldsky extends TaskRunner {
       }
     `;
 
-    const response = await request(this.uri, query, {}, this.headers);
+    const response = await this.record(
+      request(this.uri, query, {}, this.headers),
+      'goldsky', 'StagingProcessFailureEvents', 'kek'
+    );
 
     console.log('numProcessFailureEvents response', response);
 
@@ -92,7 +99,10 @@ export class Goldsky extends TaskRunner {
       }
     `;
 
-    const response = await request(this.uri, query, {}, this.headers);
+    const response = await this.record(
+      request(this.uri, query, {}, this.headers),
+      'goldsky', 'StagingRecoveryEvents', 'kek'
+    );
 
     console.log('numRecoveryEvents response', response);
 
@@ -101,7 +111,7 @@ export class Goldsky extends TaskRunner {
 
   async numMessages(): Promise<void> {
     const query = gql`
-      query Query {
+      query NumberMessages {
         number_messages {
           origin
           destination
@@ -113,7 +123,10 @@ export class Goldsky extends TaskRunner {
       }
     `;
 
-    const response = await request(this.uri, query, {}, this.headers);
+    const response = await this.record(
+      request(this.uri, query, {}, this.headers),
+      'goldsky', 'NumberMessages', 'kek'
+    );
     response.number_messages.forEach((row: {
       origin: string,
       destination: string,

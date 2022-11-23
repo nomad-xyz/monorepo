@@ -1,13 +1,13 @@
 import { NomadContext } from "@nomad-xyz/sdk";
 import Logger from "bunyan";
-import { MonitoringCollector } from "./server";
+import { MonitoringCollector } from "./metrics";
 import { TaskRunner } from "./taskRunner";
 import { sleep } from "./utils";
 
 export class HomeStatusCollector extends TaskRunner {
     ctx: NomadContext;
     logger: Logger;
-    metrics: MonitoringCollector;
+    _metrics: MonitoringCollector;
   
     constructor(
       ctx: NomadContext,
@@ -17,7 +17,11 @@ export class HomeStatusCollector extends TaskRunner {
       super();
       this.ctx = ctx;
       this.logger = logger;
-      this.metrics = metrics;
+      this._metrics = metrics;
+    }
+
+    get metrics(): MonitoringCollector {
+      return this._metrics;
     }
   
     async runTasks(): Promise<void> {
@@ -50,7 +54,7 @@ export class HomeStatusCollector extends TaskRunner {
       const domain = this.ctx.resolveDomain(nameOrDomain);
       const home = this.ctx.mustGetCore(domain).home;
       console.log(`Check home ${nameOrDomain}`);
-      const state = await home.state();
+      const state = await this.record(home.state(), 'RPC', 'HomeState', this.ctx.getDomain(domain)?.name.toString() || 'lol' );
       console.log(`Got home ${nameOrDomain}`);
       if (state === 2) {
         this.metrics.setHomeState(nameOrDomain.toString(), true);
