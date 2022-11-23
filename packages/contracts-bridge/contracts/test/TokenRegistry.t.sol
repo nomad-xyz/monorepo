@@ -18,7 +18,7 @@ contract TokenRegistryTest is BridgeTestFixture {
     using TypedMemView for bytes29;
     using BridgeMessage for bytes29;
 
-    function setUp() public override {
+    function setUp() public virtual override {
         super.setUp();
     }
 
@@ -100,7 +100,10 @@ contract TokenRegistryTest is BridgeTestFixture {
         bytes32 newId = bytes32("hey yoou");
         // It's the second contract that is been deployed by tokenRegistry
         // It deploys a bridgeToken during setUp() of BridgeTest
-        address calculated = computeCreateAddress(address(tokenRegistry), 2);
+        address calculated = computeCreateAddress(
+            address(tokenRegistry),
+            vm.getNonce(address(tokenRegistry))
+        );
         vm.expectEmit(true, true, true, false);
         emit TokenDeployed(newDomain, newId, calculated);
         vm.prank(tokenRegistry.owner());
@@ -138,7 +141,10 @@ contract TokenRegistryTest is BridgeTestFixture {
         }
         // It's the second contract that is been deployed by tokenRegistry
         // It deploys a bridgeToken during setUp() of BridgeTest
-        address calculated = computeCreateAddress(address(tokenRegistry), 2);
+        address calculated = computeCreateAddress(
+            address(tokenRegistry),
+            vm.getNonce(address(tokenRegistry))
+        );
         vm.expectEmit(true, true, true, false);
         emit TokenDeployed(domain, id, calculated);
         address deployed = tokenRegistry.ensureLocalToken(domain, id);
@@ -341,7 +347,8 @@ contract TokenRegistryTest is BridgeTestFixture {
         vm.assume(
             newRemoteDomain != remoteDomain &&
                 newRemoteDomain != homeDomain &&
-                newRemoteDomain != 0
+                newRemoteDomain != 0 &&
+                newRemoteToken != bytes32(0)
         );
         address local = createRemoteToken(newRemoteDomain, newRemoteToken);
         require(
@@ -464,7 +471,10 @@ contract TokenRegistryTest is BridgeTestFixture {
         bytes32 id = "It's over 9000";
         address repr = tokenRegistry.getRepresentationAddress(domain, id);
         assertEq(repr, address(0));
-        address calculated = computeCreateAddress(address(tokenRegistry), 2);
+        address calculated = computeCreateAddress(
+            address(tokenRegistry),
+            vm.getNonce(address(tokenRegistry))
+        );
         // test event emmission
         vm.expectEmit(true, true, true, false);
         emit TokenDeployed(domain, id, calculated);
@@ -490,7 +500,10 @@ contract TokenRegistryTest is BridgeTestFixture {
         vm.assume(domain != homeDomain && domain != 0);
         address repr = tokenRegistry.getRepresentationAddress(domain, id);
         assertEq(repr, address(0));
-        address calculated = computeCreateAddress(address(tokenRegistry), 2);
+        address calculated = computeCreateAddress(
+            address(tokenRegistry),
+            vm.getNonce(address(tokenRegistry))
+        );
         // test event emmission
         vm.expectEmit(true, true, true, false);
         emit TokenDeployed(domain, id, calculated);
