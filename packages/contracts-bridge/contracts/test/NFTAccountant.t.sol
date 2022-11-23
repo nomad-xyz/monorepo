@@ -14,6 +14,7 @@ contract NFTAccountantTest is Test {
     address defaultUser;
     address recipient = vm.addr(111);
     uint256 defaultAmount = 32000;
+    address bridgeRouter;
     ERC20Mock mockToken;
     NFTRecoveryAccountantHarness accountant;
 
@@ -21,18 +22,27 @@ contract NFTAccountantTest is Test {
 
     event ProcessFailure(
         uint256 indexed id,
-        address indexed defaultAsset,
+        address indexed user,
         address indexed recipient,
         uint256 amount
     );
 
     function setUp() public virtual {
-        accountant = new NFTRecoveryAccountantHarness(address(this), recipient);
+        setUp_vars();
+        accountant = new NFTRecoveryAccountantHarness(bridgeRouter, recipient);
         accountant.initialize();
+        setUp_mocks();
+    }
+
+    function setUp_vars() public {
         // setup test vars
         defaultUser = vm.addr(90210);
         mockToken = new ERC20Mock("Fake", "FK", address(1), 0);
         defaultAsset = address(mockToken);
+        bridgeRouter = address(this);
+    }
+
+    function setUp_mocks() public {
         accountant.exposed_setAffectedAmount(
             defaultAsset,
             AFFECTED_TOKEN_AMOUNT
@@ -137,7 +147,7 @@ contract NFTAccountantTest is Test {
         vm.expectEmit(true, true, true, true, address(accountant));
         emit ProcessFailure(_id, _asset, _user, _amount);
         accountant.record(_asset, _user, _amount);
-        // next NFT is minted to defaultUser
+        // next NFT is minted to user
         assertEq(accountant.ownerOf(_id), _user);
         // NFT has correct details
         (
@@ -160,7 +170,6 @@ contract NFTAccountantTest is Test {
         address payable _user,
         uint256 _amount
     ) public {
-        vm.assume(canAcceptNft(_user));
         address payable _asset = checkUserAndGetAsset(_user, assetIndex);
         _amount = bound(_amount, 0, accountant.totalAffected(_asset));
         recordCheck(_user, _amount, _asset);
@@ -259,7 +268,7 @@ contract NFTAccountantTest is Test {
         internal
         returns (address payable _asset)
     {
-        vm.assume(_user != address(0));
+        vm.assume(canAcceptNft(_user));
         _assetIndex = uint8(bound(_assetIndex, 0, 13));
         _asset = accountant.affectedAssets()[_assetIndex];
     }

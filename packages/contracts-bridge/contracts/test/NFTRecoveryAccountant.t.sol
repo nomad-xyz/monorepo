@@ -94,8 +94,7 @@ contract NFTRecoveryAccountantTest is Test {
         uint256 famount,
         uint256 collected
     ) public {
-        assetIndex = uint8(bound(assetIndex, 0, 13));
-        address payable asset = accountant.affectedAssets()[assetIndex];
+        address payable asset = checkUserAndGetAsset(assetIndex);
         uint256 totalAffected = accountant.totalAffected(asset);
         collected = bound(collected, 0, totalAffected);
         famount = bound(famount, 0, totalAffected);
