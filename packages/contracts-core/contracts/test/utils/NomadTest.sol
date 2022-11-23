@@ -48,7 +48,6 @@ contract NomadTest is Test {
         vm.label(fakeUpdater, "fake updater");
         vm.label(signer, "signer");
         vm.label(fakeSigner, "fake signer");
-
         merkleTest = new MerkleTest();
     }
 
@@ -111,7 +110,11 @@ contract NomadTest is Test {
         }
     }
 
-    function beaconImplementation(UpgradeBeacon beacon) internal view returns (address impl) {
+    function beaconImplementation(UpgradeBeacon beacon)
+        internal
+        view
+        returns (address impl)
+    {
         (, bytes memory data) = address(beacon).staticcall("");
         impl = abi.decode(data, (address));
         require(impl != address(0), "bad beacon contract");
