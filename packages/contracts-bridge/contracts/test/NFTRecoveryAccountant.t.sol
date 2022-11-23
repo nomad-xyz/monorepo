@@ -10,12 +10,13 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
 
 contract NFTRecoveryAccountantTest is Test {
-    address asset;
-    address user;
+    address defaultAsset;
+    address defaultUser;
     address recipient = vm.addr(111);
     uint256 amnt = 30_000_000;
     ERC20Mock mockToken;
     NFTRecoveryAccountantHarness accountant;
+    address bridgeRouter;
 
     uint256 public constant AFFECTED_TOKEN_AMOUNT = 100_000_000;
     uint256 public constant AMOUNT_ONE = 12_000_000;
@@ -31,13 +32,25 @@ contract NFTRecoveryAccountantTest is Test {
     event Transfer(address indexed from, address indexed to, uint256 value);
 
     function setUp() public virtual {
-        accountant = new NFTRecoveryAccountantHarness(address(this), recipient);
+        setUp_vars();
+        accountant = new NFTRecoveryAccountantHarness(bridgeRouter, recipient);
         accountant.initialize();
+        setUp_mocks();
+    }
+
+    function setUp_vars() public {
         // setup test vars
-        user = vm.addr(90210);
+        defaultUser = vm.addr(90210);
         mockToken = new ERC20Mock("Fake", "FK", address(1), 0);
-        asset = address(mockToken);
-        accountant.exposed_setAffectedAmount(asset, AFFECTED_TOKEN_AMOUNT);
+        defaultAsset = address(mockToken);
+        bridgeRouter = address(this);
+    }
+
+    function setUp_mocks() public {
+        accountant.exposed_setAffectedAmount(
+            defaultAsset,
+            AFFECTED_TOKEN_AMOUNT
+        );
     }
 
     function collectHelper(uint256 _amount) public {
@@ -83,7 +96,7 @@ contract NFTRecoveryAccountantTest is Test {
         vm.expectRevert("recoverable: nonexistent token");
         accountant.recoverable(_id);
         // mint a few tokens
-        accountant.record(asset, user, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
         collectHelper(AMOUNT_ONE);
         // recoverable is now non-zero
         assertEq(accountant.recoverable(_id), 3_600_000);
@@ -94,89 +107,91 @@ contract NFTRecoveryAccountantTest is Test {
         uint256 famount,
         uint256 collected
     ) public {
-        address payable asset = checkUserAndGetAsset(assetIndex);
+        address payable asset = checkUserAndGetAsset(defaultUser, assetIndex);
         uint256 totalAffected = accountant.totalAffected(asset);
         collected = bound(collected, 0, totalAffected);
         famount = bound(famount, 0, totalAffected);
 
         uint256 id = accountant.nextID();
-        accountant.record(asset, user, famount);
+        accountant.record(asset, defaultUser, famount);
         accountant.exposed_setCollectedAmount(asset, collected);
         uint256 recoverable = (collected * famount) / totalAffected;
         assertEq(accountant.recoverable(id), recoverable);
     }
 
     function test_totalCollectedUnchangedAfterRecord() public {
-        uint256 _id = 0;
         // totalCollected is zero
-        assertEq(accountant.totalCollected(asset), 0);
+        assertEq(accountant.totalCollected(defaultAsset), 0);
         // mint a few tokens
-        accountant.record(asset, user, amnt);
-        accountant.record(asset, user, amnt);
-        accountant.record(asset, user, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
         // totalCollected is not changed
-        assertEq(accountant.totalCollected(asset), 0);
+        assertEq(accountant.totalCollected(defaultAsset), 0);
     }
 
     function tets_totalCollectedChangeOnlyWithCollect() public {
         // totalCollected is not changed
-        assertEq(accountant.totalCollected(asset), 0);
+        assertEq(accountant.totalCollected(defaultAsset), 0);
         // transfer tokens outside of established process
         mockToken.mint(address(accountant), AMOUNT_ONE);
         // totalCollected is not changed
-        assertEq(accountant.totalCollected(asset), 0);
+        assertEq(accountant.totalCollected(defaultAsset), 0);
         // transfer tokens outside of established process
         mockToken.mint(address(accountant), AMOUNT_ONE);
         // totalCollected is not changed
-        assertEq(accountant.totalCollected(asset), 0);
+        assertEq(accountant.totalCollected(defaultAsset), 0);
         // collect funds through established process
         collectHelper(AMOUNT_ONE);
         // totalCollected is now equal to funds collected
-        assertEq(accountant.totalCollected(asset), AMOUNT_ONE);
+        assertEq(accountant.totalCollected(defaultAsset), AMOUNT_ONE);
     }
 
     function test_totalCollectedNotChangeWithRecover() public {
         uint256 _id = 0;
-        accountant.record(asset, user, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
         collectHelper(AMOUNT_ONE);
         // totalCollected is now equal to funds collected
-        assertEq(accountant.totalCollected(asset), AMOUNT_ONE);
+        assertEq(accountant.totalCollected(defaultAsset), AMOUNT_ONE);
         // recover
         recoverCheck(_id);
         // recovering does not change totalCollected
-        assertEq(accountant.totalCollected(asset), AMOUNT_ONE);
+        assertEq(accountant.totalCollected(defaultAsset), AMOUNT_ONE);
         // collect more funds
         collectHelper(AMOUNT_TWO);
         // recovering some more
         recoverCheck(_id);
         // totalCollected is now equal to total lifetime funds collected
-        assertEq(accountant.totalCollected(asset), AMOUNT_ONE + AMOUNT_TWO);
+        assertEq(
+            accountant.totalCollected(defaultAsset),
+            AMOUNT_ONE + AMOUNT_TWO
+        );
     }
 
     function test_totalRecoeredNotChangedAfterRecord() public {
         // totalRecovered is zero
-        assertEq(accountant.totalRecovered(asset), 0);
+        assertEq(accountant.totalRecovered(defaultAsset), 0);
         // mint a few tokens
-        accountant.record(asset, user, amnt);
-        accountant.record(asset, user, amnt);
-        accountant.record(asset, user, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
         // totalRecovered is not changed
-        assertEq(accountant.totalRecovered(asset), 0);
+        assertEq(accountant.totalRecovered(defaultAsset), 0);
     }
 
     function test_totalRecoveredNotChangeAfterCollect() public {
-        accountant.record(asset, user, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
         // collect funds
         collectHelper(AMOUNT_ONE);
         // totalRecovered is not changed
-        assertEq(accountant.totalRecovered(asset), 0);
+        assertEq(accountant.totalRecovered(defaultAsset), 0);
     }
 
     function test_totalRevoeredNotChangeAfterTransferOutsideCollect() public {
         // transfer tokens outside of established process
         mockToken.mint(address(accountant), AMOUNT_ONE);
         // totalRecovered is not changed
-        assertEq(accountant.totalRecovered(asset), 0);
+        assertEq(accountant.totalRecovered(defaultAsset), 0);
     }
 
     /// @notice Produce a fuzzed test scenario of 64 random users, who bridge back 64 random amounts
@@ -189,17 +204,17 @@ contract NFTRecoveryAccountantTest is Test {
     ) public {
         // Total affected MUST not be 0
         if (totalAffected == 0) totalAffected = 100_000_000;
-        accountant.exposed_setAffectedAmount(asset, totalAffected);
+        accountant.exposed_setAffectedAmount(defaultAsset, totalAffected);
         // Total collected MUST be between 1 and totalAffected (inclusive)
         uint256 collected = bound(collectedAssets, 1, totalAffected);
         collectHelper(collected);
         // Keep track of how many have been bridged back (instead of the circulation)
         uint256 bridgedSum;
         for (uint256 i; i < 8; i++) {
-            // Make sure that the user is not the address(0)
+            // Make sure that the defaultUser is not the address(0)
             if (users[i] == address(0)) users[i] = address(0xBEEF);
-            // Make sure that the user can receive the NFT
-            (bool success, bytes memory data) = users[i].call(
+            // Make sure that the defaultUser can receive the NFT
+            (bool success, ) = users[i].call(
                 abi.encodeWithSignature(
                     "onERC721Received(address,address,uint256,bytes)",
                     address(this),
@@ -208,28 +223,32 @@ contract NFTRecoveryAccountantTest is Test {
                     ""
                 )
             );
-            // if the user can't receive an ERC721, it's some test contract (e.g VM)
+            // if the defaultUser can't receive an ERC721, it's some test contract (e.g VM)
             // we turn them into a regular EOA
             if (!success) users[i] = address(0xBEEEEFFFEFEFEFEFEFEFEF);
             // The amount MUST be between 0 and the total Affected minus the ones that have been bridged already
-            // The user can't have more than that, as total affected is the upper bound for the total assets
+            // The defaultUser can't have more than that, as total affected is the upper bound for the total assets
             // that were hacked and bridgedSum is the sum of all the funds that other users have already bridged.
-            // Thus the respective user can have up to their difference
+            // Thus the respective defaultUser can have up to their difference
             uint256 famount = bound(
                 uint256(amounts[i]),
                 0,
                 totalAffected - bridgedSum
             );
             bridgedSum += famount;
-            uint256 prevTotalRecovered = accountant.totalRecovered(asset);
+            uint256 prevTotalRecovered = accountant.totalRecovered(
+                defaultAsset
+            );
             uint256 id = accountant.nextID();
-            if (accountant.totalMinted(asset) + famount > totalAffected) {
+            if (
+                accountant.totalMinted(defaultAsset) + famount > totalAffected
+            ) {
                 vm.expectRevert("overmint");
-                accountant.record(asset, users[i], famount);
-                // This asset has been overminted and we should check the next one
+                accountant.record(defaultAsset, users[i], famount);
+                // This defaultAsset has been overminted and we should check the next one
                 return;
             }
-            accountant.record(asset, users[i], famount);
+            accountant.record(defaultAsset, users[i], famount);
             uint256 recoverable = accountant.recoverable(id);
             address fuser = accountant.ownerOf(id);
             if (recoverable == 0) {
@@ -240,7 +259,7 @@ contract NFTRecoveryAccountantTest is Test {
             }
             recoverCheck(id);
             assertEq(
-                accountant.totalRecovered(asset),
+                accountant.totalRecovered(defaultAsset),
                 prevTotalRecovered + recoverable
             );
         }
@@ -255,8 +274,8 @@ contract NFTRecoveryAccountantTest is Test {
     // can't recover if there's no funds in contract
     function test_recoverNoCollect() public {
         // mint token
-        accountant.record(asset, user, amnt);
-        vm.prank(user);
+        accountant.record(defaultAsset, defaultUser, amnt);
+        vm.prank(defaultUser);
         // recovering fails with no collect
         vm.expectRevert("currently fully recovered");
         accountant.exposed_recover(0);
@@ -265,13 +284,13 @@ contract NFTRecoveryAccountantTest is Test {
     // collect -> recover -> recover FAIL (can't recover twice if there's no change in funds)
     function test_recoverTwiceNoCollect() public {
         // mint token
-        accountant.record(asset, user, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
         // collect funds
         collectHelper(AMOUNT_ONE);
         // recovering once works
         recoverCheck(0);
         // recovering the same token again before a collect doesn't work
-        vm.prank(user);
+        vm.prank(defaultUser);
         vm.expectRevert("currently fully recovered");
         accountant.exposed_recover(0);
     }
@@ -279,7 +298,7 @@ contract NFTRecoveryAccountantTest is Test {
     // only NFT holder can call recover
     function test_onlyOwnerRecover() public {
         // mint token
-        accountant.record(asset, user, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
         // collect funds
         collectHelper(AMOUNT_ONE);
         // only NFT holder can recover
@@ -290,7 +309,7 @@ contract NFTRecoveryAccountantTest is Test {
     // mint -> collect -> recover
     function test_recoverOne() public {
         // mint token
-        accountant.record(asset, user, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
         // collect funds
         collectHelper(AMOUNT_ONE);
         // recover
@@ -302,7 +321,7 @@ contract NFTRecoveryAccountantTest is Test {
         // collect funds
         collectHelper(AMOUNT_ONE);
         // mint token
-        accountant.record(asset, user, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
         // recover
         recoverCheck(0);
     }
@@ -310,7 +329,7 @@ contract NFTRecoveryAccountantTest is Test {
     // collect -> recover -> collect -> recover (can recover twice if there's more funds)
     function test_recoverContinuous() public {
         // mint token
-        accountant.record(asset, user, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
         // collect funds
         collectHelper(AMOUNT_ONE);
         // recover
@@ -331,7 +350,7 @@ contract NFTRecoveryAccountantTest is Test {
         emit Transfer(address(accountant), recipient, 15_000_000);
         accountant.remove(address(mockToken), 15_000_000);
         // recovering functions as normal afterward
-        accountant.record(asset, user, 1_000_000);
+        accountant.record(defaultAsset, defaultUser, 1_000_000);
         recoverCheck(0);
     }
 
@@ -387,14 +406,13 @@ contract NFTRecoveryAccountantTest is Test {
         // prank non-owner address
         vm.prank(recipient);
         vm.expectRevert("Ownable: caller is not the owner");
-        accountant.collect(user, address(mockToken), 100);
-        // prank as a user with tokens
+        accountant.collect(defaultUser, address(mockToken), 100);
+        // prank as a defaultUser with tokens
         uint256 _amount = 123;
-        address handler = vm.addr(112233);
-        mockToken.mint(user, _amount);
-        vm.prank(user);
+        mockToken.mint(defaultUser, _amount);
+        vm.prank(defaultUser);
         mockToken.approve(address(accountant), _amount);
-        accountant.collect(user, address(mockToken), 100);
+        accountant.collect(defaultUser, address(mockToken), 100);
     }
 
     // helper function to recover the full balance of the contract
@@ -416,10 +434,14 @@ contract NFTRecoveryAccountantTest is Test {
 
     function test_recoverFullBalance() public {
         // mint tokens adding up to entire supply
-        accountant.record(asset, user, amnt);
-        accountant.record(asset, user, amnt);
-        accountant.record(asset, user, amnt);
-        accountant.record(asset, user, AFFECTED_TOKEN_AMOUNT - (amnt * 3));
+        accountant.record(defaultAsset, defaultUser, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
+        accountant.record(
+            defaultAsset,
+            defaultUser,
+            AFFECTED_TOKEN_AMOUNT - (amnt * 3)
+        );
         // collect funds
         collectHelper(AMOUNT_ONE);
         // check the full balance is recoverable
@@ -434,10 +456,14 @@ contract NFTRecoveryAccountantTest is Test {
     // recovering the entire affected token amount is possible
     function test_recoverAffectedAmount() public {
         // mint tokens adding up to entire supply
-        accountant.record(asset, user, amnt);
-        accountant.record(asset, user, amnt);
-        accountant.record(asset, user, amnt);
-        accountant.record(asset, user, AFFECTED_TOKEN_AMOUNT - (amnt * 3));
+        accountant.record(defaultAsset, defaultUser, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
+        accountant.record(
+            defaultAsset,
+            defaultUser,
+            AFFECTED_TOKEN_AMOUNT - (amnt * 3)
+        );
         // collect funds
         collectHelper(AFFECTED_TOKEN_AMOUNT);
         // check the full balance is recoverable
@@ -448,13 +474,42 @@ contract NFTRecoveryAccountantTest is Test {
     // if collect more funds than affectedAssetAmounts
     function test_recoverOverAffectedAmount() public {
         // mint tokens adding up to entire supply
-        accountant.record(asset, user, amnt);
-        accountant.record(asset, user, amnt);
-        accountant.record(asset, user, amnt);
-        accountant.record(asset, user, AFFECTED_TOKEN_AMOUNT - (amnt * 3));
+        accountant.record(defaultAsset, defaultUser, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
+        accountant.record(defaultAsset, defaultUser, amnt);
+        accountant.record(
+            defaultAsset,
+            defaultUser,
+            AFFECTED_TOKEN_AMOUNT - (amnt * 3)
+        );
         // collect funds
         collectHelper(AFFECTED_TOKEN_AMOUNT * 2);
         // check the full balance is recoverable
         recoverFullBalanceHelper(AFFECTED_TOKEN_AMOUNT * 2);
+    }
+
+    function checkUserAndGetAsset(address _user, uint8 _assetIndex)
+        internal
+        returns (address payable _asset)
+    {
+        vm.assume(canAcceptNft(_user));
+        _assetIndex = uint8(bound(_assetIndex, 0, 13));
+        _asset = accountant.affectedAssets()[_assetIndex];
+    }
+
+    function canAcceptNft(address _target) internal returns (bool _success) {
+        (_success, ) = _target.call(
+            abi.encodeWithSignature(
+                "onERC721Received(address,address,uint256,bytes)",
+                _target,
+                address(0),
+                0,
+                ""
+            )
+        );
+        _success =
+            _success &&
+            _target != 0x4e59b44847b379578588920cA78FbF26c0B4956C &&
+            _target != address(0);
     }
 }
