@@ -114,7 +114,14 @@ export class Goldsky extends TaskRunner {
     `;
 
     const response = await request(this.uri, query, {}, this.headers);
-    response.number_messages.forEach((row) => {
+    response.number_messages.forEach((row: {
+      origin: string,
+      destination: string,
+      dispatched: string,
+      updated: string,
+      relayed: string,
+      processed: string,
+    }) => {
       const origin = parseInt(row.origin);
       const destination = parseInt(row.destination);
 
@@ -144,21 +151,6 @@ export class Goldsky extends TaskRunner {
       );
     });
   }
-
-  // async numEvents(){
-  //   const query = gql`
-  //       query MyQuery {
-  //           events_aggregate {
-  //           aggregate {
-  //               count
-  //           }
-  //           }
-  //       }
-  //   `;
-
-  //     const response = await request(this.uri, query, {}, this.headers);
-  //     return parseInt(response.events_aggregate.aggregate.count);
-  // }
 }
 
 /*

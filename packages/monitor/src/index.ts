@@ -1,6 +1,6 @@
 import { NomadContext } from "@nomad-xyz/sdk";
 import { defaultGoldSkySecret, Goldsky } from "./goldsky";
-import { MonitoringCollector } from "./server";
+import { MonitoringCollector} from "./server";
 import { TaskRunner } from "./taskRunner";
 import { createLogger } from "./utils";
 
@@ -13,7 +13,7 @@ dotenv.config();
 
 console.log('hello monitor');
 
-export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+export const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 // type Metrics = number[];
 // const metrics: Metrics = [];
@@ -35,21 +35,24 @@ const environment = 'production';
 
   const ctx = new NomadContext(environment);
 
-  ctx.registerRpcProvider(6648936, process.env.ETH_RPC!)
+  if (!process.env.ETH_RPC)
+    throw new Error("Should provide an ethereum rpc to ETH_RPC env variable");
+
+  ctx.registerRpcProvider(6648936, process.env.ETH_RPC);
 
   const goldsky = new Goldsky(defaultGoldSkySecret, mc);
   const homeStatus = new HomeStatusCollector(ctx, logger, mc);
   const tasks: TaskRunner[] = [
     goldsky,
     homeStatus,
-  ]
+  ];
 
   const p = await Promise.all(tasks.map(task => task.runTasks()));
 
   await Promise.all([
     p,
-    mc.startServer(3001)
-  ])
+    mc.startServer(3001),
+  ]);
 
 
   // while (true) {

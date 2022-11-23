@@ -20,17 +20,18 @@ export class HomeStatusCollector extends TaskRunner {
       this.metrics = metrics;
     }
   
-    async runTasks() {
+    async runTasks(): Promise<void> {
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         console.log(`Started HomeStatus`);
         const start = Date.now();
   
         await Promise.all([
-          this.checkAllHomes()
-        ])
+          this.checkAllHomes(),
+        ]);
   
         const time = (Date.now() - start)/1000;
-        console.log(`Finished HomeStatus after ${time.toFixed()} seconds, waiting 3 minutes`)
+        console.log(`Finished HomeStatus after ${time.toFixed()} seconds, waiting 3 minutes`);
         await sleep(180000);
       }
     }
