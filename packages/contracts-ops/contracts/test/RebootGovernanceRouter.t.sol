@@ -60,12 +60,7 @@ contract GovernanceRouterRebootTest is RebootTest, GovernanceRouterTest {
     }
 
     // check fork setUp
-    function test_setUp() public {
-        // assert beacon has been upgraded to harness
-        (, bytes memory result) = address(
-            governanceRouterUpgrade(localDomainName).beacon
-        ).staticcall("");
-        address _current = abi.decode(result, (address));
-        assertEq(_current, govHarnessImpl);
+    function test_setUp() public view {
+        governanceRouter.exposed_isGovernorRouter(0, bytes32(0));
     }
 }

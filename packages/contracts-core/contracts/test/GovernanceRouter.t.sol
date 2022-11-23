@@ -73,43 +73,6 @@ contract GovernanceRouterTest is NomadTest {
         governanceRouter.setRouterLocal(remoteDomain, remoteGovernanceRouter);
     }
 
-    modifier runNotInRecovery() {
-        if (governanceRouter.inRecovery()) exitRecovery();
-        _;
-    }
-
-    modifier runInRecovery() {
-        if (!governanceRouter.inRecovery()) enterRecovery();
-        _;
-    }
-
-    modifier runNonGoverning() {
-        // if currently governor domain, transfer to remote governor
-        // else the router will not accept incoming messages
-        if (governanceRouter.governorDomain() == homeDomain) {
-            if (governanceRouter.inRecovery()) exitRecovery();
-            prankGovernor();
-            governanceRouter.transferGovernor(remoteDomain, vm.addr(412));
-        }
-        _;
-    }
-
-    function prankReplica(uint32 _d) internal {
-        vm.prank(xAppConnectionManager.domainToReplica(_d));
-    }
-
-    function prankReplica() internal {
-        prankReplica(remoteDomain);
-    }
-
-    function prankGovernor() internal {
-        vm.prank(governanceRouter.governor());
-    }
-
-    function prankRecoveryManager() internal {
-        vm.prank(governanceRouter.recoveryManager());
-    }
-
     function test_initializeCorrectSet() public {
         governanceRouter = new GovernanceRouterHarness(homeDomain, timelock);
         // Test Initialize function
@@ -1452,4 +1415,43 @@ contract GovernanceRouterTest is NomadTest {
         assert(!governanceRouter.inRecovery());
         assertEq(governanceRouter.recoveryActiveAt(), 0);
     }
+
+
+    modifier runNotInRecovery() {
+        if (governanceRouter.inRecovery()) exitRecovery();
+        _;
+    }
+
+    modifier runInRecovery() {
+        if (!governanceRouter.inRecovery()) enterRecovery();
+        _;
+    }
+
+    modifier runNonGoverning() {
+        // if currently governor domain, transfer to remote governor
+        // else the router will not accept incoming messages
+        if (governanceRouter.governorDomain() == homeDomain) {
+            if (governanceRouter.inRecovery()) exitRecovery();
+            prankGovernor();
+            governanceRouter.transferGovernor(remoteDomain, vm.addr(412));
+        }
+        _;
+    }
+
+    function prankReplica(uint32 _d) internal {
+        vm.prank(xAppConnectionManager.domainToReplica(_d));
+    }
+
+    function prankReplica() internal {
+        prankReplica(remoteDomain);
+    }
+
+    function prankGovernor() internal {
+        vm.prank(governanceRouter.governor());
+    }
+
+    function prankRecoveryManager() internal {
+        vm.prank(governanceRouter.recoveryManager());
+    }
+
 }
