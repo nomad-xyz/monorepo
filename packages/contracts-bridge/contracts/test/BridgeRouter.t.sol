@@ -130,7 +130,7 @@ contract BridgeRouterTest is BridgeRouterBaseTest {
         emit Transfer(address(0), recipient, tokenAmount);
         vm.expectEmit(true, true, true, true);
         emit Receive(
-            uint64(remoteDomain) << 32 | uint64(nonce),
+            (uint64(remoteDomain) << 32) | uint64(nonce),
             tokenRepresentation,
             recipient,
             address(0),

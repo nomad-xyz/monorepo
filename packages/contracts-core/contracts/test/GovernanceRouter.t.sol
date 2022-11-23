@@ -282,7 +282,7 @@ contract GovernanceRouterTest is NomadTest {
             remoteDomain,
             0,
             remoteGovernanceRouter,
-            GovernanceMessage.formatBatch(calls)
+            message
         );
     }
 

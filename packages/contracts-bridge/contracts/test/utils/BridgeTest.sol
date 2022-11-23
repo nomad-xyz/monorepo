@@ -104,7 +104,9 @@ contract BridgeTestFixture is NomadTest {
         mockUpdaterPK = 420;
         mockUpdater = vm.addr(mockUpdaterPK);
         remoteBridgeRouter = vm.addr(99123).addressToBytes32();
-        accountant = NFTRecoveryAccountantHarness(address(new MockAccountant()));
+        accountant = NFTRecoveryAccountantHarness(
+            address(new MockAccountant())
+        );
         mockHome = new MockHome(homeDomain);
         home = address(mockHome);
         mockReplica = address(0xBEEFEFEEFEF);
@@ -125,7 +127,6 @@ contract BridgeTestFixture is NomadTest {
         }
         initializeContracts();
         initializeBridgeRouter();
-
     }
 
     function setUp_deployLocalToken() public {
@@ -138,7 +139,9 @@ contract BridgeTestFixture is NomadTest {
     }
 
     function setUpEthereumBridgeRouter() public {
-        accountant = NFTRecoveryAccountantHarness(address(new MockAccountant()));
+        accountant = NFTRecoveryAccountantHarness(
+            address(new MockAccountant())
+        );
         bridgeRouter = IBridgeRouterHarness(
             address(new EthereumBridgeRouterHarness(address(accountant)))
         );

@@ -217,11 +217,7 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
     ) public {
         // We have already minted bridgeUserTokenAmount of tokens during
         // setUp(). We bound that so we don't revert because of math overflow
-        tokenAmount = bound(
-            tokenAmount,
-            0,
-            A_LOT
-        );
+        tokenAmount = bound(tokenAmount, 0, A_LOT);
         localToken.mint(address(bridgeRouter), tokenAmount);
         bytes memory action = abi.encodePacked(
             BridgeMessage.Types.Transfer,
@@ -566,12 +562,16 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         bytes32 tokenAddress = remoteTokenLocalAddress.addressToBytes32();
         bytes memory tokenId = abi.encodePacked(homeDomain, tokenAddress);
         bytes memory message = abi.encodePacked(tokenId, action);
-        vm.expectCall(address(home), 0, abi.encodeWithSelector(
-            mockHome.dispatch.selector,
-            destination,
-            remoteRouter(),
-            message
-        ));
+        vm.expectCall(
+            address(home),
+            0,
+            abi.encodeWithSelector(
+                mockHome.dispatch.selector,
+                destination,
+                remoteRouter(),
+                message
+            )
+        );
         bridgeRouter.exposed_sendTransferMessage(destination, tokenId, action);
     }
 
