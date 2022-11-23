@@ -17,11 +17,6 @@ export enum MessageStages {
   Processed = 'processed',
 }
 
-export enum GoldSkyQuery {
-  QueryExample1 = 'queryexample1',
-  QueryExample2 = 'queryexample2',
-}
-
 const buckets = [
   1 * 60, // 1 min
   5 * 60, // 5 min
