@@ -441,7 +441,7 @@ abstract contract BridgeRouterBaseTest is BridgeTestFixture {
         BridgeToken(custom).initialize();
         BridgeToken(custom).transferOwnership(address(bridgeRouter));
         uint256 supply = localToken.totalSupply();
-        vm.startPrank(bridgeRouter.owner());
+        prankOwner(address(bridgeRouter));
         if (domain == 0) {
             vm.expectRevert("!null domain");
         }
