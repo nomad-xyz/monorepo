@@ -18,10 +18,6 @@ contract TokenRegistryTest is BridgeTestFixture {
     using TypedMemView for bytes29;
     using BridgeMessage for bytes29;
 
-    function setUp() public virtual override {
-        super.setUp();
-    }
-
     function test_getCanonicalTokenId() public {
         (uint32 domain, bytes32 id) = tokenRegistry.getCanonicalTokenId(
             remoteTokenLocalAddress
