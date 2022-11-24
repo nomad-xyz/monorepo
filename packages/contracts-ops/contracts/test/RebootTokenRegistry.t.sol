@@ -5,6 +5,7 @@ pragma abicoder v2;
 import "forge-std/Test.sol";
 import {RebootTest} from "./Reboot.t.sol";
 import {NomadTest} from "@nomad-xyz/contracts-core/contracts/test/utils/NomadTest.sol";
+import {BridgeTestFixture} from "@nomad-xyz/contracts-bridge/contracts/test/utils/BridgeTest.sol";
 import {TokenRegistryTest} from "@nomad-xyz/contracts-bridge/contracts/test/TokenRegistry.t.sol";
 import {TokenRegistryHarness} from "@nomad-xyz/contracts-bridge/contracts/test/harness/TokenRegistryHarness.sol";
 import {BridgeToken} from "@nomad-xyz/contracts-bridge/contracts/BridgeToken.sol";
@@ -17,7 +18,7 @@ contract TokenRegistryRebootTest is RebootTest, TokenRegistryTest {
 
     string constant ethereum = "ethereum";
 
-    function setUp() public override(NomadTest, TokenRegistryTest) {
+    function setUp() public override(NomadTest, BridgeTestFixture) {
         setUpReboot(1, "tokenregistry");
         tokenRegistry = TokenRegistryHarness(
             address(getTokenRegistry(ethereum))

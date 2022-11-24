@@ -455,7 +455,7 @@ contract TokenRegistryTest is BridgeTestFixture {
         bytes32 id = "It's over 9000";
         address repr = tokenRegistry.getRepresentationAddress(domain, id);
         assertEq(repr, address(0));
-        address calculated = expectTokenDeployedEmission(domain, id);
+        expectTokenDeployedEmission(domain, id);
         address tokenAddress = tokenRegistry.exposed_deployToken(domain, id);
         BridgeToken token = BridgeToken(tokenAddress);
         repr = tokenRegistry.getRepresentationAddress(domain, id);
