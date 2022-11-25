@@ -478,7 +478,7 @@ contract TokenRegistryTest is BridgeTestFixture {
         vm.assume(domain != homeDomain && domain != 0);
         address repr = tokenRegistry.getRepresentationAddress(domain, id);
         assertEq(repr, address(0));
-
+        expectTokenDeployedEmission(domain, id);
         address tokenAddress = tokenRegistry.exposed_deployToken(domain, id);
         BridgeToken token = BridgeToken(tokenAddress);
         repr = tokenRegistry.getRepresentationAddress(domain, id);
