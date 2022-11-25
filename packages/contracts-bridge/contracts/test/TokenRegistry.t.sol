@@ -18,10 +18,6 @@ contract TokenRegistryTest is BridgeTestFixture {
     using TypedMemView for bytes29;
     using BridgeMessage for bytes29;
 
-    function setUp() public override {
-        super.setUp();
-    }
-
     function test_getCanonicalTokenId() public {
         (uint32 domain, bytes32 id) = tokenRegistry.getCanonicalTokenId(
             remoteTokenLocalAddress
@@ -100,9 +96,7 @@ contract TokenRegistryTest is BridgeTestFixture {
         bytes32 newId = bytes32("hey yoou");
         // It's the second contract that is been deployed by tokenRegistry
         // It deploys a bridgeToken during setUp() of BridgeTest
-        address calculated = computeCreateAddress(address(tokenRegistry), 2);
-        vm.expectEmit(true, true, true, false);
-        emit TokenDeployed(newDomain, newId, calculated);
+        address calculated = expectTokenDeployedEmission(newDomain, newId);
         vm.prank(tokenRegistry.owner());
         address deployed = tokenRegistry.ensureLocalToken(newDomain, newId);
         assertEq(deployed, calculated);
@@ -136,11 +130,7 @@ contract TokenRegistryTest is BridgeTestFixture {
             );
             return;
         }
-        // It's the second contract that is been deployed by tokenRegistry
-        // It deploys a bridgeToken during setUp() of BridgeTest
-        address calculated = computeCreateAddress(address(tokenRegistry), 2);
-        vm.expectEmit(true, true, true, false);
-        emit TokenDeployed(domain, id, calculated);
+        address calculated = expectTokenDeployedEmission(domain, id);
         address deployed = tokenRegistry.ensureLocalToken(domain, id);
         assertEq(deployed, calculated);
         vm.stopPrank();
@@ -341,7 +331,8 @@ contract TokenRegistryTest is BridgeTestFixture {
         vm.assume(
             newRemoteDomain != remoteDomain &&
                 newRemoteDomain != homeDomain &&
-                newRemoteDomain != 0
+                newRemoteDomain != 0 &&
+                newRemoteToken != bytes32(0)
         );
         address local = createRemoteToken(newRemoteDomain, newRemoteToken);
         require(
@@ -464,10 +455,7 @@ contract TokenRegistryTest is BridgeTestFixture {
         bytes32 id = "It's over 9000";
         address repr = tokenRegistry.getRepresentationAddress(domain, id);
         assertEq(repr, address(0));
-        address calculated = computeCreateAddress(address(tokenRegistry), 2);
-        // test event emmission
-        vm.expectEmit(true, true, true, false);
-        emit TokenDeployed(domain, id, calculated);
+        expectTokenDeployedEmission(domain, id);
         address tokenAddress = tokenRegistry.exposed_deployToken(domain, id);
         BridgeToken token = BridgeToken(tokenAddress);
         repr = tokenRegistry.getRepresentationAddress(domain, id);
@@ -490,10 +478,7 @@ contract TokenRegistryTest is BridgeTestFixture {
         vm.assume(domain != homeDomain && domain != 0);
         address repr = tokenRegistry.getRepresentationAddress(domain, id);
         assertEq(repr, address(0));
-        address calculated = computeCreateAddress(address(tokenRegistry), 2);
-        // test event emmission
-        vm.expectEmit(true, true, true, false);
-        emit TokenDeployed(domain, id, calculated);
+        expectTokenDeployedEmission(domain, id);
         address tokenAddress = tokenRegistry.exposed_deployToken(domain, id);
         BridgeToken token = BridgeToken(tokenAddress);
         repr = tokenRegistry.getRepresentationAddress(domain, id);
@@ -563,5 +548,18 @@ contract TokenRegistryTest is BridgeTestFixture {
         vm.prank(ownerBefore);
         tokenRegistry.renounceOwnership();
         assertEq(tokenRegistry.owner(), ownerBefore);
+    }
+
+    function expectTokenDeployedEmission(uint32 _domain, bytes32 _id)
+        internal
+        returns (address _calculated)
+    {
+        _calculated = computeCreateAddress(
+            address(tokenRegistry),
+            vm.getNonce(address(tokenRegistry))
+        );
+        // test event emmission
+        vm.expectEmit(true, true, true, false);
+        emit TokenDeployed(_domain, _id, _calculated);
     }
 }
