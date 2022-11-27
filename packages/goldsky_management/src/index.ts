@@ -112,23 +112,30 @@ class Setup {
     }
 }
 
+// Initiate source schemas with pre-existing Goldsky tables (dispatch for now)
 let prodSource = new Schema('subgraph');
 let stageSource = new Schema('staging');
 prodSource.registerTable('dispatch');
 stageSource.registerTable('dispatch');
 
+// Destination views for both environments
 let prodDest = new Schema('prod_views');
 let stageDest = new Schema('staging_views');
 
+// Initiate environments with source and destination schemas.
+// both source and destination schemas are used as a source, to allow
+// re-use of freshly created views
 let prod = new Env('production', [prodSource, prodDest], prodDest);
 let stage = new Env('staging', [stageSource, stageDest], stageDest);
 
+// Dummy super class that leads the dance
 let s = new Setup([prod, stage]);
 
+// Register views. (name, template, required tables/views by name)
 let disp = new ViewTemplate('decoded_dispatch', fs.readFileSync('./views/decodedDispatch.sql', 'utf8'), ['dispatch']);
 let events = new ViewTemplate('events', fs.readFileSync('./views/events.sql', 'utf8'), ['decoded_dispatch']);
-
 s.addView(disp);
 s.addView(events);
 
+// Output the result
 fs.writeFileSync('./query.sql', s.produce())
