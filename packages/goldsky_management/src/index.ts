@@ -126,9 +126,9 @@ let stage = new Env('staging', [stageSource, stageDest], stageDest);
 let s = new Setup([prod, stage]);
 
 let disp = new ViewTemplate('decoded_dispatch', fs.readFileSync('./views/decodedDispatch.sql', 'utf8'), ['dispatch']);
-let upd = new ViewTemplate('decoded_update', fs.readFileSync('./views/decodedUpdate.sql', 'utf8'), ['decoded_dispatch']);
+let events = new ViewTemplate('events', fs.readFileSync('./views/events.sql', 'utf8'), ['decoded_dispatch']);
 
 s.addView(disp);
-s.addView(upd);
+s.addView(events);
 
 fs.writeFileSync('./query.sql', s.produce())
