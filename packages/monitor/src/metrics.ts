@@ -2,12 +2,9 @@ import { Gauge, Histogram, Counter } from 'prom-client';
 import Logger from 'bunyan';
 
 
-import { NomadContext } from '@nomad-xyz/sdk';
 
 import { register } from 'prom-client';
 import express, { Response } from 'express';
-import { TaskRunner } from './taskRunner';
-import { sleep } from './utils';
 export const prefix = `nomad_metrics`;
 
 export enum MessageStages {
@@ -137,14 +134,14 @@ export class MonitoringCollector extends MetricsCollector {
     this.requests = new Histogram({
       name: prefix + '_requests',
       help: 'Histogram that tracks latency of response to metrics request in ms',
-      labelNames: ['domain', 'query', 'labels', 'environment'],
+      labelNames: ['service', 'query', 'labels', 'environment'],
       buckets,
     });
 
     this.requestErrors = new Counter({
       name: prefix + '_request_errors',
       help: 'Histogram that tracks latency of response to metrics request in ms',
-      labelNames: ['domain', 'query', 'labels', 'environment'],
+      labelNames: ['service', 'query', 'labels', 'environment'],
     });
 
   }
@@ -208,19 +205,18 @@ export class MonitoringCollector extends MetricsCollector {
   //   this.rpcErrors.labels(code, query, this.environment).inc();
   // }
 
-  async recordRequest<T>(request: Promise<T>, domain: string, requestName: string, ...labels: string[]): Promise<T> {
+  async recordRequest<T>(request: Promise<T>, service: string, requestName: string, ...labels: string[]): Promise<T> {
     const start = Date.now();
     let result: T;
-    console.log('--- 1--->', domain, requestName, labels);
     try {
       result = await request;
     } catch(e) {
-      this.requestErrors.labels(domain, requestName, ...labels, this.environment).inc();
+      this.requestErrors.labels(service, requestName, ...labels, this.environment).inc();
       throw e;
     }
     
     const duration = Date.now() - start;
-    this.requests.labels(domain, requestName, ...labels, this.environment).observe(duration);
+    this.requests.labels(service, requestName, ...labels, this.environment).observe(duration);
     
     return result;
   }

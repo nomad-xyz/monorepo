@@ -1,7 +1,7 @@
 import { request, gql } from 'graphql-request';
 import { MessageStages, MonitoringCollector } from './metrics';
 import { TaskRunner } from './taskRunner';
-import { sleep } from './utils';
+import Logger from 'bunyan';
 
 export const defaultGoldSkySecret = 'mpa%H&RAHu9;eUe';
 
@@ -13,16 +13,10 @@ export enum GoldSkyQuery {
 
 export class Goldsky extends TaskRunner {
   protected secret: string;
-  _metrics: MonitoringCollector;
 
-  constructor(secret: string, mc: MonitoringCollector) {
-    super();
+  constructor(secret: string, logger: Logger, metrics: MonitoringCollector) {
+    super(logger, metrics);
     this.secret = secret;
-    this._metrics = mc;
-  }
-
-  get metrics(): MonitoringCollector {
-    return this._metrics;
   }
 
   /**
@@ -48,19 +42,16 @@ export class Goldsky extends TaskRunner {
     };
   }
 
-  async runTasks(): Promise<void> {
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      console.log(`Started Goldsky`);
-      const start = Date.now();
-      await Promise.all([this.numMessages()]);
+  cooldown(): number {
+    return 60;
+  }
 
-      const time = (Date.now() - start) / 1000;
-      console.log(
-        `Finished Goldsky after ${time.toFixed()} seconds, waiting 5 seconds`,
-      );
-      await sleep(5000);
-    }
+  tasks(): Promise<void>[] {
+    return [
+      this.numMessages(),
+      this.numProcessFailureEvents(),
+      this.numProcessRecoveryEvents(),
+    ]
   }
 
   async numProcessFailureEvents(): Promise<void> {
