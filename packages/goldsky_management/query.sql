@@ -7,7 +7,7 @@ FROM subgraph.dispatch
 ------
 
 CREATE
-OR REPLACE VIEW "prod_views"."decoded_update" AS (DECODED UPDATE SQL CODE)
+OR REPLACE VIEW "prod_views"."events" AS (EVENTS SQL CODE)
 FROM prod_views.decoded_dispatch
 
 
@@ -25,6 +25,6 @@ FROM staging.dispatch
 ------
 
 CREATE
-OR REPLACE VIEW "staging_views"."decoded_update" AS (DECODED UPDATE SQL CODE)
+OR REPLACE VIEW "staging_views"."events" AS (EVENTS SQL CODE)
 FROM staging_views.decoded_dispatch
 
