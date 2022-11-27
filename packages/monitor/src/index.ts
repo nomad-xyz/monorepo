@@ -40,7 +40,7 @@ const environment = 'production';
 
   ctx.registerRpcProvider(6648936, process.env.ETH_RPC);
 
-  const goldsky = new Goldsky(defaultGoldSkySecret, mc);
+  const goldsky = new Goldsky(defaultGoldSkySecret, logger, mc);
   const homeStatus = new HomeStatusCollector(ctx, logger, mc);
   const tasks: TaskRunner[] = [
     goldsky,
