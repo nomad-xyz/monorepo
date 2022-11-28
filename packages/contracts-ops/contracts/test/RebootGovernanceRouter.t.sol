@@ -15,7 +15,7 @@ contract GovernanceRouterRebootTest is RebootTest, GovernanceRouterTest {
     address govHarnessImpl;
 
     function setUp() public override(NomadTest, GovernanceRouterTest) {
-        setUpReboot(3, "governanceRouter");
+        setUpReboot("governanceRouter");
         // upgrade to harness
         governanceRouter = GovernanceRouterHarness(
             address(getGovernanceRouter(localDomainName))
