@@ -9,7 +9,7 @@ export enum GoldSkyQuery {
   StagingProcessFailureEvents = 'StagingProcessFailureEvents',
   StagingRecoveryEvents = 'StagingRecoveryEvents',
   NumberMessages = 'NumberMessages',
-};
+}
 
 export class Goldsky extends TaskRunner {
   protected secret: string;
@@ -51,13 +51,22 @@ export class Goldsky extends TaskRunner {
       this.numMessages(),
       this.numProcessFailureEvents(),
       this.numProcessRecoveryEvents(),
-    ]
+    ];
   }
 
   async numProcessFailureEvents(): Promise<void> {
     // TODO: since tables are labeled by environment, we should use a
     // different set of queries between staging / production.
     // tldr: Follow the convention we use in the gui.
+
+    // TODO: figure out how to split up these shared headers/uri/secret
+    const headers = {
+      'content-type': 'application/json',
+      'x-hasura-admin-secret': 'yaZj76nCg5q',
+    };
+
+    const uri = 'https://api.goldsky.io/c/nomad/gql/v1/graphql';
+
     const query = gql`
       query StagingProcessFailureEvents {
         staging_process_failure_aggregate {
@@ -71,11 +80,15 @@ export class Goldsky extends TaskRunner {
     `;
 
     const response = await this.record(
-      request(this.uri, query, {}, this.headers),
-      'goldsky', GoldSkyQuery.StagingProcessFailureEvents, 'kek'
+      request(uri, query, {}, headers),
+      'goldsky',
+      GoldSkyQuery.StagingProcessFailureEvents,
+      'kek',
     );
 
     console.log('numProcessFailureEvents response', response);
+
+    console.log('nodes', response.staging_process_failure_aggregate.nodes);
 
     // TODO: add method to MonitoringCollector class to inc numProcessFailureEvents counter
   }
@@ -84,6 +97,15 @@ export class Goldsky extends TaskRunner {
     // TODO: since tables are labeled by environment, we should use a
     // different set of queries between staging / production.
     // tldr: Follow the convention we use in the gui.
+
+    // TODO: figure out how to split up these shared headers/uri/secret
+    const headers = {
+      'content-type': 'application/json',
+      'x-hasura-admin-secret': 'yaZj76nCg5q',
+    };
+
+    const uri = 'https://api.goldsky.io/c/nomad/gql/v1/graphql';
+
     const query = gql`
       query StagingRecoveryEvents {
         staging_recovery_aggregate {
@@ -97,11 +119,14 @@ export class Goldsky extends TaskRunner {
     `;
 
     const response = await this.record(
-      request(this.uri, query, {}, this.headers),
-      'goldsky', GoldSkyQuery.StagingRecoveryEvents, 'kek'
+      request(uri, query, {}, headers),
+      'goldsky',
+      GoldSkyQuery.StagingRecoveryEvents,
+      'kek',
     );
 
     console.log('numRecoveryEvents response', response);
+    console.log(response.staging_recovery_aggregate.nodes);
 
     // TODO: add method to MonitoringCollector class to inc numRecoveryEvents counter
   }
@@ -122,44 +147,48 @@ export class Goldsky extends TaskRunner {
 
     const response = await this.record(
       request(this.uri, query, {}, this.headers),
-      'goldsky', GoldSkyQuery.NumberMessages, 'kek'
+      'goldsky',
+      GoldSkyQuery.NumberMessages,
+      'kek',
     );
-    response.number_messages.forEach((row: {
-      origin: string,
-      destination: string,
-      dispatched: string,
-      updated: string,
-      relayed: string,
-      processed: string,
-    }) => {
-      const origin = parseInt(row.origin);
-      const destination = parseInt(row.destination);
+    response.number_messages.forEach(
+      (row: {
+        origin: string;
+        destination: string;
+        dispatched: string;
+        updated: string;
+        relayed: string;
+        processed: string;
+      }) => {
+        const origin = parseInt(row.origin);
+        const destination = parseInt(row.destination);
 
-      this.metrics.setNumMessages(
-        MessageStages.Dispatched,
-        origin.toString(),
-        destination.toString(),
-        parseInt(row.dispatched),
-      );
-      this.metrics.setNumMessages(
-        MessageStages.Updated,
-        origin.toString(),
-        destination.toString(),
-        parseInt(row.updated),
-      );
-      this.metrics.setNumMessages(
-        MessageStages.Relayed,
-        origin.toString(),
-        destination.toString(),
-        parseInt(row.relayed),
-      );
-      this.metrics.setNumMessages(
-        MessageStages.Processed,
-        origin.toString(),
-        destination.toString(),
-        parseInt(row.processed),
-      );
-    });
+        this.metrics.setNumMessages(
+          MessageStages.Dispatched,
+          origin.toString(),
+          destination.toString(),
+          parseInt(row.dispatched),
+        );
+        this.metrics.setNumMessages(
+          MessageStages.Updated,
+          origin.toString(),
+          destination.toString(),
+          parseInt(row.updated),
+        );
+        this.metrics.setNumMessages(
+          MessageStages.Relayed,
+          origin.toString(),
+          destination.toString(),
+          parseInt(row.relayed),
+        );
+        this.metrics.setNumMessages(
+          MessageStages.Processed,
+          origin.toString(),
+          destination.toString(),
+          parseInt(row.processed),
+        );
+      },
+    );
   }
 }
 
