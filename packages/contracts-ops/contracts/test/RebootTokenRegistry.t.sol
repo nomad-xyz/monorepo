@@ -19,7 +19,7 @@ contract TokenRegistryRebootTest is RebootTest, TokenRegistryTest {
     string constant ethereum = "ethereum";
 
     function setUp() public override(NomadTest, BridgeTestFixture) {
-        setUpReboot(1, "tokenregistry");
+        setUpReboot("tokenRegistry");
         tokenRegistry = TokenRegistryHarness(
             address(getTokenRegistry(ethereum))
         );

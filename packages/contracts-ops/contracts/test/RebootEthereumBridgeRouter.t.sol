@@ -22,7 +22,7 @@ contract EthereumBridgeRouterRebootTest is RebootTest, BridgeRouterTest {
     string constant ethereum = "ethereum";
 
     function setUp() public override(BridgeRouterBaseTest, NomadTest) {
-        setUpReboot(1, "bridgerouter");
+        setUpReboot("ethBridgeRouter");
         // load proxies
         tokenRegistry = TokenRegistryHarness(
             address(getTokenRegistry(ethereum))
