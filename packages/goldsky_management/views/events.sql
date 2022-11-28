@@ -43,7 +43,7 @@ FROM
   (
     (
       (
-        decoded_dispatch
+        <%= location; %>.decoded_dispatch
         LEFT JOIN (
           SELECT
             update_1.old_root,
@@ -54,7 +54,7 @@ FROM
             update_1."timestamp",
             update_1.gs_chain_id
           FROM
-            decoded_update update_1
+            <%= location; %>.decoded_update update_1
         )
         update
           ON (
@@ -77,7 +77,7 @@ FROM
           relay_1.old_root,
           relay_1.gs_chain_id
         FROM
-          decoded_update relay_1
+          <%= location; %>.decoded_update relay_1
       ) relay ON (
         (
           (decoded_dispatch.committed_root = relay.old_root)
@@ -93,4 +93,3 @@ FROM
       )
     )
   );
-

@@ -1,5 +1,5 @@
 CREATE
-OR REPLACE VIEW "<%= location; %>"."<%= name; %>" AS (DECODED DISPATCH SQL CODE) AS (
+OR REPLACE VIEW "<%= location; %>"."<%= name; %>" AS (
   SELECT
     dispatch.id,
     dispatch."timestamp",
@@ -122,6 +122,7 @@ OR REPLACE VIEW "<%= location; %>"."<%= name; %>" AS (DECODED DISPATCH SQL CODE)
   FROM
     <%= dispatch;%>
 )
+
 SELECT
   decoded.id,
   decoded."timestamp",
@@ -186,4 +187,3 @@ SELECT
   END AS message__token__domain_name
 FROM
   decoded;
-

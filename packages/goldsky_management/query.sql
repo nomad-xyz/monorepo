@@ -1,5 +1,5 @@
 CREATE
-OR REPLACE VIEW "prod_views"."decoded_dispatch" AS (DECODED DISPATCH SQL CODE) AS (
+OR REPLACE VIEW "prod_views"."decoded_dispatch" AS (
   SELECT
     dispatch.id,
     dispatch."timestamp",
@@ -122,6 +122,7 @@ OR REPLACE VIEW "prod_views"."decoded_dispatch" AS (DECODED DISPATCH SQL CODE) A
   FROM
     subgraph.dispatch
 )
+
 SELECT
   decoded.id,
   decoded."timestamp",
@@ -186,7 +187,6 @@ SELECT
   END AS message__token__domain_name
 FROM
   decoded;
-
 
 
 ------
@@ -267,7 +267,7 @@ FROM
   (
     (
       (
-        decoded_dispatch
+        prod_views.decoded_dispatch
         LEFT JOIN (
           SELECT
             update_1.old_root,
@@ -278,7 +278,7 @@ FROM
             update_1."timestamp",
             update_1.gs_chain_id
           FROM
-            decoded_update update_1
+            prod_views.decoded_update update_1
         )
         update
           ON (
@@ -301,7 +301,7 @@ FROM
           relay_1.old_root,
           relay_1.gs_chain_id
         FROM
-          decoded_update relay_1
+          prod_views.decoded_update relay_1
       ) relay ON (
         (
           (decoded_dispatch.committed_root = relay.old_root)
@@ -320,12 +320,11 @@ FROM
 
 
 
-
 ====
 
 
 CREATE
-OR REPLACE VIEW "staging_views"."decoded_dispatch" AS (DECODED DISPATCH SQL CODE) AS (
+OR REPLACE VIEW "staging_views"."decoded_dispatch" AS (
   SELECT
     dispatch.id,
     dispatch."timestamp",
@@ -448,6 +447,7 @@ OR REPLACE VIEW "staging_views"."decoded_dispatch" AS (DECODED DISPATCH SQL CODE
   FROM
     staging.dispatch
 )
+
 SELECT
   decoded.id,
   decoded."timestamp",
@@ -512,7 +512,6 @@ SELECT
   END AS message__token__domain_name
 FROM
   decoded;
-
 
 
 ------
@@ -593,7 +592,7 @@ FROM
   (
     (
       (
-        decoded_dispatch
+        staging_views.decoded_dispatch
         LEFT JOIN (
           SELECT
             update_1.old_root,
@@ -604,7 +603,7 @@ FROM
             update_1."timestamp",
             update_1.gs_chain_id
           FROM
-            decoded_update update_1
+            staging_views.decoded_update update_1
         )
         update
           ON (
@@ -627,7 +626,7 @@ FROM
           relay_1.old_root,
           relay_1.gs_chain_id
         FROM
-          decoded_update relay_1
+          staging_views.decoded_update relay_1
       ) relay ON (
         (
           (decoded_dispatch.committed_root = relay.old_root)
@@ -643,4 +642,3 @@ FROM
       )
     )
   );
-
