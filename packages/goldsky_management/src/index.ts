@@ -1,6 +1,11 @@
 import fs from "fs";
 import ejs from 'ejs';
 
+type Domain = {
+    name: string
+    domain: number
+}
+
 class LocatedTable {
     name: string;
     schema: Schema;
@@ -63,14 +68,16 @@ class Env {
     name: string;
     source: Schema[];
     destination: Schema;
+    domains: Domain[]
 
     toProduce: ViewTemplate[];
 
-    constructor(name: string, source: Schema[], destination: Schema) {
+    constructor(name: string, source: Schema[], destination: Schema, domains: Domain[]) {
         this.name = name;
         this.source = source;
         this.destination = destination;
-        this.toProduce = []
+        this.domains = domains;
+        this.toProduce = [];
     }
 
     addToProduce(...vt: ViewTemplate[]) {
@@ -117,24 +124,41 @@ let prodSource = new Schema('subgraph');
 let stageSource = new Schema('staging');
 prodSource.registerTable('dispatch');
 stageSource.registerTable('dispatch');
+prodSource.registerTable('update');
+stageSource.registerTable('update');
 
 // Destination views for both environments
 let prodDest = new Schema('prod_views');
 let stageDest = new Schema('staging_views');
 
+let prodDomainMapping: Domain[] = [
+    { name: 'ethereum', domain: 6648936 },
+    { name: 'avalanche', domain: 1635148152 },
+    { name: 'evmos', domain: 1702260083 },
+    { name: 'milkomedaC1', domain: 25393 },
+    { name: 'moonbeam', domain: 1650811245 },
+    { name: 'xdai', domain: 2019844457 },
+]
+let stageDomainMapping: Domain[] = [
+    { name: 'goerli', domain: 1337 },
+    { name: 'sepolia', domain: 9999 },
+]
+
 // Initiate environments with source and destination schemas.
 // both source and destination schemas are used as a source, to allow
 // re-use of freshly created views
-let prod = new Env('production', [prodSource, prodDest], prodDest);
-let stage = new Env('staging', [stageSource, stageDest], stageDest);
+let prod = new Env('production', [prodSource, prodDest], prodDest, prodDomainMapping);
+let stage = new Env('staging', [stageSource, stageDest], stageDest, stageDomainMapping);
 
 // Dummy super class that leads the dance
 let s = new Setup([prod, stage]);
 
 // Register views. (name, template, required tables/views by name)
-let disp = new ViewTemplate('decoded_dispatch', fs.readFileSync('./views/decodedDispatch.sql', 'utf8'), ['dispatch']);
+let disp = new ViewTemplate('decoded_dispatch', fs.readFileSync('./views/decodedDispatch.sql', 'utf8'), [`dispatch`]);
+let update = new ViewTemplate('decoded_update', fs.readFileSync('./views/decodedUpdate.sql', 'utf8'), ['update']);
 let events = new ViewTemplate('events', fs.readFileSync('./views/events.sql', 'utf8'), ['decoded_dispatch']);
 s.addView(disp);
+s.addView(update);
 s.addView(events);
 
 // Output the result
