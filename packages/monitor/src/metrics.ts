@@ -205,20 +205,21 @@ export class MonitoringCollector extends MetricsCollector {
   //   this.rpcErrors.labels(code, query, this.environment).inc();
   // }
 
-  async recordRequest<T>(request: Promise<T>, service: string, requestName: string, ...labels: string[]): Promise<T> {
+  async recordRequest<T>(request: Promise<T>, service: string, requestName: string, ...labels: string[]): Promise<T | undefined> {
     const start = Date.now();
     let result: T;
     try {
       result = await request;
+      const duration = Date.now() - start;
+      this.requests.labels(service, requestName, ...labels, this.environment).observe(duration);
+      return result;
     } catch(e) {
       this.requestErrors.labels(service, requestName, ...labels, this.environment).inc();
-      throw e;
+      // throw e;
     }
     
-    const duration = Date.now() - start;
-    this.requests.labels(service, requestName, ...labels, this.environment).observe(duration);
     
-    return result;
+    return undefined
   }
 }
 // TODO: might want to just copy the MetricsCollector from here:

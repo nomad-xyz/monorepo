@@ -72,7 +72,7 @@ export class Goldsky extends TaskRunner {
 
     const response = await this.record(
       request(this.uri, query, {}, this.headers),
-      'goldsky', GoldSkyQuery.StagingProcessFailureEvents, 'kek'
+      'goldsky', GoldSkyQuery.StagingProcessFailureEvents, 'empty'
     );
 
     console.log('numProcessFailureEvents response', response);
@@ -98,7 +98,7 @@ export class Goldsky extends TaskRunner {
 
     const response = await this.record(
       request(this.uri, query, {}, this.headers),
-      'goldsky', GoldSkyQuery.StagingRecoveryEvents, 'kek'
+      'goldsky', GoldSkyQuery.StagingRecoveryEvents, 'empty'
     );
 
     console.log('numRecoveryEvents response', response);

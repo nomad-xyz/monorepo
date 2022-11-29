@@ -28,7 +28,9 @@ export abstract class TaskRunner {
     }
 
     abstract cooldown(): number;
-    async record<T>(request: Promise<T>, domain: string, requestName: string, ...labels: string[]): Promise<T> {
+
+    //                                                                                                     \/ probably should be something else, but not throwing.
+    async record<T>(request: Promise<T>, domain: string, requestName: string, ...labels: string[]): Promise<T | undefined> {
         return await this.metrics.recordRequest(request, domain, requestName, ...labels);
     }
 }
