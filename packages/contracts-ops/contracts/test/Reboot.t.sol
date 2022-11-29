@@ -49,7 +49,15 @@ contract RebootTest is RebootLogic, NomadTest {
             getDomainNumber(localDomainName)
         );
         // basic vars
-        remote = getConnections(localDomainName)[0];
+        string memory governorDomainName = getDomainName(getGovernorDomain());
+        if (
+            keccak256(bytes(localDomainName)) ==
+            keccak256(bytes(governorDomainName))
+        ) {
+            remote = getConnections(localDomainName)[0];
+        } else {
+            remote = governorDomainName;
+        }
         remoteDomain = getDomainNumber(remote);
         homeDomain = getDomainNumber(localDomainName);
     }
