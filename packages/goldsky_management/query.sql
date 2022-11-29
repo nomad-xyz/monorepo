@@ -1,5 +1,6 @@
+-- ENV production START
 CREATE
-OR REPLACE VIEW "prod_views"."decoded_dispatch" AS (
+OR REPLACE VIEW "production_views"."decoded_dispatch" AS (
   SELECT
     dispatch.id,
     dispatch."timestamp",
@@ -231,10 +232,8 @@ FROM
   decoded;
 
 
-------
-
 CREATE
-OR REPLACE VIEW "prod_views"."decoded_update" AS
+OR REPLACE VIEW "production_views"."decoded_update" AS
 SELECT
 update.vid,
 update.block,
@@ -275,10 +274,8 @@ update._gs_gid,
 FROM
   subgraph.update;
 
-------
-
 CREATE
-OR REPLACE VIEW "prod_views"."events" AS (
+OR REPLACE VIEW "production_views"."events" AS (
 SELECT
   decoded_dispatch.id,
   decoded_dispatch.message_hash,
@@ -322,7 +319,7 @@ FROM
   (
     (
       (
-        prod_views.decoded_dispatch
+        production_views.decoded_dispatch
         LEFT JOIN (
           SELECT
             update_1.old_root,
@@ -333,7 +330,7 @@ FROM
             update_1."timestamp",
             update_1.gs_chain_id
           FROM
-            prod_views.decoded_update update_1
+            production_views.decoded_update update_1
         )
         update
           ON (
@@ -356,7 +353,7 @@ FROM
           relay_1.old_root,
           relay_1.gs_chain_id
         FROM
-          prod_views.decoded_update relay_1
+          production_views.decoded_update relay_1
       ) relay ON (
         (
           (decoded_dispatch.committed_root = relay.old_root)
@@ -366,7 +363,7 @@ FROM
         )
       )
     )
-    LEFT JOIN [object process] ON (
+    LEFT JOIN subgraph.process ON (
       (
         decoded_dispatch.message_hash = process.message_hash
       )
@@ -374,10 +371,35 @@ FROM
   );
 
 
+CREATE
+OR REPLACE VIEW "production_views"."number_messages" AS
+SELECT
+  (ms.dispatched - ms.updated) AS dispatched,
+  (ms.updated - ms.relayed) AS updated,
+  (ms.relayed - ms.processed) AS relayed,
+  ms.processed,
+  ms.origin,
+  ms.destination
+FROM
+  (
+    SELECT
+      events.origin_domain_id AS origin,
+      events.destination_domain_id AS destination,
+      count(*) AS dispatched,
+      count(events.update_tx) AS updated,
+      count(events.relay_tx) AS relayed,
+      count(events.process_tx) AS processed
+    FROM
+      production_views.events
+    GROUP BY
+      events.origin_domain_id,
+      events.destination_domain_id
+  ) ms;
+-- ENV production END
 
-====
 
 
+-- ENV staging START
 CREATE
 OR REPLACE VIEW "staging_views"."decoded_dispatch" AS (
   SELECT
@@ -587,8 +609,6 @@ FROM
   decoded;
 
 
-------
-
 CREATE
 OR REPLACE VIEW "staging_views"."decoded_update" AS
 SELECT
@@ -622,8 +642,6 @@ update._gs_gid,
   END AS gs_chain_id
 FROM
   staging.update;
-
-------
 
 CREATE
 OR REPLACE VIEW "staging_views"."events" AS (
@@ -714,9 +732,36 @@ FROM
         )
       )
     )
-    LEFT JOIN [object process] ON (
+    LEFT JOIN staging.process ON (
       (
         decoded_dispatch.message_hash = process.message_hash
       )
     )
   );
+
+
+CREATE
+OR REPLACE VIEW "staging_views"."number_messages" AS
+SELECT
+  (ms.dispatched - ms.updated) AS dispatched,
+  (ms.updated - ms.relayed) AS updated,
+  (ms.relayed - ms.processed) AS relayed,
+  ms.processed,
+  ms.origin,
+  ms.destination
+FROM
+  (
+    SELECT
+      events.origin_domain_id AS origin,
+      events.destination_domain_id AS destination,
+      count(*) AS dispatched,
+      count(events.update_tx) AS updated,
+      count(events.relay_tx) AS relayed,
+      count(events.process_tx) AS processed
+    FROM
+      staging_views.events
+    GROUP BY
+      events.origin_domain_id,
+      events.destination_domain_id
+  ) ms;
+-- ENV staging END

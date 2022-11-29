@@ -77,7 +77,7 @@ FROM
           relay_1.old_root,
           relay_1.gs_chain_id
         FROM
-          <%= location; %>.decoded_update relay_1
+          <%= decoded_update; %> relay_1
       ) relay ON (
         (
           (decoded_dispatch.committed_root = relay.old_root)

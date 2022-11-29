@@ -95,7 +95,7 @@ class Env {
             console.log(`Creating view '${toProduce.name}' in '${this.destination.name}'`)
             this.destination.tables.push(new View(toProduce.name, this.destination));
             return produced;
-        }).join('\n\n------\n\n');
+        }).join('\n\n');
     }
 }
 
@@ -116,7 +116,7 @@ class Setup {
 
     produce(): string {
         this.envs.forEach(env => env.addToProduce(...this.viewTemplates));
-        return this.envs.map(env => env.produce()).join('\n\n\n====\n\n\n');
+        return this.envs.map(env => `-- ENV ${env.name} START\n` + env.produce() + `\n-- ENV ${env.name} END\n`).join('\n\n\n');
     }
 }
 
@@ -127,9 +127,11 @@ prodSource.registerTable('dispatch');
 stageSource.registerTable('dispatch');
 prodSource.registerTable('update');
 stageSource.registerTable('update');
+prodSource.registerTable('process');
+stageSource.registerTable('process');
 
 // Destination views for both environments
-let prodDest = new Schema('prod_views');
+let prodDest = new Schema('production_views');
 let stageDest = new Schema('staging_views');
 
 let prodDomainMapping: Domain[] = [
@@ -157,10 +159,12 @@ let s = new Setup([prod, stage]);
 // Register views. (name, template, required tables/views by name)
 let disp = new ViewTemplate('decoded_dispatch', fs.readFileSync('./views/decodedDispatch.sql', 'utf8'), [`dispatch`]);
 let update = new ViewTemplate('decoded_update', fs.readFileSync('./views/decodedUpdate.sql', 'utf8'), ['update']);
-let events = new ViewTemplate('events', fs.readFileSync('./views/events.sql', 'utf8'), ['decoded_dispatch']);
+let events = new ViewTemplate('events', fs.readFileSync('./views/events.sql', 'utf8'), ['decoded_dispatch', 'decoded_update', 'process']);
+let numberMessages = new ViewTemplate('number_messages', fs.readFileSync('./views/numberMessages.sql', 'utf8'), ['events']);
 s.addView(disp);
 s.addView(update);
 s.addView(events);
+s.addView(numberMessages);
 
 // Output the result
 fs.writeFileSync('./query.sql', s.produce())
