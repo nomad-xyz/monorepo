@@ -7,11 +7,12 @@ import {NomadTest} from "@nomad-xyz/contracts-core/contracts/test/utils/NomadTes
 
 contract RebootTest is RebootLogic, NomadTest {
     string remote;
-    string constant _domain = "ethereum";
+    string constant testDomain = "ethereum";
+    uint256 constant testDomainBlock = 15_977_624;
 
     function setUpReboot(string memory testName) public {
         // ALL
-        vm.createSelectFork(vm.envString("RPC_URL"), 15_977_624);
+        vm.createSelectFork(vm.envString("RPC_URL"), testDomainBlock);
         // read fresh config from config.json and write it to a test-specific file
         // so that state from each test don't collide
         // NOTE: this is super messy.. it would be better if modifications were stored to memory within the test run
@@ -25,7 +26,12 @@ contract RebootTest is RebootLogic, NomadTest {
         vm.writeFile(_path, vm.readFile("./actions/config.json"));
         __Config_initialize(_configName);
         // init fresh callbatch
-        __CallBatch_initialize(_domain, getDomainNumber(_domain), "", true);
+        __CallBatch_initialize(
+            testDomain,
+            getDomainNumber(testDomain),
+            "",
+            true
+        );
         // call base setup
         super.setUp();
         // basic vars
