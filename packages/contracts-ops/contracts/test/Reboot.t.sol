@@ -33,21 +33,6 @@ contract RebootTest is RebootLogic, NomadTest {
         );
         // call base setup
         super.setUp();
-        // set fake updater for remote chain replica
-        // before updater rotation, so it will be rotated on-chain
-        vm.writeJson(
-            vm.toString(updaterAddr),
-            outputPath,
-            protocolAttributePath(remote, "updater")
-        );
-        reloadConfig();
-        // perform reboot actions
-        reboot(localDomainName);
-        // execute governance actions via vm.prank
-        prankExecuteRecoveryManager(
-            address(getGovernanceRouter(localDomainName)),
-            getDomainNumber(localDomainName)
-        );
         // basic vars
         string memory governorDomainName = getDomainName(getGovernorDomain());
         if (
@@ -60,5 +45,25 @@ contract RebootTest is RebootLogic, NomadTest {
         }
         remoteDomain = getDomainNumber(remote);
         homeDomain = getDomainNumber(localDomainName);
+        // set fake updater for remote chain replica
+        // before updater rotation, so it will be rotated on-chain
+        vm.writeJson(
+            vm.toString(updaterAddr),
+            outputPath,
+            protocolConfigAttributePath(localDomainName, "updater")
+        );
+        vm.writeJson(
+            vm.toString(updaterAddr),
+            outputPath,
+            protocolConfigAttributePath(remote, "updater")
+        );
+        reloadConfig();
+        // perform reboot actions
+        reboot(localDomainName);
+        // execute governance actions via vm.prank
+        prankExecuteRecoveryManager(
+            address(getGovernanceRouter(localDomainName)),
+            getDomainNumber(localDomainName)
+        );
     }
 }

@@ -424,7 +424,7 @@ abstract contract Config is INomadProtocol {
     function protocolConfigAttributePath(
         string memory domain,
         string memory key
-    ) private pure returns (string memory) {
+    ) internal pure returns (string memory) {
         return string(abi.encodePacked(protocolConfigPath(domain), ".", key));
     }
 
@@ -607,7 +607,10 @@ contract TestJson is Test, Config {
         );
         vm.expectRevert("no ethHelper for randomDomain");
         getEthHelper("randomDomain");
-        assertEq(getUpdater("avalanche"), 0x5067c8a9cBf708f885195aA318F8d7A3f2f5D112);
+        assertEq(
+            getUpdater("avalanche"),
+            0x5067c8a9cBf708f885195aA318F8d7A3f2f5D112
+        );
         assertEq(getDomainName(1635148152), "avalanche");
         assertEq(getNetworks()[0], "avalanche");
         assertEq(
