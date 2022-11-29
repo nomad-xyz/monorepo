@@ -7,7 +7,7 @@ import {NomadTest} from "@nomad-xyz/contracts-core/contracts/test/utils/NomadTes
 
 contract RebootTest is RebootLogic, NomadTest {
     string remote;
-    string constant _domain = "ethereum";
+    string constant testDomain = "ethereum";
 
     function setUpReboot(string memory testName) public {
         // ALL
@@ -25,10 +25,15 @@ contract RebootTest is RebootLogic, NomadTest {
         vm.writeFile(_path, vm.readFile("./actions/config.json"));
         __Config_initialize(_configName);
         // init fresh callbatch
-        __CallBatch_initialize(_domain, getDomainNumber(_domain), "", true);
+        __CallBatch_initialize(
+            testDomain,
+            getDomainNumber(testDomain),
+            "",
+            true
+        );
         // call base setup
         super.setUp();
-        // set fake updater for ethereum & 1 remote chain
+        // set fake updater for remote chain replica
         // before updater rotation, so it will be rotated on-chain
         vm.writeJson(
             vm.toString(updaterAddr),
