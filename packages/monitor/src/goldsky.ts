@@ -78,6 +78,21 @@ export class Goldsky extends TaskRunner {
 
     console.log('numProcessFailureEvents response', response);
 
+    response.staging_process_failure_aggregate.forEach(
+      (row: {
+        amount: string
+        asset: string
+        _gs_chain: string
+      }) => {
+
+        this.metrics.incNumProcessFailureEvents(
+          row._gs_chain.toString(),
+          row.asset.toString()
+        );
+
+      },
+    );
+
     console.log('nodes', response.staging_process_failure_aggregate.nodes);
 
     // TODO: add method to MonitoringCollector class to inc numProcessFailureEvents counter
@@ -103,6 +118,21 @@ export class Goldsky extends TaskRunner {
     const response = await this.record(
       request(this.uri, query, {}, this.headers),
       'goldsky', GoldSkyQuery.StagingRecoveryEvents, 'empty'
+    );
+
+    response.staging_recovery_aggregate.forEach(
+      (row: {
+        _gs_chain: string;
+        amount: string;
+        asset: string;
+      }) => {
+
+        this.metrics.incNumRecoveryEvents(
+          row._gs_chain.toString(),
+          row.asset.toString()
+        );
+      
+      },
     );
 
     console.log('numRecoveryEvents response', response);

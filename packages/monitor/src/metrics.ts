@@ -219,7 +219,7 @@ export class MonitoringCollector extends MetricsCollector {
     }
     
     
-    return undefined
+    return undefined;
   }
 }
 // TODO: might want to just copy the MetricsCollector from here:
