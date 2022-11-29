@@ -92,4 +92,5 @@ FROM
         decoded_dispatch.message_hash = process.message_hash
       )
     )
-  );
+  )
+);

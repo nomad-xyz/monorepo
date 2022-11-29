@@ -1,6 +1,6 @@
 -- ENV production START
 CREATE
-OR REPLACE VIEW "production_views"."decoded_dispatch" AS (
+OR REPLACE VIEW "production_views"."decoded_dispatch" AS WITH decoded AS (
   SELECT
     dispatch.id,
     dispatch."timestamp",
@@ -368,7 +368,8 @@ FROM
         decoded_dispatch.message_hash = process.message_hash
       )
     )
-  );
+  )
+);
 
 
 CREATE
@@ -401,7 +402,7 @@ FROM
 
 -- ENV staging START
 CREATE
-OR REPLACE VIEW "staging_views"."decoded_dispatch" AS (
+OR REPLACE VIEW "staging_views"."decoded_dispatch" AS WITH decoded AS (
   SELECT
     dispatch.id,
     dispatch."timestamp",
@@ -737,7 +738,8 @@ FROM
         decoded_dispatch.message_hash = process.message_hash
       )
     )
-  );
+  )
+);
 
 
 CREATE
