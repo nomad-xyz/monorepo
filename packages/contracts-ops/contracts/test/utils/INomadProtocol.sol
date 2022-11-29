@@ -31,7 +31,7 @@ interface INomadProtocol {
 
     function getGovernor() external returns (address);
 
-    function getGovernorDomain() external returns (uint256);
+    function getGovernorDomain() external returns (uint32);
 
     function getUpdater(string memory domain) external returns (address);
 
