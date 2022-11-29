@@ -55,10 +55,6 @@ export class Goldsky extends TaskRunner {
   }
 
   async numProcessFailureEvents(): Promise<void> {
-    // TODO: since tables are labeled by environment, we should use a
-    // different set of queries between staging / production.
-    // tldr: Follow the convention we use in the gui.
-
     const query = gql`
       query StagingProcessFailureEvents {
         staging_process_failure_aggregate {
@@ -94,15 +90,9 @@ export class Goldsky extends TaskRunner {
     );
 
     console.log('nodes', response.staging_process_failure_aggregate.nodes);
-
-    // TODO: add method to MonitoringCollector class to inc numProcessFailureEvents counter
   }
 
   async numProcessRecoveryEvents(): Promise<void> {
-    // TODO: since tables are labeled by environment, we should use a
-    // different set of queries between staging / production.
-    // tldr: Follow the convention we use in the gui.
-
     const query = gql`
       query StagingRecoveryEvents {
         staging_recovery_aggregate {
@@ -137,8 +127,6 @@ export class Goldsky extends TaskRunner {
 
     console.log('numRecoveryEvents response', response);
     console.log(response.staging_recovery_aggregate.nodes);
-
-    // TODO: add method to MonitoringCollector class to inc numRecoveryEvents counter
   }
 
   async numMessages(): Promise<void> {
