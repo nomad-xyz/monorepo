@@ -243,11 +243,11 @@ abstract contract Config is INomadProtocol {
             );
     }
 
-    function getGovernorDomain() public view override returns (uint256) {
+    function getGovernorDomain() public view override returns (uint32) {
         return
             abi.decode(
                 vm.parseJson(config, ".protocol.governor.domain"),
-                (uint256)
+                (uint32)
             );
     }
 
