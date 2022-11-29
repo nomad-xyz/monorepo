@@ -58,15 +58,6 @@ export class Goldsky extends TaskRunner {
     // TODO: since tables are labeled by environment, we should use a
     // different set of queries between staging / production.
     // tldr: Follow the convention we use in the gui.
-
-    // TODO: figure out how to split up these shared headers/uri/secret
-    const headers = {
-      'content-type': 'application/json',
-      'x-hasura-admin-secret': 'yaZj76nCg5q',
-    };
-
-    const uri = 'https://api.goldsky.io/c/nomad/gql/v1/graphql';
-
     const query = gql`
       query StagingProcessFailureEvents {
         staging_process_failure_aggregate {
@@ -80,7 +71,7 @@ export class Goldsky extends TaskRunner {
     `;
 
     const response = await this.record(
-      request(uri, query, {}, headers),
+      request(this.uri, query, {}, this.headers),
       'goldsky',
       GoldSkyQuery.StagingProcessFailureEvents,
       'empty',
@@ -97,15 +88,6 @@ export class Goldsky extends TaskRunner {
     // TODO: since tables are labeled by environment, we should use a
     // different set of queries between staging / production.
     // tldr: Follow the convention we use in the gui.
-
-    // TODO: figure out how to split up these shared headers/uri/secret
-    const headers = {
-      'content-type': 'application/json',
-      'x-hasura-admin-secret': 'yaZj76nCg5q',
-    };
-
-    const uri = 'https://api.goldsky.io/c/nomad/gql/v1/graphql';
-
     const query = gql`
       query StagingRecoveryEvents {
         staging_recovery_aggregate {
@@ -119,7 +101,7 @@ export class Goldsky extends TaskRunner {
     `;
 
     const response = await this.record(
-      request(uri, query, {}, headers),
+      request(this.uri, query, {}, this.headers),
       'goldsky',
       GoldSkyQuery.StagingRecoveryEvents,
       'empty',
