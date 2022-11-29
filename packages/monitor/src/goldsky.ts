@@ -77,11 +77,12 @@ export class Goldsky extends TaskRunner {
       'empty',
     );
 
-    console.log('numProcessFailureEvents response', response);
+    // NOTE: uncomment to see shape of recovery events data
+    // console.log('numProcessFailureEvents response', response);
 
-    console.log('nodes', response.staging_process_failure_aggregate.nodes);
-
-    // TODO: add method to MonitoringCollector class to inc numProcessFailureEvents counter
+    response.staging_process_failure_aggregate.nodes.forEach((event: any) => {
+      this.metrics.incNumProcessFailureEvents(event.asset);
+    });
   }
 
   async numProcessRecoveryEvents(): Promise<void> {
@@ -107,10 +108,20 @@ export class Goldsky extends TaskRunner {
       'empty',
     );
 
-    console.log('numRecoveryEvents response', response);
-    console.log(response.staging_recovery_aggregate.nodes);
+    // NOTE: uncomment to see shape of recovery events data
+    // console.log('numRecoveryEvents response', response);
 
-    // TODO: add method to MonitoringCollector class to inc numRecoveryEvents counter
+    type StagingRecoveryEvent = {
+      _gs_chain: string;
+      amount: string;
+      asset: string;
+    };
+
+    response.staging_recovery_aggregate.nodes.forEach(
+      (event: StagingRecoveryEvent) => {
+        this.metrics.incNumRecoveryEvents(event.asset);
+      },
+    );
   }
 
   async numMessages(): Promise<void> {
