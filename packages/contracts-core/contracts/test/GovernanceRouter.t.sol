@@ -853,7 +853,7 @@ contract GovernanceRouterTest is NomadTest {
         // todo: expectNoCall Home.Dispatch
         vm.expectEmit(true, true, true, true);
         emit TransferGovernor(
-            homeDomain,
+            governanceRouter.governorDomain(),
             newDomain,
             governanceRouter.governor(),
             newGovernor
@@ -889,7 +889,7 @@ contract GovernanceRouterTest is NomadTest {
         // todo: expectNoCall Home.Dispatch
         vm.expectEmit(true, true, true, true);
         emit TransferGovernor(
-            homeDomain,
+            governanceRouter.governorDomain(),
             newDomain,
             governanceRouter.governor(),
             newGovernor
