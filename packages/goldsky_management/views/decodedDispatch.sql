@@ -157,32 +157,44 @@ SELECT
 
   CASE
     decoded.origin_domain_id
-    WHEN 6648936 THEN 'ethereum' :: text
-    WHEN 1635148152 THEN 'avalanche' :: text
-    WHEN 1702260083 THEN 'evmos' :: text
-    WHEN 25393 THEN 'milkomedaC1' :: text
-    WHEN 1650811245 THEN 'moonbeam' :: text
-    WHEN 2019844457 THEN 'xdai' :: text
+    <% for (const domain of domains) { %>
+      WHEN <%= domain.domain %> THEN '<%= domain.name %>' :: text
+    <% } %>
+
+
+    -- WHEN 6648936 THEN 'ethereum' :: text
+    -- WHEN 1635148152 THEN 'avalanche' :: text
+    -- WHEN 1702260083 THEN 'evmos' :: text
+    -- WHEN 25393 THEN 'milkomedaC1' :: text
+    -- WHEN 1650811245 THEN 'moonbeam' :: text
+    -- WHEN 2019844457 THEN 'xdai' :: text
     ELSE 'OTHER' :: text
   END AS origin_domain_name,
   CASE
     decoded.destination_domain_id
-    WHEN 6648936 THEN 'ethereum' :: text
-    WHEN 1635148152 THEN 'avalanche' :: text
-    WHEN 1702260083 THEN 'evmos' :: text
-    WHEN 25393 THEN 'milkomedaC1' :: text
-    WHEN 1650811245 THEN 'moonbeam' :: text
-    WHEN 2019844457 THEN 'xdai' :: text
+    <% for (const domain of domains) { %>
+      WHEN <%= domain.domain %> THEN '<%= domain.name %>' :: text
+    <% } %>
+    -- WHEN 6648936 THEN 'ethereum' :: text
+    -- WHEN 1635148152 THEN 'avalanche' :: text
+    -- WHEN 1702260083 THEN 'evmos' :: text
+    -- WHEN 25393 THEN 'milkomedaC1' :: text
+    -- WHEN 1650811245 THEN 'moonbeam' :: text
+    -- WHEN 2019844457 THEN 'xdai' :: text
     ELSE 'OTHER' :: text
   END AS destination_domain_name,
   CASE
     decoded.message__token__domain
-    WHEN '6648936' :: bigint THEN 'ethereum' :: text
-    WHEN '1635148152' :: bigint THEN 'avalanche' :: text
-    WHEN '1702260083' :: bigint THEN 'evmos' :: text
-    WHEN '25393' :: bigint THEN 'milkomedaC1' :: text
-    WHEN '1650811245' :: bigint THEN 'moonbeam' :: text
-    WHEN '2019844457' :: bigint THEN 'xdai' :: text
+
+    <% for (const domain of domains) { %>
+      WHEN '<%= domain.domain %>' :: bigint THEN '<%= domain.name %>' :: text
+    <% } %>
+    -- WHEN '6648936' :: bigint THEN 'ethereum' :: text
+    -- WHEN '1635148152' :: bigint THEN 'avalanche' :: text
+    -- WHEN '1702260083' :: bigint THEN 'evmos' :: text
+    -- WHEN '25393' :: bigint THEN 'milkomedaC1' :: text
+    -- WHEN '1650811245' :: bigint THEN 'moonbeam' :: text
+    -- WHEN '2019844457' :: bigint THEN 'xdai' :: text
     ELSE 'OTHER' :: text
   END AS message__token__domain_name
 FROM

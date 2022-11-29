@@ -157,32 +157,74 @@ SELECT
 
   CASE
     decoded.origin_domain_id
-    WHEN 6648936 THEN 'ethereum' :: text
-    WHEN 1635148152 THEN 'avalanche' :: text
-    WHEN 1702260083 THEN 'evmos' :: text
-    WHEN 25393 THEN 'milkomedaC1' :: text
-    WHEN 1650811245 THEN 'moonbeam' :: text
-    WHEN 2019844457 THEN 'xdai' :: text
+    
+      WHEN 6648936 THEN 'ethereum' :: text
+    
+      WHEN 1635148152 THEN 'avalanche' :: text
+    
+      WHEN 1702260083 THEN 'evmos' :: text
+    
+      WHEN 25393 THEN 'milkomedaC1' :: text
+    
+      WHEN 1650811245 THEN 'moonbeam' :: text
+    
+      WHEN 2019844457 THEN 'xdai' :: text
+    
+
+
+    -- WHEN 6648936 THEN 'ethereum' :: text
+    -- WHEN 1635148152 THEN 'avalanche' :: text
+    -- WHEN 1702260083 THEN 'evmos' :: text
+    -- WHEN 25393 THEN 'milkomedaC1' :: text
+    -- WHEN 1650811245 THEN 'moonbeam' :: text
+    -- WHEN 2019844457 THEN 'xdai' :: text
     ELSE 'OTHER' :: text
   END AS origin_domain_name,
   CASE
     decoded.destination_domain_id
-    WHEN 6648936 THEN 'ethereum' :: text
-    WHEN 1635148152 THEN 'avalanche' :: text
-    WHEN 1702260083 THEN 'evmos' :: text
-    WHEN 25393 THEN 'milkomedaC1' :: text
-    WHEN 1650811245 THEN 'moonbeam' :: text
-    WHEN 2019844457 THEN 'xdai' :: text
+    
+      WHEN 6648936 THEN 'ethereum' :: text
+    
+      WHEN 1635148152 THEN 'avalanche' :: text
+    
+      WHEN 1702260083 THEN 'evmos' :: text
+    
+      WHEN 25393 THEN 'milkomedaC1' :: text
+    
+      WHEN 1650811245 THEN 'moonbeam' :: text
+    
+      WHEN 2019844457 THEN 'xdai' :: text
+    
+    -- WHEN 6648936 THEN 'ethereum' :: text
+    -- WHEN 1635148152 THEN 'avalanche' :: text
+    -- WHEN 1702260083 THEN 'evmos' :: text
+    -- WHEN 25393 THEN 'milkomedaC1' :: text
+    -- WHEN 1650811245 THEN 'moonbeam' :: text
+    -- WHEN 2019844457 THEN 'xdai' :: text
     ELSE 'OTHER' :: text
   END AS destination_domain_name,
   CASE
     decoded.message__token__domain
-    WHEN '6648936' :: bigint THEN 'ethereum' :: text
-    WHEN '1635148152' :: bigint THEN 'avalanche' :: text
-    WHEN '1702260083' :: bigint THEN 'evmos' :: text
-    WHEN '25393' :: bigint THEN 'milkomedaC1' :: text
-    WHEN '1650811245' :: bigint THEN 'moonbeam' :: text
-    WHEN '2019844457' :: bigint THEN 'xdai' :: text
+
+    
+      WHEN '6648936' :: bigint THEN 'ethereum' :: text
+    
+      WHEN '1635148152' :: bigint THEN 'avalanche' :: text
+    
+      WHEN '1702260083' :: bigint THEN 'evmos' :: text
+    
+      WHEN '25393' :: bigint THEN 'milkomedaC1' :: text
+    
+      WHEN '1650811245' :: bigint THEN 'moonbeam' :: text
+    
+      WHEN '2019844457' :: bigint THEN 'xdai' :: text
+    
+    -- WHEN '6648936' :: bigint THEN 'ethereum' :: text
+    -- WHEN '1635148152' :: bigint THEN 'avalanche' :: text
+    -- WHEN '1702260083' :: bigint THEN 'evmos' :: text
+    -- WHEN '25393' :: bigint THEN 'milkomedaC1' :: text
+    -- WHEN '1650811245' :: bigint THEN 'moonbeam' :: text
+    -- WHEN '2019844457' :: bigint THEN 'xdai' :: text
     ELSE 'OTHER' :: text
   END AS message__token__domain_name
 FROM
@@ -209,12 +251,25 @@ update._gs_chain,
 update._gs_gid,
   CASE
     update._gs_chain
-      WHEN 'avalanche' :: text THEN 1635148152
-      WHEN 'mainnet' :: text THEN 6648936
-      WHEN 'evmos' :: text THEN 1702260083
-      WHEN 'milkomedac1' :: text THEN 25393
-      WHEN 'moonbeam' :: text THEN 1650811245
-      WHEN 'xdai' :: text THEN 2019844457
+    
+      WHEN 'ethereum' :: text THEN '6648936'
+    
+      WHEN 'avalanche' :: text THEN '1635148152'
+    
+      WHEN 'evmos' :: text THEN '1702260083'
+    
+      WHEN 'milkomedaC1' :: text THEN '25393'
+    
+      WHEN 'moonbeam' :: text THEN '1650811245'
+    
+      WHEN 'xdai' :: text THEN '2019844457'
+    
+      -- WHEN 'avalanche' :: text THEN 1635148152
+      -- WHEN 'mainnet' :: text THEN 6648936
+      -- WHEN 'evmos' :: text THEN 1702260083
+      -- WHEN 'milkomedac1' :: text THEN 25393
+      -- WHEN 'moonbeam' :: text THEN 1650811245
+      -- WHEN 'xdai' :: text THEN 2019844457
       ELSE 0
   END AS gs_chain_id
 FROM
@@ -482,32 +537,50 @@ SELECT
 
   CASE
     decoded.origin_domain_id
-    WHEN 6648936 THEN 'ethereum' :: text
-    WHEN 1635148152 THEN 'avalanche' :: text
-    WHEN 1702260083 THEN 'evmos' :: text
-    WHEN 25393 THEN 'milkomedaC1' :: text
-    WHEN 1650811245 THEN 'moonbeam' :: text
-    WHEN 2019844457 THEN 'xdai' :: text
+    
+      WHEN 1337 THEN 'goerli' :: text
+    
+      WHEN 9999 THEN 'sepolia' :: text
+    
+
+
+    -- WHEN 6648936 THEN 'ethereum' :: text
+    -- WHEN 1635148152 THEN 'avalanche' :: text
+    -- WHEN 1702260083 THEN 'evmos' :: text
+    -- WHEN 25393 THEN 'milkomedaC1' :: text
+    -- WHEN 1650811245 THEN 'moonbeam' :: text
+    -- WHEN 2019844457 THEN 'xdai' :: text
     ELSE 'OTHER' :: text
   END AS origin_domain_name,
   CASE
     decoded.destination_domain_id
-    WHEN 6648936 THEN 'ethereum' :: text
-    WHEN 1635148152 THEN 'avalanche' :: text
-    WHEN 1702260083 THEN 'evmos' :: text
-    WHEN 25393 THEN 'milkomedaC1' :: text
-    WHEN 1650811245 THEN 'moonbeam' :: text
-    WHEN 2019844457 THEN 'xdai' :: text
+    
+      WHEN 1337 THEN 'goerli' :: text
+    
+      WHEN 9999 THEN 'sepolia' :: text
+    
+    -- WHEN 6648936 THEN 'ethereum' :: text
+    -- WHEN 1635148152 THEN 'avalanche' :: text
+    -- WHEN 1702260083 THEN 'evmos' :: text
+    -- WHEN 25393 THEN 'milkomedaC1' :: text
+    -- WHEN 1650811245 THEN 'moonbeam' :: text
+    -- WHEN 2019844457 THEN 'xdai' :: text
     ELSE 'OTHER' :: text
   END AS destination_domain_name,
   CASE
     decoded.message__token__domain
-    WHEN '6648936' :: bigint THEN 'ethereum' :: text
-    WHEN '1635148152' :: bigint THEN 'avalanche' :: text
-    WHEN '1702260083' :: bigint THEN 'evmos' :: text
-    WHEN '25393' :: bigint THEN 'milkomedaC1' :: text
-    WHEN '1650811245' :: bigint THEN 'moonbeam' :: text
-    WHEN '2019844457' :: bigint THEN 'xdai' :: text
+
+    
+      WHEN '1337' :: bigint THEN 'goerli' :: text
+    
+      WHEN '9999' :: bigint THEN 'sepolia' :: text
+    
+    -- WHEN '6648936' :: bigint THEN 'ethereum' :: text
+    -- WHEN '1635148152' :: bigint THEN 'avalanche' :: text
+    -- WHEN '1702260083' :: bigint THEN 'evmos' :: text
+    -- WHEN '25393' :: bigint THEN 'milkomedaC1' :: text
+    -- WHEN '1650811245' :: bigint THEN 'moonbeam' :: text
+    -- WHEN '2019844457' :: bigint THEN 'xdai' :: text
     ELSE 'OTHER' :: text
   END AS message__token__domain_name
 FROM
@@ -534,12 +607,17 @@ update._gs_chain,
 update._gs_gid,
   CASE
     update._gs_chain
-      WHEN 'avalanche' :: text THEN 1635148152
-      WHEN 'mainnet' :: text THEN 6648936
-      WHEN 'evmos' :: text THEN 1702260083
-      WHEN 'milkomedac1' :: text THEN 25393
-      WHEN 'moonbeam' :: text THEN 1650811245
-      WHEN 'xdai' :: text THEN 2019844457
+    
+      WHEN 'goerli' :: text THEN '1337'
+    
+      WHEN 'sepolia' :: text THEN '9999'
+    
+      -- WHEN 'avalanche' :: text THEN 1635148152
+      -- WHEN 'mainnet' :: text THEN 6648936
+      -- WHEN 'evmos' :: text THEN 1702260083
+      -- WHEN 'milkomedac1' :: text THEN 25393
+      -- WHEN 'moonbeam' :: text THEN 1650811245
+      -- WHEN 'xdai' :: text THEN 2019844457
       ELSE 0
   END AS gs_chain_id
 FROM

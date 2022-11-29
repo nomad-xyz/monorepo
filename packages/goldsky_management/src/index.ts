@@ -43,10 +43,11 @@ class ViewTemplate {
         this.required = required;
     }
 
-    produce(destination: Schema, tables: LocatedTable[]) {
+    produce(destination: Schema, tables: LocatedTable[], additional?: any) {
         const replace: any = {
             location: destination.name,
             name: this.name,
+            ...additional
         };
         this.required.forEach(reqTable => {
             const lt = tables.find(locTable => locTable.name === reqTable);
@@ -90,7 +91,7 @@ class Env {
             this.source.forEach(s => {
                 console.log(s.tables)
             });
-            const produced = toProduce.produce(this.destination, this.source.map(s => s.tables).flat());
+            const produced = toProduce.produce(this.destination, this.source.map(s => s.tables).flat(), {domains: this.domains});
             console.log(`Creating view '${toProduce.name}' in '${this.destination.name}'`)
             this.destination.tables.push(new View(toProduce.name, this.destination));
             return produced;
