@@ -1,5 +1,5 @@
 CREATE
-OR REPLACE VIEW "<%= location; %>"."<%= name; %>" AS (
+OR REPLACE VIEW "<%= location; %>"."<%= name; %>" AS WITH decoded AS (
   SELECT
     dispatch.id,
     dispatch."timestamp",
