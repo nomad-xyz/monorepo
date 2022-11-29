@@ -597,7 +597,7 @@ abstract contract Config is INomadProtocol {
 contract TestJson is Test, Config {
     function setUp() public {
         // solhint-disable-next-line quotes
-        config = '{ "networks": ["avalanche", "ethereum"], "protocol": { "networks": { "avalanche": { "bridgeConfiguration": { "accountant": { "owner": "0x0000011111222223333344444555557777799999" }}, "domain": 1635148152}}, "governor": {"domain": 6648936, "id": "0x93277b8f5939975b9e6694d5fd2837143afbf68a"}}, "core": {"ethereum": {"deployHeight": 1234, "governanceRouter": {"proxy":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0","implementation":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0","beacon":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0"}, "ethHelper": "0x999d80F7FC17316b4c83f072b92EF37b72718De0"}}}';
+        config = '{ "networks": ["avalanche", "ethereum"], "protocol": { "networks": { "avalanche": { "bridgeConfiguration": { "accountant": { "owner": "0x0000011111222223333344444555557777799999" }}, "configuration": { "updater": "0x5067c8a9cBf708f885195aA318F8d7A3f2f5D112"}, "domain": 1635148152}}, "governor": {"domain": 6648936, "id": "0x93277b8f5939975b9e6694d5fd2837143afbf68a"}}, "core": {"ethereum": {"deployHeight": 1234, "governanceRouter": {"proxy":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0","implementation":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0","beacon":"0x569D80f7FC17316B4C83f072b92EF37B72819DE0"}, "ethHelper": "0x999d80F7FC17316b4c83f072b92EF37b72718De0"}}}';
     }
 
     function test_Json() public {
@@ -607,6 +607,7 @@ contract TestJson is Test, Config {
         );
         vm.expectRevert("no ethHelper for randomDomain");
         getEthHelper("randomDomain");
+        assertEq(getUpdater("avalanche"), 0x5067c8a9cBf708f885195aA318F8d7A3f2f5D112);
         assertEq(getDomainName(1635148152), "avalanche");
         assertEq(getNetworks()[0], "avalanche");
         assertEq(
