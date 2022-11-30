@@ -16,8 +16,8 @@ console.log('hello monitor');
 
 export const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
-// type Metrics = number[];
-// const metrics: Metrics = [];
+type Metrics = number[];
+const metrics: Metrics = [];
 
 // NOTE: this is the general idea
 // For each blocking task (or group of task) (so that some task won't block others - similar stuff has Keymaster):
@@ -39,7 +39,7 @@ const environment = 'production';
 
   if (ctx.getDomain(6648936) ) {
     if (!process.env.ETH_RPC) {
-      throw new Error("Should provide an ethereum rpc to ETH_RPC env variable")
+      throw new Error("Should provide an ethereum rpc to ETH_RPC env variable");
     } else {
       ctx.registerRpcProvider(6648936, process.env.ETH_RPC);
     }
@@ -63,18 +63,18 @@ const environment = 'production';
   ]);
 
 
-  // while (true) {
-  //   console.log('inside while loop. metrics: ', metrics);
+  while (true) {
+     console.log('inside while loop. metrics: ', metrics);
 
-  //   // TODO: get the new events from sdk and calculate metrics
-  //   const newMetrics: Metrics = [Math.random()];
+     // TODO: get the new events from sdk and calculate metrics
+     const newMetrics: Metrics = [Math.random()];
 
-  //   // update in memory metrics
-  //   metrics.push(...newMetrics);
+     // update in memory metrics
+     metrics.push(...newMetrics);
 
-  //   // sleep for some time before starting again
-  //   await sleep(1000);
-  // }
+     // sleep for some time before starting again
+     await sleep(1000);
+  }
 })();
 
 /*
