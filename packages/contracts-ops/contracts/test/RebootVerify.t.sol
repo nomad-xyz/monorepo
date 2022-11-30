@@ -44,11 +44,83 @@ contract RebootVerifyTest is Config, Test {
         __Config_initialize(file);
     }
 
+    /// @notice Verify the state of Ethereum
+    /// @dev The blockNumber is an arbitrary block number AFTER the deployment
     function test_verifyEthereum() public {
         domain = "ethereum";
         uint256 blockNumber = 16080528;
         domainNumber = getDomainNumber(domain);
         vm.createSelectFork(vm.envString("RPC_URL_ETHEREUM"), blockNumber);
+
+        verifyConfigImplementations();
+        readGovActions();
+        executeGovActions();
+        verifyGovActions();
+    }
+
+    /// @notice Verify the state of Avalanche
+    /// @dev The blockNumber is an arbitrary block number AFTER the deployment
+    function test_verifyAvalanche() public {
+        domain = "avalanche";
+        uint256 blockNumber = 23021186;
+        domainNumber = getDomainNumber(domain);
+        vm.createSelectFork(vm.envString("RPC_URL_AVALANCHE"), blockNumber);
+
+        verifyConfigImplementations();
+        readGovActions();
+        executeGovActions();
+        verifyGovActions();
+    }
+
+    /// @notice Verify the state of Xdai
+    /// @dev The blockNumber is an arbitrary block number AFTER the deployment
+    function test_verifyXDAI() public {
+        domain = "xdai";
+        uint256 blockNumber = 25226734;
+        domainNumber = getDomainNumber(domain);
+        vm.createSelectFork(vm.envString("RPC_URL_XDAI"), blockNumber);
+
+        verifyConfigImplementations();
+        readGovActions();
+        executeGovActions();
+        verifyGovActions();
+    }
+
+    /// @notice Verify the state of Evmos
+    /// @dev The blockNumber is an arbitrary block number AFTER the deployment
+    function test_verifyEvmos() public {
+        domain = "evmos";
+        uint256 blockNumber = 7892213;
+        domainNumber = getDomainNumber(domain);
+        vm.createSelectFork(vm.envString("RPC_URL_EVMOS"), blockNumber);
+
+        verifyConfigImplementations();
+        readGovActions();
+        executeGovActions();
+        verifyGovActions();
+    }
+
+    /// @notice Verify the state of Moonbeam
+    /// @dev The blockNumber is an arbitrary block number AFTER the deployment
+    function test_verifyMoonbeam() public {
+        domain = "moonbeam";
+        uint256 blockNumber = 2407153;
+        domainNumber = getDomainNumber(domain);
+        vm.createSelectFork(vm.envString("RPC_URL_MOONBEAM"), blockNumber);
+
+        verifyConfigImplementations();
+        readGovActions();
+        executeGovActions();
+        verifyGovActions();
+    }
+
+    /// @notice Verify the state of Milkomeda
+    /// @dev The blockNumber is an arbitrary block number AFTER the deployment
+    function test_milkomedaC1() public {
+        domain = "milkomedaC1";
+        uint256 blockNumber = 7355537;
+        domainNumber = getDomainNumber(domain);
+        vm.createSelectFork(vm.envString("RPC_URL_MILKOMEDAC1"), blockNumber);
 
         verifyConfigImplementations();
         readGovActions();
