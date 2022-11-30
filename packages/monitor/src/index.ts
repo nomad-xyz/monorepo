@@ -3,13 +3,11 @@ import { defaultGoldSkySecret, Goldsky } from "./goldsky";
 import { MonitoringCollector} from "./metrics";
 import { TaskRunner } from "./taskRunner";
 import { createLogger } from "./utils";
+import { register } from 'prom-client';
 
 import * as dotenv from 'dotenv';
 import { HomeStatusCollector } from "./homeStatus";
 dotenv.config();
-
-
-// TODO: import sdk + register from prom-client
 
 console.log('hello monitor');
 
