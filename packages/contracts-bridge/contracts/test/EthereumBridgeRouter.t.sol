@@ -3,6 +3,7 @@ pragma solidity 0.7.6;
 
 import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/libs/TypeCasts.sol";
 import {BridgeRouterBaseTest} from "./BridgeRouterBase.t.sol";
+import {EventAccountant} from "../accountants/EventAccountant.sol";
 
 contract EthereumBridgeRouterTest is BridgeRouterBaseTest {
     using TypeCasts for bytes32;
@@ -46,11 +47,10 @@ contract EthereumBridgeRouterTest is BridgeRouterBaseTest {
         address payable[14] memory affected = accountant.affectedAssets();
         for (uint256 i = 0; i < affected.length; i++) {
             address a = affected[i];
-            // note: encode with signature so don't have to import from bridge package
             vm.expectCall(
                 address(accountant),
-                abi.encodeWithSignature(
-                    "record(address,address,uint256)",
+                abi.encodeWithSelector(
+                    EventAccountant.record.selector,
                     a,
                     recipient,
                     amount
