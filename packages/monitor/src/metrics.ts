@@ -28,7 +28,7 @@ const buckets = [
 
 export class MetricsCollector {
   readonly environment: string;
-  private readonly logger: Logger;
+  readonly logger: Logger;
 
   constructor(environment: string, logger: Logger) {
     this.environment = environment;
@@ -215,11 +215,11 @@ export class MonitoringCollector extends MetricsCollector {
         .labels(service, requestName, ...labels, this.environment)
         .observe(duration);
       return result;
-    } catch (e) {
+    } catch (e: any) {
+      this.logger.error({service, requestName, error: e.message}, `Request failed`);
       this.requestErrors
         .labels(service, requestName, ...labels, this.environment)
         .inc();
-      // throw e;
     }
 
     return undefined;

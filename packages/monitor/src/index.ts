@@ -9,25 +9,7 @@ import { HomeStatusCollector } from "./homeStatus";
 import { MonitoringContext } from "./monitoringContext";
 dotenv.config();
 
-
-// TODO: import sdk + register from prom-client
-
-console.log('hello monitor');
-
-export const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
-
-// type Metrics = number[];
-// const metrics: Metrics = [];
-
-// NOTE: this is the general idea
-// For each blocking task (or group of task) (so that some task won't block others - similar stuff has Keymaster):
-//   while True:
-//     fetch events that are required to calculate the metric
-//     save result to memory
-//     record observation with prometheus
-//     sleep for a while
-
-const environment = 'production';
+const environment = process.env.NOMAD_ENVIRONMENT || 'production';
 
 (async () => {
   /* eslint-disable-next-line no-constant-condition */
@@ -45,9 +27,6 @@ const environment = 'production';
     }
   }
     
-
-  // 
-
   const goldsky = new Goldsky(defaultGoldSkySecret, mc);
   const homeStatus = new HomeStatusCollector(ctx, mc);
   const tasks: TaskRunner[] = [
@@ -61,20 +40,6 @@ const environment = 'production';
     p,
     metrics.startServer(3001),
   ]);
-
-
-  // while (true) {
-  //   console.log('inside while loop. metrics: ', metrics);
-
-  //   // TODO: get the new events from sdk and calculate metrics
-  //   const newMetrics: Metrics = [Math.random()];
-
-  //   // update in memory metrics
-  //   metrics.push(...newMetrics);
-
-  //   // sleep for some time before starting again
-  //   await sleep(1000);
-  // }
 })();
 
 /*

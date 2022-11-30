@@ -1,6 +1,6 @@
 import { MonitoringCollector } from "./metrics";
 import Logger from "bunyan";
-import { sleep } from ".";
+import { sleep } from "./utils";
 import { MonitoringContext } from "./monitoringContext";
 
 export abstract class TaskRunner {
