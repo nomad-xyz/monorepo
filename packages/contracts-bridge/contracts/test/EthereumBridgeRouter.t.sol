@@ -35,21 +35,27 @@ contract EthereumBridgeRouterTest is BridgeRouterBaseTest {
         vm.expectEmit(true, true, false, true, address(localToken));
         emit Transfer(address(bridgeRouter), recipient, amount);
         bridgeRouter.exposed_giveLocal(address(localToken), amount, recipient);
+    }
 
+    function test_giveLocalAffected() public {
+        uint256 amount = 1000;
+        address recipient = address(33);
         // test with each affected tokens
         // This checks for events on the mock accountant
         // Accountant logic is tested separately
         address payable[14] memory affected = accountant.affectedAssets();
         for (uint256 i = 0; i < affected.length; i++) {
             address a = affected[i];
-            vm.expectEmit(
-                true,
-                true,
-                false,
-                true,
-                address(bridgeRouter.accountant())
+            // note: encode with signature so don't have to import from bridge package
+            vm.expectCall(
+                address(accountant),
+                abi.encodeWithSignature(
+                    "record(address,address,uint256)",
+                    a,
+                    recipient,
+                    amount
+                )
             );
-            emit MockAcctCalled(a, recipient, amount);
             bridgeRouter.exposed_giveLocal(a, amount, recipient);
         }
     }

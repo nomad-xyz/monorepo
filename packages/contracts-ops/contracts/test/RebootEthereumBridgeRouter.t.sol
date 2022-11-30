@@ -8,18 +8,23 @@ import {UpgradeBeacon} from "@nomad-xyz/contracts-core/contracts/upgrade/Upgrade
 import {NomadTest} from "@nomad-xyz/contracts-core/contracts/test/utils/NomadTest.sol";
 import {BridgeTestFixture} from "@nomad-xyz/contracts-bridge/contracts/test/utils/BridgeTest.sol";
 import {BridgeRouterBaseTest} from "@nomad-xyz/contracts-bridge/contracts/test/BridgeRouterBase.t.sol";
-import {BridgeRouterTest} from "@nomad-xyz/contracts-bridge/contracts/test/BridgeRouter.t.sol";
+import {EthereumBridgeRouterTest} from "@nomad-xyz/contracts-bridge/contracts/test/EthereumBridgeRouter.t.sol";
+import {NFTRecoveryAccountantHarness} from "@nomad-xyz/contracts-bridge/contracts/test/harness/NFTAccountantHarness.sol";
 import {EthereumBridgeRouterHarness} from "@nomad-xyz/contracts-bridge/contracts/test/harness/BridgeRouterHarness.sol";
 import {TokenRegistryHarness} from "@nomad-xyz/contracts-bridge/contracts/test/harness/TokenRegistryHarness.sol";
 import {IBridgeRouterHarness} from "@nomad-xyz/contracts-bridge/contracts/test/harness/IBridgeRouterHarness.sol";
 import {BridgeToken} from "@nomad-xyz/contracts-bridge/contracts/BridgeToken.sol";
 import {TokenRegistry} from "@nomad-xyz/contracts-bridge/contracts/TokenRegistry.sol";
 
-contract EthereumBridgeRouterRebootTest is RebootTest, BridgeRouterTest {
+contract EthereumBridgeRouterRebootTest is
+    RebootTest,
+    EthereumBridgeRouterTest
+{
     address bridgeRouterHarnessImpl;
+    address accountantHarnessImpl;
     address tokenRegistryHarnessImpl;
 
-    function setUp() public override(BridgeRouterBaseTest, NomadTest) {
+    function setUp() public override(EthereumBridgeRouterTest, NomadTest) {
         setUpReboot("ethBridgeRouter");
         require(
             keccak256(bytes(localDomainName)) == keccak256(bytes("ethereum")),
@@ -34,9 +39,14 @@ contract EthereumBridgeRouterRebootTest is RebootTest, BridgeRouterTest {
             address(getBridgeRouter(localDomainName))
         );
         vm.label(address(bridgeRouter), "bridgeRouter");
+        accountant = NFTRecoveryAccountantHarness(
+            address(getAccountant(ethereum))
+        );
+        vm.label(address(accountant), "accountant");
         // upgrade to harness
         setUp_upgradeTokenRegistryHarness();
         setUp_upgradeBridgeRouterHarness();
+        setUp_upgradeAccountantHarness();
         // load necessary contracts
         xAppConnectionManager = getXAppConnectionManager(localDomainName);
         vm.label(address(xAppConnectionManager), "XAppConnectionManager");
@@ -94,8 +104,36 @@ contract EthereumBridgeRouterRebootTest is RebootTest, BridgeRouterTest {
         );
     }
 
+    function setUp_upgradeAccountantHarness() public {
+        accountantHarnessImpl = address(
+            new NFTRecoveryAccountantHarness(
+                address(getBridgeRouter(ethereum)),
+                address(getFundsRecipient(ethereum))
+            )
+        );
+        vm.label(accountantHarnessImpl, "accountantHarnessImpl");
+        vm.writeJson(
+            vm.toString(accountantHarnessImpl),
+            outputPath,
+            bridgeAttributePath(ethereum, "accountant.implementation")
+        );
+        reloadConfig();
+        pushSingleUpgrade(accountantUpgrade(ethereum), ethereum);
+        prankExecuteRecoveryManager(
+            address(getGovernanceRouter(ethereum)),
+            getDomainNumber(ethereum)
+        );
+    }
+
     function test_setUp_rebootBridgeRouter() public {
         // check that the harnesses have harness methods available
+        assertEq(
+            address(accountant),
+            address(
+                EthereumBridgeRouterHarness(address(getBridgeRouter(ethereum)))
+                    .accountant()
+            )
+        );
         assertEq(
             bridgeRouterHarnessImpl,
             bridgeRouterUpgrade(localDomainName).implementation
@@ -103,6 +141,10 @@ contract EthereumBridgeRouterRebootTest is RebootTest, BridgeRouterTest {
         assertEq(
             tokenRegistryHarnessImpl,
             tokenRegistryUpgrade(localDomainName).implementation
+        );
+        assertEq(
+            accountantHarnessImpl,
+            accountantUpgrade(ethereum).implementation
         );
         bridgeRouter.exposed_dust(address(this));
         tokenRegistry.exposed_localDomain();

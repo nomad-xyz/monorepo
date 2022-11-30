@@ -8,7 +8,7 @@ import {NomadTest} from "@nomad-xyz/contracts-core/contracts/test/utils/NomadTes
 contract RebootTest is RebootLogic, NomadTest {
     string remote;
     string constant testDomain = "ethereum";
-    uint256 constant testDomainBlock = 15_977_624;
+    uint256 constant testDomainBlock = 16_083_970;
 
     function setUpReboot(string memory testName) public {
         // ALL
