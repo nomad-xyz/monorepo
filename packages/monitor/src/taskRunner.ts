@@ -1,14 +1,21 @@
 import { MonitoringCollector } from "./metrics";
 import Logger from "bunyan";
 import { sleep } from ".";
+import { MonitoringContext } from "./monitoringContext";
 
 export abstract class TaskRunner {
-    logger: Logger;
-    metrics: MonitoringCollector;
+    mc: MonitoringContext;
 
-    constructor(logger: Logger, metrics: MonitoringCollector) {
-        this.logger = logger;
-        this.metrics = metrics;
+    constructor(mc: MonitoringContext) {
+        this.mc = mc;
+    }
+
+    get logger(): Logger {
+        return this.mc.logger;
+    }
+
+    get metrics(): MonitoringCollector {
+        return this.mc.metrics;
     }
 
     abstract tasks(): Promise<void>[];

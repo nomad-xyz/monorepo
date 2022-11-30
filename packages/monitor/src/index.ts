@@ -6,6 +6,7 @@ import { createLogger } from "./utils";
 
 import * as dotenv from 'dotenv';
 import { HomeStatusCollector } from "./homeStatus";
+import { MonitoringContext } from "./monitoringContext";
 dotenv.config();
 
 
@@ -31,17 +32,24 @@ const environment = 'production';
 (async () => {
   /* eslint-disable-next-line no-constant-condition */
   const logger = createLogger('monitoring', environment);
-  const mc = new MonitoringCollector(environment, logger);
+  const metrics = new MonitoringCollector(environment, logger);
+  const mc = new MonitoringContext(environment, logger, metrics);
 
   const ctx = new NomadContext(environment);
 
-  if (!process.env.ETH_RPC)
-    throw new Error("Should provide an ethereum rpc to ETH_RPC env variable");
+  if (ctx.getDomain(6648936) ) {
+    if (!process.env.ETH_RPC) {
+      throw new Error("Should provide an ethereum rpc to ETH_RPC env variable")
+    } else {
+      ctx.registerRpcProvider(6648936, process.env.ETH_RPC);
+    }
+  }
+    
 
-  ctx.registerRpcProvider(6648936, process.env.ETH_RPC);
+  // 
 
-  const goldsky = new Goldsky(defaultGoldSkySecret, logger, mc);
-  const homeStatus = new HomeStatusCollector(ctx, logger, mc);
+  const goldsky = new Goldsky(defaultGoldSkySecret, mc);
+  const homeStatus = new HomeStatusCollector(ctx, mc);
   const tasks: TaskRunner[] = [
     goldsky,
     homeStatus,
@@ -51,7 +59,7 @@ const environment = 'production';
 
   await Promise.all([
     p,
-    mc.startServer(3001),
+    metrics.startServer(3001),
   ]);
 
 

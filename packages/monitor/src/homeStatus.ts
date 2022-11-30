@@ -1,13 +1,12 @@
 import { NomadContext } from '@nomad-xyz/sdk';
-import Logger from 'bunyan';
-import { MonitoringCollector } from './metrics';
+import { MonitoringContext } from './monitoringContext';
 import { TaskRunner } from './taskRunner';
 
 export class HomeStatusCollector extends TaskRunner {
   ctx: NomadContext;
 
-  constructor(ctx: NomadContext, logger: Logger, metrics: MonitoringCollector) {
-    super(logger, metrics);
+  constructor(ctx: NomadContext, mc: MonitoringContext) {
+    super(mc);
     this.ctx = ctx;
   }
 

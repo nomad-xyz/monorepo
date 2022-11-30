@@ -1,21 +1,21 @@
 import { request, gql } from 'graphql-request';
-import { MessageStages, MonitoringCollector } from './metrics';
+import { MessageStages } from './metrics';
 import { TaskRunner } from './taskRunner';
-import Logger from 'bunyan';
+import { MonitoringContext } from './monitoringContext';
 
 export const defaultGoldSkySecret = 'mpa%H&RAHu9;eUe';
 
 export enum GoldSkyQuery {
-  StagingProcessFailureEvents = 'StagingProcessFailureEvents',
-  StagingRecoveryEvents = 'StagingRecoveryEvents',
+  ProcessFailureEvents = 'ProcessFailureEvents',
+  RecoveryEvents = 'RecoveryEvents',
   NumberMessages = 'NumberMessages',
 }
 
 export class Goldsky extends TaskRunner {
   protected secret: string;
 
-  constructor(secret: string, logger: Logger, metrics: MonitoringCollector) {
-    super(logger, metrics);
+  constructor(secret: string, mc: MonitoringContext) {
+    super(mc);
     this.secret = secret;
   }
 
@@ -58,9 +58,10 @@ export class Goldsky extends TaskRunner {
     // TODO: since tables are labeled by environment, we should use a
     // different set of queries between staging / production.
     // tldr: Follow the convention we use in the gui.
+    const tableName = this.mc.environment + '_views_process_failure_view_aggregate';
     const query = gql`
-      query StagingProcessFailureEvents {
-        staging_process_failure_aggregate {
+      query ProcessFailureEvents {
+        ${tableName} {
           nodes {
             amount
             asset
@@ -73,14 +74,19 @@ export class Goldsky extends TaskRunner {
     const response = await this.record(
       request(this.uri, query, {}, this.headers),
       'goldsky',
-      GoldSkyQuery.StagingProcessFailureEvents,
+      GoldSkyQuery.ProcessFailureEvents,
       'empty',
     );
 
     // NOTE: uncomment to see shape of recovery events data
     // console.log('numProcessFailureEvents response', response);
 
-    response.staging_process_failure_aggregate.nodes.forEach((event: any) => {
+    if (!response) {
+      this.logger.warn(`Response is not present for query ${GoldSkyQuery.ProcessFailureEvents}`);
+      return;
+    }
+    
+    response[tableName].nodes.forEach((event: any) => {
       this.metrics.incNumProcessFailureEvents(event.asset);
     });
   }
@@ -89,9 +95,10 @@ export class Goldsky extends TaskRunner {
     // TODO: since tables are labeled by environment, we should use a
     // different set of queries between staging / production.
     // tldr: Follow the convention we use in the gui.
+    const tableName = this.mc.environment + '_views_recovery_view_aggregate';
     const query = gql`
-      query StagingRecoveryEvents {
-        staging_recovery_aggregate {
+      query RecoveryEvents {
+        ${tableName} {
           nodes {
             _gs_chain
             amount
@@ -104,30 +111,36 @@ export class Goldsky extends TaskRunner {
     const response = await this.record(
       request(this.uri, query, {}, this.headers),
       'goldsky',
-      GoldSkyQuery.StagingRecoveryEvents,
+      GoldSkyQuery.RecoveryEvents,
       'empty',
     );
 
     // NOTE: uncomment to see shape of recovery events data
     // console.log('numRecoveryEvents response', response);
 
-    type StagingRecoveryEvent = {
+    type RecoveryEvent = {
       _gs_chain: string;
       amount: string;
       asset: string;
     };
 
-    response.staging_recovery_aggregate.nodes.forEach(
-      (event: StagingRecoveryEvent) => {
+    if (!response) {
+      this.logger.warn(`Response is not present for query ${GoldSkyQuery.RecoveryEvents}`);
+      return;
+    }
+    
+    response[tableName].nodes.forEach(
+      (event: RecoveryEvent) => {
         this.metrics.incNumRecoveryEvents(event.asset);
       },
     );
   }
 
   async numMessages(): Promise<void> {
+    const tableName = this.mc.environment + '_views_number_messages';
     const query = gql`
       query NumberMessages {
-        number_messages {
+        ${tableName} {
           origin
           destination
           dispatched
@@ -144,7 +157,12 @@ export class Goldsky extends TaskRunner {
       GoldSkyQuery.NumberMessages,
       'kek',
     );
-    response.number_messages.forEach(
+    if (!response) {
+      this.logger.warn(`Response is not present for query ${GoldSkyQuery.NumberMessages}`);
+      return;
+    }
+
+    response[tableName].forEach(
       (row: {
         origin: string;
         destination: string;
