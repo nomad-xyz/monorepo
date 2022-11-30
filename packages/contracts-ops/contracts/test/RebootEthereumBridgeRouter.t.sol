@@ -40,7 +40,7 @@ contract EthereumBridgeRouterRebootTest is
         );
         vm.label(address(bridgeRouter), "bridgeRouter");
         accountant = NFTRecoveryAccountantHarness(
-            address(getAccountant(ethereum))
+            address(getAccountant(localDomainName))
         );
         vm.label(address(accountant), "accountant");
         // upgrade to harness
@@ -107,21 +107,21 @@ contract EthereumBridgeRouterRebootTest is
     function setUp_upgradeAccountantHarness() public {
         accountantHarnessImpl = address(
             new NFTRecoveryAccountantHarness(
-                address(getBridgeRouter(ethereum)),
-                address(getFundsRecipient(ethereum))
+                address(getBridgeRouter(localDomainName)),
+                address(getFundsRecipient(localDomainName))
             )
         );
         vm.label(accountantHarnessImpl, "accountantHarnessImpl");
         vm.writeJson(
             vm.toString(accountantHarnessImpl),
             outputPath,
-            bridgeAttributePath(ethereum, "accountant.implementation")
+            bridgeAttributePath(localDomainName, "accountant.implementation")
         );
         reloadConfig();
-        pushSingleUpgrade(accountantUpgrade(ethereum), ethereum);
+        pushSingleUpgrade(accountantUpgrade(localDomainName), localDomainName);
         prankExecuteRecoveryManager(
-            address(getGovernanceRouter(ethereum)),
-            getDomainNumber(ethereum)
+            address(getGovernanceRouter(localDomainName)),
+            getDomainNumber(localDomainName)
         );
     }
 
@@ -130,7 +130,7 @@ contract EthereumBridgeRouterRebootTest is
         assertEq(
             address(accountant),
             address(
-                EthereumBridgeRouterHarness(address(getBridgeRouter(ethereum)))
+                EthereumBridgeRouterHarness(address(getBridgeRouter(localDomainName)))
                     .accountant()
             )
         );
@@ -144,7 +144,7 @@ contract EthereumBridgeRouterRebootTest is
         );
         assertEq(
             accountantHarnessImpl,
-            accountantUpgrade(ethereum).implementation
+            accountantUpgrade(localDomainName).implementation
         );
         bridgeRouter.exposed_dust(address(this));
         tokenRegistry.exposed_localDomain();
