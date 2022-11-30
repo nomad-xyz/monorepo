@@ -60,17 +60,19 @@ Contains forge scripts for Nomad system maintenance
   - Example:
     - `FOUNDRY_PROFILE=ops forge script Reboot --sig "runReboot(string,string,string,bool)" "production.json" "ethereum" "rebootActions.json" true`
 - `UpgradeTest.t.sol`
-  - Verify the correctness of the deployed implementations and governance actions that were produced during an Upgrade
-  - Block numbers must be set to an arbitrary number AFTER the upgrade
-  - Env variables must be set for the RPC endpoints:
-    - `RPC_URL_ETHEREUM`
-    - `RPC_URL_AVALANCHE`
-    - `RPC_URL_XDAI`
-    - `RPC_URL_EVMOS`
-    - `RPC_URL_MOONBEAM`
-    - `RPC_URL_MILKOMEDAC1`
-  - The governance actions must be placed in `actions/` and be of the format that is produced by `UpgradeCallBatches.s.sol`
-  - The config file must be placed in `actions/` and is assumed to be named `production.json`
+  - Verifies the correctness of the deployed implementations and governance actions that were produced during an Upgrade
+  - Setup:
+    - Env variables must be set for the RPC endpoints:
+      - `RPC_URL_ETHEREUM`
+      - `RPC_URL_AVALANCHE`
+      - `RPC_URL_XDAI`
+      - `RPC_URL_EVMOS`
+      - `RPC_URL_MOONBEAM`
+      - `RPC_URL_MILKOMEDAC1`
+    - The governance actions must be placed in `actions/` and be of the format that is produced by `UpgradeCallBatches.s.sol`
+    - The config file must be placed in `actions/` and is assumed to be named `production.json`
+  - Example: 
+    - `FOUNDRY_PROFILE=ops forge test --mc UpgradeTest`
 
 ## Usage
 
