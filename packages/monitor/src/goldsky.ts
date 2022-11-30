@@ -1,7 +1,7 @@
 import { request, gql } from 'graphql-request';
-import { MessageStages, MonitoringCollector } from './metrics';
+import { MessageStages } from './metrics';
 import { TaskRunner } from './taskRunner';
-import Logger from 'bunyan';
+import { MonitoringContext } from './monitoringContext';
 
 export const defaultGoldSkySecret = 'mpa%H&RAHu9;eUe';
 
@@ -14,8 +14,8 @@ export enum GoldSkyQuery {
 export class Goldsky extends TaskRunner {
   protected secret: string;
 
-  constructor(secret: string, logger: Logger, metrics: MonitoringCollector) {
-    super(logger, metrics);
+  constructor(secret: string, mc: MonitoringContext) {
+    super(mc);
     this.secret = secret;
   }
 
@@ -90,7 +90,7 @@ export class Goldsky extends TaskRunner {
     // different set of queries between staging / production.
     // tldr: Follow the convention we use in the gui.
     const query = gql`
-      query StagingRecoveryEvents {
+      query RecoveryEvents {
         staging_recovery_aggregate {
           nodes {
             _gs_chain
@@ -125,9 +125,10 @@ export class Goldsky extends TaskRunner {
   }
 
   async numMessages(): Promise<void> {
+    const tableName = this.mc.environment + '_views_number_messages';
     const query = gql`
       query NumberMessages {
-        number_messages {
+        ${tableName} {
           origin
           destination
           dispatched
@@ -144,7 +145,7 @@ export class Goldsky extends TaskRunner {
       GoldSkyQuery.NumberMessages,
       'kek',
     );
-    response.number_messages.forEach(
+    response[tableName].forEach(
       (row: {
         origin: string;
         destination: string;
