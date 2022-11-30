@@ -16,10 +16,7 @@ import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/libs/TypeCasts.sol"
 
 import {Test, stdJson} from "forge-std/Test.sol";
 
-/// @title Nomad Upgrade test
-/// @notice Verify the correctness of an upgrade of the Nomad protocol by making sure that execution of the gov actions
-/// will result in the desired state change
-contract UpgradeTest is Config, Test {
+contract RebootVerifyTest is Config, Test {
     using stdJson for string;
     using TypeCasts for bytes32;
 
