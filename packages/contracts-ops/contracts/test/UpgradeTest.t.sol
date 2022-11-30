@@ -171,50 +171,54 @@ contract UpgradeTest is Config, Test {
         UpdaterManager updaterManager = getUpdaterManager(domain);
         assertEq(updaterManager.updater(), getUpdater(domain));
 
-        // Verify Replica enrollment
+        // Verify Replica enrollment and Updater rotation
         XAppConnectionManager cnMgr = getXAppConnectionManager(domain);
         string[] memory connections = getConnections(domain);
         for (uint256 i; i < connections.length; i++) {
+            // Verify enrollment
             uint32 connectionDomain = getDomainNumber(connections[i]);
             address replica = address(getReplicaOf(domain, connections[i]));
             assertEq(cnMgr.replicaToDomain(replica), uint256(connectionDomain));
             assertEq(cnMgr.domainToReplica(connectionDomain), replica);
 
-            // Verify Upfater rotation on replicas
+            // Verify Updater rotation on replicas
             assertEq(Replica(replica).updater(), getUpdater(connections[i]));
         }
 
         // Verify new implementations have been set
 
         // Verify home implementation
-        assertBeacon(address(homeUpgrade(domain).beacon), address(homeImpl));
+        assertBeaconPointsToImpl(
+            address(homeUpgrade(domain).beacon),
+            address(homeImpl)
+        );
 
         // Verify Replica implementation
-        assertBeacon(
+        assertBeaconPointsToImpl(
             address(replicaOfUpgrade(domain, getConnections(domain)[0]).beacon),
             address(replicaImpl)
         );
 
         // Verify Gov Router implementation
-        assertBeacon(
+        assertBeaconPointsToImpl(
             address(governanceRouterUpgrade(domain).beacon),
             address(govRouterImpl)
         );
 
         // Verify Bridge Router implementation
-        assertBeacon(
+        assertBeaconPointsToImpl(
             address(bridgeRouterUpgrade(domain).beacon),
             address(bridgeRouterImpl)
         );
 
         // Verify Bridge Token Implementation
-        assertBeacon(
+        assertBeaconPointsToImpl(
             address(bridgeTokenUpgrade(domain).beacon),
             address(bridgeTokenImpl)
         );
 
         // Verify Token Registry Implementation
-        assertBeacon(
+        assertBeaconPointsToImpl(
             address(tokenRegistryUpgrade(domain).beacon),
             address(tokenRegistryImpl)
         );
@@ -223,7 +227,7 @@ contract UpgradeTest is Config, Test {
     /// @notice Load implementation address from the beacon's storage and assert it's equal to the impl arg
     /// @param beacon The address of the beacon
     /// @param impl The address of the implementation
-    function assertBeacon(address beacon, address impl) internal {
+    function assertBeaconPointsToImpl(address beacon, address impl) internal {
         address storedImpl = vm.load(beacon, bytes32(0)).bytes32ToAddress();
         assertEq(storedImpl, address(impl));
     }
