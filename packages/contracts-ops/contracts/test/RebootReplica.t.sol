@@ -12,7 +12,7 @@ contract ReplicaRebootTest is RebootTest, ReplicaTest {
     address replicaHarnessImpl;
 
     function setUp() public override(NomadTest, ReplicaTest) {
-        setUpReboot(2, "replica");
+        setUpReboot("replica");
         // upgrade to harness
         replica = ReplicaHarness(
             address(getReplicaOf(localDomainName, remote))

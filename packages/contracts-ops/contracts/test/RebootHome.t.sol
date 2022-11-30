@@ -12,7 +12,7 @@ contract HomeRebootTest is RebootTest, HomeTest {
     address homeHarnessImpl;
 
     function setUp() public override(NomadTest, HomeTest) {
-        setUpReboot(1, "home");
+        setUpReboot("home");
         // upgrade to harness
         home = HomeHarness(address(getHome(localDomainName)));
         setUp_upgradeHomeHarness();

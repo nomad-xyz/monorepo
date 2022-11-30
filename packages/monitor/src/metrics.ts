@@ -1,8 +1,6 @@
 import { Gauge, Histogram, Counter } from 'prom-client';
 import Logger from 'bunyan';
 
-
-
 import { register } from 'prom-client';
 import express, { Response } from 'express';
 export const prefix = `nomad_metrics`;
@@ -102,8 +100,6 @@ export class MonitoringCollector extends MetricsCollector {
     //   labelNames: ['code', 'query', 'environment'],
     // });
 
-
-
     this.metricsLatency = new Histogram({
       name: prefix + '_metrics_latency',
       help: 'Histogram that tracks latency of response to metrics request in ms',
@@ -143,7 +139,6 @@ export class MonitoringCollector extends MetricsCollector {
       help: 'Histogram that tracks latency of response to metrics request in ms',
       labelNames: ['service', 'query', 'labels', 'environment'],
     });
-
   }
 
   /**
@@ -177,12 +172,12 @@ export class MonitoringCollector extends MetricsCollector {
     this.metricsLatency.labels(this.environment).observe(ms);
   }
 
-  incNumProcessFailureEvents(asset: string, environment: string): void {
-    this.numProcessFailureEvents.labels(asset, environment).inc();
+  incNumProcessFailureEvents(asset: string, numEvents = 1): void {
+    this.numProcessFailureEvents.labels(asset, this.environment).inc(numEvents);
   }
 
-  incNumRecoveryEvents(asset: string, environment: string): void {
-    this.numRecoveryEvents.labels(asset, environment).inc();
+  incNumRecoveryEvents(asset: string, numEvents = 1): void {
+    this.numRecoveryEvents.labels(asset, this.environment).inc(numEvents);
   }
 
   // incGoldskyRequests(query: GoldSkyQuery, req?: number): void {
@@ -205,21 +200,29 @@ export class MonitoringCollector extends MetricsCollector {
   //   this.rpcErrors.labels(code, query, this.environment).inc();
   // }
 
-  async recordRequest<T>(request: Promise<T>, service: string, requestName: string, ...labels: string[]): Promise<T | undefined> {
+  async recordRequest<T>(
+    request: Promise<T>,
+    service: string,
+    requestName: string,
+    ...labels: string[]
+  ): Promise<T | undefined> {
     const start = Date.now();
     let result: T;
     try {
       result = await request;
       const duration = Date.now() - start;
-      this.requests.labels(service, requestName, ...labels, this.environment).observe(duration);
+      this.requests
+        .labels(service, requestName, ...labels, this.environment)
+        .observe(duration);
       return result;
-    } catch(e) {
-      this.requestErrors.labels(service, requestName, ...labels, this.environment).inc();
+    } catch (e) {
+      this.requestErrors
+        .labels(service, requestName, ...labels, this.environment)
+        .inc();
       // throw e;
     }
-    
-    
-    return undefined
+
+    return undefined;
   }
 }
 // TODO: might want to just copy the MetricsCollector from here:
