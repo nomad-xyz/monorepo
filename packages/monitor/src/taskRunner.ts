@@ -20,7 +20,7 @@ export abstract class TaskRunner {
     
             await Promise.all(this.tasks());
     
-            const time = (Date.now() - start)/1000;
+            const time = (Date.now() - start) / 1000;
             const cooldown = this.cooldown();
             this.logger.info(`Finished tasks in ${time.toFixed()} seconds, sleeping ${cooldown} seconds`);
             await sleep(cooldown * 1000);

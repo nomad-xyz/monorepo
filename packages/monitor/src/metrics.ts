@@ -1,8 +1,5 @@
 import { Gauge, Histogram, Counter } from 'prom-client';
 import Logger from 'bunyan';
-
-
-
 import { register } from 'prom-client';
 import express, { Response } from 'express';
 export const prefix = `nomad_metrics`;
