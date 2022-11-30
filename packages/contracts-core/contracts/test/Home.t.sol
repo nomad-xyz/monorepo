@@ -128,6 +128,18 @@ contract HomeTest is NomadTestWithUpdaterManager {
         assert(!home.queueContains(newRoot));
     }
 
+    function test_notUpdaterSig() public {
+        dispatchTestMessage();
+        bytes32 newRoot = home.root();
+        bytes32 oldRoot = home.committedRoot();
+        uint256 randomFakePk = 777;
+        bytes memory sig = signHomeUpdate(randomFakePk, oldRoot, newRoot);
+        vm.expectRevert("!updater sig");
+        home.update(oldRoot, newRoot, sig);
+        assertEq(oldRoot, home.committedRoot());
+        assert(home.queueContains(newRoot));
+    }
+
     function test_udpdateMultipleMessages() public {
         dispatchTestMessage();
         dispatchTestMessage();
