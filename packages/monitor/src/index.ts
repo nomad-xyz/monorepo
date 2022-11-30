@@ -37,10 +37,16 @@ const environment = 'production';
 
   const ctx = new NomadContext(environment);
 
-  if (!process.env.ETH_RPC)
-    throw new Error("Should provide an ethereum rpc to ETH_RPC env variable");
+  if (ctx.getDomain(6648936) ) {
+    if (!process.env.ETH_RPC) {
+      throw new Error("Should provide an ethereum rpc to ETH_RPC env variable")
+    } else {
+      ctx.registerRpcProvider(6648936, process.env.ETH_RPC);
+    }
+  }
+    
 
-  ctx.registerRpcProvider(6648936, process.env.ETH_RPC);
+  // 
 
   const goldsky = new Goldsky(defaultGoldSkySecret, mc);
   const homeStatus = new HomeStatusCollector(ctx, mc);
