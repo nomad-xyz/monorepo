@@ -104,13 +104,9 @@ contract BridgeTestFixture is NomadTest {
         mockUpdaterPK = 420;
         mockUpdater = vm.addr(mockUpdaterPK);
         remoteBridgeRouter = vm.addr(99123).addressToBytes32();
-        accountant = NFTRecoveryAccountantHarness(
-            address(new MockAccountant())
-        );
         mockHome = new MockHome(homeDomain);
         home = address(mockHome);
         mockReplica = address(0xBEEFEFEEFEF);
-
         // Create implementations
         tokenRegistry = new TokenRegistryHarness();
         xAppConnectionManager = new XAppConnectionManager();
@@ -122,6 +118,11 @@ contract BridgeTestFixture is NomadTest {
         );
         // Tests that concern the EThereumBridgeRouter, they will already have called
         // setUpEthereumBridgeRouter(), which means that the address will not be address(0)
+        if (address(accountant) == address(0)) {
+            accountant = NFTRecoveryAccountantHarness(
+                address(new MockAccountant())
+            );
+        }
         if (address(bridgeRouter) == address(0)) {
             setUpBridgeRouter();
         }
