@@ -16,7 +16,7 @@ import {TypeCasts} from "@nomad-xyz/contracts-core/contracts/libs/TypeCasts.sol"
 
 import {Test, stdJson} from "forge-std/Test.sol";
 
-contract RebootVerifyTest is Config, Test {
+contract UpgradeTest is Config, Test {
     using stdJson for string;
     using TypeCasts for bytes32;
 
