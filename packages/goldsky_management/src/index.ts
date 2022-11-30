@@ -49,11 +49,14 @@ class ViewTemplate {
             name: this.name,
             ...additional
         };
-        this.required.forEach(reqTable => {
+        for (const reqTable of this.required) {
             const lt = tables.find(locTable => locTable.name === reqTable);
-            if (!lt) throw new Error(`Not Found ${reqTable} in ${tables.map(t => t.fullName()).join(', ')}`);
+            if (!lt) {
+                console.error(`Not Found ${reqTable} in ${tables.map(t => t.fullName()).join(', ')}. Skipping...`);
+                return ''
+            }
             replace[reqTable] = lt.fullName();
-        })
+        }
 
         return ejs.render(this.template, replace);
     }
@@ -130,6 +133,9 @@ stageSource.registerTable('update');
 prodSource.registerTable('process');
 stageSource.registerTable('process');
 
+stageSource.registerTable('recovery');
+stageSource.registerTable('process_failure');
+
 // Destination views for both environments
 let prodDest = new Schema('production_views');
 let stageDest = new Schema('staging_views');
@@ -161,10 +167,15 @@ let disp = new ViewTemplate('decoded_dispatch', fs.readFileSync('./views/decoded
 let update = new ViewTemplate('decoded_update', fs.readFileSync('./views/decodedUpdate.sql', 'utf8'), ['update']);
 let events = new ViewTemplate('events', fs.readFileSync('./views/events.sql', 'utf8'), ['decoded_dispatch', 'decoded_update', 'process']);
 let numberMessages = new ViewTemplate('number_messages', fs.readFileSync('./views/numberMessages.sql', 'utf8'), ['events']);
+let recovery = new ViewTemplate('recovery_view', fs.readFileSync('./views/recovery.sql', 'utf8'), ['recovery']);
+let processFailure = new ViewTemplate('process_failure_view', fs.readFileSync('./views/processFailure.sql', 'utf8'), ['process_failure']);
 s.addView(disp);
 s.addView(update);
 s.addView(events);
 s.addView(numberMessages);
+
+s.addView(recovery);
+s.addView(processFailure);
 
 // Output the result
 fs.writeFileSync('./query.sql', s.produce())

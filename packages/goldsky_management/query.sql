@@ -395,6 +395,10 @@ FROM
       events.origin_domain_id,
       events.destination_domain_id
   ) ms;
+
+
+
+
 -- ENV production END
 
 
@@ -764,4 +768,10 @@ FROM
       events.origin_domain_id,
       events.destination_domain_id
   ) ms;
+
+CREATE
+OR REPLACE VIEW "staging_views"."recovery_view" AS SELECT * from staging.recovery;
+
+CREATE
+OR REPLACE VIEW "staging_views"."process_failure_view" AS SELECT * from staging.process_failure;
 -- ENV staging END
