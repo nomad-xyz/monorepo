@@ -424,7 +424,7 @@ abstract contract Config is INomadProtocol {
     function protocolConfigAttributePath(
         string memory domain,
         string memory key
-    ) private pure returns (string memory) {
+    ) internal pure returns (string memory) {
         return string(abi.encodePacked(protocolConfigPath(domain), ".", key));
     }
 
