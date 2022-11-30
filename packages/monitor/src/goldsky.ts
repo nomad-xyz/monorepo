@@ -58,7 +58,6 @@ export class Goldsky extends TaskRunner {
     // TODO: since tables are labeled by environment, we should use a
     // different set of queries between staging / production.
     // tldr: Follow the convention we use in the gui.
-
     const query = gql`
       query StagingProcessFailureEvents {
         staging_process_failure_aggregate {
@@ -73,21 +72,23 @@ export class Goldsky extends TaskRunner {
 
     const response = await this.record(
       request(this.uri, query, {}, this.headers),
-      'goldsky', GoldSkyQuery.StagingProcessFailureEvents, 'empty'
+      'goldsky',
+      GoldSkyQuery.StagingProcessFailureEvents,
+      'empty',
     );
 
-    console.log('numProcessFailureEvents response', response);
+    // NOTE: uncomment to see shape of recovery events data
+    // console.log('numProcessFailureEvents response', response);
 
-    console.log('nodes', response.staging_process_failure_aggregate.nodes);
-
-    // TODO: add method to MonitoringCollector class to inc numProcessFailureEvents counter
+    response.staging_process_failure_aggregate.nodes.forEach((event: any) => {
+      this.metrics.incNumProcessFailureEvents(event.asset);
+    });
   }
 
   async numProcessRecoveryEvents(): Promise<void> {
     // TODO: since tables are labeled by environment, we should use a
     // different set of queries between staging / production.
     // tldr: Follow the convention we use in the gui.
-
     const query = gql`
       query StagingRecoveryEvents {
         staging_recovery_aggregate {
@@ -102,13 +103,25 @@ export class Goldsky extends TaskRunner {
 
     const response = await this.record(
       request(this.uri, query, {}, this.headers),
-      'goldsky', GoldSkyQuery.StagingRecoveryEvents, 'empty'
+      'goldsky',
+      GoldSkyQuery.StagingRecoveryEvents,
+      'empty',
     );
 
-    console.log('numRecoveryEvents response', response);
-    console.log(response.staging_recovery_aggregate.nodes);
+    // NOTE: uncomment to see shape of recovery events data
+    // console.log('numRecoveryEvents response', response);
 
-    // TODO: add method to MonitoringCollector class to inc numRecoveryEvents counter
+    type StagingRecoveryEvent = {
+      _gs_chain: string;
+      amount: string;
+      asset: string;
+    };
+
+    response.staging_recovery_aggregate.nodes.forEach(
+      (event: StagingRecoveryEvent) => {
+        this.metrics.incNumRecoveryEvents(event.asset);
+      },
+    );
   }
 
   async numMessages(): Promise<void> {

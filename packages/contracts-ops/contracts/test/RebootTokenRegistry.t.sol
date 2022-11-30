@@ -4,26 +4,22 @@ pragma abicoder v2;
 
 import "forge-std/Test.sol";
 import {RebootTest} from "./Reboot.t.sol";
-import {UpgradeBeacon} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeacon.sol";
 import {NomadTest} from "@nomad-xyz/contracts-core/contracts/test/utils/NomadTest.sol";
 import {BridgeTestFixture} from "@nomad-xyz/contracts-bridge/contracts/test/utils/BridgeTest.sol";
-import {BridgeRouterBaseTest} from "@nomad-xyz/contracts-bridge/contracts/test/BridgeRouterBase.t.sol";
-import {BridgeRouterTest} from "@nomad-xyz/contracts-bridge/contracts/test/BridgeRouter.t.sol";
-import {EthereumBridgeRouterHarness} from "@nomad-xyz/contracts-bridge/contracts/test/harness/BridgeRouterHarness.sol";
+import {TokenRegistryTest} from "@nomad-xyz/contracts-bridge/contracts/test/TokenRegistry.t.sol";
 import {TokenRegistryHarness} from "@nomad-xyz/contracts-bridge/contracts/test/harness/TokenRegistryHarness.sol";
-import {IBridgeRouterHarness} from "@nomad-xyz/contracts-bridge/contracts/test/harness/IBridgeRouterHarness.sol";
 import {BridgeToken} from "@nomad-xyz/contracts-bridge/contracts/BridgeToken.sol";
-import {TokenRegistry} from "@nomad-xyz/contracts-bridge/contracts/TokenRegistry.sol";
+import {EthereumBridgeRouter} from "@nomad-xyz/contracts-bridge/contracts/BridgeRouter.sol";
+import {UpgradeBeacon} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeacon.sol";
+import {IBridgeRouterHarness} from "@nomad-xyz/contracts-bridge/contracts/test/harness/IBridgeRouterHarness.sol";
 
-contract EthereumBridgeRouterRebootTest is RebootTest, BridgeRouterTest {
-    address bridgeRouterHarnessImpl;
+contract TokenRegistryRebootTest is RebootTest, TokenRegistryTest {
     address tokenRegistryHarnessImpl;
 
     string constant ethereum = "ethereum";
 
-    function setUp() public override(BridgeRouterBaseTest, NomadTest) {
-        setUpReboot("ethBridgeRouter");
-        // load proxies
+    function setUp() public override(NomadTest, BridgeTestFixture) {
+        setUpReboot("tokenRegistry");
         tokenRegistry = TokenRegistryHarness(
             address(getTokenRegistry(ethereum))
         );
@@ -32,7 +28,6 @@ contract EthereumBridgeRouterRebootTest is RebootTest, BridgeRouterTest {
         vm.label(address(bridgeRouter), "bridgeRouter");
         // upgrade to harness
         setUp_upgradeTokenRegistryHarness();
-        setUp_upgradeBridgeRouterHarness();
         // load necessary contracts
         xAppConnectionManager = getXAppConnectionManager(ethereum);
         vm.label(address(xAppConnectionManager), "XAppConnectionManager");
@@ -43,9 +38,10 @@ contract EthereumBridgeRouterRebootTest is RebootTest, BridgeRouterTest {
         bridgeToken = BridgeToken(beaconImplementation(tokenBeacon));
         vm.label(address(bridgeToken), "bridgeToken");
         // home needed for vm.expectCall
-        home = address(getHome("ethereum"));
+        home = address(getHome(ethereum));
         vm.label(home, "home");
-        BridgeRouterBaseTest.setUp_testFixtures();
+        // BridgeTestFixture.setUp_testFixtures()
+        setUp_testFixtures();
     }
 
     function setUp_upgradeTokenRegistryHarness() public {
@@ -62,37 +58,5 @@ contract EthereumBridgeRouterRebootTest is RebootTest, BridgeRouterTest {
             address(getGovernanceRouter(ethereum)),
             getDomainNumber(ethereum)
         );
-    }
-
-    function setUp_upgradeBridgeRouterHarness() public {
-        bridgeRouterHarnessImpl = address(
-            new EthereumBridgeRouterHarness(address(getAccountant(ethereum)))
-        );
-        vm.label(bridgeRouterHarnessImpl, "bridgeRouterHarnessImpl");
-        vm.writeJson(
-            vm.toString(bridgeRouterHarnessImpl),
-            outputPath,
-            bridgeAttributePath(ethereum, "bridgeRouter.implementation")
-        );
-        reloadConfig();
-        pushSingleUpgrade(bridgeRouterUpgrade(ethereum), ethereum);
-        prankExecuteRecoveryManager(
-            address(getGovernanceRouter(ethereum)),
-            getDomainNumber(ethereum)
-        );
-    }
-
-    function test_setUp_rebootBridgeRouter() public {
-        // check that the harnesses have harness methods available
-        assertEq(
-            bridgeRouterHarnessImpl,
-            bridgeRouterUpgrade(ethereum).implementation
-        );
-        assertEq(
-            tokenRegistryHarnessImpl,
-            tokenRegistryUpgrade(ethereum).implementation
-        );
-        bridgeRouter.exposed_dust(address(this));
-        tokenRegistry.exposed_localDomain();
     }
 }
