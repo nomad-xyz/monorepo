@@ -9,7 +9,7 @@ import { HomeStatusCollector } from "./homeStatus";
 import { MonitoringContext } from "./monitoringContext";
 dotenv.config();
 
-const environment = process.env.NOMAD_ENVIRONMENT || 'production';
+const environment = process.env.ENVIRONMENT || 'production';
 const metricsPort = process.env.METRICS_PORT ? parseInt(process.env.METRICS_PORT) : 9090;
 
 (async () => {
