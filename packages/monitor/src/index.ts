@@ -10,6 +10,7 @@ import { MonitoringContext } from "./monitoringContext";
 dotenv.config();
 
 const environment = process.env.NOMAD_ENVIRONMENT || 'production';
+const metricsPort = process.env.METRICS_PORT ? parseInt(process.env.METRICS_PORT) : 9090;
 
 (async () => {
   /* eslint-disable-next-line no-constant-condition */
@@ -19,13 +20,23 @@ const environment = process.env.NOMAD_ENVIRONMENT || 'production';
 
   const ctx = new NomadContext(environment);
 
-  if (ctx.getDomain(6648936) ) {
-    if (!process.env.ETH_RPC) {
-      throw new Error("Should provide an ethereum rpc to ETH_RPC env variable")
-    } else {
-      ctx.registerRpcProvider(6648936, process.env.ETH_RPC);
+  await Promise.all(ctx.domainNumbers.map(async (domainNumber) => {
+    try {
+      const p = ctx.getProvider(domainNumber);
+      await p?.getBlockNumber();
+    } catch(_) {
+      const domainName = ctx.mustGetDomain(domainNumber).name;
+      const envName = domainName.toUpperCase() + '_RPC';
+      const rpcEndpoint = process.env[envName];
+      if (rpcEndpoint) {
+        ctx.registerRpcProvider(domainNumber, rpcEndpoint);
+      } else {
+        const errorMessage = `Couldn't get block number for domain ${domainNumber}. Please check if ${envName} env variable is present`;
+        logger.error(errorMessage);
+        throw new Error(errorMessage);
+      }
     }
-  }
+  }));
     
   const goldsky = new Goldsky(defaultGoldSkySecret, mc);
   const homeStatus = new HomeStatusCollector(ctx, mc);
@@ -38,7 +49,7 @@ const environment = process.env.NOMAD_ENVIRONMENT || 'production';
 
   await Promise.all([
     p,
-    metrics.startServer(3001),
+    metrics.startServer(metricsPort),
   ]);
 })();
 
