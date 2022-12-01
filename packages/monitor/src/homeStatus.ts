@@ -15,9 +15,7 @@ export class HomeStatusCollector extends TaskRunner {
   }
 
   tasks(): Promise<void>[] {
-    return [
-      // this.checkAllHomes(),
-    ];
+    return [this.checkAllHomes()];
   }
 
   async checkAllHomes(): Promise<void> {

@@ -215,8 +215,11 @@ export class MonitoringCollector extends MetricsCollector {
         .labels(service, requestName, ...labels, this.environment)
         .observe(duration);
       return result;
-    } catch (e: any) {
-      this.logger.error({service, requestName, error: e.message}, `Request failed`);
+    } catch (e: unknown) {
+      this.logger.error(
+        { service, requestName, error: (e as Error).message },
+        `Request failed`,
+      );
       this.requestErrors
         .labels(service, requestName, ...labels, this.environment)
         .inc();

@@ -58,7 +58,9 @@ export class Goldsky extends TaskRunner {
     // TODO: since tables are labeled by environment, we should use a
     // different set of queries between staging / production.
     // tldr: Follow the convention we use in the gui.
-    const tableName = this.mc.environment + '_views_process_failure_view_aggregate';
+    const tableName =
+      this.mc.environment + '_views_process_failure_view_aggregate';
+
     const query = gql`
       query ProcessFailureEvents {
         ${tableName} {
@@ -80,13 +82,22 @@ export class Goldsky extends TaskRunner {
 
     // NOTE: uncomment to see shape of recovery events data
     // console.log('numProcessFailureEvents response', response);
+    // console.log('nodes', response[tableName].nodes);
+
+    type ProcessFailureEvent = {
+      _gs_chain: string;
+      amount: string;
+      asset: string;
+    };
 
     if (!response) {
-      this.logger.warn(`Response is not present for query ${GoldSkyQuery.ProcessFailureEvents}`);
+      this.logger.warn(
+        `Response is not present for query ${GoldSkyQuery.ProcessFailureEvents}`,
+      );
       return;
     }
-    
-    response[tableName].nodes.forEach((event: any) => {
+
+    response[tableName].nodes.forEach((event: ProcessFailureEvent) => {
       this.metrics.incNumProcessFailureEvents(event.asset);
     });
   }
@@ -117,6 +128,7 @@ export class Goldsky extends TaskRunner {
 
     // NOTE: uncomment to see shape of recovery events data
     // console.log('numRecoveryEvents response', response);
+    // console.log('nodes', response[tableName].nodes);
 
     type RecoveryEvent = {
       _gs_chain: string;
@@ -125,15 +137,15 @@ export class Goldsky extends TaskRunner {
     };
 
     if (!response) {
-      this.logger.warn(`Response is not present for query ${GoldSkyQuery.RecoveryEvents}`);
+      this.logger.warn(
+        `Response is not present for query ${GoldSkyQuery.RecoveryEvents}`,
+      );
       return;
     }
-    
-    response[tableName].nodes.forEach(
-      (event: RecoveryEvent) => {
-        this.metrics.incNumRecoveryEvents(event.asset);
-      },
-    );
+
+    response[tableName].nodes.forEach((event: RecoveryEvent) => {
+      this.metrics.incNumRecoveryEvents(event.asset);
+    });
   }
 
   async numMessages(): Promise<void> {
@@ -158,7 +170,9 @@ export class Goldsky extends TaskRunner {
       'kek',
     );
     if (!response) {
-      this.logger.warn(`Response is not present for query ${GoldSkyQuery.NumberMessages}`);
+      this.logger.warn(
+        `Response is not present for query ${GoldSkyQuery.NumberMessages}`,
+      );
       return;
     }
 
