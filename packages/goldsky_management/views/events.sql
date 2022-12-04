@@ -43,7 +43,7 @@ FROM
   (
     (
       (
-        <%= location; %>.decoded_dispatch
+        <%= decoded_dispatch; %>
         LEFT JOIN (
           SELECT
             update_1.old_root,
@@ -54,7 +54,7 @@ FROM
             update_1."timestamp",
             update_1.gs_chain_id
           FROM
-            <%= location; %>.decoded_update update_1
+            <%= decoded_update; %> update_1
         )
         update
           ON (

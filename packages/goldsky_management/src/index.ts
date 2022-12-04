@@ -140,11 +140,12 @@ stageSource.registerTable('process_failure');
 let prodDest = new Schema('production_views');
 let stageDest = new Schema('staging_views');
 
+
 let prodDomainMapping: Domain[] = [
     { name: 'ethereum', domain: 6648936 },
     { name: 'avalanche', domain: 1635148152 },
     { name: 'evmos', domain: 1702260083 },
-    { name: 'milkomedaC1', domain: 25393 },
+    { name: 'milkomedac1', domain: 25393 }, // Pretty much how it is named in Goldsky
     { name: 'moonbeam', domain: 1650811245 },
     { name: 'xdai', domain: 2019844457 },
 ]
@@ -160,7 +161,7 @@ let prod = new Env('production', [prodSource, prodDest], prodDest, prodDomainMap
 let stage = new Env('staging', [stageSource, stageDest], stageDest, stageDomainMapping);
 
 // Dummy super class that leads the dance
-let s = new Setup([prod, stage]);
+let s = new Setup([prod, /*stage*/]);
 
 // Register views. (name, template, required tables/views by name)
 let disp = new ViewTemplate('decoded_dispatch', fs.readFileSync('./views/decodedDispatch.sql', 'utf8'), [`dispatch`]);
