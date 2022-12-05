@@ -90,10 +90,10 @@ class Env {
 
     produce(): string {
         return this.toProduce.map(toProduce => {
-            console.log(`Going to produce for env ${this.name}, with sources: ${this.source.map(s => s.name).join(', ')}, and tables: ${this.source.map(s => s.tables).flat().map(t => t.fullName())}`)
-            this.source.forEach(s => {
-                console.log(s.tables)
-            });
+            // console.log(`Going to produce for env ${this.name}, with sources: ${this.source.map(s => s.name).join(', ')}, and tables: ${this.source.map(s => s.tables).flat().map(t => t.fullName())}`)
+            // this.source.forEach(s => {
+            //     console.log(s.tables)
+            // });
             const produced = toProduce.produce(this.destination, this.source.map(s => s.tables).flat(), {domains: this.domains});
             console.log(`Creating view '${toProduce.name}' in '${this.destination.name}'`)
             this.destination.tables.push(new View(toProduce.name, this.destination));
@@ -138,6 +138,11 @@ prodSource.registerTable('process_failure');
 devSource.registerTable('recovery');
 devSource.registerTable('process_failure');
 
+prodSource.registerTable('send');
+prodSource.registerTable('receive');
+devSource.registerTable('send');
+devSource.registerTable('receive');
+
 // Destination views for both environments
 let prodDest = new Schema('production_views');
 let devDest = new Schema('development_views');
@@ -172,6 +177,13 @@ let events = new ViewTemplate('events', fs.readFileSync('./views/events.sql', 'u
 let numberMessages = new ViewTemplate('number_messages', fs.readFileSync('./views/numberMessages.sql', 'utf8'), ['events']);
 let recovery = new ViewTemplate('recovery_view', fs.readFileSync('./views/recovery.sql', 'utf8'), ['recovery']);
 let processFailure = new ViewTemplate('process_failure_view', fs.readFileSync('./views/processFailure.sql', 'utf8'), ['process_failure']);
+let bridgeEvents = new ViewTemplate('bridge_events', fs.readFileSync('./views/bridgeEvents.sql', 'utf8'), ['events', 'send', 'receive']);
+let sendTokens = new ViewTemplate('send_tokens', fs.readFileSync('./views/sendTokens.sql', 'utf8'), ['send']);
+let validReceiveTokenAmts = new ViewTemplate('valid_receive_token_amts', fs.readFileSync('./views/validReceiveTokenAmts.sql', 'utf8'), ['receive', 'events']);
+let affectedTokenAmounts = new ViewTemplate('affected_token_amounts', fs.readFileSync('./views/affectedTokenAmounts.sql', 'utf8'), ['send_tokens', 'valid_receive_token_amts']);
+let undispatchedProcess = new ViewTemplate('undispatched_process', fs.readFileSync('./views/undispatchedProcess.sql', 'utf8'), ['dispatch', 'process']);
+let willMintNew = new ViewTemplate('will_mint_new', fs.readFileSync('./views/willMintNew.sql', 'utf8'), ['events']);
+let willMintNewAll = new ViewTemplate('will_mint_new_all', fs.readFileSync('./views/willMintNewAll.sql', 'utf8'), ['events']);
 s.addView(disp);
 s.addView(update);
 s.addView(events);
@@ -179,6 +191,14 @@ s.addView(numberMessages);
 
 s.addView(recovery);
 s.addView(processFailure);
+
+s.addView(bridgeEvents);
+s.addView(sendTokens);
+s.addView(validReceiveTokenAmts);
+s.addView(affectedTokenAmounts);
+s.addView(undispatchedProcess);
+s.addView(willMintNew);
+s.addView(willMintNewAll);
 
 // Output the result
 fs.writeFileSync('./query.sql', s.produce())
