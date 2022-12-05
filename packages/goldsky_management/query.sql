@@ -373,15 +373,17 @@ FROM
 
 CREATE
 OR REPLACE VIEW "production_views"."number_messages" AS
-(SELECT 
+SELECT 
 origin_domain_id as origin, destination_domain_id as destination,
-sum(case when _events.process_tx is null and _events.relay_tx is null and _events.update_tx is null then 1 else 0 end) as dispatched
+sum(case when _events.process_tx is null and _events.relay_tx is null and _events.update_tx is null then 1 else 0 end) as dispatched,
 sum(case when _events.update_tx is not null and _events.process_tx is null and _events.relay_tx is null then 1 else 0 end) as updated,
 sum(case when _events.relay_tx is not null and _events.process_tx is null then 1 else 0 end) as relayed,
-sum(case when _events.process_tx is not null then 1 else 0 end) as processed,
-from production_views.events group by origin_domain_id, destination_domain_id);
+sum(case when _events.process_tx is not null then 1 else 0 end) as processed
+from production_views.events group by origin_domain_id, destination_domain_id;
 
+CREATE
+OR REPLACE VIEW "production_views"."recovery_view" AS SELECT * from subgraph.recovery;
 
-
-
+CREATE
+OR REPLACE VIEW "production_views"."process_failure_view" AS SELECT * from subgraph.process_failure;
 -- ENV production END

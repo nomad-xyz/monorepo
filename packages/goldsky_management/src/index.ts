@@ -133,6 +133,8 @@ stageSource.registerTable('update');
 prodSource.registerTable('process');
 stageSource.registerTable('process');
 
+prodSource.registerTable('recovery');
+prodSource.registerTable('process_failure');
 stageSource.registerTable('recovery');
 stageSource.registerTable('process_failure');
 
