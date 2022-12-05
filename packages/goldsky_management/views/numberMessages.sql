@@ -6,4 +6,4 @@ sum(case when _events.process_tx is null and _events.relay_tx is null and _event
 sum(case when _events.update_tx is not null and _events.process_tx is null and _events.relay_tx is null then 1 else 0 end) as updated,
 sum(case when _events.relay_tx is not null and _events.process_tx is null then 1 else 0 end) as relayed,
 sum(case when _events.process_tx is not null then 1 else 0 end) as processed
-from <%= events; %> group by origin_domain_id, destination_domain_id;
+from <%= events; %> _events group by origin_domain_id, destination_domain_id;

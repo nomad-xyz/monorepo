@@ -125,22 +125,22 @@ class Setup {
 
 // Initiate source schemas with pre-existing Goldsky tables (dispatch for now)
 let prodSource = new Schema('subgraph');
-let stageSource = new Schema('staging');
+let devSource = new Schema('staging');
 prodSource.registerTable('dispatch');
-stageSource.registerTable('dispatch');
+devSource.registerTable('dispatch');
 prodSource.registerTable('update');
-stageSource.registerTable('update');
+devSource.registerTable('update');
 prodSource.registerTable('process');
-stageSource.registerTable('process');
+devSource.registerTable('process');
 
 prodSource.registerTable('recovery');
 prodSource.registerTable('process_failure');
-stageSource.registerTable('recovery');
-stageSource.registerTable('process_failure');
+devSource.registerTable('recovery');
+devSource.registerTable('process_failure');
 
 // Destination views for both environments
 let prodDest = new Schema('production_views');
-let stageDest = new Schema('staging_views');
+let devDest = new Schema('development_views');
 
 
 let prodDomainMapping: Domain[] = [
@@ -151,7 +151,7 @@ let prodDomainMapping: Domain[] = [
     { name: 'moonbeam', domain: 1650811245 },
     { name: 'xdai', domain: 2019844457 },
 ]
-let stageDomainMapping: Domain[] = [
+let devDomainMapping: Domain[] = [
     { name: 'goerli', domain: 1337 },
     { name: 'sepolia', domain: 9999 },
 ]
@@ -160,10 +160,10 @@ let stageDomainMapping: Domain[] = [
 // both source and destination schemas are used as a source, to allow
 // re-use of freshly created views
 let prod = new Env('production', [prodSource, prodDest], prodDest, prodDomainMapping);
-let stage = new Env('staging', [stageSource, stageDest], stageDest, stageDomainMapping);
+let dev = new Env('development', [devSource, devDest], devDest, devDomainMapping);
 
 // Dummy super class that leads the dance
-let s = new Setup([prod, /*stage*/]);
+let s = new Setup([prod, dev]);
 
 // Register views. (name, template, required tables/views by name)
 let disp = new ViewTemplate('decoded_dispatch', fs.readFileSync('./views/decodedDispatch.sql', 'utf8'), [`dispatch`]);
