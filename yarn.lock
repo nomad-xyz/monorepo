@@ -13352,9 +13352,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"goldsky_table_management@workspace:packages/goldsky_management":
+"goldsky-table-management@workspace:packages/goldsky-management":
   version: 0.0.0-use.local
-  resolution: "goldsky_table_management@workspace:packages/goldsky_management"
+  resolution: "goldsky-table-management@workspace:packages/goldsky-management"
   dependencies:
     "@types/bunyan": ^1.8.8
     "@types/ejs": ^3.1.1

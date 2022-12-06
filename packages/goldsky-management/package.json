@@ -1,5 +1,5 @@
 {
-    "name": "goldsky_table_management",
+    "name": "goldsky-table-management",
     "version": "0.0.1",
     "description": "Repo for taking care of goldsky views for Nomad",
     "main": "index.js",
