@@ -42,9 +42,8 @@ Instantiate a [NomadContext](https://docs.nomad.xyz/sdk/classes/nomadcontext):
 // sdk includes a wasm module, so must await the import
 const { NomadContext } = await import('@nomad-xyz/sdk')
 
-type Env = 'production' | 'staging' | 'development'
-// staging is the recommended testnet environment
-const environment: Env = 'staging'
+type Env = 'production' | 'development'
+const environment: Env = 'development'
 // instantiate a preconfigured NomadContext
 const nomadContext = await NomadContext.fetch(environment)
 ```
