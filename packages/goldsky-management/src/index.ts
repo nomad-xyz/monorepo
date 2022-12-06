@@ -34,7 +34,7 @@ class Schema {
 
     registerTables(names: string[]) {
         for (const name of names) {
-            this.tables.push(new LocatedTable(name, this));
+            this.registerTable(name);
         }
     }
 }
