@@ -28,12 +28,29 @@ contract RebootTest is RebootLogic, NomadTest {
         __CallBatch_initialize(_domain, getDomainNumber(_domain), "", true);
         // call base setup
         super.setUp();
-        // set fake updater for ethereum & 1 remote chain
+        // basic vars
+        string memory governorDomainName = getDomainName(getGovernorDomain());
+        if (
+            keccak256(bytes(localDomainName)) ==
+            keccak256(bytes(governorDomainName))
+        ) {
+            remote = getConnections(localDomainName)[0];
+        } else {
+            remote = governorDomainName;
+        }
+        remoteDomain = getDomainNumber(remote);
+        homeDomain = getDomainNumber(localDomainName);
+        // set fake updater for remote chain replica
         // before updater rotation, so it will be rotated on-chain
         vm.writeJson(
             vm.toString(updaterAddr),
             outputPath,
-            protocolAttributePath(remote, "updater")
+            protocolConfigAttributePath(localDomainName, "updater")
+        );
+        vm.writeJson(
+            vm.toString(updaterAddr),
+            outputPath,
+            protocolConfigAttributePath(remote, "updater")
         );
         reloadConfig();
         // perform reboot actions
@@ -43,9 +60,5 @@ contract RebootTest is RebootLogic, NomadTest {
             address(getGovernanceRouter(localDomainName)),
             getDomainNumber(localDomainName)
         );
-        // basic vars
-        remote = getConnections(localDomainName)[0];
-        remoteDomain = getDomainNumber(remote);
-        homeDomain = getDomainNumber(localDomainName);
     }
 }
