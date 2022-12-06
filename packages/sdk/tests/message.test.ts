@@ -15,7 +15,7 @@ function toBytes32(address: string): string {
 
 describe('NomadMessage', () => {
   beforeAll(async () => {
-    conf = await NomadContext.fetchConfig('staging');
+    conf = await NomadContext.fetchConfig('development');
     context = new NomadContext(conf);
   });
 
