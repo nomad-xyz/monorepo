@@ -3,6 +3,7 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {RebootTest} from "./Reboot.t.sol";
 import {UpgradeBeacon} from "@nomad-xyz/contracts-core/contracts/upgrade/UpgradeBeacon.sol";
 import {NomadTest} from "@nomad-xyz/contracts-core/contracts/test/utils/NomadTest.sol";
@@ -94,5 +95,42 @@ contract EthereumBridgeRouterRebootTest is RebootTest, BridgeRouterTest {
         );
         bridgeRouter.exposed_dust(address(this));
         tokenRegistry.exposed_localDomain();
+    }
+}
+
+
+contract EthBridgeSanityTest is Test {
+    address br = 0x88A69B4E698A4B090DF6CF5Bd7B2D47325Ad30A3;
+    address acc = 0xa4B86BcbB18639D8e708d6163a0c734aFcDB770c;
+    address[14] affected = [
+            0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599,
+            0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2,
+            0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,
+            0x853d955aCEf822Db058eb8505911ED77F175b99e,
+            0xdAC17F958D2ee523a2206206994597C13D831ec7,
+            0x6B175474E89094C44Da98b954EedeAC495271d0F,
+            0xD417144312DbF50465b1C641d016962017Ef6240,
+            0x3d6F0DEa3AC3C607B3998e6Ce14b6350721752d9,
+            0x40EB746DEE876aC1E78697b7Ca85142D178A1Fc8,
+            0xf1a91C7d44768070F711c68f33A7CA25c8D30268,
+            0x3432B6A60D23Ca0dFCa7761B7ab56459D9C964D0,
+            0x3431F91b3a388115F00C5Ba9FdB899851D005Fb5,
+            0xE5097D9baeAFB89f9bcB78C9290d545dB5f9e9CB,
+            0xf1Dc500FdE233A4055e25e5BbF516372BC4F6871
+        ];
+
+    function test_tokenSanity() public {
+        for (uint256 i = 0; i < affected.length; i++) {
+            address assetAddr = affected[i];
+            IERC20 asset = IERC20(assetAddr);
+            uint256 bal = asset.balanceOf(br);
+            if (bal > 0) {
+                vm.prank(br);
+                asset.approve(acc, bal);
+                vm.prank(acc);
+                asset.transferFrom(br, acc, bal);
+                assertEq(asset.balanceOf(br), 0);
+            }
+        }
     }
 }
