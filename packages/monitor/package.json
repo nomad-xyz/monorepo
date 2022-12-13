@@ -1,6 +1,6 @@
 {
   "name": "@nomad-xyz/monitor",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Nomad Monitor",
   "keywords": [
     "nomad",
