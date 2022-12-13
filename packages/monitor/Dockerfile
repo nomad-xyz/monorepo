@@ -4,10 +4,9 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 COPY package.json .
-COPY package-lock.json .
 
-RUN npm install --production
+RUN yarn install 
 
 COPY src ./src
 
-CMD [ "npm", "run", "monitor" ]
+CMD [ "yarn", "run", "monitor" ]
