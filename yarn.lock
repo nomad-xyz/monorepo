@@ -3313,7 +3313,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/monitor@workspace:packages/monitor"
   dependencies:
-    "@nomad-xyz/sdk": ^3.0.0-rc.0
+    "@nomad-xyz/sdk": "workspace:^"
     "@types/bunyan": ^1.8.8
     "@types/jest": ^28.1.7
     "@types/node": ^16.9.1
@@ -3489,7 +3489,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk@^3.0.0-rc.0, @nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
+"@nomad-xyz/sdk@npm:^2.0.0-rc.21, @nomad-xyz/sdk@npm:^2.1.1":
+  version: 2.1.1
+  resolution: "@nomad-xyz/sdk@npm:2.1.1"
+  dependencies:
+    "@nomad-xyz/configuration": ^0.1.0
+    "@nomad-xyz/contracts-core": ^1.1.0
+    "@nomad-xyz/multi-provider": ^1.1.0
+    cross-fetch: ^3.1.5
+    ethers: ^5.0.0
+    graphql: ^16.5.0
+    graphql-request: ^4.3.0
+  checksum: 020b7bba922afcb98733b34a325d2db971694866fb49d022be45e8cac16482de7950903944c386edc0ddf199a7faabd0f36ff22366982eecd47d349f431b34a7
+  languageName: node
+  linkType: hard
+
+"@nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3519,21 +3534,6 @@ __metadata:
     typescript: ^4.4.3
   languageName: unknown
   linkType: soft
-
-"@nomad-xyz/sdk@npm:^2.0.0-rc.21, @nomad-xyz/sdk@npm:^2.1.1":
-  version: 2.1.1
-  resolution: "@nomad-xyz/sdk@npm:2.1.1"
-  dependencies:
-    "@nomad-xyz/configuration": ^0.1.0
-    "@nomad-xyz/contracts-core": ^1.1.0
-    "@nomad-xyz/multi-provider": ^1.1.0
-    cross-fetch: ^3.1.5
-    ethers: ^5.0.0
-    graphql: ^16.5.0
-    graphql-request: ^4.3.0
-  checksum: 020b7bba922afcb98733b34a325d2db971694866fb49d022be45e8cac16482de7950903944c386edc0ddf199a7faabd0f36ff22366982eecd47d349f431b34a7
-  languageName: node
-  linkType: hard
 
 "@nomiclabs/hardhat-ethers@npm:^2.0.1, @nomiclabs/hardhat-ethers@npm:^2.0.2, @nomiclabs/hardhat-ethers@npm:^2.0.4":
   version: 2.1.0
