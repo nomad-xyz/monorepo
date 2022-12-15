@@ -22,14 +22,6 @@ describe("killswitch tests", () => {
     let tomReplica;
     let jerryReplica;
 
-    const killswitchOutputToJson = (output: string) => {
-        const chunks = output
-            .split('\r\n')
-            .filter((s) => s.length)
-            .join(',');
-        return JSON.parse(`[${chunks}]`);
-    };
-
     const makeKillswitch = (
         config_var = 'CONFIG_PATH=/app/config/test_config.json',
         set_add_vars = true
@@ -101,30 +93,21 @@ describe("killswitch tests", () => {
     it('should return a bad config file error', async () => {
 
         const killswitch = makeKillswitch('CONFIG_PATH=/some/bad/config/path.json');
-        const cmd = ['./killswitch', '--app', 'token-bridge', '--all'];
-        const json = await killswitch.run(cmd).then(killswitchOutputToJson);
+        const cmd = ['./killswitch', '--environment', 'already-set', '--app', 'token-bridge', '--all'];
+        const output = await killswitch.run(cmd);
 
-        expect(json[0].message.result.status).to.equal('error');
-        expect(json[0].message.result.message).to.match(/^BadConfigVar:/);
+        expect(output).to.match(/BadConfigVar: Unable to load config/);
     });
 
-    it('should return missing rpc and signer errors', async () => {
+    it('should preflight successfully', async () => {
 
-        const killswitch = makeKillswitch(undefined, false);
-        const cmd = ['./killswitch', '--app', 'token-bridge', '--all'];
-        const json = await killswitch.run(cmd).then(killswitchOutputToJson);
+        const killswitch = makeKillswitch();
+        const cmd = ['./killswitch', '--environment', 'already-set', '--app', 'token-bridge', '--all'];
+        const output = await killswitch.run(cmd);
 
-        const homes = json[0].message.homes;
-        expect(homes.tom.status).to.equal('error');
-        expect(homes.jerry.status).to.equal('error');
-        const tomJerryResult = homes.tom.message.replicas.jerry.result;
-        const jerryTomResult = homes.jerry.message.replicas.tom.result;
-        expect(tomJerryResult.status).to.equal('error');
-        expect(jerryTomResult.status).to.equal('error');
-        expect(tomJerryResult.message[0]).to.match(/^MissingRPC:/);
-        expect(jerryTomResult.message[0]).to.match(/^MissingRPC:/);
-        expect(tomJerryResult.message[2]).to.match(/^MissingAttestationSignerConf:/);
-        expect(jerryTomResult.message[2]).to.match(/^MissingAttestationSignerConf:/);
+        expect(output).to.match(/\[CHANNEL] jerry -> tom/);
+        expect(output).to.match(/\[CHANNEL] tom -> jerry/);
+        expect(output).to.match(/\[NOTICE] Nothing killed!/);
     });
 
     it('should unenroll all replicas', async () => {
@@ -135,14 +118,11 @@ describe("killswitch tests", () => {
         expect(await jerryXcm.isReplica(tomReplica.address)).to.be.true;
 
         const killswitch = makeKillswitch();
-        const cmd = ['./killswitch', '--app', 'token-bridge', '--all'];
-        const json = await killswitch.run(cmd).then(killswitchOutputToJson);
+        const cmd = ['./killswitch', '--environment', 'already-set', '--app', 'token-bridge', '--all', '--force'];
+        const output = await killswitch.run(cmd);
 
-        const homes = json[0].message.homes;
-        expect(homes.tom.status).to.equal('success');
-        expect(homes.jerry.status).to.equal('success');
-        expect(homes.tom.message.replicas.jerry.result.tx_hash).to.have.lengthOf(66);
-        expect(homes.jerry.message.replicas.tom.result.tx_hash).to.have.lengthOf(66);
+        expect(output).to.match(/\[CHANNEL] jerry -> tom\r?\n\[SUCCESS]/);
+        expect(output).to.match(/\[CHANNEL] tom -> jerry\r?\n\[SUCCESS]/);
 
         expect(await tomXcm.isReplica(jerryReplica.address)).to.be.false;
         expect(await jerryXcm.isReplica(tomReplica.address)).to.be.false;
@@ -156,14 +136,10 @@ describe("killswitch tests", () => {
         expect(await jerryXcm.isReplica(tomReplica.address)).to.be.true;
 
         const killswitch = makeKillswitch();
-        const cmd = ['./killswitch', '--app', 'token-bridge', '--all-inbound', 'jerry'];
-        const json = await killswitch.run(cmd).then(killswitchOutputToJson);
+        const cmd = ['./killswitch', '--environment', 'already-set', '--app', 'token-bridge', '--all-inbound', 'jerry', '--force'];
+        const output = await killswitch.run(cmd);
 
-        expect(json).to.not.be.undefined;
-        const homes = json[0].message.homes;
-        expect(homes.tom.status).to.equal('success');
-        expect(homes.jerry).to.be.undefined;
-        expect(homes.tom.message.replicas.jerry.result.tx_hash).to.have.lengthOf(66);
+        expect(output).to.match(/\[CHANNEL] tom -> jerry\r?\n\[SUCCESS]/);
 
         expect(await tomXcm.isReplica(jerryReplica.address)).to.be.true;
         expect(await jerryXcm.isReplica(tomReplica.address)).to.be.false;

@@ -10,7 +10,7 @@ const defaultGoldSkySecret = "mpa%H&RAHu9;eUe";
 
 const supportedEnvironments = [
   "production",
-  "staging",
+  "development",
 ];
 
 /**
@@ -400,6 +400,7 @@ export class GoldSkyBackend extends MessageBackend {
     f: Partial<MessageFilter>,
     limit?: number,
   ): Promise<GoldSkyMessage[] | undefined> {
+    const eventsTable = `${this.env}_views_events`;
     const query = gql`
       query Query(
         $committedRoot: String
@@ -407,7 +408,7 @@ export class GoldSkyBackend extends MessageBackend {
         $transactionHash: String
         $limit: Int
       ) {
-        events(
+        ${eventsTable}(
           where: {
             _or: [
               { dispatch_tx: { _eq: $transactionHash } }
@@ -466,7 +467,7 @@ export class GoldSkyBackend extends MessageBackend {
 
     const response = await request(this.uri, query, filter, this.headers);
 
-    const events: GoldSkyMessage[] = nulls2undefined(response.events);
+    const events: GoldSkyMessage[] = nulls2undefined(response[eventsTable]);
 
     if (!events || events.length <= 0) return undefined;
 
