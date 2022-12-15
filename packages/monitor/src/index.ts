@@ -10,6 +10,9 @@ import { MonitoringContext } from './monitoringContext';
 dotenv.config();
 
 const environment = process.env.ENVIRONMENT || 'production';
+if (environment !== 'production' && environment !== 'development') 
+  throw new Error(`Only production and development environments are supported`);
+  
 const metricsPort = process.env.METRICS_PORT
   ? parseInt(process.env.METRICS_PORT)
   : 9090;
