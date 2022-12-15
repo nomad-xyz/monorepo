@@ -9,4 +9,4 @@ RUN yarn install
 
 COPY src ./src
 
-CMD [ "yarn", "run", "monitor" ]
+CMD [ "yarn", "run", "start" ]

@@ -37,14 +37,14 @@ export class HomeStatusCollector extends TaskRunner {
   async checkHome(nameOrDomain: string | number): Promise<void> {
     const domain = this.ctx.resolveDomain(nameOrDomain);
     const home = this.ctx.mustGetCore(domain).home;
-    console.log(`Check home for ${nameOrDomain}`);
+    this.logger.info({domain: nameOrDomain}, `Check home`);
     const state = await this.record(
       home.state(),
       'RPC',
       'HomeState',
       this.ctx.getDomain(domain)?.name.toString() || 'lol',
     );
-    console.log(`Checked home for ${nameOrDomain}`);
+    this.logger.info({domain: nameOrDomain}, `Checked home`);
     if (state === 2) {
       this.metrics.setHomeState(nameOrDomain.toString(), true);
     } else {

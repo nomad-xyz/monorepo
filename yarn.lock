@@ -3313,7 +3313,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/monitor@workspace:packages/monitor"
   dependencies:
-    "@nomad-xyz/sdk": "workspace:^"
+    "@nomad-xyz/sdk": 3.0.0-rc.0
     "@types/bunyan": ^1.8.8
     "@types/jest": ^28.1.7
     "@types/node": ^16.9.1
@@ -3489,22 +3489,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nomad-xyz/sdk@npm:^2.0.0-rc.21, @nomad-xyz/sdk@npm:^2.1.1":
-  version: 2.1.1
-  resolution: "@nomad-xyz/sdk@npm:2.1.1"
-  dependencies:
-    "@nomad-xyz/configuration": ^0.1.0
-    "@nomad-xyz/contracts-core": ^1.1.0
-    "@nomad-xyz/multi-provider": ^1.1.0
-    cross-fetch: ^3.1.5
-    ethers: ^5.0.0
-    graphql: ^16.5.0
-    graphql-request: ^4.3.0
-  checksum: 020b7bba922afcb98733b34a325d2db971694866fb49d022be45e8cac16482de7950903944c386edc0ddf199a7faabd0f36ff22366982eecd47d349f431b34a7
-  languageName: node
-  linkType: hard
-
-"@nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
+"@nomad-xyz/sdk@3.0.0-rc.0, @nomad-xyz/sdk@workspace:^, @nomad-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nomad-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3534,6 +3519,21 @@ __metadata:
     typescript: ^4.4.3
   languageName: unknown
   linkType: soft
+
+"@nomad-xyz/sdk@npm:^2.0.0-rc.21, @nomad-xyz/sdk@npm:^2.1.1":
+  version: 2.1.1
+  resolution: "@nomad-xyz/sdk@npm:2.1.1"
+  dependencies:
+    "@nomad-xyz/configuration": ^0.1.0
+    "@nomad-xyz/contracts-core": ^1.1.0
+    "@nomad-xyz/multi-provider": ^1.1.0
+    cross-fetch: ^3.1.5
+    ethers: ^5.0.0
+    graphql: ^16.5.0
+    graphql-request: ^4.3.0
+  checksum: 020b7bba922afcb98733b34a325d2db971694866fb49d022be45e8cac16482de7950903944c386edc0ddf199a7faabd0f36ff22366982eecd47d349f431b34a7
+  languageName: node
+  linkType: hard
 
 "@nomiclabs/hardhat-ethers@npm:^2.0.1, @nomiclabs/hardhat-ethers@npm:^2.0.2, @nomiclabs/hardhat-ethers@npm:^2.0.4":
   version: 2.1.0
@@ -4920,6 +4920,13 @@ __metadata:
     "@types/docker-modem": "*"
     "@types/node": "*"
   checksum: 3d03c68addb37c50e9557fff17171d26423aa18e544cb24e4caa81ebcec39ccc1cafed7adbfb8f4220d8ed23028d231717826bb77a786d425885c4f4cc37536d
+  languageName: node
+  linkType: hard
+
+"@types/ejs@npm:^3.1.1":
+  version: 3.1.1
+  resolution: "@types/ejs@npm:3.1.1"
+  checksum: 12fa444920aaa70af2fae4424fa62b49c23b31a37129c428b7c9f9068e58c0696b4e5601b0449f87bae8794e039c679a43651c356c34f17d1bb460456dd41441
   languageName: node
   linkType: hard
 
@@ -13373,6 +13380,31 @@ __metadata:
   checksum: 9b4cb70aa0b43bf89b18cf0e543695185e16d8dd99c17bdc6a1df0a9f88ff9dc8d2467aebace54c3842fc451a564882948c87a3b4fbdb1cacf3e05fd54b6ac5d
   languageName: node
   linkType: hard
+
+"goldsky-table-management@workspace:packages/goldsky-management":
+  version: 0.0.0-use.local
+  resolution: "goldsky-table-management@workspace:packages/goldsky-management"
+  dependencies:
+    "@types/bunyan": ^1.8.8
+    "@types/ejs": ^3.1.1
+    "@types/jest": ^28.1.7
+    "@types/node": ^16.9.1
+    "@typescript-eslint/eslint-plugin": ^5.20.0
+    "@typescript-eslint/parser": ^5.20.0
+    bunyan: ^1.8.15
+    dotenv: ^10.0.0
+    ejs: ^3.1.8
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.3.0
+    jest: ^28.1.3
+    nyc: ^15.1.0
+    prettier: ^2.4.1
+    regenerator-runtime: ^0.13.9
+    ts-jest: ^28.0.8
+    ts-node: ^10.7.0
+    typescript: ^4.4.3
+  languageName: unknown
+  linkType: soft
 
 "got@npm:12.1.0":
   version: 12.1.0
