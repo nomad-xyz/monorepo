@@ -2,7 +2,7 @@
 
 ### Unreleased
 
-### 3.0.0-rc.1
+### 3.0.1-rc.0
 
 - fix: remove staging env and references to staging
 - fix: set `from` in call overrides in `prepareRecover`
