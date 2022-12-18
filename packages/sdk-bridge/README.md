@@ -44,9 +44,8 @@ Instantiate a [BridgeContext](https://docs.nomad.xyz/sdk-bridge/classes/bridgeco
 // sdk includes a wasm module, so must await the import
 const { BridgeContext } = await import('@nomad-xyz/sdk-bridge')
 
-type Env = 'production' | 'staging' | 'development'
-// staging is the recommended testnet environment
-const environment: Env = 'staging'
+type Env = 'production' | 'development'
+const environment: Env = 'development'
 // instantiate a preconfigured BridgeContext
 const bridgeContext = await BridgeContext.fetch(environment)
 ```

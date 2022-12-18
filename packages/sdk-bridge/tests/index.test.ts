@@ -3,7 +3,7 @@ import * as config from '@nomad-xyz/configuration';
 
 import { NomadContext } from '@nomad-xyz/sdk';
 
-const ENVIRONMENTS = ['development', 'staging', 'production'];
+const ENVIRONMENTS = ['development', 'production'];
 
 describe('sdk-bridge', () => {
   describe('BridgeContext', () => {
