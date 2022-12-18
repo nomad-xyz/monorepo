@@ -472,11 +472,11 @@ export class BridgeContext extends NomadContext {
 
   /**
    * Get the accountant associated with this environment, if any. Accountants
-   * will be on Goerli for staging, Ethereum for production.
+   * will be on Goerli for development, Ethereum for production.
    */
   get accountant(): bridge.NFTAccountant | undefined {
     switch (this.environment) {
-      case 'staging': {
+      case 'development': {
         return bridge.NftAccountant__factory.connect(
           MOCK_GOERLI_ACCOUNTANT,
           this.mustGetConnection('goerli'),
