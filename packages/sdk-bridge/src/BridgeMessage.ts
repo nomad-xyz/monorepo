@@ -122,17 +122,18 @@ export class BridgeMessage extends NomadMessage<BridgeContext> {
   static async bridgeFirstFromBackend(
     context: BridgeContext,
     transactionHash: string,
-    // _backend?: BridgeMessageBackend,
   ): Promise<BridgeMessage> {
-    // const backend = context._backend || _backend;
-    // if (!backend) {
-    //   throw new Error(`No backend is set for the context`);
-    // }
-    // const dispatches = await backend.getDispatches(transactionHash, 1);
-    // if (!dispatches || dispatches.length === 0) throw new Error(`No dispatch`);
-
-    // const m = new NomadMessage(context, dispatches[0]);
     const m = await this.baseFirstFromBackend(context, transactionHash);
+    const bm = BridgeMessage.fromNomadMessage(context, m, context._backend);
+
+    return bm;
+  }
+
+  static async bridgeFromMessageHash(
+    context: BridgeContext,
+    messageHash: string,
+  ): Promise<BridgeMessage> {
+    const m = await this.baseFromMessageHash(context, messageHash);
     const bm = BridgeMessage.fromNomadMessage(context, m, context._backend);
 
     return bm;
