@@ -210,8 +210,8 @@ export class GoldSkyBackend extends MessageBackend {
   async getDispatchByMessageHash(
     messageHash: string,
   ): Promise<Dispatch | undefined> {
-    const ms = await this.getMessage(messageHash)
-    if (!ms) return
+    const ms = await this.getMessage(messageHash);
+    if (!ms) return;
 
     return ({
       args: {
@@ -222,7 +222,7 @@ export class GoldSkyBackend extends MessageBackend {
         message: ms.message,
       },
       transactionHash: ms.dispatch_tx,
-    })
+    });
   }
 
   /**
