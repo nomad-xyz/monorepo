@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### 3.1.0-rc.3
+
+- fix: release sdk package first
+
 ### 3.1.0-rc.0
 
 - remove staging
