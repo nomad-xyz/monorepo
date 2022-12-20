@@ -16,29 +16,29 @@ import {IBridgeRouterHarness} from "@nomad-xyz/contracts-bridge/contracts/test/h
 contract TokenRegistryRebootTest is RebootTest, TokenRegistryTest {
     address tokenRegistryHarnessImpl;
 
-    string constant ethereum = "ethereum";
-
     function setUp() public override(NomadTest, BridgeTestFixture) {
         setUpReboot("tokenRegistry");
         tokenRegistry = TokenRegistryHarness(
-            address(getTokenRegistry(ethereum))
+            address(getTokenRegistry(localDomainName))
         );
         vm.label(address(tokenRegistry), "tokenRegistry");
-        bridgeRouter = IBridgeRouterHarness(address(getBridgeRouter(ethereum)));
+        bridgeRouter = IBridgeRouterHarness(
+            address(getBridgeRouter(localDomainName))
+        );
         vm.label(address(bridgeRouter), "bridgeRouter");
         // upgrade to harness
         setUp_upgradeTokenRegistryHarness();
         // load necessary contracts
-        xAppConnectionManager = getXAppConnectionManager(ethereum);
+        xAppConnectionManager = getXAppConnectionManager(localDomainName);
         vm.label(address(xAppConnectionManager), "XAppConnectionManager");
-        upgradeBeaconController = getUpgradeBeaconController(ethereum);
+        upgradeBeaconController = getUpgradeBeaconController(localDomainName);
         vm.label(address(upgradeBeaconController), "upgradeBeaconController");
         tokenBeacon = UpgradeBeacon(payable(tokenRegistry.tokenBeacon()));
         vm.label(address(tokenBeacon), "tokenBeacon");
         bridgeToken = BridgeToken(beaconImplementation(tokenBeacon));
         vm.label(address(bridgeToken), "bridgeToken");
         // home needed for vm.expectCall
-        home = address(getHome(ethereum));
+        home = address(getHome(localDomainName));
         vm.label(home, "home");
         // BridgeTestFixture.setUp_testFixtures()
         setUp_testFixtures();
@@ -50,13 +50,16 @@ contract TokenRegistryRebootTest is RebootTest, TokenRegistryTest {
         vm.writeJson(
             vm.toString(tokenRegistryHarnessImpl),
             outputPath,
-            bridgeAttributePath(ethereum, "tokenRegistry.implementation")
+            bridgeAttributePath(localDomainName, "tokenRegistry.implementation")
         );
         reloadConfig();
-        pushSingleUpgrade(tokenRegistryUpgrade(ethereum), ethereum);
+        pushSingleUpgrade(
+            tokenRegistryUpgrade(localDomainName),
+            localDomainName
+        );
         prankExecuteRecoveryManager(
-            address(getGovernanceRouter(ethereum)),
-            getDomainNumber(ethereum)
+            address(getGovernanceRouter(localDomainName)),
+            getDomainNumber(localDomainName)
         );
     }
 }

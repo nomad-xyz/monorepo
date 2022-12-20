@@ -19,31 +19,31 @@ contract BridgeRouterRebootTest is RebootTest, BridgeRouterTest {
     address bridgeRouterHarnessImpl;
     address tokenRegistryHarnessImpl;
 
-    string constant ethereum = "ethereum";
-
     function setUp() public override(BridgeRouterBaseTest, NomadTest) {
         setUpReboot("bridgeRouter");
         // load proxies
         tokenRegistry = TokenRegistryHarness(
-            address(getTokenRegistry(ethereum))
+            address(getTokenRegistry(localDomainName))
         );
         vm.label(address(tokenRegistry), "tokenRegistry");
-        bridgeRouter = IBridgeRouterHarness(address(getBridgeRouter(ethereum)));
+        bridgeRouter = IBridgeRouterHarness(
+            address(getBridgeRouter(localDomainName))
+        );
         vm.label(address(bridgeRouter), "bridgeRouter");
         // upgrade to harness
         setUp_upgradeTokenRegistryHarness();
         setUp_upgradeBridgeRouterHarness();
         // load necessary contracts
-        xAppConnectionManager = getXAppConnectionManager(ethereum);
+        xAppConnectionManager = getXAppConnectionManager(localDomainName);
         vm.label(address(xAppConnectionManager), "XAppConnectionManager");
-        upgradeBeaconController = getUpgradeBeaconController(ethereum);
+        upgradeBeaconController = getUpgradeBeaconController(localDomainName);
         vm.label(address(upgradeBeaconController), "upgradeBeaconController");
         tokenBeacon = UpgradeBeacon(payable(tokenRegistry.tokenBeacon()));
         vm.label(address(tokenBeacon), "tokenBeacon");
         bridgeToken = BridgeToken(beaconImplementation(tokenBeacon));
         vm.label(address(bridgeToken), "bridgeToken");
         // home needed for vm.expectCall
-        home = address(getHome("ethereum"));
+        home = address(getHome(localDomainName));
         vm.label(home, "home");
         BridgeRouterBaseTest.setUp_testFixtures();
     }
@@ -54,13 +54,16 @@ contract BridgeRouterRebootTest is RebootTest, BridgeRouterTest {
         vm.writeJson(
             vm.toString(tokenRegistryHarnessImpl),
             outputPath,
-            bridgeAttributePath(ethereum, "tokenRegistry.implementation")
+            bridgeAttributePath(localDomainName, "tokenRegistry.implementation")
         );
         reloadConfig();
-        pushSingleUpgrade(tokenRegistryUpgrade(ethereum), ethereum);
+        pushSingleUpgrade(
+            tokenRegistryUpgrade(localDomainName),
+            localDomainName
+        );
         prankExecuteRecoveryManager(
-            address(getGovernanceRouter(ethereum)),
-            getDomainNumber(ethereum)
+            address(getGovernanceRouter(localDomainName)),
+            getDomainNumber(localDomainName)
         );
     }
 
@@ -70,13 +73,16 @@ contract BridgeRouterRebootTest is RebootTest, BridgeRouterTest {
         vm.writeJson(
             vm.toString(bridgeRouterHarnessImpl),
             outputPath,
-            bridgeAttributePath(ethereum, "bridgeRouter.implementation")
+            bridgeAttributePath(localDomainName, "bridgeRouter.implementation")
         );
         reloadConfig();
-        pushSingleUpgrade(bridgeRouterUpgrade(ethereum), ethereum);
+        pushSingleUpgrade(
+            bridgeRouterUpgrade(localDomainName),
+            localDomainName
+        );
         prankExecuteRecoveryManager(
-            address(getGovernanceRouter(ethereum)),
-            getDomainNumber(ethereum)
+            address(getGovernanceRouter(localDomainName)),
+            getDomainNumber(localDomainName)
         );
     }
 
@@ -84,11 +90,11 @@ contract BridgeRouterRebootTest is RebootTest, BridgeRouterTest {
         // check that the harnesses have harness methods available
         assertEq(
             bridgeRouterHarnessImpl,
-            bridgeRouterUpgrade(ethereum).implementation
+            bridgeRouterUpgrade(localDomainName).implementation
         );
         assertEq(
             tokenRegistryHarnessImpl,
-            tokenRegistryUpgrade(ethereum).implementation
+            tokenRegistryUpgrade(localDomainName).implementation
         );
         bridgeRouter.exposed_dust(address(this));
         tokenRegistry.exposed_localDomain();
