@@ -11,6 +11,7 @@ contract DeployDABridgeRouter is Script {
     uint256 localDomain;
     uint256 remoteDomain;
     address remoteUpdater;
+    address daBridgeWatcher;
     uint256 optimisticSeconds;
     bytes32 daBridgePalletId;
 
@@ -18,6 +19,7 @@ contract DeployDABridgeRouter is Script {
         localDomain = vm.envUint("GOERLI_DOMAIN");
         remoteDomain = vm.envUint("AVAIL_DOMAIN");
         remoteUpdater = vm.envAddress("AVAIL_UPDATER_ADDRESS");
+        daBridgeWatcher = vm.envAddress("DA_BRIDGE_WATCHER_ADDRESS");
         optimisticSeconds = vm.envUint("OPTIMISTIC_SECONDS");
         daBridgePalletId = vm.envBytes32("DA_BRIDGE_PALLET_ID");
     }
@@ -38,11 +40,22 @@ contract DeployDABridgeRouter is Script {
         );
 
         XAppConnectionManager manager = new XAppConnectionManager();
+
+        // Entity to with permission to set home, enroll replica, and set
+        // watcher permissions is contract owner (deployer by default).
         manager.setHome(address(home));
         manager.ownerEnrollReplica(address(replica), uint32(remoteDomain));
+        manager.setWatcherPermission(
+            daBridgeWatcher,
+            uint32(remoteDomain),
+            true
+        );
 
         DABridgeRouter router = new DABridgeRouter();
         router.initialize(address(manager), uint32(remoteDomain));
+
+        // Entity to with permission to enroll remote router is contract owner
+        // (deployer by default).
         router.enrollRemoteRouter(uint32(remoteDomain), daBridgePalletId);
 
         vm.stopBroadcast();
