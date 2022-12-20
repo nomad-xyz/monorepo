@@ -203,6 +203,29 @@ export class GoldSkyBackend extends MessageBackend {
   }
 
   /**
+   * Prepares a Dispatch event from backend's internal message representation
+   *
+   * @returns Dispatch event assiciated with message hash (if any)
+   */
+  async getDispatchByMessageHash(
+    messageHash: string,
+  ): Promise<Dispatch | undefined> {
+    const ms = await this.getMessage(messageHash);
+    if (!ms) return;
+
+    return ({
+      args: {
+        messageHash: ms?.message_hash,
+        leafIndex: BigNumber.from(ms.leaf_index),
+        destinationAndNonce: BigNumber.from(ms.destination_and_nonce),
+        committedRoot: ms.committed_root,
+        message: ms.message,
+      },
+      transactionHash: ms.dispatch_tx,
+    });
+  }
+
+  /**
    * Stores message into internal cache
    */
   storeMessage(m: GoldSkyMessage): void {

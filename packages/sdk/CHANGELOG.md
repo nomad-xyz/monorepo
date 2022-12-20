@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### 3.2.0-rc.0
+
+- feat: instantiate from message hash
+
 ### 3.1.0-rc.3
 
 - fix: release sdk package first

@@ -208,6 +208,21 @@ export class NomadMessage<T extends NomadContext> {
     return m;
   }
 
+  static async baseFromMessageHash<T extends NomadContext>(
+    context: T,
+    messageHash: string,
+  ): Promise<NomadMessage<T>> {
+    if (!context._backend) {
+      throw new Error(`No backend is set for the context`);
+    }
+    const dispatch = await context._backend.getDispatchByMessageHash(messageHash);
+    if (!dispatch) throw new Error(`No dispatch`);
+
+    const m = new NomadMessage(context, dispatch);
+
+    return m;
+  }
+
   /**
    * Get the `Relay` event associated with this message (if any)
    *

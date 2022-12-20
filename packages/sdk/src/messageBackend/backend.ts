@@ -11,6 +11,7 @@ export abstract class MessageBackend {
     limit?: number,
   ): Promise<Dispatch[] | undefined>;
   abstract getFirstMessageHash(tx: string): Promise<string | undefined>;
+  abstract getDispatchByMessageHash(messageHash: string): Promise<Dispatch | undefined>;
 
   abstract dispatchTx(messageHash: string): Promise<string | undefined>;
   abstract updateTx(messageHash: string): Promise<string | undefined>;
