@@ -24,14 +24,22 @@ library DABridgeMessage {
 
     enum Types {
         Invalid, // 0
-        DataRoot // 1
+        DataRootBatch // 1
     }
 
     // ============ Constants ============
 
     uint256 private constant IDENTIFIER_LEN = 1;
+    uint256 private constant COUNT_LEN = 2;
     uint256 private constant BLOCK_NUMBER_LEN = 4;
     uint256 private constant DATA_ROOT_LEN = 32;
+
+    // ============ Structs ============
+
+    struct DataRootBatchItem {
+        bytes32 dataRoot;
+        uint32 blockNumber;
+    }
 
     // ============ Internal Functions ============
 
@@ -49,9 +57,19 @@ library DABridgeMessage {
      * @param _view The bytes string
      * @return TRUE if message is valid
      */
-    function isValidDataRootLength(bytes29 _view) internal pure returns (bool) {
+    function isValidDataRootBatchLength(bytes29 _view)
+        internal
+        pure
+        returns (bool)
+    {
         uint256 _len = _view.len();
-        return _len == IDENTIFIER_LEN + BLOCK_NUMBER_LEN + DATA_ROOT_LEN;
+        uint16 dataCount = count(_view);
+        require(dataCount > 0, "!valid message");
+        uint256 expectedLen = IDENTIFIER_LEN +
+            COUNT_LEN +
+            dataCount *
+            (BLOCK_NUMBER_LEN + DATA_ROOT_LEN);
+        return _len == expectedLen;
     }
 
     /**
@@ -74,53 +92,75 @@ library DABridgeMessage {
     }
 
     /**
-     * @notice Checks that the message is of type DataRoot
+     * @notice Checks that the message is of type DataRootBatch
      * @param _view The message
-     * @return True if the message is of type DataRoot
+     * @return True if the message is of type DataRootBatch
      */
-    function isDataRoot(bytes29 _view) internal pure returns (bool) {
-        return isType(_view, Types.DataRoot);
+    function isDataRootBatch(bytes29 _view) internal pure returns (bool) {
+        return isType(_view, Types.DataRootBatch);
     }
 
     /**
      * @notice Creates a serialized data root from components
-     * @param _blockNumber The block number
-     * @param _root The root
-     * @return The formatted data root
+     * @param data block number + root array
+     * @return result The formatted data root
      */
-    function formatDataRoot(uint32 _blockNumber, bytes32 _root)
+    function formatDataRootBatch(DataRootBatchItem[] memory data)
         internal
         pure
-        returns (bytes memory)
+        returns (bytes memory result)
     {
-        return abi.encodePacked(uint8(Types.DataRoot), _blockNumber, _root);
-    }
-
-    /**
-     * @notice Retrieves the block number from a message
-     * @param _message The message
-     * @return The block number
-     */
-    function blockNumber(bytes29 _message) internal pure returns (uint32) {
-        return
-            uint32(_message.indexUint(IDENTIFIER_LEN, uint8(BLOCK_NUMBER_LEN)));
-    }
-
-    /**
-     * @notice Retrieves the data root from a message
-     * @param _message The message
-     * @return The data root
-     */
-    function dataRoot(bytes29 _message) internal pure returns (bytes32) {
-        return
-            _message.index(
-                BLOCK_NUMBER_LEN + IDENTIFIER_LEN,
-                uint8(DATA_ROOT_LEN)
+        result = abi.encodePacked(
+            uint8(Types.DataRootBatch),
+            uint16(data.length)
+        );
+        for (uint256 i = 0; i < data.length; i++) {
+            result = abi.encodePacked(
+                result,
+                data[i].blockNumber,
+                data[i].dataRoot
             );
+        }
     }
 
-    function isValidDataRoot(bytes29 _view) internal pure returns (bool) {
-        return isType(_view, Types.DataRoot) && isValidDataRootLength(_view);
+    /**
+     * @notice Retrieves the number of data roots from a message
+     * @param _view The message
+     * @return The amount of data roots
+     */
+    function count(bytes29 _view) internal pure returns (uint16) {
+        return uint16(_view.indexUint(IDENTIFIER_LEN, uint8(COUNT_LEN)));
+    }
+
+    function dataRootBatch(bytes29 _view)
+        internal
+        pure
+        returns (DataRootBatchItem[] memory)
+    {
+        uint16 _count = count(_view);
+        DataRootBatchItem[] memory _dataRoots = new DataRootBatchItem[](_count);
+        uint256 _offset = IDENTIFIER_LEN + COUNT_LEN;
+        for (uint256 i = 0; i < _count; i++) {
+            _dataRoots[i] = DataRootBatchItem({
+                blockNumber: uint32(
+                    _view.indexUint(_offset, uint8(BLOCK_NUMBER_LEN))
+                ),
+                dataRoot: bytes32(
+                    _view.indexUint(
+                        _offset + BLOCK_NUMBER_LEN,
+                        uint8(DATA_ROOT_LEN)
+                    )
+                )
+            });
+            _offset += BLOCK_NUMBER_LEN + DATA_ROOT_LEN;
+        }
+        return _dataRoots;
+    }
+
+    function isValidDataRootBatch(bytes29 _view) internal pure returns (bool) {
+        return
+            isType(_view, Types.DataRootBatch) &&
+            isValidDataRootBatchLength(_view);
     }
 
     function getTypedView(bytes29 _view) internal pure returns (bytes29) {

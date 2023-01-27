@@ -22,6 +22,7 @@ contract DABridgeMessageTest is Test {
     using DABridgeMessage for bytes29;
 
     uint256 private constant IDENTIFIER_LEN = 1;
+    uint256 private constant COUNT_LEN = 2;
     uint256 private constant BLOCK_NUMBER_LEN = 4;
     uint256 private constant DATA_ROOT_LEN = 32;
 
@@ -33,21 +34,33 @@ contract DABridgeMessageTest is Test {
     /// @notice Verify that the enum for the memview types remains unchaged
     function test_typeOrderUnchanged() public {
         assertEq(uint256(DABridgeMessage.Types.Invalid), 0);
-        assertEq(uint256(DABridgeMessage.Types.DataRoot), 1);
+        assertEq(uint256(DABridgeMessage.Types.DataRootBatch), 1);
     }
 
     /// @notice A DABridgeMessage must be IDENTIFIER_LEN + BLOCK_NUMBER_LEN + DATA_ROOT_LEN
     /// so that it can contain all the required information needed by the Bridge.
-    function test_isValidMessageLength() public {
-        bytes memory longMessage = new bytes(38);
-        bytes memory correctMessage = new bytes(37);
-        bytes memory shortMessage = new bytes(36);
+    function test_isValidMessageLength(uint16 count) public {
+        vm.assume(count > 0);
+        bytes memory identifierAndLength = abi.encodePacked(uint8(0), count);
+        uint256 correctLength = count * (BLOCK_NUMBER_LEN + DATA_ROOT_LEN);
+        bytes memory longMessage = abi.encodePacked(
+            identifierAndLength,
+            new bytes(correctLength + 1)
+        );
+        bytes memory correctMessage = abi.encodePacked(
+            identifierAndLength,
+            new bytes(correctLength)
+        );
+        bytes memory shortMessage = abi.encodePacked(
+            identifierAndLength,
+            new bytes(correctLength - 1)
+        );
         bytes29 longView = longMessage.ref(0);
         bytes29 correctView = correctMessage.ref(0);
         bytes29 shortView = shortMessage.ref(0);
-        assertFalse(shortView.isValidDataRootLength());
-        assertFalse(longView.isValidDataRootLength());
-        assertTrue(correctView.isValidDataRootLength());
+        assertFalse(shortView.isValidDataRootBatchLength());
+        assertFalse(longView.isValidDataRootBatchLength());
+        assertTrue(correctView.isValidDataRootBatchLength());
     }
 
     function test_messageTypeReturnsCorrectType() public {
@@ -60,29 +73,31 @@ contract DABridgeMessageTest is Test {
             uint256(DABridgeMessage.Types.Invalid)
         );
         viewUnderTest = emptyView.castTo(
-            uint40(DABridgeMessage.Types.DataRoot)
+            uint40(DABridgeMessage.Types.DataRootBatch)
         );
         assertEq(
             uint256(viewUnderTest.messageType()),
-            uint256(DABridgeMessage.Types.DataRoot)
+            uint256(DABridgeMessage.Types.DataRootBatch)
         );
     }
 
     function test_detectsCorrectType() public {
         bytes memory message = abi.encodePacked(
-            uint8(DABridgeMessage.Types.DataRoot),
+            uint8(DABridgeMessage.Types.DataRootBatch),
+            uint32(1),
             _blockNumber,
             _dataRoot
         );
         bytes29 _view = message.ref(0);
-        assertFalse(_view.isDataRoot());
+        assertFalse(_view.isDataRootBatch());
         _view = _view.getTypedView();
-        assertTrue(_view.isDataRoot());
+        assertTrue(_view.isDataRootBatch());
     }
 
     function test_assertsExistingType() public {
         bytes memory message = abi.encodePacked(
             uint8(255),
+            uint32(1),
             _blockNumber,
             _dataRoot
         );
@@ -94,34 +109,62 @@ contract DABridgeMessageTest is Test {
     function test_formatDataRootSucceeds() public {
         bytes29 manualDataRoot = abi
             .encodePacked(
-                DABridgeMessage.Types.DataRoot,
+                DABridgeMessage.Types.DataRootBatch,
+                uint16(1),
                 _blockNumber,
                 _dataRoot
             )
             .ref(0);
-        bytes29 dataRoot = DABridgeMessage
-            .formatDataRoot(_blockNumber, _dataRoot)
-            .ref(0);
+
+        DABridgeMessage.DataRootBatchItem[]
+            memory _dataRoots = new DABridgeMessage.DataRootBatchItem[](1);
+
+        _dataRoots[0] = DABridgeMessage.DataRootBatchItem({
+            dataRoot: _dataRoot,
+            blockNumber: _blockNumber
+        });
+
+        bytes29 dataRoot = DABridgeMessage.formatDataRootBatch(_dataRoots).ref(
+            0
+        );
         assertEq(dataRoot.keccak(), manualDataRoot.keccak());
     }
 
     function test_getBlockNumber() public {
-        bytes29 dataRoot = DABridgeMessage
-            .formatDataRoot(_blockNumber, _dataRoot)
-            .ref(0);
+        DABridgeMessage.DataRootBatchItem[]
+            memory _dataRoots = new DABridgeMessage.DataRootBatchItem[](1);
+
+        _dataRoots[0] = DABridgeMessage.DataRootBatchItem({
+            dataRoot: _dataRoot,
+            blockNumber: _blockNumber
+        });
+
+        bytes29 dataRoot = DABridgeMessage.formatDataRootBatch(_dataRoots).ref(
+            0
+        );
+
         assertEq(
             uint256(_blockNumber),
-            uint256(DABridgeMessage.blockNumber(dataRoot))
+            uint256(DABridgeMessage.dataRootBatch(dataRoot)[0].blockNumber)
         );
     }
 
     function test_getDataRoot() public {
-        bytes29 dataRoot = DABridgeMessage
-            .formatDataRoot(_blockNumber, _dataRoot)
-            .ref(0);
+        DABridgeMessage.DataRootBatchItem[]
+            memory _dataRoots = new DABridgeMessage.DataRootBatchItem[](1);
+
+        _dataRoots[0] = DABridgeMessage.DataRootBatchItem({
+            dataRoot: _dataRoot,
+            blockNumber: _blockNumber
+        });
+
+        bytes29 dataRoot = DABridgeMessage.formatDataRootBatch(_dataRoots).ref(
+            0
+        );
+
         assertEq(
             uint256(_dataRoot),
-            uint256(DABridgeMessage.dataRoot(dataRoot))
+            uint256(DABridgeMessage.dataRootBatch(dataRoot)[0].dataRoot)
         );
     }
 }
