@@ -60,7 +60,7 @@ contract DABridgeRouter is Version0, Router {
     /**
      * @notice Receive messages sent via Nomad from other remote xApp Routers;
      * parse the contents of the message and enact the message's effects on the local chain
-     * @dev Called by an Nomad Replica contract while processing a message sent via Nomad
+     * @dev Called by a Nomad Replica contract while processing a message sent via Nomad
      * @param _origin The domain the message is coming from
      * @param _nonce The unique identifier for the message from origin to destination
      * @param _sender The address the message is coming from
