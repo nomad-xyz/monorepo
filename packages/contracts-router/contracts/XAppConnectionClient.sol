@@ -15,7 +15,7 @@ abstract contract XAppConnectionClient is OwnableUpgradeable {
     // ============ Modifiers ============
 
     /**
-     * @notice Only accept messages from an Nomad Replica contract
+     * @notice Only accept messages from a Nomad Replica contract
      */
     modifier onlyReplica() {
         require(_isReplica(msg.sender), "!replica");
