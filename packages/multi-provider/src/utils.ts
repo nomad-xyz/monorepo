@@ -77,7 +77,7 @@ export function canonizeId(data: BytesLike): Uint8Array {
 }
 
 /**
- * Converts an Nomad ID of 20 or 32 bytes to the corresponding EVM Address.
+ * Converts a Nomad ID of 20 or 32 bytes to the corresponding EVM Address.
  *
  * For 32-byte IDs this enforces the EVM convention of using the LAST 20 bytes.
  *
