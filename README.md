@@ -14,4 +14,4 @@ Please read `CONTRIBUTING.md`.
 
 ### Design
 
-Pleaes see [docs.nomad.xyz](https://docs.nomad.xyz)
+Please see [docs.nomad.xyz](https://docs.nomad.xyz)
