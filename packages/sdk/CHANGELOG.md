@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+### 3.2.1
+
+- feat: process method accepts transaction overrides like gasLimit
+
 ### 3.2.0-rc.0
 
 - feat: instantiate from message hash
