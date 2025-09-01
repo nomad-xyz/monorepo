@@ -1,4 +1,4 @@
-import { ethers, ContractTransaction } from 'ethers';
+import { ethers, ContractTransaction, Overrides } from 'ethers';
 import { keccak256 } from 'ethers/lib/utils';
 import { BigNumber } from '@ethersproject/bignumber';
 import { arrayify, hexlify } from '@ethersproject/bytes';
@@ -316,8 +316,8 @@ export class NomadMessage<T extends NomadContext> {
     return undefined;
   }
 
-  async process(): Promise<ContractTransaction> {
-    return this.context.process(this);
+  async process(overrides: Overrides = {}): Promise<ContractTransaction> {
+    return this.context.process(this, overrides);
   }
 
   /**

@@ -1,4 +1,4 @@
-import { providers, Signer, ContractTransaction, BytesLike } from 'ethers';
+import { providers, Signer, ContractTransaction, BytesLike, Overrides } from 'ethers';
 
 import { MultiProvider } from '@nomad-xyz/multi-provider';
 import * as core from '@nomad-xyz/contracts-core';
@@ -261,20 +261,23 @@ export class NomadContext extends MultiProvider<config.Domain> {
    *       `const confirmAt = await NomadMessage.confirmAt()`
    *
    * @param message NomadMessage
+   * @param overrides Any tx overrides (e.g. gas limit, gas price)
    * @returns The Contract Transaction receipt
    */
   async process(
     message: NomadMessage<NomadContext>,
+    overrides: Overrides = {},
   ): Promise<ContractTransaction> {
     const data = await message.getProof();
     if (!data) throw new Error('Unable to fetch proof');
-    return this.processProof(message.origin, message.destination, data);
+    return this.processProof(message.origin, message.destination, data, overrides);
   }
 
   async processProof(
     origin: string | number,
     destination: string | number,
     proof: MessageProof,
+    overrides: Overrides = {},
   ): Promise<ContractTransaction> {
     // get replica contract
     const replica = this.mustGetReplicaFor(origin, destination);
@@ -283,12 +286,14 @@ export class NomadContext extends MultiProvider<config.Domain> {
       proof.message,
       proof.proof.path,
       proof.proof.index,
+      overrides,
     );
 
     return replica.proveAndProcess(
       proof.message,
       proof.proof.path,
       proof.proof.index,
+      overrides,
     );
   }
 
