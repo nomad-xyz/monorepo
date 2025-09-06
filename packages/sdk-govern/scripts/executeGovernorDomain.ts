@@ -40,7 +40,7 @@ async function run() {
     // TODO: submit transaction directly via gnosis safe API instead of throwing
     const governorCode = await provider.getCode(governor);
     if (governorCode != "0x") {
-        throw new Error(`Governor in ${CONFIG.environment} is a contract - likely a Gnosis multisig \nSubmit governance transactions on https://gnosis-safe.io/ \nAddress: ${governor} \nChain: ${context.resolveDomainName(domain)}`);
+        throw new Error(`Governor in ${CONFIG.environment} is a contract - likely a Gnosis multisig \nSubmit governance transactions on https://safe.global/ \nAddress: ${governor} \nChain: ${context.resolveDomainName(domain)}`);
     }
 
     // if the signer provided is not the governor,
