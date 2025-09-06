@@ -5,7 +5,7 @@ Contains forge scripts for Nomad system maintenance
 ## Building Blocks
 
 - `Config.sol` utilities for loading and parsing Nomad Config JSON
-  - initalize the config with the path to a JSON config
+  - initialize the config with the path to a JSON config
 - `CallBatch.sol` utility for aggregating calls into a callbatch, and
   outputting the batch to JSON
   - initialize a callbatch with the local domain name and an output path
